@@ -4,12 +4,14 @@
  */
 
 import { getBotManager } from '@/tree/bot';
+import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 
 export async function botControlHandler(
   id: string,
   action: 'start' | 'stop' | 'pause' | 'resume',
 ): Promise<{ ok: boolean; error?: string }> {
   try {
+    await loadAllBotsFromD1();
     const manager = getBotManager();
     const bot = manager.getBot(id);
     if (!bot) {

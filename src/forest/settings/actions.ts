@@ -4,6 +4,7 @@
 'use server';
 
 import { getBotManager } from '@/tree/bot';
+import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 
 export interface SettingsData {
   exchanges: {
@@ -44,7 +45,8 @@ const DEFAULT_SETTINGS: SettingsData = {
 };
 
 export async function getSettings(): Promise<SettingsData> {
-  // TODO: wire to D1 user_settings table
+  await loadAllBotsFromD1();
+  // TODO: wire to D1 settings table for exchange credentials + risk limits
   // For now return defaults + live killswitch state
   const ks = getBotManager().getKillswitch();
   return {

@@ -1,210 +1,302 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Activity, Plus, Pause, TrendingUp, TrendingDown, Bot } from 'lucide-react';
 import Link from 'next/link';
 
 import type { BotCardData, DashboardKpis } from '@/forest/dashboard/actions';
 
+interface BotCardDataApi {
+  id: string;
+  name: string;
+  strategy: 'grid' | 'mean_reversion';
+  pair: string;
+  exchange: string;
+  status: string;
+  totalPnl: number;
+  winCount: number;
+  lossCount: number;
+  startedAt: number | null;
+  updatedAt: number;
+}
+
 interface DashboardData {
   kpis: DashboardKpis;
   bots: BotCardData[];
 }
 
-interface Props {
-  initialData: DashboardData;
-}
+const statusStyles: Record<string, string> = {
+  running: 'badge-success',
+  active: 'badge-success',
+  paused: 'badge-warning',
+  stopped: 'badge-neutral',
+  error: 'badge-error',
+};
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    draft: 'badge-neutral', paper_test: 'badge-neutral',
-    live_running: 'badge-running', paused: 'badge-paused',
-    error: 'badge-error', stopped: 'badge-neutral',
-    running: 'badge-running',
-  };
-  return <span className={`badge ${map[status] || 'badge-neutral'}`}>{status}</span>;
-}
+export default function DashboardClient() {
+  const t = useTranslations('dashboard');
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-function PnlValue({ value }: { value: number }) {
-  const cls = value >= 0 ? 'text-profit' : 'text-loss';
-  const prefix = value >= 0 ? '+' : '';
-  return (
-    <span className={`mono ${cls}`}>
-      {prefix}{value.toFixed(2)}
-    </span>
-  );
-}
+  useEffect(() => {
+    let cancelled = false;
 
-export default function DashboardClient({ initialData }: Props) {
-  const t = useTranslations();
-  const data = initialData;
+    async function load() {
+      try {
+        setLoading(true);
+        setError(null);
 
-  return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700 }}>
-            {t('dashboard.title')}
-          </h1>
+        const response = await fetch('/api/bots', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Request failed: ${response.status}`);
+        }
+
+        const body = (await response.json()) as { ok: boolean; data?: BotCardDataApi[] | null; error?: string | null };
+
+        if (!body.ok || !Array.isArray(body.data)) {
+          throw new Error(body.error ?? 'Unable to load bots.');
+        }
+
+        const bots: BotCardData[] = body.data.map((item) => ({
+          id: item.id,
+          name: item.name,
+          strategy: item.strategy,
+          pair: item.pair,
+          exchange: item.exchange,
+          botStatus: item.status,
+          totalPnl: Number.isFinite(item.totalPnl) ? item.totalPnl : 0,
+          winCount: Number.isFinite(item.winCount) ? item.winCount : 0,
+          lossCount: Number.isFinite(item.lossCount) ? item.lossCount : 0,
+          startedAt: item.startedAt ?? null,
+          updatedAt: item.updatedAt,
+          capitalAllocated: 0,
+          maxDrawdownPct: 0,
+        }));
+
+        const totalWinCount = bots.reduce((sum, b) => sum + b.winCount, 0);
+        const totalLossCount = bots.reduce((sum, b) => sum + b.lossCount, 0);
+        const totalTrades = totalWinCount + totalLossCount;
+
+        const kpis: DashboardKpis = {
+          totalBalance: bots.reduce((sum, b) => sum + b.totalPnl, 0),
+          todayPnl: bots.reduce((sum, b) => sum + b.totalPnl, 0),
+          activeBots: bots.filter((b) => b.botStatus === 'running' || b.botStatus === 'active').length,
+          totalTrades,
+          winRate: totalTrades > 0 ? Math.round((totalWinCount / totalTrades) * 100) : 0,
+        };
+
+        if (!cancelled) {
+          setData({ kpis, bots });
+        }
+      } catch (fetchError) {
+        const message = fetchError instanceof Error ? fetchError.message : 'Unknown dashboard error';
+        if (!cancelled) {
+          setError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="dashboard">
+        <header className="section-header">
+          <div>
+            <h1>{t('title')}</h1>
+            <p className="meta">{t('subtitle')}</p>
+          </div>
+        </header>
+        <div className="panel" style={{ padding: '2rem' }}>
+          <p style={{ color: 'var(--text-secondary)' }}>{t('loading') ?? 'Loading dashboard...'}</p>
         </div>
-        <div className="flex gap-3">
-          <Link href="/vi/bots/new" className="btn btn-primary">
-            <Plus size={16} /> {t('dashboard.newBot')}
-          </Link>
-          <button className="btn btn-ghost">
-            <Pause size={16} /> {t('dashboard.pauseAll')}
+      </section>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <section className="dashboard">
+        <header className="section-header">
+          <div>
+            <h1>{t('title')}</h1>
+            <p className="meta">{t('subtitle')}</p>
+          </div>
+        </header>
+        <div className="panel" style={{ padding: '2rem' }}>
+          <p style={{ color: 'var(--color-loss)' }}>{error ?? t('failed') ?? 'Failed to load dashboard data.'}</p>
+          <button
+            className="btn btn-primary"
+            style={{ marginTop: '1rem' }}
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              setData(null);
+            }}
+          >
+            {t('retry') ?? 'Retry'}
           </button>
         </div>
+      </section>
+    );
+  }
+
+  const { kpis, bots } = data;
+  const pnl = kpis.totalBalance;
+  const winRate = kpis.winRate;
+  const pnlClass = pnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)';
+  const TrendIcon = pnl >= 0 ? TrendingUp : TrendingDown;
+
+  return (
+    <section className="dashboard">
+      <header className="section-header">
+        <div>
+          <h1>{t('title')}</h1>
+          <p className="meta">{t('subtitle')}</p>
+        </div>
+        <Link href="/bots/new" className="btn btn-primary">
+          <Plus className="btn-icon" />
+          {t('newBot')}
+        </Link>
+      </header>
+
+      <div className="panel-group">
+        <div className="panel">
+          <h3>Total Balance</h3>
+          <p className="metric" style={{ color: 'var(--color-profit)' }}>
+            ${kpis.totalBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </p>
+          <p className="meta">
+            CashClaw {t('title').toLowerCase()} {bots.length} · Profit: $
+            {kpis.todayPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </p>
+        </div>
+
+        <div className="panel">
+          <h3>Win Rate</h3>
+          <p className="metric">{winRate.toLocaleString(undefined, { maximumFractionDigits: 2 })}%</p>
+          <p className="meta">
+            {bots.reduce((sum, b) => sum + b.winCount, 0).toLocaleString()}W / {bots.reduce((sum, b) => sum + b.lossCount, 0).toLocaleString()}L
+          </p>
+        </div>
+
+        <div className="panel">
+          <h3>Active Bots</h3>
+          <p className="metric">
+            {kpis.activeBots.toLocaleString()} / {bots.length.toLocaleString()}
+          </p>
+          <p className="meta">
+            Active rate: {bots.length > 0 ? `${((kpis.activeBots / bots.length) * 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}%` : '—'}
+          </p>
+        </div>
+
+        <div className="panel">
+          <h3>Capital Deployed</h3>
+          <p className="metric">$2,450 / $5,000</p>
+          <div className="mt-1 h-2 rounded" style={{ background: 'var(--bg-primary)' }}>
+            <div className="h-2 rounded" style={{ width: '49%', background: 'var(--color-profit)' }} />
+          </div>
+        </div>
       </div>
 
-      {/* KPI Grid */}
-      <div className="kpi-grid">
-        <div className="kpi-card">
-          <div className="kpi-label bi-label">
-            <span className="vi">{t('dashboard.portfolioValue')}</span>
-            <span className="en">Portfolio Value</span>
-          </div>
-          <div className="kpi-value mono">
-            ${data.kpis.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label bi-label">
-            <span className="vi">{t('dashboard.todayPnl')}</span>
-            <span className="en">Today&apos;s P&L</span>
-          </div>
-          <div className={`kpi-value mono ${data.kpis.todayPnl >= 0 ? 'profit' : 'loss'}`}>
-            {data.kpis.todayPnl >= 0 ? '+' : ''}{data.kpis.todayPnl.toFixed(2)}
-          </div>
-          <div className={`kpi-change mono ${data.kpis.todayPnl >= 0 ? 'profit' : 'loss'}`}>
-            {data.kpis.todayPnl >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-            {data.kpis.todayPnl >= 0 ? '+' : ''}{((data.kpis.todayPnl / Math.max(data.kpis.totalBalance, 1)) * 100).toFixed(2)}%
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label bi-label">
-            <span className="vi">{t('dashboard.activeBots')}</span>
-            <span className="en">Active Bots</span>
-          </div>
-          <div className="kpi-value" style={{ color: 'var(--color-profit)' }}>{data.kpis.activeBots}</div>
-          <div className="flex items-center gap-1 mt-2" style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
-            <Activity size={12} /> {t('common.loading')}
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label bi-label">
-            <span className="vi">{t('dashboard.winRate')}</span>
-            <span className="en">Win Rate</span>
-          </div>
-          <div className="kpi-value mono">{data.kpis.winRate}%</div>
-          <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>
-            {data.kpis.totalTrades} {t('dashboard.totalTrades').toLowerCase()}
-          </div>
-        </div>
-      </div>
-
-      {/* Bot List + Recent Trades */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Bots */}
-        <div className="card lg:col-span-2">
-          <div className="card-header">
-            <h2 className="card-title">
-              <Bot size={16} /> {t('bots.listTitle')}
-            </h2>
-            <Link href="/vi/bots/new" className="btn btn-ghost" style={{ fontSize: 'var(--text-xs)' }}>
-              <Plus size={14} /> {t('bots.createNew')}
+      <div className="panel" style={{ marginTop: '1.5rem' }}>
+        <header className="panel-header">
+          <h2>Bots</h2>
+          <div className="panel-actions">
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+              {bots.length === 0
+                ? (t('empty') ?? 'No bots found. Create your first bot to get started.')
+                : `${bots.length} ${t('subtitle')}`}
+            </span>
+            <Link className="btn btn-secondary" href="/bots/new" prefetch={false}>
+              <Bot className="btn-icon" />
+              {t('createBot')}
             </Link>
           </div>
+        </header>
 
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t('bots.columns.name')}</th>
-                  <th>{t('bots.columns.pair')}</th>
-                  <th>{t('bots.columns.strategy')}</th>
-                  <th>{t('bots.columns.status')}</th>
-                  <th className="text-right">{t('bots.columns.pnl')}</th>
-                  <th className="text-right">{t('bots.columns.winRate')}</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.bots.map((bot) => (
-                  <tr key={bot.id}>
-                    <td>
-                      <Link href={`/vi/bots/${bot.id}`} className="font-semibold" style={{ color: 'var(--color-accent)' }}>
-                        {bot.name}
-                      </Link>
-                      <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>
-                        {bot.exchange}
-                      </div>
-                    </td>
-                    <td className="mono">{bot.pair}</td>
-                    <td>{t(`bots.strategy.${bot.strategy}`)}</td>
-                    <td><StatusBadge status={bot.botStatus} /></td>
-                    <td className="text-right"><PnlValue value={bot.totalPnl} /></td>
-                    <td className="text-right mono">
-                      {((bot.winCount / Math.max(bot.winCount + bot.lossCount, 1)) * 100).toFixed(0)}%
-                    </td>
-                    <td>
-                      <Link href={`/vi/bots/${bot.id}`} className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: 'var(--text-xs)' }}>
-                        Detail
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {bots.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            <Bot className="btn-icon" style={{ width: '2.5rem', height: '2.5rem', margin: '0 auto 1rem' }} />
+            <p>{t('empty') ?? 'No bots found. Start by creating a new trading bot.'}</p>
           </div>
+        ) : (
+          <div className="grid gap-3">
+            {bots.map((bot) => (
+              <div className="list-item" key={bot.id}>
+                <div className="list-meta">
+                  <div className="list-titles">
+                    <h4>{bot.name}</h4>
+                    <span>{bot.pair}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-5">
+                  <span className={`badge ${statusStyles[bot.botStatus] ?? 'badge-neutral'}`}>
+                    {bot.botStatus}
+                  </span>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="mono" style={{ color: 'var(--color-profit)' }}>
+                      ${bot.totalPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </div>
+                    <div className="meta">
+                      {bot.winCount}W / {bot.lossCount}L
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginTop: '1.5rem' }}>
+        <div className="panel">
+          <h3>Win Rate</h3>
+          <p className="metric">{winRate.toFixed(1)}%</p>
+          <p className="meta">
+            {bots.reduce((sum, b) => sum + b.winCount, 0).toLocaleString()}W / {bots.reduce((sum, b) => sum + b.lossCount, 0).toLocaleString()}L
+          </p>
         </div>
-
-        {/* Quick Stats */}
-        <div className="space-y-4">
-          <div className="card">
-            <h3 className="card-title mb-4">{t('dashboard.quickActions')}</h3>
-            <div className="space-y-2">
-              <Link href="/vi/bots/new" className="btn btn-primary w-full justify-center">
-                <Plus size={16} /> {t('dashboard.newBot')}
-              </Link>
-              <button className="btn btn-ghost w-full justify-center">
-                <Pause size={16} /> {t('dashboard.pauseAll')}
-              </button>
-              <Link href="/vi/settings" className="btn btn-ghost w-full justify-center">
-                Settings
-              </Link>
-            </div>
-          </div>
-
-          <div className="card">
-            <h3 className="card-title">Risk Overview</h3>
-            <div className="space-y-3 mt-4">
-              <div>
-                <div className="flex justify-between" style={{ fontSize: 'var(--text-sm)' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Max Drawdown</span>
-                  <span className="mono text-warning">-8.2%</span>
-                </div>
-                <div className="mt-1 h-2 rounded" style={{ background: 'var(--bg-primary)' }}>
-                  <div className="h-2 rounded" style={{ width: '41%', background: 'var(--color-warning)' }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between" style={{ fontSize: 'var(--text-sm)' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Capital Used</span>
-                  <span className="mono">$2,450 / $5,000</span>
-                </div>
-                <div className="mt-1 h-2 rounded" style={{ background: 'var(--bg-primary)' }}>
-                  <div className="h-2 rounded" style={{ width: '49%', background: 'var(--color-profit)' }} />
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="panel">
+          <h3>Total Trades</h3>
+          <p className="metric">{kpis.totalTrades.toLocaleString()}</p>
+          <p className="meta">Over {bots.length.toLocaleString()} bots</p>
+        </div>
+        <div className="panel">
+          <h3>Today PnL</h3>
+          <p className="metric" style={{ color: 'var(--color-profit)' }}>
+            ${kpis.todayPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </p>
+          <p className="meta">Performance today</p>
         </div>
       </div>
-    </div>
+
+      <div className="panel" style={{ marginTop: '1.5rem' }}>
+        <h3>Efficiency</h3>
+        <div className="flex justify-between" style={{ fontSize: 'var(--text-sm)' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Capital Used</span>
+          <span className="mono">$2,450 / $5,000</span>
+        </div>
+        <div className="mt-1 h-2 rounded" style={{ background: 'var(--bg-primary)' }}>
+          <div className="h-2 rounded" style={{ width: '49%', background: 'var(--color-profit)' }} />
+        </div>
+      </div>
+    </section>
   );
 }

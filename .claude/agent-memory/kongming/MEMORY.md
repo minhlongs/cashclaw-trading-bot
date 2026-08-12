@@ -1,0 +1,2 @@
+- [trade-bot go-live gap (2026-08-12 snapshot)](project_tradebot_golive_gap.md) — pipeline "GO-LIVE" only covers auth+version bootstrap; UI/live-trading/persistence/customer-login not wired. Re-verify before trusting.
+- [Verify full user journey, not just task scope](feedback_verify_full_user_journey.md) — for "go live" questions, curl real URLs + grep TODOs; don't trust a pipeline's own PASS/GO-LIVE label at face value.

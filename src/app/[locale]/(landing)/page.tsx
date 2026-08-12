@@ -1,6 +1,10 @@
 import { Metadata } from 'next';
 import LandingClient from './LandingClient';
 
+export function generateStaticParams() {
+  return [{ locale: 'vi' }, { locale: 'en' }];
+}
+
 export const metadata: Metadata = {
   title: 'CashClaw — Auto-Profit Trading Bot | Crypto Trading Bot',
   description: 'Automated crypto trading bot. Grid & Mean Reversion strategies. Runs 24/7 on Binance, Bybit, OKX.',

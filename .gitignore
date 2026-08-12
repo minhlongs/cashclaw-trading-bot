@@ -8,3 +8,11 @@ tsconfig.tsbuildinfo
 .env.*
 .DS_Store
 /tmp-*
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example

@@ -1,6 +1,10 @@
 import { Metadata } from 'next';
 import LoginForm from '@/components/auth/login-form';
 
+export function generateStaticParams() {
+  return [{ locale: 'vi' }, { locale: 'en' }];
+}
+
 export const metadata: Metadata = {
   title: 'CashClaw — Đăng nhập',
 };

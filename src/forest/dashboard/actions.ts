@@ -6,6 +6,7 @@
 import { getBotManager, type BotConfig, isGridConfig, isMeanRevConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
 import { createServerClient } from '@/lib/db/client';
+import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import type { TradeEvent, CapitalSnapshot, TradeEventType } from '@/tree/telemetry';
 
 const MAX_EVENTS = 200;
@@ -96,6 +97,7 @@ function calcKpis(bots: BotInstance[]): DashboardKpis {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
+  await loadAllBotsFromD1();
   const manager = getBotManager();
   const bots = manager.getAllBots();
   const kpis = calcKpis(bots);
@@ -111,6 +113,7 @@ export async function getKpis(): Promise<DashboardKpis> {
 }
 
 export async function getBotCards(): Promise<BotCardData[]> {
+  await loadAllBotsFromD1();
   const manager = getBotManager();
   return manager.getAllBots().map(snapshotToCard);
 }

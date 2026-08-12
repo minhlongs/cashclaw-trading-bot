@@ -1,7 +1,6 @@
 import '../globals.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import { notFound } from 'next/navigation';
 
 const locales = ['vi', 'en'] as const;
 
@@ -19,7 +18,7 @@ export default async function RootLayout({
   const { locale } = await params;
 
   if (!locales.includes(locale as 'vi' | 'en')) {
-    notFound();
+    return null;
   }
 
   const messages = await getMessages();

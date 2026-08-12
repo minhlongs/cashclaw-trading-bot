@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 
 interface Props {
-  initialBots: Array<{ id: string; name: string; strategy: string; configJson: string }>;
+  initialBots?: Array<{ id: string; name: string; strategy: string; configJson: string }>;
 }
 
 export interface BotInfo {
@@ -39,7 +39,7 @@ export default function BacktestsClient({ initialBots }: Props) {
   const locale = useLocale();
   const t = (vi: string, en: string) => locale === 'vi' ? vi : en;
 
-  const [bots] = useState<BotInfo[]>(initialBots);
+  const [bots, setBots] = useState<BotInfo[]>(initialBots ?? []);
   const [selectedBotId, setSelectedBotId] = useState('');
   const [results, setResults] = useState<BacktestResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -90,13 +90,14 @@ export default function BacktestsClient({ initialBots }: Props) {
         }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as { success: boolean; error?: string; candlesFetched?: number; result?: unknown };
       if (!data.success) {
         setError(data.error ?? 'Unknown error');
         return;
       }
 
-      setCandlesFetched(data.candlesFetched);
+      const fetched = data.candlesFetched;
+      setCandlesFetched(typeof fetched === 'number' ? fetched : null);
       if (data.result) setResults([data.result as BacktestResult, ...results]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed');

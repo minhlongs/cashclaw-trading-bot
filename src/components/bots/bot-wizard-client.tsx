@@ -130,7 +130,7 @@ export default function BotWizardClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { ok: boolean; error?: string; data?: { id: string } };
 
       if (!data.ok) {
         throw new Error(data.error || 'Failed to create bot');
@@ -138,9 +138,12 @@ export default function BotWizardClient() {
 
       setSubmitSuccess(true);
       // Redirect after short delay
-      setTimeout(() => {
-        window.location.href = `/${locale}/bots/${data.data.id}`;
-      }, 1500);
+      const newBotId = data.data?.id;
+      if (newBotId) {
+        setTimeout(() => {
+          window.location.href = `/${locale}/bots/${newBotId}`;
+        }, 1500);
+      }
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : 'Failed to create bot');
     } finally {

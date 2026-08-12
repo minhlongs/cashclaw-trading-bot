@@ -8,6 +8,12 @@
   },
   "dashboard": {
     "title": "Bảng điều khiển",
+    "subtitle": "Tổng quan giao dịch",
+    "loading": "Đang tải...",
+    "failed": "Không thể tải dữ liệu",
+    "retry": "Thử lại",
+    "empty": "Chưa có bot. Tạo bot đầu tiên để bắt đầu.",
+    "createBot": "Tạo bot",
     "portfolioValue": "Tổng tài sản",
     "todayPnl": "Lãi/Lỗ hôm nay",
     "activeBots": "Bot hoạt động",

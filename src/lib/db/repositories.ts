@@ -56,6 +56,11 @@ export async function findBotsByUser(db: D1Database, userId: string): Promise<Bo
   return results;
 }
 
+export async function findAllBots(db: D1Database): Promise<Bot[]> {
+  const { results } = await db.prepare('SELECT * FROM bots ORDER BY created_at DESC').all<Bot>();
+  return results;
+}
+
 export async function findRunningBots(db: D1Database): Promise<Bot[]> {
   const { results } = await db.prepare(
     "SELECT * FROM bots WHERE status IN ('live_running', 'paper_test', 'running')"

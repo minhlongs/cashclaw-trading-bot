@@ -9,7 +9,7 @@ import type {
   User, Bot, Trade, ApiCredential, TradeEvent, CapitalSnapshot, AuditLog,
 } from '@/lib/db/types';
 import {
-  findBotById, findBotsByUser, insertBot, updateBot, deleteBot,
+  findBotById, findBotsByUser, findAllBots, insertBot, updateBot, deleteBot,
   findTradesByBot, insertTrade, updateTrade,
   findCredential, upsertCredential,
   insertTradeEvent, insertCapitalSnapshot, insertAudit,
@@ -50,6 +50,13 @@ function botToRow(bot: {
     win_count: 0,
     loss_count: 0,
     max_drawdown: 0,
+    total_trades: 0,
+    started_at: null,
+    stopped_at: null,
+    last_error: null,
+    last_tick_at: null,
+    last_order_at: null,
+    current_drawdown: 0,
   };
 }
 
@@ -71,8 +78,7 @@ export async function hydrateFromD1(userId: string): Promise<void> {
   for (const row of rows) {
     try {
       const config = JSON.parse(row.config_json) as BotConfig;
-      // Hydrate with paper adapter — real exchange adapter wired when user provides credentials
-      manager.createBot({
+      const bot = await manager.createBot({
         id: row.id,
         config,
         exchangeConfig: {
@@ -84,13 +90,137 @@ export async function hydrateFromD1(userId: string): Promise<void> {
         },
         mode: 'paper',
       });
-      // Sync status
-      const bot = manager.getBot(row.id);
-      if (bot && row.status !== 'draft') {
-        // BotInstance.start() would be called here; for now just log
+
+      // Restore persisted BotState fields from D1 row
+      const snapshot = bot.getSnapshot();
+      const patch: Record<string, unknown> = {};
+
+      if (row.total_trades != null && row.total_trades !== snapshot.totalTrades) {
+        patch.totalTrades = row.total_trades;
+      }
+      if (row.started_at != null) {
+        patch.startedAt = row.started_at;
+      }
+      if (row.stopped_at != null) {
+        patch.stoppedAt = row.stopped_at;
+      }
+      if (row.last_error != null) {
+        patch.error = row.last_error;
+      }
+      if (row.last_tick_at != null) {
+        patch.lastTickAt = row.last_tick_at;
+      }
+      if (row.last_order_at != null) {
+        patch.lastOrderAt = row.last_order_at;
+      }
+      if (row.current_drawdown != null && row.current_drawdown !== snapshot.currentDrawdown) {
+        patch.currentDrawdown = row.current_drawdown;
+      }
+      if (row.total_pnl != null && row.total_pnl !== snapshot.totalPnl) {
+        patch.totalPnl = row.total_pnl;
+      }
+      if (row.win_count != null && row.win_count !== snapshot.winCount) {
+        patch.winCount = row.win_count;
+      }
+      if (row.loss_count != null && row.loss_count !== snapshot.lossCount) {
+        patch.lossCount = row.loss_count;
+      }
+      if (row.max_drawdown != null && row.max_drawdown !== snapshot.maxDrawdown) {
+        patch.maxDrawdown = row.max_drawdown;
+      }
+
+      if (Object.keys(patch).length > 0) {
+        bot.patchState(patch);
       }
     } catch {
       // skip malformed config
+    }
+  }
+}
+
+/**
+ * Tracks bot IDs already hydrated from D1 into BotManager.
+ * Module-scoped so it survives across requests in the same Worker isolate.
+ */
+const hydratedBotIds = new Set<string>();
+
+/**
+ * Load ALL bots from D1 (no userId filter — single-user v1).
+ * Called by handlers on cold start / SSR mount to populate in-memory state.
+ * Safe to call multiple times — already-loaded bots are skipped.
+ */
+export async function loadAllBotsFromD1(): Promise<void> {
+  const db = createServerClient();
+  if (!db) return;
+
+  const manager = getBotManager();
+  const rows = await findAllBots(db);
+
+  for (const row of rows) {
+    // Skip bots already hydrated in this isolate lifecycle
+    if (hydratedBotIds.has(row.id)) continue;
+
+    try {
+      const config = JSON.parse(row.config_json) as BotConfig;
+      const bot = await manager.createBot({
+        id: row.id,
+        config,
+        exchangeConfig: {
+          apiKey: '',
+          apiSecret: '',
+          testnet: true,
+          sandbox: true,
+          rateLimitMs: 100,
+        },
+        mode: 'paper',
+      });
+
+      // Restore persisted BotState fields from D1 row
+      const snapshot = bot.getSnapshot();
+      const patch: Record<string, unknown> = {};
+
+      if (row.total_trades != null && row.total_trades !== snapshot.totalTrades) {
+        patch.totalTrades = row.total_trades;
+      }
+      if (row.started_at != null) {
+        patch.startedAt = row.started_at;
+      }
+      if (row.stopped_at != null) {
+        patch.stoppedAt = row.stopped_at;
+      }
+      if (row.last_error != null) {
+        patch.error = row.last_error;
+      }
+      if (row.last_tick_at != null) {
+        patch.lastTickAt = row.last_tick_at;
+      }
+      if (row.last_order_at != null) {
+        patch.lastOrderAt = row.last_order_at;
+      }
+      if (row.current_drawdown != null && row.current_drawdown !== snapshot.currentDrawdown) {
+        patch.currentDrawdown = row.current_drawdown;
+      }
+      if (row.total_pnl != null && row.total_pnl !== snapshot.totalPnl) {
+        patch.totalPnl = row.total_pnl;
+      }
+      if (row.win_count != null && row.win_count !== snapshot.winCount) {
+        patch.winCount = row.win_count;
+      }
+      if (row.loss_count != null && row.loss_count !== snapshot.lossCount) {
+        patch.lossCount = row.loss_count;
+      }
+      if (row.max_drawdown != null && row.max_drawdown !== snapshot.maxDrawdown) {
+        patch.maxDrawdown = row.max_drawdown;
+      }
+
+      // Apply patch if there are differences
+      if (Object.keys(patch).length > 0) {
+        bot.patchState(patch);
+      }
+
+      hydratedBotIds.add(row.id);
+    } catch {
+      // skip malformed config or bots that BotManager already holds
     }
   }
 }

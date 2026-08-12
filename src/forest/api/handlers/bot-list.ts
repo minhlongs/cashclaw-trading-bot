@@ -5,6 +5,7 @@
 
 import { getBotManager, type BotConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
+import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 
 export interface BotListItem {
   id: string;
@@ -26,6 +27,7 @@ export async function botListHandler(): Promise<{
   error?: string;
 }> {
   try {
+    await loadAllBotsFromD1();
     const manager = getBotManager();
     const bots: BotInstance[] = manager.getAllBots();
 

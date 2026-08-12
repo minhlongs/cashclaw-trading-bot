@@ -8,6 +8,12 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "subtitle": "Trading Overview",
+    "loading": "Loading...",
+    "failed": "Failed to load dashboard data",
+    "retry": "Retry",
+    "empty": "No bots found. Create your first bot to get started.",
+    "createBot": "Create Bot",
     "portfolioValue": "Portfolio Value",
     "todayPnl": "Today's P&L",
     "activeBots": "Active Bots",

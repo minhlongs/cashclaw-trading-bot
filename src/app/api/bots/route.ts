@@ -3,7 +3,6 @@
 import { NextResponse } from 'next/server';
 import { botListHandler, botCreateHandler, type CreateBotPayload } from '@/forest/api/routes';
 
-export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const result = await botListHandler();

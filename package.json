@@ -4,17 +4,21 @@
   "description": "CashClaw AI Trading Bot Platform",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
+    "build:worker": "npx @opennextjs/cloudflare build",
+    "dev": "next dev",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "db:generate": "wrangler d1 migrations create cashclaw-db --local",
     "db:apply": "wrangler d1 migrations apply cashclaw-db --local",
     "db:apply:remote": "wrangler d1 migrations apply cashclaw-db",
-    "deploy": "wrangler deploy",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "hono": "^4.12.30",
@@ -24,10 +28,10 @@
     "next-intl": "^4.13.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "wrangler": "^4.110.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.2",
     "@types/node": "^20.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
@@ -35,6 +39,7 @@
     "eslint-config-next": "^16.2.10",
     "typescript": "^5.7.0",
     "vite-tsconfig-paths": "^4.3.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.122.0"
   }
 }

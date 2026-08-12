@@ -1,0 +1,12 @@
+---
+name: feedback-verify-full-user-journey-not-just-task-scope
+description: When a founder asks "next steps to go live / hand over to client," verify the actual customer-facing journey (curl real URLs, grep for TODOs, check what's wired end-to-end) before trusting a pipeline's own GO-LIVE/PASS verdict, which may only cover the narrow ticket it executed.
+metadata:
+  type: feedback
+---
+
+Rule: for "go live / bàn giao cho khách" questions, do not take a `/orchestrate` pipeline's own "GO-LIVE" or "PASS" language at face value. Independently verify the end-to-end customer journey — hit the live URLs unauthenticated as a browser would, grep for `TODO`/stub auth/commented-out DB bindings, check what the deploy target actually serves (API-only Worker vs. full app) — before advising the founder the product is ready.
+
+**Why:** on trade-bot (2026-08-12), the pipeline's `ship-report.md`/`result-verdict.md` declared "GO-LIVE"/"PASS, can transition to closed" for a task that only added a Bearer auth guard + version endpoint. Every acceptance criterion in that ticket was genuinely met (45/45 tests, SHA match, smoke tests). But the actual product — UI, live trading via CCXT, credential/bot persistence, customer login — was never deployed or wired, discoverable only by curling the live URL directly (`/`, `/vi/dashboard` returned 401 JSON, not the Next.js app) and reading the settings/auth files for TODO stubs. See [[project-tradebot-golive-gap]] for the specific findings. A pipeline's self-declared verdict is scoped to the task it was given, not to "is this product handoff-ready" — those are different questions and only the latter is what founders mean by "go live."
+
+**How to apply:** for any "ready to ship to client" / "go live" advisory question in this environment (founder runs multiple client-facing SaaS products for non-technical CEOs — see the global Sophia handover rules for the general pattern of BYOK setup wizards + bilingual non-tech handoff), spend the first pass of scouting on: (1) what does an unauthenticated browser actually see at the live URL, (2) does the core value-prop feature (here: live trading via CCXT) have its runtime dependency actually installed/wired, (3) does anything a non-tech client would type into a form (API keys, settings) actually persist, (4) is there a real login for the client (not just an ops bearer token). Only after those four hold should a pipeline's internal PASS be treated as product-readiness evidence.

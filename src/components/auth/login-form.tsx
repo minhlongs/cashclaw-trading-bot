@@ -1,23 +1,57 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function LoginForm() {
   const t = useTranslations();
+  const router = useRouter();
+  const locale = useLocale();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [passcode, setPasscode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // TODO: wire auth
-    setLoading(false);
+    setError('');
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, passcode }),
+      });
+
+      const data = (await res.json()) as { ok: boolean; error?: string; user?: { id: string; email: string } };
+
+      if (!res.ok || !data.ok) {
+        setError(data.error || 'Login failed');
+        setLoading(false);
+        return;
+      }
+
+      // Login successful — redirect to dashboard (use current locale)
+      router.push(`/${locale}/dashboard`);
+    } catch {
+      setError('Network error — please try again');
+      setLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div
+          className="p-3 rounded text-sm"
+          style={{ background: 'var(--color-loss)', color: 'white' }}
+        >
+          {error}
+        </div>
+      )}
+
       <div className="form-group">
         <label className="form-label">
           Email / Email
@@ -34,13 +68,13 @@ export default function LoginForm() {
 
       <div className="form-group">
         <label className="form-label">
-          Mật khẩu / Password
+          Mật khẩu / Passcode
         </label>
         <input
           type="password"
           className="form-input"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={passcode}
+          onChange={(e) => setPasscode(e.target.value)}
           placeholder="••••••••"
           required
         />

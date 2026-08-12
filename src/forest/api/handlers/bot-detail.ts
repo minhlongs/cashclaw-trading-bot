@@ -5,6 +5,7 @@
 
 import { getBotManager, type BotConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
+import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import type { TradeEvent, TradeEventType } from '@/tree/telemetry';
 
 export interface BotDetail {
@@ -37,6 +38,7 @@ export async function botDetailHandler(id: string): Promise<{
   error?: string;
 }> {
   try {
+    await loadAllBotsFromD1();
     const manager = getBotManager();
     const bot: BotInstance | undefined = manager.getBot(id);
     if (!bot) {

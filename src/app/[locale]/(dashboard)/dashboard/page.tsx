@@ -1,18 +1,18 @@
 import { Metadata } from 'next';
-import Sidebar from '@/components/layout/sidebar';
 import DashboardClient from '@/components/dashboard/dashboard-client';
-import { getDashboardData } from '@/forest/dashboard/actions';
+
+export function generateStaticParams() {
+  return [{ locale: 'vi' }, { locale: 'en' }];
+}
 
 export const metadata: Metadata = {
   title: 'CashClaw — Dashboard',
 };
 
-export default async function DashboardPage() {
-  const serverData = await getDashboardData();
+export default function DashboardPage() {
   return (
     <div className="app-container">
-      <Sidebar />
-      <DashboardClient initialData={serverData} />
+      <DashboardClient />
     </div>
   );
 }

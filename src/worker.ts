@@ -25,6 +25,7 @@ type Env = {
   DB: unknown; // D1Database — typed at deploy time via wrangler
   ADMIN_TOKEN?: string; // Bearer token for auth guard
   VERSION?: string; // Git SHA injected at deploy time
+  ASSETS: { fetch: (request: Request) => Promise<Response> }; // Static assets binding
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -32,6 +33,28 @@ const app = new Hono<{ Bindings: Env }>();
 app.use('*', logger());
 app.use('*', cors({ origin: '*', allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] }));
 app.use('*', prettyJSON());
+
+// Static file serving from Next.js export (out/ directory)
+app.use('*', async (c, next) => {
+  const path = c.req.path;
+
+  // Skip API routes and internal paths
+  if (path.startsWith('/api/') || path.startsWith('/_next/') || path === '/favicon.ico') {
+    return next();
+  }
+
+  try {
+    // Use CF Workers ASSETS binding to serve static files
+    const assetResponse = await c.env.ASSETS.fetch(c.req.raw);
+    if (assetResponse.ok) {
+      return assetResponse;
+    }
+  } catch {
+    // Asset not found, fall through to API routes
+  }
+
+  return next();
+});
 
 // Health check
 app.get('/api/health', (c) => {

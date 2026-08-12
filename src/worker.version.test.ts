@@ -29,7 +29,7 @@ describe('/api/version', () => {
     const app = makeApp({ VERSION: 'abc1234def5678' });
     const res = await app.fetch(new Request('http://localhost/api/version'), {});
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = (await res.json()) as { ok: boolean; data: { version: string; shortSha: string } };
     expect(body).toEqual({ ok: true, data: { version: 'abc1234def5678', shortSha: 'abc1234' } });
   });
 
@@ -37,7 +37,7 @@ describe('/api/version', () => {
     const app = makeApp({ VERSION: 'deadbeef' });
     const res = await app.fetch(new Request('http://localhost/api/version'), {});
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = (await res.json()) as { ok: boolean; data: { version: string; shortSha: string } };
     expect(body.ok).toBe(true);
     expect(body.data.version).toBe('deadbeef');
   });
@@ -46,7 +46,7 @@ describe('/api/version', () => {
     const app = makeApp();
     const res = await app.fetch(new Request('http://localhost/api/version'), {});
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = (await res.json()) as { ok: boolean; data: { version: string; shortSha: string } };
     expect(body).toEqual({ ok: true, data: { version: '0.0.0-dev', shortSha: '0000000' } });
   });
 
@@ -54,7 +54,7 @@ describe('/api/version', () => {
     const app = makeApp({ VERSION: 'a1b2c3d' });
     const res = await app.fetch(new Request('http://localhost/api/version'), {});
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = (await res.json()) as { ok: boolean; data: { version: string; shortSha: string } };
     expect(body.data.shortSha).toBe('a1b2c3d');
   });
 });

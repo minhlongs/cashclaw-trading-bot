@@ -1,13 +1,28 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
-import { Shield, Key, Zap, Power, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Shield, Key, Zap, Power, AlertTriangle, Loader2 } from 'lucide-react';
 import type { SettingsData } from '@/forest/settings/actions';
 
-interface Props {
-  initialData: SettingsData;
-}
+const DEFAULT_SETTINGS: SettingsData = {
+  exchanges: {
+    binance: { apiKey: '', apiSecret: '', testnet: true },
+    bybit: { apiKey: '', apiSecret: '', testnet: true },
+    okx: { apiKey: '', apiSecret: '', testnet: true },
+  },
+  risk: {
+    maxDrawdownPct: 15,
+    dailyLossLimitPct: 10,
+    cooldownMinutes: 30,
+    maxOpenOrders: 50,
+  },
+  killswitch: {
+    enabled: true,
+    reason: null,
+    triggeredAt: null,
+  },
+};
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
@@ -18,17 +33,47 @@ function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: 
   );
 }
 
-export default function SettingsClient({ initialData }: Props) {
+export default function SettingsClient() {
   const t = useTranslations();
-  const [settings, setSettings] = useState(initialData);
+  const [settings, setSettings] = useState<SettingsData>(DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(true);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const res = await fetch('/api/auth/me');
+        const json: { ok?: boolean; user?: unknown } = await res.json();
+        if (json.ok && json.user) {
+          // User is authenticated — fetch settings from server action
+          const { getSettings } = await import('@/forest/settings/actions');
+          const serverSettings = await getSettings();
+          setSettings(serverSettings);
+        }
+        // If not authenticated, keep DEFAULT_SETTINGS — user can still configure
+      } catch {
+        // Network error or unauthenticated — use defaults
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSettings();
+  }, []);
 
   const toggleSecret = (key: string) =>
     setShowSecrets((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const maskValue = (key: string, value: string) =>
     !showSecrets[key] && value ? '••••••••••••••••' : value;
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
+        <Loader2 size={32} style={{ color: 'var(--color-profit)', animation: 'spin 1s linear infinite' }} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -49,8 +94,8 @@ export default function SettingsClient({ initialData }: Props) {
             marginBottom: '16px',
           }}
         >
-          API keys stored securely. Keys required for live trading.
-          API keys được lưu an toàn. Yêu cầu cho live trading.
+          API keys stored securely. Paper mode — no real funds at risk.
+          API keys được lưu an toàn. Chế độ paper — không dùng tiền thật.
         </p>
 
         {(Object.keys(settings.exchanges) as Array<keyof typeof settings.exchanges>).map(
@@ -81,7 +126,7 @@ export default function SettingsClient({ initialData }: Props) {
                       fontWeight: 500,
                     }}
                   >
-                    {ex.testnet ? 'TESTNET' : 'LIVE'}
+                    TESTNET
                   </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -155,7 +200,7 @@ export default function SettingsClient({ initialData }: Props) {
               step={1}
             />
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
-              Tạm dừng nếu tổng lãi/lỗ ngày vượt ngưỡn
+              Tạm dừng nếu tổng lãi/lỗ ngày vượt ngưỡng
             </span>
           </div>
           <div className="form-group">

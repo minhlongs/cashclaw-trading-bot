@@ -1,28 +1,36 @@
 {
-  "name": "cashclaw-trading-bot",
-  "main": "src/worker.ts",
-  "compatibility_date": "2026-07-14",
-  "compatibility_flags": ["nodejs_compat"],
-  // D1 + KV bindings tạm tắt cho lần ship này.
-  // Lý do: placeholder IDs không phải UUID hợp lệ → deploy validation fail.
-  // Bật lại ở ticket "thread c.env xuống handler".
-  //
-  // "d1_databases": [
-  //   {
-  //     "binding": "DB",
-  //     "database_name": "cashclaw-db",
-  //     "database_id": "<real-id>"
-  //   }
-  // ],
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "CACHE",
-  //     "id": "<real-id>"
-  //   }
-  // ],
-  // Cron OFF có chủ đích: chưa có scheduled() export nên mọi trigger đều fail.
-  // "triggers": {
-  //   "crons": ["* * * * *"]
-  // },
-  "routes": []
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "cashclaw-trading-bot",
+	"compatibility_date": "2026-08-12",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "cashclaw-trading-bot"
+		}
+	],
+	// D1 database — cashclaw-db (provisioned 2026-08-13)
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "cashclaw-db",
+			"database_id": "c054f5a3-e7b9-42f0-88eb-dfffc4f8feae"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "cashclaw-opennext-cache"
+		}
+	],
+	"images": {
+		"binding": "IMAGES"
+	}
 }
