@@ -22,6 +22,8 @@ import { BotScheduler } from './forest/bot/scheduler';
 
 type Env = {
   DB: unknown; // D1Database — typed at deploy time via wrangler
+  ADMIN_TOKEN?: string; // Bearer token for auth guard
+  VERSION?: string; // Git SHA injected at deploy time
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -39,6 +41,23 @@ app.get('/api/health', (c) => {
     running: manager.getRunningBots().length,
     timestamp: Date.now(),
   });
+});
+
+// ── Version ──────────────────────────────────────────────────────
+app.get('/api/version', (c) => {
+  try {
+    const version = c.env.VERSION ?? process.env.VERSION;
+    if (version) {
+      const shortSha = version.slice(0, 7);
+      return c.json({ ok: true, data: { version, shortSha } });
+    }
+    return c.json(
+      { ok: true, data: { version: '0.0.0-dev', shortSha: '0000000' } },
+      200,
+    );
+  } catch {
+    return c.json({ ok: true, data: { version: '0.0.0-dev', shortSha: '0000000' } }, 200);
+  }
 });
 
 // ── API routes ──────────────────────────────────────────────────

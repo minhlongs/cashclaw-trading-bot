@@ -1,24 +1,28 @@
 {
   "name": "cashclaw-trading-bot",
   "main": "src/worker.ts",
-  "account_id": "YOUR_ACCOUNT_ID",
   "compatibility_date": "2026-07-14",
   "compatibility_flags": ["nodejs_compat"],
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "cashclaw-db",
-      "database_id": "YOUR_DB_ID"
-    }
-  ],
-  "kv_namespaces": [
-    {
-      "binding": "CACHE",
-      "id": "YOUR_KV_ID"
-    }
-  ],
-  "triggers": {
-    "crons": ["* * * * *"]
-  },
+  // D1 + KV bindings tạm tắt cho lần ship này.
+  // Lý do: placeholder IDs không phải UUID hợp lệ → deploy validation fail.
+  // Bật lại ở ticket "thread c.env xuống handler".
+  //
+  // "d1_databases": [
+  //   {
+  //     "binding": "DB",
+  //     "database_name": "cashclaw-db",
+  //     "database_id": "<real-id>"
+  //   }
+  // ],
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "CACHE",
+  //     "id": "<real-id>"
+  //   }
+  // ],
+  // Cron OFF có chủ đích: chưa có scheduled() export nên mọi trigger đều fail.
+  // "triggers": {
+  //   "crons": ["* * * * *"]
+  // },
   "routes": []
 }
