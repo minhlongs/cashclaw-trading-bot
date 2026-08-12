@@ -107,7 +107,13 @@ export class BotManager {
       throw new Error(`Bot already exists: ${req.id}`);
     }
 
-    const modeKey = req.mode === 'paper' ? 'paper' : `live:${req.config.exchange}`;
+    // v1: paper-only lockdown — force paper mode at BotManager level
+    if (req.mode !== 'paper') {
+      this.deps.onLog('Live mode blocked — Paper-only v1');
+      req.mode = 'paper';
+    }
+
+    const modeKey = 'paper';
     let exchange = this.exchanges.get(modeKey);
 
     if (!exchange) {
@@ -118,10 +124,23 @@ export class BotManager {
     const callbacks: BotCallbacks = {
       onStateChange: (state) => {
         this.deps.onBotEvent(req.id, 'state_change', { status: state.status, pnl: state.totalPnl });
-        // Persist status to D1 - map BotStatus to D1 Bot status
+        // Persist full BotState to D1 — map BotStatus to D1 Bot status
         if (this.deps.userId) {
           const d1Status = state.status === 'running' ? 'paper_test' : state.status;
-          patchBot(req.id, { status: d1Status as any, total_pnl: state.totalPnl }).catch(() => {});
+          patchBot(req.id, {
+            status: d1Status as any,
+            total_pnl: state.totalPnl,
+            total_trades: state.totalTrades,
+            win_count: state.winCount,
+            loss_count: state.lossCount,
+            max_drawdown: state.maxDrawdown,
+            current_drawdown: state.currentDrawdown,
+            started_at: state.startedAt,
+            stopped_at: state.stoppedAt,
+            last_error: state.error,
+            last_tick_at: state.lastTickAt,
+            last_order_at: state.lastOrderAt,
+          }).catch(() => {});
         }
       },
       onTrade: (trade) => {

@@ -163,6 +163,9 @@ async fetchOrder(_exchange: string, orderId: string, _symbol: string): Promise<{
 }
 
 export function createCCXTClient(exchange: string, _config?: { apiKey?: string; apiSecret?: string; sandbox?: boolean }) {
+  if (typeof ccxt === 'undefined') {
+    throw new Error('CCXT not available — Paper-only mode');
+  }
   return new CCXTTransformer({
     exchange,
     apiKey: _config?.apiKey,

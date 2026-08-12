@@ -182,6 +182,44 @@ export async function insertCapitalSnapshot(db: D1Database, snap: CapitalSnapsho
 }
 
 // ──────────────────────────────────────────────
+// Settings
+// ──────────────────────────────────────────────
+
+export interface SettingsRow {
+  id: string;
+  user_id: string | null;
+  exchange_creds_json: string;
+  risk_limits_json: string;
+  killswitch_enabled: number;
+  killswitch_reason: string | null;
+  killswitch_triggered_at: number | null;
+  updated_at: number;
+}
+
+export async function findSettingsByUser(db: D1Database, _userId: string | null): Promise<SettingsRow | null> {
+  const row = await db.prepare('SELECT * FROM settings LIMIT 1').first<SettingsRow>();
+  return row ?? null;
+}
+
+export async function upsertSettings(db: D1Database, row: SettingsRow): Promise<void> {
+  await db.prepare(
+    `INSERT INTO settings (id, user_id, exchange_creds_json, risk_limits_json, killswitch_enabled, killswitch_reason, killswitch_triggered_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       exchange_creds_json = excluded.exchange_creds_json,
+       risk_limits_json = excluded.risk_limits_json,
+       killswitch_enabled = excluded.killswitch_enabled,
+       killswitch_reason = excluded.killswitch_reason,
+       killswitch_triggered_at = excluded.killswitch_triggered_at,
+       updated_at = excluded.updated_at`
+  ).bind(
+    row.id, row.user_id, row.exchange_creds_json, row.risk_limits_json,
+    row.killswitch_enabled, row.killswitch_reason, row.killswitch_triggered_at,
+    row.updated_at,
+  ).run();
+}
+
+// ──────────────────────────────────────────────
 // Audit
 // ──────────────────────────────────────────────
 

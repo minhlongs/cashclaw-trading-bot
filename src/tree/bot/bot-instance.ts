@@ -85,6 +85,12 @@ export class BotInstance {
     return { ...this.state };
   }
 
+  /** Apply a partial patch to bot state — used by D1 hydration. */
+  patchState(patch: Partial<BotState>): void {
+    Object.assign(this.state, patch);
+    this.state.updatedAt = Date.now();
+  }
+
   getConfig(): GridBotConfig | MeanRevBotConfig {
     return { ...this.config };
   }

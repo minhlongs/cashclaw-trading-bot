@@ -47,8 +47,8 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
           setBot(data.bot);
           setTrades(data.trades ?? []);
         }
-      } catch (err) {
-        console.error('Failed to fetch bot data:', err);
+      } catch {
+        // Bot data fetch failed — user sees empty state
       } finally {
         setLoading(false);
       }

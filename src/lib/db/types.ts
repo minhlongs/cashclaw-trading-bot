@@ -52,6 +52,13 @@ export interface Bot {
   win_count: number;
   loss_count: number;
   max_drawdown: number;
+  total_trades: number;
+  started_at: number | null;
+  stopped_at: number | null;
+  last_error: string | null;
+  last_tick_at: number | null;
+  last_order_at: number | null;
+  current_drawdown: number;
   created_at: number;
   updated_at: number;
 }

@@ -39,19 +39,20 @@ export default function SettingsClient() {
   const [loading, setLoading] = useState(true);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
+  const [riskDraft, setRiskDraft] = useState(DEFAULT_SETTINGS.risk);
+  const [exchangeDrafts, setExchangeDrafts] = useState(DEFAULT_SETTINGS.exchanges);
+  const [exchangeSaving, setExchangeSaving] = useState<Record<string, boolean>>({});
+  const [ksSaving, setKsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/auth/me');
-        const json: { ok?: boolean; user?: unknown } = await res.json();
-        if (json.ok && json.user) {
-          // User is authenticated — fetch settings from server action
-          const { getSettings } = await import('@/forest/settings/actions');
-          const serverSettings = await getSettings();
-          setSettings(serverSettings);
-        }
-        // If not authenticated, keep DEFAULT_SETTINGS — user can still configure
+        const { getSettings } = await import('@/forest/settings/actions');
+        const serverSettings = await getSettings();
+        setSettings(serverSettings);
+        setRiskDraft(serverSettings.risk);
+        setExchangeDrafts(serverSettings.exchanges);
       } catch {
         // Network error or unauthenticated — use defaults
       } finally {
@@ -66,6 +67,123 @@ export default function SettingsClient() {
 
   const maskValue = (key: string, value: string) =>
     !showSecrets[key] && value ? '••••••••••••••••' : value;
+
+  const handleSaveRisk = async () => {
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'risk',
+          maxDrawdownPct: riskDraft.maxDrawdownPct,
+          dailyLossLimitPct: riskDraft.dailyLossLimitPct,
+          cooldownMinutes: riskDraft.cooldownMinutes,
+          maxOpenOrders: riskDraft.maxOpenOrders,
+        }),
+      });
+      const result: { ok: boolean; error?: string } = await res.json();
+      if (result.ok) {
+        setSettings((prev) => ({ ...prev, risk: { ...riskDraft } }));
+        setSaveMessage('Saved / Da luu');
+      } else {
+        setSaveMessage(result.error ?? 'Save failed');
+      }
+    } catch {
+      setSaveMessage('Network error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateExchange = async (
+    exchange: 'binance' | 'bybit' | 'okx',
+  ) => {
+    const draft = exchangeDrafts[exchange];
+    if (!draft.apiKey.trim() || !draft.apiSecret.trim()) return;
+    setExchangeSaving((prev) => ({ ...prev, [exchange]: true }));
+    setSaveMessage(null);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'exchange',
+          exchange,
+          apiKey: draft.apiKey,
+          apiSecret: draft.apiSecret,
+          testnet: draft.testnet,
+        }),
+      });
+      const result: { ok: boolean; error?: string } = await res.json();
+      if (result.ok) {
+        setSettings((prev) => ({
+          ...prev,
+          exchanges: { ...prev.exchanges, [exchange]: draft },
+        }));
+        setSaveMessage(`${exchange} credentials saved`);
+      } else {
+        setSaveMessage(result.error ?? `${exchange} save failed`);
+      }
+    } catch {
+      setSaveMessage('Network error');
+    } finally {
+      setExchangeSaving((prev) => ({ ...prev, [exchange]: false }));
+    }
+  };
+
+  const handleEmergencyHalt = async () => {
+    setKsSaving(true);
+    setSaveMessage(null);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'killswitch', action: 'halt', reason: 'Manual halt from settings' }),
+      });
+      const result: { ok: boolean; error?: string } = await res.json();
+      if (result.ok) {
+        setSettings((prev) => ({
+          ...prev,
+          killswitch: { enabled: false, reason: 'Manual halt from settings', triggeredAt: Date.now() },
+        }));
+        setSaveMessage('Trading halted / Da dung');
+      } else {
+        setSaveMessage(result.error ?? 'Halt failed');
+      }
+    } catch {
+      setSaveMessage('Network error');
+    } finally {
+      setKsSaving(false);
+    }
+  };
+
+  const handleResume = async () => {
+    setKsSaving(true);
+    setSaveMessage(null);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'killswitch', action: 'resume' }),
+      });
+      const result: { ok: boolean; error?: string } = await res.json();
+      if (result.ok) {
+        setSettings((prev) => ({
+          ...prev,
+          killswitch: { enabled: true, reason: null, triggeredAt: null },
+        }));
+        setSaveMessage('Trading resumed / Tiep tuc');
+      } else {
+        setSaveMessage(result.error ?? 'Resume failed');
+      }
+    } catch {
+      setSaveMessage('Network error');
+    } finally {
+      setKsSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -100,7 +218,11 @@ export default function SettingsClient() {
 
         {(Object.keys(settings.exchanges) as Array<keyof typeof settings.exchanges>).map(
           (exchange) => {
-            const ex = settings.exchanges[exchange];
+            const ex = exchangeDrafts[exchange];
+            const isDirty =
+              ex.apiKey !== settings.exchanges[exchange].apiKey ||
+              ex.apiSecret !== settings.exchanges[exchange].apiSecret ||
+              ex.testnet !== settings.exchanges[exchange].testnet;
             return (
               <div
                 key={exchange}
@@ -135,8 +257,14 @@ export default function SettingsClient() {
                     <input
                       type="text"
                       className="form-input mono"
-                      defaultValue={maskValue(`${exchange}-key`, ex.apiKey)}
-                      readOnly
+                      value={maskValue(`${exchange}-key`, ex.apiKey)}
+                      readOnly={!showSecrets[exchange]}
+                      onChange={(e) =>
+                        setExchangeDrafts((prev) => ({
+                          ...prev,
+                          [exchange]: { ...prev[exchange], apiKey: e.target.value },
+                        }))
+                      }
                     />
                   </div>
                   <div className="form-group">
@@ -144,8 +272,14 @@ export default function SettingsClient() {
                     <input
                       type="text"
                       className="form-input mono"
-                      defaultValue={maskValue(`${exchange}-secret`, ex.apiSecret)}
-                      readOnly
+                      value={maskValue(`${exchange}-secret`, ex.apiSecret)}
+                      readOnly={!showSecrets[exchange]}
+                      onChange={(e) =>
+                        setExchangeDrafts((prev) => ({
+                          ...prev,
+                          [exchange]: { ...prev[exchange], apiSecret: e.target.value },
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -160,8 +294,14 @@ export default function SettingsClient() {
                   <button
                     className="btn btn-ghost"
                     style={{ fontSize: 'var(--text-xs)' }}
+                    disabled={exchangeSaving[exchange] || !isDirty}
+                    onClick={() => handleUpdateExchange(exchange)}
                   >
-                    {t('settings.update', { defaultValue: 'Update' })}
+                    {exchangeSaving[exchange] ? (
+                      <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                    ) : (
+                      t('settings.update', { defaultValue: 'Update' })
+                    )}
                   </button>
                 </div>
               </div>
@@ -180,10 +320,13 @@ export default function SettingsClient() {
             <input
               type="number"
               className="form-input"
-              defaultValue={settings.risk.maxDrawdownPct}
+              value={riskDraft.maxDrawdownPct}
               min={1}
               max={100}
               step={1}
+              onChange={(e) =>
+                setRiskDraft((prev) => ({ ...prev, maxDrawdownPct: Number(e.target.value) }))
+              }
             />
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
               Halt all bots if portfolio drops this percentage
@@ -194,10 +337,13 @@ export default function SettingsClient() {
             <input
               type="number"
               className="form-input"
-              defaultValue={settings.risk.dailyLossLimitPct}
+              value={riskDraft.dailyLossLimitPct}
               min={1}
               max={100}
               step={1}
+              onChange={(e) =>
+                setRiskDraft((prev) => ({ ...prev, dailyLossLimitPct: Number(e.target.value) }))
+              }
             />
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
               Tạm dừng nếu tổng lãi/lỗ ngày vượt ngưỡng
@@ -208,10 +354,13 @@ export default function SettingsClient() {
             <input
               type="number"
               className="form-input"
-              defaultValue={settings.risk.cooldownMinutes}
+              value={riskDraft.cooldownMinutes}
               min={5}
               max={1440}
               step={5}
+              onChange={(e) =>
+                setRiskDraft((prev) => ({ ...prev, cooldownMinutes: Number(e.target.value) }))
+              }
             />
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
               Thời gian chờ sau chuỗi lỗ / Wait after consecutive losses
@@ -222,10 +371,13 @@ export default function SettingsClient() {
             <input
               type="number"
               className="form-input"
-              defaultValue={settings.risk.maxOpenOrders}
+              value={riskDraft.maxOpenOrders}
               min={1}
               max={500}
               step={5}
+              onChange={(e) =>
+                setRiskDraft((prev) => ({ ...prev, maxOpenOrders: Number(e.target.value) }))
+              }
             />
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
               Giới hạn tổng lệnh mở toàn hệ thống
@@ -237,15 +389,23 @@ export default function SettingsClient() {
           className="btn btn-primary"
           style={{ marginTop: '16px' }}
           disabled={saving}
-          onClick={async () => {
-            setSaving(true);
-            // TODO: collect form values → call updateRiskLimits server action
-            await new Promise((r) => setTimeout(r, 400));
-            setSaving(false);
-          }}
+          onClick={handleSaveRisk}
         >
           {saving ? 'Saving...' : t('settings.save', { defaultValue: 'Lưu thay đổi / Save' })}
         </button>
+        {saveMessage && (
+          <span
+            style={{
+              marginLeft: '12px',
+              fontSize: 'var(--text-xs)',
+              color: saveMessage.includes('failed') || saveMessage.includes('error') || saveMessage.includes('Error')
+                ? '#ff5050'
+                : 'var(--color-profit)',
+            }}
+          >
+            {saveMessage}
+          </span>
+        )}
       </div>
 
       {/* Killswitch */}
@@ -321,10 +481,24 @@ export default function SettingsClient() {
           <button
             className="btn btn-ghost"
             style={{ color: '#ff5050' }}
+            disabled={ksSaving}
+            onClick={handleEmergencyHalt}
           >
-            <Power size={16} /> {t('settings.halt', { defaultValue: 'Emergency Halt / Dừng khẩn cấp' })}
+            {ksSaving ? (
+              <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+            ) : (
+              <Power size={16} />
+            )}{' '}
+            {t('settings.halt', { defaultValue: 'Emergency Halt / Dừng khẩn cấp' })}
           </button>
-          <button className="btn btn-primary">
+          <button
+            className="btn btn-primary"
+            disabled={ksSaving}
+            onClick={handleResume}
+          >
+            {ksSaving ? (
+              <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+            ) : null}{' '}
             {t('settings.resume', { defaultValue: 'Resume Trading / Tiếp tục' })}
           </button>
         </div>

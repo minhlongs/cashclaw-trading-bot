@@ -1,8 +1,8 @@
 // GET /api/settings — list current settings
-// POST /api/settings — update settings (exchange creds, risk limits)
+// POST /api/settings — update settings (exchange creds, risk limits, killswitch)
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSettings, updateExchangeCredentials, updateRiskLimits } from '@/forest/settings/actions';
+import { getSettings, updateExchangeCredentials, updateRiskLimits, emergencyHalt, resumeFromHalt } from '@/forest/settings/actions';
 
 const ExchangeSchema = z.object({
   type: z.literal('exchange'),
@@ -14,11 +14,19 @@ const ExchangeSchema = z.object({
 
 const RiskSchema = z.object({
   type: z.literal('risk'),
-  maxDrawdownPct: z.number().min(0).max(100).optional(),
-  dailyLossLimitPct: z.number().min(0).max(100).optional(),
+  maxDrawdownPct: z.number().min(1).max(100).optional(),
+  dailyLossLimitPct: z.number().min(1).max(100).optional(),
+  cooldownMinutes: z.number().min(1).max(1440).optional(),
+  maxOpenOrders: z.number().min(1).max(500).optional(),
 });
 
-const SettingsSchema = z.discriminatedUnion('type', [ExchangeSchema, RiskSchema]);
+const KillswitchSchema = z.object({
+  type: z.literal('killswitch'),
+  action: z.enum(['halt', 'resume']),
+  reason: z.string().optional().default('Manual halt from settings'),
+});
+
+const SettingsSchema = z.discriminatedUnion('type', [ExchangeSchema, RiskSchema, KillswitchSchema]);
 
 export async function GET() {
   try {
@@ -43,14 +51,26 @@ export async function POST(req: Request) {
       return NextResponse.json(result, result.ok ? undefined : { status: 400 });
     }
 
-    const { maxDrawdownPct, dailyLossLimitPct } = parsed.data;
-    const result = await updateRiskLimits({
-      maxDrawdownPct,
-      dailyLossLimitPct,
-      cooldownMinutes: undefined,
-      maxOpenOrders: undefined,
-    });
-    return NextResponse.json(result, result.ok ? undefined : { status: 400 });
+    if (parsed.data.type === 'risk') {
+      const { maxDrawdownPct, dailyLossLimitPct, cooldownMinutes, maxOpenOrders } = parsed.data;
+      const result = await updateRiskLimits({
+        maxDrawdownPct,
+        dailyLossLimitPct,
+        cooldownMinutes,
+        maxOpenOrders,
+      });
+      return NextResponse.json(result, result.ok ? undefined : { status: 400 });
+    }
+
+    if (parsed.data.type === 'killswitch') {
+      const { action, reason } = parsed.data;
+      const result = action === 'halt'
+        ? await emergencyHalt(reason)
+        : await resumeFromHalt();
+      return NextResponse.json(result, result.ok ? undefined : { status: 400 });
+    }
+
+    return NextResponse.json({ ok: false, error: 'Unknown settings type' }, { status: 400 });
   } catch {
     return NextResponse.json({ ok: false, error: 'Settings update failed' }, { status: 500 });
   }
