@@ -17,6 +17,7 @@ import {
   dailyStatsHandler,
 } from './forest/api/routes';
 
+import { authGuard } from './forest/api/auth-guard';
 import { getBotManager } from './tree/bot';
 import { BotScheduler } from './forest/bot/scheduler';
 
@@ -59,6 +60,8 @@ app.get('/api/version', (c) => {
     return c.json({ ok: true, data: { version: '0.0.0-dev', shortSha: '0000000' } }, 200);
   }
 });
+
+app.use('*', authGuard());
 
 // ── API routes ──────────────────────────────────────────────────
 app.get('/api/bots', async (c) => {
