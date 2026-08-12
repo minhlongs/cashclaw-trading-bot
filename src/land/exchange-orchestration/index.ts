@@ -1,8 +1,8 @@
 // Land layer — Exchange Orchestration
-// Wraps PaperExchange + CCXT adapters with killswitch + rate-limit guards.
-
-import type { Ticker, OrderBook, OrderRequest, OrderResult, Balance } from '@/tree/exchange/types';
-import { PaperExchange } from '@/tree/exchange';
+// Wraps PaperExchangeProvider (v1) + CCXT providers (v2).
+// Uses Killswitch + rate-limit guards + circuit breaker per provider.
+import type { ExchangeId, Ticker, OrderBook, OrderRequest, OrderResult, Balance } from '@/tree/exchange/types';
+import { PaperExchangeProvider } from '@/tree/exchange/provider';
 import { Killswitch } from '@/tree/bot/killswitch';
 
 export interface ExchangeOrchestratorDeps {
@@ -11,72 +11,131 @@ export interface ExchangeOrchestratorDeps {
 }
 
 export class ExchangeOrchestrator {
-  private adapters: Map<string, PaperExchange> = new Map();
+  private providers: Map<string, PaperExchangeProvider> = new Map();
   private killswitch: Killswitch;
+  private onError?: (err: Error, ctx: string) => void;
 
   constructor(deps: ExchangeOrchestratorDeps = {}) {
     this.killswitch = deps.killswitch ?? ({} as Killswitch);
+    this.onError = deps.onError;
   }
 
-  private getOrCreatePaper(exchange: string): PaperExchange {
-    let adapter = this.adapters.get(exchange);
-    if (!adapter) {
-      adapter = new PaperExchange([{ currency: 'USDT', total: 10000 }]);
-      this.adapters.set(exchange, adapter);
+  private reportError(err: Error, ctx: string): void {
+    try {
+      if (this.onError) this.onError(err, ctx);
+    } catch {
+      // never throw from error reporter
     }
-    return adapter;
+  }
+
+  /** Register a provider for an exchange id (e.g. 'binance:mainnet') */
+  registerProvider(exchangeId: string, provider: PaperExchangeProvider): void {
+    this.providers.set(exchangeId, provider);
+  }
+
+  /** Get already-registered provider */
+  getProvider(exchangeId: string): PaperExchangeProvider | undefined {
+    return this.providers.get(exchangeId);
+  }
+
+  /** Pick the healthiest provider for the exchange (null-op for v1 single-provider) */
+  selectHealthyProvider(exchangeId: string): PaperExchangeProvider | undefined {
+    const p = this.providers.get(exchangeId);
+    if (p && !p.isUnhealthy()) return p;
+    return undefined;
+  }
+
+  private getOrCreateProvider(exchange: string): PaperExchangeProvider {
+    let provider = this.providers.get(exchange);
+    if (!provider) {
+      provider = new PaperExchangeProvider({
+        type: 'paper',
+        exchangeId: exchange,
+        initialBalances: [{ currency: 'USDT', total: 10000 }],
+      });
+      this.providers.set(exchange, provider);
+    }
+    return provider;
   }
 
   async fetchTicker(
     exchange: string,
     symbol: string,
-  ): Promise<{ symbol: string; last: number; bid: number; ask: number; high24h: number; low24h: number; volume24h: number; timestamp: number }> {
-    const adapter = this.getOrCreatePaper(exchange);
-    const ticker = await adapter.fetchTicker(exchange as Parameters<typeof adapter.fetchTicker>[0], symbol);
-    return ticker;
+  ): Promise<Ticker> {
+    const provider = this.getOrCreateProvider(exchange);
+    try {
+      return await provider.fetchTicker(exchange as ExchangeId, symbol);
+    } catch (err) {
+      this.reportError(err instanceof Error ? err : new Error(String(err)), `fetchTicker/${symbol}`);
+      throw err;
+    }
   }
 
   async fetchOrderBook(exchange: string, symbol: string, depth = 20): Promise<OrderBook> {
-    const adapter = this.getOrCreatePaper(exchange);
-    return adapter.fetchOrderBook(exchange as Parameters<typeof adapter.fetchOrderBook>[0], symbol, depth);
+    const provider = this.getOrCreateProvider(exchange);
+    try {
+      return await provider.fetchOrderBook(exchange as ExchangeId, symbol, depth);
+    } catch (err) {
+      this.reportError(err instanceof Error ? err : new Error(String(err)), `fetchOrderBook/${symbol}`);
+      throw err;
+    }
   }
 
-  async placeOrder(
-    exchange: string,
-    request: OrderRequest,
-  ): Promise<OrderResult> {
+  async placeOrder(exchange: string, request: OrderRequest): Promise<OrderResult> {
     if (!this.killswitch.isTradingEnabled()) {
       throw new Error('Trading halted by killswitch');
     }
-    const adapter = this.getOrCreatePaper(exchange);
-    return adapter.placeOrder(exchange as Parameters<typeof adapter.placeOrder>[0], request);
+    const provider = this.getOrCreateProvider(exchange);
+    if (provider.isCircuitOpen()) {
+      const health = provider.getHealth();
+      throw new Error(`Trading paused for ${exchange} — provider score ${health.score}, failures ${health.failureCount}`);
+    }
+    try {
+      return await provider.placeOrder(exchange as ExchangeId, request);
+    } catch (err) {
+      this.reportError(err instanceof Error ? err : new Error(String(err)), `placeOrder/${request.symbol}`);
+      throw err;
+    }
   }
 
   async cancelOrder(exchange: string, orderId: string, symbol: string): Promise<boolean> {
-    const adapter = this.getOrCreatePaper(exchange);
-    return adapter.cancelOrder(orderId, symbol);
+    const provider = this.getOrCreateProvider(exchange);
+    try {
+      return await provider.cancelOrder(exchange as ExchangeId, orderId, symbol);
+    } catch (err) {
+      this.reportError(err instanceof Error ? err : new Error(String(err)), `cancelOrder/${orderId}`);
+      throw err;
+    }
   }
 
   async fetchOrder(exchange: string, orderId: string, symbol: string): Promise<OrderResult> {
-    const adapter = this.getOrCreatePaper(exchange);
-    return adapter.fetchOrder(orderId, symbol);
+    const provider = this.getOrCreateProvider(exchange);
+    try {
+      return await provider.fetchOrder(exchange as ExchangeId, orderId, symbol);
+    } catch (err) {
+      this.reportError(err instanceof Error ? err : new Error(String(err)), `fetchOrder/${orderId}`);
+      throw err;
+    }
   }
 
   async fetchBalances(exchange: string): Promise<Balance[]> {
-    const adapter = this.getOrCreatePaper(exchange);
-    return adapter.fetchBalances(exchange as Parameters<typeof adapter.fetchBalances>[0]);
+    const provider = this.getOrCreateProvider(exchange);
+    try {
+      return await provider.fetchBalances(exchange as ExchangeId);
+    } catch (err) {
+      this.reportError(err instanceof Error ? err : new Error(String(err)), `fetchBalances/${exchange}`);
+      throw err;
+    }
   }
 
   ping(exchange: string): Promise<boolean> {
-    const adapter = this.adapters.get(exchange);
-    return adapter ? adapter.ping() : Promise.resolve(true);
+    const provider = this.providers.get(exchange);
+    if (!provider) return Promise.resolve(true);
+    return Promise.resolve(!provider.isCircuitOpen());
   }
 
   destroy(): void {
-    for (const [, adapter] of this.adapters) {
-      // PaperExchange has no close method
-    }
-    this.adapters.clear();
+    this.providers.clear();
   }
 }
 

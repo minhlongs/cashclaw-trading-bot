@@ -4,6 +4,8 @@
 
 import { getBotManager } from '@/tree/bot';
 import { Killswitch } from '@/tree/bot/killswitch';
+import { getExchangeOrchestrator } from '@/land/exchange-orchestration';
+import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import { createServerClient } from '@/lib/db/client';
 import { TelemetryWriter } from '@/tree/telemetry/writer';
 import type { BotInstance } from '@/tree/bot/bot-instance';
@@ -11,6 +13,8 @@ import type { BotInstance } from '@/tree/bot/bot-instance';
 export interface SchedulerDeps {
   getNow?: () => number; // override for testing
   onEvalError?: (botId: string, error: Error) => void;
+  /** Optional: return the ExchangeOrchestrator for circuit-open checks before tick */
+  getOrchestrator?: () => ExchangeOrchestrator;
 }
 
 export class BotScheduler {
@@ -37,7 +41,21 @@ export class BotScheduler {
     const runningBots = manager.getRunningBots();
 
     const errors: SchedulerError[] = [];
+    const orchestrator = this.deps.getOrchestrator?.();
+
     for (const bot of runningBots) {
+      // Circuit-open guard: skip bot if its exchange provider circuit is open.
+      // getProvider is public; if no provider registered yet, circuit can't be open.
+      if (orchestrator) {
+        const cfg = bot.getConfig() as { exchange: string };
+        const provider = orchestrator.getProvider(cfg.exchange);
+        if (provider?.isCircuitOpen()) {
+          const skipErr = new Error(`Circuit open for ${cfg.exchange} — skipping ${bot.id}`);
+          this.deps.onEvalError?.(bot.id, skipErr);
+          continue;
+        }
+      }
+
       try {
         await bot.tick();
         await this.persistBotState(bot);

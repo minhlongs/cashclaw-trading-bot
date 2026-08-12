@@ -34,7 +34,7 @@ export class PaperExchange {
   name: string = 'Paper Trading';
 
   private balances = new Map<string, { free: number; used: number }>();
-  private orders = new Map<string, PaperTrade>();
+  orders = new Map<string, PaperTrade>();
   private orderCounter = 0;
 
   constructor(initialBalances: { currency: string; total: number }[]) {
@@ -103,6 +103,12 @@ export class PaperExchange {
     return this.toOrderResult(trade);
   }
 
+  getOrders(): Map<string, PaperTrade> { return this.orders; }
+
+  getOrder(orderId: string): PaperTrade | undefined { return this.orders.get(orderId); }
+
+  toOrderResultPublic(trade: PaperTrade): OrderResult { return this.toOrderResult(trade); }
+
   async cancelOrder(orderId: string, _symbol: string): Promise<boolean> {
     const trade = this.orders.get(orderId);
     if (!trade || trade.status !== 'open') return false;
@@ -158,7 +164,7 @@ export class PaperExchange {
     return true;
   }
 
-  private toOrderResult(trade: PaperTrade): OrderResult {
+  toOrderResult(trade: PaperTrade): OrderResult {
     return {
       id: trade.orderId,
       exchangeId: trade.exchangeId,
