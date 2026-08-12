@@ -1,0 +1,295 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "bots": "Trading Bots",
+    "backtests": "Backtests",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "portfolioValue": "Portfolio Value",
+    "todayPnl": "Today's P&L",
+    "activeBots": "Active Bots",
+    "winRate": "Win Rate",
+    "totalTrades": "Total Trades",
+    "recentTrades": "Recent Trades",
+    "quickActions": "Quick Actions",
+    "newBot": "New Bot",
+    "pauseAll": "Pause All",
+    "noTrades": "No trades yet"
+  },
+  "bots": {
+    "title": "Trading Bots",
+    "listTitle": "Bot List",
+    "createNew": "Create New Bot",
+    "status": {
+      "draft": "Draft",
+      "paper_test": "Paper Test",
+      "live_running": "Live",
+      "paused": "Paused",
+      "error": "Error",
+      "stopped": "Stopped"
+    },
+    "columns": {
+      "name": "Name",
+      "pair": "Pair",
+      "strategy": "Strategy",
+      "status": "Status",
+      "pnl": "P&L",
+      "winRate": "Win Rate",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "strategy": {
+      "grid": "Grid",
+      "mean_reversion": "Mean Reversion"
+    }
+  },
+  "botWizard": {
+    "step1": "Select Strategy",
+    "step2": "Select Trading Pair",
+    "step3": "Configure Parameters",
+    "strategy": "Strategy",
+    "pair": "Trading Pair",
+    "exchange": "Exchange",
+    "capital": "Initial Capital (USDT)",
+    "gridSpacing": "Grid Spacing (%)",
+    "gridLevels": "Grid Levels",
+    "bbPeriod": "Bollinger Period",
+    "rsiThreshold": "RSI Threshold",
+    "maxDrawdown": "Max Drawdown (%)",
+    "create": "Create Bot",
+    "cancel": "Cancel"
+  },
+  "botDetail": {
+    "title": "Bot Details",
+    "performance": "Performance",
+    "totalPnl": "Total P&L",
+    "winRate": "Win Rate",
+    "maxDrawdown": "Max Drawdown",
+    "totalTrades": "Total Trades",
+    "gridLevels": "Price Levels",
+    "tradeHistory": "Trade History",
+    "configPanel": "Configuration",
+    "saveConfig": "Save Config",
+    "start": "Start",
+    "pause": "Pause",
+    "stop": "Stop",
+    "killSwitch": "Emergency Stop"
+  },
+  "settings": {
+    "title": "Settings",
+    "exchangeCredentials": "Exchange API Keys",
+    "exchange": "Exchange",
+    "apiKey": "API Key",
+    "apiSecret": "API Secret",
+    "isTestnet": "Testnet",
+    "capitalAllocation": "Capital Allocation (USDT)",
+    "riskLimits": "Risk Limits",
+    "maxDrawdown": "Max Drawdown (%)",
+    "maxPositionSize": "Max Position Size (USDT)",
+    "language": "Language",
+    "save": "Save",
+    "saveSuccess": "Saved successfully"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "save": "Save",
+    "usdt": "USDT",
+    "pair": "Pair",
+    "time": "Time",
+    "side": "Side",
+    "entryPrice": "Entry Price",
+    "exitPrice": "Exit Price",
+    "quantity": "Quantity",
+    "pnl": "P&L",
+    "fee": "Fee",
+    "status": "Status",
+    "buy": "Buy",
+    "sell": "Sell",
+    "profit": "Profit",
+    "loss": "Loss"
+  },
+  "landing": {
+    "nav": {
+      "logo": "CashClaw",
+      "cta": "Get Started"
+    },
+    "hero": {
+      "badge": "🤖 Automated Trading Bot",
+      "badgeSub": "for busy people",
+      "title": "Auto-profit",
+      "titleLine2": "without watching charts",
+      "subtitle": "CashClaw runs 24/7 on Binance, Bybit, OKX. Set your strategy, the bot books profits — results sent to Telegram.",
+      "cta": "Start Free",
+      "trust": "🔒 Safe · No lock-in · 7-day trial",
+      "link": "For developers ›"
+    },
+    "features": {
+      "title": "Why CashClaw?",
+      "items": [
+        {
+          "icon": "🤖",
+          "title": "Smart AI Bots",
+          "desc": "Auto-optimized strategies to maximize gains and reduce risk."
+        },
+        {
+          "icon": "📊",
+          "title": "Transparent Performance",
+          "desc": "Full trade history and bot performance at a glance."
+        },
+        {
+          "icon": "🔒",
+          "title": "Safety First",
+          "desc": "No contracts, cancel anytime. You're always in control."
+        },
+        {
+          "icon": "💼",
+          "title": "Flexible for Any Goal",
+          "desc": "Short, medium, or long-term investing fully customizable."
+        }
+      ]
+    },
+    "stats": {
+      "label": "Proven Performance",
+      "items": [
+        {
+          "value": "$500+",
+          "label": "Minimum capital"
+        },
+        {
+          "value": "2–10%",
+          "label": "Target monthly return"
+        },
+        {
+          "value": "24/7",
+          "label": "Runs non-stop"
+        },
+        {
+          "value": "100%",
+          "label": "Your money, your control"
+        }
+      ]
+    },
+    "steps": {
+      "title": "Start in 3 Steps",
+      "items": [
+        {
+          "n": "01",
+          "title": "Choose Strategy",
+          "desc": "Grid or Mean Reversion — pick what fits your goals."
+        },
+        {
+          "n": "02",
+          "title": "Fund Account",
+          "desc": "Deposit funds into your trading account."
+        },
+        {
+          "n": "03",
+          "title": "Get Results",
+          "desc": "Relax while the bot runs and sends reports to Telegram."
+        }
+      ]
+    },
+    "pricing": {
+      "title": "Pricing",
+      "plans": [
+        {
+          "name": "Starter",
+          "price": "$25",
+          "unit": "/day",
+          "features": [
+            "Capital: from $500",
+            "Grid",
+            "Email support"
+          ],
+          "cta": "Start"
+        },
+        {
+          "name": "Pro",
+          "price": "$49",
+          "unit": "/day",
+          "features": [
+            "Capital: from $1,000",
+            "Grid + Mean Rev",
+            "1-1 Telegram"
+          ],
+          "cta": "Start",
+          "popular": true
+        }
+      ]
+    },
+    "testimonial": {
+      "quote": "CashClaw saves me time and optimizes returns. No more watching charts 24/7.",
+      "author": "Nguyen Van A",
+      "role": "Crypto Investor"
+    },
+    "cta": {
+      "title": "Ready to trade automatically?",
+      "subtitle": "7-day free trial. No commitment.",
+      "button": "Sign Up Now"
+    },
+    "footer": {
+      "product": "CashClaw",
+      "copyright": "© 2026 CashClaw"
+    }
+  },
+  "cta": {
+    "nav": {
+      "logo": "CashClaw",
+      "back": "← Back"
+    },
+    "hero": {
+      "icon": "🚀",
+      "title": "Get Started Now",
+      "subtitle": "Create your first bot in minutes. We'll guide you step-by-step.",
+      "note": "Powered by Cloudflare — safe, fast, worldwide."
+    },
+    "whatNext": {
+      "title": "What happens next?",
+      "items": [
+        {
+          "icon": "📋",
+          "title": "Pick a Strategy",
+          "desc": "Grid or Mean Reversion — choose what fits your goals."
+        },
+        {
+          "icon": "🔌",
+          "title": "Connect Exchange",
+          "desc": "Enter Binance/Bybit/OKX API key — encrypted, safe storage."
+        },
+        {
+          "icon": "▶️",
+          "title": "Run Paper Trading",
+          "desc": "7-day free trial with simulated funds — see results before going live."
+        },
+        {
+          "icon": "📈",
+          "title": "Earn Profit",
+          "desc": "Bot runs 24/7, you get daily reports via Telegram."
+        }
+      ]
+    },
+    "guarantee": {
+      "icon": "🛡️",
+      "title": "Our Commitment",
+      "items": [
+        "No lock-in contract — cancel anytime",
+        "Your API key is encrypted — we cannot withdraw funds",
+        "7-day free trial with paper trading first",
+        "1-1 Telegram support for Pro plan"
+      ]
+    },
+    "cta": {
+      "button": "Sign Up & Create First Bot",
+      "note": "No credit card required to start."
+    }
+  }
+}

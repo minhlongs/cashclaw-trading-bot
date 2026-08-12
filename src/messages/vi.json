@@ -1,0 +1,295 @@
+{
+  "nav": {
+    "dashboard": "Bảng điều khiển",
+    "bots": "Bot giao dịch",
+    "backtests": "Backtest",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất"
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển",
+    "portfolioValue": "Tổng tài sản",
+    "todayPnl": "Lãi/Lỗ hôm nay",
+    "activeBots": "Bot hoạt động",
+    "winRate": "Tỷ lệ thắng",
+    "totalTrades": "Tổng giao dịch",
+    "recentTrades": "Giao dịch gần đây",
+    "quickActions": "Thao tác nhanh",
+    "newBot": "Tạo bot mới",
+    "pauseAll": "Tạm dừng tất cả",
+    "noTrades": "Chưa có giao dịch nào"
+  },
+  "bots": {
+    "title": "Bot giao dịch",
+    "listTitle": "Danh sách bot",
+    "createNew": "Tạo bot mới",
+    "status": {
+      "draft": "Nháp",
+      "paper_test": "Test giấy",
+      "live_running": "Đang chạy",
+      "paused": "Tạm dừng",
+      "error": "Lỗi",
+      "stopped": "Đã dừng"
+    },
+    "columns": {
+      "name": "Tên",
+      "pair": "Cặp",
+      "strategy": "Chiến lược",
+      "status": "Trạng thái",
+      "pnl": "Lãi/Lỗ",
+      "winRate": "Thắng",
+      "createdAt": "Ngày tạo",
+      "actions": "Thao tác"
+    },
+    "strategy": {
+      "grid": "Grid",
+      "mean_reversion": "Mean Reversion"
+    }
+  },
+  "botWizard": {
+    "step1": "Chọn chiến lược",
+    "step2": "Chọn cặp giao dịch",
+    "step3": "Cấu hình tham số",
+    "strategy": "Chiến lược",
+    "pair": "Cặp giao dịch",
+    "exchange": "Sàn",
+    "capital": "Vốn khởi tạo (USDT)",
+    "gridSpacing": "Khoảng cách grid (%)",
+    "gridLevels": "Số tầng grid",
+    "bbPeriod": "Chu kỳ Bollinger",
+    "rsiThreshold": "Ngưỡng RSI",
+    "maxDrawdown": "Max Drawdown (%)",
+    "create": "Tạo bot",
+    "cancel": "Hủy"
+  },
+  "botDetail": {
+    "title": "Chi tiết bot",
+    "performance": "Hiệu suất",
+    "totalPnl": "Tổng Lãi/Lỗ",
+    "winRate": "Tỷ lệ thắng",
+    "maxDrawdown": "Max Drawdown",
+    "totalTrades": "Tổng giao dịch",
+    "gridLevels": "Các mức giá",
+    "tradeHistory": "Lịch sử giao dịch",
+    "configPanel": "Cấu hình",
+    "saveConfig": "Lưu cấu hình",
+    "start": "Chạy",
+    "pause": "Tạm dừng",
+    "stop": "Dừng",
+    "killSwitch": "Dừng khẩn cấp"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "exchangeCredentials": "API Keys sàn giao dịch",
+    "exchange": "Sàn",
+    "apiKey": "API Key",
+    "apiSecret": "API Secret",
+    "isTestnet": "Testnet",
+    "capitalAllocation": "Phân bổ vốn (USDT)",
+    "riskLimits": "Giới hạn rủi ro",
+    "maxDrawdown": "Max Drawdown (%)",
+    "maxPositionSize": "Kích thước vị thế tối đa (USDT)",
+    "language": "Ngôn ngữ",
+    "save": "Lưu",
+    "saveSuccess": "Đã lưu thành công"
+  },
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "retry": "Thử lại",
+    "confirm": "Xác nhận",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "save": "Lưu",
+    "usdt": "USDT",
+    "pair": "Cặp",
+    "time": "Thời gian",
+    "side": "Loại",
+    "entryPrice": "Giá vào",
+    "exitPrice": "Giá ra",
+    "quantity": "Số lượng",
+    "pnl": "Lãi/Lỗ",
+    "fee": "Phí",
+    "status": "Trạng thái",
+    "buy": "Mua",
+    "sell": "Bán",
+    "profit": "Lãi",
+    "loss": "Lỗ"
+  },
+  "landing": {
+    "nav": {
+      "logo": "CashClaw",
+      "cta": "Bắt đầu ngay"
+    },
+    "hero": {
+      "badge": "🤖 Bot giao dịch tự động",
+      "badgeSub": "cho người bận rộn",
+      "title": "Chốt lãi tự động",
+      "titleLine2": "không cần canh sàn",
+      "subtitle": "CashClaw chạy 24/7 trên Binance, Bybit, OKX. Bạn đặt chiến lược, bot chốt lãi — kết quả gửi về Telegram.",
+      "cta": "Bắt đầu miễn phí",
+      "trust": "🔒 An toàn · Không khoá hợp đồng · Thử nghiệm 7 ngày",
+      "link": "Cho nhà phát triển ›"
+    },
+    "features": {
+      "title": "Tại sao chọn CashClaw?",
+      "items": [
+        {
+          "icon": "🤖",
+          "title": "Bot AI thông minh",
+          "desc": "Chiến lược tự động tối ưu chốt lãi, giảm rủi ro nhờ thuật toán nâng cao."
+        },
+        {
+          "icon": "📊",
+          "title": "Hiệu quả minh bạch",
+          "desc": "Theo dõi toàn bộ lịch sử giao dịch, tối ưu hiệu suất bot."
+        },
+        {
+          "icon": "🔒",
+          "title": "An toàn là ưu tiên",
+          "desc": "Không khoá hợp đồng, hủy bất cứ lúc nào. Bạn hoàn toàn làm chủ."
+        },
+        {
+          "icon": "💼",
+          "title": "Linh hoạt mọi mục tiêu",
+          "desc": "Phù hợp đầu tư ngắn, trung và dài hạn. Tùy chỉnh theo chiến lược của bạn."
+        }
+      ]
+    },
+    "stats": {
+      "label": "Hiệu quả đã được chứng minh",
+      "items": [
+        {
+          "value": "$500+",
+          "label": "Vốn tối thiểu"
+        },
+        {
+          "value": "2–10%",
+          "label": "Lợi nhuận mục tiêu/tháng"
+        },
+        {
+          "value": "24/7",
+          "label": "Chạy tự động không ngừng"
+        },
+        {
+          "value": "100%",
+          "label": "Bạn làm chủ tiền của mình"
+        }
+      ]
+    },
+    "steps": {
+      "title": "Bắt đầu chỉ 3 bước",
+      "items": [
+        {
+          "n": "01",
+          "title": "Chọn chiến lược",
+          "desc": "Grid hoặc Mean Reversion — phù hợp với mục tiêu của bạn."
+        },
+        {
+          "n": "02",
+          "title": "Nạp tiền",
+          "desc": "Nạp tiền vào tài khoản giao dịch của bạn."
+        },
+        {
+          "n": "03",
+          "title": "Nhận kết quả",
+          "desc": "Ngồi lại và theo dõi bot tự động chạy, gửi báo cáo qua Telegram."
+        }
+      ]
+    },
+    "pricing": {
+      "title": "Gói dịch vụ",
+      "plans": [
+        {
+          "name": "Starter",
+          "price": "99K",
+          "unit": "/ngày",
+          "features": [
+            "Vốn: từ $500",
+            "Grid",
+            "Hỗ trợ Email"
+          ],
+          "cta": "Bắt đầu"
+        },
+        {
+          "name": "Pro",
+          "price": "199K",
+          "unit": "/ngày",
+          "features": [
+            "Vốn: từ $1,000",
+            "Grid + Mean Rev",
+            "Telegram 1-1"
+          ],
+          "cta": "Bắt đầu",
+          "popular": true
+        }
+      ]
+    },
+    "testimonial": {
+      "quote": "CashClaw tiết kiệm thời gian và tối ưu lợi nhuận. Tôi không còn phải canh sàn 24/7.",
+      "author": "Nguyễn Văn A",
+      "role": "Nhà đầu tư"
+    },
+    "cta": {
+      "title": "Sẵn sàng giao dịch tự động?",
+      "subtitle": "Thử nghiệm 7 ngày miễn phí. Không ràng buộc.",
+      "button": "Đăng ký ngay"
+    },
+    "footer": {
+      "product": "CashClaw",
+      "copyright": "© 2026 CashClaw"
+    }
+  },
+  "cta": {
+    "nav": {
+      "logo": "CashClaw",
+      "back": "← Quay lại"
+    },
+    "hero": {
+      "icon": "🚀",
+      "title": "Bắt đầu ngay",
+      "subtitle": "Tạo bot đầu tiên trong vài phút. Chúng tôi hướng dẫn từng bước.",
+      "note": "Nền tảng vận hành trên Cloudflare — an toàn, nhanh, toàn cầu."
+    },
+    "whatNext": {
+      "title": "Điều gì xảy ra tiếp theo?",
+      "items": [
+        {
+          "icon": "📋",
+          "title": "Chọn chiến lược",
+          "desc": "Grid hoặc Mean Reversion — bạn chọn phù hợp mục tiêu."
+        },
+        {
+          "icon": "🔌",
+          "title": "Kết nối sàn",
+          "desc": "Nhập API key Binance/Bybit/OKX — được mã hoá, lưu an toàn."
+        },
+        {
+          "icon": "▶️",
+          "title": "Chạy paper trading",
+          "desc": "Thử nghiệm 7 ngày không tốn tiền thật — xem kết quả trước khi live."
+        },
+        {
+          "icon": "📈",
+          "title": "Thu lãi",
+          "desc": "Bot chạy tự động, bạn nhận báo cáo qua Telegram mỗi ngày."
+        }
+      ]
+    },
+    "guarantee": {
+      "icon": "🛡️",
+      "title": "Cam kết của chúng tôi",
+      "items": [
+        "Không khoá hợp đồng — hủy bất cứ lúc nào",
+        "API key của bạn được mã hoá, chúng tôi không thể rút tiền",
+        "Thử nghiệm 7 ngày miễn phí, dùng paper trading trước",
+        "Hỗ trợ Telegram 1-1 cho gói Pro"
+      ]
+    },
+    "cta": {
+      "button": "Đăng ký & tạo bot đầu tiên",
+      "note": "Không cần thẻ tín dụng để bắt đầu."
+    }
+  }
+}

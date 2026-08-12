@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bot Detail — Trade Bot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f1117;
+      color: #e8eaed;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .label-vn { font-size: 13px; color: #e8eaed; }
+    .label-en { font-size: 12px; color: #8b8fa3; display: block; }
+    .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+    .text-green { color: #00d4aa; }
+    .text-red { color: #ff4757; }
+    .text-amber { color: #f0b90b; }
+    .text-blue { color: #4dabf7; }
+    .text-sm { font-size: 12px; }
+
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px; background: #1a1d27; border-right: 1px solid #2a2d3a;
+      padding: 24px 16px; flex-shrink: 0;
+    }
+    .sidebar-logo { font-size: 18px; font-weight: 700; color: #00d4aa; margin-bottom: 32px; }
+    .bot-breadcrumb { font-size: 12px; color: #5a5f72; margin-bottom: 8px; padding-left: 12px; }
+    .bot-breadcrumb a { color: #4dabf7; text-decoration: none; }
+    .bot-breadcrumb a:hover { text-decoration: underline; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 6px;
+      color: #8b8fa3; cursor: pointer; margin-bottom: 4px;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: #252836; color: #e8eaed; }
+    .nav-item.active { background: #252836; color: #00d4aa; }
+
+    .main { flex: 1; padding: 24px; overflow-x: hidden; }
+
+    .bot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .bot-title-group { display: flex; align-items: center; gap: 14px; }
+    .bot-title-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700;
+    }
+    .bot-title-icon.grid { background: rgba(167,139,250,0.2); color: #a78bfa; }
+    .bot-title { font-size: 22px; font-weight: 700; }
+    .bot-subtitle { font-size: 13px; color: #8b8fa3; margin-top: 2px; }
+
+    .btn {
+      height: 36px; padding: 0 16px; border-radius: 8px; border: none;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+    }
+    .btn-primary { background: #4dabf7; color: #0f1117; }
+    .btn-green { background: #00d4aa; color: #0f1117; }
+    .btn-amber { background: #f0b90b; color: #0f1117; }
+    .btn-red { background: #ff4757; color: #fff; }
+    .btn-ghost {
+      background: transparent; color: #8b8fa3; border: 1px solid #2a2d3a;
+    }
+    .btn-ghost:hover { background: #252836; color: #e8eaed; }
+
+    /* Performance metrics row */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .metric-label { font-size: 11px; color: #5a5f72; text-transform: uppercase; letter-spacing: 0.04em; }
+    .metric-value { font-size: 16px; font-family: 'SF Mono', monospace; font-weight: 600; margin-top: 4px; }
+
+    /* Chart area */
+    .chart-container {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .chart-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid #2a2d3a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chart-title { font-size: 14px; font-weight: 600; }
+    .timeframe-pills { display: flex; gap: 4px; }
+    .tf-pill {
+      padding: 4px 10px; border-radius: 4px; font-size: 11px;
+      color: #8b8fa3; cursor: pointer; border: none; background: transparent;
+      font-family: 'SF Mono', monospace;
+    }
+    .tf-pill:hover { color: #e8eaed; background: #252836; }
+    .tf-pill.active { background: #252836; color: #e8eaed; font-weight: 600; }
+
+    .chart-area {
+      padding: 20px;
+      height: 320px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Fake candlestick chart */
+    .chart-svg { width: 100%; height: 100%; }
+
+    /* Grid / BB legend */
+    .chart-legend {
+      display: flex;
+      gap: 16px;
+      padding: 10px 20px;
+      border-top: 1px solid #2a2d3a;
+      font-size: 11px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; color: #8b8fa3; }
+    .legend-line { width: 16px; height: 2px; border-radius: 1px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* Two-col below chart */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 16px;
+    }
+
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid #2a2d3a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title { font-size: 14px; font-weight: 600; }
+    .card-body { padding: 0; }
+    .card-body-pad { padding: 16px 20px; }
+
+    /* Grid levels visualization */
+    .grid-viz {
+      padding: 16px 20px;
+    }
+    .grid-level {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      gap: 10px;
+    }
+    .grid-line {
+      flex: 1;
+      height: 20px;
+      border-top: 1px dashed;
+      display: flex;
+      align-items: center;
+    }
+    .grid-line .label { font-size: 11px; font-family: 'SF Mono', monospace; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #161822; padding: 8px 14px; text-align: left;
+      font-size: 10px; font-weight: 600; color: #5a5f72;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid #2a2d3a;
+    }
+    thead th.right { text-align: right; }
+    tbody td {
+      padding: 10px 14px; border-bottom: 1px solid #1e2130;
+      font-size: 13px; vertical-align: middle;
+    }
+    tbody td.right { text-align: right; }
+    tbody tr:hover { background: #252836; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* Badges */
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .badge-green { background: rgba(0,212,170,0.12); color: #00d4aa; }
+    .badge-amber { background: rgba(240,185,11,0.12); color: #f0b90b; }
+    .badge-red { background: rgba(255,71,87,0.12); color: #ff4757; }
+    .badge-blue { background: rgba(77,171,247,0.12); color: #4dabf7; }
+    .badge-gray { background: rgba(90,95,114,0.15); color: #8b8fa3; }
+
+    /* Config panel */
+    .config-section {
+      padding: 14px 20px;
+      border-bottom: 1px solid #1e2130;
+    }
+    .config-section:last-child { border-bottom: none; }
+    .config-section-title {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+      color: #5a5f72; font-weight: 600; margin-bottom: 10px;
+    }
+    .config-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+    .config-key { color: #8b8fa3; }
+    .config-val { font-family: 'SF Mono', monospace; font-weight: 500; }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .btn-lg { height: 40px; padding: 0 24px; font-size: 14px; }
+
+    @media (max-width: 1200px) {
+      .metrics-row { grid-template-columns: repeat(3, 1fr); }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 16px; }
+      .metrics-row { grid-template-columns: repeat(2, 1fr); }
+      .bot-header { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">TradeBot</div>
+    <nav>
+      <div class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <div><span class="label-vn">Tổng quan</span><span class="label-en">Dashboard</span></div>
+      </div>
+      <div class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <div><span class="label-vn">Bot của tôi</span><span class="label-en">My Bots</span></div>
+      </div>
+      <div class="nav-item active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <div><span class="label-vn">Cài đặt</span><span class="label-en">Settings</span></div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="bot-breadcrumb">
+      <a href="#">Quản lý bot / Bot Management</a> › BTC/USDT Grid
+    </div>
+
+    <!-- Bot header -->
+    <div class="bot-header">
+      <div class="bot-title-group">
+        <div class="bot-title-icon grid">G</div>
+        <div>
+          <h1 class="bot-title">BTC/USDT Grid</h1>
+          <div class="bot-subtitle">
+            <span class="badge badge-green" style="margin-right:8px;">Đang chạy / Running</span>
+            Grid Strategy · Binance Testnet · UID 8a3f2c
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap: 10px;">
+        <button class="btn btn-ghost"><span class="label-vn">Chia sẻ</span><span class="label-en" style="font-size:12px;">Share</span></button>
+        <button class="btn btn-amber"><span class="label-vn">Tạm dừng</span><span class="label-en">Pause</span></button>
+        <button class="btn btn-red"><span class="label-vn">Dừng bot</span><span class="label-en">Stop Bot</span></button>
+      </div>
+    </div>
+
+    <!-- Performance metrics -->
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Tổng Lãi lỗ / Total P&L</div>
+        <div class="metric-value text-green">+$842.30</div>
+        <div class="text-sm text-green">+3.52%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Tỷ lệ thắng / Win Rate</div>
+        <div class="metric-value text-green">72.4%</div>
+        <div class="text-sm" style="color:#8b8fa3;">147 gd / trades</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Max Drawdown</div>
+        <div class="metric-value text-amber">5.8%</div>
+        <div class="text-sm" style="color:#8b8fa3;">Giới hạn / Limit: 15%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Hôm nay / Today</div>
+        <div class="metric-value text-green">+$23.40</div>
+        <div class="text-sm text-green">+1.17%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Vốn / Capital</div>
+        <div class="metric-value">$2,000</div>
+        <div class="text-sm" style="color:#8b8fa3;">Đang giao dịch / In use</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Thời gian chạy / Uptime</div>
+        <div class="metric-value">14d 6h</div>
+        <div class="text-sm" style="color:#00d4aa;">99.7% stable</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title">BTC/USDT — Tỷ giá & Các mức lưới / Price & Grid Levels</div>
+        <div class="timeframe-pills">
+          <button class="tf-pill">1H</button>
+          <button class="tf-pill active">4H</button>
+          <button class="tf-pill">1D</button>
+          <button class="tf-pill">1W</button>
+          <button class="tf-pill">All</button>
+        </div>
+      </div>
+      <div class="chart-area">
+        <!-- Simplified SVG candlestick representation -->
+        <svg class="chart-svg" viewBox="0 0 800 260" preserveAspectRatio="xMidYMid meet">
+          <!-- Grid lines -->
+          <line x1="0" y1="40" x2="800" y2="40" stroke="#2a2d3a" stroke-dasharray="4 4"/>
+          <line x1="0" y1="80" x2="800" y2="80" stroke="#2a2d3a" stroke-dasharray="4 4"/>
+          <line x1="0" y1="120" x2="800" y2="120" stroke="#2a2d3a" stroke-dasharray="4 4"/>
+          <line x1="0" y1="160" x2="800" y2="160" stroke="#2a2d3a" stroke-dasharray="4 4"/>
+          <line x1="0" y1="200" x2="800" y2="200" stroke="#2a2d3a" stroke-dasharray="4 4"/>
+
+          <!-- Price axis labels -->
+          <text x="760" y="44" fill="#5a5f72" font-size="10" font-family="mono" text-anchor="end">67,600</text>
+          <text x="760" y="84" fill="#5a5f72" font-size="10" font-family="mono" text-anchor="end">67,300</text>
+          <text x="760" y="124" fill="#5a5f72" font-size="10" font-family="mono" text-anchor="end">67,000</text>
+          <text x="760" y="164" fill="#5a5f72" font-size="10" font-family="mono" text-anchor="end">66,700</text>
+          <text x="760" y="204" fill="#5a5f72" font-size="10" font-family="mono" text-anchor="end">66,400</text>
+
+          <!-- Candlesticks -->
+          <g opacity="0.9">
+            <!-- Green candle -->
+            <rect x="20" y="70" width="10" height="40" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <line x1="25" y1="60" x2="25" y2="115" stroke="#00d4aa" stroke-width="1.5"/>
+            <rect x="34" y="80" width="10" height="20" rx="1" fill="#ff4757" opacity="0.7"/>
+            <line x1="39" y1="72" x2="39" y2="105" stroke="#ff4757" stroke-width="1.5"/>
+
+            <!-- More candles... (simplified) -->
+            <rect x="60" y="75" width="10" height="35" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <line x1="65" y1="68" x2="65" y2="115" stroke="#00d4aa" stroke-width="1.5"/>
+            <rect x="74" y="78" width="10" height="30" rx="1" fill="#ff4757" opacity="0.7"/>
+            <line x1="79" y1="70" x2="79" y2="112" stroke="#ff4757" stroke-width="1.5"/>
+
+            <rect x="100" y="70" width="10" height="40" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <line x1="105" y1="62" x2="105" y2="115" stroke="#00d4aa" stroke-width="1.5"/>
+            <rect x="114" y="65" width="10" height="50" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <line x1="119" y1="55" x2="119" y2="120" stroke="#00d4aa" stroke-width="1.5"/>
+
+            <rect x="140" y="72" width="10" height="38" rx="1" fill="#ff4757" opacity="0.7"/>
+            <line x1="145" y1="65" x2="145" y2="115" stroke="#ff4757" stroke-width="1.5"/>
+            <rect x="154" y="75" width="10" height="38" rx="1" fill="#ff4757" opacity="0.7"/>
+            <line x1="159" y1="68" x2="159" y2="118" stroke="#ff4757" stroke-width="1.5"/>
+
+            <rect x="180" y="68" width="10" height="42" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <line x1="185" y1="60" x2="185" y2="115" stroke="#00d4aa" stroke-width="1.5"/>
+            <rect x="194" y="70" width="10" height="40" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <line x1="199" y1="62" x2="199" y2="115" stroke="#00d4aa" stroke-width="1.5"/>
+
+            <!-- Current price area -->
+            <rect x="240" y="75" width="10" height="35" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <line x1="245" y1="70" x2="245" y2="115" stroke="#00d4aa" stroke-width="1.5"/>
+            <rect x="254" y="72" width="10" height="38" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <line x1="259" y1="65" x2="259" y2="115" stroke="#00d4aa" stroke-width="1.5"/>
+            <rect x="268" y="78" width="10" height="25" rx="1" fill="#ff4757" opacity="0.7"/>
+            <line x1="273" y1="72" x2="273" y2="108" stroke="#ff4757" stroke-width="1.5"/>
+
+            <rect x="300" y="73" width="10" height="38" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <line x1="305" y1="66" x2="305" y2="116" stroke="#00d4aa" stroke-width="1.5"/>
+            <rect x="314" y="76" width="10" height="36" rx="1" fill="#ff4757" opacity="0.7"/>
+            <line x1="319" y1="68" x2="319" y2="117" stroke="#ff4757" stroke-width="1.5"/>
+
+            <!-- Spread of candles towards right -->
+            <rect x="400" y="74" width="10" height="32" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <rect x="430" y="71" width="10" height="36" rx="1" fill="#ff4757" opacity="0.7"/>
+            <rect x="460" y="75" width="10" height="30" rx="1" fill="#ff4757" opacity="0.7"/>
+            <rect x="490" y="72" width="10" height="36" rx="1" fill="#00d4aa" opacity="0.7"/>
+            <rect x="520" y="73" width="10" height="30" rx="1" fill="#ff4757" opacity="0.7"/>
+          </g>
+
+          <!-- Grid level lines (horizontal) -->
+          <line x1="0" y1="55" x2="800" y2="55" stroke="#a78bfa" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+          <line x1="0" y1="95" x2="800" y2="95" stroke="#a78bfa" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+          <line x1="0" y1="135" x2="800" y2="135" stroke="#4dabf7" stroke-width="1.5" opacity="0.7"/>
+          <text x="5" y="133" fill="#4dabf7" font-size="9" font-family="mono">▼ Current price $67,245</text>
+          <line x1="0" y1="175" x2="800" y2="175" stroke="#a78bfa" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+          <line x1="0" y1="215" x2="800" y2="215" stroke="#a78bfa" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+
+          <!-- Entry marker -->
+          <circle cx="100" cy="70" r="4" fill="#4dabf7"/>
+          <text x="105" y="68" fill="#4dabf7" font-size="9" font-family="mono">ENTRY $67,198</text>
+
+          <!-- Exit markers (rings) -->
+          <circle cx="300" cy="80" r="4" fill="#00d4aa" opacity="0.5"/>
+          <text x="308" y="82" fill="#00d4aa" font-size="9" font-family="mono">+$5.62</text>
+        </svg>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line" style="background:#a78bfa;"></div> Mức lưới mua / Buy grid level</div>
+        <div class="legend-item"><div class="legend-line" style="background:#4dabf7;"></div> Giá hiện tại / Current price</div>
+        <div class="legend-item"><div class="legend-line" style="background:#f0b90b;"></div> Mức lưới bán / Sell grid level</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4dabf7;"></div> Vào lệnh / Entry</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00d4aa;"></div> Thoát lệnh / Exit</div>
+      </div>
+    </div>
+
+    <!-- Two column: Trade history + Config -->
+    <div class="detail-grid">
+      <!-- Trade history -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="label-vn">Lịch sử giao dịch</span><span class="label-en" style="font-size:12px;color:#8b8fa3;">Trade History</span></div>
+          <button class="btn btn-ghost btn-sm"><span class="label-vn">Xuất CSV</span><span class="label-en" style="font-size:11px;">Export</span></button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th><span class="label-vn">Thời gian</span><span class="label-en">Time</span></th>
+              <th><span class="label-vn">Loại</span><span class="label-en">Type</span></th>
+              <th class="right"><span class="label-vn">Giá</span><span class="label-en">Price</span></th>
+              <th class="right"><span class="label-vn">Số lượng</span><span class="label-en">Amount</span></th>
+              <th class="right"><span class="label-vn">Phí</span><span class="label-en">Fee</span></th>
+              <th class="right"><span class="label-vn">Lãi lỗ</span><span class="label-en">P&L</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono" style="color:#8b8fa3;">14:28:12</td>
+              <td><span class="badge badge-green">MUA</span></td>
+              <td class="mono right">$67,245.00</td>
+              <td class="mono right">0.015</td>
+              <td class="mono right">$0.067</td>
+              <td class="mono right text-green">+$5.62</td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:#8b8fa3;">14:15:43</td>
+              <td><span class="badge badge-green">MUA</span></td>
+              <td class="mono right">$67,198.00</td>
+              <td class="mono right">0.012</td>
+              <td class="mono right">$0.054</td>
+              <td class="mono right text-green">+$8.45</td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:#8b8fa3;">13:52:01</td>
+              <td><span class="badge badge-red">BÁN</span></td>
+              <td class="mono right">$67,312.50</td>
+              <td class="mono right">0.018</td>
+              <td class="mono right">$0.078</td>
+              <td class="mono right text-green">+$12.30</td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:#8b8fa3;">13:30:22</td>
+              <td><span class="badge badge-green">MUA</span></td>
+              <td class="mono right">$67,100.00</td>
+              <td class="mono right">0.020</td>
+              <td class="mono right">$0.089</td>
+              <td class="mono right text-green">+$3.18</td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:#8b8fa3;">12:45:18</td>
+              <td><span class="badge badge-red">BÁN</span></td>
+              <td class="mono right">$67,380.00</td>
+              <td class="mono right">0.015</td>
+              <td class="mono right">$0.065</td>
+              <td class="mono right text-red">-$1.80</td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:#8b8fa3;">12:10:05</td>
+              <td><span class="badge badge-green">MUA</span></td>
+              <td class="mono right">$67,050.00</td>
+              <td class="mono right">0.015</td>
+              <td class="mono right">$0.062</td>
+              <td class="mono right text-green">+$4.90</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Config panel -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="label-vn">Cấu hình Bot</span><span class="label-en" style="font-size:12px;color:#8b8fa3;">Bot Configuration</span></div>
+          <button class="btn btn-ghost btn-sm"><span class="label-vn" style="font-size:11px;">Chỉnh sửa</span><span class="label-en" style="font-size:10px;">Edit</span></button>
+        </div>
+        <div class="card-body">
+          <div class="config-section">
+            <div class="config-section-title"><span class="label-vn">Tham số cơ bản</span><span class="label-en">Basic Parameters</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Cặp giao dịch</span><span class="label-en">Pair</span></span><span class="config-val">BTC/USDT</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Chiến lược</span><span class="label-en">Strategy</span></span><span class="config-val">Grid Trading</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Sàn giao dịch</span><span class="label-en">Exchange</span></span><span class="config-val">Binance Testnet</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Chế độ</span><span class="label-en">Mode</span></span><span class="badge badge-blue">Paper Trading</span></div>
+          </div>
+          <div class="config-section">
+            <div class="config-section-title"><span class="label-vn">Tham số lưới</span><span class="label-en">Grid Parameters</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Khoảng cách lưới</span><span class="label-en">Grid Spacing</span></span><span class="config-val">1.0%</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Số mức lưới</span><span class="label-en">Grid Levels</span></span><span class="config-val">20 levels</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Mức mỗi lệnh</span><span class="label-en">Order Size</span></span><span class="config-val">$100 / lệnh / order</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Giới hạn lệnh</span><span class="label-en">Order Limit</span></span><span class="config-val">Max 10 open</span></div>
+          </div>
+          <div class="config-section">
+            <div class="config-section-title"><span class="label-vn">Quản lý rủi ro</span><span class="label-en">Risk Management</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Vốn giao dịch</span><span class="label-en">Trading Capital</span></span><span class="config-val">$2,000</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Max Drawdown</span><span class="config-key"><span class="label-vn">Tối đa sụt giảm</span></span><span class="config-val text-amber">15%</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Stop Loss</span><span class="config-key"><span class="label-vn">Cắt lỗ</span></span><span class="config-val">10%</span></div>
+            <div class="config-row"><span class="config-key"><span class="label-vn">Take Profit</span><span class="config-key"><span class="label-vn">Chốt lời</span></span><span class="config-val">Grid + 5%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

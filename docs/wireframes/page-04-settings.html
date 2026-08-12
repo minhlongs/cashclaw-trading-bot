@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — Trade Bot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f1117;
+      color: #e8eaed;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .label-vn { font-size: 13px; color: #e8eaed; }
+    .label-en { font-size: 12px; color: #8b8fa3; display: block; }
+    .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px; background: #1a1d27; border-right: 1px solid #2a2d3a;
+      padding: 24px 16px; flex-shrink: 0;
+    }
+    .sidebar-logo { font-size: 18px; font-weight: 700; color: #00d4aa; margin-bottom: 32px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 6px;
+      color: #8b8fa3; cursor: pointer; margin-bottom: 4px;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: #252836; color: #e8eaed; }
+    .nav-item.active { background: #252836; color: #f0b90b; }
+
+    .main { flex: 1; padding: 24px; max-width: 900px; }
+
+    .page-header { margin-bottom: 28px; }
+    .page-title { font-size: 24px; font-weight: 700; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #2a2d3a;
+      margin-bottom: 24px;
+      gap: 0;
+      overflow-x: auto;
+    }
+    .tab {
+      padding: 12px 20px;
+      font-size: 13px;
+      color: #8b8fa3;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .tab:hover { color: #e8eaed; }
+    .tab.active { color: #f0b90b; border-bottom-color: #f0b90b; }
+
+    /* Settings sections */
+    .settings-section {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #2a2d3a;
+    }
+    .section-title { font-size: 14px; font-weight: 600; }
+    .section-desc { font-size: 12px; color: #8b8fa3; margin-top: 2px; }
+    .section-body { padding: 20px; }
+    .section-body .form-group + .form-group { margin-top: 16px; }
+
+    /* Form */
+    .form-group { margin-bottom: 0; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-label {
+      font-size: 12px; font-weight: 500; color: #8b8fa3;
+      margin-bottom: 6px; display: block;
+    }
+    .form-control {
+      background: #0f1117; border: 1px solid #2a2d3a; border-radius: 6px;
+      padding: 0 12px; height: 36px; color: #e8eaed; font-size: 13px;
+      font-family: inherit; width: 100%;
+    }
+    .form-control.mono { font-family: 'SF Mono', monospace; }
+    .form-control:focus { outline: none; border-color: #4dabf7; }
+    .form-control.readonly {
+      color: #8b8fa3; border-style: dashed;
+    }
+
+    .form-hint {
+      font-size: 11px; color: #5a5f72; margin-top: 4px;
+    }
+    .form-error {
+      font-size: 11px; color: #ff4757; margin-top: 4px;
+    }
+
+    /* Key input with eye toggle */
+    .key-row {
+      display: flex; gap: 8px; align-items: stretch;
+    }
+    .key-row .form-control { flex: 1; }
+    .key-toggle {
+      width: 36px; background: #252836; border: 1px solid #2a2d3a;
+      border-radius: 6px; color: #8b8fa3; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .key-toggle:hover { color: #e8eaed; }
+
+    /* Connected exchange cards */
+    .exchange-list { display: flex; flex-direction: column; gap: 12px; }
+    .exchange-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: #0f1117;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+    }
+    .exchange-card.connected { border-left: 3px solid #00d4aa; }
+    .exchange-card.disconnected { border-left: 3px solid #5a5f72; }
+    .exchange-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+    .exchange-icon.binance { background: rgba(240,185,11,0.15); color: #f0b90b; }
+    .exchange-icon.bybit { background: rgba(0,212,170,0.15); color: #00d4aa; }
+    .exchange-icon.okx { background: rgba(77,171,247,0.15); color: #4dabf7; }
+    .exchange-info { flex: 1; }
+    .exchange-name { font-weight: 600; font-size: 13px; }
+    .exchange-status { font-size: 12px; margin-top: 1px; }
+    .exchange-actions { display: flex; gap: 8px; }
+
+    /* User row */
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid #1e2130;
+    }
+    .user-row:last-child { border-bottom: none; }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #252836; display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 13px; color: #8b8fa3;
+    }
+    .user-info { flex: 1; }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-email { font-size: 12px; color: #8b8fa3; }
+    .user-capital { text-align: right; }
+    .user-capital-value { font-family: 'SF Mono', monospace; font-size: 14px; font-weight: 600; }
+    .user-capital-label { font-size: 11px; color: #5a5f72; }
+
+    /* Slider */
+    .risk-slider {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: #2a2d3a;
+      border-radius: 2px;
+      outline: none;
+    }
+    .risk-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #f0b90b; cursor: pointer;
+    }
+    .risk-value {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 6px;
+    }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: flex; gap: 0; border-radius: 8px;
+      border: 1px solid #2a2d3a; overflow: hidden; width: fit-content;
+    }
+    .lang-option {
+      padding: 8px 20px; font-size: 13px; cursor: pointer;
+      background: transparent; color: #8b8fa3; border: none;
+      font-family: inherit;
+    }
+    .lang-option:hover { background: #252836; }
+    .lang-option.active { background: #f0b90b; color: #0f1117; font-weight: 600; }
+
+    /* Buttons */
+    .btn {
+      height: 36px; padding: 0 16px; border-radius: 8px; border: none;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+    }
+    .btn-primary { background: #4dabf7; color: #0f1117; }
+    .btn-danger { background: #ff4757; color: #fff; }
+    .btn-ghost {
+      background: transparent; color: #8b8fa3; border: 1px solid #2a2d3a;
+    }
+    .btn-ghost:hover { background: #252836; color: #e8eaed; }
+    .btn-sm { height: 28px; padding: 0 12px; font-size: 12px; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 16px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">TradeBot</div>
+    <nav>
+      <div class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <div><span class="label-vn">Tổng quan</span><span class="label-en">Dashboard</span></div>
+      </div>
+      <div class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <div><span class="label-vn">Bot của tôi</span><span class="label-en">My Bots</span></div>
+      </div>
+      <div class="nav-item active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <div><span class="label-vn">Cài đặt</span><span class="label-en">Settings</span></div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <h1 class="page-title"><span class="label-vn">Cài đặt</span><span class="label-en" style="font-size:16px;color:#8b8fa3;">Settings</span></h1>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active"><span class="label-vn">Sàn giao dịch</span><span class="label-en">Exchanges</span></button>
+      <button class="tab"><span class="label-vn">Nhóm & Vốn</span><span class="label-en">Team & Capital</span></button>
+      <button class="tab"><span class="label-vn">Giới hạn rủi ro</span><span class="label-en">Risk Limits</span></button>
+      <button class="tab"><span class="label-vn">Ngôn ngữ</span><span class="label-en">Language</span></button>
+      <button class="tab"><span class="label-vn">Thông báo</span><span class="label-en">Notifications</span></button>
+    </div>
+
+    <!-- ── Exchange Credentials ── -->
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="label-vn">API Sàn Giao Dịch (Testnet)</span>
+          <span class="label-en">Exchange API Credentials (Testnet)</span>
+        </div>
+        <div class="section-desc">
+          <span class="label-vn">Nhập khóa API từ sân giao dịch. Chỉ sử dụng Testnet cho giao dịch thử.</span>
+          <span class="label-en">Enter exchange API keys. Use Testnet only for paper trading.</span>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="exchange-list">
+
+          <!-- Binance -->
+          <div class="exchange-card connected">
+            <div class="exchange-icon binance">B</div>
+            <div class="exchange-info">
+              <div class="exchange-name">Binance Testnet</div>
+              <div class="exchange-status text-green"><span class="label-vn">Đã kết nối / Connected</span> · UID: Nguyễn Văn A</div>
+            </div>
+            <div class="exchange-actions">
+              <button class="btn btn-ghost btn-sm"><span class="label-vn" style="font-size:11px;">Kiểm tra</span><span class="label-en" style="font-size:10px;">Test</span></button>
+              <button class="btn btn-danger btn-sm"><span class="label-vn" style="font-size:11px;">Ngắt kết nối</span><span class="label-en" style="font-size:10px;">Disconnect</span></button>
+            </div>
+          </div>
+
+          <!-- Bybit -->
+          <div class="exchange-card connected">
+            <div class="exchange-icon bybit">Y</div>
+            <div class="exchange-info">
+              <div class="exchange-name">Bybit Testnet</div>
+              <div class="exchange-status text-green"><span class="label-vn">Đã kết nối / Connected</span> · UID: Trần Văn B</div>
+            </div>
+            <div class="exchange-actions">
+              <button class="btn btn-ghost btn-sm"><span class="label-vn" style="font-size:11px;">Kiểm tra</span><span class="label-en" style="font-size:10px;">Test</span></button>
+              <button class="btn btn-danger btn-sm"><span class="label-vn" style="font-size:11px;">Ngắt kết nối</span><span class="label-en" style="font-size:10px;">Disconnect</span></button>
+            </div>
+          </div>
+
+          <!-- OKX (not connected) -->
+          <div class="exchange-card disconnected">
+            <div class="exchange-icon okx">O</div>
+            <div class="exchange-info">
+              <div class="exchange-name">OKX Testnet</div>
+              <div class="exchange-status" style="color: #5a5f72;"><span class="label-vn">Chưa kết nối / Not connected</span></div>
+            </div>
+            <button class="btn btn-ghost btn-sm">+ <span class="label-vn" style="font-size:11px;">Kết nối</span><span class="label-en" style="font-size:10px;">Connect</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Team & Capital ── -->
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title"><span class="label-vn">Quản lý nhóm & Phân bổ vốn</span><span class="label-en" style="font-size:12px;color:#8b8fa3;">Team Management & Capital Allocation</span></div>
+        <div class="section-desc"><span class="label-vn">3 thành viên · Tổng vốn: $5,000</span><span class="label-en">3 members · Total capital: $5,000</span></div>
+      </div>
+      <div class="section-body">
+        <div class="user-row">
+          <div class="user-avatar">NA</div>
+          <div class="user-info">
+            <div class="user-name">Nguyễn Văn A</div>
+            <div class="user-email">nguyenvana@email.com</div>
+          </div>
+          <div class="user-capital">
+            <div class="user-capital-value text-green">$2,416 / $2,500</div>
+            <div class="user-capital-label"><span class="label-vn">Hiện tại / Giới hạn</span><span class="label-en">Current / Limit</span></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-left: 12px;"><span class="label-vn" style="font-size:11px;">Chỉnh sửa</span></button>
+        </div>
+        <div class="user-row">
+          <div class="user-avatar">TB</div>
+          <div class="user-info">
+            <div class="user-name">Trần Văn B</div>
+            <div class="user-email">tranvanb@email.com</div>
+          </div>
+          <div class="user-capital">
+            <div class="user-capital-value text-green">$1,208 / $1,250</div>
+            <div class="user-capital-label"><span class="label-vn">Hiện tại / Giới hạn</span><span class="label-en">Current / Limit</span></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-left: 12px;"><span class="label-vn" style="font-size:11px;">Chỉnh sửa</span></button>
+        </div>
+        <div class="user-row">
+          <div class="user-avatar">LC</div>
+          <div class="user-info">
+            <div class="user-name">Lê Văn C</div>
+            <div class="user-email">levanc@email.com</div>
+          </div>
+          <div class="user-capital">
+            <div class="user-capital-value text-amber">$1,083 / $1,000</div>
+            <div class="user-capital-label"><span class="label-vn">Vượt giới hạn / Over limit</span><span class="label-en">Over limit</span></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-left: 12px;"><span class="label-vn" style="font-size:11px;">Chỉnh sửa</span></button>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-top: 12px;">+ <span class="label-vn">Thêm thành viên</span><span class="label-en">Add Member</span></button>
+      </div>
+    </div>
+
+    <!-- ── Risk Limits ── -->
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title"><span class="label-vn">Giới hạn rủi ro toàn hệ thống</span><span class="label-en" style="font-size:12px;color:#8b8fa3;">System-Wide Risk Limits</span></div>
+        <div class="section-desc"><span class="label-vn">Áp dụng cho tất cả bot trong team</span><span class="label-en">Applies to all bots in the team</span></div>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label"><span class="label-vn">Max Drawdown (%)</span><span class="label-en">Max Drawdown (%)</span><span class="label-vn">Sụt giảm tối đa (%)</span></label>
+            <input class="form-control" type="number" value="15" max="100" min="1" />
+            <div class="form-hint"><span class="label-vn">Dừng bot nếu lỗ vượt ngưỡn này</span><span class="label-en">Stop bot if loss exceeds this threshold</span></div>
+            <div class="risk-value"><span style="color:#5a5f72;font-size:11px;">1%</span><span style="color:#8b8fa3;font-size:13px;font-family:'SF Mono',monospace;" class="mono">15%</span><span style="color:#5a5f72;font-size:11px;">100%</span></div>
+            <input type="range" class="risk-slider" min="1" max="100" value="15" />
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span class="label-vn">Kích thước vị thế tối đa (USDT)</span><span class="label-en">Max Position Size (USDT)</span></label>
+            <input class="form-control" type="number" value="500" />
+            <div class="form-hint"><span class="label-vn">Giới hạn mỗi lệnh mở</span><span class="label-en">Max per open order</span></div>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top: 14px;">
+          <div class="form-group">
+            <label class="form-label"><span class="label-vn">Số lệnh mở tối đa / bot</span><span class="label-en">Max Open Orders per Bot</span></label>
+            <input class="form-control" type="number" value="10" min="1" max="100" />
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span class="label-vn">Số bot chạy đồng thời tối đa</span><span class="label-en">Max Concurrent Running Bots</span></label>
+            <input class="form-control" type="number" value="5" min="1" max="20" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Language ── -->
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title"><span class="label-vn">Ngôn ngữ hiển thị</span><span class="label-en" style="font-size:12px;color:#8b8fa3;">Display Language</span></div>
+      </div>
+      <div class="section-body">
+        <div class="lang-toggle">
+          <button class="lang-option active">🇻🇳 Tiếng Việt</button>
+          <button class="lang-option">🇬🇧 English</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save -->
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button class="btn btn-ghost"><span class="label-vn">Hủy bỏ</span><span class="label-en">Discard</span></button>
+      <button class="btn btn-primary"><span class="label-vn">Lưu cài đặt</span><span class="label-en">Save Settings</span></button>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

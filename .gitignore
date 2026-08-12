@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.wrangler/
+.orchestrate/
+tsconfig.tsbuildinfo
+.dev.vars
+.env
+.env.*
+.DS_Store
+/tmp-*

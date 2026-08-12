@@ -1,0 +1,105 @@
+// Cloudflare Workers entry point — CashClaw Trading Bot Platform
+// Hono app serving API routes + CF Cron eval trigger.
+// Deployed via: wrangler deploy (main: src/worker.ts)
+
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { logger } from 'hono/logger';
+import { prettyJSON } from 'hono/pretty-json';
+
+import {
+  botListHandler,
+  botDetailHandler,
+  botControlHandler,
+  killswitchHaltHandler,
+  killswitchResumeHandler,
+  eventsHandler,
+  dailyStatsHandler,
+} from './forest/api/routes';
+
+import { getBotManager } from './tree/bot';
+import { BotScheduler } from './forest/bot/scheduler';
+
+type Env = {
+  DB: unknown; // D1Database — typed at deploy time via wrangler
+};
+
+const app = new Hono<{ Bindings: Env }>();
+
+app.use('*', logger());
+app.use('*', cors({ origin: '*', allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] }));
+app.use('*', prettyJSON());
+
+// Health check
+app.get('/api/health', (c) => {
+  const manager = getBotManager();
+  return c.json({
+    status: 'ok',
+    bots: manager.getAllBots().length,
+    running: manager.getRunningBots().length,
+    timestamp: Date.now(),
+  });
+});
+
+// ── API routes ──────────────────────────────────────────────────
+app.get('/api/bots', async (c) => {
+  const result = await botListHandler();
+  return c.json(result, result.ok ? 200 : 500);
+});
+
+app.get('/api/bots/:id', async (c) => {
+  const id = c.req.param('id');
+  const result = await botDetailHandler(id);
+  return c.json(result, result.ok ? 200 : 404);
+});
+
+app.post('/api/bots/:id/:action', async (c) => {
+  const id = c.req.param('id');
+  const action = c.req.param('action');
+  if (!['start', 'stop', 'pause', 'resume'].includes(action ?? '')) {
+    return c.json({ ok: false, error: 'Invalid action' }, 400);
+  }
+  const result = await botControlHandler(id, action as 'start' | 'stop' | 'pause' | 'resume');
+  return c.json(result, result.ok ? 200 : 500);
+});
+
+app.post('/api/killswitch/halt', async (c) => {
+  const body = await c.req.parseBody();
+  const reason = typeof body.reason === 'string' ? body.reason : '';
+  const result = await killswitchHaltHandler(reason);
+  return c.json(result, result.ok ? 200 : 400);
+});
+
+app.post('/api/killswitch/resume', async (c) => {
+  const result = await killswitchResumeHandler();
+  return c.json(result, result.ok ? 200 : 500);
+});
+
+app.get('/api/events', async (c) => {
+  const botId = c.req.query('botId') ?? undefined;
+  const limit = parseInt(c.req.query('limit') ?? '50', 10);
+  const result = await eventsHandler(botId, limit);
+  return c.json(result, result.ok ? 200 : 500);
+});
+
+app.get('/api/stats/daily', async (c) => {
+  const result = await dailyStatsHandler();
+  return c.json(result, result.ok ? 200 : 500);
+});
+
+// ── CF Cron: bot eval loop ──────────────────────────────────────
+app.post('/api/cron/eval', async (c) => {
+  const scheduler = new BotScheduler();
+  const report = await scheduler.tick();
+  return c.json(report);
+});
+
+// ── 404 ─────────────────────────────────────────────────────────
+app.notFound((c) => c.json({ error: 'Not found' }, 404));
+
+// ── Error handler ───────────────────────────────────────────────
+app.onError((err, c) => {
+  return c.json({ error: err.message ?? 'Internal error' }, 500);
+});
+
+export default app;

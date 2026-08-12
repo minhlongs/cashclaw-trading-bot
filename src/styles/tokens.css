@@ -1,0 +1,56 @@
+/* CashClaw Design Tokens — from design-guidelines.md */
+
+:root {
+  /* Backgrounds */
+  --bg-primary: #0B0E11;
+  --bg-surface: #141820;
+  --bg-elevated: #1A2030;
+  --bg-hover: #1E2838;
+
+  /* Semantic */
+  --color-profit: #00D4AA;
+  --color-loss: #FF4757;
+  --color-warning: #FFB020;
+  --color-ai: #A78BFA;
+  --color-accent: #00D4AA;
+
+  /* Borders */
+  --border-subtle: #1E2530;
+  --border-default: #2A3340;
+  --border-focus: #00D4AA;
+
+  /* Text */
+  --text-primary: #E8EAED;
+  --text-secondary: #8B95A5;
+  --text-tertiary: #5A6577;
+
+  /* Typography */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 28px;
+  --text-3xl: 40px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+  --content-max: 1440px;
+}

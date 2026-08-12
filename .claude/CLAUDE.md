@@ -1,0 +1,3 @@
+# Project-local guidance This file loads only when Claude Code works in this repository. It supplements the repository root `CLAUDE.md` with session-level and local-tooling conventions, and is the right place for instructions that do not belong in shared project docs.
+
+## Session conventions - Use Vietnamese-first phrasing for customer-facing explanations unless the user switches to English. - Prefer small, focused diffs; avoid broad reformatting or mass renames. - Treat `.claude/agent-memory/` as state shared across sessions for the named agents; preserve its structure and do not delete memory files without confirmation.

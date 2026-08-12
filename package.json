@@ -1,0 +1,40 @@
+{
+  "name": "trade-bot",
+  "version": "1.0.0",
+  "description": "CashClaw AI Trading Bot Platform",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "db:generate": "wrangler d1 migrations create cashclaw-db --local",
+    "db:apply": "wrangler d1 migrations apply cashclaw-db --local",
+    "db:apply:remote": "wrangler d1 migrations apply cashclaw-db",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.12.30",
+    "lightweight-charts": "^4.2.0",
+    "lucide-react": "^0.469.0",
+    "next": "^16.2.10",
+    "next-intl": "^4.13.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "wrangler": "^4.110.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^16.2.10",
+    "typescript": "^5.7.0",
+    "vite-tsconfig-paths": "^4.3.2",
+    "vitest": "^3.2.4"
+  }
+}

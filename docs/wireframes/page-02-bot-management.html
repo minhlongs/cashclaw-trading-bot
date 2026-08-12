@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bot Management — Trade Bot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f1117;
+      color: #e8eaed;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .label-vn { font-size: 13px; color: #e8eaed; }
+    .label-en { font-size: 12px; color: #8b8fa3; display: block; }
+    .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+    .text-green { color: #00d4aa; }
+    .text-red { color: #ff4757; }
+    .text-amber { color: #f0b90b; }
+    .text-sm { font-size: 12px; }
+
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px;
+      background: #1a1d27;
+      border-right: 1px solid #2a2d3a;
+      padding: 24px 16px;
+      flex-shrink: 0;
+    }
+    .sidebar-logo { font-size: 18px; font-weight: 700; color: #00d4aa; margin-bottom: 32px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 6px;
+      color: #8b8fa3; cursor: pointer; margin-bottom: 4px;
+    }
+    .nav-item:hover { background: #252836; color: #e8eaed; }
+    .nav-item.active { background: #252836; color: #4dabf7; }
+
+    .main { flex: 1; padding: 24px; }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .page-title { font-size: 24px; font-weight: 700; }
+    .header-actions { display: flex; gap: 10px; }
+
+    .btn {
+      height: 36px; padding: 0 16px; border-radius: 8px; border: none;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+    }
+    .btn-primary { background: #4dabf7; color: #0f1117; }
+    .btn-danger { background: #ff4757; color: #fff; }
+    .btn-ghost {
+      background: transparent; color: #8b8fa3; border: 1px solid #2a2d3a;
+    }
+    .btn-ghost:hover { background: #252836; color: #e8eaed; }
+    .btn-sm { height: 28px; padding: 0 12px; font-size: 12px; }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-bar .search-input {
+      background: #0f1117; border: 1px solid #2a2d3a; border-radius: 8px;
+      padding: 0 12px; height: 36px; color: #e8eaed; font-size: 13px;
+      font-family: inherit; width: 240px;
+    }
+    .filter-pill {
+      padding: 6px 14px; border-radius: 100px; font-size: 12px;
+      border: 1px solid #2a2d3a; color: #8b8fa3; cursor: pointer;
+      background: transparent;
+    }
+    .filter-pill:hover { border-color: #4dabf7; color: #4dabf7; }
+    .filter-pill.active { background: rgba(77,171,247,0.12); border-color: #4dabf7; color: #4dabf7; }
+    .filter-count { font-size: 11px; color: #5a5f72; margin-left: 4px; }
+
+    /* Bot grid */
+    .bot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 16px;
+    }
+
+    .bot-card {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .bot-card:hover { border-color: #3a3d4a; }
+    .bot-card.expanded { border-color: #4dabf7; }
+
+    .bot-card-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .bot-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px; flex-shrink: 0;
+    }
+    .bot-icon.grid { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    .bot-icon.mean { background: rgba(77,171,247,0.15); color: #4dabf7; }
+    .bot-meta { flex: 1; min-width: 0; }
+    .bot-card-name { font-weight: 600; font-size: 14px; }
+    .bot-card-detail { font-size: 12px; color: #8b8fa3; margin-top: 2px; }
+    .bot-card-pnl { text-align: right; }
+
+    .bot-card-body {
+      border-top: 1px solid #2a2d3a;
+      padding: 0 20px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    .bot-card.expanded .bot-card-body {
+      max-height: 500px;
+      padding: 16px 20px;
+    }
+
+    /* Mini stats row */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 12px 20px;
+      border-top: 1px solid #2a2d3a;
+    }
+    .mini-stat-label { font-size: 11px; color: #5a5f72; text-transform: uppercase; letter-spacing: 0.03em; }
+    .mini-stat-value { font-size: 13px; font-family: 'SF Mono', monospace; margin-top: 2px; }
+
+    /* Bot card actions */
+    .bot-card-actions {
+      display: flex;
+      gap: 8px;
+      padding: 12px 20px;
+      border-top: 1px solid #2a2d3a;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .badge-green { background: rgba(0,212,170,0.12); color: #00d4aa; }
+    .badge-amber { background: rgba(240,185,11,0.12); color: #f0b90b; }
+    .badge-red { background: rgba(255,71,87,0.12); color: #ff4757; }
+    .badge-blue { background: rgba(77,171,247,0.12); color: #4dabf7; }
+    .badge-gray { background: rgba(90,95,114,0.15); color: #8b8fa3; }
+
+    /* Modal overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 12px;
+      width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #2a2d3a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-close {
+      background: none; border: none; color: #8b8fa3; font-size: 20px; cursor: pointer;
+    }
+    .modal-close:hover { color: #e8eaed; }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #2a2d3a;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Wizard steps */
+    .wizard-steps {
+      display: flex;
+      margin-bottom: 24px;
+      gap: 0;
+    }
+    .wizard-step {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 12px;
+      color: #5a5f72;
+      border-bottom: 2px solid #2a2d3a;
+    }
+    .wizard-step.current { color: #4dabf7; border-bottom-color: #4dabf7; }
+    .wizard-step.done { color: #00d4aa; border-bottom-color: #00d4aa; }
+
+    /* Form */
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      font-size: 12px; font-weight: 500; color: #8b8fa3;
+      margin-bottom: 6px; display: block;
+    }
+    .form-control {
+      background: #0f1117; border: 1px solid #2a2d3a; border-radius: 6px;
+      padding: 0 12px; height: 36px; color: #e8eaed; font-size: 13px;
+      font-family: inherit; width: 100%;
+    }
+    .form-control:focus { outline: none; border-color: #4dabf7; }
+    select.form-control { appearance: none; cursor: pointer; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Mini table inside modal */
+    .mini-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .mini-table th {
+      text-align: left; padding: 6px 10px; font-weight: 500; color: #5a5f72;
+      text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em;
+      border-bottom: 1px solid #2a2d3a;
+    }
+    .mini-table td {
+      padding: 8px 10px; border-bottom: 1px solid #1e2130;
+    }
+    .mini-table tr:last-child td { border-bottom: none; }
+    .mini-table td:last-child { text-align: right; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 16px; }
+      .bot-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">TradeBot</div>
+    <nav>
+      <div class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <div><span class="label-vn">Tổng quan</span><span class="label-en">Dashboard</span></div>
+      </div>
+      <div class="nav-item active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <div><span class="label-vn">Bot của tôi</span><span class="label-en">My Bots</span></div>
+      </div>
+      <div class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <div><span class="label-vn">Cài đặt</span><span class="label-en">Settings</span></div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><span class="label-vn">Quản lý Bot</span><span class="label-en" style="font-size:16px;color:#8b8fa3;">Bot Management</span></h1>
+        <p style="color: #5a5f72; font-size: 12px; margin-top: 2px;" class="mono">4 bot · 3 đang chạy / running · 1 tạm dừng / paused</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="openWizard()">+ Tạo Bot Mới / New Bot</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <input type="text" class="search-input" placeholder="Tìm kiếm bot..." />
+      <button class="filter-pill active">Tất cả <span class="filter-count">(4)</span></button>
+      <button class="filter-pill">Đang chạy <span class="filter-count">(3)</span></button>
+      <button class="filter-pill">Tạm dừng <span class="filter-count">(1)</span></button>
+      <button class="filter-pill">Lỗi <span class="filter-count">(0)</span></button>
+      <span style="color: #5a5f72; font-size: 12px; margin-left: auto;">Chiến lược / Strategy:</span>
+      <select style="background:#0f1117;border:1px solid #2a2d3a;border-radius:6px;padding:6px 10px;color:#8b8fa3;font-size:12px;">
+        <option>Tất cả / All</option>
+        <option>Grid Trading</option>
+        <option>Mean Reversion</option>
+      </select>
+    </div>
+
+    <!-- Bot Grid -->
+    <div class="bot-grid">
+
+      <!-- Bot Card 1 — Expanded example -->
+      <div class="bot-card expanded" id="bot-1">
+        <div class="bot-card-header" onclick="toggleCard('bot-1')">
+          <div class="bot-icon grid">G</div>
+          <div class="bot-meta">
+            <div class="bot-card-name">BTC/USDT Grid</div>
+            <div class="bot-card-detail">Grid Strategy · Binance Testnet</div>
+          </div>
+          <span class="badge badge-green">Đang chạy / Running</span>
+          <div class="bot-card-pnl">
+            <div class="mono text-green" style="font-size: 15px;">+$842.30</div>
+            <div class="text-sm text-green">+3.52%</div>
+          </div>
+        </div>
+
+        <!-- Expanded body -->
+        <div class="bot-card-body">
+          <div class="mini-stats">
+            <div>
+              <div class="mini-stat-label">Tỷ lệ thắng / WinRate</div>
+              <div class="mini-stat-value text-green">72.4%</div>
+            </div>
+            <div>
+              <div class="mini-stat-label">Max Drawdown</div>
+              <div class="mini-stat-value text-amber">5.8%</div>
+            </div>
+            <div>
+              <div class="mini-stat-label">Số giao dịch / Trades</div>
+              <div class="mini-stat-value">147</div>
+            </div>
+            <div>
+              <div class="mini-stat-label">Vốn đang dùng / Capital</div>
+              <div class="mini-stat-value">$2,000</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div class="text-sm text-green" style="margin-bottom: 8px;"><span class="label-vn">Giao dịch gần đây / Recent trades:</span></div>
+            <table class="mini-table">
+              <thead>
+                <tr>
+                  <th><span class="label-vn">Thời gian</span><span class="label-en">Time</span></th>
+                  <th><span class="label-vn">Loại</span><span class="label-en">Type</span></th>
+                  <th><span class="label-vn">Giá</span><span class="label-en">Price</span></th>
+                  <th><span class="label-vn">Lãi lỗ</span><span class="label-en">P&L</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono" style="color:#8b8fa3;">14:28</td>
+                  <td><span class="badge badge-green" style="font-size:9px;">MUA</span></td>
+                  <td class="mono">$67,245</td>
+                  <td class="mono text-green">+$8.45</td>
+                </tr>
+                <tr>
+                  <td class="mono" style="color:#8b8fa3;">14:10</td>
+                  <td><span class="badge badge-red" style="font-size:9px;">BÁN</span></td>
+                  <td class="mono">$67,312</td>
+                  <td class="mono text-green">+$12.30</td>
+                </tr>
+                <tr>
+                  <td class="mono" style="color:#8b8fa3;">13:52</td>
+                  <td><span class="badge badge-green" style="font-size:9px;">MUA</span></td>
+                  <td class="mono">$67,198</td>
+                  <td class="mono text-red">-$1.20</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bot-card-actions">
+          <button class="btn btn-ghost btn-sm"><span class="label-vn">Chi tiết</span><span class="label-en">Detail</span></button>
+          <button class="btn btn-ghost btn-sm"><span class="label-vn">Cấu hình</span><span class="label-en">Configure</span></button>
+          <button class="btn btn-danger btn-sm" style="margin-left: auto;">
+            <span class="label-vn">Dừng bot</span><span class="label-en">Stop</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bot Card 2 -->
+      <div class="bot-card" id="bot-2">
+        <div class="bot-card-header" onclick="toggleCard('bot-2')">
+          <div class="bot-icon mean">M</div>
+          <div class="bot-meta">
+            <div class="bot-card-name">ETH/USDT Mean Rev.</div>
+            <div class="bot-card-detail">Mean Reversion · Bybit Testnet</div>
+          </div>
+          <span class="badge badge-green">Đang chạy / Running</span>
+          <div class="bot-card-pnl">
+            <div class="mono text-green" style="font-size:15px;">+$234.50</div>
+            <div class="text-sm text-green">+7.82%</div>
+          </div>
+        </div>
+        <div class="bot-card-body">
+          <div class="mini-stats">
+            <div><div class="mini-stat-label">Tỷ lệ thắng / WinRate</div><div class="mini-stat-value text-green">81.5%</div></div>
+            <div><div class="mini-stat-label">Max Drawdown</div><div class="mini-stat-value text-green">2.1%</div></div>
+            <div><div class="mini-stat-label">Số giao dịch / Trades</div><div class="mini-stat-value">89</div></div>
+            <div><div class="mini-stat-label">Vốn đang dùng / Capital</div><div class="mini-stat-value">$1,000</div></div>
+          </div>
+          <div style="margin-top:14px;">
+            <table class="mini-table"><thead><tr><th><span class="label-vn">Thời gian</span><span class="label-en">Time</span></th><th><span class="label-vn">Loại</span><span class="label-en">Type</span></th><th><span class="label-vn">Giá</span><span class="label-en">Price</span></th><th><span class="label-vn">Lãi lỗ</span><span class="label-en">P&L</span></th></tr></thead>
+            <tbody><tr><td class="mono" style="color:#8b8fa3;">14:15</td><td><span class="badge badge-green" style="font-size:9px;">MUA</span></td><td class="mono">$3,441</td><td class="mono text-green">+$18.70</td></tr></tbody></table>
+          </div>
+        </div>
+        <div class="bot-card-actions">
+          <button class="btn btn-ghost btn-sm"><span class="label-vn">Chi tiết</span><span class="label-en">Detail</span></button>
+          <button class="btn btn-ghost btn-sm"><span class="label-vn">Cấu hình</span><span class="label-en">Configure</span></button>
+          <button class="btn btn-danger btn-sm" style="margin-left:auto;"><span class="label-vn">Dừng bot</span><span class="label-en">Stop</span></button>
+        </div>
+      </div>
+
+      <!-- Bot Card 3 — Paused -->
+      <div class="bot-card" id="bot-3">
+        <div class="bot-card-header" onclick="toggleCard('bot-3')">
+          <div class="bot-icon grid">G</div>
+          <div class="bot-meta">
+            <div class="bot-card-name">SOL/USDT Grid</div>
+            <div class="bot-card-detail">Grid Strategy · OKX Testnet</div>
+          </div>
+          <span class="badge badge-amber">Tạm dừng / Paused</span>
+          <div class="bot-card-pnl">
+            <div class="mono text-green" style="font-size:15px;">+$156.20</div>
+            <div class="text-sm text-green">+5.21%</div>
+          </div>
+        </div>
+        <div class="bot-card-body">
+          <div class="mini-stats">
+            <div><div class="mini-stat-label">Tỷ lệ thắng / WinRate</div><div class="mini-stat-value text-green">64.8%</div></div>
+            <div><div class="mini-stat-label">Max Drawdown</div><div class="mini-stat-value text-amber">8.4%</div></div>
+            <div><div class="mini-stat-label">Số giao dịch / Trades</div><div class="mini-stat-value">72</div></div>
+            <div><div class="mini-stat-label">Vốn đang dùng / Capital</div><div class="mini-stat-value">$500</div></div>
+          </div>
+        </div>
+        <div class="bot-card-actions">
+          <button class="btn btn-primary btn-sm"><span class="label-vn">Tiếp tục</span><span class="label-en">Resume</span></button>
+          <button class="btn btn-ghost btn-sm"><span class="label-vn">Cấu hình</span><span class="label-en">Configure</span></button>
+          <button class="btn btn-danger btn-sm" style="margin-left:auto;"><span class="label-vn">Xóa bot</span><span class="label-en">Delete</span></button>
+        </div>
+      </div>
+
+      <!-- Bot Card 4 — Error -->
+      <div class="bot-card" id="bot-4">
+        <div class="bot-card-header" onclick="toggleCard('bot-4')">
+          <div class="bot-icon mean">M</div>
+          <div class="bot-meta">
+            <div class="bot-card-name">BNB/USDT Mean Rev.</div>
+            <div class="bot-card-detail">Mean Reversion · Binance Testnet</div>
+          </div>
+          <span class="badge badge-red">Lỗi / Error</span>
+          <div class="bot-card-pnl">
+            <div class="mono text-red" style="font-size:15px;">-$76.90</div>
+            <div class="text-sm text-red">-2.56%</div>
+          </div>
+        </div>
+        <div class="bot-card-body">
+          <div style="background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.2);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;">
+            <span class="text-red" style="font-weight:600;"><span class="label-vn">Lỗi:</span><span class="label-en">Error:</span></span>
+            <span class="text-sm" style="color:#8b8fa3;margin-left:8px;">Connection timeout — Bybit API returned 503 after 3 retries</span>
+          </div>
+          <div class="mini-stats">
+            <div><div class="mini-stat-label">Tỷ lệ thắng / WinRate</div><div class="mini-stat-value text-red">48.2%</div></div>
+            <div><div class="mini-stat-label">Max Drawdown</div><div class="mini-stat-value text-red">12.3%</div></div>
+            <div><div class="mini-stat-label">Số giao dịch / Trades</div><div class="mini-stat-value">34</div></div>
+            <div><div class="mini-stat-label">Vốn đang dùng / Capital</div><div class="mini-stat-value">$1,000</div></div>
+          </div>
+        </div>
+        <div class="bot-card-actions">
+          <button class="btn btn-primary btn-sm"><span class="label-vn">Khởi động lại</span><span class="label-en">Restart</span></button>
+          <button class="btn btn-ghost btn-sm"><span class="label-vn">Cấu hình</span><span class="label-en">Configure</span></button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto;"><span class="label-vn">Xem logs</span><span class="label-en">Logs</span></button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- New Bot Wizard Modal (hidden by default) -->
+    <div class="modal-overlay" id="wizard-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title"><span class="label-vn">Tạo Bot Mới</span><span class="label-en" style="font-size:13px;color:#8b8fa3;">Create New Bot</span></div>
+          <button class="modal-close" onclick="closeWizard()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="wizard-steps">
+            <div class="wizard-step done">1. Chiến lược</div>
+            <div class="wizard-step current">2. Cặp giao dịch</div>
+            <div class="wizard-step">3. Tham số</div>
+            <div class="wizard-step">4. Triển khai</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-vn">Chọn chiến lược</span><span class="label-en">Select Strategy</span></label>
+            <select class="form-control">
+              <option>Grid Trading — Giao dịch lưới</option>
+              <option>Mean Reversion — Hồi quy trung bình</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-vn">Chọn cặp giao dịch</span><span class="label-en">Select Trading Pair</span></label>
+            <select class="form-control">
+              <option>BTC/USDT — Bitcoin</option>
+              <option>ETH/USDT — Ethereum</option>
+              <option>SOL/USDT — Solana</option>
+              <option>BNB/USDT — BNB</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-vn">Chọn sàn giao dịch</span><span class="label-en">Select Exchange</span></label>
+            <select class="form-control">
+              <option>Binance Testnet</option>
+              <option>Bybit Testnet</option>
+              <option>OKX Testnet</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label"><span class="label-vn">Vốn giao dịch (USDT)</span><span class="label-en">Trading Capital (USDT)</span></label>
+              <input class="form-control" type="number" value="500" />
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="label-vn">Chiến lược</span><span class="label-en">Strategy</span></label>
+              <select class="form-control">
+                <option>Testnet (Không dùng tiền thật)</option>
+                <option>Paper Trading</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeWizard()"><span class="label-vn">Hủy</span><span class="label-en">Cancel</span></button>
+          <button class="btn btn-primary"><span class="label-vn">Bước 3: Tham số ›</span><span class="label-en">Step 3: Parameters ›</span></button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function toggleCard(id) {
+  document.getElementById(id).classList.toggle('expanded');
+}
+function openWizard() {
+  document.getElementById('wizard-modal').classList.add('show');
+}
+function closeWizard() {
+  document.getElementById('wizard-modal').classList.remove('show');
+}
+</script>
+</body>
+</html>

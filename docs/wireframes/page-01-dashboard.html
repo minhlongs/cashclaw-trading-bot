@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Trade Bot</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f1117;
+      color: #e8eaed;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    .label-vn { font-size: 13px; color: #e8eaed; }
+    .label-en { font-size: 12px; color: #8b8fa3; display: block; }
+    .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+
+    /* ── Layout ── */
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px;
+      background: #1a1d27;
+      border-right: 1px solid #2a2d3a;
+      padding: 24px 16px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .sidebar-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: #00d4aa;
+      margin-bottom: 32px;
+      padding: 0 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: #8b8fa3;
+      cursor: pointer;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .nav-item:hover { background: #252836; color: #e8eaed; }
+    .nav-item.active { background: #252836; color: #00d4aa; }
+    .nav-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .main {
+      flex: 1;
+      padding: 24px;
+      max-width: calc(1400px + 48px);
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .page-title { font-size: 24px; font-weight: 700; }
+    .header-actions { display: flex; gap: 10px; }
+
+    /* ── Buttons ── */
+    .btn {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+    .btn-primary { background: #4dabf7; color: #0f1117; }
+    .btn-primary:hover { background: #74c0fc; }
+    .btn-danger { background: #ff4757; color: #fff; }
+    .btn-danger:hover { background: #ff6b7a; }
+    .btn-ghost {
+      background: transparent;
+      color: #8b8fa3;
+      border: 1px solid #2a2d3a;
+    }
+    .btn-ghost:hover { background: #252836; color: #e8eaed; }
+
+    /* ── KPI Grid ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'SF Mono', monospace;
+      margin-bottom: 4px;
+    }
+    .kpi-change {
+      font-size: 12px;
+      font-family: 'SF Mono', monospace;
+      margin-top: 2px;
+    }
+    .kpi-label-vn { font-size: 12px; color: #8b8fa3; }
+    .kpi-label-en { font-size: 11px; color: #5a5f72; }
+    .text-green { color: #00d4aa; }
+    .text-red { color: #ff4757; }
+    .text-amber { color: #f0b90b; }
+
+    /* ── Two-column section ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #2a2d3a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title { font-size: 14px; font-weight: 600; }
+    .card-body { padding: 0; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #161822;
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #5a5f72;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #2a2d3a;
+    }
+    thead th.right { text-align: right; }
+    tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #1e2130;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    tbody td.right { text-align: right; }
+    tbody tr:hover { background: #252836; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge-green { background: rgba(0,212,170,0.12); color: #00d4aa; }
+    .badge-amber { background: rgba(240,185,11,0.12); color: #f0b90b; }
+    .badge-red { background: rgba(255,71,87,0.12); color: #ff4757; }
+    .badge-blue { background: rgba(77,171,247,0.12); color: #4dabf7; }
+    .badge-gray { background: rgba(90,95,114,0.15); color: #8b8fa3; }
+
+    /* ── Bot status list ── */
+    .bot-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid #1e2130;
+      gap: 16px;
+    }
+    .bot-row:last-child { border-bottom: none; }
+    .bot-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .bot-icon.grid { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    .bot-icon.mean { background: rgba(77,171,247,0.15); color: #4dabf7; }
+    .bot-info { flex: 1; min-width: 0; }
+    .bot-name { font-weight: 600; font-size: 13px; }
+    .bot-detail { font-size: 12px; color: #8b8fa3; margin-top: 2px; }
+    .bot-pnl { text-align: right; }
+    .text-sm { font-size: 12px; }
+
+    /* ── Quick actions top bar ── */
+    .quick-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1200px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 16px; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .kpi-card { padding: 14px; }
+      .kpi-value { font-size: 22px; }
+      .page-header { flex-direction: column; gap: 12px; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { flex: 1; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">TradeBot</div>
+    <nav>
+      <div class="nav-item active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <div><span class="label-vn">Tổng quan</span><span class="label-en">Dashboard</span></div>
+      </div>
+      <div class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <div><span class="label-vn">Bot của tôi</span><span class="label-en">My Bots</span></div>
+      </div>
+      <div class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <div><span class="label-vn">Cài đặt</span><span class="label-en">Settings</span></div>
+      </div>
+    </nav>
+    <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid #2a2d3a;">
+      <div class="nav-item">
+        <div class="nav-dot" style="background: #00d4aa;"></div>
+        <div><span class="label-vn">Nguyễn Văn A</span><span class="label-en">User 1</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><span class="label-vn">Tổng quan Danh mục</span><span class="label-en" style="color: #8b8fa3; font-size: 16px;">Portfolio Dashboard</span></h1>
+        <p style="color: #5a5f72; font-size: 12px; margin-top: 2px;" class="mono">Cập nhật lúc: 14:32:05 UTC &nbsp;|&nbsp; Updated: 14:32:05 UTC</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary">+ Bot Mới / New Bot</button>
+        <button class="btn btn-ghost">
+          <span class="label-vn">Tạm dừng tất cả</span><span class="label-en" style="font-size: 12px;">Pause All</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label-vn">Tổng tài sản danh mục</div>
+        <div class="kpi-label-en">Total Portfolio Value</div>
+        <div class="kpi-value" style="margin-top: 8px;">$4,832.50</div>
+        <div class="kpi-label-en" style="font-size: 12px; margin-top: 8px; color: #8b8fa3;">
+          <span style="color: #5a5f72;">Tự do / Free:</span> $1,200.00 &nbsp;
+          <span style="color: #5a5f72;">Đang giao dịch / Locked:</span> $3,632.50
+        </div>
+        <div class="kpi-change text-green">+3.24% hôm nay / today</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label-vn">Lãi lỗ hôm nay</div>
+        <div class="kpi-label-en">Today's P&L</div>
+        <div class="kpi-value text-green" style="margin-top: 8px;">+$156.80</div>
+        <div class="kpi-change text-green">+3.36%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label-vn">Bot đang hoạt động</div>
+        <div class="kpi-label-en">Active Bots</div>
+        <div style="display: flex; align-items: baseline; gap: 12px; margin-top: 8px;">
+          <div class="kpi-value">4</div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <span class="badge badge-green">Đang chạy / Running 3</span>
+            <span class="badge badge-amber">Tạm dừng / Paused 1</span>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label-vn">Tỷ lệ thắng</div>
+        <div class="kpi-label-en">Win Rate (7 ngày / days)</div>
+        <div class="kpi-value text-green" style="margin-top: 8px;">68.2%</div>
+        <div class="kpi-change text-green">▲ 4.1% so với / vs tuần trước</div>
+      </div>
+    </div>
+
+    <!-- Two-column: Bots quick view + Recent trades -->
+    <div class="two-col">
+
+      <!-- Left: Bots Quick View -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="label-vn">Bot của tôi</span><span class="label-en" style="font-size: 12px; color: #8b8fa3;">My Bots</span></div>
+          <button class="btn btn-ghost" style="height: 28px; font-size: 12px;">Xem tất cả / View All →</button>
+        </div>
+        <div class="card-body">
+          <div class="bot-row">
+            <div class="bot-icon grid">G</div>
+            <div class="bot-info">
+              <div class="bot-name">BTC/USDT Grid</div>
+              <div class="bot-detail">Grid Strategy · Binance Testnet</div>
+            </div>
+            <span class="badge badge-green">Đang chạy / Running</span>
+            <div class="bot-pnl mono text-green">+$842.30</div>
+          </div>
+          <div class="bot-row">
+            <div class="bot-icon mean">M</div>
+            <div class="bot-info">
+              <div class="bot-name">ETH/USDT Mean Rev.</div>
+              <div class="bot-detail">Mean Reversion · Bybit</div>
+            </div>
+            <span class="badge badge-green">Đang chạy / Running</span>
+            <div class="bot-pnl mono text-green">+$234.50</div>
+          </div>
+          <div class="bot-row">
+            <div class="bot-icon grid">G</div>
+            <div class="bot-info">
+              <div class="bot-name">SOL/USDT Grid</div>
+              <div class="bot-detail">Grid Strategy · OKX</div>
+            </div>
+            <span class="badge badge-amber">Tạm dừng / Paused</span>
+            <div class="bot-pnl mono text-green">+$156.20</div>
+          </div>
+          <div class="bot-row">
+            <div class="bot-icon mean">M</div>
+            <div class="bot-info">
+              <div class="bot-name">BNB/USDT Mean Rev.</div>
+              <div class="bot-detail">Mean Reversion · Binance</div>
+            </div>
+            <span class="badge badge-green">Đang chạy / Running</span>
+            <div class="bot-pnl mono text-red">-$76.90</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Account status -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="label-vn">Trạng thái tài khoản</span><span class="label-en" style="font-size: 12px; color: #8b8fa3;">Account Status</span></div>
+        </div>
+        <div style="padding: 20px;">
+          <!-- Exchange cards -->
+          <div style="margin-bottom: 16px;">
+            <div class="label-vn" style="color: #8b8fa3; font-size: 12px; margin-bottom: 8px;">Sàn giao dịch đã kết nối / Connected Exchanges</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div style="background: #0f1117; border: 1px solid #2a2d3a; border-radius: 6px; padding: 10px 16px; display: flex; align-items: center; gap: 8px;">
+                <span style="color: #f0b90b; font-weight: 600;">◆</span>
+                <span class="mono">Binance</span>
+                <span class="badge badge-green" style="font-size: 10px;">Testnet</span>
+              </div>
+              <div style="background: #0f1117; border: 1px solid #2a2d3a; border-radius: 6px; padding: 10px 16px; display: flex; align-items: center; gap: 8px;">
+                <span style="color: #00d4aa; font-weight: 600;">●</span>
+                <span class="mono">Bybit</span>
+                <span class="badge badge-green" style="font-size: 10px;">Testnet</span>
+              </div>
+              <div style="background: #0f1117; border: 1px solid #2a2d3a; border-radius: 6px; padding: 10px 16px; display: flex; align-items: center; gap: 8px;">
+                <span style="color: #4dabf7; font-weight: 600;">◉</span>
+                <span class="mono">OKX</span>
+                <span class="badge badge-gray" style="font-size: 10px;">Not connected</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Team allocation -->
+          <div style="margin-bottom: 16px;">
+            <div class="label-vn" style="color: #8b8fa3; font-size: 12px; margin-bottom: 8px;">Phân bổ vốn / Capital Allocation</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="text-sm">Nguyễn Văn A</span>
+                <span class="mono text-sm text-green">$2,416 / $2,500</span>
+              </div>
+              <div style="background: #252836; border-radius: 4px; height: 6px; width: 100%;">
+                <div style="background: #00d4aa; border-radius: 4px; height: 100%; width: 96.6%;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="text-sm">Trần Văn B</span>
+                <span class="mono text-sm text-green">$1,208 / $1,250</span>
+              </div>
+              <div style="background: #252836; border-radius: 4px; height: 6px; width: 100%;">
+                <div style="background: #00d4aa; border-radius: 4px; height: 100%; width: 96.6%;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="text-sm">Lê Văn C</span>
+                <span class="mono text-sm text-amber">$1,083 / $1,000</span>
+              </div>
+              <div style="background: #252836; border-radius: 4px; height: 6px; width: 100%;">
+                <div style="background: #f0b90b; border-radius: 4px; height: 100%; width: 108.3%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Risk summary -->
+          <div>
+            <div class="label-vn" style="color: #8b8fa3; font-size: 12px; margin-bottom: 8px;">Cảnh báo rủi ro / Risk Alerts</div>
+            <div style="background: rgba(240,185,11,0.08); border: 1px solid rgba(240,185,11,0.2); border-radius: 6px; padding: 10px 14px; display: flex; align-items: center; gap: 8px;">
+              <span style="color: #f0b90b;">⚠</span>
+              <span class="text-sm" style="color: #f0b90b;">Max drawdown gần mức giới hạn / Max drawdown near limit:</span>
+              <span class="mono text-sm text-amber" style="margin-left: auto;">78%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Trades Table -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="label-vn">Giao dịch gần đây</span><span class="label-en" style="font-size: 12px; color: #8b8fa3;">Recent Trades</span></div>
+        <button class="btn btn-ghost" style="height: 28px; font-size: 12px;">
+          <span class="label-vn">Xuất CSV</span><span class="label-en" style="font-size: 11px;">Export CSV</span>
+        </button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th><span class="label-vn">Thời gian</span><span class="label-en">Time</span></th>
+            <th><span class="label-vn">Cặp giao dịch</span><span class="label-en">Pair</span></th>
+            <th><span class="label-vn">Loại</span><span class="label-en">Type</span></th>
+            <th class="right"><span class="label-vn">Giá vào</span><span class="label-en">Entry</span></th>
+            <th class="right"><span class="label-vn">Giá ra</span><span class="label-en">Exit</span></th>
+            <th class="right"><span class="label-vn">Lãi lỗ</span><span class="label-en">P&L</span></th>
+            <th><span class="label-vn">Bot</span><span class="label-en">Bot</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono" style="color: #8b8fa3;">14:28:12</td>
+            <td class="mono">BTC/USDT</td>
+            <td><span class="badge badge-green">MUA / Buy</span></td>
+            <td class="mono right">$67,245.00</td>
+            <td class="mono right">$67,312.50</td>
+            <td class="mono right text-green">+$8.45</td>
+            <td class="text-sm">BTC Grid</td>
+          </tr>
+          <tr>
+            <td class="mono" style="color: #8b8fa3;">14:15:43</td>
+            <td class="mono">ETH/USDT</td>
+            <td><span class="badge badge-red">BÁN / Sell</span></td>
+            <td class="mono right">$3,456.80</td>
+            <td class="mono right">$3,450.10</td>
+            <td class="mono right text-red">-$2.18</td>
+            <td class="text-sm">ETH Mean R.</td>
+          </tr>
+          <tr>
+            <td class="mono" style="color: #8b8fa3;">13:52:01</td>
+            <td class="mono">BTC/USDT</td>
+            <td><span class="badge badge-green">MUA / Buy</span></td>
+            <td class="mono right">$67,198时</td>
+            <td class="mono right">$67,245.00</td>
+            <td class="mono right text-green">+$5.62</td>
+            <td class="text-sm">BTC Grid</td>
+          </tr>
+          <tr>
+            <td class="mono" style="color: #8b8fa3;">13:30:22</td>
+            <td class="mono">ETH/USDT</td>
+            <td><span class="badge badge-green">MUA / Buy</span></td>
+            <td class="mono right">$3,441.50</td>
+            <td class="mono right">$3,456.80</td>
+            <td class="mono right text-green">+$2.33</td>
+            <td class="text-sm">ETH Mean R.</td>
+          </tr>
+          <tr>
+            <td class="mono" style="color: #8b8fa3;">12:45:18</td>
+            <td class="mono">SOL/USDT</td>
+            <td><span class="badge badge-red">BÁN / Sell</span></td>
+            <td class="mono right">$184.20</td>
+            <td class="mono right">$182.90</td>
+            <td class="mono right text-red">-$3.12</td>
+            <td class="text-sm">SOL Grid</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>
