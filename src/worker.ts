@@ -61,8 +61,6 @@ app.get('/api/version', (c) => {
   }
 });
 
-app.use('*', authGuard());
-
 // ── API routes ──────────────────────────────────────────────────
 app.get('/api/bots', async (c) => {
   const result = await botListHandler();
@@ -96,6 +94,9 @@ app.post('/api/killswitch/resume', async (c) => {
   const result = await killswitchResumeHandler();
   return c.json(result, result.ok ? 200 : 500);
 });
+
+app.use('/api/bots', authGuard());
+app.use('/api/killswitch', authGuard());
 
 app.get('/api/events', async (c) => {
   const botId = c.req.query('botId') ?? undefined;
