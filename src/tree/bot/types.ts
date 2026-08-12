@@ -1,6 +1,53 @@
 // Bot Engine — Core Types
 // State machine events, bot lifecycle, strategy configs
 
+// ── StrategyChain (OmniRoute Phase 4) ────────────────────────────────────────
+export interface StrategyContext {
+  symbol: string;
+  balance: number;
+  openPositions: number;
+  lastPrice: number;
+}
+
+export interface TradeSignal {
+  side: 'buy' | 'sell';
+  qty: number;
+  price: number;
+  reason: string;
+}
+
+export interface ChainLeg {
+  strategy: 'grid' | 'mean_reversion';
+  on: string;
+}
+
+export interface ChainStrategy {
+  name: string;
+  evaluate(ctx: StrategyContext): TradeSignal | null;
+}
+
+export interface ChainNode {
+  strategy: ChainStrategy;
+  fallback: ChainStrategy | null;
+}
+
+export type StrategyChain = ChainNode[];
+
+export interface PreconditionResult {
+  pass: boolean;
+  reason: string;
+}
+
+export type PreconditionFn = (ctx: StrategyContext) => PreconditionResult;
+
+export function hasStrategyChain(
+  config: BotConfig,
+): config is BotConfig & { strategyChain: ChainLeg[] } {
+  return Array.isArray((config as any).strategyChain) &&
+    (config as any).strategyChain.length > 0;
+}
+
+// ── Existing bot configs ─────────────────────────────────────────────────────
 export type BotStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'error';
 export type BotMode = 'paper' | 'live';
 export type StrategyType = 'grid' | 'mean_reversion';
@@ -53,18 +100,18 @@ export interface BotState {
   config: BotConfig;
   status: BotStatus;
   createdAt: number;
-  updatedAt: number;
+  startedAt: number | null;
+  error: string | null;
   totalPnl: number;
   totalTrades: number;
   winCount: number;
   lossCount: number;
   maxDrawdown: number;
   currentDrawdown: number;
-  startedAt: number | null;
   stoppedAt: number | null;
   lastTickAt: number | null;
   lastOrderAt: number | null;
-  error: string | null;
+  updatedAt: number;
 }
 
 export interface BotTrade {
@@ -73,40 +120,33 @@ export interface BotTrade {
   exchangeId: string;
   symbol: string;
   side: 'buy' | 'sell';
-  type: 'market' | 'limit';
+  type: string;
   price: number;
   quantity: number;
   filled: number;
   fee: number;
   pnl: number;
-  status: 'open' | 'filled' | 'cancelled' | 'rejected';
+  status: 'pending' | 'filled' | 'cancelled';
   timestamp: number;
-  gridLevel?: number;
-  indicatorValues?: Record<string, number>;
 }
+
+export type GridLevelStatus = 'pending' | 'open' | 'filled' | 'cancelled';
 
 export interface GridLevel {
   level: number;
   side: 'buy' | 'sell';
   triggerPrice: number;
+  quantity: number;
+  status: GridLevelStatus;
+  price?: number;
+  filledPrice?: number | null;
   takeProfitPrice: number;
   stopLossPrice: number;
-  quantity: number;
-  status: 'pending' | 'open' | 'filled' | 'cancelled';
-  orderId: string | null;
-  // Mutable runtime fields (not in initial config)
-  price?: number;
-  /** Entry fill price when this level was hit */
-  filledPrice?: number;
-  filledQty?: number;
-  /** Trailing TP that ratchets up (buy) or down (sell) as price moves favorably */
   currentTpPrice?: number;
-  /** Trailing SL that ratchets up (buy) or down (sell) as price moves favorably */
   currentSlPrice?: number;
-  /** True once trailing has been initialized at entry fill */
   trailingActive?: boolean;
-  /** Skip exit check for one tick — prevents same-tick close right after init */
   trailingSkipExit?: boolean;
+  orderId: string | null;
 }
 
 export interface BotAuditLog {
