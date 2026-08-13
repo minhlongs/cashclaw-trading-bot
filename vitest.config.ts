@@ -11,10 +11,10 @@ export default defineConfig({
     hookTimeout: 5000,
     coverage: {
       thresholds: {
-        statements: 20,
+        statements: 25,
         branches: 75,
-        functions: 58,
-        lines: 20,
+        functions: 65,
+        lines: 25,
       },
     },
   },

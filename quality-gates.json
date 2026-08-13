@@ -1,12 +1,12 @@
 {
-  "_note": "Aspirational targets. Current: warnings=89, maxFileLines=362. Enforce via CI when thresholds are achievable.",
-  "maxWarnings": 100,
+  "_note": "Enforced by vitest coverage thresholds + eslint --max-warnings. Update when metrics improve.",
+  "maxWarnings": 78,
   "maxErrors": 0,
   "coverageThresholds": {
-    "lines": 40,
-    "functions": 40,
-    "branches": 30
+    "statements": 25,
+    "branches": 75,
+    "functions": 65,
+    "lines": 25
   },
-  "maxFileLines": 400,
-  "maxComplexity": 15
+  "maxFileLines": 400
 }
