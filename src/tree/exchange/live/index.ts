@@ -4,6 +4,9 @@
 
 import { createCCXTClient } from '../ccxt/client';
 import { rateLimiter } from '../rate-limiter';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'exchange-live' });
 import type {
   ExchangeId,
   Ticker,
@@ -119,7 +122,8 @@ export class LiveExchange implements ExchangeAdapter {
       await rateLimiter.acquire(this.id, 'api');
       await this.client.fetchTicker(this.id, 'BTC/USDT');
       return true;
-    } catch {
+    } catch (error) {
+      log.warn('Exchange ping failed', { action: 'ping', error: error instanceof Error ? error : new Error(String(error)) });
       return false;
     }
   }

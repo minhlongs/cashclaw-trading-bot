@@ -9,6 +9,9 @@
 
 import { createServerClient } from '@/lib/db/client';
 import type { TradeEvent, TradeEventType } from '@/tree/telemetry';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'api/events' });
 
 export interface EventsResponse {
   ok: boolean;
@@ -56,7 +59,8 @@ export async function eventsHandler(
       .all<EventRow>();
 
     return { ok: true, data: rowsToEvents(results) };
-  } catch {
+  } catch (error) {
+    log.error('Failed to query events', error instanceof Error ? error : new Error(String(error)), { action: 'eventsHandler' });
     return { ok: false, error: 'Failed to query events' };
   }
 }
@@ -76,8 +80,9 @@ function rowsToEvents(rows: EventRow[]): TradeEvent[] {
     if (r.detail_json) {
       try {
         details = JSON.parse(r.detail_json) as Record<string, unknown>;
-      } catch {
-        // malformed JSON — keep empty details
+      } catch (error) {
+        // malformed JSON — keep empty details but log
+        log.warn('Malformed trade event detail JSON', { action: 'rowsToEvents', error: error instanceof Error ? error : new Error(String(error)) });
       }
     }
     out.push({

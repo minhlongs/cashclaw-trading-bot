@@ -7,6 +7,9 @@
  */
 
 import { createServerClient } from '@/lib/db/client';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'api/daily-stats' });
 
 export interface DailyStats {
   ok: boolean;
@@ -85,8 +88,9 @@ export async function dailyStatsHandler(): Promise<DailyStats> {
           if (typeof detail.strategy === 'string') {
             strategy = detail.strategy;
           }
-        } catch {
-          // keep defaults
+        } catch (error) {
+          // keep defaults but log malformed JSON
+          log.warn('Malformed trade event detail JSON', { action: 'parseDetail', error: error instanceof Error ? error : new Error(String(error)) });
         }
       }
 
@@ -117,7 +121,8 @@ export async function dailyStatsHandler(): Promise<DailyStats> {
         byStrategy,
       },
     };
-  } catch {
+  } catch (error) {
+    log.error('Failed to compute daily stats', error instanceof Error ? error : new Error(String(error)), { action: 'dailyStatsHandler' });
     return { ok: false, error: 'Failed to compute daily stats' };
   }
 }

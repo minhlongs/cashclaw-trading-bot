@@ -3,6 +3,9 @@
 
 import ccxt from 'ccxt';
 import type { Exchange as CCXTExchange, Order as CCXTOrder } from 'ccxt';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'ccxt-client' });
 
 export interface CCXTConfig {
   exchange: string;
@@ -123,7 +126,8 @@ export class CCXTTransformer {
     try {
       await ex.cancelOrder(orderId, _symbol);
       return true;
-    } catch {
+    } catch (error) {
+      log.warn('Order cancel failed', { action: 'cancelOrder', error: error instanceof Error ? error : new Error(String(error)) });
       return false;
     }
   }

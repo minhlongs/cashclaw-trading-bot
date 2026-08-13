@@ -17,6 +17,9 @@ import { BotInstance, type BotCallbacks } from './bot-instance';
 import type { TelemetryWriter } from '../telemetry';
 import { persistBot, hydrateFromD1, patchBot, persistTrade } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'bot-manager' });
 
 type D1BotStatus = 'draft' | 'paper_test' | 'live_running' | 'paused' | 'error' | 'stopped';
 
@@ -152,7 +155,9 @@ export class BotManager {
             last_error: state.error,
             last_tick_at: state.lastTickAt,
             last_order_at: state.lastOrderAt,
-          }).catch(() => {});
+          }).catch((error) => {
+            log.error(`D1 persist state failed for ${req.id}`, error instanceof Error ? error : new Error(String(error)), { action: 'patchBot:state' });
+          });
         }
       },
       onTrade: (trade) => {
@@ -168,7 +173,9 @@ export class BotManager {
             pnl: trade.pnl,
             status: trade.status === 'filled' ? 'filled' : 'open',
             exchangeOrderId: trade.id,
-          }).catch(() => {});
+          }).catch((error) => {
+            log.error(`D1 persist trade failed for ${req.id}`, error instanceof Error ? error : new Error(String(error)), { action: 'persistTrade' });
+          });
         }
       },
       onLog: (msg) => this.deps.onLog(`[${req.id}] ${msg}`),
@@ -188,7 +195,9 @@ export class BotManager {
         strategy: req.config.strategy,
         pair: req.config.symbol,
         exchange: req.config.exchange,
-      }).catch(() => {});
+      }).catch((error) => {
+        log.error(`D1 persist bot failed for ${req.id}`, error instanceof Error ? error : new Error(String(error)), { action: 'persistBot' });
+      });
     }
 
     this.deps.onLog(`Bot ${req.id} created (${req.config.strategy}, ${req.config.symbol}, ${req.mode})`);
@@ -208,7 +217,7 @@ export class BotManager {
     // Persist status to D1
     if (this.deps.userId) {
       const state = bot.getSnapshot();
-      patchBot(id, { status: toD1Status(state.status), total_pnl: state.totalPnl }).catch(() => {});
+      this.patchBotSafe(id, { status: toD1Status(state.status), total_pnl: state.totalPnl });
     }
   }
 
@@ -222,7 +231,7 @@ export class BotManager {
     // Persist status to D1
     if (this.deps.userId) {
       const state = bot.getSnapshot();
-      patchBot(id, { status: toD1Status(state.status), total_pnl: state.totalPnl }).catch(() => {});
+      this.patchBotSafe(id, { status: toD1Status(state.status), total_pnl: state.totalPnl });
     }
   }
 
@@ -233,7 +242,7 @@ export class BotManager {
     // Persist status to D1
     if (this.deps.userId) {
       const state = bot.getSnapshot();
-      patchBot(id, { status: toD1Status(state.status), total_pnl: state.totalPnl }).catch(() => {});
+      this.patchBotSafe(id, { status: toD1Status(state.status), total_pnl: state.totalPnl });
     }
   }
 
@@ -244,7 +253,7 @@ export class BotManager {
       this.bots.delete(id);
       // Persist status to D1 (mark as stopped/deleted)
       if (this.deps.userId) {
-        patchBot(id, { status: 'stopped', total_pnl: 0 }).catch(() => {});
+        this.patchBotSafe(id, { status: 'stopped', total_pnl: 0 });
       }
     }
   }
@@ -252,6 +261,12 @@ export class BotManager {
   resetKillswitch(): void {
     this.killswitch.reset();
     this.deps.onLog('Killswitch reset');
+  }
+
+  private patchBotSafe(id: string, fields: Record<string, unknown>): void {
+    patchBot(id, fields).catch((error) => {
+      log.error(`D1 persist failed for ${id}`, error instanceof Error ? error : new Error(String(error)), { action: 'patchBot' });
+    });
   }
 
   private emitTelemetry(eventType: TradeEventType, details: Record<string, unknown> = {}): void {

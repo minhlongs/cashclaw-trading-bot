@@ -3,6 +3,10 @@
  * v1: Logs alerts to structured format. Future: webhook/email integration.
  */
 
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'alerts' });
+
 export interface Alert {
   id: string;
   level: 'info' | 'warning' | 'error' | 'critical';
@@ -53,8 +57,8 @@ export function emitAlert(
   for (const handler of handlers) {
     try {
       handler(alert);
-    } catch {
-      // Don't let handler errors break alerting
+    } catch (error) {
+      log.warn('Alert handler error (non-fatal)', { action: 'fireAlert', error: error instanceof Error ? error : new Error(String(error)) });
     }
   }
 

@@ -7,6 +7,9 @@ import { runBacktest, type BacktestResult } from './engine';
 import type { BotConfig } from '@/tree/bot/types';
 import { createServerClient } from '@/lib/db/client';
 import type { BacktestResultRow } from '@/lib/db/types';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'backtest-actions' });
 
 const SUPPORTED_INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'] as const;
 type CandleInterval = (typeof SUPPORTED_INTERVALS)[number];
@@ -127,8 +130,8 @@ export async function runBacktestAction(input: BacktestRunInput): Promise<Backte
           result.created_at,
         )
         .run();
-    } catch {
-      // Non-fatal — backtest succeeded even if persistence failed
+    } catch (error) {
+      log.warn('Backtest result persistence failed (non-fatal)', { action: 'persistBacktest', error: error instanceof Error ? error : new Error(String(error)) });
     }
   }
 
@@ -147,7 +150,8 @@ export async function getBacktestResults(botId: string) {
       .bind(botId)
       .all<BacktestResultRow>();
     return results;
-  } catch {
+  } catch (error) {
+    log.error('Failed to fetch backtest results', error instanceof Error ? error : new Error(String(error)), { action: 'getBacktestResults' });
     return [];
   }
 }

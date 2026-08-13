@@ -9,5 +9,13 @@ export default defineConfig({
     environment: 'node',
     testTimeout: 10000,
     hookTimeout: 5000,
+    coverage: {
+      thresholds: {
+        statements: 20,
+        branches: 75,
+        functions: 58,
+        lines: 20,
+      },
+    },
   },
 });

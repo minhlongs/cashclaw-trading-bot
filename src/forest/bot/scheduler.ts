@@ -4,11 +4,13 @@
 
 import { getBotManager } from '@/tree/bot';
 import { Killswitch } from '@/tree/bot/killswitch';
-import { getExchangeOrchestrator } from '@/land/exchange-orchestration';
-import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
+import { getExchangeOrchestrator, type ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import { createServerClient } from '@/lib/db/client';
 import { TelemetryWriter } from '@/tree/telemetry/writer';
 import type { BotInstance } from '@/tree/bot/bot-instance';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'scheduler' });
 
 export interface SchedulerDeps {
   getNow?: () => number; // override for testing
@@ -86,8 +88,8 @@ export class BotScheduler {
         .prepare(`UPDATE bots SET total_pnl = ?, updated_at = ? WHERE id = ?`)
         .bind(state.totalPnl, Date.now(), state.id)
         .run();
-    } catch {
-      // Non-fatal — in-memory state is authoritative
+    } catch (error) {
+      log.warn('D1 persist failed (non-fatal)', { action: 'persistBot', error: error instanceof Error ? error : new Error(String(error)) });
     }
   }
 }

@@ -8,6 +8,9 @@ import { BotInstance } from '@/tree/bot/bot-instance';
 import { createServerClient } from '@/lib/db/client';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import type { TradeEvent, CapitalSnapshot, TradeEventType } from '@/tree/telemetry';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'dashboard-actions' });
 
 const MAX_EVENTS = 200;
 const MAX_SNAPSHOTS = 90;
@@ -152,8 +155,8 @@ export async function getRecentEvents(botIds?: string[]): Promise<TradeEvent[]> 
       if (r.detail_json) {
         try {
           details = JSON.parse(r.detail_json) as Record<string, unknown>;
-        } catch {
-          // malformed JSON — skip details
+        } catch (error) {
+          log.warn('Malformed trade event JSON skipped', { action: 'parseEventDetail', error: error instanceof Error ? error : new Error(String(error)) });
         }
       }
       out.push({
@@ -165,7 +168,8 @@ export async function getRecentEvents(botIds?: string[]): Promise<TradeEvent[]> 
       });
     }
     return out;
-  } catch {
+  } catch (error) {
+    log.error('Failed to fetch trade events', error instanceof Error ? error : new Error(String(error)), { action: 'getTradeEvents' });
     return [];
   }
 }
@@ -212,7 +216,8 @@ export async function getCapitalSnapshots(botId: string, limit = 30): Promise<Ca
       totalTrades: r.total_trades,
       timestamp: r.created_at,
     }));
-  } catch {
+  } catch (error) {
+    log.error('Failed to fetch capital snapshots', error instanceof Error ? error : new Error(String(error)), { action: 'getCapitalSnapshots' });
     return [];
   }
 }

@@ -4,6 +4,9 @@
 // Solution: Combine streams via exchange's combined endpoint.
 
 import type { Ticker, OrderBook } from '../types';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'exchange-ws' });
 
 export type WsEventType = 'ticker' | 'orderbook' | 'trade' | 'kline';
 
@@ -107,7 +110,7 @@ export class BinanceWsConnection extends WsConnection {
               this.dispatch(data.stream, data.data);
             }
           } catch {
-            // Non-JSON message, ignore
+            // Non-JSON WebSocket message — intentionally ignored
           }
         };
 

@@ -5,6 +5,9 @@
  */
 
 import { getBotManager } from '@/tree/bot';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'api/killswitch' });
 
 export async function killswitchHaltHandler(
   reason: string,
@@ -27,7 +30,8 @@ export async function killswitchResumeHandler(): Promise<{
   try {
     getBotManager().manualResume();
     return { ok: true };
-  } catch {
+  } catch (error) {
+    log.error('Killswitch resume failed', error instanceof Error ? error : new Error(String(error)), { action: 'killswitchResume' });
     return { ok: false, error: 'Killswitch resume failed' } as { ok: boolean; error: string };
   }
 }

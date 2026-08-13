@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/db/client';
 import { parseSessionCookie } from '@/lib/auth/session-utils';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'auth-me' });
 
 export async function GET(req: Request) {
   try {
@@ -43,7 +46,8 @@ export async function GET(req: Request) {
         locale: session.locale,
       },
     });
-  } catch {
+  } catch (error) {
+    log.error('Auth check failed', error instanceof Error ? error : new Error(String(error)), { action: 'GET /api/auth/me' });
     return NextResponse.json({ ok: false, error: 'Auth check failed' }, { status: 500 });
   }
 }

@@ -8,6 +8,9 @@ import { createServerClient } from '@/lib/db/client';
 import { findSettingsByUser, upsertSettings, type SettingsRow } from '@/lib/db/repositories';
 import { getBotManager } from '@/tree/bot';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger({ module: 'settings-actions' });
 
 export interface SettingsData {
   exchanges: {
@@ -67,7 +70,8 @@ function parseExchanges(raw: string): SettingsData['exchanges'] {
       }
     }
     return result;
-  } catch {
+  } catch (error) {
+    log.warn('Failed to parse exchange settings, using defaults', { action: 'parseExchanges', error: error instanceof Error ? error : new Error(String(error)) });
     return { ...DEFAULT_EXCHANGES };
   }
 }
@@ -81,7 +85,8 @@ function parseRisk(raw: string): SettingsData['risk'] {
       cooldownMinutes: typeof obj.cooldownMinutes === 'number' ? obj.cooldownMinutes : DEFAULT_RISK.cooldownMinutes,
       maxOpenOrders: typeof obj.maxOpenOrders === 'number' ? obj.maxOpenOrders : DEFAULT_RISK.maxOpenOrders,
     };
-  } catch {
+  } catch (error) {
+    log.warn('Failed to parse risk settings, using defaults', { action: 'parseRisk', error: error instanceof Error ? error : new Error(String(error)) });
     return { ...DEFAULT_RISK };
   }
 }
