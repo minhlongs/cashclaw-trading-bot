@@ -10,7 +10,7 @@ import { TelemetryWriter } from '@/tree/telemetry/writer';
 import type { BotInstance } from '@/tree/bot/bot-instance';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'scheduler' });
+const log = createLogger('scheduler');
 
 export interface SchedulerDeps {
   getNow?: () => number; // override for testing

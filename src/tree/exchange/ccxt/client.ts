@@ -5,7 +5,7 @@ import ccxt from 'ccxt';
 import type { Exchange as CCXTExchange, Order as CCXTOrder } from 'ccxt';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'ccxt-client' });
+const log = createLogger('ccxt-client');
 
 export interface CCXTConfig {
   exchange: string;

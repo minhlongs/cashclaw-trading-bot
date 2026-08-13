@@ -7,7 +7,7 @@
 import { getBotManager } from '@/tree/bot';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'api/killswitch' });
+const log = createLogger('api/killswitch');
 
 export async function killswitchHaltHandler(
   reason: string,

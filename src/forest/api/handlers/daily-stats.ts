@@ -9,7 +9,7 @@
 import { createServerClient } from '@/lib/db/client';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'api/daily-stats' });
+const log = createLogger('api/daily-stats');
 
 export interface DailyStats {
   ok: boolean;

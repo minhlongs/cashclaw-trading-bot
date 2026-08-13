@@ -9,7 +9,7 @@ import { createServerClient } from '@/lib/db/client';
 import type { BacktestResultRow } from '@/lib/db/types';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'backtest-actions' });
+const log = createLogger('backtest-actions');
 
 const SUPPORTED_INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'] as const;
 type CandleInterval = (typeof SUPPORTED_INTERVALS)[number];

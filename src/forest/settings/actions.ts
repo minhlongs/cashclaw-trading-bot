@@ -10,7 +10,7 @@ import { getBotManager } from '@/tree/bot';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'settings-actions' });
+const log = createLogger('settings-actions');
 
 export interface SettingsData {
   exchanges: {

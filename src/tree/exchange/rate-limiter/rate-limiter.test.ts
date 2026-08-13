@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { RateLimiter } from './index';
-import type { EndpointCategory } from './index';
 
 describe('RateLimiter', () => {
   let rl: RateLimiter;
@@ -106,18 +105,19 @@ describe('RateLimiter', () => {
     });
   });
 
-  describe('reportBackoff', () => {
+  describe('recordBackoff', () => {
     it('sets backoff state', () => {
-      rl.reportBackoff('binance', 'api', 1000);
+      rl.recordBackoff('binance', 'api', 1000);
 
       const result = rl.tryAcquire('binance', 'api');
       expect(result.allowed).toBe(false);
     });
 
     it('backoff expires after delay', () => {
-      rl.reportBackoff('binance', 'api', 1000);
+      // recordBackoff(exchange, category, multiplier=2) → base 1000ms * 2 = 2000ms
+      rl.recordBackoff('binance', 'api', 2);
 
-      vi.advanceTimersByTime(1100);
+      vi.advanceTimersByTime(2100);
 
       const result = rl.tryAcquire('binance', 'api');
       expect(result.allowed).toBe(true);

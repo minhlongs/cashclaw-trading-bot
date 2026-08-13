@@ -11,7 +11,7 @@ import { createServerClient } from '@/lib/db/client';
 import type { TradeEvent, TradeEventType } from '@/tree/telemetry';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'api/events' });
+const log = createLogger('api/events');
 
 export interface EventsResponse {
   ok: boolean;

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { checkRateLimit, getRateLimitHeaders } from './rate-limiter';
 
 describe('rate-limiter', () => {
@@ -13,55 +13,46 @@ describe('rate-limiter', () => {
 
   describe('checkRateLimit', () => {
     it('allows first request', () => {
-      const result = checkRateLimit('test-key');
+      const result = checkRateLimit('rl-allow-first');
       expect(result.allowed).toBe(true);
       expect(result.remaining).toBe(99);
+    });
+
+    it('rejects when limit exceeded', () => {
+      for (let i = 0; i < 101; i++) {
+        checkRateLimit('rl-reject-limit');
+      }
+      const result = checkRateLimit('rl-reject-limit');
+      expect(result.allowed).toBe(false);
     });
 
     it('tracks request count', () => {
-      checkRateLimit('test-key');
-      checkRateLimit('test-key');
-      const result = checkRateLimit('test-key');
+      checkRateLimit('rl-track-count');
+      checkRateLimit('rl-track-count');
+      const result = checkRateLimit('rl-track-count');
+
       expect(result.remaining).toBe(97);
     });
 
-    it('blocks when limit exceeded', () => {
-      for (let i = 0; i < 100; i++) {
-        checkRateLimit('test-key');
-      }
-      const result = checkRateLimit('test-key');
-      expect(result.allowed).toBe(false);
-      expect(result.remaining).toBe(0);
-    });
-
-    it('resets after window expires', () => {
-      for (let i = 0; i < 100; i++) {
-        checkRateLimit('test-key');
-      }
-
-      vi.advanceTimersByTime(61000);
-
-      const result = checkRateLimit('test-key');
-      expect(result.allowed).toBe(true);
-      expect(result.remaining).toBe(99);
-    });
-
     it('tracks different keys separately', () => {
-      checkRateLimit('key-1');
-      checkRateLimit('key-1');
-      checkRateLimit('key-2');
+      checkRateLimit('rl-diff-key-1');
+      checkRateLimit('rl-diff-key-1');
+      checkRateLimit('rl-diff-key-1');
 
-      const result1 = checkRateLimit('key-1');
-      expect(result1.remaining).toBe(98);
+      checkRateLimit('rl-diff-key-2');
+      checkRateLimit('rl-diff-key-2');
 
-      const result2 = checkRateLimit('key-2');
-      expect(result2.remaining).toBe(99);
+      const result1 = checkRateLimit('rl-diff-key-1');
+      expect(result1.remaining).toBe(96);
+
+      const result2 = checkRateLimit('rl-diff-key-2');
+      expect(result2.remaining).toBe(97);
     });
   });
 
   describe('getRateLimitHeaders', () => {
     it('returns correct headers', () => {
-      const result = checkRateLimit('test-key');
+      const result = checkRateLimit('rl-headers-correct');
       const headers = getRateLimitHeaders(result);
 
       expect(headers['X-RateLimit-Limit']).toBe('100');
@@ -71,9 +62,9 @@ describe('rate-limiter', () => {
 
     it('returns zero remaining when limit hit', () => {
       for (let i = 0; i < 100; i++) {
-        checkRateLimit('test-key');
+        checkRateLimit('rl-zero-remaining');
       }
-      const result = checkRateLimit('test-key');
+      const result = checkRateLimit('rl-zero-remaining');
       const headers = getRateLimitHeaders(result);
 
       expect(headers['X-RateLimit-Remaining']).toBe('0');

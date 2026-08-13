@@ -10,7 +10,7 @@ import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import type { TradeEvent, CapitalSnapshot, TradeEventType } from '@/tree/telemetry';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'dashboard-actions' });
+const log = createLogger('dashboard-actions');
 
 const MAX_EVENTS = 200;
 const MAX_SNAPSHOTS = 90;

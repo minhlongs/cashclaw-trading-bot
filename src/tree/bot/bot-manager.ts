@@ -19,7 +19,7 @@ import { persistBot, hydrateFromD1, patchBot, persistTrade } from '@/forest/bot/
 import { createServerClient } from '@/lib/db/client';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'bot-manager' });
+const log = createLogger('bot-manager');
 
 type D1BotStatus = 'draft' | 'paper_test' | 'live_running' | 'paused' | 'error' | 'stopped';
 

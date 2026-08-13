@@ -5,7 +5,7 @@
 
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'alerts' });
+const log = createLogger('alerts');
 
 export interface Alert {
   id: string;

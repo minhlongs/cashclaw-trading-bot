@@ -4,7 +4,7 @@ import { createServerClient } from '@/lib/db/client';
 import { parseSessionCookie } from '@/lib/auth/session-utils';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'auth-me' });
+const log = createLogger('auth-me');
 
 export async function GET(req: Request) {
   try {

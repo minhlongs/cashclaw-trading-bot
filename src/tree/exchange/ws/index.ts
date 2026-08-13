@@ -4,9 +4,6 @@
 // Solution: Combine streams via exchange's combined endpoint.
 
 import type { Ticker, OrderBook } from '../types';
-import { createLogger } from '@/lib/logger';
-
-const log = createLogger({ module: 'exchange-ws' });
 
 export type WsEventType = 'ticker' | 'orderbook' | 'trade' | 'kline';
 

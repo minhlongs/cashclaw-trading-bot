@@ -6,7 +6,7 @@ import { createCCXTClient } from '../ccxt/client';
 import { rateLimiter } from '../rate-limiter';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger({ module: 'exchange-live' });
+const log = createLogger('exchange-live');
 import type {
   ExchangeId,
   Ticker,
