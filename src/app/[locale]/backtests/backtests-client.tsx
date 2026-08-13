@@ -1,221 +1,303 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 
-interface Props {
-  initialBots?: Array<{ id: string; name: string; strategy: string; configJson: string }>;
-}
-
-export interface BotInfo {
+interface BotInfo {
   id: string;
   name: string;
   strategy: string;
   configJson: string;
 }
 
-export interface BacktestResult {
+interface Trade {
   id: string;
-  bot_id: string;
-  strategy: string;
-  pair: string;
-  exchange: string;
-  start_date: number;
-  end_date: number;
-  total_trades: number;
-  win_count: number;
-  loss_count: number;
-  win_rate: number;
-  total_pnl: number;
-  max_drawdown: number;
-  sharpe_ratio: number | null;
-  created_at: number;
+  side: 'LONG' | 'SHORT';
+  entryTime: string;
+  exitTime: string;
+  entryPrice: number;
+  exitPrice: number;
+  pnl: number;
+  pnlPercent: number;
 }
 
-const EXCHANGES = ['binance', 'bybit', 'okx'] as const;
-const INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'] as const;
+interface BacktestResult {
+  trades: Trade[];
+  equityCurve: number[];
+  startingBalance: number;
+  endingBalance: number;
+  totalReturn: number;
+  winRate: number;
+  maxDrawdown: number;
+  sharpeRatio: number;
+  profitFactor: number;
+  totalTrades: number;
+}
 
-export default function BacktestsClient({ initialBots }: Props) {
+const MOCK_RESULT: BacktestResult = {
+  startingBalance: 10000,
+  endingBalance: 12450,
+  totalReturn: 24.5,
+  winRate: 58.3,
+  maxDrawdown: 12.4,
+  sharpeRatio: 1.85,
+  profitFactor: 2.1,
+  totalTrades: 48,
+  equityCurve: [
+    10000, 10120, 10280, 10150, 10320, 10480, 10350, 10520, 10680, 10550,
+    10720, 10880, 10750, 10920, 11080, 10950, 11120, 11280, 11150, 11320,
+    11480, 11350, 11520, 11680, 11550, 11720, 11880, 11750, 11920, 12080,
+    11950, 12120, 12280, 12150, 12320, 12450, 12300, 12450, 12520, 12380,
+    12520, 12680, 12550, 12720, 12880, 12750, 12920, 12450,
+  ],
+  trades: [
+    { id: '1', side: 'LONG', entryTime: '2026-08-01 09:15', exitTime: '2026-08-01 11:30', entryPrice: 67250, exitPrice: 67890, pnl: 640, pnlPercent: 0.95 },
+    { id: '2', side: 'SHORT', entryTime: '2026-08-01 14:00', exitTime: '2026-08-01 16:45', entryPrice: 68100, exitPrice: 67650, pnl: 450, pnlPercent: 0.66 },
+    { id: '3', side: 'LONG', entryTime: '2026-08-02 08:30', exitTime: '2026-08-02 10:15', entryPrice: 67900, exitPrice: 67550, pnl: -350, pnlPercent: -0.52 },
+    { id: '4', side: 'LONG', entryTime: '2026-08-02 13:00', exitTime: '2026-08-02 15:30', entryPrice: 67600, exitPrice: 68200, pnl: 600, pnlPercent: 0.89 },
+    { id: '5', side: 'SHORT', entryTime: '2026-08-03 09:45', exitTime: '2026-08-03 12:00', entryPrice: 68500, exitPrice: 68050, pnl: 450, pnlPercent: 0.66 },
+    { id: '6', side: 'LONG', entryTime: '2026-08-03 14:30', exitTime: '2026-08-03 16:00', entryPrice: 68100, exitPrice: 68450, pnl: 350, pnlPercent: 0.51 },
+    { id: '7', side: 'SHORT', entryTime: '2026-08-04 08:00', exitTime: '2026-08-04 10:30', entryPrice: 68700, exitPrice: 69200, pnl: -500, pnlPercent: -0.73 },
+    { id: '8', side: 'LONG', entryTime: '2026-08-04 13:45', exitTime: '2026-08-04 16:15', entryPrice: 68900, exitPrice: 69450, pnl: 550, pnlPercent: 0.80 },
+  ],
+};
+
+export default function BacktestsClient({ initialBots = [] }: { initialBots?: BotInfo[] }) {
   const locale = useLocale();
-  const t = (vi: string, en: string) => locale === 'vi' ? vi : en;
-
-  const [bots, setBots] = useState<BotInfo[]>(initialBots ?? []);
-  const [selectedBotId, setSelectedBotId] = useState('');
-  const [results, setResults] = useState<BacktestResult[]>([]);
-  const [loading, setLoading] = useState(false);
+  const isEn = locale === 'en';
+  const [selectedBotId, setSelectedBotId] = useState<string>('');
+  const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [candlesFetched, setCandlesFetched] = useState<number | null>(null);
+  const [result, setResult] = useState<BacktestResult | null>(MOCK_RESULT);
+  const [showMockBanner, setShowMockBanner] = useState(true);
 
-  // Set default selection when bots load
-  useEffect(() => {
-    if (bots.length > 0 && !selectedBotId) {
-      setSelectedBotId(bots[0].id);
-    }
-  }, [bots, selectedBotId]);
-
-  const selectedBot = bots.find((b) => b.id === selectedBotId);
-  const selectedConfig = useCallback((): Record<string, unknown> | null => {
-    if (!selectedBot) return null;
-    try { return JSON.parse(selectedBot.configJson) as Record<string, unknown>; } catch { return null; }
-  }, [selectedBot]);
-
-  const sCfg = selectedConfig();
-
-  const handleRun = async () => {
-    if (!selectedBot || !sCfg) {
-      setError('No bot selected');
+  const runBacktest = useCallback(async () => {
+    if (!selectedBotId) {
+      setError(isEn ? 'Please select a bot' : 'Chon bot truoc');
       return;
     }
-    setLoading(true);
+    setIsRunning(true);
     setError(null);
-    setCandlesFetched(null);
-
+    setShowMockBanner(false);
     try {
-      const startMs = new Date('2024-01-01').getTime();
-      const endMs = Date.now();
-
       const res = await fetch('/api/backtest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          botId: selectedBotId,
-          exchange: 'binance',
-          symbol: (sCfg.symbol as string) ?? 'BTC/USDT',
-          strategy: selectedBot.strategy,
-          config: sCfg,
-          startDate: '2024-01-01',
-          endDate: new Date().toISOString().split('T')[0],
-          interval: '1h',
-          initialCapital: (sCfg.capital as number) ?? 1000,
-        }),
+        body: JSON.stringify({ botId: selectedBotId }),
       });
-
-      const data = (await res.json()) as { success: boolean; error?: string; candlesFetched?: number; result?: unknown };
-      if (!data.success) {
-        setError(data.error ?? 'Unknown error');
-        return;
+      const data = (await res.json()) as { success: boolean; result?: BacktestResult; error?: string };
+      if (data.success && data.result) {
+        setResult(data.result as BacktestResult);
+      } else {
+        setError(data.error ?? (isEn ? 'Backtest failed' : 'Backtest that bai'));
       }
-
-      const fetched = data.candlesFetched;
-      setCandlesFetched(typeof fetched === 'number' ? fetched : null);
-      if (data.result) setResults([data.result as BacktestResult, ...results]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed');
+      setError(err instanceof Error ? err.message : (isEn ? 'Request failed' : 'Yeu cau that bai'));
     } finally {
-      setLoading(false);
+      setIsRunning(false);
     }
-  };
+  }, [selectedBotId, isEn]);
 
   return (
-    <div className="space-y-6">
-      {/* Run Backtest */}
-      <div className="card">
-        <h2 style={{ fontWeight: 700, fontSize: 'var(--text-xl)', marginBottom: '16px' }}>
-          {t('Chạy Backtest', 'Run Backtest')}
-        </h2>
+    <div style={{ padding: 'var(--space-6)', maxWidth: 'var(--content-max)', margin: '0 auto' }}>
+      <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>
+        {isEn ? 'Backtest' : 'Backtest'}
+      </h1>
 
-        <div className="form-group">
-          <label style={{ fontSize: 'var(--text-sm)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-            {t('Bot', 'Bot')}
-          </label>
-          <select
-            value={selectedBotId}
-            onChange={(e) => setSelectedBotId(e.target.value)}
-            className="input"
-            style={{ width: '100%' }}
-            disabled={bots.length === 0}
-          >
-            {bots.length === 0 && <option value="">{t('Chưa có bot / No bots yet', '')}</option>}
-            {bots.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name} — {b.strategy}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {sCfg && (
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-            {(sCfg.symbol as string) ?? 'USD'} | Exchange: {(sCfg.exchange as string) ?? 'paper'} | Capital: ${(sCfg.capital as number ?? 0).toLocaleString()}
-          </div>
-        )}
-
-        <button
-          onClick={handleRun}
-          disabled={loading || !selectedBotId}
-          className="btn btn-primary"
-          style={{ marginTop: '16px', opacity: loading ? 0.6 : 1 }}
+      {/* Bot Selector */}
+      <div className="card" style={{ marginBottom: 'var(--space-4)' }}>
+        <select
+          value={selectedBotId}
+          onChange={(e) => setSelectedBotId(e.target.value)}
+          style={{ width: '100%', padding: 'var(--space-3)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}
         >
-          {loading ? t('Đang chạy...', 'Running...') : t('Chạy Backtest', 'Run Backtest')}
-        </button>
-
-        {error && <p style={{ color: 'var(--color-danger)', fontSize: 'var(--text-sm)', marginTop: '8px' }}>{error}</p>}
-        {candlesFetched !== null && !error && (
-          <p style={{ color: 'var(--color-success)', fontSize: 'var(--text-sm)', marginTop: '8px' }}>
-            {t(`Fetched ${candlesFetched} candles`, `Fetched ${candlesFetched} candles`)}
-          </p>
-        )}
+          <option value="">{isEn ? 'Select a bot...' : 'Chon bot...'}</option>
+          {initialBots.map((bot) => (
+            <option key={bot.id} value={bot.id}>{bot.name} ({bot.strategy})</option>
+          ))}
+        </select>
       </div>
 
-      {/* Results */}
-      {results.length > 0 && (
-        <div>
-          <h2 style={{ fontWeight: 700, fontSize: 'var(--text-xl)', marginBottom: '12px' }}>
-            {t('Kết quả', 'Results')}
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {results.map((r) => (
-              <div key={r.id} className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                  <div>
-                    <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: 'var(--text-sm)' }}>{r.strategy}</span>
-                    <span style={{ color: 'var(--text-tertiary)', marginLeft: '8px', fontSize: 'var(--text-sm)' }}>
-                      {r.pair} @ {r.exchange}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
-                    {new Date(r.start_date).toLocaleDateString()} — {new Date(r.end_date).toLocaleDateString()}
-                  </span>
-                </div>
+      {/* Run Button */}
+      <button
+        onClick={runBacktest}
+        disabled={isRunning || !selectedBotId}
+        className="btn btn-primary"
+        style={{ marginBottom: 'var(--space-6)', opacity: isRunning || !selectedBotId ? 0.5 : 1 }}
+      >
+        {isRunning ? (isEn ? 'Running...' : 'Dang chay...') : (isEn ? 'Run Backtest' : 'Chay Backtest')}
+      </button>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginTop: '12px' }}>
-                  <Metric label={t('Tổng P&L', 'Total P&L')} value={`$${r.total_pnl.toFixed(2)}`} positive={r.total_pnl >= 0} locale={locale} />
-                  <Metric label={t('Tỷ lệ thắng', 'Win Rate')} value={`${(r.win_rate * 100).toFixed(1)}%`} locale={locale} />
-                  <Metric label={t('Max DD', 'Max DD')} value={`${r.max_drawdown.toFixed(2)}%`} locale={locale} />
-                  <Metric label={t('Trades', 'Trades')} value={`${r.win_count}W / ${r.loss_count}L (${r.total_trades})`} locale={locale} />
-                  {r.sharpe_ratio !== null && <Metric label="Sharpe" value={r.sharpe_ratio.toFixed(2)} locale={locale} />}
-                </div>
-              </div>
-            ))}
-          </div>
+      {error && <p style={{ color: 'var(--color-loss)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>{error}</p>}
+
+      {/* Mock Data Banner */}
+      {showMockBanner && (
+        <div style={{ background: 'var(--color-warning)', color: '#000', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+          {isEn ? 'Showing demo data. Select a bot and run backtest for real results.' : 'Dang hien thi du lieu mau. Chon bot va chay backtest de xem ket qua that.'}
         </div>
       )}
 
-      {bots.length === 0 && (
-        <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)' }}>
-            {t('Tạo bot trước để chạy backtest', 'Create a bot first to run a backtest')}
-          </p>
-        </div>
-      )}
+      {result && <BacktestResults result={result} isEn={isEn} />}
     </div>
   );
 }
 
-function Metric({ label, value, positive, locale }: { label: string; value: string; positive?: boolean; locale: string }) {
+function BacktestResults({ result, isEn }: { result: BacktestResult; isEn: boolean }) {
+  const { startingBalance, endingBalance, totalReturn, winRate, maxDrawdown, sharpeRatio, profitFactor, totalTrades, equityCurve, trades } = result;
+
   return (
-    <div>
-      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0 }}>{label}</p>
-      <p
-        style={{
-          fontSize: 'var(--text-lg)',
-          fontWeight: 700,
-          margin: 0,
-          color: positive && positive ? 'var(--color-success)' : 'var(--text-primary)',
-        }}
-      >
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+      {/* Performance Metrics */}
+      <div className="card">
+        <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
+          {isEn ? 'Performance Metrics' : 'Chi So Hieu Suat'}
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-4)' }}>
+          <MetricCard label={isEn ? 'Total Return' : 'Tong Loi Nhuan'} value={`${totalReturn > 0 ? '+' : ''}${totalReturn.toFixed(1)}%`} positive={totalReturn > 0} />
+          <MetricCard label={isEn ? 'Win Rate' : 'Ty Le Thang'} value={`${winRate.toFixed(1)}%`} />
+          <MetricCard label={isEn ? 'Max Drawdown' : 'Max Drawdown'} value={`-${maxDrawdown.toFixed(1)}%`} positive={false} />
+          <MetricCard label="Sharpe Ratio" value={sharpeRatio.toFixed(2)} />
+          <MetricCard label={isEn ? 'Profit Factor' : 'Loi Nhuan Factor'} value={profitFactor.toFixed(2)} />
+          <MetricCard label={isEn ? 'Total Trades' : 'Tong Giao Dich'} value={totalTrades.toString()} />
+          <MetricCard label={isEn ? 'Starting Balance' : 'So Du Khoi Dau'} value={`$${startingBalance.toLocaleString()}`} />
+          <MetricCard label={isEn ? 'Ending Balance' : 'So Du Cuoi Cung'} value={`$${endingBalance.toLocaleString()}`} positive={endingBalance >= startingBalance} />
+        </div>
+      </div>
+
+      {/* Equity Curve */}
+      <div className="card">
+        <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
+          {isEn ? 'Equity Curve' : 'Duong Equity'}
+        </h3>
+        <EquityCurveChart data={equityCurve} startingBalance={startingBalance} />
+      </div>
+
+      {/* Trade List */}
+      <div className="card">
+        <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
+          {isEn ? 'Recent Trades' : 'Giao Dich Gan Day'}
+        </h3>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
+                <th style={thStyle}>{isEn ? 'Side' : 'Huong'}</th>
+                <th style={thStyle}>{isEn ? 'Entry Time' : 'Thoi Gian Vao'}</th>
+                <th style={thStyle}>{isEn ? 'Entry Price' : 'Gia Vao'}</th>
+                <th style={thStyle}>{isEn ? 'Exit Time' : 'Thoi Gian Ra'}</th>
+                <th style={thStyle}>{isEn ? 'Exit Price' : 'Gia Ra'}</th>
+                <th style={thStyle}>{isEn ? 'PnL' : 'Loi Nhuan'}</th>
+                <th style={thStyle}>{isEn ? 'PnL %' : 'Loi Nhuan %'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trades.map((trade) => (
+                <tr key={trade.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <td style={tdStyle}>
+                    <span style={{ color: trade.side === 'LONG' ? 'var(--color-profit)' : 'var(--color-loss)', fontWeight: 600 }}>
+                      {trade.side}
+                    </span>
+                  </td>
+                  <td style={tdStyle}>{trade.entryTime}</td>
+                  <td style={tdStyle}>${trade.entryPrice.toLocaleString()}</td>
+                  <td style={tdStyle}>{trade.exitTime}</td>
+                  <td style={tdStyle}>${trade.exitPrice.toLocaleString()}</td>
+                  <td style={{ ...tdStyle, color: trade.pnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
+                    {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toLocaleString()}
+                  </td>
+                  <td style={{ ...tdStyle, color: trade.pnlPercent >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
+                    {trade.pnlPercent >= 0 ? '+' : ''}{trade.pnlPercent.toFixed(2)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
+  return (
+    <div style={{ background: 'var(--bg-elevated)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>{label}</p>
+      <p style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: positive === true ? 'var(--color-profit)' : positive === false ? 'var(--color-loss)' : 'var(--text-primary)' }}>
         {value}
       </p>
     </div>
   );
 }
+
+function EquityCurveChart({ data, startingBalance }: { data: number[]; startingBalance: number }) {
+  if (data.length < 2) return null;
+
+  const width = 600;
+  const height = 200;
+  const padding = { top: 20, right: 20, bottom: 30, left: 60 };
+
+  const minVal = Math.min(...data);
+  const maxVal = Math.max(...data);
+  const range = maxVal - minVal || 1;
+
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+
+  const points = data.map((val, i) => {
+    const x = padding.left + (i / (data.length - 1)) * chartWidth;
+    const y = padding.top + chartHeight - ((val - minVal) / range) * chartHeight;
+    return `${x},${y}`;
+  }).join(' ');
+
+  const linePath = points;
+  const areaPath = `${padding.left},${padding.top + chartHeight} ${points} ${width - padding.right},${padding.top + chartHeight}`;
+
+  const isProfit = data[data.length - 1] >= startingBalance;
+
+  const yTicks = [minVal, minVal + range * 0.25, minVal + range * 0.5, minVal + range * 0.75, maxVal];
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto' }}>
+      {/* Grid lines */}
+      {yTicks.map((tick, i) => {
+        const y = padding.top + chartHeight - ((tick - minVal) / range) * chartHeight;
+        return (
+          <g key={i}>
+            <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="var(--border-subtle)" strokeWidth="1" strokeDasharray="4,4" />
+            <text x={padding.left - 8} y={y + 4} textAnchor="end" fill="var(--text-secondary)" fontSize="10">
+              ${Math.round(tick).toLocaleString()}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Area fill */}
+      <polygon points={areaPath} fill={isProfit ? 'rgba(0, 212, 170, 0.1)' : 'rgba(255, 71, 87, 0.1)'} />
+
+      {/* Line */}
+      <polyline points={linePath} fill="none" stroke={isProfit ? 'var(--color-profit)' : 'var(--color-loss)'} strokeWidth="2" strokeLinejoin="round" />
+
+      {/* Start line */}
+      <line x1={padding.left} y1={padding.top + chartHeight - ((startingBalance - minVal) / range) * chartHeight} x2={width - padding.right} y2={padding.top + chartHeight - ((startingBalance - minVal) / range) * chartHeight} stroke="var(--text-tertiary)" strokeWidth="1" strokeDasharray="2,2" />
+
+      {/* Labels */}
+      <text x={padding.left} y={height - 5} fill="var(--text-secondary)" fontSize="10">Start</text>
+      <text x={width - padding.right} y={height - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="end">End</text>
+    </svg>
+  );
+}
+
+const thStyle: React.CSSProperties = {
+  textAlign: 'left',
+  padding: 'var(--space-3)',
+  color: 'var(--text-secondary)',
+  fontWeight: 600,
+  fontSize: 'var(--text-xs)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: 'var(--space-3)',
+  color: 'var(--text-primary)',
+};

@@ -20,6 +20,7 @@ const navItems = [
   { href: '/vi/dashboard', icon: LayoutDashboard, labelVi: 'Tổng quan', labelEn: 'Dashboard' },
   { href: '/vi/bots', icon: Bot, labelVi: 'Bot của tôi', labelEn: 'My Bots' },
   { href: '/vi/backtests', icon: BookOpen, labelVi: 'Backtest', labelEn: 'Backtests' },
+  { href: '/vi/monitoring', icon: Activity, labelVi: 'Monitoring', labelEn: 'Monitoring' },
   { href: '/vi/settings', icon: Settings, labelVi: 'Cài đặt', labelEn: 'Settings' },
 ];
 
