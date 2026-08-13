@@ -1,7 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import { useLocale } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { Plus, Search, Filter, Play, Pause } from 'lucide-react';
 import Link from 'next/link';
@@ -54,7 +53,7 @@ export default function BotsListClient() {
         } else {
           setError('Failed to fetch bots');
         }
-      } catch (err) {
+      } catch {
         setError('Failed to fetch bots');
       } finally {
         setLoading(false);

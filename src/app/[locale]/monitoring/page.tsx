@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import MonitoringClient from '@/components/monitoring/monitoring-client';
+import { MonitoringClient } from '@/components/monitoring/monitoring-client';
 
 export function generateStaticParams() {
   return [{ locale: 'vi' }, { locale: 'en' }];

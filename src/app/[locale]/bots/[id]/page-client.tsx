@@ -1,8 +1,7 @@
 'use client';
 
-import { use } from 'react';
-import BotDetailClient from '@/components/bots/bot-detail-client';
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
+import { BotDetailClient } from '@/components/bots/bot-detail-client';
 
 interface BotDetailData {
   id: string;
@@ -81,7 +80,7 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
 
   return (
     <div className="main-content">
-      <BotDetailClient initialData={bot} initialTrades={trades} />
+      <BotDetailClient bot={bot} trades={trades} />
     </div>
   );
 }

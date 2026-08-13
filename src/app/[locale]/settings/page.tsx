@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import SettingsClient from '@/components/settings/settings-client';
+import { SettingsClient } from '@/components/settings/settings-client';
 
 export function generateStaticParams() {
   return [{ locale: 'vi' }, { locale: 'en' }];

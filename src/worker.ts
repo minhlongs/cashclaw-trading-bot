@@ -22,8 +22,9 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
+import { logger as honoLogger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
+import { createLogger } from './lib/logger';
 
 import {
   botListHandler,
@@ -39,6 +40,8 @@ import { authGuard } from './forest/api/auth-guard';
 import { getBotManager } from './tree/bot';
 import { BotScheduler } from './forest/bot/scheduler';
 
+const logger = createLogger('worker');
+
 type Env = {
   DB: unknown; // D1Database — typed at deploy time via wrangler
   ADMIN_TOKEN?: string; // Bearer token for auth guard
@@ -48,7 +51,7 @@ type Env = {
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.use('*', logger());
+app.use('*', honoLogger());
 app.use('*', cors({ origin: '*', allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] }));
 app.use('*', prettyJSON());
 
@@ -97,7 +100,9 @@ app.get('/api/version', (c) => {
       { ok: true, data: { version: '0.0.0-dev', shortSha: '0000000' } },
       200,
     );
-  } catch {
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    logger.error('Failed to read version', err, { action: 'get-version' });
     return c.json({ ok: true, data: { version: '0.0.0-dev', shortSha: '0000000' } }, 200);
   }
 });

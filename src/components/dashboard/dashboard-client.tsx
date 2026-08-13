@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Activity, Plus, Pause, TrendingUp, TrendingDown, Bot } from 'lucide-react';
+import { Plus, Bot } from 'lucide-react';
 import Link from 'next/link';
 
 import type { BotCardData, DashboardKpis } from '@/forest/dashboard/actions';
@@ -158,10 +158,7 @@ export default function DashboardClient() {
   }
 
   const { kpis, bots } = data;
-  const pnl = kpis.totalBalance;
   const winRate = kpis.winRate;
-  const pnlClass = pnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)';
-  const TrendIcon = pnl >= 0 ? TrendingUp : TrendingDown;
 
   return (
     <section className="dashboard">

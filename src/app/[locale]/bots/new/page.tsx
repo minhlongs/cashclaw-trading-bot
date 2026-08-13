@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import BotWizardClient from '@/components/bots/bot-wizard-client';
+import { BotWizardClient } from '@/components/bots/bot-wizard-client';
 
 export function generateStaticParams() {
   return [{ locale: 'vi' }, { locale: 'en' }];

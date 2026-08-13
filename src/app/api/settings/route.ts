@@ -4,6 +4,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSettings, updateExchangeCredentials, updateRiskLimits, emergencyHalt, resumeFromHalt } from '@/forest/settings/actions';
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('api-settings');
 
 const ExchangeSchema = z.object({
   type: z.literal('exchange'),
@@ -33,7 +36,9 @@ export async function GET() {
   try {
     const data = await getSettings();
     return NextResponse.json({ ok: true, data });
-  } catch {
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    logger.error('Failed to load settings', err, { action: 'get-settings' });
     return NextResponse.json({ ok: false, error: 'Failed to load settings' }, { status: 500 });
   }
 }
@@ -80,7 +85,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: false, error: 'Unknown settings type' }, { status: 400 });
-  } catch {
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    logger.error('Settings update failed', err, { action: 'update-settings' });
     return NextResponse.json({ ok: false, error: 'Settings update failed' }, { status: 500 });
   }
 }

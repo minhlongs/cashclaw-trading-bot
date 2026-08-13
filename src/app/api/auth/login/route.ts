@@ -2,7 +2,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db/client';
-import { hashPasscode, generateSessionId } from '@/lib/auth/session-utils';
+import { generateSessionId } from '@/lib/auth/session-utils';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('auth-login');
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -80,7 +83,9 @@ export async function POST(req: Request) {
       path: '/',
     });
     return response;
-  } catch {
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    logger.error('Login failed', err, { action: 'authenticate' });
     return NextResponse.json({ ok: false, error: 'Login failed' }, { status: 500 });
   }
 }

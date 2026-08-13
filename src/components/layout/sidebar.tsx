@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Bot,
-  BarChart3,
   Settings,
   BookOpen,
   ChevronLeft,
