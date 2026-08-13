@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSettings, updateExchangeCredentials, updateRiskLimits, emergencyHalt, resumeFromHalt } from '@/forest/settings/actions';
+import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
 
 const ExchangeSchema = z.object({
   type: z.literal('exchange'),
@@ -38,6 +39,14 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const rateLimit = checkRateLimit('settings:update');
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const body = await req.json();
     const parsed = SettingsSchema.safeParse(body);

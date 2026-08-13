@@ -5,6 +5,7 @@
 // Operator/CLI access via Bearer token lives in src/worker.ts → /internal/api/bots.
 import { NextResponse } from 'next/server';
 import { botListHandler, botCreateHandler, type CreateBotPayload } from '@/forest/api/routes';
+import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
 
 
 export async function GET() {
@@ -13,6 +14,14 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const rateLimit = checkRateLimit('bots:create');
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   const body = (await req.json().catch(() => ({}))) as CreateBotPayload;
   const result = await botCreateHandler(body);
   return NextResponse.json(result, result.ok ? undefined : { status: 400 });
