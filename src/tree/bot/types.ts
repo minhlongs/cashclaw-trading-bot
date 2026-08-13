@@ -43,8 +43,8 @@ export type PreconditionFn = (ctx: StrategyContext) => PreconditionResult;
 export function hasStrategyChain(
   config: BotConfig,
 ): config is BotConfig & { strategyChain: ChainLeg[] } {
-  return Array.isArray((config as any).strategyChain) &&
-    (config as any).strategyChain.length > 0;
+  return Array.isArray(config.strategyChain) &&
+    config.strategyChain.length > 0;
 }
 
 // ── Existing bot configs ─────────────────────────────────────────────────────
@@ -69,6 +69,7 @@ export interface BaseBotConfig {
   capital: number;
   maxDrawdownPct: number;
   strategy: StrategyType;
+  strategyChain?: ChainLeg[];
 }
 
 export interface GridBotConfig extends BaseBotConfig {

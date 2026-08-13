@@ -1,5 +1,7 @@
-// GET /api/bots/[id] — bot detail + trades
-// POST /api/bots/[id] — control action (start/stop/pause/resume)
+// GET /api/bots/[id] — bot detail + trades (user-facing, session-cookie auth)
+// POST /api/bots/[id] — control action (start/stop/pause/resume) (user-facing)
+//
+// Operator/CLI access via Bearer token lives in src/worker.ts → /internal/api/bots.
 import { NextResponse } from 'next/server';
 import { botDetailHandler, botControlHandler } from '@/forest/api/routes';
 

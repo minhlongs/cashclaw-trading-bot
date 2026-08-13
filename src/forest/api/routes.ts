@@ -6,10 +6,15 @@
  *
  * All responses follow { ok: boolean, data?: T, error?: string }.
  *
+ * API surface split:
+ *   - src/app/api/bots/              — Next.js App Router (session-cookie auth, user-facing)
+ *   - src/worker.ts → /internal/api/ — Hono Worker (Bearer token, operator/cron access)
+ *   - src/app/api/auth/, settings/   — Next.js App Router only (no Hono equivalent)
+ *
  * File layout:
- *   app/api/{bots,killswitch,events,stats}/route.ts  — Next.js App Router route handlers
- *   src/forest/api/handlers.ts                        — shared handler implementations
- *   src/forest/api/middleware.ts                      — auth / rate-limit middleware
+ *   src/forest/api/handlers/   — shared handler implementations
+ *   src/forest/api/auth-guard.ts — Hono Bearer token middleware (worker.ts)
+ *   src/middleware.ts            — Next.js session-cookie middleware (app router)
  */
 
 export { botListHandler } from './handlers/bot-list';

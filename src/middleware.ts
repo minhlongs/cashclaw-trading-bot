@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Session-cookie auth guard for Next.js App Router routes.
+// This middleware applies to /api/* routes handled by Next.js only.
+// Hono routes in src/worker.ts use Bearer token auth (auth-guard.ts).
 // Protected API methods — only mutating endpoints require session cookie.
 // Public: GET pages, GET API (settings/bots list), auth endpoints.
 const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];

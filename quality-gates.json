@@ -1,0 +1,12 @@
+{
+  "_note": "Aspirational targets. Current: warnings=89, maxFileLines=362. Enforce via CI when thresholds are achievable.",
+  "maxWarnings": 100,
+  "maxErrors": 0,
+  "coverageThresholds": {
+    "lines": 40,
+    "functions": 40,
+    "branches": 30
+  },
+  "maxFileLines": 400,
+  "maxComplexity": 15
+}

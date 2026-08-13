@@ -14,7 +14,9 @@ import type {
   BotConfig,
   GridBotConfig,
   MeanRevBotConfig,
+  StrategyContext,
 } from './types';
+import { buildDefaultChain, type StrategyChain } from './strategy-chain';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
 import type { TradeEventType } from '../telemetry/types';
@@ -41,6 +43,7 @@ export class BotInstance {
 
   private state: BotState;
   private strategy: GridStrategy | MeanRevStrategy | null = null;
+  private strategyChain: StrategyChain | null = null;
   private tickInterval: ReturnType<typeof setInterval> | null = null;
   private orderCounter = 0;
   private lastTickPrice: number | null = null;
@@ -190,6 +193,18 @@ export class BotInstance {
       this.state.lastTickAt = Date.now();
       this.state.updatedAt = Date.now();
 
+      // Evaluate StrategyChain first if configured
+      const chainOrder = this.evaluateChain(price);
+      if (chainOrder) {
+        this.callbacks.onLog(`[${this.id}] Chain signal: ${chainOrder.side} ${chainOrder.quantity} @ market`);
+        try {
+          await this.executeOrder(chainOrder);
+        } catch (error) {
+          // Chain order failure is non-fatal — continue tick
+          this.emitTelemetry('error', { error: error instanceof Error ? error.message : 'unknown', context: 'bot.chainOrder' });
+        }
+      }
+
       if (this.strategy) {
         this.strategy.onTicker(ticker);
       }
@@ -207,41 +222,13 @@ export class BotInstance {
   // ── Strategy factory ───────────────────────────────────────
 
   private initializeStrategy(price: number): void {
+    // Build StrategyChain if configured
+    if (this.config.strategyChain) {
+      this.strategyChain = buildDefaultChain(this.config);
+    }
+
     const placeOrder = async (req: OrderRequest): Promise<OrderResult> => {
-      if (!this.deps.killswitch.isTradingEnabled()) {
-        throw new Error('Trading halted by killswitch');
-      }
-
-      const result = await this.deps.exchange.placeOrder(req);
-      this.state.lastOrderAt = Date.now();
-      this.orderCounter++;
-      this.state.totalTrades++;
-
-      const trade = this.orderResultToTrade(result);
-      this.callbacks.onTrade(trade);
-      this.deps.killswitch.onOrderFilled(result);
-
-      const pnl = result.pnl ?? 0;
-      this.state.totalPnl += pnl;
-      if (pnl >= 0) this.state.winCount++;
-      else this.state.lossCount++;
-
-      this.deps.killswitch.updateDailyPnl(pnl);
-      this.deps.killswitch.updatePeakCapital(this.config.capital + this.state.totalPnl);
-
-      // Emit fill telemetry
-      this.emitTelemetry('fill', {
-        orderId: result.id,
-        side: result.side,
-        price: result.price,
-        quantity: result.quantity,
-        pnl,
-      });
-
-      this.state.updatedAt = Date.now();
-      this.emitState();
-
-      return result;
+      return this.executeOrder(req);
     };
 
     const onTrade = (trade: BotTrade) => this.callbacks.onTrade(trade);
@@ -263,7 +250,82 @@ export class BotInstance {
     }
   }
 
+  private evaluateChain(price: number): OrderRequest | null {
+    if (!this.strategyChain || this.strategyChain.length === 0) {
+      return null;
+    }
+
+    const ctx: StrategyContext = {
+      symbol: this.config.symbol,
+      balance: this.config.capital + this.state.totalPnl,
+      openPositions: this.state.totalTrades - this.state.winCount - this.state.lossCount,
+      lastPrice: price,
+    };
+
+    for (const node of this.strategyChain) {
+      const signal = node.strategy.evaluate(ctx);
+      if (signal) {
+        return {
+          symbol: this.config.symbol,
+          side: signal.side,
+          type: 'market',
+          quantity: signal.qty,
+        };
+      }
+    }
+
+    return null;
+  }
+
   // ── Helpers ────────────────────────────────────────────────
+
+  /**
+   * Execute an order placement with killswitch check, exchange call, and telemetry.
+   * Single source of truth for all order placement in BotInstance.
+   */
+  private async executeOrder(req: OrderRequest): Promise<OrderResult> {
+    if (!this.deps.killswitch.isTradingEnabled()) {
+      throw new Error('Trading halted by killswitch');
+    }
+
+    const result = await this.deps.exchange.placeOrder(req);
+    this.state.lastOrderAt = Date.now();
+    this.orderCounter++;
+    this.state.totalTrades++;
+
+    const trade = this.orderResultToTrade(result);
+    this.callbacks.onTrade(trade);
+    this.deps.killswitch.onOrderFilled(result);
+
+    const pnl = result.pnl ?? 0;
+    this.state.totalPnl += pnl;
+    if (pnl >= 0) this.state.winCount++;
+    else this.state.lossCount++;
+
+    this.deps.killswitch.updateDailyPnl(pnl);
+    this.deps.killswitch.updatePeakCapital(this.config.capital + this.state.totalPnl);
+
+    this.emitTelemetry('fill', {
+      orderId: result.id,
+      side: result.side,
+      price: result.price,
+      quantity: result.quantity,
+      pnl,
+    });
+
+    this.state.updatedAt = Date.now();
+    this.emitState();
+
+    return result;
+  }
+
+  /**
+   * Place an order externally (e.g. from Telegram bot or API).
+   * Throws on killswitch, returns result on success.
+   */
+  async placeOrder(req: OrderRequest): Promise<OrderResult> {
+    return this.executeOrder(req);
+  }
 
   private orderResultToTrade(result: OrderResult): BotTrade {
     return {

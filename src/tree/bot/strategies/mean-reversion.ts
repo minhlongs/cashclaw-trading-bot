@@ -40,6 +40,7 @@ export class MeanRevStrategy {
   private lastTradeTime: number = 0;
   private position: 'long' | 'short' | 'none' = 'none';
   private entryPrice: number = 0;
+  private _tradeCount: number = 0;
 
   constructor(config: MeanRevBotConfig, callbacks: MeanRevStrategyCallbacks) {
     this.config = config;
@@ -91,6 +92,10 @@ export class MeanRevStrategy {
 
   getPosition(): 'long' | 'short' | 'none' {
     return this.position;
+  }
+
+  get tradeCount(): number {
+    return this._tradeCount;
   }
 
   private calculateBB(): BollingerBands {
@@ -179,6 +184,7 @@ export class MeanRevStrategy {
       this.position = 'long';
       this.entryPrice = price;
       this.lastTradeTime = Date.now();
+      this._tradeCount++;
 
       this.callbacks.onLog(`LONG entry @ ${price.toFixed(2)} | BB lower=${bb.lower.toFixed(2)} RSI=${rsi.value.toFixed(1)}`);
     } catch (error) {
@@ -206,6 +212,7 @@ export class MeanRevStrategy {
       this.position = 'none';
       this.entryPrice = 0;
       this.lastTradeTime = Date.now();
+      this._tradeCount++;
     } catch (error) {
       this.callbacks.onLog(`LONG exit failed: ${error instanceof Error ? error.message : 'unknown'}`);
     }

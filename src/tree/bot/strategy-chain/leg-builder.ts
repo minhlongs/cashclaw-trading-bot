@@ -7,11 +7,11 @@ import { createMeanRevChainStrategy } from './strategies/mean-reversion';
 import type { GridBotConfig, MeanRevBotConfig, BotConfig } from '@/tree/bot/types';
 
 export function buildDefaultChain(config: BotConfig): StrategyChain {
-  if (!Array.isArray((config as any).strategyChain)) {
+  if (!Array.isArray(config.strategyChain)) {
     return [];
   }
 
-  const legs: ChainLeg[] = (config as any).strategyChain as ChainLeg[];
+  const legs = config.strategyChain;
   const nodes: StrategyChain = [];
   let strategy: ChainStrategy | null = null;
 

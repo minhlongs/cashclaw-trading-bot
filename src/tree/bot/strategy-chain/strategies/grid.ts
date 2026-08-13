@@ -54,7 +54,7 @@ export function createGridChainStrategy(config: GridChainConfig): ChainStrategy 
 
       // GridStrategy emits trades via onTrade callback when a fill occurs.
       // Signal presence inferred from internal fill count.
-      const filled = (strategy as any).levelCount ?? 0;
+      const filled = strategy.levelCount ?? 0;
       if (filled > 0) {
         return {
           side: ctx.lastPrice > 0 ? 'buy' : 'sell',

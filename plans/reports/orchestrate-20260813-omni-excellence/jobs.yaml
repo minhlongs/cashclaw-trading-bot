@@ -1,0 +1,173 @@
+version: 1
+concurrency: 1
+jobs:
+  - id: gap-01-ccxt-dependency
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 1: Add ccxt dependency or stub exchange adapter.
+      The codebase imports CCXT but it's not in package.json. Live trading is broken.
+      - Read src/tree/exchange/ to understand the exchange adapter pattern
+      - Add ccxt to package.json dependencies OR create a proper stub if CCXT integration is deferred
+      - Ensure all imports resolve correctly
+      - Run type-check to verify
+    timeout: 15m
+    expected_output: "ccxt dependency added or exchange adapter properly stubbed, type-check passes"
+    importance: high
+
+  - id: gap-02-killswitch-tests
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 2: Write killswitch unit tests (P0 — financial safety).
+      The Killswitch class at src/tree/bot/killswitch.ts has 0 tests.
+      - Read killswitch.ts thoroughly
+      - Write comprehensive unit tests covering: halt triggers (daily loss, consecutive losses, manual, system error), resume with cooldown, telemetry callbacks, per-bot state tracking, reset
+      - Follow existing test patterns (see src/tree/bot/strategies/grid.trailing.test.ts)
+      - Target: 10+ test cases
+      - Run tests to verify they pass
+    timeout: 20m
+    expected_output: "killswitch.test.ts with 10+ passing tests"
+    importance: high
+    depends_on: [gap-01-ccxt-dependency]
+
+  - id: gap-03-deduplicate-d1-adapter
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 3: Deduplicate hydrateFromD1 and loadAllBotsFromD1.
+      In src/forest/bot/d1-adapter.ts, lines 94-138 and 178-221 are nearly identical.
+      - Extract shared state restoration logic into a restoreBotState() helper
+      - Refactor both hydrateFromD1 and loadAllBotsFromD1 to use the shared helper
+      - Verify no behavioral change by running existing tests
+      - Run type-check to verify
+    timeout: 15m
+    expected_output: "DRY violation fixed, restoreBotState() extracted, type-check passes"
+    importance: medium
+    depends_on: [gap-01-ccxt-dependency]
+
+  - id: gap-04-botinstance-tests
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 4: Add BotInstance unit tests.
+      src/tree/bot/bot-instance.ts has 0 tests. It's the core trading engine.
+      - Read bot-instance.ts and its dependencies
+      - Write tests covering: initialization, start/stop lifecycle, strategy execution (tick), order placement, killswitch integration, state snapshots, error handling
+      - Mock the exchange adapter and killswitch dependencies
+      - Target: 10+ test cases
+      - Run tests to verify they pass
+    timeout: 20m
+    expected_output: "bot-instance.test.ts with 10+ passing tests"
+    importance: high
+    depends_on: [gap-02-killswitch-tests]
+
+  - id: gap-05-ci-workflow
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 5: Add GitHub Actions CI workflow.
+      Currently 0 CI workflows exist.
+      - Create .github/workflows/ci.yml with: type-check, lint, build, test
+      - Trigger on push to main and PRs
+      - Use Node.js 20, npm ci, cache node_modules
+      - Keep it simple — 1 workflow, not 25 like OmniRoute
+      - Verify the workflow YAML is valid
+    timeout: 15m
+    expected_output: ".github/workflows/ci.yml created and valid"
+    importance: medium
+    depends_on: [gap-03-deduplicate-d1-adapter]
+
+  - id: gap-06-structured-error-logging
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 6: Replace bare catch {} blocks with structured error logging.
+      Critical paths silently swallow errors:
+      - src/forest/bot/d1-adapter.ts: persistBot(...).catch(() => {})
+      - src/tree/bot/bot-instance.ts: order placement returns null on error
+      - Any other bare catch {} blocks in critical paths
+      - Replace with structured error logging using the existing telemetry/callback pattern
+      - Do NOT change behavior, only add visibility
+      - Run type-check to verify
+    timeout: 15m
+    expected_output: "No bare catch {} in critical paths, structured error logging added"
+    importance: medium
+    depends_on: [gap-03-deduplicate-d1-adapter]
+
+  - id: gap-07-consolidate-api
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 7: Consolidate dual API surface.
+      Both Hono (worker.ts) and Next.js App Router serve /api/bots — they conflict.
+      - Analyze both API surfaces: Hono routes in worker.ts vs Next.js routes in src/app/api/
+      - Decision: Keep Hono for Cloudflare Worker APIs (cron, killswitch, events) and Next.js for user-facing APIs (auth, settings, bot CRUD)
+      - Document the split clearly with comments
+      - Ensure no route conflicts remain
+      - Run type-check and build to verify
+    timeout: 20m
+    expected_output: "Clear API surface split documented, no route conflicts"
+    importance: high
+    depends_on: [gap-06-structured-error-logging]
+
+  - id: gap-08-extract-order-placement
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 8: Extract order placement into single domain function.
+      In src/tree/bot/bot-instance.ts, order placement logic is duplicated:
+      - Lines 226-261: placeOrder closure inside initializeStrategy
+      - Lines 311-352: placeOrder class method
+      - Extract shared logic into a single placeOrder function
+      - Both the closure and method should delegate to it
+      - Run tests and type-check to verify
+    timeout: 15m
+    expected_output: "Single placeOrder implementation, no duplication"
+    importance: medium
+    depends_on: [gap-04-botinstance-tests]
+
+  - id: gap-09-quality-ratchets
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 9: Add quality ratchet configs.
+      OmniRoute uses ratchet baselines to prevent quality regression.
+      - Add ESLint max-warnings rule (start with current warning count)
+      - Add TypeScript strict mode checks in CI
+      - Create .eslintrc quality gates (complexity, no-any, no-console)
+      - Keep it simple — start with 3-5 rules, not OmniRoute's full suite
+      - Run lint to verify it passes
+    timeout: 15m
+    expected_output: "Quality ratchet configs added, lint passes"
+    importance: low
+    depends_on: [gap-05-ci-workflow]
+
+  - id: gap-10-increase-coverage
+    runtime: internal
+    task: implement
+    cwd: /Users/macbook/trade-bot
+    prompt: |
+      GAP 10: Increase test coverage toward 40%.
+      Current coverage is ~2-5% (5 test files).
+      - Run vitest with coverage to identify untested code
+      - Write tests for the most impactful untested modules:
+        * src/forest/api/routes.ts
+        * src/forest/bot/scheduler.ts
+        * src/tree/bot/bot-manager.ts
+        * src/forest/api/handlers/*.ts
+      - Target: 40%+ line coverage
+      - Run full test suite to verify all tests pass
+    timeout: 30m
+    expected_output: "Coverage at 40%+, all tests passing"
+    importance: medium
+    depends_on: [gap-04-botinstance-tests, gap-08-extract-order-placement]

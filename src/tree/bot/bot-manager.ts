@@ -10,12 +10,25 @@ import type {
   OrderBook,
   Balance,
 } from '../exchange/types';
-import type { BotConfig } from './types';
+import type { BotConfig, BotStatus } from './types';
+import type { TradeEventType } from '../telemetry/types';
 import { Killswitch } from './killswitch';
 import { BotInstance, type BotCallbacks } from './bot-instance';
 import type { TelemetryWriter } from '../telemetry';
 import { persistBot, hydrateFromD1, patchBot, persistTrade } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
+
+type D1BotStatus = 'draft' | 'paper_test' | 'live_running' | 'paused' | 'error' | 'stopped';
+
+function toD1Status(status: BotStatus): D1BotStatus {
+  switch (status) {
+    case 'running': return 'paper_test';
+    case 'paused': return 'paused';
+    case 'stopped': return 'stopped';
+    case 'error': return 'error';
+    case 'idle': return 'draft';
+  }
+}
 
 export interface CreateBotRequest {
   id: string;
@@ -126,9 +139,8 @@ export class BotManager {
         this.deps.onBotEvent(req.id, 'state_change', { status: state.status, pnl: state.totalPnl });
         // Persist full BotState to D1 — map BotStatus to D1 Bot status
         if (this.deps.userId) {
-          const d1Status = state.status === 'running' ? 'paper_test' : state.status;
           patchBot(req.id, {
-            status: d1Status as any,
+            status: toD1Status(state.status),
             total_pnl: state.totalPnl,
             total_trades: state.totalTrades,
             win_count: state.winCount,
@@ -196,8 +208,7 @@ export class BotManager {
     // Persist status to D1
     if (this.deps.userId) {
       const state = bot.getSnapshot();
-      const d1Status = state.status === 'running' ? 'paper_test' : state.status;
-      patchBot(id, { status: d1Status as any, total_pnl: state.totalPnl }).catch(() => {});
+      patchBot(id, { status: toD1Status(state.status), total_pnl: state.totalPnl }).catch(() => {});
     }
   }
 
@@ -211,8 +222,7 @@ export class BotManager {
     // Persist status to D1
     if (this.deps.userId) {
       const state = bot.getSnapshot();
-      const d1Status = state.status === 'running' ? 'paper_test' : state.status;
-      patchBot(id, { status: d1Status as any, total_pnl: state.totalPnl }).catch(() => {});
+      patchBot(id, { status: toD1Status(state.status), total_pnl: state.totalPnl }).catch(() => {});
     }
   }
 
@@ -223,8 +233,7 @@ export class BotManager {
     // Persist status to D1
     if (this.deps.userId) {
       const state = bot.getSnapshot();
-      const d1Status = state.status === 'running' ? 'paper_test' : state.status;
-      patchBot(id, { status: d1Status as any, total_pnl: state.totalPnl }).catch(() => {});
+      patchBot(id, { status: toD1Status(state.status), total_pnl: state.totalPnl }).catch(() => {});
     }
   }
 
@@ -245,10 +254,10 @@ export class BotManager {
     this.deps.onLog('Killswitch reset');
   }
 
-  private emitTelemetry(eventType: string, details: Record<string, unknown> = {}): void {
+  private emitTelemetry(eventType: TradeEventType, details: Record<string, unknown> = {}): void {
     // emit for all bots on global killswitch events
     for (const [botId] of this.bots) {
-      this.deps.telemetry?.emit(botId, eventType as any, details);
+      this.deps.telemetry?.emit(botId, eventType, details);
     }
   }
 

@@ -1,10 +1,8 @@
 // CCXT Exchange Client Transformer
 // Converts CCXT responses to CashClaw internal types
-// In production: CCXT is bundled with the Workers build
 
-// CCXT is a global injected by the Workers bundler (nodejs_compat)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const ccxt: any;
+import ccxt from 'ccxt';
+import type { Exchange as CCXTExchange, Order as CCXTOrder } from 'ccxt';
 
 export interface CCXTConfig {
   exchange: string;
@@ -14,6 +12,9 @@ export interface CCXTConfig {
   sandbox?: boolean;
 }
 
+// ccxt namespace contains exchange constructors keyed by capitalized name (e.g. "Binance")
+type ExchangeConstructors = Record<string, new (config?: Record<string, unknown>) => CCXTExchange>;
+
 export class CCXTTransformer {
   private config: CCXTConfig;
 
@@ -21,9 +22,10 @@ export class CCXTTransformer {
     this.config = config;
   }
 
-  private getExchange(): any {
+  private getExchange(): CCXTExchange {
     const name = this.config.exchange.charAt(0).toUpperCase() + this.config.exchange.slice(1);
-    const ExchangeClass = ccxt[name];
+    const namespace = ccxt as unknown as ExchangeConstructors;
+    const ExchangeClass = namespace[name];
     if (!ExchangeClass) {
       throw new Error(`Unsupported exchange: ${this.config.exchange}`);
     }
@@ -57,8 +59,8 @@ export class CCXTTransformer {
     const book = await ex.fetchOrderBook(symbol, _depth);
     return {
       symbol,
-      bids: (book.bids ?? []).map(([price, qty]: [number, number]) => ({ price, quantity: qty })),
-      asks: (book.asks ?? []).map(([price, qty]: [number, number]) => ({ price, quantity: qty })),
+      bids: (book.bids ?? []).map(([price, qty]) => ({ price: price ?? 0, quantity: qty ?? 0 })),
+      asks: (book.asks ?? []).map(([price, qty]) => ({ price: price ?? 0, quantity: qty ?? 0 })),
       timestamp: book.timestamp ?? Date.now(),
     };
   }
@@ -67,11 +69,14 @@ export class CCXTTransformer {
     const ex = this.getExchange();
     const raw = await ex.fetchBalance();
     const balances: { currency: string; free: number; used: number; total: number }[] = [];
-    for (const [currency, info] of Object.entries(raw.total ?? {})) {
+    const freeMap = raw.free as unknown as Record<string, number>;
+    const usedMap = raw.used as unknown as Record<string, number>;
+    const totalMap = raw.total as unknown as Record<string, number>;
+    for (const [currency, info] of Object.entries(totalMap ?? {})) {
       const total = Number(info) || 0;
       if (total <= 0) continue;
-      const freeVal = Number((raw.free as Record<string, number> | undefined)?.[currency] ?? 0);
-      const usedVal = Number((raw.used as Record<string, number> | undefined)?.[currency] ?? 0);
+      const freeVal = Number(freeMap[currency] ?? 0);
+      const usedVal = Number(usedMap[currency] ?? 0);
       balances.push({ currency, free: freeVal, used: usedVal, total });
     }
     return balances;
@@ -124,12 +129,26 @@ export class CCXTTransformer {
   }
 
   async fetchOpenOrders(_exchange: string, _symbol?: string): Promise<{ id: string; exchangeId: string; symbol: string; side: string; type: string; price: number; quantity: number; filled: number; status: string; fee?: number; feeCurrency?: string; timestamp: number; pnl?: number }[]> {
-  const ex = this.getExchange();
-  const raw = await ex.fetchOpenOrders(_symbol);
-  return raw.map((o: any) => ({ id: o.id, exchangeId: _exchange, symbol: o.symbol, side: o.side as 'buy' | 'sell', type: o.type as 'market' | 'limit', price: o.price ?? 0, quantity: o.amount, filled: o.filled ?? 0, status: o.status as 'open' | 'filled' | 'cancelled' | 'rejected', fee: o.fee ? o.fee.cost : undefined, feeCurrency: o.fee ? o.fee.currency : undefined, timestamp: o.timestamp ?? Date.now(), pnl: 0 }));
-}
+    const ex = this.getExchange();
+    const raw = await ex.fetchOpenOrders(_symbol);
+    return raw.map((o: CCXTOrder) => ({
+      id: String(o.id),
+      exchangeId: _exchange,
+      symbol: String(o.symbol),
+      side: String(o.side),
+      type: String(o.type),
+      price: Number(o.price ?? 0),
+      quantity: Number(o.amount ?? 0),
+      filled: Number(o.filled ?? 0),
+      status: String(o.status ?? 'open'),
+      fee: o.fee ? Number(o.fee.cost) : undefined,
+      feeCurrency: o.fee ? (String(o.fee.currency) || undefined) : undefined,
+      timestamp: Number(o.timestamp ?? Date.now()),
+      pnl: 0,
+    }));
+  }
 
-async fetchOrder(_exchange: string, orderId: string, _symbol: string): Promise<{ id: string; exchangeId: string; symbol: string; side: string; type: string; price: number; quantity: number; filled: number; status: string; fee?: number; feeCurrency?: string; timestamp: number; pnl?: number }> {
+  async fetchOrder(_exchange: string, orderId: string, _symbol: string): Promise<{ id: string; exchangeId: string; symbol: string; side: string; type: string; price: number; quantity: number; filled: number; status: string; fee?: number; feeCurrency?: string; timestamp: number; pnl?: number }> {
     const ex = this.getExchange();
     const raw = await ex.fetchOrder(orderId, _symbol);
     if (!raw) throw new Error(`Order not found: ${orderId}`);
@@ -147,25 +166,22 @@ async fetchOrder(_exchange: string, orderId: string, _symbol: string): Promise<{
     return {
       id: String(raw.id),
       exchangeId: _exchange,
-      symbol: raw.symbol ?? _symbol,
-      side: raw.side,
-      type: raw.type,
+      symbol: String(raw.symbol ?? _symbol),
+      side: String(raw.side),
+      type: String(raw.type),
       price: Number(raw.price ?? 0),
       quantity: Number(raw.amount ?? 0),
       filled: Number(raw.filled ?? 0),
-      status: statusMap[raw.status ?? ''] ?? 'open',
+      status: String(statusMap[raw.status ?? ''] ?? 'open'),
       fee: raw.fee ? Number(raw.fee.cost ?? 0) : undefined,
-      feeCurrency: raw.fee ? (raw.fee.currency as string) : undefined,
-      timestamp: raw.timestamp ?? Date.now(),
+      feeCurrency: raw.fee ? (String(raw.fee.currency) || undefined) : undefined,
+      timestamp: Number(raw.timestamp ?? Date.now()),
       pnl: 0,
     };
   }
 }
 
-export function createCCXTClient(exchange: string, _config?: { apiKey?: string; apiSecret?: string; sandbox?: boolean }) {
-  if (typeof ccxt === 'undefined') {
-    throw new Error('CCXT not available — Paper-only mode');
-  }
+export function createCCXTClient(exchange: string, _config?: { apiKey?: string; apiSecret?: string; sandbox?: boolean }): CCXTTransformer {
   return new CCXTTransformer({
     exchange,
     apiKey: _config?.apiKey,

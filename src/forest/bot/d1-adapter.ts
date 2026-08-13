@@ -15,8 +15,11 @@ import {
   insertTradeEvent, insertCapitalSnapshot, insertAudit,
 } from '@/lib/db/repositories';
 import { getBotManager } from '@/tree/bot';
-import type { BotConfig, GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
+import type { BotConfig, BotState, GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
 import { isGridConfig } from '@/tree/bot';
+
+// Error handler callback type for structured error logging
+export type ErrorHandler = (error: Error, context: string) => void;
 
 // ──────────────────────────────────────────────
 // Helpers
@@ -61,6 +64,37 @@ function botToRow(bot: {
 }
 
 // ──────────────────────────────────────────────
+// State Restoration Helper
+// ──────────────────────────────────────────────
+
+/**
+ * Restore BotInstance state from a D1 database row.
+ * Shared by hydrateFromD1 and loadAllBotsFromD1.
+ */
+function restoreBotStateFromRow(
+  bot: { getSnapshot: () => BotState; patchState: (patch: Partial<BotState>) => void },
+  row: { total_trades: number; started_at: number | null; stopped_at: number | null; last_error: string | null; last_tick_at: number | null; last_order_at: number | null; current_drawdown: number; total_pnl: number; win_count: number; loss_count: number; max_drawdown: number },
+): void {
+  const patch: Partial<BotState> = {};
+
+  if (row.total_trades != null) patch.totalTrades = row.total_trades;
+  if (row.started_at != null) patch.startedAt = row.started_at;
+  if (row.stopped_at != null) patch.stoppedAt = row.stopped_at;
+  if (row.last_tick_at != null) patch.lastTickAt = row.last_tick_at;
+  if (row.last_order_at != null) patch.lastOrderAt = row.last_order_at;
+  if (row.current_drawdown != null) patch.currentDrawdown = row.current_drawdown;
+  if (row.total_pnl != null) patch.totalPnl = row.total_pnl;
+  if (row.win_count != null) patch.winCount = row.win_count;
+  if (row.loss_count != null) patch.lossCount = row.loss_count;
+  if (row.max_drawdown != null) patch.maxDrawdown = row.max_drawdown;
+  if (row.last_error != null) patch.error = row.last_error;
+
+  if (Object.keys(patch).length > 0) {
+    bot.patchState(patch);
+  }
+}
+
+// ──────────────────────────────────────────────
 // Public API
 // ──────────────────────────────────────────────
 
@@ -68,7 +102,7 @@ function botToRow(bot: {
  * Load all bots for a user from D1, replay into BotManager.
  * Call once at Workers startup / SSR mount.
  */
-export async function hydrateFromD1(userId: string): Promise<void> {
+export async function hydrateFromD1(userId: string, onError?: ErrorHandler): Promise<void> {
   const db = createServerClient();
   if (!db) return;
 
@@ -91,49 +125,10 @@ export async function hydrateFromD1(userId: string): Promise<void> {
         mode: 'paper',
       });
 
-      // Restore persisted BotState fields from D1 row
-      const snapshot = bot.getSnapshot();
-      const patch: Record<string, unknown> = {};
-
-      if (row.total_trades != null && row.total_trades !== snapshot.totalTrades) {
-        patch.totalTrades = row.total_trades;
-      }
-      if (row.started_at != null) {
-        patch.startedAt = row.started_at;
-      }
-      if (row.stopped_at != null) {
-        patch.stoppedAt = row.stopped_at;
-      }
-      if (row.last_error != null) {
-        patch.error = row.last_error;
-      }
-      if (row.last_tick_at != null) {
-        patch.lastTickAt = row.last_tick_at;
-      }
-      if (row.last_order_at != null) {
-        patch.lastOrderAt = row.last_order_at;
-      }
-      if (row.current_drawdown != null && row.current_drawdown !== snapshot.currentDrawdown) {
-        patch.currentDrawdown = row.current_drawdown;
-      }
-      if (row.total_pnl != null && row.total_pnl !== snapshot.totalPnl) {
-        patch.totalPnl = row.total_pnl;
-      }
-      if (row.win_count != null && row.win_count !== snapshot.winCount) {
-        patch.winCount = row.win_count;
-      }
-      if (row.loss_count != null && row.loss_count !== snapshot.lossCount) {
-        patch.lossCount = row.loss_count;
-      }
-      if (row.max_drawdown != null && row.max_drawdown !== snapshot.maxDrawdown) {
-        patch.maxDrawdown = row.max_drawdown;
-      }
-
-      if (Object.keys(patch).length > 0) {
-        bot.patchState(patch);
-      }
-    } catch {
-      // skip malformed config
+      restoreBotStateFromRow(bot, row);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      onError?.(error, `d1-adapter:hydrateBot:${row.id}`);
     }
   }
 }
@@ -149,7 +144,7 @@ const hydratedBotIds = new Set<string>();
  * Called by handlers on cold start / SSR mount to populate in-memory state.
  * Safe to call multiple times — already-loaded bots are skipped.
  */
-export async function loadAllBotsFromD1(): Promise<void> {
+export async function loadAllBotsFromD1(onError?: ErrorHandler): Promise<void> {
   const db = createServerClient();
   if (!db) return;
 
@@ -175,52 +170,11 @@ export async function loadAllBotsFromD1(): Promise<void> {
         mode: 'paper',
       });
 
-      // Restore persisted BotState fields from D1 row
-      const snapshot = bot.getSnapshot();
-      const patch: Record<string, unknown> = {};
-
-      if (row.total_trades != null && row.total_trades !== snapshot.totalTrades) {
-        patch.totalTrades = row.total_trades;
-      }
-      if (row.started_at != null) {
-        patch.startedAt = row.started_at;
-      }
-      if (row.stopped_at != null) {
-        patch.stoppedAt = row.stopped_at;
-      }
-      if (row.last_error != null) {
-        patch.error = row.last_error;
-      }
-      if (row.last_tick_at != null) {
-        patch.lastTickAt = row.last_tick_at;
-      }
-      if (row.last_order_at != null) {
-        patch.lastOrderAt = row.last_order_at;
-      }
-      if (row.current_drawdown != null && row.current_drawdown !== snapshot.currentDrawdown) {
-        patch.currentDrawdown = row.current_drawdown;
-      }
-      if (row.total_pnl != null && row.total_pnl !== snapshot.totalPnl) {
-        patch.totalPnl = row.total_pnl;
-      }
-      if (row.win_count != null && row.win_count !== snapshot.winCount) {
-        patch.winCount = row.win_count;
-      }
-      if (row.loss_count != null && row.loss_count !== snapshot.lossCount) {
-        patch.lossCount = row.loss_count;
-      }
-      if (row.max_drawdown != null && row.max_drawdown !== snapshot.maxDrawdown) {
-        patch.maxDrawdown = row.max_drawdown;
-      }
-
-      // Apply patch if there are differences
-      if (Object.keys(patch).length > 0) {
-        bot.patchState(patch);
-      }
-
+      restoreBotStateFromRow(bot, row);
       hydratedBotIds.add(row.id);
-    } catch {
-      // skip malformed config or bots that BotManager already holds
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      onError?.(error, `d1-adapter:loadBot:${row.id}`);
     }
   }
 }

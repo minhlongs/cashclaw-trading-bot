@@ -5,6 +5,7 @@
  */
 
 import { getBotManager, type CreateBotRequest } from '@/tree/bot';
+import type { GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 
 export interface CreateBotPayload {
@@ -34,15 +35,41 @@ export async function botCreateHandler(
     const manager = getBotManager();
 
     // Map payload to CreateBotRequest — always paper in v1
+    const baseConfig = {
+      symbol: payload.pair,
+      exchange: payload.exchange,
+      mode: 'paper' as const,
+      capital: payload.capital,
+      maxDrawdownPct: 10,
+    };
+
+    const strategyConfig = payload.strategy === 'grid'
+      ? {
+          ...baseConfig,
+          strategy: 'grid' as const,
+          gridSpacingPct: 1,
+          gridLevels: 10,
+          capitalPerLevelPct: 10,
+          takeProfitPct: 2,
+          stopLossPct: 5,
+          rebalanceOnFill: false,
+        } satisfies GridBotConfig
+      : {
+          ...baseConfig,
+          strategy: 'mean_reversion' as const,
+          bbPeriod: 20,
+          bbStdDev: 2,
+          rsiPeriod: 14,
+          rsiBuyThreshold: 30,
+          rsiSellThreshold: 70,
+          volumeMultiplier: 1.5,
+          positionSizePct: 10,
+          cooldownMinutes: 5,
+        } satisfies MeanRevBotConfig;
+
     const botConfig: CreateBotRequest = {
       id: payload.id,
-      config: {
-        strategy: payload.strategy,
-        symbol: payload.pair,
-        exchange: payload.exchange,
-        capital: payload.capital,
-        params: payload.config,
-      } as any,
+      config: strategyConfig,
       exchangeConfig: {
         apiKey: '',
         apiSecret: '',

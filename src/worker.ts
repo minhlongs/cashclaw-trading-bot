@@ -1,6 +1,24 @@
 // Cloudflare Workers entry point — CashClaw Trading Bot Platform
-// Hono app serving API routes + CF Cron eval trigger.
+// Hono app serving system/infrastructure API routes + CF Cron eval trigger.
 // Deployed via: wrangler deploy (main: src/worker.ts)
+//
+// ── API surface split ──────────────────────────────────────────
+// This worker handles routes that run OUTSIDE Next.js middleware:
+//   - /internal/api/bots/*    — operator-only bot management (Bearer token)
+//   - /api/killswitch/*       — emergency halt / resume
+//   - /api/events             — system event telemetry
+//   - /api/stats/daily        — daily P&L / trade stats
+//   - /api/cron/eval          — CF Cron trigger for eval loop
+//   - /api/health, /api/version — infra probes
+//
+// User-facing APIs live in src/app/api/ (Next.js App Router):
+//   - /api/bots/*             — user-facing bot CRUD (session cookie auth)
+//   - /api/auth/*             — login, logout, session check
+//   - /api/settings           — exchange creds, risk limits
+//
+// The /api/bots path is served by Next.js (has session-cookie auth guards).
+// Hono uses /internal/api/bots to avoid route collision.
+// ────────────────────────────────────────────────────────────────
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -85,23 +103,28 @@ app.get('/api/version', (c) => {
 });
 
 // ── Protected routes middleware — BEFORE route definitions ──────────────────────
-app.use('/api/bots/*', authGuard());
+// NOTE: /api/bots/* is intentionally NOT here — it is served by Next.js App Router
+// (src/app/api/bots/) with session-cookie auth guards via src/middleware.ts.
+// Hono uses /internal/api/bots/* for operator/CLI access with Bearer token auth.
+app.use('/internal/api/bots/*', authGuard());
 app.use('/api/killswitch/*', authGuard());
 app.use('/api/cron/*', authGuard());
 
-// ── API routes ──────────────────────────────────────────────────
-app.get('/api/bots', async (c) => {
+// ── Operator bot management (internal) ──────────────────────────
+// These duplicate /api/bots handlers for direct Worker/CLI access.
+// User-facing /api/bots lives in src/app/api/bots/ (Next.js, session auth).
+app.get('/internal/api/bots', async (c) => {
   const result = await botListHandler();
   return c.json(result, result.ok ? 200 : 500);
 });
 
-app.get('/api/bots/:id', async (c) => {
+app.get('/internal/api/bots/:id', async (c) => {
   const id = c.req.param('id');
   const result = await botDetailHandler(id);
   return c.json(result, result.ok ? 200 : 404);
 });
 
-app.post('/api/bots/:id/:action', async (c) => {
+app.post('/internal/api/bots/:id/:action', async (c) => {
   const id = c.req.param('id');
   const action = c.req.param('action');
   if (!['start', 'stop', 'pause', 'resume'].includes(action ?? '')) {

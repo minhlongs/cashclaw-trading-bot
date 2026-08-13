@@ -56,7 +56,7 @@ export function createMeanRevChainStrategy(
 
       // MeanRevStrategy emits trades when RSI/BB conditions trigger.
       // Signal presence inferred from internal fill count.
-      const fills = (strategy as any).fillCount ?? 0;
+      const fills = strategy.tradeCount ?? 0;
       if (fills > 0) {
         return {
           side: ctx.lastPrice > 0 ? 'buy' : 'sell',
