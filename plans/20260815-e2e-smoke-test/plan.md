@@ -1,7 +1,7 @@
 ---
 title: "End-to-End Smoke Test: Verify Full Customer Journey"
 description: "Verify all 6 customer journey flows work end-to-end, fix schema mismatches and broken wiring"
-status: pending
+status: complete
 priority: P1
 effort: 5h
 branch: main
