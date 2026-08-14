@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { BacktestResult } from './engine';
 import type { Candle } from './ohlcv';
 import type { BotConfig } from '@/tree/bot/types';
 import type { BacktestResultRow } from '@/lib/db/types';
@@ -27,7 +26,7 @@ vi.mock('@/lib/logger', () => ({
 
 import { runBacktestAction, getBacktestResults, type BacktestRunInput } from './actions';
 import { fetchOHLCV } from './data-fetcher';
-import { runBacktest } from './engine';
+import { runBacktest, type BacktestResult } from './engine';
 import { createServerClient } from '@/lib/db/client';
 
 const mockFetchOHLCV = vi.mocked(fetchOHLCV);
