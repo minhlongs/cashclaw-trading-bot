@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import {
   LayoutDashboard,
   Bot,
@@ -10,16 +11,22 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-const navItems = [
-  { href: '/vi/dashboard', icon: LayoutDashboard, labelVi: 'Tổng quan', labelEn: 'Dashboard' },
-  { href: '/vi/bots', icon: Bot, labelVi: 'Bot', labelEn: 'Bots' },
-  { href: '/vi/backtests', icon: BookOpen, labelVi: 'Backtest', labelEn: 'Backtests' },
-  { href: '/vi/monitoring', icon: Activity, labelVi: 'Monitor', labelEn: 'Monitor' },
-  { href: '/vi/settings', icon: Settings, labelVi: 'Cài đặt', labelEn: 'Settings' },
+const NAV_ROUTES = [
+  { path: 'dashboard', icon: LayoutDashboard, labelVi: 'Tổng quan', labelEn: 'Dashboard' },
+  { path: 'bots', icon: Bot, labelVi: 'Bot', labelEn: 'Bots' },
+  { path: 'backtests', icon: BookOpen, labelVi: 'Backtest', labelEn: 'Backtests' },
+  { path: 'monitoring', icon: Activity, labelVi: 'Monitor', labelEn: 'Monitor' },
+  { path: 'settings', icon: Settings, labelVi: 'Cài đặt', labelEn: 'Settings' },
 ];
 
 export default function MobileNav() {
+  const locale = useLocale();
   const pathname = usePathname();
+
+  const navItems = NAV_ROUTES.map((item) => ({
+    ...item,
+    href: `/${locale}/${item.path}`,
+  }));
 
   return (
     <nav className="mobile-nav">

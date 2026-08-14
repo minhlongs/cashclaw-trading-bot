@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { type Step, type FormState, GRID_DEFAULTS, MEANREV_DEFAULTS } from './wizard-types';
 import { BasicStep } from './basic-step';
 import { StrategyStep } from './strategy-step';
@@ -21,6 +22,7 @@ const STEPS: Step[] = ['basic', 'strategy', 'config', 'review'];
 
 export function BotWizardClient() {
   const router = useRouter();
+  const locale = useLocale();
   const [step, setStep] = useState<Step>('basic');
   const [form, setForm] = useState<FormState>(INITIAL);
   const [submitting, setSubmitting] = useState(false);
@@ -58,6 +60,7 @@ export function BotWizardClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: crypto.randomUUID(),
           name: form.name,
           strategy: form.strategy,
           pair: form.pair,
@@ -71,7 +74,7 @@ export function BotWizardClient() {
         throw new Error(data.error || 'Failed to create bot');
       }
       setSubmitSuccess(true);
-      setTimeout(() => router.push(`/bots/${data.data?.id}`), 1500);
+      setTimeout(() => router.push(`/${locale}/bots/${data.data?.id}`), 1500);
     } catch (e: unknown) {
       setSubmitError(e instanceof Error ? e.message : 'Failed to create bot');
     } finally {

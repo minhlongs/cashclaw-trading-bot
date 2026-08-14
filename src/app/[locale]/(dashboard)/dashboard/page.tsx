@@ -10,9 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardPage() {
-  return (
-    <div className="app-container">
-      <DashboardClient />
-    </div>
-  );
+  return <DashboardClient />;
 }

@@ -74,7 +74,7 @@ const LOADED_SETTINGS: SettingsData = {
     cooldownMinutes: 60,
     maxOpenOrders: 10,
   },
-  killswitch: { enabled: false, reason: null, triggeredAt: null },
+  killswitch: { enabled: true, reason: null, triggeredAt: null },
 };
 
 type FetchInit = RequestInit | undefined;
@@ -105,6 +105,19 @@ function findPostByAction(
     if (url !== '/api/settings' || init?.method !== 'POST') continue;
     const body = JSON.parse(init.body as string) as Record<string, unknown>;
     if (body.action === action) return body;
+  }
+  return undefined;
+}
+
+/** Returns the parsed body of the first POST whose `type` matches. */
+function findPostByType(
+  mock: ReturnType<typeof vi.fn>,
+  type: string,
+): Record<string, unknown> | undefined {
+  for (const [url, init] of mock.mock.calls as [string, FetchInit][]) {
+    if (url !== '/api/settings' || init?.method !== 'POST') continue;
+    const body = JSON.parse(init.body as string) as Record<string, unknown>;
+    if (body.type === type) return body;
   }
   return undefined;
 }
@@ -157,11 +170,12 @@ describe('SettingsClient', () => {
       expect(screen.getByTestId('exchange-settings')).toBeTruthy();
     });
 
-    // Killswitch default is disabled -> ACTIVE badge, both controls usable
-    expect(screen.getByText('ACTIVE')).toBeTruthy();
+    // Component DEFAULT_SETTINGS has killswitch.enabled = false (trading OFF) → HALTED badge.
+    // Resume is usable, Halt is not (can't halt what's already halted).
+    expect(screen.getByText('HALTED')).toBeTruthy();
     expect(
       screen.getByRole('button', { name: /halt all trading/i }),
-    ).toBeEnabled();
+    ).toBeDisabled();
   });
 
   it('tolerates a non-2xx settings response without crashing', async () => {
@@ -189,7 +203,7 @@ describe('SettingsClient', () => {
     expect(screen.getByTestId('strategy-settings')).toBeTruthy();
   });
 
-  it('posts action save-exchange with the submitted credentials', async () => {
+  it('posts type exchange with the submitted credentials', async () => {
     const fetchMock = stubFetch();
     const user = userEvent.setup();
 
@@ -201,18 +215,16 @@ describe('SettingsClient', () => {
     await user.click(screen.getByTestId('mock-save-exchange'));
 
     await waitFor(() => {
-      const body = findPostByAction(fetchMock, 'save-exchange');
+      const body = findPostByType(fetchMock, 'exchange');
       expect(body).toBeDefined();
       expect(body!.exchange).toBe('binance');
-      expect(body!.data).toEqual({
-        apiKey: 'key',
-        apiSecret: 'secret',
-        testnet: true,
-      });
+      expect(body!.apiKey).toBe('key');
+      expect(body!.apiSecret).toBe('secret');
+      expect(body!.testnet).toBe(true);
     });
   });
 
-  it('posts action save-risk when the strategy section saves', async () => {
+  it('posts type risk when the strategy section saves', async () => {
     const fetchMock = stubFetch();
     const user = userEvent.setup();
 
@@ -224,16 +236,12 @@ describe('SettingsClient', () => {
     await user.click(screen.getByTestId('mock-save-strategy'));
 
     await waitFor(() => {
-      const body = findPostByAction(fetchMock, 'save-risk');
+      const body = findPostByType(fetchMock, 'risk');
       expect(body).toBeDefined();
-      expect(body!.data).toEqual({
-        risk: {
-          maxDrawdownPct: 20,
-          dailyLossLimitPct: 10,
-          cooldownMinutes: 30,
-          maxOpenOrders: 5,
-        },
-      });
+      expect(body!.maxDrawdownPct).toBe(20);
+      expect(body!.dailyLossLimitPct).toBe(10);
+      expect(body!.cooldownMinutes).toBe(30);
+      expect(body!.maxOpenOrders).toBe(5);
     });
   });
 
@@ -263,11 +271,16 @@ describe('SettingsClient', () => {
 
     render(<SettingsClient />);
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /resume trading/i }),
-      ).toBeTruthy();
+      expect(screen.getByText('ACTIVE')).toBeTruthy();
     });
 
+    // First halt so Resume becomes clickable
+    await user.click(screen.getByRole('button', { name: /halt all trading/i }));
+    await waitFor(() => {
+      expect(screen.getByText('HALTED')).toBeTruthy();
+    });
+
+    // Now click Resume
     await user.click(screen.getByRole('button', { name: /resume trading/i }));
 
     await waitFor(() => {
@@ -365,7 +378,7 @@ describe('SettingsClient', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: /resume trading/i }),
+        screen.getByRole('button', { name: /halt all trading/i }),
       ).toBeDisabled();
     });
 

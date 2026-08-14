@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Plus, Bot } from 'lucide-react';
 import Link from 'next/link';
 
@@ -36,6 +36,7 @@ const statusStyles: Record<string, string> = {
 
 export default function DashboardClient() {
   const t = useTranslations('dashboard');
+  const locale = useLocale();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -167,7 +168,7 @@ export default function DashboardClient() {
           <h1>{t('title')}</h1>
           <p className="meta">{t('subtitle')}</p>
         </div>
-        <Link href="/bots/new" className="btn btn-primary">
+        <Link href={`/${locale}/bots/new`} className="btn btn-primary">
           <Plus className="btn-icon" />
           {t('newBot')}
         </Link>
@@ -221,7 +222,7 @@ export default function DashboardClient() {
                 ? (t('empty') ?? 'No bots found. Create your first bot to get started.')
                 : `${bots.length} ${t('subtitle')}`}
             </span>
-            <Link className="btn btn-secondary" href="/bots/new" prefetch={false}>
+            <Link className="btn btn-secondary" href={`/${locale}/bots/new`} prefetch={false}>
               <Bot className="btn-icon" />
               {t('createBot')}
             </Link>

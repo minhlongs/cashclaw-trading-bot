@@ -9,6 +9,7 @@ import DashboardClient from './dashboard-client';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'vi',
 }));
 
 vi.mock('next/navigation', () => ({
@@ -415,7 +416,7 @@ describe('DashboardClient', () => {
 
       await waitFor(() => {
         const link = screen.getByText('newBot').closest('a');
-        expect(link).toHaveAttribute('href', '/bots/new');
+        expect(link).toHaveAttribute('href', '/vi/bots/new');
       });
     });
 

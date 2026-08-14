@@ -51,7 +51,7 @@ export function SettingsClient() {
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'save-exchange', exchange, data: { apiKey, apiSecret, testnet } }),
+        body: JSON.stringify({ type: 'exchange', exchange, apiKey, apiSecret, testnet }),
       });
       const result: { ok: boolean; error?: string } = await res.json();
       if (result.ok) {
@@ -79,7 +79,7 @@ export function SettingsClient() {
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'save-risk', data: { risk } }),
+        body: JSON.stringify({ type: 'risk', ...risk }),
       });
       const result: { ok: boolean; error?: string } = await res.json();
       if (result.ok) {
@@ -100,11 +100,11 @@ export function SettingsClient() {
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'halt' }),
+        body: JSON.stringify({ type: 'killswitch', action: 'halt', reason: 'Manual halt' }),
       });
       const result: { ok: boolean; error?: string } = await res.json();
       if (result.ok) {
-        setSettings((prev) => ({ ...prev, killswitch: { ...prev.killswitch, enabled: true, reason: 'Manual halt' } }));
+        setSettings((prev) => ({ ...prev, killswitch: { ...prev.killswitch, enabled: false, reason: 'Manual halt' } }));
         setSaveMessage('Trading halted');
       } else {
         setSaveMessage(result.error ?? 'Halt failed');
@@ -123,11 +123,11 @@ export function SettingsClient() {
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'resume' }),
+        body: JSON.stringify({ type: 'killswitch', action: 'resume' }),
       });
       const result: { ok: boolean; error?: string } = await res.json();
       if (result.ok) {
-        setSettings((prev) => ({ ...prev, killswitch: { ...prev.killswitch, enabled: false, reason: null } }));
+        setSettings((prev) => ({ ...prev, killswitch: { ...prev.killswitch, enabled: true, reason: null } }));
         setSaveMessage('Trading resumed');
       } else {
         setSaveMessage(result.error ?? 'Resume failed');
@@ -185,10 +185,10 @@ export function SettingsClient() {
           </div>
           <span
             className={`badge ${
-              settings.killswitch.enabled ? 'badge-error' : 'badge-neutral'
+              !settings.killswitch.enabled ? 'badge-error' : 'badge-neutral'
             }`}
           >
-            {settings.killswitch.enabled ? 'HALTED' : 'ACTIVE'}
+            {!settings.killswitch.enabled ? 'HALTED' : 'ACTIVE'}
           </span>
         </div>
         <div>
@@ -200,7 +200,7 @@ export function SettingsClient() {
               className="btn btn-danger"
               style={{ padding: '8px 16px' }}
               onClick={handleHalt}
-              disabled={ksSaving || settings.killswitch.enabled}
+              disabled={ksSaving || !settings.killswitch.enabled}
             >
               {ksSaving ? (
                 <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
@@ -209,7 +209,7 @@ export function SettingsClient() {
             </button>
             <button
               className="btn btn-primary"
-              disabled={ksSaving}
+              disabled={ksSaving || settings.killswitch.enabled}
               onClick={handleResume}
             >
               {ksSaving ? (
