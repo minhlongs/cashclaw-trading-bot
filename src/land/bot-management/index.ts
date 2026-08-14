@@ -12,6 +12,7 @@ import type { CreateBotRequest } from '@/tree/bot/bot-manager';
 import type { ExchangeConfig } from '@/tree/exchange/types';
 import { createServerClient } from '@/lib/db/client';
 import type { TradeEventType, CapitalSnapshot } from '@/tree/telemetry';
+import { ok, err, type Result } from '@/lib/result';
 
 // Types extracted to bot-management-types.ts
 import type { BotInfo, BotCreateInput, BotListResult } from './bot-management-types';
@@ -88,43 +89,43 @@ export async function createBot(input: BotCreateInput): Promise<BotInfo> {
   return botToInfo(bot);
 }
 
-export async function startBot(id: string): Promise<{ ok: boolean; error?: string }> {
+export async function startBot(id: string): Promise<Result<void>> {
   try {
     const manager = getBotManager();
     await manager.startBot(id);
-    return { ok: true };
+    return ok(undefined);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Start failed' };
+    return err(e instanceof Error ? e.message : 'Start failed');
   }
 }
 
-export function stopBot(id: string): { ok: boolean; error?: string } {
+export function stopBot(id: string): Result<void> {
   try {
     const manager = getBotManager();
     manager.stopBot(id);
-    return { ok: true };
+    return ok(undefined);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Stop failed' };
+    return err(e instanceof Error ? e.message : 'Stop failed');
   }
 }
 
-export function pauseBot(id: string): { ok: boolean; error?: string } {
+export function pauseBot(id: string): Result<void> {
   try {
     const manager = getBotManager();
     manager.pauseBot(id);
-    return { ok: true };
+    return ok(undefined);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Pause failed' };
+    return err(e instanceof Error ? e.message : 'Pause failed');
   }
 }
 
-export function resumeBot(id: string): { ok: boolean; error?: string } {
+export function resumeBot(id: string): Result<void> {
   try {
     const manager = getBotManager();
     manager.resumeBot(id);
-    return { ok: true };
+    return ok(undefined);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Resume failed' };
+    return err(e instanceof Error ? e.message : 'Resume failed');
   }
 }
 

@@ -64,4 +64,22 @@ describe('killswitchResumeHandler', () => {
     expect(result.ok).toBe(false);
     expect(result.error).toBe('Killswitch resume failed');
   });
+
+  it('handles non-Error throw from manualHalt', async () => {
+    mockManager.manualHalt.mockImplementation(() => {
+      throw 'string error';
+    });
+    const result = await killswitchHaltHandler('emergency');
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe('Killswitch halt failed');
+  });
+
+  it('handles non-Error throw from manualResume', async () => {
+    mockManager.manualResume.mockImplementation(() => {
+      throw 42;
+    });
+    const result = await killswitchResumeHandler();
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe('Killswitch resume failed');
+  });
 });

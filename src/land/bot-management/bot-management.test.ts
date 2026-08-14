@@ -108,7 +108,8 @@ describe('bot-management', () => {
   describe('startBot', () => {
     it('returns ok on success', async () => {
       const { startBot } = await import('./index');
-      expect(await startBot('b1')).toEqual({ ok: true });
+      const r = await startBot('b1');
+      expect(r.ok).toBe(true);
       expect(m.startBot).toHaveBeenCalledWith('b1');
     });
     it('returns error message on failure', async () => {
@@ -116,42 +117,49 @@ describe('bot-management', () => {
       const { startBot } = await import('./index');
       const r = await startBot('b1');
       expect(r.ok).toBe(false);
-      expect(r.error).toBe('Bad');
+      if (!r.ok) expect(r.error).toBe('Bad');
     });
     it('returns generic error for non-Error throw', async () => {
       m.startBot.mockRejectedValue('str');
       const r = await (await import('./index')).startBot('b1');
       expect(r.ok).toBe(false);
-      expect(r.error).toBe('Start failed');
+      if (!r.ok) expect(r.error).toBe('Start failed');
     });
   });
   describe('stopBot', () => {
     it('returns ok on success', async () => {
-      expect((await import('./index')).stopBot('b1')).toEqual({ ok: true });
+      const r = (await import('./index')).stopBot('b1');
+      expect(r.ok).toBe(true);
     });
     it('returns error on failure', async () => {
       m.stopBot.mockImplementation(() => { throw new Error('Stop'); });
-      expect((await import('./index')).stopBot('b1')).toEqual({ ok: false, error: 'Stop' });
+      const r = (await import('./index')).stopBot('b1');
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error).toBe('Stop');
     });
   });
   describe('pauseBot', () => {
     it('returns ok on success', async () => {
-      expect((await import('./index')).pauseBot('b1')).toEqual({ ok: true });
+      const r = (await import('./index')).pauseBot('b1');
+      expect(r.ok).toBe(true);
     });
     it('returns error on failure', async () => {
       m.pauseBot.mockImplementation(() => { throw new Error('Pause'); });
-      expect((await import('./index')).pauseBot('b1')).toEqual({ ok: false, error: 'Pause' });
+      const r = (await import('./index')).pauseBot('b1');
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error).toBe('Pause');
     });
   });
   describe('resumeBot', () => {
     it('returns ok on success', async () => {
-      expect((await import('./index')).resumeBot('b1')).toEqual({ ok: true });
+      const r = (await import('./index')).resumeBot('b1');
+      expect(r.ok).toBe(true);
     });
     it('returns error if killswitch halted', async () => {
       m.resumeBot.mockImplementation(() => { throw new Error('Cannot resume: killswitch is halted'); });
       const r = (await import('./index')).resumeBot('b1');
       expect(r.ok).toBe(false);
-      expect(r.error).toContain('killswitch');
+      if (!r.ok) expect(r.error).toContain('killswitch');
     });
   });
   describe('removeBot', () => {

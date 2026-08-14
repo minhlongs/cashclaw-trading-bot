@@ -9,6 +9,7 @@ import { findSettingsByUser, upsertSettings, type SettingsRow } from '@/lib/db/r
 import { getBotManager } from '@/tree/bot';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { createLogger } from '@/lib/logger';
+import { ok, err, type Result } from '@/lib/result';
 
 const log = createLogger('settings-actions');
 
@@ -142,9 +143,9 @@ async function loadCurrentSettings(): Promise<SettingsData> {
   return data;
 }
 
-async function persistSettings(data: SettingsData): Promise<{ ok: boolean; error?: string }> {
+async function persistSettings(data: SettingsData): Promise<Result<void>> {
   const db = createServerClient();
-  if (!db) return { ok: false, error: 'Database not available' };
+  if (!db) return err('Database not available');
 
   const now = Math.floor(Date.now() / 1000);
   const row: SettingsRow = {
@@ -159,7 +160,7 @@ async function persistSettings(data: SettingsData): Promise<{ ok: boolean; error
   };
 
   await upsertSettings(db, row);
-  return { ok: true };
+  return ok(undefined);
 }
 
 // ── Public server actions ────────────────────────────────────
@@ -174,17 +175,17 @@ export async function updateExchangeCredentials(
   apiKey: string,
   apiSecret: string,
   testnet: boolean,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<Result<void>> {
   try {
     if (!apiKey.trim() || !apiSecret.trim()) {
-      return { ok: false, error: 'API key and secret are required' };
+      return err('API key and secret are required');
     }
 
     const current = await loadCurrentSettings();
     current.exchanges[exchange] = { apiKey, apiSecret, testnet };
     return persistSettings(current);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Update failed' };
+    return err(e instanceof Error ? e.message : 'Update failed');
   }
 }
 
@@ -193,19 +194,19 @@ export async function updateRiskLimits(input: {
   dailyLossLimitPct?: number;
   cooldownMinutes?: number;
   maxOpenOrders?: number;
-}): Promise<{ ok: boolean; error?: string }> {
+}): Promise<Result<void>> {
   try {
     if (input.maxDrawdownPct !== undefined && (input.maxDrawdownPct < 1 || input.maxDrawdownPct > 100)) {
-      return { ok: false, error: 'Max drawdown must be between 1-100%' };
+      return err('Max drawdown must be between 1-100%');
     }
     if (input.dailyLossLimitPct !== undefined && (input.dailyLossLimitPct < 1 || input.dailyLossLimitPct > 100)) {
-      return { ok: false, error: 'Daily loss limit must be between 1-100%' };
+      return err('Daily loss limit must be between 1-100%');
     }
     if (input.cooldownMinutes !== undefined && (input.cooldownMinutes < 1 || input.cooldownMinutes > 1440)) {
-      return { ok: false, error: 'Cooldown must be between 1-1440 minutes' };
+      return err('Cooldown must be between 1-1440 minutes');
     }
     if (input.maxOpenOrders !== undefined && (input.maxOpenOrders < 1 || input.maxOpenOrders > 500)) {
-      return { ok: false, error: 'Max open orders must be between 1-500' };
+      return err('Max open orders must be between 1-500');
     }
 
     const current = await loadCurrentSettings();
@@ -216,11 +217,11 @@ export async function updateRiskLimits(input: {
 
     return persistSettings(current);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Update failed' };
+    return err(e instanceof Error ? e.message : 'Update failed');
   }
 }
 
-export async function emergencyHalt(reason: string): Promise<{ ok: boolean; error?: string }> {
+export async function emergencyHalt(reason: string): Promise<Result<void>> {
   try {
     getBotManager().getKillswitch().manualHalt(reason);
     // Persist killswitch halt to D1
@@ -230,11 +231,11 @@ export async function emergencyHalt(reason: string): Promise<{ ok: boolean; erro
     current.killswitch.triggeredAt = Date.now();
     return persistSettings(current);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Halt failed' };
+    return err(e instanceof Error ? e.message : 'Halt failed');
   }
 }
 
-export async function resumeFromHalt(): Promise<{ ok: boolean; error?: string }> {
+export async function resumeFromHalt(): Promise<Result<void>> {
   try {
     getBotManager().getKillswitch().manualResume();
     // Persist killswitch resume to D1
@@ -244,18 +245,18 @@ export async function resumeFromHalt(): Promise<{ ok: boolean; error?: string }>
     current.killswitch.triggeredAt = null;
     return persistSettings(current);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Resume failed' };
+    return err(e instanceof Error ? e.message : 'Resume failed');
   }
 }
 
-export async function resetAllBots(): Promise<{ ok: boolean; error?: string }> {
+export async function resetAllBots(): Promise<Result<void>> {
   try {
     const manager = getBotManager();
     for (const bot of manager.getRunningBots()) {
       bot.stop();
     }
-    return { ok: true };
+    return ok(undefined);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Reset failed' };
+    return err(e instanceof Error ? e.message : 'Reset failed');
   }
 }
