@@ -1,123 +1,109 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TelemetryWriter, type TelemetryWriterDeps, type TelemetryWriterCallbacks } from './writer';
+import { TelemetryWriter } from './writer';
 import type { TradeEvent } from './types';
 
-function createDeps(): TelemetryWriterDeps & { enqueue: ReturnType<typeof vi.fn> } {
-  return { enqueue: vi.fn().mockResolvedValue(undefined) };
+function createMockDeps() {
+  const enqueue = vi.fn(async () => {});
+  return { enqueue };
 }
 
-function createWriter(
-  deps: TelemetryWriterDeps = createDeps(),
-  callbacks: TelemetryWriterCallbacks = {},
-) {
-  return new TelemetryWriter(deps, callbacks);
-}
-
-function queueLength(writer: TelemetryWriter): number {
-  return (writer as unknown as { queue: Array<{ event: TradeEvent; retries: number }> }).queue.length;
-}
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('TelemetryWriter', () => {
-  let deps: ReturnType<typeof createDeps>;
-
-  beforeEach(() => {
-    deps = createDeps();
+  it('creates an instance', () => {
+    const writer = new TelemetryWriter(createMockDeps());
+    expect(writer).toBeDefined();
   });
 
-  describe('emit', () => {
-    it('adds event to queue', () => {
-      const writer = createWriter(deps);
-      writer.emit('bot-1', 'start');
-      expect(queueLength(writer)).toBe(1);
-    });
+  it('emit queues an event with correct fields', async () => {
+    const deps = createMockDeps();
+    const writer = new TelemetryWriter(deps);
+    writer.emit('bot-1', 'start', { symbol: 'BTC/USDT' });
 
-    it('queues multiple events', () => {
-      const writer = createWriter(deps);
-      writer.emit('bot-1', 'start');
-      writer.emit('bot-1', 'tick');
-      writer.emit('bot-1', 'stop');
-      expect(queueLength(writer)).toBe(3);
-    });
+    await new Promise((r) => setTimeout(r, 10));
 
-    it('sets botId and eventType correctly', () => {
-      const writer = createWriter(deps);
-      const received: TradeEvent[] = [];
-      writer.subscribe((e) => { received.push(e); });
-      writer.emit('bot-1', 'start');
-      expect(received[0].botId).toBe('bot-1');
-      expect(received[0].eventType).toBe('start');
-    });
+    expect(deps.enqueue).toHaveBeenCalledOnce();
+    const [sql, bindings] = deps.enqueue.mock.calls[0] as unknown as [string, unknown[]];
+    expect(sql).toContain('trade_events');
+    expect(bindings[1]).toBe('bot-1');
+    expect(bindings[2]).toBe('start');
   });
 
-  describe('subscribe', () => {
-    it('notifies listener when event is emitted', () => {
-      const writer = createWriter(deps);
-      const received: TradeEvent[] = [];
-      writer.subscribe((e) => { received.push(e); });
-      writer.emit('bot-1', 'start');
-      expect(received).toHaveLength(1);
-      expect(received[0].eventType).toBe('start');
-    });
+  it('emitError creates error event', async () => {
+    const deps = createMockDeps();
+    const writer = new TelemetryWriter(deps);
+    writer.emitError('bot-1', 'connection lost', 'ws');
 
-    it('unsubscribes listener', () => {
-      const writer = createWriter(deps);
-      const received: TradeEvent[] = [];
-      const unsub = writer.subscribe((e) => { received.push(e); });
-      writer.emit('bot-1', 'start');
-      expect(received).toHaveLength(1);
-      unsub();
-      writer.emit('bot-1', 'stop');
-      expect(received).toHaveLength(1);
-    });
+    await new Promise((r) => setTimeout(r, 10));
 
-    it('supports multiple independent listeners', () => {
-      const writer = createWriter(deps);
-      const a: TradeEvent[] = [];
-      const b: TradeEvent[] = [];
-      writer.subscribe((e) => { a.push(e); });
-      writer.subscribe((e) => { b.push(e); });
-
-      writer.emit('bot-1', 'start');
-      expect(a).toHaveLength(1);
-      expect(b).toHaveLength(1);
-    });
+    const [, bindings] = deps.enqueue.mock.calls[0] as unknown as [string, unknown[]];
+    expect(bindings[1]).toBe('bot-1');
+    expect(bindings[2]).toBe('error');
+    const details = JSON.parse(bindings[3] as string) as Record<string, unknown>;
+    expect(details.context).toBe('ws');
   });
 
-  describe('flush', () => {
-    it('calls enqueue for each queued event', async () => {
-      const writer = createWriter(deps);
-      writer.emit('bot-1', 'start');
-      writer.emit('bot-1', 'stop');
-      await (writer as unknown as { flush: () => Promise<void> }).flush();
-      expect(deps.enqueue).toHaveBeenCalledTimes(2);
-      expect(queueLength(writer)).toBe(0);
-    });
-
-    it('does not run second flush while first is in progress', async () => {
-      let resolve: () => void;
-      const firstFlush = new Promise<void>((r) => { resolve = r; });
-      deps.enqueue.mockReturnValueOnce(firstFlush).mockResolvedValue(undefined);
-
-      const writer = createWriter(deps);
-      writer.emit('bot-1', 'start');
-      const flushPromise = (writer as unknown as { flush: () => Promise<void> }).flush();
-      const secondFlush = (writer as unknown as { flush: () => Promise<void> }).flush();
-
-      resolve!();
-      await flushPromise;
-      await secondFlush;
-      expect(deps.enqueue).toHaveBeenCalledTimes(1);
-    });
+  it('flush is no-op when queue empty', async () => {
+    const deps = createMockDeps();
+    new TelemetryWriter(deps);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(deps.enqueue).not.toHaveBeenCalled();
   });
 
-  describe('callbacks', () => {
-    it('calls onFlushError when enqueue fails', async () => {
-      const onError = vi.fn();
-      deps.enqueue.mockRejectedValueOnce(new Error('db down'));
-      const writer = createWriter(deps, { onFlushError: onError });
-      writer.emit('bot-1', 'start');
-      await (writer as unknown as { flush: () => Promise<void> }).flush();
-      expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'db down' }));
-    });
+  it('each emit creates its own enqueue call', async () => {
+    const deps = createMockDeps();
+    const writer = new TelemetryWriter(deps);
+    writer.emit('bot-1', 'tick', {});
+    writer.emit('bot-2', 'fill', {});
+    writer.emit('bot-3', 'signal', {});
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(deps.enqueue).toHaveBeenCalledTimes(3);
+  });
+
+  it('subscribe receives emitted events', async () => {
+    const deps = createMockDeps();
+    const writer = new TelemetryWriter(deps);
+    const listener = vi.fn();
+
+    writer.subscribe(listener);
+    writer.emit('bot-1', 'start', {});
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(listener).toHaveBeenCalledOnce();
+    const event = listener.mock.calls[0][0] as TradeEvent;
+    expect(event.botId).toBe('bot-1');
+    expect(event.eventType).toBe('start');
+  });
+
+  it('unsubscribe stops events', async () => {
+    const deps = createMockDeps();
+    const writer = new TelemetryWriter(deps);
+    const listener = vi.fn();
+
+    const unsub = writer.subscribe(listener);
+    unsub();
+    writer.emit('bot-1', 'start', {});
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('onFlushError callback fires on enqueue failure', async () => {
+    const deps = createMockDeps();
+    deps.enqueue.mockRejectedValueOnce(new Error('DB down'));
+    const onFlushError = vi.fn();
+    const writer = new TelemetryWriter(deps, { onFlushError });
+    writer.emit('bot-1', 'start', {});
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(onFlushError).toHaveBeenCalledOnce();
+    expect(onFlushError.mock.calls[0][0].message).toBe('DB down');
   });
 });

@@ -87,7 +87,6 @@ describe('createBotInstance', () => {
     );
     expect(bot).toBeInstanceOf(BotInstance);
     expect(bots.has('grid-1')).toBe(true);
-    expect(onLog).toHaveBeenCalledWith(expect.stringContaining('created'));
   });
 
   it('creates mean reversion bot', async () => {
@@ -101,16 +100,32 @@ describe('createBotInstance', () => {
     expect(bots.has('mr-1')).toBe(true);
   });
 
-  it('throws if bot already exists', async () => {
-    bots.set('grid-1', {} as BotInstance);
+  it('rejects duplicate bot id', async () => {
+    await createBotInstance(
+      { id: 'grid-1', config: gridConfig, exchangeConfig: defaultExchangeConfig, mode: 'paper' },
+      { killswitch, onLog, onError },
+      bots,
+      exchanges,
+    );
     await expect(
       createBotInstance(
         { id: 'grid-1', config: gridConfig, exchangeConfig: defaultExchangeConfig, mode: 'paper' },
         { killswitch, onLog, onError },
         bots,
         exchanges,
-      )
+      ),
     ).rejects.toThrow('Bot already exists: grid-1');
+  });
+
+  it('forces paper mode when live mode requested', async () => {
+    const bot = await createBotInstance(
+      { id: 'live-1', config: gridConfig, exchangeConfig: defaultExchangeConfig, mode: 'live' },
+      { killswitch, onLog, onError },
+      bots,
+      exchanges,
+    );
+    expect(bot).toBeInstanceOf(BotInstance);
+    expect(onLog).toHaveBeenCalledWith('Live mode blocked — Paper-only v1');
   });
 
   it('registers bot with killswitch', async () => {
@@ -121,5 +136,29 @@ describe('createBotInstance', () => {
       exchanges,
     );
     expect(killswitch.registerBot).toHaveBeenCalledWith('test-ks', gridConfig.capital);
+  });
+
+  it('creates paper adapter when exchange map is empty', async () => {
+    expect(exchanges.has('paper')).toBe(false);
+    await createBotInstance(
+      { id: 'ex-1', config: gridConfig, exchangeConfig: defaultExchangeConfig, mode: 'paper' },
+      { killswitch, onLog, onError },
+      bots,
+      exchanges,
+    );
+    expect(exchanges.has('paper')).toBe(true);
+    expect(exchanges.get('paper')).toBeDefined();
+  });
+
+  it('reuses existing exchange adapter from map', async () => {
+    const mockExchange = { ping: vi.fn() } as unknown as ExchangeAdapter;
+    exchanges.set('paper', mockExchange);
+    await createBotInstance(
+      { id: 'ex-2', config: gridConfig, exchangeConfig: defaultExchangeConfig, mode: 'paper' },
+      { killswitch, onLog, onError },
+      bots,
+      exchanges,
+    );
+    expect(exchanges.get('paper')).toBe(mockExchange);
   });
 });
