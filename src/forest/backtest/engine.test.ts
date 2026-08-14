@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { runBacktest } from './engine';
-import type { RunBacktestOptions } from './engine';
+import { runBacktest, type RunBacktestOptions } from './engine';
 import type { Candle } from './ohlcv';
 import type { GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
 

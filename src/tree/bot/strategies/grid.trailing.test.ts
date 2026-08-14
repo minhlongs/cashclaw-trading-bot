@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { GridStrategy } from './grid';
-import type { GridStrategyCallbacks } from './grid';
+import { GridStrategy, type GridStrategyCallbacks } from './grid';
 
 const SYMBOL = 'BTC/USDT';
 const EXCHANGE = 'binance';

@@ -1,8 +1,7 @@
 // CCXT Exchange Client Transformer
 // Converts CCXT responses to CashClaw internal types
 
-import ccxt from 'ccxt';
-import type { Exchange as CCXTExchange, Order as CCXTOrder } from 'ccxt';
+import ccxt, { type Exchange as CCXTExchange, type Order as CCXTOrder } from 'ccxt';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ccxt-client');

@@ -12,11 +12,7 @@ import { createD1Callbacks, persistNewBot } from './bot-manager-helpers';
 import { createServerClient } from '@/lib/db/client';
 import { createLogger } from '@/lib/logger';
 import { createPaperAdapter } from './paper-adapter';
-import type { BotManagerDependencies, CreateBotRequest } from './bot-manager-types';
-
-const log = createLogger('bot-manager');
-
-import { toD1Status, type D1BotStatus } from './bot-manager-types';
+import { toD1Status, type BotManagerDependencies, type CreateBotRequest, type D1BotStatus } from './bot-manager-types';
 export type { BotManagerDependencies, CreateBotRequest, D1BotStatus } from './bot-manager-types';
 
 export class BotManager {

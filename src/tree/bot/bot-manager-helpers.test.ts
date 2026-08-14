@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createD1Callbacks, persistNewBot } from './bot-manager-helpers';
+import { createD1Callbacks, persistNewBot, type D1CallbackDeps } from './bot-manager-helpers';
 import type { BotState, BotTrade } from './types';
-import type { D1CallbackDeps } from './bot-manager-helpers';
 
 vi.mock('@/forest/bot/d1-adapter', () => ({
   persistBot: vi.fn().mockResolvedValue(undefined),

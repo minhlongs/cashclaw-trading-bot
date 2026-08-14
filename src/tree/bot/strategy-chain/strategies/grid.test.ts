@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { StrategyContext, TradeSignal } from '../types';
-import type { GridBotConfig } from '@/tree/bot/types';
-import type { BotTrade } from '@/tree/bot/types';
+import type { GridBotConfig, BotTrade } from '@/tree/bot/types';
 import type { OrderRequest, OrderResult } from '@/tree/exchange/types';
 
 let mockLevelCount = 0;

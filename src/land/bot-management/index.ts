@@ -6,8 +6,7 @@
 
 import { getBotManager, resetBotManager } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
-import type { BotState } from '@/tree/bot/types';
-import type { BotConfig } from '@/tree/bot/types';
+import type { BotState, BotConfig } from '@/tree/bot/types';
 import type { CreateBotRequest } from '@/tree/bot/bot-manager';
 import type { ExchangeConfig } from '@/tree/exchange/types';
 import { createServerClient } from '@/lib/db/client';

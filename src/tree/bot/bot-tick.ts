@@ -11,8 +11,8 @@ import type {
   MeanRevBotConfig,
   BotCallbacks,
   BotDependencies,
+  BotState,
 } from './types';
-import type { BotState } from './types';
 import type { StrategyChain } from './strategy-chain';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';

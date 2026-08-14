@@ -8,8 +8,8 @@ import type {
 import type {
   BotTrade,
   BotDependencies,
+  BotState,
 } from './types';
-import type { BotState } from './types';
 import type { TradeEventType } from '../telemetry/types';
 
 export interface OrderContext {

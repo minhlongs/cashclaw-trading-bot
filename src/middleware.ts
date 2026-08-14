@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 // Session-cookie auth guard for Next.js App Router routes.
 // This middleware applies to /api/* routes handled by Next.js only.
