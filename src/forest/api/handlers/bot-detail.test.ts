@@ -63,6 +63,10 @@ vi.mock('@/forest/bot/d1-adapter', () => ({
   loadAllBotsFromD1: vi.fn(async () => {}),
 }));
 
+vi.mock('@/forest/dashboard/trade-events', () => ({
+  getRecentEvents: vi.fn(async () => []),
+}));
+
 async function getDetail(id: string) {
   const { botDetailHandler } = await import('./bot-detail');
   return botDetailHandler(id);

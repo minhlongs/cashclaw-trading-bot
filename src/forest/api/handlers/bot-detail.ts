@@ -6,6 +6,7 @@
 import { getBotManager, type BotConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
+import { getRecentEvents } from '@/forest/dashboard/trade-events';
 import type { TradeEvent, TradeEventType } from '@/tree/telemetry';
 
 export interface BotDetail {
@@ -62,6 +63,9 @@ export async function botDetailHandler(id: string): Promise<{
       };
     }
 
+    // Fetch recent trade events from D1
+    const recentEvents = await getRecentEvents([id]);
+
     return {
       ok: true,
       data: {
@@ -84,6 +88,7 @@ export async function botDetailHandler(id: string): Promise<{
         lastOrderAt: snapshot.lastOrderAt,
         error: snapshot.error,
         gridConfig,
+        recentEvents,
       },
     };
   } catch (e) {

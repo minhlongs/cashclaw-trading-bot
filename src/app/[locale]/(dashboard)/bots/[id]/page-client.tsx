@@ -40,6 +40,7 @@ interface ApiBotDetail {
   lastTickAt: number | null;
   lastOrderAt: number | null;
   gridConfig: Record<string, unknown>;
+  recentEvents?: Array<{ id: string; eventType: string; details: Record<string, unknown>; timestamp: number }>;
 }
 
 interface TradeRow {
@@ -52,10 +53,18 @@ interface TradeRow {
   openedAt: number;
 }
 
+interface TradeEventRow {
+  id: string;
+  eventType: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
 export default function BotDetailPageClient({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [bot, setBot] = useState<BotDetailData | null>(null);
   const [trades, setTrades] = useState<TradeRow[]>([]);
+  const [tradeEvents, setTradeEvents] = useState<TradeEventRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,6 +93,14 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
               config: (d.gridConfig ?? {}) as Record<string, number>,
             });
             setTrades([]);
+            if (d.recentEvents && Array.isArray(d.recentEvents)) {
+              setTradeEvents(d.recentEvents.map(e => ({
+                id: e.id,
+                eventType: e.eventType,
+                details: e.details,
+                timestamp: e.timestamp,
+              })));
+            }
           }
         }
       } catch {
@@ -121,6 +138,43 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
   return (
     <div className="main-content">
       <BotDetailClient bot={bot} trades={trades} />
+      {tradeEvents.length > 0 && (
+        <div className="card" style={{ marginTop: 'var(--space-4)' }}>
+          <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-3)' }}>
+            Trade Events
+          </h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: 'var(--text-sm)' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>Time</th>
+                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>Type</th>
+                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tradeEvents.slice(0, 50).map((evt) => (
+                  <tr key={evt.id} style={{ borderTop: '1px solid var(--border)' }}>
+                    <td style={{ padding: '8px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
+                      {new Date(evt.timestamp).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '8px' }}>
+                      <span className={`badge ${
+                        evt.eventType === 'fill' ? 'badge-success' :
+                        evt.eventType === 'error' ? 'badge-error' :
+                        'badge-neutral'
+                      }`}>{evt.eventType}</span>
+                    </td>
+                    <td style={{ padding: '8px', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: 'var(--text-xs)' }}>
+                      {JSON.stringify(evt.details)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
