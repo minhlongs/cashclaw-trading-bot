@@ -2,9 +2,24 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@/tree/bot', () => ({
   getBotManager: vi.fn(),
-  isGridConfig: vi.fn((cfg: any) => cfg.strategy === 'grid'),
-  isMeanRevConfig: vi.fn((cfg: any) => cfg.strategy === 'mean_reversion'),
+  isGridConfig: vi.fn((cfg: { strategy?: string }) => cfg.strategy === 'grid'),
+  isMeanRevConfig: vi.fn((cfg: { strategy?: string }) => cfg.strategy === 'mean_reversion'),
 }));
+
+vi.mock('@/lib/db/client', () => ({
+  createServerClient: vi.fn(),
+}));
+
+vi.mock('@/lib/logger', () => ({
+  createLogger: vi.fn(() => ({ error: vi.fn(), info: vi.fn(), warn: vi.fn() })),
+}));
+
+function mockD1(rows: Array<{ id: string; detail_json: string; created_at: number }>) {
+  const all = vi.fn().mockResolvedValue({ results: rows });
+  const bind = vi.fn().mockReturnValue({ all });
+  const prepare = vi.fn().mockReturnValue({ bind });
+  return { prepare, bind, all };
+}
 
 const mockManager = {
   getBot: vi.fn(),
@@ -128,10 +143,68 @@ describe('bot-detail', () => {
   });
 
   describe('getTradeHistory', () => {
-    it('returns empty array (not yet implemented)', async () => {
+    it('queries D1 and maps fill events to TradeRow', async () => {
+      const db = mockD1([
+        { id: 'evt-1', detail_json: JSON.stringify({ side: 'buy', price: 45000, quantity: 0.1, pnl: 50 }), created_at: 1000 },
+        { id: 'evt-2', detail_json: JSON.stringify({ side: 'sell', price: 46000, quantity: 0.1, pnl: 100 }), created_at: 2000 },
+      ]);
+      const { createServerClient } = await import('@/lib/db/client');
+      vi.mocked(createServerClient).mockReturnValue(db as unknown as ReturnType<typeof createServerClient>);
+
+      const { getTradeHistory } = await import('./bot-detail');
+      const result = await getTradeHistory('bot-1', 10);
+
+      expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('trade_events'));
+      const preparedObj = db.prepare.mock.results[0].value;
+      expect(preparedObj.bind).toHaveBeenCalledWith('bot-1', 'fill', 10);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({ id: 'evt-1', side: 'buy', price: 45000, quantity: 0.1, pnl: 50, status: 'filled', openedAt: 1000 });
+      expect(result[1]).toEqual({ id: 'evt-2', side: 'sell', price: 46000, quantity: 0.1, pnl: 100, status: 'filled', openedAt: 2000 });
+    });
+
+    it('returns empty when D1 unavailable', async () => {
+      const { createServerClient } = await import('@/lib/db/client');
+      vi.mocked(createServerClient).mockReturnValue(null);
+
       const { getTradeHistory } = await import('./bot-detail');
       const result = await getTradeHistory('bot-1');
       expect(result).toEqual([]);
+    });
+
+    it('returns empty on D1 query error', async () => {
+      const db = { prepare: vi.fn().mockImplementation(() => { throw new Error('D1 fail'); }) };
+      const { createServerClient } = await import('@/lib/db/client');
+      vi.mocked(createServerClient).mockReturnValue(db as unknown as ReturnType<typeof createServerClient>);
+
+      const { getTradeHistory } = await import('./bot-detail');
+      const result = await getTradeHistory('bot-1');
+      expect(result).toEqual([]);
+    });
+
+    it('handles malformed detail_json gracefully', async () => {
+      const db = mockD1([
+        { id: 'evt-bad', detail_json: 'not-json', created_at: 3000 },
+      ]);
+      const { createServerClient } = await import('@/lib/db/client');
+      vi.mocked(createServerClient).mockReturnValue(db as unknown as ReturnType<typeof createServerClient>);
+
+      const { getTradeHistory } = await import('./bot-detail');
+      const result = await getTradeHistory('bot-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].side).toBe('buy');
+      expect(result[0].price).toBe(0);
+    });
+
+    it('defaults missing fields in details', async () => {
+      const db = mockD1([
+        { id: 'evt-empty', detail_json: JSON.stringify({}), created_at: 4000 },
+      ]);
+      const { createServerClient } = await import('@/lib/db/client');
+      vi.mocked(createServerClient).mockReturnValue(db as unknown as ReturnType<typeof createServerClient>);
+
+      const { getTradeHistory } = await import('./bot-detail');
+      const result = await getTradeHistory('bot-1');
+      expect(result[0]).toEqual({ id: 'evt-empty', side: 'buy', price: 0, quantity: 0, pnl: null, status: 'filled', openedAt: 4000 });
     });
   });
 

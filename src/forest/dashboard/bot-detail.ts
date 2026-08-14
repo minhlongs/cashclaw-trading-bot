@@ -6,6 +6,8 @@
 import { getBotManager, isGridConfig, isMeanRevConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
 import { getBotCards, type BotCardData } from './bot-kpis';
+import { createServerClient } from '@/lib/db/client';
+import { createLogger } from '@/lib/logger';
 
 // ── Types ───────────────────────────────────────────────────────
 export interface BotDetailData {
@@ -86,10 +88,38 @@ export async function getBotDetail(id: string): Promise<BotDetailData | null> {
   return botToDetail(bot);
 }
 
-export async function getTradeHistory(_botId: string, _limit = 20): Promise<TradeRow[]> {
-  // TODO: wire to D1 trade_events table once telemetry persists trades
-  // Returning empty for now — client shows empty state gracefully
-  return [];
+export async function getTradeHistory(botId: string, limit = 20): Promise<TradeRow[]> {
+  const log = createLogger('bot-detail');
+  const db = createServerClient();
+  if (!db) return [];
+
+  try {
+    const result = await db
+      .prepare('SELECT id, detail_json, created_at FROM trade_events WHERE bot_id = ? AND event_type = ? ORDER BY created_at DESC LIMIT ?')
+      .bind(botId, 'fill', limit)
+      .all<{ id: string; detail_json: string; created_at: number }>();
+
+    return result.results.map((row) => {
+      let details: Record<string, unknown> = {};
+      try {
+        details = JSON.parse(row.detail_json);
+      } catch {
+        log.warn('Malformed trade event detail_json', { action: 'getTradeHistory', eventId: row.id });
+      }
+      return {
+        id: row.id,
+        side: (details.side as 'buy' | 'sell') ?? 'buy',
+        price: Number(details.price) || 0,
+        quantity: Number(details.quantity) || 0,
+        pnl: details.pnl != null ? Number(details.pnl) : null,
+        status: 'filled' as const,
+        openedAt: row.created_at,
+      };
+    });
+  } catch (error) {
+    log.error('Failed to fetch trade history', error instanceof Error ? error : new Error(String(error)), { action: 'getTradeHistory', botId });
+    return [];
+  }
 }
 
 export async function getAllBots(): Promise<BotCardData[]> {
