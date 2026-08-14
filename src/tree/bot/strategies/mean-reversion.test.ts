@@ -20,7 +20,7 @@ function makeTicker(overrides: Partial<Ticker> = {}): Ticker {
 function makeConfig(overrides: Partial<MeanRevBotConfig> = {}): MeanRevBotConfig {
   return {
     strategy: 'mean_reversion',
-    pair: 'BTC/USDT',
+    symbol: 'BTC/USDT',
     exchange: 'binance',
     capital: 1000,
     bbPeriod: 20,
@@ -28,10 +28,11 @@ function makeConfig(overrides: Partial<MeanRevBotConfig> = {}): MeanRevBotConfig
     rsiPeriod: 14,
     rsiBuyThreshold: 30,
     rsiSellThreshold: 70,
-    entryPct: 1,
-    exitPct: 0.5,
     volumeMultiplier: 1.5,
+    positionSizePct: 10,
+    cooldownMinutes: 5,
     mode: 'paper',
+    maxDrawdownPct: 15,
     ...overrides,
   };
 }
@@ -145,7 +146,8 @@ describe('MeanRevStrategy', () => {
         rsiPeriod: 3,
         rsiBuyThreshold: 80, // very easy to trigger oversold
         rsiSellThreshold: 90,
-        entryPct: 5,
+        positionSizePct: 5,
+        cooldownMinutes: 0,
         volumeMultiplier: 1,
       });
       strategy.start(50000);

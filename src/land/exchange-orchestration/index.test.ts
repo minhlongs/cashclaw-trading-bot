@@ -87,7 +87,7 @@ describe('ExchangeOrchestrator', () => {
 
   describe('killswitch integration', () => {
     it('blocks trading when killswitch disables', async () => {
-      const ks = new Killswitch();
+      const ks = new Killswitch({ onHalt: vi.fn(), onResume: vi.fn(), onOrderPlaced: vi.fn(), onOrderFilled: vi.fn(), onError: vi.fn() });
       ks.disable();
 
       orchestrator = new ExchangeOrchestrator({ killswitch: ks, onError });
@@ -100,7 +100,7 @@ describe('ExchangeOrchestrator', () => {
     });
 
     it('allows trading when killswitch is default', async () => {
-      const ks = new Killswitch();
+      const ks = new Killswitch({ onHalt: vi.fn(), onResume: vi.fn(), onOrderPlaced: vi.fn(), onOrderFilled: vi.fn(), onError: vi.fn() });
       orchestrator = new ExchangeOrchestrator({ killswitch: ks, onError });
 
       const result = await orchestrator.placeOrder('binance', {
@@ -117,7 +117,7 @@ describe('ExchangeOrchestrator', () => {
       const provider = makeMockProvider() as any;
       orchestrator.registerProvider('binance', provider);
 
-      const result = await orchestrator.cancelOrder('binance', 'order-1');
+      const result = await orchestrator.cancelOrder('binance', 'order-1', 'BTC/USDT');
       expect(result).toBe(true);
       expect(provider.cancelOrder).toHaveBeenCalled();
     });

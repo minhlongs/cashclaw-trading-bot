@@ -15,8 +15,7 @@ vi.mock('@/lib/db/client', () => ({
   createServerClient: vi.fn().mockReturnValue(null),
 }));
 
-import { botCreateHandler } from './bot-create';
-import type { CreateBotPayload } from './bot-create';
+import { botCreateHandler, type CreateBotPayload } from './bot-create';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 
 function paperPayload(overrides: Partial<CreateBotPayload> = {}): CreateBotPayload {

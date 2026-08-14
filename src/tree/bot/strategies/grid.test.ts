@@ -20,7 +20,7 @@ function makeTicker(overrides: Partial<Ticker> = {}): Ticker {
 function makeConfig(overrides: Partial<GridBotConfig> = {}): GridBotConfig {
   return {
     strategy: 'grid',
-    pair: 'BTC/USDT',
+    symbol: 'BTC/USDT',
     exchange: 'binance',
     capital: 1000,
     gridSpacingPct: 2,
@@ -28,6 +28,9 @@ function makeConfig(overrides: Partial<GridBotConfig> = {}): GridBotConfig {
     takeProfitPct: 2,
     stopLossPct: 5,
     mode: 'paper',
+    maxDrawdownPct: 15,
+    capitalPerLevelPct: 5,
+    rebalanceOnFill: false,
     ...overrides,
   };
 }

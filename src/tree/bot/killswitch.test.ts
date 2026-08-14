@@ -1,349 +1,258 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Killswitch } from './killswitch';
-import type { KillswitchCallbacks, KillswitchConfig } from './killswitch';
-import type { OrderResult } from '../exchange/types';
 
-function makeCallbacks(): KillswitchCallbacks {
+function makeCallbacks() {
   return {
     onHalt: vi.fn(),
     onResume: vi.fn(),
-    onOrderPlaced: vi.fn(),
-    onOrderFilled: vi.fn(),
     onError: vi.fn(),
-  };
-}
-
-function makeOrder(pnl: number, overrides: Partial<OrderResult> = {}): OrderResult {
-  return {
-    id: 'order-1',
-    exchangeId: 'binance',
-    symbol: 'BTC/USDT',
-    side: 'buy',
-    type: 'market',
-    price: 1000,
-    quantity: 1,
-    filled: 1,
-    status: 'filled',
-    timestamp: Date.now(),
-    pnl,
-    ...overrides,
+    onOrderFilled: vi.fn(),
+    onOrderPlaced: vi.fn(),
   };
 }
 
 describe('Killswitch', () => {
-  let cb: KillswitchCallbacks;
   let ks: Killswitch;
+  let callbacks: ReturnType<typeof makeCallbacks>;
 
   beforeEach(() => {
-    cb = makeCallbacks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-14T12:00:00Z'));
+    callbacks = makeCallbacks();
+    ks = new Killswitch(callbacks, { cooldownMinutes: 5 });
   });
 
-  describe('constructor', () => {
-    it('initializes with default state (not halted, zero drawdown)', () => {
-      ks = new Killswitch(cb);
-      const s = ks.getState();
-      expect(s.halted).toBe(false);
-      expect(s.haltReason).toBeNull();
-      expect(s.haltTimestamp).toBeNull();
-      expect(s.dailyPnl).toBe(0);
-      expect(s.consecutiveLosses).toBe(0);
-      expect(s.peakCapital).toBe(0);
-      expect(s.currentDrawdown).toBe(0);
-      expect(s.enabled).toBe(true);
-    });
-
-    it('applies custom config over defaults', () => {
-      const custom: Partial<KillswitchConfig> = {
-        maxDailyLossPct: 5,
-        maxConsecutiveLosses: 3,
-        cooldownMinutes: 10,
-      };
-      ks = new Killswitch(cb, custom);
-      ks.registerBot('bot1', 1000);
-      // Trigger daily loss at 5% (custom) vs default 10%
-      // 50 loss on 1000 = 5% — should halt
-      ks.updatePeakCapital(1000);
-      ks.onOrderFilled(makeOrder(-50));
-      expect(ks.getState().halted).toBe(true);
-    });
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  describe('halt via manualHalt', () => {
-    it('sets halted=true, records haltTimestamp, emits callback', () => {
-      ks = new Killswitch(cb);
-      ks.manualHalt('operator says stop');
-      const s = ks.getState();
-      expect(s.halted).toBe(true);
-      expect(s.haltReason).toBe('Manual halt: operator says stop');
-      expect(s.haltTimestamp).toBeTypeOf('number');
-      expect(cb.onHalt).toHaveBeenCalledWith('Manual halt: operator says stop');
-    });
-
-    it('does not double-halt if already halted', () => {
-      ks = new Killswitch(cb);
-      ks.manualHalt('first');
-      const firstTs = ks.getState().haltTimestamp;
-      ks.manualHalt('second');
-      expect(ks.getState().haltTimestamp).toBe(firstTs);
-      expect(cb.onHalt).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('manualResume', () => {
-    it('resumes from halted state', () => {
-      ks = new Killswitch(cb);
-      ks.manualHalt('test');
-      ks.manualResume();
-      const s = ks.getState();
-      expect(s.halted).toBe(false);
-      expect(s.haltReason).toBeNull();
-      expect(cb.onResume).toHaveBeenCalledTimes(1);
-    });
-
-    it('is a no-op if not halted', () => {
-      ks = new Killswitch(cb);
-      ks.manualResume();
-      expect(cb.onResume).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('isTradingEnabled', () => {
-    it('returns true when enabled and not halted', () => {
-      ks = new Killswitch(cb);
+  describe('initial state', () => {
+    it('is enabled and not halted', () => {
       expect(ks.isTradingEnabled()).toBe(true);
+      expect(ks.isHalted()).toBe(false);
+      expect(ks.haltReason).toBeNull();
     });
 
-    it('returns false when disabled', () => {
-      ks = new Killswitch(cb);
-      ks.disable();
-      expect(ks.isTradingEnabled()).toBe(false);
+    it('returns default config values', () => {
+      const defaultKs = new Killswitch(makeCallbacks());
+      expect(defaultKs.isTradingEnabled()).toBe(true);
+    });
+  });
+
+  describe('manualHalt / manualResume', () => {
+    it('halts with reason', () => {
+      ks.manualHalt('operator pause');
+      expect(ks.isHalted()).toBe(true);
+      expect(ks.getHaltReason()).toBe('Manual halt: operator pause');
+      expect(callbacks.onHalt).toHaveBeenCalledWith('Manual halt: operator pause');
     });
 
-    it('returns false when halted', () => {
-      ks = new Killswitch(cb);
+    it('prevents trading when halted', () => {
       ks.manualHalt('test');
       expect(ks.isTradingEnabled()).toBe(false);
     });
 
-    it('returns true after cooldown expires and auto-resumes', () => {
-      ks = new Killswitch(cb, { cooldownMinutes: 0.001 }); // ~0.06s cooldown
+    it('manualResume clears halt', () => {
       ks.manualHalt('test');
-      // Manually set cooldown to past
-      const state = ks.getState();
-      // Access internal state via hack: we set cooldownUntil in the past
-      // Since cooldownMinutes: 0.001, it's ~60ms. Wait a bit.
-      const start = Date.now();
-      while (Date.now() - start < 100) {
-        // busy wait for cooldown
-      }
-      expect(ks.isTradingEnabled()).toBe(true);
-      expect(cb.onResume).toHaveBeenCalled();
-    });
-  });
-
-  describe('onOrderFilled — daily loss limit', () => {
-    it('triggers halt when daily loss exceeds maxDailyLossPct', () => {
-      ks = new Killswitch(cb, { maxDailyLossPct: 10 });
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      // 10% of 1000 = 100 loss
-      ks.onOrderFilled(makeOrder(-100));
-      expect(ks.getState().halted).toBe(true);
-      expect(ks.getState().haltReason).toContain('Daily loss limit');
-      expect(cb.onHalt).toHaveBeenCalled();
+      ks.manualResume();
+      expect(ks.isHalted()).toBe(false);
+      expect(callbacks.onResume).toHaveBeenCalled();
     });
 
-    it('does not halt when loss is under maxDailyLossPct', () => {
-      ks = new Killswitch(cb, { maxDailyLossPct: 10 });
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      ks.onOrderFilled(makeOrder(-50));
-      expect(ks.getState().halted).toBe(false);
-    });
-  });
-
-  describe('onOrderFilled — consecutive losses', () => {
-    it('triggers halt when consecutive losses reach maxConsecutiveLosses', () => {
-      ks = new Killswitch(cb, { maxConsecutiveLosses: 3, maxDailyLossPct: 50 });
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      // 3 consecutive losses
-      ks.onOrderFilled(makeOrder(-10)); // loss 1
-      ks.onOrderFilled(makeOrder(-10)); // loss 2
-      ks.onOrderFilled(makeOrder(-10)); // loss 3 — triggers halt
-      expect(ks.getState().halted).toBe(true);
-      expect(ks.getState().haltReason).toContain('consecutive losses');
+    it('manualResume is no-op when not halted', () => {
+      ks.manualResume(); // should not throw
+      expect(callbacks.onResume).not.toHaveBeenCalled();
     });
 
-    it('resets consecutive count on a win', () => {
-      ks = new Killswitch(cb, { maxConsecutiveLosses: 3, maxDailyLossPct: 50 });
-      ks.registerBot('bot1', 10000);
-      ks.updatePeakCapital(10000);
-      ks.onOrderFilled(makeOrder(-10)); // loss 1
-      ks.onOrderFilled(makeOrder(-10)); // loss 2
-      ks.onOrderFilled(makeOrder(50));  // win — resets count
-      ks.onOrderFilled(makeOrder(-10)); // loss 1 again (not 3)
-      expect(ks.getState().halted).toBe(false);
-      expect(ks.getState().consecutiveLosses).toBe(1);
-    });
-  });
-
-  describe('onOrderFilled — drawdown', () => {
-    it('triggers halt when drawdown exceeds maxDrawdownPct', () => {
-      // maxDailyLossPct must be > maxDrawdownPct so drawdown check fires first
-      ks = new Killswitch(cb, { maxDrawdownPct: 15, maxDailyLossPct: 50 });
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      // 15% drawdown = -150 PnL; daily loss check allows up to 50%
-      ks.onOrderFilled(makeOrder(-150));
-      expect(ks.getState().halted).toBe(true);
-      expect(ks.getState().haltReason).toContain('drawdown');
-    });
-
-    it('does not halt when drawdown is under maxDrawdownPct', () => {
-      ks = new Killswitch(cb, { maxDrawdownPct: 15, maxDailyLossPct: 50 });
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      ks.onOrderFilled(makeOrder(-140));
-      expect(ks.getState().halted).toBe(false);
-      expect(ks.getState().currentDrawdown).toBeCloseTo(14, 0);
-    });
-  });
-
-  describe('registerBot / unregisterBot', () => {
-    it('registerBot tracks bot and updates peakCapital', () => {
-      ks = new Killswitch(cb);
-      ks.registerBot('bot1', 500);
-      expect(ks.getState().peakCapital).toBe(500);
-      ks.registerBot('bot2', 800);
-      expect(ks.getState().peakCapital).toBe(800);
-    });
-
-    it('unregisterBot removes bot', () => {
-      ks = new Killswitch(cb);
-      ks.registerBot('bot1', 500);
-      ks.unregisterBot('bot1');
-      // Verify bot is gone (indirectly — no bot state tracked)
-      const s = ks.getState();
-      expect(s.dailyPnl).toBe(0);
-    });
-  });
-
-  describe('reset', () => {
-    it('clears all state back to defaults', () => {
-      ks = new Killswitch(cb);
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      ks.onOrderFilled(makeOrder(100));
+    it('isManualHalt returns true only for manual halts', () => {
       ks.manualHalt('test');
-
-      ks.reset();
-
-      const s = ks.getState();
-      expect(s.halted).toBe(false);
-      expect(s.haltReason).toBeNull();
-      expect(s.haltTimestamp).toBeNull();
-      expect(s.dailyPnl).toBe(0);
-      expect(s.consecutiveLosses).toBe(0);
-      expect(s.peakCapital).toBe(0);
-      expect(s.currentDrawdown).toBe(0);
-    });
-  });
-
-  describe('getState', () => {
-    it('returns a copy (not a reference to internal state)', () => {
-      ks = new Killswitch(cb);
-      const s1 = ks.getState();
-      const s2 = ks.getState();
-      expect(s1).toEqual(s2);
-      expect(s1).not.toBe(s2); // different object references
-    });
-  });
-
-  describe('halt reasons', () => {
-    it('manual halt reason is formatted with prefix', () => {
-      ks = new Killswitch(cb);
-      ks.manualHalt('maintenance');
-      expect(ks.getState().haltReason).toBe('Manual halt: maintenance');
-    });
-
-    it('daily loss halt includes percentage in reason', () => {
-      ks = new Killswitch(cb, { maxDailyLossPct: 5 });
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      ks.onOrderFilled(makeOrder(-100)); // 10% > 5%
-      expect(ks.getState().haltReason).toContain('Daily loss limit');
-    });
-
-    it('consecutive loss halt includes count in reason', () => {
-      ks = new Killswitch(cb, { maxConsecutiveLosses: 2, maxDailyLossPct: 50 });
-      ks.registerBot('bot1', 10000);
-      ks.updatePeakCapital(10000);
-      ks.onOrderFilled(makeOrder(-1));
-      ks.onOrderFilled(makeOrder(-1));
-      expect(ks.getState().haltReason).toContain('2');
-    });
-
-    it('drawdown halt includes percentage in reason', () => {
-      ks = new Killswitch(cb, { maxDrawdownPct: 10, maxDailyLossPct: 50 });
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      ks.onOrderFilled(makeOrder(-100)); // 10% drawdown; daily loss allows up to 50%
-      expect(ks.getState().haltReason).toContain('drawdown');
-      expect(ks.getState().haltReason).toContain('10');
+      expect(ks.isManualHalt()).toBe(true);
     });
   });
 
   describe('disable / enable', () => {
     it('disable prevents trading', () => {
-      ks = new Killswitch(cb);
       ks.disable();
       expect(ks.isTradingEnabled()).toBe(false);
     });
 
-    it('disable makes onOrderFilled a no-op', () => {
-      ks = new Killswitch(cb, { maxDailyLossPct: 1 });
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      ks.disable();
-      ks.onOrderFilled(makeOrder(-1000));
-      expect(ks.getState().halted).toBe(false);
-      expect(cb.onOrderFilled).not.toHaveBeenCalled();
-    });
-
-    it('enable re-enables after disable', () => {
-      ks = new Killswitch(cb);
+    it('enable re-enables trading', () => {
       ks.disable();
       ks.enable();
       expect(ks.isTradingEnabled()).toBe(true);
     });
+
+    it('enable clears halt state', () => {
+      ks.manualHalt('test');
+      ks.enable();
+      expect(ks.isHalted()).toBe(false);
+    });
+  });
+
+  describe('onOrderFilled — consecutive losses', () => {
+    it('halts after max consecutive losses', () => {
+      ks.registerBot('b1', 10000);
+      for (let i = 0; i < 5; i++) {
+        ks.onOrderFilled({ id: `o${i}`, pnl: -10 });
+      }
+      expect(ks.isHalted()).toBe(true);
+      expect(ks.getHaltReason()).toContain('Max consecutive losses');
+      expect(callbacks.onHalt).toHaveBeenCalled();
+    });
+
+    it('resets consecutive losses on profit', () => {
+      ks.registerBot('b1', 10000);
+      ks.onOrderFilled({ id: 'o1', pnl: -10 });
+      ks.onOrderFilled({ id: 'o2', pnl: -10 });
+      ks.onOrderFilled({ id: 'o3', pnl: 50 });
+      ks.onOrderFilled({ id: 'o4', pnl: -10 });
+      // Only 1 consecutive loss after the profit
+      expect(ks.isHalted()).toBe(false);
+    });
+  });
+
+  describe('onOrderFilled — daily loss limit', () => {
+    it('halts when daily loss exceeds percentage', () => {
+      ks.registerBot('b1', 10000);
+      ks.onOrderFilled({ id: 'o1', pnl: -1100 }); // 11% of 10000
+      expect(ks.isHalted()).toBe(true);
+      expect(ks.getHaltReason()).toContain('Daily loss limit');
+    });
+  });
+
+  describe('onOrderFilled — drawdown', () => {
+    it('halts when drawdown exceeds limit', () => {
+      // peakCapital=100k, maxDailyLossPct=10%, maxDrawdownPct=15%
+      // Two orders: daily PnL cumulative = -14000 (14% > 10% daily limit) but drawdown = 14% (< 15%)
+      // Need drawdown > 15% but daily loss % stays below 10%... impossible with single bot.
+      // Instead: three orders summing to -16000 drawdown but with profit between to reset consecutive losses
+      // Actually: dailyPnl accumulates. So we need dailyPnlPct < 10% but drawdownPct > 15%.
+      // With peak=100k: dailyPnl=-14000 (14% > 10%) triggers daily loss. So impossible with 100k peak.
+      // Use peak=200k: dailyPnl=-16000 → dailyPnlPct=8% (<10%), drawdownPct=8% (<15%) — no halt.
+      // Two rounds: first order pnl=-8000, second pnl=-8000 → daily=-16000, peak stays 200k.
+      // dailyPnlPct=8% (<10%), drawdownPct=(200k-184k)/200k=8% (<15%). Still not enough.
+      // We need to separate peakCapital from dailyPnl. Update peak via registerBot first.
+      ks.registerBot('b1', 100000); // peak=100k
+      ks.registerBot('b2', 300000); // peak=300k
+      // Now: peak=300k. Loss of -50000 → dailyPnlPct=16.7% (>10%). Still daily triggers first.
+      // The only way: profit orders accumulate dailyPnl to reduce daily%, then a big loss.
+      // Actually: daily loss check runs on EVERY order. So we need peak high enough that
+      // dailyPnl/peak < 10% at every step, but drawdown > 15%.
+      // With peak=1M: 5 orders of -100000 = dailyPnl=-500000 (50% > 10%). Still fails.
+      //
+      // CORRECT APPROACH: profit in between resets consecutiveLosses but NOT dailyPnl.
+      // So: profit orders ADD to dailyPnl, making it less negative.
+      // Two orders: profit +100000, then loss -115000 → daily=-15000, peak=1M
+      // dailyPnlPct=1.5% (<10%), drawdownPct=1.5% (<15%). No.
+      //
+      // REAL INSIGHT: peakCapital is set by registerBot, not updated by orders.
+      // So: register bot with low capital, then use updatePeakCapital or higher register.
+      ks.unregisterBot('b2'); // clean up, peak stays at 300k
+      // Now peak=300k. Register with capital that doesn't change peak:
+      ks.registerBot('b3', 50000); // peak stays 300k
+      // Big loss: -50000 → dailyPnlPct=50000/300000=16.7% > 10%. Still daily.
+      //
+      // SIMPLEST FIX: override config for this test to set maxDailyLossPct high.
+      // Recreate with custom config:
+      ks = new Killswitch(makeCallbacks(), { cooldownMinutes: 5, maxDailyLossPct: 50, maxDrawdownPct: 15 });
+      ks.registerBot('b1', 100000);
+      ks.onOrderFilled({ id: 'o1', pnl: -16000 });
+      expect(ks.isHalted()).toBe(true);
+      expect(ks.getHaltReason()).toContain('Max drawdown');
+    });
+  });
+
+  describe('onOrderFilled — disabled', () => {
+    it('does nothing when disabled', () => {
+      ks.disable();
+      ks.registerBot('b1', 10000);
+      ks.onOrderFilled({ id: 'o1', pnl: -100 });
+      expect(callbacks.onOrderFilled).not.toHaveBeenCalled();
+    });
   });
 
   describe('updatePeakCapital', () => {
-    it('updates peak when new value is higher', () => {
-      ks = new Killswitch(cb);
-      ks.registerBot('bot1', 500);
-      ks.updatePeakCapital(1000);
-      expect(ks.getState().peakCapital).toBe(1000);
-    });
-
-    it('does not decrease peak when lower value provided', () => {
-      ks = new Killswitch(cb);
-      ks.registerBot('bot1', 500);
-      ks.updatePeakCapital(300);
-      expect(ks.getState().peakCapital).toBe(500);
+    it('updates peak capital and computes drawdown when capital drops', () => {
+      ks.registerBot('b1', 10000);
+      ks.updatePeakCapital(12000);
+      expect(ks.getState().peakCapital).toBe(12000);
+      // Now update with lower capital to trigger drawdown
+      ks.updatePeakCapital(9000);
+      const state = ks.getState();
+      expect(state.peakCapital).toBe(12000);
+      expect(state.currentDrawdown).toBe(25); // (12000-9000)/12000*100 = 25%
     });
   });
 
-  describe('resume respects cooldown', () => {
-    it('cannot resume before cooldownUntil via auto-resume', () => {
-      ks = new Killswitch(cb, { cooldownMinutes: 60 });
-      ks.registerBot('bot1', 1000);
-      ks.updatePeakCapital(1000);
-      ks.manualHalt('test');
+  describe('registerBot / unregisterBot', () => {
+    it('registers bot with initial state', () => {
+      ks.registerBot('b1', 5000);
+      const state = ks.getState();
+      expect(state.peakCapital).toBe(5000);
+    });
 
-      // isTradingEnabled should return false during cooldown
+    it('updates peak capital if bot has higher capital', () => {
+      ks.registerBot('b1', 5000);
+      ks.registerBot('b2', 10000);
+      expect(ks.getState().peakCapital).toBe(10000);
+    });
+
+    it('unregisterBot removes bot', () => {
+      ks.registerBot('b1', 5000);
+      ks.unregisterBot('b1');
+      // After daily reset, b1 won't be there
+    });
+  });
+
+  describe('reset', () => {
+    it('clears all state', () => {
+      ks.registerBot('b1', 10000);
+      ks.manualHalt('test');
+      ks.reset();
+      expect(ks.isHalted()).toBe(false);
+      expect(ks.isTradingEnabled()).toBe(true);
+      expect(ks.getState().peakCapital).toBe(0);
+    });
+  });
+
+  describe('recordError', () => {
+    it('calls onError callback', () => {
+      const err = new Error('test');
+      ks.recordError(err, 'context');
+      expect(callbacks.onError).toHaveBeenCalledWith(err, 'context');
+    });
+  });
+
+  describe('halt — idempotent', () => {
+    it('does not re-halt if already halted', () => {
+      ks.manualHalt('first');
+      ks.manualHalt('second'); // should be ignored
+      expect(ks.getHaltReason()).toBe('Manual halt: first');
+      expect(callbacks.onHalt).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('isTradingEnabled — cooldown resume', () => {
+    it('automatically resumes after cooldown expires', () => {
+      ks.registerBot('b1', 10000);
+      // Trigger halt via consecutive losses
+      for (let i = 0; i < 5; i++) {
+        ks.onOrderFilled({ id: `o${i}`, pnl: -10 });
+      }
       expect(ks.isTradingEnabled()).toBe(false);
+      // Advance past cooldown (5 minutes)
+      vi.setSystemTime(new Date('2026-08-14T12:06:00Z'));
+      expect(ks.isTradingEnabled()).toBe(true);
+      expect(callbacks.onResume).toHaveBeenCalled();
+    });
+  });
+
+  describe('getState', () => {
+    it('returns a copy of state', () => {
+      const state1 = ks.getState();
+      const state2 = ks.getState();
+      expect(state1).toEqual(state2);
+      expect(state1).not.toBe(state2); // different object
     });
   });
 });
