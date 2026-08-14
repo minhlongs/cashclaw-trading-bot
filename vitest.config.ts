@@ -7,14 +7,18 @@ export default defineConfig({
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     exclude: ['node_modules', '**/*.e2e.*'],
     environment: 'node',
+    environmentMatchGlobs: [
+      ['src/**/*.test.tsx', 'jsdom'],
+    ],
+    setupFiles: ['src/test-setup.ts'],
     testTimeout: 10000,
     hookTimeout: 5000,
     coverage: {
       thresholds: {
-        statements: 55,
+        statements: 70,
         branches: 85,
         functions: 85,
-        lines: 55,
+        lines: 70,
       },
     },
   },
