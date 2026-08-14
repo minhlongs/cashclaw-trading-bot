@@ -17,9 +17,9 @@ Bootstrap new project: internal trading bot tool → future multi-user SaaS.
 | 01 | Foundation — Scaffold, DB, Auth | complete | P1 |
 | 02 | Exchange Integration — API + WS | complete | P1 |
 | 03 | Bot Engine — Grid + Mean Rev | complete | P1 |
-| 04 | Dashboard UI — 5 Pages + i18n | in-progress | P2 |
-| 05 | Backtesting — Jesse → D1 Pipeline | pending | P2 |
-| 06 | Deploy + Polish — CF Workers + Audit | pending | P3 |
+| 04 | Dashboard UI — 5 Pages + i18n | complete | P2 |
+| 05 | Backtesting — Jesse → D1 Pipeline | complete | P2 |
+| 06 | Deploy + Polish — CF Workers + Audit | complete | P3 |
 
 ## Dependencies
 

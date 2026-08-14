@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Backtesting — Jesse → D1 Pipeline"
-status: pending
+status: complete
 priority: P2
 effort: 2d
 dependencies: [phase-02]
