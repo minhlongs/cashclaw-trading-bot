@@ -4,7 +4,11 @@ type Json = Record<string, unknown>;
 
 // ── Hoisted mocks ─────────────────────────────────────────────
 
-const mockGetSettings = vi.fn(async () => ({ ok: true, data: {} }));
+const mockGetSettings = vi.fn(async () => ({
+  exchanges: { binance: { apiKey: '', apiSecret: '', testnet: true }, bybit: { apiKey: '', apiSecret: '', testnet: true }, okx: { apiKey: '', apiSecret: '', testnet: true } },
+  risk: { maxDrawdownPct: 15, dailyLossLimitPct: 10, cooldownMinutes: 60, maxOpenOrders: 10 },
+  killswitch: { enabled: true, reason: null, triggeredAt: null },
+}));
 const mockUpdateExchange = vi.fn(async (): Promise<{ ok: boolean; error?: string }> => ({ ok: true }));
 const mockUpdateRisk = vi.fn(async (): Promise<{ ok: boolean; error?: string }> => ({ ok: true }));
 const mockEmergencyHalt = vi.fn(async (): Promise<{ ok: boolean; error?: string }> => ({ ok: true }));
@@ -32,7 +36,11 @@ vi.mock('@/lib/logger', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mockCheckRateLimit.mockReturnValue({ allowed: true, remaining: 99, resetAt: Date.now() + 60000 });
-  mockGetSettings.mockResolvedValue({ ok: true, data: {} });
+  mockGetSettings.mockResolvedValue({
+    exchanges: { binance: { apiKey: '', apiSecret: '', testnet: true }, bybit: { apiKey: '', apiSecret: '', testnet: true }, okx: { apiKey: '', apiSecret: '', testnet: true } },
+    risk: { maxDrawdownPct: 15, dailyLossLimitPct: 10, cooldownMinutes: 60, maxOpenOrders: 10 },
+    killswitch: { enabled: true, reason: null, triggeredAt: null },
+  });
   mockUpdateExchange.mockResolvedValue({ ok: true });
   mockUpdateRisk.mockResolvedValue({ ok: true });
   mockEmergencyHalt.mockResolvedValue({ ok: true });

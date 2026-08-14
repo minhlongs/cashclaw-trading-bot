@@ -67,6 +67,7 @@ export type BotEvent =
   | { type: 'KILLSWITCH'; data: { reason: string } };
 
 export interface BaseBotConfig {
+  name?: string;
   symbol: string;
   exchange: string;
   mode: BotMode;

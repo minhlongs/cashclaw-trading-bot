@@ -64,7 +64,7 @@ const sampleBots: BotCardData[] = [
 function mockFetchOk(bots: BotCardData[]) {
   fetchMock.mockResolvedValue({
     ok: true,
-    json: async () => ({ ok: true, bots }),
+    json: async () => ({ ok: true, data: bots }),
   });
 }
 
@@ -314,7 +314,7 @@ describe('BotsListClient', () => {
   it('shows no-bots-found when API returns empty array', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ ok: true, bots: [] }),
+      json: async () => ({ ok: true, data: [] }),
     });
     render(<BotsListClient />);
 

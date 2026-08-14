@@ -26,7 +26,7 @@ function botToRow(bot: {
   return {
     id: bot.id,
     user_id: bot.user_id,
-    name: bot.name,
+    name: bot.name || bot.id,
     strategy: bot.strategy as Bot['strategy'],
     pair: bot.pair,
     exchange: bot.exchange as Bot['exchange'],

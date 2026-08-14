@@ -36,6 +36,7 @@ export async function botCreateHandler(
 
     // Map payload to CreateBotRequest — always paper in v1
     const baseConfig = {
+      name: payload.name,
       symbol: payload.pair,
       exchange: payload.exchange,
       mode: 'paper' as const,

@@ -63,7 +63,7 @@ function botToDetail(bot: BotInstance): BotDetailData {
 
   return {
     id: s.id,
-    name: s.id,
+    name: cfg.name || s.id,
     strategy: cfg.strategy,
     pair: cfg.symbol,
     exchange: cfg.exchange ?? 'paper',

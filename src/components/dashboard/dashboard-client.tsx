@@ -19,6 +19,7 @@ interface BotCardDataApi {
   lossCount: number;
   startedAt: number | null;
   updatedAt: number;
+  capitalAllocated: number;
 }
 
 interface DashboardData {
@@ -77,7 +78,7 @@ export default function DashboardClient() {
           lossCount: Number.isFinite(item.lossCount) ? item.lossCount : 0,
           startedAt: item.startedAt ?? null,
           updatedAt: item.updatedAt,
-          capitalAllocated: 0,
+          capitalAllocated: Number.isFinite(item.capitalAllocated) ? item.capitalAllocated : 0,
           maxDrawdownPct: 0,
         }));
 
@@ -86,7 +87,7 @@ export default function DashboardClient() {
         const totalTrades = totalWinCount + totalLossCount;
 
         const kpis: DashboardKpis = {
-          totalBalance: bots.reduce((sum, b) => sum + b.totalPnl, 0),
+          totalBalance: bots.reduce((sum, b) => sum + b.capitalAllocated + b.totalPnl, 0),
           todayPnl: bots.reduce((sum, b) => sum + b.totalPnl, 0),
           activeBots: bots.filter((b) => b.botStatus === 'running' || b.botStatus === 'active').length,
           totalTrades,
@@ -181,7 +182,7 @@ export default function DashboardClient() {
             ${kpis.totalBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </p>
           <p className="meta">
-            CashClaw {t('title').toLowerCase()} {bots.length} · Profit: $
+            CashClaw {t('title').toLowerCase()} {bots.length} · PnL: $
             {kpis.todayPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </p>
         </div>
@@ -205,11 +206,13 @@ export default function DashboardClient() {
         </div>
 
         <div className="panel">
-          <h3>Capital Deployed</h3>
-          <p className="metric">$2,450 / $5,000</p>
-          <div className="mt-1 h-2 rounded" style={{ background: 'var(--bg-primary)' }}>
-            <div className="h-2 rounded" style={{ width: '49%', background: 'var(--color-profit)' }} />
-          </div>
+          <h3>Total Capital</h3>
+          <p className="metric">
+            ${bots.reduce((sum, b) => sum + b.capitalAllocated, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </p>
+          <p className="meta">
+            Across {bots.length} bots
+          </p>
         </div>
       </div>
 
@@ -277,22 +280,11 @@ export default function DashboardClient() {
           <p className="meta">Over {bots.length.toLocaleString()} bots</p>
         </div>
         <div className="panel">
-          <h3>Today PnL</h3>
-          <p className="metric" style={{ color: 'var(--color-profit)' }}>
+          <h3>Total PnL</h3>
+          <p className="metric" style={{ color: kpis.todayPnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
             ${kpis.todayPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </p>
-          <p className="meta">Performance today</p>
-        </div>
-      </div>
-
-      <div className="panel" style={{ marginTop: '1.5rem' }}>
-        <h3>Efficiency</h3>
-        <div className="flex justify-between" style={{ fontSize: 'var(--text-sm)' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Capital Used</span>
-          <span className="mono">$2,450 / $5,000</span>
-        </div>
-        <div className="mt-1 h-2 rounded" style={{ background: 'var(--bg-primary)' }}>
-          <div className="h-2 rounded" style={{ width: '49%', background: 'var(--color-profit)' }} />
+          <p className="meta">Realized across all bots</p>
         </div>
       </div>
     </section>

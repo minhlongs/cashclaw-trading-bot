@@ -40,6 +40,7 @@ interface BotCardDataApi {
   lossCount: number;
   startedAt: number | null;
   updatedAt: number;
+  capitalAllocated: number;
 }
 
 function makeApiBot(overrides: Partial<BotCardDataApi> = {}): BotCardDataApi {
@@ -55,6 +56,7 @@ function makeApiBot(overrides: Partial<BotCardDataApi> = {}): BotCardDataApi {
     lossCount: 3,
     startedAt: 1_700_000_000_000,
     updatedAt: 1_700_100_000_000,
+    capitalAllocated: 5000,
     ...overrides,
   };
 }
@@ -277,21 +279,20 @@ describe('DashboardClient', () => {
       await waitFor(() => {
         expect(screen.getByText('Total Balance')).toBeInTheDocument();
         expect(screen.getByText('Active Bots')).toBeInTheDocument();
-        expect(screen.getByText('Capital Deployed')).toBeInTheDocument();
-        // "Win Rate" appears twice (top KPI + bottom grid), use getAllByText
+        expect(screen.getByText('Total Capital')).toBeInTheDocument();
+        // "Win Rate" appears in top KPI panel
         expect(screen.getAllByText('Win Rate').length).toBeGreaterThanOrEqual(1);
       });
     });
 
-    it('computes Total Balance as sum of totalPnl across bots', async () => {
+    it('computes Total Balance as capital + PnL across bots', async () => {
       fetchMock.mockResolvedValue(jsonResponse(true, twoBots));
 
       render(<DashboardClient />);
 
-      // 150 + (-20) = 130; "$130" appears in both Total Balance KPI and Today PnL panel
+      // (5000+150) + (5000-20) = 10130
       await waitFor(() => {
-        const matches = screen.getAllByText('$130');
-        expect(matches.length).toBeGreaterThanOrEqual(1);
+        expect(screen.getByText('$10,130')).toBeInTheDocument();
       });
     });
 
@@ -420,29 +421,20 @@ describe('DashboardClient', () => {
       });
     });
 
-    it('renders bottom performance grid with Total Trades and Today PnL', async () => {
+    it('renders bottom performance grid with Total Trades and Total PnL', async () => {
       fetchMock.mockResolvedValue(jsonResponse(true, twoBots));
 
       render(<DashboardClient />);
 
       await waitFor(() => {
         expect(screen.getByText('Total Trades')).toBeInTheDocument();
-        expect(screen.getByText('Today PnL')).toBeInTheDocument();
+        expect(screen.getByText('Total PnL')).toBeInTheDocument();
         // totalTrades = 16 + 8 = 24
         expect(screen.getByText('24')).toBeInTheDocument();
       });
     });
 
-    it('renders Efficiency panel', async () => {
-      fetchMock.mockResolvedValue(jsonResponse(true, twoBots));
 
-      render(<DashboardClient />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Efficiency')).toBeInTheDocument();
-        expect(screen.getByText('Capital Used')).toBeInTheDocument();
-      });
-    });
   });
 
   /* ---------------------------------------------------------------- */
@@ -467,9 +459,10 @@ describe('DashboardClient', () => {
       render(<DashboardClient />);
 
       await waitFor(() => {
-        // Balance = 75; "$75" appears in Total Balance KPI and Today PnL
-        const balanceMatches = screen.getAllByText('$75');
-        expect(balanceMatches.length).toBeGreaterThanOrEqual(1);
+        // Total Balance = capital (5000) + PnL (75) = 5075
+        expect(screen.getByText('$5,075')).toBeInTheDocument();
+        // Total PnL and bot card both show $75
+        expect(screen.getAllByText('$75').length).toBeGreaterThanOrEqual(1);
         // Win rate = 80%
         expect(screen.getByText('80%')).toBeInTheDocument();
         // Active = 1/1
@@ -558,9 +551,11 @@ describe('DashboardClient', () => {
       render(<DashboardClient />);
 
       await waitFor(() => {
-        // NaN.totalPnl is clamped to 0 via Number.isFinite check; "$0" appears in KPI and bot card
-        const matches = screen.getAllByText('$0');
-        expect(matches.length).toBeGreaterThanOrEqual(1);
+        // NaN.totalPnl is clamped to 0; Total Balance = capital (5000) + 0 = $5,000
+        // $5,000 appears in Total Capital and Total Balance panels
+        expect(screen.getAllByText('$5,000').length).toBeGreaterThanOrEqual(1);
+        // Bot card PnL shows $0 (appears in both Total PnL panel and bot card)
+        expect(screen.getAllByText('$0').length).toBeGreaterThanOrEqual(1);
       });
     });
   });

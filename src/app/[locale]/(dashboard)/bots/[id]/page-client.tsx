@@ -21,6 +21,27 @@ interface BotDetailData {
   config: Record<string, number>;
 }
 
+interface ApiBotDetail {
+  id: string;
+  name: string;
+  strategy: string;
+  pair: string;
+  exchange: string;
+  status: string;
+  capital: number;
+  totalPnl: number;
+  totalTrades: number;
+  winCount: number;
+  lossCount: number;
+  maxDrawdown: number;
+  currentDrawdown: number;
+  startedAt: number | null;
+  stoppedAt: number | null;
+  lastTickAt: number | null;
+  lastOrderAt: number | null;
+  gridConfig: Record<string, unknown>;
+}
+
 interface TradeRow {
   id: string;
   side: 'buy' | 'sell';
@@ -42,9 +63,28 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
       try {
         const res = await fetch(`/api/bots/${id}`);
         if (res.ok) {
-          const data = await res.json() as { bot: BotDetailData; trades: TradeRow[] };
-          setBot(data.bot);
-          setTrades(data.trades ?? []);
+          const body = await res.json() as { ok: boolean; data?: ApiBotDetail; error?: string };
+          if (body.ok && body.data) {
+            const d = body.data;
+            setBot({
+              id: d.id,
+              name: d.name,
+              strategy: d.strategy as 'grid' | 'mean_reversion',
+              pair: d.pair,
+              exchange: d.exchange,
+              botStatus: d.status,
+              totalPnl: d.totalPnl,
+              winCount: d.winCount,
+              lossCount: d.lossCount,
+              capitalAllocated: d.capital,
+              capitalUsed: 0,
+              maxDrawdownPct: d.maxDrawdown,
+              startedAt: d.startedAt,
+              updatedAt: d.lastTickAt ?? d.startedAt ?? Date.now(),
+              config: (d.gridConfig ?? {}) as Record<string, number>,
+            });
+            setTrades([]);
+          }
         }
       } catch {
         // Bot data fetch failed — user sees empty state

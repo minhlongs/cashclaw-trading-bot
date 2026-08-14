@@ -14,6 +14,7 @@ export interface BotListItem {
   pair: string;
   exchange: string;
   status: string;
+  capitalAllocated: number;
   totalPnl: number;
   winCount: number;
   lossCount: number;
@@ -36,7 +37,7 @@ export async function botListHandler(): Promise<{
       const config = bot.getConfig() as BotConfig;
       return {
         id: snapshot.id,
-        name: snapshot.id,
+        name: config.name || snapshot.id,
         strategy: config.strategy,
         pair: config.symbol,
         exchange: config.exchange ?? 'paper',
@@ -46,6 +47,7 @@ export async function botListHandler(): Promise<{
         lossCount: snapshot.lossCount,
         startedAt: snapshot.startedAt,
         updatedAt: snapshot.updatedAt,
+        capitalAllocated: config.capital,
       };
     });
 

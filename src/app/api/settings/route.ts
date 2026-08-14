@@ -32,10 +32,25 @@ const KillswitchSchema = z.object({
 
 const SettingsSchema = z.discriminatedUnion('type', [ExchangeSchema, RiskSchema, KillswitchSchema]);
 
+function maskSecret(value: string | undefined): string {
+  if (!value || value.length === 0) return '';
+  if (value.length <= 4) return '••••';
+  return value.slice(0, 2) + '••••' + value.slice(-2);
+}
+
 export async function GET() {
   try {
     const data = await getSettings();
-    return NextResponse.json({ ok: true, data });
+    const masked = {
+      ...data,
+      exchanges: Object.fromEntries(
+        Object.entries(data.exchanges).map(([exchange, creds]) => [
+          exchange,
+          { ...creds, apiKey: maskSecret(creds.apiKey), apiSecret: maskSecret(creds.apiSecret) },
+        ]),
+      ),
+    };
+    return NextResponse.json({ ok: true, data: masked });
   } catch (e) {
     const err = e instanceof Error ? e : new Error(String(e));
     logger.error('Failed to load settings', err, { action: 'get-settings' });

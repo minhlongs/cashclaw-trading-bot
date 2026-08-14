@@ -10,6 +10,7 @@ import type { TradeEvent, TradeEventType } from '@/tree/telemetry';
 
 export interface BotDetail {
   id: string;
+  name: string;
   strategy: string;
   pair: string;
   exchange: string;
@@ -68,6 +69,7 @@ export async function botDetailHandler(id: string): Promise<{
         strategy: config.strategy,
         pair: config.symbol,
         exchange: config.exchange ?? 'paper',
+        name: config.name || snapshot.id,
         status: snapshot.status,
         capital: config.capital,
         totalPnl: snapshot.totalPnl,

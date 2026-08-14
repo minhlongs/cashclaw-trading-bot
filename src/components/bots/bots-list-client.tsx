@@ -46,10 +46,10 @@ export default function BotsListClient() {
         const response = await fetch('/api/bots');
         const raw = await response.json();
 
-        const data = raw as { ok?: boolean; bots?: BotCardData[] };
+        const data = raw as { ok?: boolean; data?: BotCardData[] };
 
-        if (data.ok && Array.isArray(data.bots)) {
-          setBots(data.bots);
+        if (data.ok && Array.isArray(data.data)) {
+          setBots(data.data);
         } else {
           setError('Failed to fetch bots');
         }
