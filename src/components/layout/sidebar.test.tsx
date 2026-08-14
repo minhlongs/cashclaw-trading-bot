@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'vi',
 }));
 
 vi.mock('next/navigation', () => ({

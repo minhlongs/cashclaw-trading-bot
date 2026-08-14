@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -15,18 +15,24 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-const navItems = [
-  { href: '/vi/dashboard', icon: LayoutDashboard, labelVi: 'Tổng quan', labelEn: 'Dashboard' },
-  { href: '/vi/bots', icon: Bot, labelVi: 'Bot của tôi', labelEn: 'My Bots' },
-  { href: '/vi/backtests', icon: BookOpen, labelVi: 'Backtest', labelEn: 'Backtests' },
-  { href: '/vi/monitoring', icon: Activity, labelVi: 'Monitoring', labelEn: 'Monitoring' },
-  { href: '/vi/settings', icon: Settings, labelVi: 'Cài đặt', labelEn: 'Settings' },
+const NAV_ROUTES = [
+  { path: 'dashboard', icon: LayoutDashboard, labelVi: 'Tổng quan', labelEn: 'Dashboard' },
+  { path: 'bots', icon: Bot, labelVi: 'Bot của tôi', labelEn: 'My Bots' },
+  { path: 'backtests', icon: BookOpen, labelVi: 'Backtest', labelEn: 'Backtests' },
+  { path: 'monitoring', icon: Activity, labelVi: 'Monitoring', labelEn: 'Monitoring' },
+  { path: 'settings', icon: Settings, labelVi: 'Cài đặt', labelEn: 'Settings' },
 ];
 
 export default function Sidebar() {
   const t = useTranslations();
+  const locale = useLocale();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+
+  const navItems = NAV_ROUTES.map((item) => ({
+    ...item,
+    href: `/${locale}/${item.path}`,
+  }));
 
   return (
     <aside
