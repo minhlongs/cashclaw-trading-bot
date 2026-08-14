@@ -19,25 +19,23 @@ export function MonitoringClient() {
       setLoading(true);
       setError(null);
 
-      const [healthRes, metricsRes, killswitchRes, alertsRes] = await Promise.all([
+      const [healthRes, metricsRes, killswitchRes] = await Promise.all([
         fetch('/api/health'),
         fetch('/api/metrics'),
-        fetch('/api/killswitch'),
-        fetch('/api/alerts'),
+        fetch('/api/killswitch-status'),
       ]);
 
-      if (!healthRes.ok || !metricsRes.ok || !killswitchRes.ok || !alertsRes.ok) {
+      if (!healthRes.ok || !metricsRes.ok || !killswitchRes.ok) {
         throw new Error('One or more API endpoints returned an error');
       }
 
-      const [health, metrics, killswitch, alerts] = await Promise.all([
+      const [health, metrics, killswitch] = await Promise.all([
         healthRes.json() as Promise<MonitoringData['health']>,
         metricsRes.json() as Promise<MonitoringData['metrics']>,
         killswitchRes.json() as Promise<MonitoringData['killswitch']>,
-        alertsRes.json() as Promise<MonitoringData['alerts']>,
       ]);
 
-      setData({ health, metrics, killswitch, alerts });
+      setData({ health, metrics, killswitch, alerts: [] });
       setLastRefresh(new Date());
     } catch (fetchError) {
       const msg = fetchError instanceof Error ? fetchError.message : 'Failed to load monitoring data';
