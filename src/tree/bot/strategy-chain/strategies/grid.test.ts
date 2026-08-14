@@ -1,15 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { StrategyContext, TradeSignal } from '../types';
 import type { GridBotConfig } from '@/tree/bot/types';
+import type { BotTrade } from '@/tree/bot/types';
+import type { OrderRequest, OrderResult } from '@/tree/exchange/types';
 
 let mockLevelCount = 0;
 const mockOnTicker = vi.fn();
 
+interface CapturedCallbacks {
+  placeOrder: (req: OrderRequest) => Promise<OrderResult>;
+  onTrade: (trade: BotTrade) => void;
+  onLog: (msg: string) => void;
+}
+let capturedCallbacks: CapturedCallbacks = {
+  placeOrder: () => Promise.resolve({} as OrderResult),
+  onTrade: () => {},
+  onLog: () => {},
+};
+
 vi.mock('@/tree/bot/strategies/grid', () => ({
-  GridStrategy: vi.fn().mockImplementation(() => ({
-    onTicker: mockOnTicker,
-    get levelCount() { return mockLevelCount; },
-  })),
+  GridStrategy: vi.fn().mockImplementation((_config: GridBotConfig, callbacks: CapturedCallbacks) => {
+    capturedCallbacks = callbacks;
+    return {
+      onTicker: mockOnTicker,
+      get levelCount() { return mockLevelCount; },
+    };
+  }),
 }));
 
 const { createGridChainStrategy } = await import('./grid');
@@ -104,5 +120,70 @@ describe('createGridChainStrategy', () => {
     mockLevelCount = 2;
     const signal = makeChain().evaluate({ ...ctx, balance: 5 });
     expect(signal!.qty).toBe(0.5);
+  });
+});
+
+describe('captured callbacks', () => {
+  const config = { type: 'grid' as const, gridConfig: {} as GridBotConfig };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLevelCount = 0;
+  });
+
+  it('placeOrder returns filled OrderResult with correct fields', async () => {
+    const chain = createGridChainStrategy(config);
+    expect(chain).toBeDefined();
+
+    const req: OrderRequest = {
+      symbol: 'BTC/USDT',
+      side: 'buy',
+      type: 'limit',
+      quantity: 0.5,
+      price: 30000,
+    };
+
+    const result = await capturedCallbacks.placeOrder(req);
+
+    expect(result.symbol).toBe('BTC/USDT');
+    expect(result.side).toBe('buy');
+    expect(result.type).toBe('limit');
+    expect(result.price).toBe(30000);
+    expect(result.quantity).toBe(0.5);
+    expect(result.filled).toBe(0.5);
+    expect(result.status).toBe('filled');
+    expect(result.fee).toBe(0);
+    expect(result.id).toBe('');
+    expect(result.exchangeId).toBe('');
+  });
+
+  it('onTrade accepts a BotTrade without error', () => {
+    const chain = createGridChainStrategy(config);
+    expect(chain).toBeDefined();
+
+    const trade: BotTrade = {
+      id: 'trade-1',
+      botId: 'bot-1',
+      exchangeId: 'ex-1',
+      symbol: 'BTC/USDT',
+      side: 'buy',
+      type: 'limit',
+      price: 30000,
+      quantity: 0.5,
+      filled: 0.5,
+      fee: 0.1,
+      pnl: 0,
+      status: 'filled',
+      timestamp: Date.now(),
+    };
+
+    expect(() => capturedCallbacks.onTrade(trade)).not.toThrow();
+  });
+
+  it('onLog accepts a message string without error', () => {
+    const chain = createGridChainStrategy(config);
+    expect(chain).toBeDefined();
+
+    expect(() => capturedCallbacks.onLog('test log message')).not.toThrow();
   });
 });

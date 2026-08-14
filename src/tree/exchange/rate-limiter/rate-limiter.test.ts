@@ -170,6 +170,25 @@ describe('RateLimiter — budget, canProceed, reset, defaults', () => {
     });
   });
 
+  // ---------------------------------------------------- acquire (legacy)
+  describe('acquire — legacy wait path', () => {
+    it('waits and resolves when tokens are empty', async () => {
+      // Drain okx:order bucket (capacity=20)
+      for (let i = 0; i < 20; i++) rl.tryAcquire('okx', 'order');
+      expect(rl.tryAcquire('okx', 'order').allowed).toBe(false);
+
+      const promise = rl.acquire('okx', 'order');
+      vi.advanceTimersByTime(200); // waitMs + 50 = 150
+      const waitMs = await promise;
+      expect(waitMs).toBeGreaterThanOrEqual(0);
+    });
+
+    it('returns 0 immediately when tokens are available', async () => {
+      const waitMs = await rl.acquire('okx', 'order');
+      expect(waitMs).toBe(0);
+    });
+  });
+
   // ------------------------------------------------ singleton export
   describe('rateLimiter singleton', () => {
     it('is an instance of RateLimiter', () => {

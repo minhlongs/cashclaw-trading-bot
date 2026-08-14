@@ -1,15 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { StrategyContext } from '../types';
-import type { MeanRevBotConfig } from '@/tree/bot/types';
+import type { MeanRevBotConfig, BotTrade } from '@/tree/bot/types';
+import type { OrderRequest, OrderResult } from '@/tree/exchange/types';
 
 let mockTradeCount = 0;
 const mockOnTicker = vi.fn();
 
+interface CapturedCallbacks {
+  placeOrder: (req: OrderRequest) => Promise<OrderResult>;
+  onTrade: (trade: BotTrade) => void;
+  onLog: (msg: string) => void;
+}
+let capturedCallbacks: CapturedCallbacks = {
+  placeOrder: () => Promise.resolve({} as OrderResult),
+  onTrade: () => {},
+  onLog: () => {},
+};
+
 vi.mock('@/tree/bot/strategies/mean-reversion', () => ({
-  MeanRevStrategy: vi.fn().mockImplementation(() => ({
-    onTicker: mockOnTicker,
-    get tradeCount() { return mockTradeCount; },
-  })),
+  MeanRevStrategy: vi.fn().mockImplementation((_config: MeanRevBotConfig, callbacks: CapturedCallbacks) => {
+    capturedCallbacks = callbacks;
+    return {
+      onTicker: mockOnTicker,
+      get tradeCount() { return mockTradeCount; },
+    };
+  }),
 }));
 
 const { createMeanRevChainStrategy } = await import('./mean-reversion');
@@ -106,5 +121,69 @@ describe('createMeanRevChainStrategy', () => {
     mockTradeCount = 1;
     const signal = makeChain().evaluate({ ...ctx, balance: 5 });
     expect(signal!.qty).toBe(0.5);
+  });
+});
+
+describe('captured callbacks', () => {
+  const config = { type: 'mean_reversion' as const, meanRevConfig: {} as MeanRevBotConfig };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTradeCount = 0;
+  });
+
+  it('placeOrder returns filled OrderResult with correct fields', async () => {
+    const chain = createMeanRevChainStrategy(config);
+    expect(chain).toBeDefined();
+
+    const req: OrderRequest = {
+      symbol: 'ETH/USDT',
+      side: 'sell',
+      type: 'market',
+      quantity: 1.0,
+    };
+
+    const result = await capturedCallbacks.placeOrder(req);
+
+    expect(result.symbol).toBe('ETH/USDT');
+    expect(result.side).toBe('sell');
+    expect(result.type).toBe('market');
+    expect(result.price).toBe(0);
+    expect(result.quantity).toBe(1.0);
+    expect(result.filled).toBe(1.0);
+    expect(result.status).toBe('filled');
+    expect(result.fee).toBe(0);
+    expect(result.id).toBe('');
+    expect(result.exchangeId).toBe('');
+  });
+
+  it('onTrade accepts a BotTrade without error', () => {
+    const chain = createMeanRevChainStrategy(config);
+    expect(chain).toBeDefined();
+
+    const trade: BotTrade = {
+      id: 'trade-2',
+      botId: 'bot-2',
+      exchangeId: 'ex-2',
+      symbol: 'ETH/USDT',
+      side: 'sell',
+      type: 'market',
+      price: 2000,
+      quantity: 1.0,
+      filled: 1.0,
+      fee: 0.05,
+      pnl: 0,
+      status: 'filled',
+      timestamp: Date.now(),
+    };
+
+    expect(() => capturedCallbacks.onTrade(trade)).not.toThrow();
+  });
+
+  it('onLog accepts a message string without error', () => {
+    const chain = createMeanRevChainStrategy(config);
+    expect(chain).toBeDefined();
+
+    expect(() => capturedCallbacks.onLog('mean rev log')).not.toThrow();
   });
 });

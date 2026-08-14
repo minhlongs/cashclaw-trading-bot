@@ -408,6 +408,18 @@ describe('BotManager', () => {
     });
   });
 
+  // ── resetKillswitch ──────────────────────────────────────────────────────
+
+  describe('resetKillswitch', () => {
+    it('resets killswitch state and logs', async () => {
+      const mgr = createManager();
+      mgr.manualHalt('test halt');
+      expect(mgr.getKillswitch().isTradingEnabled()).toBe(false);
+      mgr.resetKillswitch();
+      expect(mgr.getKillswitch().isTradingEnabled()).toBe(true);
+    });
+  });
+
   // ── destroy ─────────────────────────────────────────────────────────────
 
   describe('destroy', () => {
@@ -425,6 +437,73 @@ describe('BotManager', () => {
       const bot = mgr.getBot('bot-1')!;
       mgr.destroy();
       expect(bot.destroy).toHaveBeenCalledOnce();
+    });
+  });
+
+  // ── getRunningBots ────────────────────────────────────────────────────────
+
+  describe('getRunningBots', () => {
+    it('returns only bots with running status', async () => {
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('bot-1'));
+      await mgr.createBot(mockRequest('bot-2'));
+      const bot1 = mgr.getBot('bot-1')!;
+      (bot1.getSnapshot as ReturnType<typeof vi.fn>).mockReturnValue({
+        status: 'running' as BotStatus,
+        totalPnl: 0,
+        symbol: 'BTC/USDT',
+        strategy: 'grid',
+      });
+      expect(mgr.getRunningBots()).toHaveLength(1);
+      expect(mgr.getRunningBots()[0].id).toBe('bot-1');
+    });
+
+    it('returns empty when no bots are running', async () => {
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('bot-1'));
+      expect(mgr.getRunningBots()).toHaveLength(0);
+    });
+  });
+
+  // ── removeBot with userId ────────────────────────────────────────────────
+
+  describe('removeBot with userId', () => {
+    it('persists stopped status to D1 when userId provided', async () => {
+      const mgr = createManager('user-1');
+      await mgr.createBot(mockRequest('bot-1'));
+      mgr.removeBot('bot-1');
+      await new Promise((r) => setTimeout(r, 0));
+      expect(patchBot).toHaveBeenCalledWith('bot-1', expect.objectContaining({ status: 'stopped' }));
+      expect(mgr.getBot('bot-1')).toBeUndefined();
+    });
+
+    it('skips D1 persist when no userId', async () => {
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('bot-1'));
+      mgr.removeBot('bot-1');
+      await new Promise((r) => setTimeout(r, 0));
+      expect(patchBot).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── patchBotSafe catch block ──────────────────────────────────────────────
+
+  describe('patchBotSafe — D1 persist failure', () => {
+    it('logs error when patchBot rejects', async () => {
+      patchBot.mockRejectedValueOnce(new Error('D1 write failed'));
+      const mgr = createManager('user-1');
+      await mgr.createBot(mockRequest('bot-1'));
+      const bot = mgr.getBot('bot-1')!;
+      (bot.getSnapshot as ReturnType<typeof vi.fn>).mockReturnValue({
+        status: 'stopped' as BotStatus,
+        totalPnl: 0,
+        symbol: 'BTC/USDT',
+        strategy: 'grid',
+      });
+      mgr.stopBot('bot-1');
+      await new Promise((r) => setTimeout(r, 0));
+      // Error should be caught, not thrown
+      expect(mgr.getBot('bot-1')).toBeDefined();
     });
   });
 

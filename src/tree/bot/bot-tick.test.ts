@@ -1,10 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { tick, type TickContext } from './bot-tick';
 import type { BotState, GridBotConfig, BotCallbacks } from './types';
 import type { Ticker, ExchangeAdapter } from '../exchange/types';
 
+const mockEvaluateChain = vi.fn().mockReturnValue(null);
 vi.mock('./bot-strategy', () => ({
-  evaluateChain: vi.fn().mockReturnValue(null),
+  evaluateChain: (...args: unknown[]) => mockEvaluateChain(...args),
 }));
 
 const SYMBOL = 'BTC/USDT';
@@ -179,5 +180,37 @@ describe('tick', () => {
     });
     const result = await tick(ctx);
     expect(result.lastTickPrice).toBeNull();
+  });
+
+  // ── Chain order: lines 65-81 ─────────────────────────────────────────────
+  describe('chain order', () => {
+    beforeEach(() => { mockEvaluateChain.mockReturnValue(null); });
+
+    it('places order and logs when evaluateChain returns an order', async () => {
+      const chainOrder = { symbol: SYMBOL, side: 'buy' as const, type: 'market' as const, quantity: 0.01 };
+      mockEvaluateChain.mockReturnValue(chainOrder);
+      const callbacks = mkCallbacks();
+      const placeOrder = vi.fn().mockResolvedValue({ id: 'chain-o1', status: 'filled' });
+      const ctx = mkCtx({ callbacks, placeOrder });
+      await tick(ctx);
+      expect(callbacks.onLog).toHaveBeenCalledWith(
+        expect.stringContaining('Chain signal: buy'),
+      );
+      expect(placeOrder).toHaveBeenCalledWith(chainOrder);
+    });
+
+    it('catches placeOrder error inside chain order block', async () => {
+      const chainOrder = { symbol: SYMBOL, side: 'buy' as const, type: 'market' as const, quantity: 0.01 };
+      mockEvaluateChain.mockReturnValue(chainOrder);
+      const emitTelemetry = vi.fn();
+      const placeOrder = vi.fn().mockRejectedValue(new Error('insufficient funds'));
+      const ctx = mkCtx({ emitTelemetry, placeOrder });
+      await tick(ctx);
+      expect(emitTelemetry).toHaveBeenCalledWith('error',
+        expect.objectContaining({ context: 'bot.chainOrder' }),
+      );
+      // Tick still completes despite placeOrder failure
+      expect(emitTelemetry).toHaveBeenCalledWith('tick', expect.anything());
+    });
   });
 });
