@@ -37,6 +37,17 @@ export interface User {
   updated_at: number;
 }
 
+export interface SettingsRow {
+  id: string;
+  user_id: string | null;
+  exchange_creds_json: string;
+  risk_limits_json: string;
+  killswitch_enabled: number;
+  killswitch_reason: string | null;
+  killswitch_triggered_at: number | null;
+  updated_at: number;
+}
+
 export interface Bot {
   id: string;
   user_id: string;

@@ -1,6 +1,10 @@
 // Bot Engine — Core Types
 // State machine events, bot lifecycle, strategy configs
 
+import type { ExchangeAdapter } from '../exchange/types';
+import type { Killswitch } from './killswitch';
+import type { TelemetryWriter } from '../telemetry/writer';
+
 // ── StrategyChain (OmniRoute Phase 4) ────────────────────────────────────────
 export interface StrategyContext {
   symbol: string;
@@ -164,4 +168,19 @@ export function isGridConfig(config: BotConfig): config is GridBotConfig {
 
 export function isMeanRevConfig(config: BotConfig): config is MeanRevBotConfig {
   return config.strategy === 'mean_reversion';
+}
+
+// ── Bot instance types (extracted from bot-instance.ts) ─────────────────────
+
+export interface BotCallbacks {
+  onStateChange: (state: BotState) => void;
+  onTrade: (trade: BotTrade) => void;
+  onLog: (msg: string) => void;
+  onError: (error: Error, context: string) => void;
+}
+
+export interface BotDependencies {
+  exchange: ExchangeAdapter;
+  killswitch: Killswitch;
+  telemetry?: TelemetryWriter;
 }

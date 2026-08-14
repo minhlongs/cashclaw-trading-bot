@@ -13,43 +13,9 @@ import type { ExchangeConfig } from '@/tree/exchange/types';
 import { createServerClient } from '@/lib/db/client';
 import type { TradeEventType, CapitalSnapshot } from '@/tree/telemetry';
 
-// ── Types ──────────────────────────────────────────────────────
-
-export interface BotInfo {
-  id: string;
-  name: string;
-  strategy: string;
-  pair: string;
-  exchange: string;
-  status: string;
-  capital: number;
-  totalPnl: number;
-  totalTrades: number;
-  winCount: number;
-  lossCount: number;
-  maxDrawdown: number;
-  startedAt: number | null;
-  stoppedAt: number | null;
-  lastTickAt: number | null;
-  lastOrderAt: number | null;
-  error: string | null;
-}
-
-export interface BotCreateInput {
-  id: string;
-  name: string;
-  strategy: 'grid' | 'mean_reversion';
-  pair: string;
-  exchange: string;
-  capital: number;
-  mode: 'paper' | 'live';
-  config: Record<string, unknown>;
-}
-
-export interface BotListResult {
-  bots: BotInfo[];
-  total: number;
-}
+// Types extracted to bot-management-types.ts
+import type { BotInfo, BotCreateInput, BotListResult } from './bot-management-types';
+export type { BotInfo, BotCreateInput, BotListResult } from './bot-management-types';
 
 // ── Bot Operations ─────────────────────────────────────────────
 

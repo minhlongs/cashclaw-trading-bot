@@ -1,6 +1,7 @@
 // Mean Reversion Strategy
 // Principle: Price tends to revert to its mean after extreme moves.
 // Uses Bollinger Bands (oversold/overbought) + RSI for entry signals.
+// Indicator calculations are in mean-reversion-indicators.ts (extracted for size compliance).
 
 import type {
   MeanRevBotConfig,
@@ -11,22 +12,12 @@ import type {
   OrderRequest,
   OrderResult,
 } from '../../exchange/types';
+import { calculateBB, calculateRSI, checkVolume, type BollingerBands, type RSI } from './mean-reversion-indicators';
 
 export interface MeanRevStrategyCallbacks {
   placeOrder: (req: OrderRequest) => Promise<OrderResult>;
   onTrade: (trade: BotTrade) => void;
   onLog: (msg: string) => void;
-}
-
-interface BollingerBands {
-  upper: number;
-  middle: number;
-  lower: number;
-}
-
-interface RSI {
-  value: number;
-  trend: 'oversold' | 'neutral' | 'overbought';
 }
 
 export class MeanRevStrategy {
@@ -79,9 +70,9 @@ export class MeanRevStrategy {
 
     if (this.prices.length < this.config.bbPeriod) return;
 
-    const bb = this.calculateBB();
-    const rsi = this.calculateRSI();
-    const volCheck = this.checkVolume();
+    const bb = calculateBB(this.prices, this.config.bbPeriod, this.config.bbStdDev);
+    const rsi = calculateRSI(this.prices, this.config.rsiPeriod, this.config.rsiBuyThreshold, this.config.rsiSellThreshold);
+    const volCheck = checkVolume(this.volumes, this.config.bbPeriod, this.config.volumeMultiplier);
 
     this.evaluateSignal(price, bb, rsi, volCheck);
   }
@@ -96,58 +87,6 @@ export class MeanRevStrategy {
 
   get tradeCount(): number {
     return this._tradeCount;
-  }
-
-  private calculateBB(): BollingerBands {
-    const window = this.prices.slice(-this.config.bbPeriod);
-    const middle = window.reduce((a, b) => a + b, 0) / window.length;
-    const variance = window.reduce((sum, p) => sum + Math.pow(p - middle, 2), 0) / window.length;
-    const std = Math.sqrt(variance);
-    const multiplier = this.config.bbStdDev;
-
-    return {
-      upper: middle + multiplier * std,
-      middle,
-      lower: middle - multiplier * std,
-    };
-  }
-
-  private calculateRSI(): RSI {
-    const period = this.config.rsiPeriod;
-    const window = this.prices.slice(-period - 1);
-    if (window.length < period + 1) return { value: 50, trend: 'neutral' };
-
-    let gains = 0;
-    let losses = 0;
-
-    for (let i = window.length - period; i < window.length; i++) {
-      const change = window[i] - window[i - 1];
-      if (change > 0) gains += change;
-      else losses += Math.abs(change);
-    }
-
-    const avgGain = gains / period;
-    const avgLoss = losses / period;
-
-    if (avgLoss === 0) return { value: 100, trend: 'overbought' };
-
-    const rs = avgGain / avgLoss;
-    const rsi = 100 - 100 / (1 + rs);
-
-    let trend: 'oversold' | 'neutral' | 'overbought' = 'neutral';
-    if (rsi <= this.config.rsiBuyThreshold) trend = 'oversold';
-    else if (rsi >= this.config.rsiSellThreshold) trend = 'overbought';
-
-    return { value: rsi, trend };
-  }
-
-  private checkVolume(): boolean {
-    if (this.volumes.length < this.config.bbPeriod) return false;
-
-    const recentVol = this.volumes[this.volumes.length - 1];
-    const avgVol = this.volumes.slice(-this.config.bbPeriod).reduce((a, b) => a + b, 0) / this.config.bbPeriod;
-
-    return recentVol >= avgVol * this.config.volumeMultiplier;
   }
 
   private evaluateSignal(price: number, bb: BollingerBands, rsi: RSI, volCheck: boolean): void {

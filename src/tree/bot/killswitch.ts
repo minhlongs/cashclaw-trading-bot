@@ -1,52 +1,24 @@
 // Killswitch — Global circuit breaker for all trading bots
 // Triggers on: daily loss limit, consecutive losses, manual halt, system error
 
-import type { OrderResult } from '../exchange/types';
-
-export interface KillswitchCallbacks {
-  onHalt: (reason: string) => void;
-  onResume: () => void;
-  onOrderPlaced: (order: OrderResult) => void;
-  onOrderFilled: (order: OrderResult) => void;
-  onError: (error: Error, context: string) => void;
-}
-
-export interface KillswitchConfig {
-  maxDailyLossPct: number;
-  maxConsecutiveLosses: number;
-  maxDrawdownPct: number;
-  cooldownMinutes: number;
-}
-
-export interface KillswitchState {
-  enabled: boolean;
-  halted: boolean;
-  haltReason: string | null;
-  haltTimestamp: number | null;
-  dailyPnl: number;
-  consecutiveLosses: number;
-  peakCapital: number;
-  currentDrawdown: number;
-  cooldownUntil: number | null;
-  dailyStartTime: number;
-}
-
-const DEFAULT_CONFIG: KillswitchConfig = {
-  maxDailyLossPct: 10,
-  maxConsecutiveLosses: 5,
-  maxDrawdownPct: 15,
-  cooldownMinutes: 30,
-};
+import type { KillswitchCallbacks, KillswitchConfig, KillswitchState } from './killswitch-types';
+export type { KillswitchCallbacks, KillswitchConfig, KillswitchState };
 
 export class Killswitch {
-  private config: KillswitchConfig;
   private callbacks: KillswitchCallbacks;
+  private config: KillswitchConfig;
   private state: KillswitchState;
-  private botStates = new Map<string, { dailyPnl: number; consecutiveLosses: number }>();
+  private botStates = new Map<string, { dailyPnl: number; consecutiveLosses: number; capital: number }>();
+  private resetTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(callbacks: KillswitchCallbacks, config: Partial<KillswitchConfig> = {}) {
     this.callbacks = callbacks;
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = {
+      maxDailyLossPct: config.maxDailyLossPct ?? 10,
+      maxConsecutiveLosses: config.maxConsecutiveLosses ?? 5,
+      maxDrawdownPct: config.maxDrawdownPct ?? 15,
+      cooldownMinutes: config.cooldownMinutes ?? 30,
+    };
     this.state = {
       enabled: true,
       halted: false,
@@ -59,37 +31,14 @@ export class Killswitch {
       cooldownUntil: null,
       dailyStartTime: Date.now(),
     };
+    this.scheduleDailyReset();
   }
 
-  get isEnabled(): boolean {
-    return this.state.enabled;
-  }
-
-  get isHalted(): boolean {
-    return this.state.halted;
-  }
-
-  get haltReason(): string | null {
-    return this.state.haltReason;
-  }
-
-  isTradingEnabled(): boolean {
-    if (!this.state.enabled) return false;
-    if (this.state.halted) {
-      // Check cooldown
-      if (this.state.cooldownUntil && Date.now() > this.state.cooldownUntil) {
-        this.resume('Cooldown expired');
-        return true;
-      }
-      return false;
-    }
-    return true;
-  }
-
-  registerBot(botId: string, initialCapital: number): void {
-    this.botStates.set(botId, { dailyPnl: 0, consecutiveLosses: 0 });
-    if (initialCapital > this.state.peakCapital) {
-      this.state.peakCapital = initialCapital;
+  // ── Bot registration ──────────────────────────────────────────
+  registerBot(botId: string, capital: number): void {
+    this.botStates.set(botId, { dailyPnl: 0, consecutiveLosses: 0, capital });
+    if (capital > this.state.peakCapital) {
+      this.state.peakCapital = capital;
     }
   }
 
@@ -97,71 +46,15 @@ export class Killswitch {
     this.botStates.delete(botId);
   }
 
-  onOrderFilled(order: OrderResult): void {
-    if (!this.state.enabled) return;
-
-    this.callbacks.onOrderFilled(order);
-    const pnl = order.pnl ?? 0;
-    this.updateDailyPnl(pnl);
-
-    if (pnl < 0) {
-      this.state.consecutiveLosses++;
-      if (this.state.consecutiveLosses >= this.config.maxConsecutiveLosses) {
-        this.halt(`Max consecutive losses reached: ${this.state.consecutiveLosses}`);
-      }
-    } else {
-      this.state.consecutiveLosses = 0;
-    }
-
-    this.updateDrawdown();
+  // ── Public API ──────────────────────────────────────────────
+  disable(): void {
+    this.state.enabled = false;
   }
 
-  updateDailyPnl(pnl: number): void {
-    this.state.dailyPnl += pnl;
-
-    const lossPct = Math.abs(this.state.dailyPnl / this.state.peakCapital) * 100;
-    if (lossPct >= this.config.maxDailyLossPct) {
-      this.halt(`Daily loss limit reached: ${lossPct.toFixed(2)}%`);
-    }
-  }
-
-  private updateDrawdown(): void {
-    if (this.state.peakCapital > 0) {
-      const currentCapital = this.state.peakCapital + this.state.dailyPnl;
-      this.state.currentDrawdown = ((this.state.peakCapital - currentCapital) / this.state.peakCapital) * 100;
-
-      if (this.state.currentDrawdown >= this.config.maxDrawdownPct) {
-        this.halt(`Max drawdown reached: ${this.state.currentDrawdown.toFixed(2)}%`);
-      }
-    }
-  }
-
-  updatePeakCapital(capital: number): void {
-    if (capital > this.state.peakCapital) {
-      this.state.peakCapital = capital;
-    }
-  }
-
-  private halt(reason: string): void {
-    if (this.state.halted) return;
-
-    this.state.halted = true;
-    this.state.haltReason = reason;
-    this.state.haltTimestamp = Date.now();
-    this.state.cooldownUntil = Date.now() + this.config.cooldownMinutes * 60 * 1000;
-
-    this.callbacks.onHalt(reason);
-  }
-
-  private resume(reason: string): void {
+  enable(): void {
+    this.state.enabled = true;
     this.state.halted = false;
-    this.state.haltReason = null;
-    this.state.haltTimestamp = null;
     this.state.cooldownUntil = null;
-    this.state.dailyPnl = 0;
-    this.state.consecutiveLosses = 0;
-
-    this.callbacks.onResume();
   }
 
   manualHalt(reason: string): void {
@@ -170,35 +63,137 @@ export class Killswitch {
 
   manualResume(): void {
     if (this.state.halted) {
-      this.resume('Manual resume');
+      this.resume();
     }
   }
 
-  disable(): void {
-    this.state.enabled = false;
+  onOrderFilled(order: { id: string; pnl?: number; symbol?: string }): void {
+    if (!this.state.enabled) return;
+    this.callbacks.onOrderFilled(order as any);
+    if (this.state.halted) return;
+    const pnl = order.pnl ?? 0;
+    this.state.dailyPnl += pnl;
+    if (pnl < 0) {
+      this.state.consecutiveLosses++;
+      if (this.state.consecutiveLosses >= this.config.maxConsecutiveLosses) {
+        this.halt(`Max consecutive losses reached: ${this.state.consecutiveLosses}`);
+        return;
+      }
+    } else {
+      this.state.consecutiveLosses = 0;
+    }
+    if (this.state.peakCapital > 0) {
+      const dailyPnlPct = Math.abs(this.state.dailyPnl / this.state.peakCapital) * 100;
+      if (this.state.dailyPnl < 0 && dailyPnlPct >= this.config.maxDailyLossPct) {
+        this.halt(`Daily loss limit exceeded: ${dailyPnlPct.toFixed(1)}%`);
+        return;
+      }
+      const cur = this.state.peakCapital + this.state.dailyPnl;
+      this.state.currentDrawdown = ((this.state.peakCapital - cur) / this.state.peakCapital) * 100;
+      if (this.state.currentDrawdown >= this.config.maxDrawdownPct) {
+        this.halt(`Max drawdown reached: ${this.state.currentDrawdown.toFixed(2)}%`);
+      }
+    }
   }
 
-  enable(): void {
-    this.state.enabled = true;
+  updateDailyPnl(_pnl: number): void {
+    // Daily PnL is already tracked in onOrderFilled; this method kept for API compat.
+  }
+
+  updatePeakCapital(capital: number): void {
+    this.state.peakCapital = Math.max(this.state.peakCapital, capital);
+    if (this.state.peakCapital > 0) {
+      this.state.currentDrawdown = Math.abs(
+        ((this.state.peakCapital - capital) / this.state.peakCapital) * 100
+      );
+    }
   }
 
   reset(): void {
-    this.state.dailyPnl = 0;
-    this.state.consecutiveLosses = 0;
     this.state.halted = false;
     this.state.haltReason = null;
     this.state.haltTimestamp = null;
     this.state.cooldownUntil = null;
+    this.state.dailyPnl = 0;
+    this.state.consecutiveLosses = 0;
     this.state.peakCapital = 0;
     this.state.currentDrawdown = 0;
+    this.state.enabled = true;
+    this.botStates.clear();
+  }
 
-    for (const [, bot] of this.botStates) {
-      bot.dailyPnl = 0;
-      bot.consecutiveLosses = 0;
+  recordError(error: Error, context: string): void {
+    this.callbacks.onError(error, context);
+  }
+
+  // ── Accessors ────────────────────────────────────────────────
+  get haltReason(): string | null {
+    return this.state.haltReason;
+  }
+
+  isHalted(): boolean {
+    return this.state.halted;
+  }
+
+  isManualHalt(): boolean {
+    return this.state.halted && this.state.haltReason?.startsWith('Manual') === true;
+  }
+
+  getHaltReason(): string | null {
+    return this.state.haltReason;
+  }
+
+  isTradingEnabled(): boolean {
+    if (!this.state.enabled) return false;
+    if (this.state.halted) {
+      if (this.state.cooldownUntil && Date.now() >= this.state.cooldownUntil) {
+        this.resume();
+        return true;
+      }
+      return false;
     }
+    return true;
+  }
+
+  private resume(): void {
+    this.state.halted = false;
+    this.state.haltReason = null;
+    this.state.cooldownUntil = null;
+    this.callbacks.onResume();
   }
 
   getState(): KillswitchState {
     return { ...this.state };
+  }
+
+  private halt(reason: string): void {
+    if (this.state.halted) return;
+    this.state.halted = true;
+    this.state.haltReason = reason;
+    this.state.haltTimestamp = Date.now();
+    this.state.cooldownUntil = Date.now() + this.config.cooldownMinutes * 60_000;
+    this.callbacks.onHalt(reason);
+  }
+
+  private scheduleDailyReset(): void {
+    const tomorrow = new Date();
+    tomorrow.setHours(0, 0, 0, 0);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    this.resetTimer = setTimeout(() => {
+      this.dailyReset();
+      this.scheduleDailyReset();
+    }, tomorrow.getTime() - Date.now());
+  }
+
+  private dailyReset(): void {
+    this.state.dailyPnl = 0;
+    this.state.consecutiveLosses = 0;
+    this.state.dailyStartTime = Date.now();
+    this.state.peakCapital = 0;
+    this.state.currentDrawdown = 0;
+    for (const [, bot] of this.botStates) {
+      bot.dailyPnl = 0;
+      bot.consecutiveLosses = 0;
+    }
   }
 }
