@@ -295,4 +295,47 @@ describe('BotScheduler', () => {
       expect(r3.tickCount).toBe(3);
     });
   });
+
+  describe('rate-limit tracking', () => {
+    it('tracks rate-limit usage per exchange in tick report', async () => {
+      const bot1 = makeMockBot({ id: 'b1', exchange: 'binance' });
+      const bot2 = makeMockBot({ id: 'b2', exchange: 'binance' });
+      const bot3 = makeMockBot({ id: 'b3', exchange: 'bybit' });
+      mockGetBotManager.mockReturnValue({
+        getRunningBots: vi.fn().mockReturnValue([bot1, bot2, bot3]),
+        getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
+      });
+      mockProvider.isCircuitOpen.mockReturnValue(false);
+
+      const scheduler = await createScheduler({
+        getOrchestrator: () => mockOrchestratorInstance as any,
+      });
+      const report = await scheduler.tick();
+
+      expect(report.rateLimitUsage).toEqual({ binance: 2, bybit: 1 });
+    });
+
+    it('returns empty rateLimitUsage when no orchestrator', async () => {
+      const scheduler = await createScheduler();
+      const report = await scheduler.tick();
+      expect(report.rateLimitUsage).toEqual({});
+    });
+
+    it('clears rate-limit counts between ticks', async () => {
+      const bot = makeMockBot({ id: 'b1', exchange: 'binance' });
+      mockGetBotManager.mockReturnValue({
+        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
+      });
+      mockProvider.isCircuitOpen.mockReturnValue(false);
+
+      const scheduler = await createScheduler({
+        getOrchestrator: () => mockOrchestratorInstance as any,
+      });
+      const r1 = await scheduler.tick();
+      const r2 = await scheduler.tick();
+      expect(r1.rateLimitUsage.binance).toBe(1);
+      expect(r2.rateLimitUsage.binance).toBe(1);
+    });
+  });
 });

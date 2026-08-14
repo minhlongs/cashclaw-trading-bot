@@ -37,7 +37,14 @@ describe('/api/bots route', () => {
       mockBotCreateHandler.mockResolvedValue({ ok: true, id: 'bot-1' });
       const req = new Request('http://localhost/api/bots', {
         method: 'POST',
-        body: JSON.stringify({ config: { symbol: 'BTC/USDT' } }),
+        body: JSON.stringify({
+          id: 'bot-1',
+          name: 'Test Bot',
+          strategy: 'grid',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          capital: 1000,
+        }),
       });
       const res = await POST(req);
       expect(res.status).toBe(200);

@@ -16,3 +16,4 @@ export {
   getBotDetail, getTradeHistory, getAllBots,
   type BotDetailData, type TradeRow,
 } from './bot-detail';
+export { getExchangeHealth, type ExchangeHealthCard } from './exchange-health';

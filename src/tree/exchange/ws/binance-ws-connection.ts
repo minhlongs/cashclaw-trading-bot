@@ -46,7 +46,7 @@ export class BinanceWsConnection extends WsConnection {
           }
         };
 
-        this.ws.onerror = (error) => {
+        this.ws.onerror = (_error) => {
           // Notify all subscribers
           for (const [, sub] of this.subscriptions) {
             sub.callback.onError?.(new Error('WebSocket error'));
@@ -69,7 +69,7 @@ export class BinanceWsConnection extends WsConnection {
   }
 
   private dispatch(stream: string, data: Record<string, unknown>): void {
-    for (const [id, sub] of this.subscriptions) {
+    for (const [, sub] of this.subscriptions) {
       if (stream.endsWith(sub.symbol.toLowerCase())) {
         switch (sub.type) {
           case 'ticker':

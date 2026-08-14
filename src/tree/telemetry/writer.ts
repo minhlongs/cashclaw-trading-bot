@@ -89,6 +89,27 @@ export class TelemetryWriter {
     this.emit(botId, 'rebalance', { oldBase, newBase });
   }
 
+  emitExchangeHealth(botId: string, health: {
+    exchangeId: string;
+    score: number;
+    state: string;
+    latencyMs: number;
+    failureCount: number;
+    rateLimitUsed: number;
+    rateLimitTotal: number;
+  }): void {
+    this.emit(botId, 'exchange_health', { ...health, timestamp: Date.now() });
+  }
+
+  emitRateLimitUsage(botId: string, exchangeId: string, usage: {
+    endpoint: string;
+    callsInWindow: number;
+    maxPerWindow: number;
+    windowMs: number;
+  }): void {
+    this.emit(botId, 'rate_limit_usage', { exchangeId, ...usage, timestamp: Date.now() });
+  }
+
   // Persist a daily capital snapshot (call once per bot per day, OR after each fill)
   async snapshot(botId: string, capital: number, pnl: number, balances: Balance[], config: {
     maxDrawdownPct: number;

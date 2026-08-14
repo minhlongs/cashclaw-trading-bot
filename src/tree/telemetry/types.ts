@@ -12,7 +12,9 @@ export type TradeEventType =
   | 'pause'
   | 'config_change'
   | 'rebalance'
-  | 'metric_snapshot';
+  | 'metric_snapshot'
+  | 'exchange_health'
+  | 'rate_limit_usage';
 
 export interface TradeEvent {
   id: string;
@@ -47,6 +49,17 @@ export interface DailyMetrics {
   maxDrawdownPct: number;
   sharpeRatio: number | null;
   profitFactor: number | null;
+}
+
+export interface ExchangeHealthSnapshot {
+  exchangeId: string;
+  score: number;
+  state: string;
+  latencyMs: number;
+  failureCount: number;
+  rateLimitUsed: number;
+  rateLimitTotal: number;
+  timestamp: number;
 }
 
 export interface GoLiveReadiness {

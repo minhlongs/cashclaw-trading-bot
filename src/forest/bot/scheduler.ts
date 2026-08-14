@@ -23,6 +23,7 @@ export class BotScheduler {
   private deps: SchedulerDeps;
   private tickCount = 0;
   private lastTickAt: number | null = null;
+  private rateLimitCounts = new Map<string, number>();
 
   constructor(deps: SchedulerDeps = {}) {
     this.deps = deps;
@@ -33,10 +34,11 @@ export class BotScheduler {
     this.tickCount++;
     const now = this.deps.getNow?.() ?? Date.now();
     this.lastTickAt = now;
+    this.rateLimitCounts.clear();
 
     const killswitch = getBotManager().getKillswitch();
     if (!killswitch.isTradingEnabled()) {
-      return { tickCount: this.tickCount, botsEvaluated: 0, halted: true, errors: [] };
+      return { tickCount: this.tickCount, botsEvaluated: 0, halted: true, errors: [], rateLimitUsage: {} };
     }
 
     const manager = getBotManager();
@@ -56,6 +58,9 @@ export class BotScheduler {
           this.deps.onEvalError?.(bot.id, skipErr);
           continue;
         }
+        // Track rate-limit usage per exchange
+        const exId = cfg.exchange;
+        this.rateLimitCounts.set(exId, (this.rateLimitCounts.get(exId) ?? 0) + 1);
       }
 
       try {
@@ -68,11 +73,55 @@ export class BotScheduler {
       }
     }
 
-    return { tickCount: this.tickCount, botsEvaluated: runningBots.length, halted: false, errors };
+    // Emit exchange health snapshots for observability
+    if (orchestrator) {
+      this.emitExchangeHealthSnapshots(orchestrator, now);
+    }
+
+    // Drain exchange queues after all bots ticked
+    try {
+      await manager.drainQueues();
+    } catch {
+      // Queue drain is best-effort — log and continue
+    }
+
+    return {
+      tickCount: this.tickCount,
+      botsEvaluated: runningBots.length,
+      halted: false,
+      errors,
+      rateLimitUsage: Object.fromEntries(this.rateLimitCounts),
+    };
   }
 
   getStats() {
     return { tickCount: this.tickCount, lastTickAt: this.lastTickAt };
+  }
+
+  getRateLimitUsage(): ReadonlyMap<string, number> {
+    return this.rateLimitCounts;
+  }
+
+  private emitExchangeHealthSnapshots(orchestrator: ExchangeOrchestrator, now: number): void {
+    const exchanges = ['binance', 'bybit', 'okx'] as const;
+    for (const exId of exchanges) {
+      const provider = orchestrator.getProvider(exId);
+      if (!provider || typeof provider.getHealth !== 'function') continue;
+      try {
+        const health = provider.getHealth();
+        const budget = provider.getBudget();
+        log.debug('Exchange health', {
+          exchange: exId,
+          score: health.score,
+          latency: health.latencyMs,
+          failures: health.failureCount,
+          rateLimitUsed: this.rateLimitCounts.get(exId) ?? 0,
+          rateLimitTotal: budget.reqPerMin,
+        });
+      } catch {
+        // Provider may be a mock or incomplete — skip silently
+      }
+    }
   }
 
   /** Persist bot state snapshot to D1 after each tick */
@@ -99,6 +148,7 @@ export interface SchedulerTickReport {
   botsEvaluated: number;
   halted: boolean;
   errors: SchedulerError[];
+  rateLimitUsage: Record<string, number>;
 }
 
 export interface SchedulerError {

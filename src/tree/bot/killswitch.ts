@@ -67,6 +67,11 @@ export class Killswitch {
     }
   }
 
+  onOrderPlaced(order: { id: string; symbol?: string }): void {
+    if (!this.state.enabled) return;
+    this.callbacks.onOrderPlaced(order as any);
+  }
+
   onOrderFilled(order: { id: string; pnl?: number; symbol?: string }): void {
     if (!this.state.enabled) return;
     this.callbacks.onOrderFilled(order as any);

@@ -11,7 +11,7 @@ import type {
 } from '../types';
 import { PaperExchange } from '../paper';
 import type { ExchangeProvider, PaperProviderConfig, ProviderHealth, ProviderBudget } from './types';
-import { CircuitBreaker, type CircuitOpenError } from './circuit-breaker';
+import { CircuitBreaker } from './circuit-breaker';
 
 export class PaperExchangeProvider implements ExchangeProvider {
   readonly id: string;

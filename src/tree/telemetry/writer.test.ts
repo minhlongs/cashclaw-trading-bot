@@ -115,6 +115,28 @@ describe('TelemetryWriter', () => {
       const { w, evt } = pair(); w.emitRebalance('b1', 0.6, 0.7);
       expect(evt().details.oldBase).toBe(0.6); expect(evt().details.newBase).toBe(0.7);
     });
+    it('emitExchangeHealth carries health data and timestamp', () => {
+      const { w, evt } = pair();
+      w.emitExchangeHealth('b1', {
+        exchangeId: 'binance', score: 95, state: 'healthy',
+        latencyMs: 45, failureCount: 0, rateLimitUsed: 12, rateLimitTotal: 1200,
+      });
+      expect(evt().eventType).toBe('exchange_health');
+      expect(evt().details.exchangeId).toBe('binance');
+      expect(evt().details.score).toBe(95);
+      expect(evt().details.rateLimitUsed).toBe(12);
+      expect(evt().details.timestamp).toBe(1000);
+    });
+    it('emitRateLimitUsage carries exchange and usage data', () => {
+      const { w, evt } = pair();
+      w.emitRateLimitUsage('b1', 'bybit', {
+        endpoint: 'api', callsInWindow: 45, maxPerWindow: 120, windowMs: 60000,
+      });
+      expect(evt().eventType).toBe('rate_limit_usage');
+      expect(evt().details.exchangeId).toBe('bybit');
+      expect(evt().details.callsInWindow).toBe(45);
+      expect(evt().details.maxPerWindow).toBe(120);
+    });
   });
   describe('flush', () => {
     it('flushes queued events to D1 via enqueue', async () => {

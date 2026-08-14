@@ -101,7 +101,6 @@ export class CircuitBreaker {
     if (this.state !== 'open') return;
 
     const now = Date.now();
-    const sinceTrip = now - (this.trippedAt ?? 0);
     const untilHalfOpen = this.halfOpenAt ? Math.max(0, this.halfOpenAt - now) : 0;
 
     // After full cooldown period, transition to half_open

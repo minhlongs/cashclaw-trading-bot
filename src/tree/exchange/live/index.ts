@@ -16,9 +16,6 @@ import type {
   OrderResult,
   ExchangeAdapter,
   ExchangeConfig,
-  Side,
-  OrderType,
-  OrderStatus,
 } from '../types';
 
 interface KillswitchCallbacks {
