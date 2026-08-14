@@ -4,6 +4,9 @@
 import type { Ticker, OrderBook } from '../types';
 import type { WsEventType, WsSubscription } from './ws-types';
 import { WsConnection } from './ws-connection';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('binance-ws');
 
 export class BinanceWsConnection extends WsConnection {
   private streams: string[] = [];
@@ -38,8 +41,8 @@ export class BinanceWsConnection extends WsConnection {
             if (data.stream && data.data) {
               this.dispatch(data.stream, data.data);
             }
-          } catch {
-            // Non-JSON WebSocket message — intentionally ignored
+          } catch (error) {
+            log.debug('Non-JSON WebSocket message', { action: 'onmessage', error: error instanceof Error ? error.message : String(error) });
           }
         };
 

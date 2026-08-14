@@ -3,6 +3,9 @@
 
 import type { TradeEvent, TradeEventType } from './types';
 import type { Balance } from '../exchange/types';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('telemetry-writer');
 
 type Listener = (event: TradeEvent) => void | Promise<void>;
 
@@ -41,7 +44,7 @@ export class TelemetryWriter {
     };
     this.queue.push({ event, retries: 0 });
     this.listeners.forEach((fn) => {
-      try { fn(event); } catch { /* swallow listener errors */ }
+      try { fn(event); } catch (error) { log.warn('Listener error', { error: error instanceof Error ? error : new Error(String(error)) }); }
     });
     this.flushSoon();
   }

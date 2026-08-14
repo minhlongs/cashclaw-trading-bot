@@ -70,8 +70,9 @@ app.use('*', async (c, next) => {
     if (assetResponse.ok) {
       return assetResponse;
     }
-  } catch {
+  } catch (error) {
     // Asset not found, fall through to API routes
+    logger.warn('Asset fetch failed, falling through', { action: 'static-assets', error: error instanceof Error ? error.message : String(error) });
   }
 
   return next();

@@ -4,6 +4,9 @@
 import type { ExchangeId, Ticker, OrderBook, OrderRequest, OrderResult, Balance } from '@/tree/exchange/types';
 import { PaperExchangeProvider } from '@/tree/exchange/provider';
 import { Killswitch } from '@/tree/bot/killswitch';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('exchange-orchestration');
 
 export interface ExchangeOrchestratorDeps {
   killswitch?: Killswitch;
@@ -23,8 +26,8 @@ export class ExchangeOrchestrator {
   private reportError(err: Error, ctx: string): void {
     try {
       if (this.onError) this.onError(err, ctx);
-    } catch {
-      // never throw from error reporter
+    } catch (error) {
+      log.error('Error reporter failed', error instanceof Error ? error : new Error(String(error)), { action: 'reportError' });
     }
   }
 
