@@ -53,10 +53,6 @@ function postRequest(path: string, body: unknown): Request {
   });
 }
 
-function getRequest(path: string): Request {
-  return new Request(`http://localhost${path}`, { method: 'GET' });
-}
-
 /* ------------------------------------------------------------------ */
 /*  Tests                                                             */
 /* ------------------------------------------------------------------ */
@@ -110,7 +106,8 @@ describe('POST /api/bots — bot creation', () => {
   });
 
   it('rejects payload missing required id', async () => {
-    const { id: _omitted, ...withoutId } = validBotPayload();
+    const { id, ...withoutId } = validBotPayload();
+    void id;
     const res = await POST(postRequest('/api/bots', withoutId));
     const json = (await res.json()) as Record<string, unknown>;
 
@@ -120,7 +117,8 @@ describe('POST /api/bots — bot creation', () => {
   });
 
   it('rejects payload missing required capital', async () => {
-    const { capital: _omitted, ...withoutCapital } = validBotPayload();
+    const { capital, ...withoutCapital } = validBotPayload();
+    void capital;
     const res = await POST(postRequest('/api/bots', withoutCapital));
 
     expect(res.status).toBe(400);

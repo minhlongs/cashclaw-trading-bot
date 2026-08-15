@@ -24,7 +24,7 @@ vi.mock('@/tree/bot/strategy-chain', () => ({
 }));
 
 import { initializeStrategy, evaluateChain } from './bot-strategy';
-import type { GridBotConfig, MeanRevBotConfig, StrategyChain, StrategyContext } from './types';
+import type { GridBotConfig, MeanRevBotConfig, StrategyChain } from './types';
 
 function makeGridConfig(overrides: Partial<GridBotConfig> = {}): GridBotConfig {
   return {

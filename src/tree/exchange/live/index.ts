@@ -84,7 +84,7 @@ export class LiveExchange implements ExchangeAdapter {
     await rateLimiter.acquire(this.id, 'order');
 
     try {
-      const result = await this.client.placeOrder(this.id, request as any);
+      const result = await this.client.placeOrder(this.id, request as unknown as OrderResult);
       this.orderCount++;
       this.killswitch.onOrderPlaced(result as OrderResult);
       return result as OrderResult;

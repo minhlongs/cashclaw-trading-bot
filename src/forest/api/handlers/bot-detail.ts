@@ -7,7 +7,7 @@ import { getBotManager, type BotConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { getRecentEvents } from '@/forest/dashboard/trade-events';
-import type { TradeEvent, TradeEventType } from '@/tree/telemetry';
+import type { TradeEvent } from '@/tree/telemetry';
 
 export interface BotDetail {
   id: string;

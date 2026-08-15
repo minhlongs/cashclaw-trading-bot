@@ -8,7 +8,6 @@ import type {
 import type {
   BotState,
   BotTrade,
-  BotConfig,
   GridBotConfig,
   MeanRevBotConfig,
   BotCallbacks,
@@ -18,7 +17,6 @@ import type { StrategyChain } from './strategy-chain';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
 import type { TradeEventType } from '../telemetry/types';
-import { TelemetryWriter } from '../telemetry/writer';
 import { createInitialState } from './bot-state';
 import { initializeStrategy } from './bot-strategy';
 import { executeOrder as execOrder, type OrderContext } from './bot-order-executor';

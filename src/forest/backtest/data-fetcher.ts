@@ -5,21 +5,6 @@ import type { Candle } from './ohlcv';
 
 const KLINE_LIMIT = 1000;
 
-const ENDPOINTS: Record<string, { path: string; base: string }> = {
-  binance: {
-    path: '/api/v3/klines',
-    base: 'https://api.binance.com',
-  },
-  bybit: {
-    path: '/v5/market/kline',
-    base: 'https://api.bybit.com',
-  },
-  okx: {
-    path: '/api/v5/market/history-candles',
-    base: 'https://www.okx.com',
-  },
-};
-
 function binanceUrl(symbol: string, interval: string, startMs: number, endMs: number): string {
   const s = encodeURIComponent(symbol.replace('/', ''));
   return `https://api.binance.com/api/v3/klines?symbol=${s}&interval=${interval}&startTime=${startMs}&endTime=${endMs}&limit=${KLINE_LIMIT}`;

@@ -9,11 +9,10 @@ import { BotInstance } from '@/tree/bot/bot-instance';
 import type { BotState, BotConfig } from '@/tree/bot/types';
 import type { CreateBotRequest } from '@/tree/bot/bot-manager';
 import type { ExchangeConfig } from '@/tree/exchange/types';
-import { createServerClient } from '@/lib/db/client';
-import type { TradeEventType, CapitalSnapshot } from '@/tree/telemetry';
 import { ok, err, type Result } from '@/lib/result';
 
 // Types extracted to bot-management-types.ts
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for consumers
 import type { BotInfo, BotCreateInput, BotListResult } from './bot-management-types';
 export type { BotInfo, BotCreateInput, BotListResult } from './bot-management-types';
 
@@ -38,36 +37,9 @@ export function getBot(id: string): BotInfo | undefined {
 export async function createBot(input: BotCreateInput): Promise<BotInfo> {
   const manager = getBotManager();
 
-  const baseConfig = {
-    symbol: input.pair,
-    exchange: input.exchange,
-    mode: input.mode,
-    capital: input.capital,
-    maxDrawdownPct: 15,
-    strategy: input.strategy,
-  };
-
   const config: BotConfig = input.strategy === 'grid'
-    ? ({
-        ...baseConfig,
-        gridSpacingPct: (input.config.gridSpacingPct as number) ?? 1,
-        gridLevels: (input.config.gridLevels as number) ?? 5,
-        capitalPerLevelPct: (input.config.capitalPerLevelPct as number) ?? 20,
-        takeProfitPct: (input.config.takeProfitPct as number) ?? 0.5,
-        stopLossPct: (input.config.stopLossPct as number) ?? 2,
-        rebalanceOnFill: (input.config.rebalanceOnFill as boolean) ?? false,
-      }) as BotConfig
-    : ({
-        ...baseConfig,
-        bbPeriod: (input.config.bbPeriod as number) ?? 20,
-        bbStdDev: (input.config.bbStdDev as number) ?? 2,
-        rsiPeriod: (input.config.rsiPeriod as number) ?? 14,
-        rsiBuyThreshold: (input.config.rsiBuyThreshold as number) ?? 30,
-        rsiSellThreshold: (input.config.rsiSellThreshold as number) ?? 70,
-        volumeMultiplier: (input.config.volumeMultiplier as number) ?? 1.5,
-        positionSizePct: (input.config.positionSizePct as number) ?? 10,
-        cooldownMinutes: (input.config.cooldownMinutes as number) ?? 60,
-      }) as BotConfig;
+    ? buildGridConfig(input)
+    : buildMeanRevConfig(input);
 
   const exchangeConfig: ExchangeConfig = {
     apiKey: '',
@@ -86,6 +58,18 @@ export async function createBot(input: BotCreateInput): Promise<BotInfo> {
 
   const bot = await manager.createBot(req);
   return botToInfo(bot);
+}
+
+function baseConfig(input: BotCreateInput) {
+  return { symbol: input.pair, exchange: input.exchange, mode: input.mode, capital: input.capital, maxDrawdownPct: 15, strategy: input.strategy };
+}
+
+function buildGridConfig(input: BotCreateInput): BotConfig {
+  return { ...baseConfig(input), gridSpacingPct: (input.config.gridSpacingPct as number) ?? 1, gridLevels: (input.config.gridLevels as number) ?? 5, capitalPerLevelPct: (input.config.capitalPerLevelPct as number) ?? 20, takeProfitPct: (input.config.takeProfitPct as number) ?? 0.5, stopLossPct: (input.config.stopLossPct as number) ?? 2, rebalanceOnFill: (input.config.rebalanceOnFill as boolean) ?? false } as BotConfig;
+}
+
+function buildMeanRevConfig(input: BotCreateInput): BotConfig {
+  return { ...baseConfig(input), bbPeriod: (input.config.bbPeriod as number) ?? 20, bbStdDev: (input.config.bbStdDev as number) ?? 2, rsiPeriod: (input.config.rsiPeriod as number) ?? 14, rsiBuyThreshold: (input.config.rsiBuyThreshold as number) ?? 30, rsiSellThreshold: (input.config.rsiSellThreshold as number) ?? 70, volumeMultiplier: (input.config.volumeMultiplier as number) ?? 1.5, positionSizePct: (input.config.positionSizePct as number) ?? 10, cooldownMinutes: (input.config.cooldownMinutes as number) ?? 60 } as BotConfig;
 }
 
 export async function startBot(id: string): Promise<Result<void>> {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { StrategyContext, TradeSignal } from '../types';
+import type { StrategyContext } from '../types';
 import type { GridBotConfig, BotTrade } from '@/tree/bot/types';
 import type { OrderRequest, OrderResult } from '@/tree/exchange/types';
 

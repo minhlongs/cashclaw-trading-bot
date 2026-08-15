@@ -8,6 +8,7 @@
  */
 
 import { createServerClient } from '@/lib/db/client';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- TradeEvent used on line ~48; TradeEventType cast on line 91
 import type { TradeEvent, TradeEventType } from '@/tree/telemetry';
 import { createLogger } from '@/lib/logger';
 

@@ -6,7 +6,8 @@
 import { createServerClient } from '@/lib/db/client';
 import { findBotsByUser, findAllBots } from '@/lib/db/repositories';
 import { getBotManager } from '@/tree/bot';
-import type { BotConfig, BotState } from '@/tree/bot/types';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- BotState used in hydration logic; BotConfig cast on line 62
+import type { BotState, BotConfig } from '@/tree/bot/types';
 
 // Error handler callback type for structured error logging
 export type ErrorHandler = (error: Error, context: string) => void;
@@ -25,17 +26,17 @@ function restoreBotStateFromRow(
 ): void {
   const patch: Partial<BotState> = {};
 
-  if (row.total_trades != null) patch.totalTrades = row.total_trades;
-  if (row.started_at != null) patch.startedAt = row.started_at;
-  if (row.stopped_at != null) patch.stoppedAt = row.stopped_at;
-  if (row.last_tick_at != null) patch.lastTickAt = row.last_tick_at;
-  if (row.last_order_at != null) patch.lastOrderAt = row.last_order_at;
-  if (row.current_drawdown != null) patch.currentDrawdown = row.current_drawdown;
-  if (row.total_pnl != null) patch.totalPnl = row.total_pnl;
-  if (row.win_count != null) patch.winCount = row.win_count;
-  if (row.loss_count != null) patch.lossCount = row.loss_count;
-  if (row.max_drawdown != null) patch.maxDrawdown = row.max_drawdown;
-  if (row.last_error != null) patch.error = row.last_error;
+  if (row.total_trades !==null) patch.totalTrades = row.total_trades;
+  if (row.started_at !==null) patch.startedAt = row.started_at;
+  if (row.stopped_at !==null) patch.stoppedAt = row.stopped_at;
+  if (row.last_tick_at !==null) patch.lastTickAt = row.last_tick_at;
+  if (row.last_order_at !==null) patch.lastOrderAt = row.last_order_at;
+  if (row.current_drawdown !==null) patch.currentDrawdown = row.current_drawdown;
+  if (row.total_pnl !==null) patch.totalPnl = row.total_pnl;
+  if (row.win_count !==null) patch.winCount = row.win_count;
+  if (row.loss_count !==null) patch.lossCount = row.loss_count;
+  if (row.max_drawdown !==null) patch.maxDrawdown = row.max_drawdown;
+  if (row.last_error !==null) patch.error = row.last_error;
 
   if (Object.keys(patch).length > 0) {
     bot.patchState(patch);

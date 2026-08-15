@@ -1,8 +1,6 @@
 // Bot Management — types and status mapper
 // Extracted from index.ts for size compliance.
 
-import type { BotState, BotConfig } from '@/tree/bot/types';
-
 export interface BotInfo {
   id: string;
   name: string;

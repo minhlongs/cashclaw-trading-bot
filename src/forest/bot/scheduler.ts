@@ -3,11 +3,10 @@
 // In production: triggered by CF Cron (1min interval); here: manual tick() for tests.
 
 import { getBotManager } from '@/tree/bot';
-import { Killswitch } from '@/tree/bot/killswitch';
-import { getExchangeOrchestrator, type ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import { createServerClient } from '@/lib/db/client';
-import { TelemetryWriter } from '@/tree/telemetry/writer';
 import type { BotInstance } from '@/tree/bot/bot-instance';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- ExchangeOrchestrator used in SchedulerDeps (line 16) and emitExchangeHealthSnapshots (line 102)
+import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('scheduler');
@@ -102,7 +101,7 @@ export class BotScheduler {
     return this.rateLimitCounts;
   }
 
-  private emitExchangeHealthSnapshots(orchestrator: ExchangeOrchestrator, now: number): void {
+  private emitExchangeHealthSnapshots(orchestrator: ExchangeOrchestrator, _now: number): void {
     const exchanges = ['binance', 'bybit', 'okx'] as const;
     for (const exId of exchanges) {
       const provider = orchestrator.getProvider(exId);
@@ -130,7 +129,6 @@ export class BotScheduler {
     if (!db) return;
 
     const state = bot.getSnapshot();
-    const config = bot.getConfig() as { capital: number; symbol: string; exchange: string };
 
     try {
       await db

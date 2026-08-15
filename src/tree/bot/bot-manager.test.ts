@@ -1,7 +1,6 @@
 // bot-manager.test.ts — unit tests for BotManager singleton orchestrator
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { BotInstance } from './bot-instance';
-import type { BotConfig, BotStatus } from './types';
+import type { BotStatus } from './types';
 
 // ── Hoisted vi.mock() factories ─────────────────────────────────────────────
 

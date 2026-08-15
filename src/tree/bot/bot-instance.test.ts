@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BotInstance } from './bot-instance';
-import type { BotConfig, BotTrade } from './types';
-import type { ExchangeAdapter, Ticker, OrderRequest, OrderResult } from '../exchange/types';
+import type { BotConfig } from './types';
+import type { ExchangeAdapter, Ticker, OrderResult } from '../exchange/types';
 import { Killswitch } from './killswitch';
 import type { TelemetryWriter } from '../telemetry/writer';
 

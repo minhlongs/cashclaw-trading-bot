@@ -7,10 +7,7 @@ import { getBotManager, type BotConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import type { TradeEvent } from '@/tree/telemetry';
-import { createLogger } from '@/lib/logger';
 import { getRecentEvents } from './trade-events';
-
-const log = createLogger('dashboard-actions');
 
 // ── Types ───────────────────────────────────────────────────────
 export interface BotCardData {

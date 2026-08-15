@@ -13,14 +13,6 @@ const log = createLogger('backtest-actions');
 
 const SUPPORTED_INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'] as const;
 type CandleInterval = (typeof SUPPORTED_INTERVALS)[number];
-const INTERVAL_MS: Record<CandleInterval, number> = {
-  '1m': 60_000,
-  '5m': 300_000,
-  '15m': 900_000,
-  '1h': 3_600_000,
-  '4h': 14_400_000,
-  '1d': 86_400_000,
-};
 
 export interface BacktestRunInput {
   botId: string;
@@ -48,22 +40,11 @@ export interface BacktestRunOutput {
  */
 export async function runBacktestAction(input: BacktestRunInput): Promise<BacktestRunOutput> {
   const interval = (input.interval ?? '1h') as CandleInterval;
-  if (!SUPPORTED_INTERVALS.includes(interval)) {
-    return { success: false, error: `Unsupported interval: ${input.interval}`, candlesFetched: 0 };
-  }
+  const validationError = validateBacktestInput(input, interval);
+  if (validationError) return { success: false, error: validationError, candlesFetched: 0 };
 
   const startMs = input.startDate.getTime();
   const endMs = input.endDate.getTime();
-
-  if (endMs <= startMs) {
-    return { success: false, error: 'endDate must be after startDate', candlesFetched: 0 };
-  }
-
-  // Clamp: max 3 years of data
-  const threeYearsMs = 3 * 365 * 24 * 3600 * 1000;
-  if (endMs - startMs > threeYearsMs) {
-    return { success: false, error: 'Date range exceeds 3-year limit', candlesFetched: 0 };
-  }
 
   let candles;
   try {
@@ -136,6 +117,14 @@ export async function runBacktestAction(input: BacktestRunInput): Promise<Backte
   }
 
   return { success: true, result, candlesFetched: candles.length };
+}
+
+function validateBacktestInput(input: BacktestRunInput, interval: CandleInterval): string | null {
+  if (!SUPPORTED_INTERVALS.includes(interval)) return `Unsupported interval: ${input.interval}`;
+  if (input.endDate.getTime() <= input.startDate.getTime()) return 'endDate must be after startDate';
+  const threeYearsMs = 3 * 365 * 24 * 3600 * 1000;
+  if (input.endDate.getTime() - input.startDate.getTime() > threeYearsMs) return 'Date range exceeds 3-year limit';
+  return null;
 }
 
 /**

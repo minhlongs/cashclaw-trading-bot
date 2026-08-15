@@ -5,7 +5,7 @@
 
 import { createServerClient } from '@/lib/db/client';
 import type {
-  Bot, Trade, ApiCredential, TradeEvent, CapitalSnapshot, AuditLog,
+  Bot, Trade, ApiCredential, TradeEvent,
 } from '@/lib/db/types';
 import {
   insertBot, updateBot, deleteBot,

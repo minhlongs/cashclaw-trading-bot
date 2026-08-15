@@ -63,12 +63,6 @@ const DEFAULT_NOTIFICATION: SettingsData['notification'] = {
   chatId: '',
 };
 
-const DEFAULT_KILLSWITCH: SettingsData['killswitch'] = {
-  enabled: true,
-  reason: null,
-  triggeredAt: null,
-};
-
 const DEFAULT_KILLSWITCH_DAILY: SettingsData['killswitchDaily'] = {
   dailyPnl: 0,
   consecutiveLosses: 0,
@@ -221,6 +215,7 @@ export async function getSettings(): Promise<SettingsData> {
   return loadCurrentSettings();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
 export async function updateExchangeCredentials(
   exchange: 'binance' | 'bybit' | 'okx',
   apiKey: string,
@@ -240,6 +235,7 @@ export async function updateExchangeCredentials(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
 export async function updateRiskLimits(input: {
   maxDrawdownPct?: number;
   dailyLossLimitPct?: number;
@@ -247,29 +243,40 @@ export async function updateRiskLimits(input: {
   maxOpenOrders?: number;
 }): Promise<Result<void>> {
   try {
-    if (input.maxDrawdownPct !== undefined && (input.maxDrawdownPct < 1 || input.maxDrawdownPct > 100)) {
-      return err('Max drawdown must be between 1-100%');
-    }
-    if (input.dailyLossLimitPct !== undefined && (input.dailyLossLimitPct < 1 || input.dailyLossLimitPct > 100)) {
-      return err('Daily loss limit must be between 1-100%');
-    }
-    if (input.cooldownMinutes !== undefined && (input.cooldownMinutes < 1 || input.cooldownMinutes > 1440)) {
-      return err('Cooldown must be between 1-1440 minutes');
-    }
-    if (input.maxOpenOrders !== undefined && (input.maxOpenOrders < 1 || input.maxOpenOrders > 500)) {
-      return err('Max open orders must be between 1-500');
-    }
+    const rangeError = validateRiskRanges(input);
+    if (rangeError) return err(rangeError);
 
     const current = await loadCurrentSettings();
-    if (input.maxDrawdownPct !== undefined) current.risk.maxDrawdownPct = input.maxDrawdownPct;
-    if (input.dailyLossLimitPct !== undefined) current.risk.dailyLossLimitPct = input.dailyLossLimitPct;
-    if (input.cooldownMinutes !== undefined) current.risk.cooldownMinutes = input.cooldownMinutes;
-    if (input.maxOpenOrders !== undefined) current.risk.maxOpenOrders = input.maxOpenOrders;
-
+    applyRiskOverrides(current, input);
     return persistSettings(current);
   } catch (e) {
     return err(e instanceof Error ? e.message : 'Update failed');
   }
+}
+
+function validateRiskRanges(input: {
+  maxDrawdownPct?: number;
+  dailyLossLimitPct?: number;
+  cooldownMinutes?: number;
+  maxOpenOrders?: number;
+}): string | null {
+  if (input.maxDrawdownPct !== undefined && (input.maxDrawdownPct < 1 || input.maxDrawdownPct > 100)) return 'Max drawdown must be between 1-100%';
+  if (input.dailyLossLimitPct !== undefined && (input.dailyLossLimitPct < 1 || input.dailyLossLimitPct > 100)) return 'Daily loss limit must be between 1-100%';
+  if (input.cooldownMinutes !== undefined && (input.cooldownMinutes < 1 || input.cooldownMinutes > 1440)) return 'Cooldown must be between 1-1440 minutes';
+  if (input.maxOpenOrders !== undefined && (input.maxOpenOrders < 1 || input.maxOpenOrders > 500)) return 'Max open orders must be between 1-500';
+  return null;
+}
+
+function applyRiskOverrides(current: SettingsData, input: {
+  maxDrawdownPct?: number;
+  dailyLossLimitPct?: number;
+  cooldownMinutes?: number;
+  maxOpenOrders?: number;
+}): void {
+  if (input.maxDrawdownPct !== undefined) current.risk.maxDrawdownPct = input.maxDrawdownPct;
+  if (input.dailyLossLimitPct !== undefined) current.risk.dailyLossLimitPct = input.dailyLossLimitPct;
+  if (input.cooldownMinutes !== undefined) current.risk.cooldownMinutes = input.cooldownMinutes;
+  if (input.maxOpenOrders !== undefined) current.risk.maxOpenOrders = input.maxOpenOrders;
 }
 
 export async function updateNotificationSettings(
@@ -282,6 +289,7 @@ export async function updateNotificationSettings(
   return persistSettings(current);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
 export async function emergencyHalt(reason: string): Promise<Result<void>> {
   try {
     const current = await loadCurrentSettings();
@@ -294,6 +302,7 @@ export async function emergencyHalt(reason: string): Promise<Result<void>> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
 export async function resumeFromHalt(): Promise<Result<void>> {
   try {
     const current = await loadCurrentSettings();
@@ -306,6 +315,7 @@ export async function resumeFromHalt(): Promise<Result<void>> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
 export async function resetAllBots(): Promise<Result<void>> {
   try {
     const manager = getBotManager();

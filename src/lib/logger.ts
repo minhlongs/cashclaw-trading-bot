@@ -54,6 +54,7 @@ export function createLogger(moduleName: string) {
         message,
         context: { ...baseContext, ...ctx },
       };
+      // eslint-disable-next-line no-console -- logger is the terminal output layer; console is intentional
       console.log(formatLogEntry(entry));
     },
 
@@ -64,6 +65,7 @@ export function createLogger(moduleName: string) {
         message,
         context: { ...baseContext, ...ctx },
       };
+      // eslint-disable-next-line no-console -- logger is the terminal output layer; console is intentional
       console.warn(formatLogEntry(entry));
     },
 
@@ -81,6 +83,7 @@ export function createLogger(moduleName: string) {
             }
           : undefined,
       };
+      // eslint-disable-next-line no-console -- logger is the terminal output layer; console is intentional
       console.error(formatLogEntry(entry));
     },
 
@@ -92,7 +95,8 @@ export function createLogger(moduleName: string) {
           message,
           context: { ...baseContext, ...ctx },
         };
-        console.log(formatLogEntry(entry));
+        // eslint-disable-next-line no-console -- logger is the terminal output layer; console is intentional
+      console.log(formatLogEntry(entry));
       }
     },
   };

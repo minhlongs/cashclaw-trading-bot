@@ -14,7 +14,7 @@ export function formatBotRow(
     exchange: String(row.exchange),
     status: String(row.status),
     started_at: String(row.started_at),
-    stopped_at: row.stopped_at != null ? String(row.stopped_at) : null,
+    stopped_at: row.stopped_at !==null ? String(row.stopped_at) : null,
     created_at: String(row.created_at),
   };
 }
@@ -34,9 +34,9 @@ export function formatFillRow(
     fee: Number(row.fee),
     status: String(row.status),
     exchange_order_id: String(row.exchange_order_id),
-    error_message: row.error_message != null ? String(row.error_message) : null,
+    error_message: row.error_message !==null ? String(row.error_message) : null,
     opened_at: String(row.opened_at),
-    closed_at: row.closed_at != null ? String(row.closed_at) : null,
+    closed_at: row.closed_at !==null ? String(row.closed_at) : null,
     created_at: String(row.created_at),
   };
 }

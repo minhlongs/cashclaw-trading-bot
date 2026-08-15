@@ -153,7 +153,6 @@ function BacktestResults({ result, isEn }: { result: BacktestResult; isEn: boole
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-      {/* Performance Metrics */}
       <div className="card">
         <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
           {isEn ? 'Performance Metrics' : 'Chi So Hieu Suat'}
@@ -167,7 +166,6 @@ function BacktestResults({ result, isEn }: { result: BacktestResult; isEn: boole
         </div>
       </div>
 
-      {/* Equity Curve */}
       <div className="card">
         <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
           {isEn ? 'Equity Curve' : 'Duong Equity'}
@@ -175,47 +173,52 @@ function BacktestResults({ result, isEn }: { result: BacktestResult; isEn: boole
         <EquityCurveChart data={equity_curve_json} />
       </div>
 
-      {/* Trade List */}
-      <div className="card">
-        <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
-          {isEn ? 'Recent Trades' : 'Giao Dich Gan Day'}
-        </h3>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-                <th style={thStyle}>{isEn ? 'Side' : 'Huong'}</th>
-                <th style={thStyle}>{isEn ? 'Entry Time' : 'Thoi Gian Vao'}</th>
-                <th style={thStyle}>{isEn ? 'Entry Price' : 'Gia Vao'}</th>
-                <th style={thStyle}>{isEn ? 'Exit Time' : 'Thoi Gian Ra'}</th>
-                <th style={thStyle}>{isEn ? 'Exit Price' : 'Gia Ra'}</th>
-                <th style={thStyle}>{isEn ? 'PnL' : 'Loi Nhuan'}</th>
-                <th style={thStyle}>{isEn ? 'PnL %' : 'Loi Nhuan %'}</th>
+      <RecentTradesTable trades={trades_json} isEn={isEn} />
+    </div>
+  );
+}
+
+function RecentTradesTable({ trades, isEn }: { trades: BacktestResult['trades_json']; isEn: boolean }) {
+  return (
+    <div className="card">
+      <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
+        {isEn ? 'Recent Trades' : 'Giao Dich Gan Day'}
+      </h3>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
+              <th style={thStyle}>{isEn ? 'Side' : 'Huong'}</th>
+              <th style={thStyle}>{isEn ? 'Entry Time' : 'Thoi Gian Vao'}</th>
+              <th style={thStyle}>{isEn ? 'Entry Price' : 'Gia Vao'}</th>
+              <th style={thStyle}>{isEn ? 'Exit Time' : 'Thoi Gian Ra'}</th>
+              <th style={thStyle}>{isEn ? 'Exit Price' : 'Gia Ra'}</th>
+              <th style={thStyle}>{isEn ? 'PnL' : 'Loi Nhuan'}</th>
+              <th style={thStyle}>{isEn ? 'PnL %' : 'Loi Nhuan %'}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {trades.map((trade, i) => (
+              <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <td style={tdStyle}>
+                  <span style={{ color: trade.side === 'buy' ? 'var(--color-profit)' : 'var(--color-loss)', fontWeight: 600 }}>
+                    {trade.side.toUpperCase()}
+                  </span>
+                </td>
+                <td style={tdStyle}>{new Date(trade.entryTimestamp).toLocaleString()}</td>
+                <td style={tdStyle}>${trade.entryPrice.toLocaleString()}</td>
+                <td style={tdStyle}>{new Date(trade.exitTimestamp).toLocaleString()}</td>
+                <td style={tdStyle}>${trade.exitPrice.toLocaleString()}</td>
+                <td style={{ ...tdStyle, color: trade.pnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
+                  {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toFixed(2)}
+                </td>
+                <td style={{ ...tdStyle, color: trade.pnlPct >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
+                  {trade.pnlPct >= 0 ? '+' : ''}{trade.pnlPct.toFixed(2)}%
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {trades_json.map((trade, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <td style={tdStyle}>
-                    <span style={{ color: trade.side === 'buy' ? 'var(--color-profit)' : 'var(--color-loss)', fontWeight: 600 }}>
-                      {trade.side.toUpperCase()}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>{new Date(trade.entryTimestamp).toLocaleString()}</td>
-                  <td style={tdStyle}>${trade.entryPrice.toLocaleString()}</td>
-                  <td style={tdStyle}>{new Date(trade.exitTimestamp).toLocaleString()}</td>
-                  <td style={tdStyle}>${trade.exitPrice.toLocaleString()}</td>
-                  <td style={{ ...tdStyle, color: trade.pnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
-                    {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toFixed(2)}
-                  </td>
-                  <td style={{ ...tdStyle, color: trade.pnlPct >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
-                    {trade.pnlPct >= 0 ? '+' : ''}{trade.pnlPct.toFixed(2)}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

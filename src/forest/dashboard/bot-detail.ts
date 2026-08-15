@@ -3,7 +3,7 @@
 
 'use server';
 
-import { getBotManager, isGridConfig, isMeanRevConfig } from '@/tree/bot';
+import { getBotManager, isGridConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
 import { getBotCards, type BotCardData } from './bot-kpis';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
@@ -113,7 +113,7 @@ export async function getTradeHistory(botId: string, limit = 20): Promise<TradeR
         side: (details.side as 'buy' | 'sell') ?? 'buy',
         price: Number(details.price) || 0,
         quantity: Number(details.quantity) || 0,
-        pnl: details.pnl != null ? Number(details.pnl) : null,
+        pnl: details.pnl !== null && details.pnl !== undefined ? Number(details.pnl) : null,
         status: 'filled' as const,
         openedAt: row.created_at,
       };

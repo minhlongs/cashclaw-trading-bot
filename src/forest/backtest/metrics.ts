@@ -15,7 +15,7 @@ import type { Fill } from './paper-exchange';
  * Convert raw fills into BacktestTrade records.
  * Uses FIFO: each buy is paired with the next sell on the opposite side.
  */
-export function buildTradesFromFills(fills: Fill[], feePct: number, capitalStart: number): BacktestTrade[] {
+export function buildTradesFromFills(fills: Fill[], _feePct: number, _capitalStart: number): BacktestTrade[] {
   // Track capital after each fill to identify realized P&L from sells
   // We'll use a "trade pot" approach: track capital committed to open positions,
   // realized when sold.

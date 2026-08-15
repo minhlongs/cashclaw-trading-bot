@@ -5,8 +5,6 @@ import type {
   OrderRequest,
 } from '../exchange/types';
 import type {
-  BotTrade,
-  BotConfig,
   GridBotConfig,
   MeanRevBotConfig,
   BotCallbacks,

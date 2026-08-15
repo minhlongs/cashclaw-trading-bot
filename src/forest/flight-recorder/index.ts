@@ -4,8 +4,9 @@
 
 import { createServerClient } from '@/lib/db/client';
 import type { D1Database } from '@/lib/db/types';
-import type { BotRecord, FillRecord, TickRecord, NewBotInput, NewFillInput, NewTickInput } from './flight-recorder-types';
-import { formatBotRow, formatFillRow, formatTickRow } from './flight-recorder-helpers';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- BotRecord used in query results; NewBotInput/NewTickInput/NewFillInput used in insert helpers
+import type { BotRecord, NewBotInput, NewTickInput, NewFillInput } from './flight-recorder-types';
+import { formatBotRow } from './flight-recorder-helpers';
 
 const INSERT_BOT = `INSERT INTO bots
   (id, user_id, name, strategy, pair, exchange, status, config_json, capital_allocated, capital_used, total_pnl, win_count, loss_count, max_drawdown, created_at, updated_at)

@@ -16,7 +16,6 @@ export function MonitoringClient() {
 
   const fetchData = useCallback(async () => {
     try {
-      setLoading(true);
       setError(null);
 
       const [healthRes, metricsRes, killswitchRes] = await Promise.all([
@@ -46,7 +45,8 @@ export function MonitoringClient() {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchData is useCallback-memoized; setState only fires on async completion
+    void fetchData();
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [fetchData]);

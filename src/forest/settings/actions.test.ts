@@ -22,6 +22,7 @@ const mockManager = {
 vi.mock('@/tree/bot', () => ({ getBotManager: () => mockManager }));
 
 import { createServerClient } from '@/lib/db/client';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- these imports trigger vitest mock wiring; actual calls go through action() helper
 import { emergencyHalt, resumeFromHalt, resetAllBots, getSettings, updateExchangeCredentials, updateRiskLimits } from './actions';
 
 const DEFAULT_SETTINGS_ROW = {

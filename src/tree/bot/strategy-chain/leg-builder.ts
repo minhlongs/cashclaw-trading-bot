@@ -1,7 +1,7 @@
 // Chain leg builder — OmniRoute Phase 4
 // Constructs StrategyChain from BotConfig legs; supports optional fallback.
 
-import type { ChainStrategy, StrategyChain, ChainLeg, StrategyContext, TradeSignal } from './types';
+import type { ChainStrategy, StrategyChain } from './types';
 import { createGridChainStrategy } from './strategies/grid';
 import { createMeanRevChainStrategy } from './strategies/mean-reversion';
 import type { GridBotConfig, MeanRevBotConfig, BotConfig } from '@/tree/bot/types';

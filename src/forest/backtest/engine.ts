@@ -1,7 +1,7 @@
 // Backtest Engine — deterministic simulation over OHLCV candles
 // Strategy classes emit fills via their callbacks; we record them and compute metrics.
 
-import type { BotConfig, GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
+import type { GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
 import type { Ticker } from '@/tree/exchange/types';
 import { GridStrategy } from '@/tree/bot/strategies/grid';
 import { MeanRevStrategy } from '@/tree/bot/strategies/mean-reversion';

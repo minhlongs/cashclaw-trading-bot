@@ -8,6 +8,24 @@ interface KillswitchCardProps {
   killswitch: KillswitchResponse;
 }
 
+function getBadgeClass(killswitch: KillswitchResponse): string {
+  if (killswitch.halted) return 'badge-error';
+  if (killswitch.enabled) return 'badge-profit';
+  return 'badge-neutral';
+}
+
+function getBadgeLabel(killswitch: KillswitchResponse): string {
+  if (killswitch.halted) return 'Da kich hoat';
+  if (killswitch.enabled) return 'San sang';
+  return 'Tat';
+}
+
+function getStatusText(killswitch: KillswitchResponse): string {
+  if (killswitch.halted) return 'DA KICH HOAT';
+  if (killswitch.enabled) return 'Binh thuong';
+  return 'Tat';
+}
+
 export function KillswitchCard({ killswitch }: KillswitchCardProps) {
   return (
     <div className="panel">
@@ -17,10 +35,8 @@ export function KillswitchCard({ killswitch }: KillswitchCardProps) {
           Killswitch
         </div>
         <div className="panel-actions">
-          <span
-            className={`badge ${killswitch.halted ? 'badge-error' : killswitch.enabled ? 'badge-profit' : 'badge-neutral'}`}
-          >
-            {killswitch.halted ? 'Da kich hoat' : killswitch.enabled ? 'San sang' : 'Tat'}
+          <span className={`badge ${getBadgeClass(killswitch)}`}>
+            {getBadgeLabel(killswitch)}
           </span>
         </div>
       </div>
@@ -28,7 +44,7 @@ export function KillswitchCard({ killswitch }: KillswitchCardProps) {
         <MetricRow
           icon={Shield}
           label="Trang thai"
-          value={killswitch.halted ? 'DA KICH HOAT' : killswitch.enabled ? 'Binh thuong' : 'Tat'}
+          value={getStatusText(killswitch)}
           color={killswitch.halted ? 'var(--color-loss)' : 'var(--color-profit)'}
         />
         {killswitch.halted && killswitch.haltReason && (

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { encrypt, decrypt } from './crypto';
 
 // Generate a valid 256-bit key for testing

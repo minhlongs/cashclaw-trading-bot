@@ -2,6 +2,7 @@
 // Triggers on: daily loss limit, consecutive losses, manual halt, system error
 
 import type { KillswitchCallbacks, KillswitchConfig, KillswitchState } from './killswitch-types';
+import type { OrderResult } from '@/tree/exchange/types';
 export type { KillswitchCallbacks, KillswitchConfig, KillswitchState };
 
 export class Killswitch {
@@ -70,12 +71,12 @@ export class Killswitch {
 
   onOrderPlaced(order: { id: string; symbol?: string }): void {
     if (!this.state.enabled) return;
-    this.callbacks.onOrderPlaced(order as any);
+    this.callbacks.onOrderPlaced(order as unknown as OrderResult);
   }
 
   onOrderFilled(order: { id: string; pnl?: number; symbol?: string }): void {
     if (!this.state.enabled) return;
-    this.callbacks.onOrderFilled(order as any);
+    this.callbacks.onOrderFilled(order as unknown as OrderResult);
     if (this.state.halted) return;
     const pnl = order.pnl ?? 0;
     this.state.dailyPnl += pnl;

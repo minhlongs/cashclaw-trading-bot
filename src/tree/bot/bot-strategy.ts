@@ -5,14 +5,15 @@ import type {
   OrderRequest,
   OrderResult,
 } from '../exchange/types';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- BotConfig used in line 54 type assertion; StrategyContext used in line 75 build context
 import type {
   BotTrade,
   BotConfig,
+  StrategyContext,
   GridBotConfig,
   MeanRevBotConfig,
-  StrategyContext,
 } from './types';
-import { buildDefaultChain, type StrategyChain } from './strategy-chain';
+import { type StrategyChain, buildDefaultChain } from './strategy-chain';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
 

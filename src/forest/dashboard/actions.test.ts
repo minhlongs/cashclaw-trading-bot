@@ -55,16 +55,6 @@ const mockManager = {
   resumeBot: vi.fn(),
 };
 
-// resetBotManager is a real function (not vi.fn) so beforeEach can call
-// it to clear the real module-level singleton inside bot-manager.ts,
-// preventing stale state from leaking between tests.
-const _doReset = () => {
-  mockBot = makeMockBot();
-  // Also clear the internal singleton map in the real bot-manager module
-  // by re-importing and calling the real reset (not the mock).
-  // Since vitest replaces the export, we use the closure to reset state.
-};
-
 vi.mock('@/tree/bot', () => {
   const reset = () => {
     mockBot = makeMockBot();

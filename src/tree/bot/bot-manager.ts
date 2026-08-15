@@ -1,22 +1,20 @@
 // Bot Manager — singleton orchestrator for all bot instances
 // Types extracted to bot-manager-types.ts, helpers to bot-manager-helpers.ts.
 
-import type { ExchangeAdapter, ExchangeConfig, ExchangeId } from '../exchange/types';
-import type { BotConfig, BotStatus } from './types';
-import type { TradeEventType } from '../telemetry/types';
+import type { ExchangeAdapter, ExchangeId } from '../exchange/types';
 import { Killswitch } from './killswitch';
 import { BotInstance } from './bot-instance';
-import type { TelemetryWriter } from '../telemetry';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- TelemetryWriter used in BotManager; TradeEventType used in emitTelemetry (line 210)
+import type { TelemetryWriter, TradeEventType } from '../telemetry';
 import { patchBot } from '@/forest/bot/d1-adapter';
 import { createD1Callbacks, persistNewBot } from './bot-manager-helpers';
-import { createServerClient } from '@/lib/db/client';
 import { createLogger } from '@/lib/logger';
 import { createPaperAdapter } from './paper-adapter';
 import { RequestQueue, QueuedExchangeAdapter } from '../exchange/queue';
 import { LiveExchange } from '../exchange/live';
 
 const log = createLogger('bot-manager');
-import { toD1Status, type BotManagerDependencies, type CreateBotRequest, type D1BotStatus } from './bot-manager-types';
+import { toD1Status, type BotManagerDependencies, type CreateBotRequest } from './bot-manager-types';
 export type { BotManagerDependencies, CreateBotRequest, D1BotStatus } from './bot-manager-types';
 
 export class BotManager {
