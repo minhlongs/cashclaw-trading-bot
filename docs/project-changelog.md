@@ -43,3 +43,12 @@
 
 ### i18n Consolidation — Commit `0a1b5c9`
 - 18 source files migrated from manual bilingual patterns (labelVi/labelEn, isEn ternaries, inline t(vi, en) helpers, hardcoded strings) to `useTranslations()` from next-intl. All customer-facing strings now flow through vi.json/en.json (244 keys, in sync). Protected wizard flow logic untouched. Dead page.constants.ts removed.
+
+### Rate-Limit Fix — Commit `78b29d0`
+- Added `ok: false` to rate-limit responses in `POST /api/bots` and `POST /api/settings` — was returning bare `{ error }` without the documented `ok` field.
+
+### Dead Code Cleanup — Commit `54973ea`
+- Wizard `FIELD_KEY_MAP` and `STRATEGY_KEY_MAP` deduplicated into `wizard-types.ts`. Empty barrel `strategies/index.ts` removed.
+
+### ExchangeOrchestrator Result<T> — Commit `2b2308a`
+- 6 public methods (fetchTicker, fetchOrderBook, placeOrder, cancelOrder, fetchOrder, fetchBalances) now return `Result<T>` instead of throwing. Killswitch/circuit-breaker paths return `err()`. 7 type-guard tests added for `hasStrategyChain`, `isGridConfig`, `isMeanRevConfig`. V2 wiring documented.

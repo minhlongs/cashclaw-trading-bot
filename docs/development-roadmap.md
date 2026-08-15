@@ -22,6 +22,12 @@
 | Backtest wiring | Backtest page loads real bots from D1 into selector (was empty) | commit `9f5bd1f` |
 | Phase M docs | README + architecture/code-standards/roadmap/changelog; lint zero-warning gate | commit `d44abdb` |
 | Phase N i18n | 18 files migrated to useTranslations(); vi.json/en.json 244 keys synced | commit `0a1b5c9` |
+| Phase O rate-limit | Fixed ok:false missing in bots/settings rate-limit responses | commit `78b29d0` |
+| Phase P dead code | Wizard maps deduplicated, empty barrel removed | commit `54973ea` |
+| Phase Q orchestrator | ExchangeOrchestrator 6 methods → Result<T>, type-guard tests added, v2 wiring documented | commit `2b2308a` |
+| Phase O rate-limit | Fixed ok:false missing in bots/settings rate-limit responses | commit `78b29d0` |
+| Phase P dead code | Wizard maps deduplicated, empty barrel removed | commit `54973ea` |
+| Phase Q orchestrator | ExchangeOrchestrator 6 methods → Result<T>, 7 type-guard tests, v2 wiring documented | commit `2b2308a` |
 
 ## Current State
 
