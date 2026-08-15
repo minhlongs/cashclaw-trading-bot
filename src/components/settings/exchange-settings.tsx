@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Shield, Key, Loader2 } from 'lucide-react';
 import type { SettingsData } from '@/forest/settings/actions';
 
@@ -15,6 +15,10 @@ export function ExchangeSettings({ exchanges, onSave }: ExchangeSettingsProps) {
   const [apiSecret, setApiSecret] = useState('');
   const [testnet, setTestnet] = useState(true);
   const [saving, setSaving] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const handleEdit = (exchange: string) => {
     const config = exchanges[exchange as keyof typeof exchanges];
@@ -29,9 +33,9 @@ export function ExchangeSettings({ exchanges, onSave }: ExchangeSettingsProps) {
     setSaving(true);
     try {
       await onSave(editing, apiKey, apiSecret, testnet);
-      setEditing(null);
+      if (mountedRef.current) setEditing(null);
     } finally {
-      setSaving(false);
+      if (mountedRef.current) setSaving(false);
     }
   };
 

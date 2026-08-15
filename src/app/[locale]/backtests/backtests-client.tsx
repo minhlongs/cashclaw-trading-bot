@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { runBacktestAction } from '@/forest/backtest/actions';
 
@@ -60,6 +60,10 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BacktestResult | null>(null);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const runBacktest = useCallback(async () => {
     if (!selectedBotId) {
@@ -97,7 +101,7 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
     } catch (err) {
       setError(err instanceof Error ? err.message : t('requestFailed'));
     } finally {
-      setIsRunning(false);
+      if (mountedRef.current) setIsRunning(false);
     }
   }, [selectedBotId, interval, initialBots, t]);
 

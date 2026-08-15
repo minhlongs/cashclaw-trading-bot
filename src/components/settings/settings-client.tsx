@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Power, AlertTriangle, Loader2 } from 'lucide-react';
 import type { SettingsData } from '@/forest/settings/actions';
 import { ExchangeSettings } from './exchange-settings';
@@ -29,22 +29,28 @@ export function SettingsClient() {
   const [loading, setLoading] = useState(true);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [ksSaving, setKsSaving] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const loadSettings = async () => {
       try {
         const res = await fetch('/api/settings');
         if (res.ok) {
           const data: { ok: boolean; data?: SettingsData } = await res.json();
-          if (data.ok && data.data) setSettings(data.data);
+          if (data.ok && data.data && !cancelled) setSettings(data.data);
         }
       } catch {
         // Network error or unauthenticated — use defaults
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     loadSettings();
+    return () => { cancelled = true; };
   }, []);
 
   const handleExchangeSave = async (exchange: string, apiKey: string, apiSecret: string, testnet: boolean) => {
@@ -132,7 +138,7 @@ export function SettingsClient() {
     } catch {
       setSaveMessage('Network error');
     } finally {
-      setKsSaving(false);
+      if (mountedRef.current) setKsSaving(false);
     }
   };
 
@@ -155,7 +161,7 @@ export function SettingsClient() {
     } catch {
       setSaveMessage('Network error');
     } finally {
-      setKsSaving(false);
+      if (mountedRef.current) setKsSaving(false);
     }
   };
 

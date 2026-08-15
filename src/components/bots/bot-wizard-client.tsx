@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { type Step, type FormState, GRID_DEFAULTS, MEANREV_DEFAULTS } from './wizard-types';
@@ -29,6 +29,10 @@ export function BotWizardClient() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -75,11 +79,13 @@ export function BotWizardClient() {
         throw new Error(data.error || t('submitError'));
       }
       setSubmitSuccess(true);
-      setTimeout(() => router.push(`/${locale}/bots/${data.data?.id}`), 1500);
+      setTimeout(() => {
+        if (mountedRef.current) router.push(`/${locale}/bots/${data.data?.id}`);
+      }, 1500);
     } catch (e: unknown) {
-      setSubmitError(e instanceof Error ? e.message : t('submitError'));
+      if (mountedRef.current) setSubmitError(e instanceof Error ? e.message : t('submitError'));
     } finally {
-      setSubmitting(false);
+      if (mountedRef.current) setSubmitting(false);
     }
   };
 

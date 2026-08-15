@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { RefreshCw, AlertTriangle, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { MonitoringData } from './monitoring-types';
@@ -15,6 +15,10 @@ export function MonitoringClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -42,7 +46,7 @@ export function MonitoringClient() {
       const msg = fetchError instanceof Error ? fetchError.message : t('loadFailed');
       setError(msg);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, [t]);
 

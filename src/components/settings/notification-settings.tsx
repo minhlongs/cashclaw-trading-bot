@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Zap, Loader2 } from 'lucide-react';
 
 interface NotificationSettingsProps {
@@ -15,13 +15,17 @@ export function NotificationSettings({ telegram, onSave }: NotificationSettingsP
   const [botToken, setBotToken] = useState(telegram.botToken);
   const [chatId, setChatId] = useState(telegram.chatId);
   const [saving, setSaving] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       await onSave(botToken, chatId);
     } finally {
-      setSaving(false);
+      if (mountedRef.current) setSaving(false);
     }
   };
 

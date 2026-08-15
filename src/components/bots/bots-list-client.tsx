@@ -39,6 +39,7 @@ export default function BotsListClient() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
+    let cancelled = false;
     const fetchBots = async () => {
       try {
         setLoading(true);
@@ -48,19 +49,22 @@ export default function BotsListClient() {
 
         const data = raw as { ok?: boolean; data?: BotCardData[] };
 
-        if (data.ok && Array.isArray(data.data)) {
-          setBots(data.data);
-        } else {
-          setError('Failed to fetch bots');
+        if (!cancelled) {
+          if (data.ok && Array.isArray(data.data)) {
+            setBots(data.data);
+          } else {
+            setError('Failed to fetch bots');
+          }
         }
       } catch {
-        setError('Failed to fetch bots');
+        if (!cancelled) setError('Failed to fetch bots');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchBots();
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = bots.filter((bot) => {
