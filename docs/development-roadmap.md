@@ -32,6 +32,7 @@
 | Phase U.2 wizard config | Wizard config pass-through wired: config record accepted by Zod, coerceNum helper, bot-create handler honors spacing_pct/grid_levels/drawdown | commit `b18ca86` |
 | Phase V dead code | Deleted create-bot.ts + 3 tests + quality-gates.json + bot-management/ module (556 lines). Flaky test fixes in 7 client components (setState-after-teardown) | commits `514bf30`, `e2d19aa` |
 | Phase VI layer fix | Eliminated BotManager layer violation: ExchangeOrchestrator type re-exported from tree/bot/bot-manager-types.ts | commit `8e4c85f` |
+| Phase VII queue drain cron | CF Cron trigger fires every 5 minutes to drain exchange request queues; worker.ts scheduled() handler wired with logger; wrangler.jsonc triggers.crons added; duplicate-imports lint issue fixed via consolidated type+value import | commit `ddb0309` |
 
 ## Current State
 
@@ -44,7 +45,6 @@
 ## Known Backlog (v2 and beyond)
 
 - **BotManager hydration architecture** — replace in-memory registry + per-request hydration with a cold-start-resilient store (Durable Objects or direct-D1 reads everywhere).
-- **Queue drain wiring** — request queue exists; drain/cron wiring deferred.
 - **Cross-exchange routing** — routing across binance/bybit/okx at runtime.
 - **Live exchange** — CCXT on Workers feasibility is unresolved; requires D1 provisioning, live engine wiring, and explicit customer opt-in.
 - **Coverage tail** — 87.5%→90% possible (page-client, LandingClient, CtaClient) but low signal for v1; revisit after more business-logic tests.

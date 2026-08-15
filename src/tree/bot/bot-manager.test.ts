@@ -29,6 +29,7 @@ vi.mock('./bot-manager-helpers', () => ({
     onError: vi.fn(),
   })),
   persistNewBot: vi.fn(async () => {}),
+  patchBot: vi.fn(async () => {}),
 }));
 
 vi.mock('./paper-adapter', () => ({

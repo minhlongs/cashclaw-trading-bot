@@ -2,8 +2,8 @@
 // Types extracted to bot-manager-types.ts, helpers to bot-manager-helpers.ts.
 
 import type { ExchangeAdapter, ExchangeId } from '../exchange/types';
-import { toD1Status, type ExchangeOrchestrator, type BotManagerDependencies, type CreateBotRequest, type D1BotStatus } from './bot-manager-types';
-export { toD1Status, type ExchangeOrchestrator, type BotManagerDependencies, type CreateBotRequest, type D1BotStatus };
+import { toD1Status, type ExchangeOrchestrator, type BotManagerDependencies, type CreateBotRequest } from './bot-manager-types';
+export type { ExchangeOrchestrator, BotManagerDependencies, CreateBotRequest } from './bot-manager-types';
 
 import type { TelemetryWriter, TradeEventType } from '../telemetry';
 import { Killswitch } from './killswitch';
