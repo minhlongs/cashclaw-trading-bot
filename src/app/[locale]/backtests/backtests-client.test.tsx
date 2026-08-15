@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import BacktestsClient from './backtests-client';
+import type { BacktestResult } from '@/forest/backtest/types';
+import type { BacktestRunOutput } from '@/forest/backtest/actions';
 
 /* ------------------------------------------------------------------ */
 /* Mocks                                                              */
@@ -42,7 +44,7 @@ const BOTS = [
   { id: 'bot-2', name: 'MeanRev ETH', strategy: 'mean_reversion', configJson: '{}' },
 ];
 
-function makeResult(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+function makeResult(overrides: Partial<BacktestResult> = {}): BacktestResult {
   return {
     id: 'res-1',
     bot_id: 'bot-1',
@@ -187,7 +189,8 @@ describe('BacktestsClient — initial render', () => {
 
 describe('BacktestsClient — Vietnamese success (vi)', () => {
   it('renders metrics, equity curve, and trades on success', async () => {
-    runMock.mockResolvedValue({ success: true, result: profitData });
+    const output: BacktestRunOutput = { success: true, result: profitData, candlesFetched: 100 };
+    runMock.mockResolvedValue(output);
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -216,7 +219,8 @@ describe('BacktestsClient — Vietnamese success (vi)', () => {
   });
 
   it('displays error from a failed action response', async () => {
-    runMock.mockResolvedValue({ success: false, error: 'invalid api key' });
+    const output: BacktestRunOutput = { success: false, error: 'invalid api key', candlesFetched: 0 };
+    runMock.mockResolvedValue(output);
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -227,7 +231,8 @@ describe('BacktestsClient — Vietnamese success (vi)', () => {
   });
 
   it('displays fallback "Backtest that bai" when action returns success:false without error', async () => {
-    runMock.mockResolvedValue({ success: false });
+    const output: BacktestRunOutput = { success: false, candlesFetched: 0 };
+    runMock.mockResolvedValue(output);
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -260,7 +265,7 @@ describe('BacktestsClient — Vietnamese success (vi)', () => {
   });
 
   it('shows running state and re-enables when action resolves', async () => {
-    let resolve: (v: unknown) => void;
+    let resolve: (v: BacktestRunOutput) => void;
     runMock.mockImplementation(() => new Promise((r) => { resolve = r; }));
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
@@ -270,12 +275,13 @@ describe('BacktestsClient — Vietnamese success (vi)', () => {
 
     expect(screen.getByText('Dang chay...')).toBeTruthy();
     expect(screen.getByRole('button')).toBeDisabled();
-    resolve!({ success: true, result: profitData });
+    resolve!({ success: true, result: profitData, candlesFetched: 100 });
     await waitFor(() => expect(screen.getByRole('button')).toBeEnabled());
   });
 
   it('clears prior error state when action succeeds', async () => {
-    runMock.mockResolvedValueOnce({ success: false, error: 'first error' });
+    const errOutput: BacktestRunOutput = { success: false, error: 'first error', candlesFetched: 0 };
+    runMock.mockResolvedValueOnce(errOutput);
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -283,7 +289,7 @@ describe('BacktestsClient — Vietnamese success (vi)', () => {
     await user.click(screen.getByRole('button'));
     expect(await screen.findByText('first error')).toBeTruthy();
 
-    runMock.mockResolvedValueOnce({ success: true, result: profitData });
+    runMock.mockResolvedValueOnce({ success: true, result: profitData, candlesFetched: 100 });
     await user.click(screen.getByRole('button'));
     expect(await screen.findByText('Chi So Hieu Suat')).toBeTruthy();
     expect(screen.queryByText('first error')).toBeNull();
@@ -315,7 +321,7 @@ describe('BacktestsClient — English success (en)', () => {
   });
 
   it('renders English section headings on success', async () => {
-    runMock.mockResolvedValue({ success: true, result: profitData });
+    runMock.mockResolvedValue({ success: true, result: profitData, candlesFetched: 100 });
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -340,7 +346,8 @@ describe('BacktestsClient — English success (en)', () => {
   });
 
   it('shows "Backtest failed" when action returns no error field', async () => {
-    runMock.mockResolvedValue({ success: false });
+    const output: BacktestRunOutput = { success: false, candlesFetched: 0 };
+    runMock.mockResolvedValue(output);
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -364,7 +371,7 @@ describe('EquityCurveChart — data length guard', () => {
     const shortResult = makeResult({
       equity_curve_json: [{ timestamp: 1700000000000, equity: 10000, drawdownPct: 0 }],
     });
-    runMock.mockResolvedValue({ success: true, result: shortResult });
+    runMock.mockResolvedValue({ success: true, result: shortResult, candlesFetched: 100 });
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -378,7 +385,7 @@ describe('EquityCurveChart — data length guard', () => {
   });
 
   it('renders SVG chart when equity_curve has 2 or more points', async () => {
-    runMock.mockResolvedValue({ success: true, result: makeResult() });
+    runMock.mockResolvedValue({ success: true, result: makeResult(), candlesFetched: 100 });
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -402,7 +409,7 @@ describe('RecentTradesTable — pnl styling', () => {
   });
 
   it('renders profit trade with plus prefix and profit color', async () => {
-    runMock.mockResolvedValue({ success: true, result: profitData });
+    runMock.mockResolvedValue({ success: true, result: profitData, candlesFetched: 100 });
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -415,7 +422,7 @@ describe('RecentTradesTable — pnl styling', () => {
   });
 
   it('renders loss trade with minus sign and loss color', async () => {
-    runMock.mockResolvedValue({ success: true, result: lossData });
+    runMock.mockResolvedValue({ success: true, result: lossData, candlesFetched: 100 });
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -428,7 +435,7 @@ describe('RecentTradesTable — pnl styling', () => {
   });
 
   it('renders profit PnL percentage with plus sign', async () => {
-    runMock.mockResolvedValue({ success: true, result: profitData });
+    runMock.mockResolvedValue({ success: true, result: profitData, candlesFetched: 100 });
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -439,7 +446,7 @@ describe('RecentTradesTable — pnl styling', () => {
   });
 
   it('renders loss PnL percentage with loss color', async () => {
-    runMock.mockResolvedValue({ success: true, result: lossData });
+    runMock.mockResolvedValue({ success: true, result: lossData, candlesFetched: 100 });
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -462,7 +469,7 @@ describe('MetricCard styling', () => {
   });
 
   it('renders positive PnL value with profit color', async () => {
-    runMock.mockResolvedValue({ success: true, result: profitData });
+    runMock.mockResolvedValue({ success: true, result: profitData, candlesFetched: 100 });
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 
@@ -475,7 +482,7 @@ describe('MetricCard styling', () => {
   });
 
   it('renders negative PnL value with loss color', async () => {
-    runMock.mockResolvedValue({ success: true, result: lossData });
+    runMock.mockResolvedValue({ success: true, result: lossData, candlesFetched: 100 });
     render(<BacktestsClient initialBots={BOTS} />);
     const user = userEvent.setup();
 

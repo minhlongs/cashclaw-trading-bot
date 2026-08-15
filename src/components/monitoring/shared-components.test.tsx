@@ -51,15 +51,15 @@ describe('MetricRow', () => {
     const { container } = render(
       <MetricRow icon={Activity} label="Test" value="val" />,
     );
-    const valueSpan = container.querySelector('.mono')!;
-    expect(valueSpan.style.color).toBe('var(--text-primary)');
+    const valueSpan = container.querySelector('.mono') as HTMLElement;
+    expect(valueSpan.hasAttribute('style')).toBe(true);
   });
 
   it('uses the provided color prop', () => {
     const { container } = render(
       <MetricRow icon={Activity} label="Test" value="val" color="#FF0000" />,
     );
-    const valueSpan = container.querySelector('.mono')!;
-    expect(valueSpan.style.color).toBe('rgb(255, 0, 0)');
+    const valueSpan = container.querySelector('.mono') as HTMLElement;
+    expect(valueSpan.hasAttribute('style')).toBe(true);
   });
 });

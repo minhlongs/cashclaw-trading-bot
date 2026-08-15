@@ -7,6 +7,8 @@ const health: HealthResponse = { status: 'ok', timestamp: 1720000000000, version
 const metrics: MetricsResponse = {
   bots: { total: 2, running: 1, paused: 1 },
   performance: { totalPnl: 150.5, winRate: 60, totalTrades: 10, totalWins: 6, totalLosses: 4 },
+  uptime: 3600,
+  timestamp: 1720000000000,
 };
 const killswitch: KillswitchResponse = {
   enabled: true, halted: false, haltReason: null, haltedAt: null,
