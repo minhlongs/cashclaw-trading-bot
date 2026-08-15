@@ -17,6 +17,7 @@ function makeReq(method: string, pathname: string, cookies: Record<string, strin
     method,
     nextUrl: { pathname },
     cookies: { get: (name: string) => cookieMap.get(name) },
+    headers: {},
   } as any;
 }
 
@@ -205,9 +206,31 @@ describe('middleware', () => {
 
   /* ── DB unavailable fallback ────────────────────────────────── */
 
-  it('falls back to cookie check when DB unavailable', async () => {
+  it('falls back to cookie check when DB unavailable (dev mode)', async () => {
     mockDbUnavailable();
     const res = await middleware(makeReq('POST', '/api/bots', { session_id: 'dev-ok' }));
     expect(res.status).toBe(200);
+  });
+
+  it('returns 503 when DB unavailable in production', async () => {
+    mockDbUnavailable();
+    const original = process.env.NODE_ENV;
+    try {
+      process.env.NODE_ENV = 'production';
+      const res = await middleware(makeReq('POST', '/api/bots', { session_id: 'prod-ok' }));
+      expect(res.status).toBe(503);
+    } finally {
+      process.env.NODE_ENV = original;
+    }
+  });
+
+  it('strips client-supplied x-user-id header', async () => {
+    mockDbSession('server-user', Date.now() + 86400000);
+    const req = makeReq('POST', '/api/bots', { session_id: 'valid-session' });
+    req.headers = { 'x-user-id': 'spoofed-user' };
+    const res = await middleware(req);
+    expect(res.status).toBe(200);
+    // Response headers should NOT contain client-supplied x-user-id
+    expect(res.headers.get('x-user-id')).toBeNull();
   });
 });

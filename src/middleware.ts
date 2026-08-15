@@ -44,7 +44,11 @@ export async function middleware(req: NextRequest) {
     );
   }
 
-  // Validate session against D1 (graceful fallback if DB unavailable in dev)
+  // Strip any client-supplied x-user-id to prevent spoofing
+  const sanitizedHeaders = new Headers(req.headers);
+  sanitizedHeaders.delete('x-user-id');
+
+  // Validate session against D1
   const db = createServerClient();
   if (db) {
     try {
@@ -61,10 +65,9 @@ export async function middleware(req: NextRequest) {
         );
       }
 
-      // Attach userId for downstream handlers
-      const response = NextResponse.next();
-      response.headers.set('x-user-id', results[0].user_id);
-      return response;
+      // Set server-verified userId on request (overrides any client value)
+      sanitizedHeaders.set('x-user-id', results[0].user_id);
+      return NextResponse.next({ request: { headers: sanitizedHeaders } });
     } catch {
       // D1 query failed — deny request rather than silently allowing
       return NextResponse.json(
@@ -74,7 +77,14 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // No DB available (local dev) — accept with valid cookie
+  // No DB available (local dev only) — accept with valid cookie
+  // In production this should never happen; fail-closed.
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { ok: false, error: 'Session store unavailable' },
+      { status: 503 }
+    );
+  }
   return NextResponse.next();
 }
 
