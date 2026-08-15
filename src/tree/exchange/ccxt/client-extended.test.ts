@@ -43,10 +43,10 @@ const makeClient = () => new CCXTTransformer({ exchange: 'binance' });
 
 describe('CCXTTransformer - extended coverage', () => {
   describe('getExchange (unsupported)', () => {
-    it('throws for unsupported exchange', () => {
+    it('throws for unsupported exchange', async () => {
       const client = new CCXTTransformer({ exchange: 'unknown' });
       // getExchange is private; call via any public method to trigger it
-      expect(client.fetchTicker('unknown', 'BTC/USDT')).rejects.toThrow('Unsupported exchange: unknown');
+      await expect(client.fetchTicker('unknown', 'BTC/USDT')).rejects.toThrow('Unsupported exchange: unknown');
     });
   });
 

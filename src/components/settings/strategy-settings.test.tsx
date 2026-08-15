@@ -56,23 +56,25 @@ describe('StrategySettings', () => {
 
   it('disables save button while saving', async () => {
     const { user, risk } = setup();
+    let resolveSave!: () => void;
     const onSave = vi.fn().mockImplementation(
-      () => new Promise<void>((resolve) => setTimeout(resolve, 100))
+      () => new Promise<void>((resolve) => { resolveSave = resolve; })
     );
     render(<StrategySettings risk={risk} onSave={onSave} />);
 
     const button = screen.getByRole('button', { name: /save parameters/i });
     await user.click(button);
 
-    await waitFor(() => {
-      expect(button).toBeDisabled();
-    });
+    await waitFor(() => expect(button).toBeDisabled());
+    resolveSave();
+    await waitFor(() => expect(button).not.toBeDisabled());
   });
 
   it('shows loading spinner while saving', async () => {
     const { user, risk } = setup();
+    let resolveSave!: () => void;
     const onSave = vi.fn().mockImplementation(
-      () => new Promise<void>((resolve) => setTimeout(resolve, 100))
+      () => new Promise<void>((resolve) => { resolveSave = resolve; })
     );
     render(<StrategySettings risk={risk} onSave={onSave} />);
 
@@ -81,6 +83,11 @@ describe('StrategySettings', () => {
     await waitFor(() => {
       const spinner = document.querySelector('.animate-spin');
       expect(spinner).toBeInTheDocument();
+    });
+    resolveSave();
+    await waitFor(() => {
+      const spinner = document.querySelector('.animate-spin');
+      expect(spinner).not.toBeInTheDocument();
     });
   });
 
