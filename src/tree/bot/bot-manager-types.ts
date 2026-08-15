@@ -25,7 +25,7 @@ export interface CreateBotRequest {
 
 export type D1BotStatus = 'draft' | 'paper_test' | 'live_running' | 'paused' | 'error' | 'stopped';
 
-export function toD1Status(status: BotStatus): D1BotStatus {
+export const toD1Status = (status: BotStatus): D1BotStatus => {
   switch (status) {
     case 'running': return 'paper_test';
     case 'paused': return 'paused';
@@ -33,4 +33,4 @@ export function toD1Status(status: BotStatus): D1BotStatus {
     case 'error': return 'error';
     case 'idle': return 'draft';
   }
-}
+};

@@ -191,3 +191,17 @@ app.onError((err, c) => {
 });
 
 export default app;
+
+// CF Cron trigger — fires every 5 minutes per wrangler.jsonc [[triggers]]
+// Drains exchange request queues and logs outcome for observability.
+export async function scheduled(_event: { scheduledTime: number }, _env: Env, _ctx: ExecutionContext): Promise<void> {
+  const manager = getBotManager();
+  const report = await manager.drainQueues();
+  const entries = Object.values(report);
+  const total = entries.reduce((sum, e) => sum + e.processed + e.skipped + e.pending, 0);
+  const { createLogger } = await import('@/lib/logger');
+  const log = createLogger('cron');
+  if (total > 0) {
+    log.info(`drained ${total} across ${entries.length} exchange queues`, { processed: entries.reduce((s, e) => s + e.processed, 0) });
+  }
+}

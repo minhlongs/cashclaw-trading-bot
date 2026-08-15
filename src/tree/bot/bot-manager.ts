@@ -2,11 +2,13 @@
 // Types extracted to bot-manager-types.ts, helpers to bot-manager-helpers.ts.
 
 import type { ExchangeAdapter, ExchangeId } from '../exchange/types';
-import type { ExchangeOrchestrator } from './bot-manager-types';
+import { toD1Status, type ExchangeOrchestrator, type BotManagerDependencies, type CreateBotRequest, type D1BotStatus } from './bot-manager-types';
+export { toD1Status, type ExchangeOrchestrator, type BotManagerDependencies, type CreateBotRequest, type D1BotStatus };
+
+import type { TelemetryWriter, TradeEventType } from '../telemetry';
 import { Killswitch } from './killswitch';
 import { BotInstance } from './bot-instance';
- 
-import type { TelemetryWriter, TradeEventType } from '../telemetry';
+
 import { patchBot } from '@/forest/bot/d1-adapter';
 import { createD1Callbacks, persistNewBot } from './bot-manager-helpers';
 import { createLogger } from '@/lib/logger';
@@ -15,8 +17,6 @@ import { RequestQueue, QueuedExchangeAdapter } from '../exchange/queue';
 import { LiveExchange } from '../exchange/live';
 
 const log = createLogger('bot-manager');
-import { toD1Status, type BotManagerDependencies, type CreateBotRequest } from './bot-manager-types';
-export type { BotManagerDependencies, CreateBotRequest, D1BotStatus } from './bot-manager-types';
 
 export class BotManager {
   private bots = new Map<string, BotInstance>();
@@ -36,7 +36,6 @@ export class BotManager {
     };
 
     this.killswitch = new Killswitch(
-
       {
         onHalt: (reason) => {
           this.deps.onLog(`KILLSWITCH HALT: ${reason}`);
@@ -274,4 +273,3 @@ export function resetBotManager(): void {
   manager?.destroy();
   manager = null;
 }
-
