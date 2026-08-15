@@ -214,14 +214,10 @@ describe('middleware', () => {
 
   it('returns 503 when DB unavailable in production', async () => {
     mockDbUnavailable();
-    const original = process.env.NODE_ENV;
-    try {
-      process.env.NODE_ENV = 'production';
-      const res = await middleware(makeReq('POST', '/api/bots', { session_id: 'prod-ok' }));
-      expect(res.status).toBe(503);
-    } finally {
-      process.env.NODE_ENV = original;
-    }
+    vi.stubEnv('NODE_ENV', 'production');
+    const res = await middleware(makeReq('POST', '/api/bots', { session_id: 'prod-ok' }));
+    expect(res.status).toBe(503);
+    vi.unstubAllEnvs();
   });
 
   it('strips client-supplied x-user-id header', async () => {

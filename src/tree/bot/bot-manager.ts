@@ -7,7 +7,7 @@ import type { TradeEventType } from '../telemetry/types';
 import { Killswitch } from './killswitch';
 import { BotInstance } from './bot-instance';
 import type { TelemetryWriter } from '../telemetry';
-import { hydrateFromD1, patchBot } from '@/forest/bot/d1-adapter';
+import { patchBot } from '@/forest/bot/d1-adapter';
 import { createD1Callbacks, persistNewBot } from './bot-manager-helpers';
 import { createServerClient } from '@/lib/db/client';
 import { createLogger } from '@/lib/logger';
@@ -25,7 +25,6 @@ export class BotManager {
   private queues = new Map<string, RequestQueue>();
   private killswitch: Killswitch;
   private deps: Omit<Required<BotManagerDependencies>, 'telemetry' | 'userId'> & { telemetry?: TelemetryWriter; userId?: string };
-  private initialized = false;
 
   constructor(deps: BotManagerDependencies = {}) {
     this.deps = {
@@ -58,20 +57,6 @@ export class BotManager {
         cooldownMinutes: 30,
       },
     );
-  }
-
-  /** Initialize BotManager - load bots from D1 and start them */
-  async initialize(): Promise<void> {
-    if (this.initialized) return;
-
-    if (this.deps.userId) {
-      try {
-        await hydrateFromD1(this.deps.userId);
-      } catch (error) {
-        this.deps.onError(error instanceof Error ? error : new Error(String(error)), 'BotManager.initialize');
-      }
-    }
-    this.initialized = true;
   }
 
   getKillswitch(): Killswitch {
