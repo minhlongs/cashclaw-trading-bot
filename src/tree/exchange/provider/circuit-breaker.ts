@@ -8,20 +8,30 @@ export interface CircuitBreakerOptions {
   threshold: number;      // consecutive failures to trip open
   cooldownMs: number;      // full cooldown before half-open attempt (from trip moment)
   halfOpenAfterMs: number; // minimum time in open before half-open trial
+  onStateChange?: (from: CircuitState, to: CircuitState, timestamp: number) => void;
 }
 
 export class CircuitBreaker {
   private state: CircuitState = 'closed';
   private failureCount = 0;
-
   private readonly threshold: number;
   private readonly cooldownMs: number;
   private readonly halfOpenAfterMs: number;
+  private readonly opts: CircuitBreakerOptions;
+
+  private setState(next: CircuitState): void {
+    const prev = this.state;
+    this.state = next;
+    if (prev !== next && this.opts.onStateChange) {
+      this.opts.onStateChange(prev, next, Date.now());
+    }
+  }
 
   private trippedAt: number | null = null;
   private halfOpenAt: number | null = null;
 
   constructor(opts: CircuitBreakerOptions) {
+    this.opts = opts;
     this.threshold = opts.threshold;
     this.cooldownMs = opts.cooldownMs;
     this.halfOpenAfterMs = opts.halfOpenAfterMs;
@@ -33,7 +43,7 @@ export class CircuitBreaker {
   }
 
   reset(): void {
-    this.state = 'closed';
+    this.setState('closed');
     this.failureCount = 0;
     this.trippedAt = null;
     this.halfOpenAt = null;
@@ -69,7 +79,7 @@ export class CircuitBreaker {
     this.halfOpenAt = null;
 
     if (this.state === 'half_open') {
-      this.state = 'closed';
+      this.setState('closed');
     }
     // in 'closed' state, nothing changes
   }
@@ -93,7 +103,7 @@ export class CircuitBreaker {
     const now = Date.now();
     this.trippedAt = now;
     this.halfOpenAt = now + this.cooldownMs + this.halfOpenAfterMs;
-    this.state = 'open';
+    this.setState('open');
   }
 
   /** Evaluate state transitions based on elapsed time */
@@ -106,7 +116,7 @@ export class CircuitBreaker {
     // After full cooldown period, transition to half_open
     // (halfOpenAt = tripTime + cooldownMs + halfOpenAfterMs)
     if (untilHalfOpen === 0) {
-      this.state = 'half_open';
+      this.setState('half_open');
       // Keep failureCount intact so a single failed trial reopens
     }
   }

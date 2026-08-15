@@ -170,4 +170,42 @@ describe('CircuitBreaker', () => {
       expect(cb.getFailureCount()).toBe(0);
     });
   });
+
+  describe('onStateChange callback', () => {
+    it('notifies on state transitions', async () => {
+      const onChange = vi.fn();
+      const tracked = new CircuitBreaker({
+        threshold: 2,
+        cooldownMs: 5000,
+        halfOpenAfterMs: 2000,
+        onStateChange: onChange,
+      });
+
+      await tracked.execute(failingFn).catch(() => {});
+      await tracked.execute(failingFn).catch(() => {});
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith('closed', 'open', expect.any(Number));
+
+      vi.advanceTimersByTime(7001);
+      tracked.getState(); // triggers half_open transition
+      expect(onChange).toHaveBeenLastCalledWith('open', 'half_open', expect.any(Number));
+
+      await tracked.execute(successFn);
+      expect(onChange).toHaveBeenLastCalledWith('half_open', 'closed', expect.any(Number));
+      expect(onChange).toHaveBeenCalledTimes(3);
+    });
+
+    it('does not notify when state stays the same', async () => {
+      const onChange = vi.fn();
+      const tracked = new CircuitBreaker({
+        threshold: 5,
+        cooldownMs: 1000,
+        halfOpenAfterMs: 1000,
+        onStateChange: onChange,
+      });
+
+      await tracked.execute(failingFn).catch(() => {});
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
 });
