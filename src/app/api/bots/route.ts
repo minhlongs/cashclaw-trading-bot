@@ -4,7 +4,7 @@
 // This is the canonical /api/bots for end users.
 // Operator/CLI access via Bearer token lives in src/worker.ts → /internal/api/bots.
 import { NextResponse } from 'next/server';
-import { botListHandler, botCreateHandler, type CreateBotPayload } from '@/forest/api/routes';
+import { botListHandler, botCreateHandler } from '@/forest/api/routes';
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
 import { z } from 'zod';
 
@@ -16,6 +16,7 @@ const CreateBotSchema = z.object({
   exchange: z.enum(['binance', 'bybit', 'okx']),
   capital: z.number().positive().max(1_000_000),
   mode: z.enum(['paper', 'live']).optional().default('paper'),
+  config: z.record(z.string(), z.number()).optional(),
   gridConfig: z.object({
     lowerPrice: z.number().positive(),
     upperPrice: z.number().positive(),
@@ -50,7 +51,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const body = parsed.data as CreateBotPayload;
-  const result = await botCreateHandler(body);
+  const result = await botCreateHandler(parsed.data);
   return NextResponse.json(result, result.ok ? undefined : { status: 400 });
 }

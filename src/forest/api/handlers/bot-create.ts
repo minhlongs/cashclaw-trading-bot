@@ -8,6 +8,19 @@ import { getBotManager, type CreateBotRequest } from '@/tree/bot';
 import type { GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 
+/** Coerce a numeric config value, clamping to [min, max] and falling back to defaultValue. */
+function coerceNum(
+  config: Record<string, number> | undefined,
+  key: string,
+  defaultValue: number,
+  min: number,
+  max: number,
+): number {
+  const raw = config?.[key];
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return defaultValue;
+  return Math.min(max, Math.max(min, raw));
+}
+
 export interface CreateBotPayload {
   id: string;
   name: string;
@@ -15,7 +28,7 @@ export interface CreateBotPayload {
   pair: string;
   exchange: string;
   capital: number;
-  config: Record<string, number>;
+  config?: Record<string, number>;
   mode?: 'paper' | 'live';
 }
 
@@ -35,37 +48,39 @@ export async function botCreateHandler(
     const manager = getBotManager();
 
     // Map payload to CreateBotRequest — always paper in v1
+    const cfg = payload.config;
+
     const baseConfig = {
       name: payload.name,
       symbol: payload.pair,
       exchange: payload.exchange,
       mode: 'paper' as const,
       capital: payload.capital,
-      maxDrawdownPct: 10,
+      maxDrawdownPct: coerceNum(cfg, 'max_drawdown_pct', 10, 1, 50),
     };
 
     const strategyConfig = payload.strategy === 'grid'
       ? {
           ...baseConfig,
           strategy: 'grid' as const,
-          gridSpacingPct: 1,
-          gridLevels: 10,
-          capitalPerLevelPct: 10,
-          takeProfitPct: 2,
-          stopLossPct: 5,
+          gridSpacingPct: coerceNum(cfg, 'spacing_pct', 1, 0.1, 20),
+          gridLevels: coerceNum(cfg, 'grid_levels', 10, 2, 200),
+          capitalPerLevelPct: coerceNum(cfg, 'capital_per_level_pct', 10, 1, 100),
+          takeProfitPct: coerceNum(cfg, 'take_profit_pct', 2, 0.1, 50),
+          stopLossPct: coerceNum(cfg, 'stop_loss_pct', 5, 0.1, 50),
           rebalanceOnFill: false,
         } satisfies GridBotConfig
       : {
           ...baseConfig,
           strategy: 'mean_reversion' as const,
-          bbPeriod: 20,
-          bbStdDev: 2,
-          rsiPeriod: 14,
-          rsiBuyThreshold: 30,
-          rsiSellThreshold: 70,
-          volumeMultiplier: 1.5,
-          positionSizePct: 10,
-          cooldownMinutes: 5,
+          bbPeriod: coerceNum(cfg, 'bb_period', 20, 2, 200),
+          bbStdDev: coerceNum(cfg, 'bb_std_dev', 2, 0.5, 5),
+          rsiPeriod: coerceNum(cfg, 'rsi_period', 14, 2, 100),
+          rsiBuyThreshold: coerceNum(cfg, 'rsi_buy_threshold', 30, 5, 50),
+          rsiSellThreshold: coerceNum(cfg, 'rsi_sell_threshold', 70, 50, 95),
+          volumeMultiplier: coerceNum(cfg, 'volume_multiplier', 1.5, 0.1, 10),
+          positionSizePct: coerceNum(cfg, 'position_size_pct', 10, 1, 100),
+          cooldownMinutes: coerceNum(cfg, 'cooldown_minutes', 5, 0, 60),
         } satisfies MeanRevBotConfig;
 
     const botConfig: CreateBotRequest = {
