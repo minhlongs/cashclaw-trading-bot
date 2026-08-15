@@ -99,3 +99,23 @@ export const MEANREV_FIELDS: FieldDef[] = [
   { key: 'position_size_pct', label: 'Position Size (%)', step: '1' },
   { key: 'max_drawdown_pct', label: 'Max Drawdown (%)', step: '1' },
 ];
+
+export const STRATEGY_KEY_MAP: Record<string, string> = {
+  grid: 'strategies.grid',
+  mean_reversion: 'strategies.mean_reversion',
+};
+
+export const FIELD_KEY_MAP: Record<string, string> = {
+  spacing_pct: 'fields.spacingPct',
+  levels: 'fields.levels',
+  capital_per_level_pct: 'fields.capitalPerLevelPct',
+  max_drawdown_pct: 'fields.maxDrawdownPct',
+  bb_period: 'fields.bbPeriod',
+  bb_std: 'fields.bbStd',
+  rsi_period: 'fields.rsiPeriod',
+  rsi_buy_threshold: 'fields.rsiBuy',
+  rsi_sell_threshold: 'fields.rsiSell',
+  volume_multiplier: 'fields.volumeMultiplier',
+  position_size_pct: 'fields.positionSizePct',
+};
+

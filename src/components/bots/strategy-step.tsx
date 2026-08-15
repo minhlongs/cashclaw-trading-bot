@@ -2,12 +2,7 @@
 
 import { ChevronLeft, ChevronRight, GitBranch } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type StrategyStepProps, STRATEGIES } from './wizard-types';
-
-const STRATEGY_KEY_MAP: Record<string, string> = {
-  grid: 'strategies.grid',
-  mean_reversion: 'strategies.mean_reversion',
-};
+import { type StrategyStepProps, STRATEGIES, STRATEGY_KEY_MAP } from './wizard-types';
 
 export function StrategyStep({ form, setStrategyDefaults, onNext, onPrev }: StrategyStepProps) {
   const t = useTranslations('botWizard');

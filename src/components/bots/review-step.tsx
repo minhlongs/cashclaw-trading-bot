@@ -2,26 +2,7 @@
 
 import { ChevronLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type ReviewStepProps, GRID_FIELDS, MEANREV_FIELDS, GRID_DEFAULTS, MEANREV_DEFAULTS } from './wizard-types';
-
-const STRATEGY_KEY_MAP: Record<string, string> = {
-  grid: 'strategies.grid',
-  mean_reversion: 'strategies.mean_reversion',
-};
-
-const FIELD_KEY_MAP: Record<string, string> = {
-  spacing_pct: 'fields.spacingPct',
-  levels: 'fields.levels',
-  capital_per_level_pct: 'fields.capitalPerLevelPct',
-  max_drawdown_pct: 'fields.maxDrawdownPct',
-  bb_period: 'fields.bbPeriod',
-  bb_std: 'fields.bbStd',
-  rsi_period: 'fields.rsiPeriod',
-  rsi_buy_threshold: 'fields.rsiBuy',
-  rsi_sell_threshold: 'fields.rsiSell',
-  volume_multiplier: 'fields.volumeMultiplier',
-  position_size_pct: 'fields.positionSizePct',
-};
+import { type ReviewStepProps, GRID_FIELDS, MEANREV_FIELDS, GRID_DEFAULTS, MEANREV_DEFAULTS, STRATEGY_KEY_MAP, FIELD_KEY_MAP } from './wizard-types';
 
 export function ReviewStep({ form, submitting, submitError, submitSuccess, onSubmit, onPrev }: ReviewStepProps) {
   const t = useTranslations('botWizard');

@@ -2,21 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type ConfigStepProps, GRID_FIELDS, MEANREV_FIELDS } from './wizard-types';
-
-const FIELD_KEY_MAP: Record<string, string> = {
-  spacing_pct: 'fields.spacingPct',
-  levels: 'fields.levels',
-  capital_per_level_pct: 'fields.capitalPerLevelPct',
-  max_drawdown_pct: 'fields.maxDrawdownPct',
-  bb_period: 'fields.bbPeriod',
-  bb_std: 'fields.bbStd',
-  rsi_period: 'fields.rsiPeriod',
-  rsi_buy_threshold: 'fields.rsiBuy',
-  rsi_sell_threshold: 'fields.rsiSell',
-  volume_multiplier: 'fields.volumeMultiplier',
-  position_size_pct: 'fields.positionSizePct',
-};
+import { type ConfigStepProps, GRID_FIELDS, MEANREV_FIELDS, FIELD_KEY_MAP } from './wizard-types';
 
 export function ConfigStep({ form, updateConfig, strategy, onNext, onPrev }: ConfigStepProps) {
   const t = useTranslations('botWizard');
