@@ -6,7 +6,6 @@
 
 import { createServerClient } from '@/lib/db/client';
 import { findSettingsByUser, upsertSettings, type SettingsRow } from '@/lib/db/repositories';
-import { getBotManager } from '@/tree/bot';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { createLogger } from '@/lib/logger';
 import { ok, err, type Result } from '@/lib/result';
@@ -215,7 +214,7 @@ export async function getSettings(): Promise<SettingsData> {
   return loadCurrentSettings();
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
+ 
 export async function updateExchangeCredentials(
   exchange: 'binance' | 'bybit' | 'okx',
   apiKey: string,
@@ -235,7 +234,7 @@ export async function updateExchangeCredentials(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
+ 
 export async function updateRiskLimits(input: {
   maxDrawdownPct?: number;
   dailyLossLimitPct?: number;
@@ -289,7 +288,7 @@ export async function updateNotificationSettings(
   return persistSettings(current);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
+ 
 export async function emergencyHalt(reason: string): Promise<Result<void>> {
   try {
     const current = await loadCurrentSettings();
@@ -302,7 +301,7 @@ export async function emergencyHalt(reason: string): Promise<Result<void>> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
+ 
 export async function resumeFromHalt(): Promise<Result<void>> {
   try {
     const current = await loadCurrentSettings();
@@ -312,19 +311,6 @@ export async function resumeFromHalt(): Promise<Result<void>> {
     return persistSettings(current);
   } catch (e) {
     return err(e instanceof Error ? e.message : 'Resume failed');
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-exported for API route
-export async function resetAllBots(): Promise<Result<void>> {
-  try {
-    const manager = getBotManager();
-    for (const bot of manager.getRunningBots()) {
-      bot.stop();
-    }
-    return ok(undefined);
-  } catch (e) {
-    return err(e instanceof Error ? e.message : 'Reset failed');
   }
 }
 

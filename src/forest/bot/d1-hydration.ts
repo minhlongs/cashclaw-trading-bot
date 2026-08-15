@@ -6,7 +6,7 @@
 import { createServerClient } from '@/lib/db/client';
 import { findBotsByUser, findAllBots } from '@/lib/db/repositories';
 import { getBotManager } from '@/tree/bot';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- BotState used in hydration logic; BotConfig cast on line 62
+ 
 import type { BotState, BotConfig } from '@/tree/bot/types';
 
 // Error handler callback type for structured error logging

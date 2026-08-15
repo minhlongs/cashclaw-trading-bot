@@ -14,6 +14,8 @@ export default defineConfig({
     testTimeout: 10000,
     hookTimeout: 5000,
     coverage: {
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/test-setup.ts'],
       thresholds: {
         statements: 80,
         branches: 85,

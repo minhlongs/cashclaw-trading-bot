@@ -4,7 +4,7 @@
 
 import { createServerClient } from '@/lib/db/client';
 import type { D1Database } from '@/lib/db/types';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- BotRecord used in query results; NewBotInput/NewTickInput/NewFillInput used in insert helpers
+ 
 import type { BotRecord, NewBotInput, NewTickInput, NewFillInput } from './flight-recorder-types';
 import { formatBotRow } from './flight-recorder-helpers';
 

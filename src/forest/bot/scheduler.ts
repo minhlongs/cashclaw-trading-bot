@@ -5,7 +5,7 @@
 import { getBotManager } from '@/tree/bot';
 import { createServerClient } from '@/lib/db/client';
 import type { BotInstance } from '@/tree/bot/bot-instance';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- ExchangeOrchestrator used in SchedulerDeps (line 16) and emitExchangeHealthSnapshots (line 102)
+ 
 import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import { createLogger } from '@/lib/logger';
 

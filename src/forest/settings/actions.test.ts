@@ -15,15 +15,9 @@ vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
 }));
 
-// BotManager mock — only used by resetAllBots tests
-const mockManager = {
-  getRunningBots: vi.fn((): { stop: () => void }[] => []),
-};
-vi.mock('@/tree/bot', () => ({ getBotManager: () => mockManager }));
-
 import { createServerClient } from '@/lib/db/client';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- these imports trigger vitest mock wiring; actual calls go through action() helper
-import { emergencyHalt, resumeFromHalt, resetAllBots, getSettings, updateExchangeCredentials, updateRiskLimits } from './actions';
+import { emergencyHalt, resumeFromHalt, getSettings, updateExchangeCredentials, updateRiskLimits } from './actions';
 
 const DEFAULT_SETTINGS_ROW = {
   id: 'settings_default',
@@ -46,7 +40,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockFindSettings.mockResolvedValue(null);
   mockUpsertSettings.mockResolvedValue(undefined);
-  mockManager.getRunningBots.mockReturnValue([]);
   vi.mocked(createServerClient).mockReturnValue({
     prepare: vi.fn().mockReturnValue({
       bind: vi.fn().mockReturnValue({
@@ -163,30 +156,6 @@ describe('resumeFromHalt', () => {
     const row = mockUpsertSettings.mock.calls[0]?.[1] as any;
     expect(row.killswitch_enabled).toBe(1);
     expect(row.killswitch_reason).toBeNull();
-  });
-});
-
-describe('resetAllBots', () => {
-  it('returns ok when no bots running', async () => {
-    mockManager.getRunningBots.mockReturnValue([]);
-    const fn = await action('./actions', 'resetAllBots');
-    const result = await fn();
-    expect(result).toEqual({ ok: true });
-  });
-
-  it('stops running bots', async () => {
-    const mockBot = { stop: vi.fn() };
-    mockManager.getRunningBots.mockReturnValue([mockBot]);
-    const fn = await action('./actions', 'resetAllBots');
-    await fn();
-    expect(mockBot.stop).toHaveBeenCalled();
-  });
-
-  it('returns error when getRunningBots throws', async () => {
-    mockManager.getRunningBots.mockImplementation(() => { throw new Error('mgr down'); });
-    const fn = await action('./actions', 'resetAllBots');
-    const result = await fn();
-    expect(result).toEqual({ ok: false, error: 'mgr down' });
   });
 });
 

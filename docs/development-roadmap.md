@@ -26,13 +26,14 @@
 | Phase P dead code | Wizard maps deduplicated, empty barrel removed | commit `54973ea` |
 | Phase Q orchestrator | ExchangeOrchestrator 6 methods → Result<T>, 7 type-guard tests, v2 wiring documented | commit `2b2308a` |
 | Phase R deps | 13 packages pinned exact (next 16.3.1, react 19.2.8, vitest 3.2.7, etc.); @opennextjs/cloudflare peer dep satisfied | commit `83cc365` |
-| Phase S orchestrator wiring | ExchangeOrchestrator wired into bot execution path; duplicate killswitch guard removed from order executor | commit `c0cb35a` |
+| Phase S orchestrator wiring | ExchangeOrchestrator wired into bot execution path; duplicate killswitch guard restored in executor as defense-in-depth | commit `30a5a13` |
+| Phase T make gates real | Flaky test race fixed (5/5 green), coverage gate wired (89.21%/88.65%), 12 dead eslint-disable suppressions removed + enforcement, 3 dead-code modules removed | commit `c8b5b7f` |
 
 ## Current State
 
-- **Tests:** 1633 across 123 files, full suite green
-- **Coverage:** statements 88.18%, branches 88.73%, functions 90.33%, lines 88.18% (thresholds 80/85/85/80)
-- **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0`)
+- **Tests:** 1610 across 122 files, full suite green
+- **Coverage:** statements 89.21%, branches 88.65%, functions 90.86%, lines 89.21% (thresholds 80/85/85/80)
+- **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0` + `reportUnusedDisableDirectives: error`)
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean
 

@@ -56,6 +56,12 @@
 ### Killswitch Defense-in-Depth — Commit `42eb237`
 - Restored killswitch guard at top of `executeOrder` (executor-level defense-in-depth). Prevents future direct callers of `executeOrder` from bypassing the BotInstance-level killswitch. Two tests added.
 
+### Phase T: Make Gates Real — Commit `c8b5b7f`
+- T1: Fixed flaky `strategy-settings.test.tsx` save tests (deferred resolve handle instead of 100ms setTimeout; 5/5 consecutive runs verified green).
+- T2: Wired coverage into CI (added `test:coverage` script, coverage step in ci.yml, scoped `coverage.include` to `src/`). Actual coverage: 89.21% statements / 88.65% branches. Deprecated `environmentMatchGlobs` still in place — deferred to later phase.
+- T3: Deleted 12 no-op `eslint-disable` suppressions; added `reportUnusedDisableDirectives: 'error'` to enforce immutability per Phase M suppression-freeze rule.
+- T4: Removed 3 dead-code items: `src/land/bot-management/` (0 external importers), `src/tree/exchange/index.ts` barrel, `resetAllBots()` in settings/actions.ts + 3 orphan tests.
+
 ### Orchestrator Wiring (Phase S) — Commit `c0cb35a`
 - ExchangeOrchestrator wired into BotManager/BotInstance/bot-tick/bot-order-executor as optional first-choice execution path, with raw adapter fallback. Duplicate killswitch guard removed from bot-order-executor (BotInstance-level guard preserved as defense-in-depth). 2 executor-level killswitch tests removed.
 

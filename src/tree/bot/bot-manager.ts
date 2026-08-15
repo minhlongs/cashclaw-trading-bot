@@ -5,7 +5,7 @@ import type { ExchangeAdapter, ExchangeId } from '../exchange/types';
 import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import { Killswitch } from './killswitch';
 import { BotInstance } from './bot-instance';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- TelemetryWriter used in BotManager; TradeEventType used in emitTelemetry (line 210)
+ 
 import type { TelemetryWriter, TradeEventType } from '../telemetry';
 import { patchBot } from '@/forest/bot/d1-adapter';
 import { createD1Callbacks, persistNewBot } from './bot-manager-helpers';

@@ -1,6 +1,11 @@
 import nextConfig from 'eslint-config-next';
 
 export default [
+  {
+    linterOptions: {
+      reportUnusedDisableDirectives: 'error',
+    },
+  },
   ...nextConfig,
   {
     rules: {

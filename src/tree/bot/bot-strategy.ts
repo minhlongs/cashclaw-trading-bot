@@ -5,7 +5,7 @@ import type {
   OrderRequest,
   OrderResult,
 } from '../exchange/types';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- BotConfig used in line 54 type assertion; StrategyContext used in line 75 build context
+ 
 import type {
   BotTrade,
   BotConfig,

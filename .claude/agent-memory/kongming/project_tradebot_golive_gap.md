@@ -1,19 +1,24 @@
 ---
 name: project-tradebot-golive-gap
-description: trade-bot "GO-LIVE" ship-report (2026-08-12, SHA aa91351) only covers an auth+version bootstrap slice — the actual customer-facing product (UI, live trading engine, persistence, customer login) is not deployed/functional. Verify current state before trusting this snapshot.
+description: trade-bot (CashClaw) state history — the 2026-08-12 "GO-LIVE" verdict was a narrow auth+version slice; by 2026-08-15 the Phase L-S quality campaign closed most of those gaps. Current open issue is quality-gate integrity (flaky CI), not missing product wiring.
 metadata:
   type: project
 ---
 
-As of 2026-08-12, `.orchestrate/latest/ship-report.md` and `result-verdict.md` declared trade-bot (CashClaw) "GREEN / GO-LIVE" and "PASS — pipeline can transition to closed/completed state." That verdict is accurate for its own narrow scope (Bearer auth guard, `/api/version`, `/api/health`, 45 unit tests, SHA-matched deploy) but does NOT mean the product is ready to hand to the non-technical client. Verified by direct repo read + live curl probes on 2026-08-12:
+**Superseded snapshot (2026-08-12):** `.orchestrate/latest/ship-report.md` declared trade-bot "GREEN / GO-LIVE" for a task that only added a Bearer auth guard + `/api/version`. At that time: no UI deployed, ccxt absent from package.json, D1/KV bindings commented out, settings had `// TODO: persist to D1`, login form was `// TODO: wire auth`. See [[feedback-verify-full-user-journey]] for the process lesson.
 
-- **No UI is deployed.** `wrangler.jsonc` `main` points at `src/worker.ts`, a pure Hono API app — no `@cloudflare/next-on-pages` / `@opennextjs/cloudflare` adapter exists in `package.json`. `curl` to `/`, `/vi`, `/vi/dashboard` on the live Worker all return `401 {"ok":false,"error":"Unauthorized — missing token"}` (Hono's `authGuard()` is wired with `app.use('*', ...)`, catching everything, and there is no Next.js response behind it at all — the Next app has never been deployed to this Worker).
-- **Live trading engine is non-functional.** `src/tree/exchange/ccxt/client.ts` does `declare const ccxt: any` assuming CCXT is a global injected by "the Workers bundler," but `ccxt` is absent from `package.json` dependencies and `node_modules`. Starting any bot in live mode will throw at runtime.
-- **No persistence.** `wrangler.jsonc` has D1/KV bindings commented out (placeholder IDs weren't valid UUIDs). `createServerClient()` (`src/lib/db/client.ts`) returns `null` without `env.DB`, so `src/forest/bot/d1-adapter.ts` silently no-ops and `BotManager` state is in-memory only — wiped on every redeploy/cold start. `src/forest/settings/actions.ts` has explicit `// TODO: store encrypted in D1` / `// TODO: persist to D1` — exchange API keys and risk limits are validated then discarded, never saved. Schema + migration (`src/lib/db/schema.ts`, `migrations/0001_initial_schema.sql`) already exist — this is a wiring gap, not a from-scratch build.
-- **No customer auth.** `src/components/auth/login-form.tsx` submit handler is `// TODO: wire auth` and does nothing. The only credential live is the single shared `ADMIN_TOKEN` bearer secret (ops/API access), not a customer session system.
-- **Cron eval loop disabled.** No `scheduled()` export in `worker.ts`; cron trigger is commented out in `wrangler.jsonc`. Bots would need manual `POST /api/cron/eval` — no autonomous evaluation loop.
-- The original plan (`plans/20260714-cashclaw-trading-bot-platform/phase-06-deploy-polish.md`) specified success criteria that were never executed against this ship: 24h paper-trading dry run, dashboard load <2s check, Telegram alerts, full wireframe QA. What shipped on 2026-08-12 was a much smaller "bootstrap" (auth guard + version endpoint) task, not phase-06.
+**Re-verified 2026-08-15 — most of that is now FIXED.** Do not repeat the old gap list as current:
+- `ccxt ^4.5.73` is a real dependency in `package.json`; `@opennextjs/cloudflare` is the deploy path (`npm run deploy`), so the Next.js app does ship.
+- Settings persistence is implemented **with AES-256-GCM encryption** (`src/lib/crypto.ts`, used at `src/forest/settings/actions.ts:188-190`). Zero `TODO`/`FIXME` remain anywhere in `src/`.
+- D1 is wired: 6 migrations, repositories, hydration (`src/forest/bot/d1-hydration.ts`), session-cookie middleware.
+- Quality campaign Phases L-S: 1635 tests / 123 files, lint 0 warnings, TS 0 errors, coverage 87.94% stmts / 88.57% branches, zero `any` in non-test code.
 
-**Why this matters:** the founder's `/orchestrate` pipeline (kongming plan → suntzu gate → execute → suntzu result-gate → ship) verified only the acceptance criteria of the specific task it was given (add auth guard + version endpoint), and both `plan-verdict.md` and `result-verdict.md` are internally consistent PASSes for that scope. But the pipeline's own "GO-LIVE" / "SHIP" language in `ship-report.md` and `execution.md` implies product-readiness, which does not hold once you check the actual customer journey (browser hitting real URLs, exchange keys persisting, live bot execution).
+**Current open issue (2026-08-15) is quality-signal integrity, not product wiring:**
+- `npm test` is **flaky-red ~60% of runs** (measured 3/5 exit 1). Root cause: `src/components/settings/strategy-settings.test.tsx` leaves a 100ms `setTimeout` promise unawaited; `setSaving(false)` fires after jsdom teardown → `ReferenceError: window is not defined`. `.github/workflows/ci.yml` final step is `npm test`, so CI is intermittently red.
+- Coverage thresholds in `vitest.config.ts` are **decorative** — `npm test` is `vitest run` with no `--coverage`, so CI never evaluates them.
+- `quality-gates.json` is read by **nothing** and its numbers (maxWarnings 91, statements 25) contradict reality (0, 87.94).
+- 13 removable no-op `eslint-disable` directives (12 confirmed unnecessary by `eslint --report-unused-disable-directives`).
+- `src/land/bot-management/` (392 lines incl. tests) is a **fully orphaned module** — zero importers outside its own test.
+- `src/tree/bot/*` violates the documented "`tree/` = pure domain, no I/O" contract (`docs/system-architecture.md:9,27`) by importing `patchBot`/`persistBot`/`persistTrade` from `@/forest/bot/d1-adapter`.
 
-**How to apply:** Before advising or acting on this ship-report/verdict as "done," re-verify current state (curl the live URL, re-grep for the TODOs above) — this snapshot decays fast as the founder fixes gaps. See [[feedback-verify-full-user-journey-not-just-task-scope]] for the process lesson this incident produced.
+**How to apply:** this repo's weak spot has shifted from "is it built?" to "do the green metrics mean anything?" Verify enforcement wiring (does CI actually run the gate?) before trusting a reported metric. Re-check with `npx vitest run` several times — a single green run proves nothing on a flaky suite.
