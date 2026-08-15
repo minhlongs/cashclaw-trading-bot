@@ -2,7 +2,7 @@
 // Types extracted to bot-manager-types.ts, helpers to bot-manager-helpers.ts.
 
 import type { ExchangeAdapter, ExchangeId } from '../exchange/types';
-import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
+import type { ExchangeOrchestrator } from './bot-manager-types';
 import { Killswitch } from './killswitch';
 import { BotInstance } from './bot-instance';
  

@@ -5,6 +5,7 @@ import type { BotConfig, BotStatus } from './types';
 import type { ExchangeConfig } from '../exchange/types';
 import type { TelemetryWriter } from '../telemetry';
 import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
+export type { ExchangeOrchestrator };
 
 export interface BotManagerDependencies {
   onLog?: (msg: string) => void;
