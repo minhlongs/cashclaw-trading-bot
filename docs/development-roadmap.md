@@ -28,11 +28,15 @@
 | Phase R deps | 13 packages pinned exact (next 16.3.1, react 19.2.8, vitest 3.2.7, etc.); @opennextjs/cloudflare peer dep satisfied | commit `83cc365` |
 | Phase S orchestrator wiring | ExchangeOrchestrator wired into bot execution path; duplicate killswitch guard restored in executor as defense-in-depth | commit `30a5a13` |
 | Phase T make gates real | Flaky test race fixed (5/5 green), coverage gate wired (89.21%/88.65%), 12 dead eslint-disable suppressions removed + enforcement, 3 dead-code modules removed | commit `c8b5b7f` |
+| Phase U.1 orchestrator Result | ExchangeOrchestrator 6 methods → Result<T>, 7 type-guard tests | commit `6c658e2` |
+| Phase U.2 wizard config | Wizard config pass-through wired: config record accepted by Zod, coerceNum helper, bot-create handler honors spacing_pct/grid_levels/drawdown | commit `b18ca86` |
+| Phase V dead code | Deleted create-bot.ts + 3 tests + quality-gates.json + bot-management/ module (556 lines). Flaky test fixes in 7 client components (setState-after-teardown) | commits `514bf30`, `e2d19aa` |
+| Phase VI layer fix | Eliminated BotManager layer violation: ExchangeOrchestrator type re-exported from tree/bot/bot-manager-types.ts | commit `8e4c85f` |
 
 ## Current State
 
-- **Tests:** 1610 across 122 files, full suite green
-- **Coverage:** statements 89.21%, branches 88.65%, functions 90.86%, lines 89.21% (thresholds 80/85/85/80)
+- **Tests:** 1588 across 119 files, full suite green
+- **Coverage:** statements 89.06%, branches 88.72%, functions 90.66%, lines 89.06% (thresholds 80/85/85/80)
 - **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0` + `reportUnusedDisableDirectives: error`)
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean

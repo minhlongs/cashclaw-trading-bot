@@ -67,3 +67,15 @@
 
 ### ExchangeOrchestrator Result<T> — Commit `2b2308a`
 - 6 public methods (fetchTicker, fetchOrderBook, placeOrder, cancelOrder, fetchOrder, fetchBalances) now return `Result<T>` instead of throwing. Killswitch/circuit-breaker paths return `err()`. 7 type-guard tests added for `hasStrategyChain`, `isGridConfig`, `isMeanRevConfig`. V2 wiring documented.
+
+### Phase V: Dead Code Removal — Commits `514bf30`, `e2d19aa`
+- Deleted `src/tree/bot/create-bot.ts` + 3 associated test files (415 lines) plus orphan `quality-gates.json`. All had 0 production importers. Flaky `setState-after-teardown` race fixed in 7 client components by adding `cancelled` flag + `useEffect` cleanup (verified 10/10 consecutive runs green).
+
+### Phase VI: Layer Violation Fix — Commit `8e4c85f`
+- Eliminated BotManager dependency on `land/exchange-orchestration` by re-exporting `ExchangeOrchestrator` type from `tree/bot/bot-manager-types.ts` and importing from the local tree boundary instead. `patchBot` remains via `tree/bot/bot-manager-helpers.ts` indirection (which already imports from `forest`).
+
+### Killswitch Guard Restored — Commit `6c658e2`
+- Restored killswitch guard at top of `bot-order-executor.ts` `executeOrder()` as defense-in-depth. Tests updated to cover halt path.
+
+### Flaky Test Fixes — Commit `66568b8`
+- Fixed deferred resolve handle in `strategy-settings.test.tsx` (eliminated 100ms setTimeout race). Added missing `await` in `client-extended.test.ts` async rejection test.
