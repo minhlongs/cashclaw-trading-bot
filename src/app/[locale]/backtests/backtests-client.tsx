@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useLocale } from 'next-intl';
+import { runBacktestAction } from '@/forest/backtest/actions';
 
 interface BotInfo {
   id: string;
@@ -10,66 +11,56 @@ interface BotInfo {
   configJson: string;
 }
 
-interface Trade {
-  id: string;
-  side: 'LONG' | 'SHORT';
-  entryTime: string;
-  exitTime: string;
+interface BacktestTrade {
+  entryTimestamp: number;
+  exitTimestamp: number;
+  side: 'buy' | 'sell';
   entryPrice: number;
   exitPrice: number;
+  quantity: number;
   pnl: number;
-  pnlPercent: number;
+  fee: number;
+  pnlPct: number;
+  holdingMinutes: number;
+}
+
+interface BacktestEquityPoint {
+  timestamp: number;
+  equity: number;
+  drawdownPct: number;
 }
 
 interface BacktestResult {
-  trades: Trade[];
-  equityCurve: number[];
-  startingBalance: number;
-  endingBalance: number;
-  totalReturn: number;
-  winRate: number;
-  maxDrawdown: number;
-  sharpeRatio: number;
-  profitFactor: number;
-  totalTrades: number;
+  id: string;
+  bot_id: string;
+  strategy: string;
+  pair: string;
+  exchange: string;
+  start_date: number;
+  end_date: number;
+  total_trades: number;
+  win_count: number;
+  loss_count: number;
+  win_rate: number;
+  total_pnl: number;
+  max_drawdown: number;
+  sharpe_ratio: number | null;
+  params_json: string;
+  equity_curve_json: BacktestEquityPoint[];
+  trades_json: BacktestTrade[];
+  created_at: number;
 }
 
-const MOCK_RESULT: BacktestResult = {
-  startingBalance: 10000,
-  endingBalance: 12450,
-  totalReturn: 24.5,
-  winRate: 58.3,
-  maxDrawdown: 12.4,
-  sharpeRatio: 1.85,
-  profitFactor: 2.1,
-  totalTrades: 48,
-  equityCurve: [
-    10000, 10120, 10280, 10150, 10320, 10480, 10350, 10520, 10680, 10550,
-    10720, 10880, 10750, 10920, 11080, 10950, 11120, 11280, 11150, 11320,
-    11480, 11350, 11520, 11680, 11550, 11720, 11880, 11750, 11920, 12080,
-    11950, 12120, 12280, 12150, 12320, 12450, 12300, 12450, 12520, 12380,
-    12520, 12680, 12550, 12720, 12880, 12750, 12920, 12450,
-  ],
-  trades: [
-    { id: '1', side: 'LONG', entryTime: '2026-08-01 09:15', exitTime: '2026-08-01 11:30', entryPrice: 67250, exitPrice: 67890, pnl: 640, pnlPercent: 0.95 },
-    { id: '2', side: 'SHORT', entryTime: '2026-08-01 14:00', exitTime: '2026-08-01 16:45', entryPrice: 68100, exitPrice: 67650, pnl: 450, pnlPercent: 0.66 },
-    { id: '3', side: 'LONG', entryTime: '2026-08-02 08:30', exitTime: '2026-08-02 10:15', entryPrice: 67900, exitPrice: 67550, pnl: -350, pnlPercent: -0.52 },
-    { id: '4', side: 'LONG', entryTime: '2026-08-02 13:00', exitTime: '2026-08-02 15:30', entryPrice: 67600, exitPrice: 68200, pnl: 600, pnlPercent: 0.89 },
-    { id: '5', side: 'SHORT', entryTime: '2026-08-03 09:45', exitTime: '2026-08-03 12:00', entryPrice: 68500, exitPrice: 68050, pnl: 450, pnlPercent: 0.66 },
-    { id: '6', side: 'LONG', entryTime: '2026-08-03 14:30', exitTime: '2026-08-03 16:00', entryPrice: 68100, exitPrice: 68450, pnl: 350, pnlPercent: 0.51 },
-    { id: '7', side: 'SHORT', entryTime: '2026-08-04 08:00', exitTime: '2026-08-04 10:30', entryPrice: 68700, exitPrice: 69200, pnl: -500, pnlPercent: -0.73 },
-    { id: '8', side: 'LONG', entryTime: '2026-08-04 13:45', exitTime: '2026-08-04 16:15', entryPrice: 68900, exitPrice: 69450, pnl: 550, pnlPercent: 0.80 },
-  ],
-};
+const INTERVALS = ['1h', '4h', '1d'] as const;
 
 export default function BacktestsClient({ initialBots = [] }: { initialBots?: BotInfo[] }) {
   const locale = useLocale();
   const isEn = locale === 'en';
   const [selectedBotId, setSelectedBotId] = useState<string>('');
+  const [interval, setInterval] = useState<string>('1h');
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<BacktestResult | null>(MOCK_RESULT);
-  const [showMockBanner, setShowMockBanner] = useState(true);
+  const [result, setResult] = useState<BacktestResult | null>(null);
 
   const runBacktest = useCallback(async () => {
     if (!selectedBotId) {
@@ -78,14 +69,27 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
     }
     setIsRunning(true);
     setError(null);
-    setShowMockBanner(false);
     try {
-      const res = await fetch('/api/backtest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ botId: selectedBotId }),
+      const bot = initialBots.find(b => b.id === selectedBotId);
+      if (!bot) {
+        setError(isEn ? 'Bot not found' : 'Khong tim thay bot');
+        return;
+      }
+      const config = JSON.parse(bot.configJson || '{}');
+      const now = new Date();
+      const endDate = now;
+      const startDate = new Date(now.getTime() - 90 * 86400000);
+
+      const data = await runBacktestAction({
+        botId: bot.id,
+        exchange: config.exchange || 'binance',
+        symbol: config.symbol || 'BTC/USDT',
+        strategy: bot.strategy as 'grid' | 'mean_reversion',
+        config,
+        startDate,
+        endDate,
+        interval: interval as '1h' | '4h' | '1d',
       });
-      const data = (await res.json()) as { success: boolean; result?: BacktestResult; error?: string };
       if (data.success && data.result) {
         setResult(data.result as BacktestResult);
       } else {
@@ -96,7 +100,7 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
     } finally {
       setIsRunning(false);
     }
-  }, [selectedBotId, isEn]);
+  }, [selectedBotId, interval, initialBots, isEn]);
 
   return (
     <div style={{ padding: 'var(--space-6)', maxWidth: 'var(--content-max)', margin: '0 auto' }}>
@@ -116,6 +120,15 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
             <option key={bot.id} value={bot.id}>{bot.name} ({bot.strategy})</option>
           ))}
         </select>
+        <select
+          value={interval}
+          onChange={(e) => setInterval(e.target.value)}
+          style={{ width: '100%', padding: 'var(--space-3)', marginTop: 'var(--space-3)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}
+        >
+          {INTERVALS.map((iv) => (
+            <option key={iv} value={iv}>{iv}</option>
+          ))}
+        </select>
       </div>
 
       {/* Run Button */}
@@ -130,20 +143,13 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
 
       {error && <p style={{ color: 'var(--color-loss)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>{error}</p>}
 
-      {/* Mock Data Banner */}
-      {showMockBanner && (
-        <div style={{ background: 'var(--color-warning)', color: '#000', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
-          {isEn ? 'Showing demo data. Select a bot and run backtest for real results.' : 'Dang hien thi du lieu mau. Chon bot va chay backtest de xem ket qua that.'}
-        </div>
-      )}
-
       {result && <BacktestResults result={result} isEn={isEn} />}
     </div>
   );
 }
 
 function BacktestResults({ result, isEn }: { result: BacktestResult; isEn: boolean }) {
-  const { startingBalance, endingBalance, totalReturn, winRate, maxDrawdown, sharpeRatio, profitFactor, totalTrades, equityCurve, trades } = result;
+  const { total_pnl, win_rate, max_drawdown, sharpe_ratio, total_trades, equity_curve_json, trades_json, win_count, loss_count } = result;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
@@ -153,14 +159,11 @@ function BacktestResults({ result, isEn }: { result: BacktestResult; isEn: boole
           {isEn ? 'Performance Metrics' : 'Chi So Hieu Suat'}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-4)' }}>
-          <MetricCard label={isEn ? 'Total Return' : 'Tong Loi Nhuan'} value={`${totalReturn > 0 ? '+' : ''}${totalReturn.toFixed(1)}%`} positive={totalReturn > 0} />
-          <MetricCard label={isEn ? 'Win Rate' : 'Ty Le Thang'} value={`${winRate.toFixed(1)}%`} />
-          <MetricCard label={isEn ? 'Max Drawdown' : 'Max Drawdown'} value={`-${maxDrawdown.toFixed(1)}%`} positive={false} />
-          <MetricCard label="Sharpe Ratio" value={sharpeRatio.toFixed(2)} />
-          <MetricCard label={isEn ? 'Profit Factor' : 'Loi Nhuan Factor'} value={profitFactor.toFixed(2)} />
-          <MetricCard label={isEn ? 'Total Trades' : 'Tong Giao Dich'} value={totalTrades.toString()} />
-          <MetricCard label={isEn ? 'Starting Balance' : 'So Du Khoi Dau'} value={`$${startingBalance.toLocaleString()}`} />
-          <MetricCard label={isEn ? 'Ending Balance' : 'So Du Cuoi Cung'} value={`$${endingBalance.toLocaleString()}`} positive={endingBalance >= startingBalance} />
+          <MetricCard label={isEn ? 'Total PnL' : 'Tong Loi Nhuan'} value={`${total_pnl > 0 ? '+' : ''}$${total_pnl.toFixed(2)}`} positive={total_pnl > 0} />
+          <MetricCard label={isEn ? 'Win Rate' : 'Ty Le Thang'} value={`${win_rate.toFixed(1)}%`} />
+          <MetricCard label={isEn ? 'Max Drawdown' : 'Max Drawdown'} value={`-${max_drawdown.toFixed(1)}%`} positive={false} />
+          <MetricCard label="Sharpe Ratio" value={(sharpe_ratio ?? 0).toFixed(2)} />
+          <MetricCard label={isEn ? 'Total Trades' : 'Tong Giao Dich'} value={`${total_trades} (${win_count}W / ${loss_count}L)`} />
         </div>
       </div>
 
@@ -169,7 +172,7 @@ function BacktestResults({ result, isEn }: { result: BacktestResult; isEn: boole
         <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
           {isEn ? 'Equity Curve' : 'Duong Equity'}
         </h3>
-        <EquityCurveChart data={equityCurve} startingBalance={startingBalance} />
+        <EquityCurveChart data={equity_curve_json} />
       </div>
 
       {/* Trade List */}
@@ -191,22 +194,22 @@ function BacktestResults({ result, isEn }: { result: BacktestResult; isEn: boole
               </tr>
             </thead>
             <tbody>
-              {trades.map((trade) => (
-                <tr key={trade.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              {trades_json.map((trade, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <td style={tdStyle}>
-                    <span style={{ color: trade.side === 'LONG' ? 'var(--color-profit)' : 'var(--color-loss)', fontWeight: 600 }}>
-                      {trade.side}
+                    <span style={{ color: trade.side === 'buy' ? 'var(--color-profit)' : 'var(--color-loss)', fontWeight: 600 }}>
+                      {trade.side.toUpperCase()}
                     </span>
                   </td>
-                  <td style={tdStyle}>{trade.entryTime}</td>
+                  <td style={tdStyle}>{new Date(trade.entryTimestamp).toLocaleString()}</td>
                   <td style={tdStyle}>${trade.entryPrice.toLocaleString()}</td>
-                  <td style={tdStyle}>{trade.exitTime}</td>
+                  <td style={tdStyle}>{new Date(trade.exitTimestamp).toLocaleString()}</td>
                   <td style={tdStyle}>${trade.exitPrice.toLocaleString()}</td>
                   <td style={{ ...tdStyle, color: trade.pnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
-                    {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toLocaleString()}
+                    {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toFixed(2)}
                   </td>
-                  <td style={{ ...tdStyle, color: trade.pnlPercent >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
-                    {trade.pnlPercent >= 0 ? '+' : ''}{trade.pnlPercent.toFixed(2)}%
+                  <td style={{ ...tdStyle, color: trade.pnlPct >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
+                    {trade.pnlPct >= 0 ? '+' : ''}{trade.pnlPct.toFixed(2)}%
                   </td>
                 </tr>
               ))}
@@ -229,30 +232,31 @@ function MetricCard({ label, value, positive }: { label: string; value: string; 
   );
 }
 
-function EquityCurveChart({ data, startingBalance }: { data: number[]; startingBalance: number }) {
+function EquityCurveChart({ data }: { data: { timestamp: number; equity: number; drawdownPct: number }[] }) {
   if (data.length < 2) return null;
 
   const width = 600;
   const height = 200;
   const padding = { top: 20, right: 20, bottom: 30, left: 60 };
 
-  const minVal = Math.min(...data);
-  const maxVal = Math.max(...data);
+  const equities = data.map(d => d.equity);
+  const minVal = Math.min(...equities);
+  const maxVal = Math.max(...equities);
   const range = maxVal - minVal || 1;
 
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
-  const points = data.map((val, i) => {
+  const points = data.map((d, i) => {
     const x = padding.left + (i / (data.length - 1)) * chartWidth;
-    const y = padding.top + chartHeight - ((val - minVal) / range) * chartHeight;
+    const y = padding.top + chartHeight - ((d.equity - minVal) / range) * chartHeight;
     return `${x},${y}`;
   }).join(' ');
 
   const linePath = points;
   const areaPath = `${padding.left},${padding.top + chartHeight} ${points} ${width - padding.right},${padding.top + chartHeight}`;
 
-  const isProfit = data[data.length - 1] >= startingBalance;
+  const isProfit = equities[equities.length - 1] >= equities[0];
 
   const yTicks = [minVal, minVal + range * 0.25, minVal + range * 0.5, minVal + range * 0.75, maxVal];
 
@@ -278,7 +282,7 @@ function EquityCurveChart({ data, startingBalance }: { data: number[]; startingB
       <polyline points={linePath} fill="none" stroke={isProfit ? 'var(--color-profit)' : 'var(--color-loss)'} strokeWidth="2" strokeLinejoin="round" />
 
       {/* Start line */}
-      <line x1={padding.left} y1={padding.top + chartHeight - ((startingBalance - minVal) / range) * chartHeight} x2={width - padding.right} y2={padding.top + chartHeight - ((startingBalance - minVal) / range) * chartHeight} stroke="var(--text-tertiary)" strokeWidth="1" strokeDasharray="2,2" />
+      <line x1={padding.left} y1={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} x2={width - padding.right} y2={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} stroke="var(--text-tertiary)" strokeWidth="1" strokeDasharray="2,2" />
 
       {/* Labels */}
       <text x={padding.left} y={height - 5} fill="var(--text-secondary)" fontSize="10">Start</text>

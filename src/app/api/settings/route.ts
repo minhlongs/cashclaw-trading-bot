@@ -2,7 +2,7 @@
 // POST /api/settings — update settings (exchange creds, risk limits, killswitch)
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSettings, updateExchangeCredentials, updateRiskLimits, emergencyHalt, resumeFromHalt } from '@/forest/settings/actions';
+import { getSettings, updateExchangeCredentials, updateRiskLimits, updateNotificationSettings, emergencyHalt, resumeFromHalt } from '@/forest/settings/actions';
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
 import { createLogger } from '@/lib/logger';
 
@@ -30,7 +30,13 @@ const KillswitchSchema = z.object({
   reason: z.string().optional().default('Manual halt from settings'),
 });
 
-const SettingsSchema = z.discriminatedUnion('type', [ExchangeSchema, RiskSchema, KillswitchSchema]);
+const NotificationSchema = z.object({
+  type: z.literal('notification'),
+  botToken: z.string().optional().default(''),
+  chatId: z.string().optional().default(''),
+});
+
+const SettingsSchema = z.discriminatedUnion('type', [ExchangeSchema, RiskSchema, NotificationSchema, KillswitchSchema]);
 
 function maskSecret(value: string | undefined): string {
   if (!value || value.length === 0) return '';
@@ -49,6 +55,10 @@ export async function GET() {
           { ...creds, apiKey: maskSecret(creds.apiKey), apiSecret: maskSecret(creds.apiSecret) },
         ]),
       ),
+      notification: {
+        ...data.notification,
+        botToken: maskSecret(data.notification.botToken),
+      },
     };
     return NextResponse.json({ ok: true, data: masked });
   } catch (e) {
@@ -88,6 +98,12 @@ export async function POST(req: Request) {
         cooldownMinutes,
         maxOpenOrders,
       });
+      return NextResponse.json(result, result.ok ? undefined : { status: 400 });
+    }
+
+    if (parsed.data.type === 'notification') {
+      const { botToken, chatId } = parsed.data;
+      const result = await updateNotificationSettings(botToken, chatId);
       return NextResponse.json(result, result.ok ? undefined : { status: 400 });
     }
 

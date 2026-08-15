@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS: SettingsData = {
     cooldownMinutes: 60,
     maxOpenOrders: 10,
   },
+  notification: { botToken: '', chatId: '' },
   killswitch: { enabled: false, reason: null, triggeredAt: null },
 };
 
@@ -68,9 +69,27 @@ export function SettingsClient() {
     }
   };
 
-  const handleNotificationSave = async (_botToken: string, _chatId: string) => {
+  const handleNotificationSave = async (botToken: string, chatId: string) => {
     setSaveMessage(null);
-    setSaveMessage('Telegram notifications saved (placeholder)');
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'notification', botToken, chatId }),
+      });
+      const result: { ok: boolean; error?: string } = await res.json();
+      if (result.ok) {
+        setSettings((prev) => ({
+          ...prev,
+          notification: { botToken, chatId },
+        }));
+        setSaveMessage('Telegram notifications saved!');
+      } else {
+        setSaveMessage(result.error ?? 'Notification save failed');
+      }
+    } catch {
+      setSaveMessage('Network error');
+    }
   };
 
   const handleStrategySave = async (risk: SettingsData['risk']) => {
@@ -173,7 +192,7 @@ export function SettingsClient() {
       )}
 
       <ExchangeSettings exchanges={settings.exchanges} onSave={handleExchangeSave} />
-      <NotificationSettings telegram={{ botToken: '', chatId: '' }} onSave={handleNotificationSave} />
+      <NotificationSettings telegram={settings.notification} onSave={handleNotificationSave} />
       <StrategySettings risk={settings.risk} onSave={handleStrategySave} />
 
       {/* Kill Switch */}

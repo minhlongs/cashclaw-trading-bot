@@ -136,7 +136,7 @@ describe('upsertSettings', () => {
     const { upsertSettings } = await import('./repositories');
     await upsertSettings(mockDb, {
       id: 's1', user_id: 'u1', exchange_creds_json: '{}',
-      risk_limits_json: '{}', killswitch_enabled: 0,
+      risk_limits_json: '{}', notification_json: '{}', killswitch_enabled: 0,
       killswitch_reason: null, killswitch_triggered_at: null,
       updated_at: 1000,
     });

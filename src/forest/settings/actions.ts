@@ -25,6 +25,10 @@ export interface SettingsData {
     cooldownMinutes: number;
     maxOpenOrders: number;
   };
+  notification: {
+    botToken: string;
+    chatId: string;
+  };
   killswitch: {
     enabled: boolean;
     reason: string | null;
@@ -45,6 +49,11 @@ const DEFAULT_RISK: SettingsData['risk'] = {
   dailyLossLimitPct: 10,
   cooldownMinutes: 30,
   maxOpenOrders: 50,
+};
+
+const DEFAULT_NOTIFICATION: SettingsData['notification'] = {
+  botToken: '',
+  chatId: '',
 };
 
 const DEFAULT_KILLSWITCH: SettingsData['killswitch'] = {
@@ -92,10 +101,24 @@ function parseRisk(raw: string): SettingsData['risk'] {
   }
 }
 
+function parseNotification(raw: string | undefined): SettingsData['notification'] {
+  if (!raw) return { ...DEFAULT_NOTIFICATION };
+  try {
+    const obj = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      botToken: typeof obj.botToken === 'string' ? obj.botToken : '',
+      chatId: typeof obj.chatId === 'string' ? obj.chatId : '',
+    };
+  } catch {
+    return { ...DEFAULT_NOTIFICATION };
+  }
+}
+
 function rowToSettingsData(row: SettingsRow): SettingsData {
   return {
     exchanges: parseExchanges(row.exchange_creds_json),
     risk: parseRisk(row.risk_limits_json),
+    notification: parseNotification(row.notification_json),
     killswitch: {
       enabled: row.killswitch_enabled === 1,
       reason: row.killswitch_reason,
@@ -111,6 +134,7 @@ async function loadCurrentSettings(): Promise<SettingsData> {
     return {
       exchanges: { ...DEFAULT_EXCHANGES },
       risk: { ...DEFAULT_RISK },
+      notification: { ...DEFAULT_NOTIFICATION },
       killswitch: {
         enabled: getBotManager().getKillswitch().isTradingEnabled(),
         reason: null,
@@ -124,6 +148,7 @@ async function loadCurrentSettings(): Promise<SettingsData> {
     return {
       exchanges: { ...DEFAULT_EXCHANGES },
       risk: { ...DEFAULT_RISK },
+      notification: { ...DEFAULT_NOTIFICATION },
       killswitch: {
         enabled: getBotManager().getKillswitch().isTradingEnabled(),
         reason: null,
@@ -153,6 +178,7 @@ async function persistSettings(data: SettingsData): Promise<Result<void>> {
     user_id: null,
     exchange_creds_json: JSON.stringify(data.exchanges),
     risk_limits_json: JSON.stringify(data.risk),
+    notification_json: JSON.stringify(data.notification),
     killswitch_enabled: data.killswitch.enabled ? 1 : 0,
     killswitch_reason: data.killswitch.reason,
     killswitch_triggered_at: data.killswitch.triggeredAt,
@@ -219,6 +245,16 @@ export async function updateRiskLimits(input: {
   } catch (e) {
     return err(e instanceof Error ? e.message : 'Update failed');
   }
+}
+
+export async function updateNotificationSettings(
+  botToken: string,
+  chatId: string,
+): Promise<Result<void>> {
+  const current = await loadCurrentSettings();
+  current.notification.botToken = botToken;
+  current.notification.chatId = chatId;
+  return persistSettings(current);
 }
 
 export async function emergencyHalt(reason: string): Promise<Result<void>> {

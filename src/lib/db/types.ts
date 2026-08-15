@@ -42,6 +42,7 @@ export interface SettingsRow {
   user_id: string | null;
   exchange_creds_json: string;
   risk_limits_json: string;
+  notification_json: string;
   killswitch_enabled: number;
   killswitch_reason: string | null;
   killswitch_triggered_at: number | null;

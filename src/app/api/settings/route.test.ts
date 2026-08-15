@@ -7,10 +7,12 @@ type Json = Record<string, unknown>;
 const mockGetSettings = vi.fn(async () => ({
   exchanges: { binance: { apiKey: '', apiSecret: '', testnet: true }, bybit: { apiKey: '', apiSecret: '', testnet: true }, okx: { apiKey: '', apiSecret: '', testnet: true } },
   risk: { maxDrawdownPct: 15, dailyLossLimitPct: 10, cooldownMinutes: 60, maxOpenOrders: 10 },
+  notification: { botToken: '', chatId: '' },
   killswitch: { enabled: true, reason: null, triggeredAt: null },
 }));
 const mockUpdateExchange = vi.fn(async (): Promise<{ ok: boolean; error?: string }> => ({ ok: true }));
 const mockUpdateRisk = vi.fn(async (): Promise<{ ok: boolean; error?: string }> => ({ ok: true }));
+const mockUpdateNotification = vi.fn(async (): Promise<{ ok: boolean; error?: string }> => ({ ok: true }));
 const mockEmergencyHalt = vi.fn(async (): Promise<{ ok: boolean; error?: string }> => ({ ok: true }));
 const mockResumeFromHalt = vi.fn(async () => ({ ok: true }));
 const mockCheckRateLimit = vi.fn(() => ({ allowed: true, remaining: 99, resetAt: Date.now() + 60000 }));
@@ -20,6 +22,7 @@ vi.mock('@/forest/settings/actions', () => ({
   getSettings: mockGetSettings,
   updateExchangeCredentials: mockUpdateExchange,
   updateRiskLimits: mockUpdateRisk,
+  updateNotificationSettings: mockUpdateNotification,
   emergencyHalt: mockEmergencyHalt,
   resumeFromHalt: mockResumeFromHalt,
 }));
@@ -39,10 +42,12 @@ beforeEach(() => {
   mockGetSettings.mockResolvedValue({
     exchanges: { binance: { apiKey: '', apiSecret: '', testnet: true }, bybit: { apiKey: '', apiSecret: '', testnet: true }, okx: { apiKey: '', apiSecret: '', testnet: true } },
     risk: { maxDrawdownPct: 15, dailyLossLimitPct: 10, cooldownMinutes: 60, maxOpenOrders: 10 },
+    notification: { botToken: '', chatId: '' },
     killswitch: { enabled: true, reason: null, triggeredAt: null },
   });
   mockUpdateExchange.mockResolvedValue({ ok: true });
   mockUpdateRisk.mockResolvedValue({ ok: true });
+  mockUpdateNotification.mockResolvedValue({ ok: true });
   mockEmergencyHalt.mockResolvedValue({ ok: true });
   mockResumeFromHalt.mockResolvedValue({ ok: true });
 });

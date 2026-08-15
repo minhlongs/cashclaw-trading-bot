@@ -74,6 +74,7 @@ const LOADED_SETTINGS: SettingsData = {
     cooldownMinutes: 60,
     maxOpenOrders: 10,
   },
+  notification: { botToken: '', chatId: '' },
   killswitch: { enabled: true, reason: null, triggeredAt: null },
 };
 

@@ -348,6 +348,7 @@ describe('GET /api/settings', () => {
         okx: { apiKey: '', apiSecret: '', testnet: true },
       },
       risk: { maxDrawdownPct: 15, dailyLossLimitPct: 10, cooldownMinutes: 60, maxOpenOrders: 10 },
+      notification: { botToken: '', chatId: '' },
       killswitch: { enabled: true, reason: null, triggeredAt: null },
     });
     GET = (await import('@/app/api/settings/route')).GET;

@@ -47,12 +47,22 @@ type Env = {
   ADMIN_TOKEN?: string; // Bearer token for auth guard
   VERSION?: string; // Git SHA injected at deploy time
   ASSETS: { fetch: (request: Request) => Promise<Response> }; // Static assets binding
+  ALLOWED_ORIGINS?: string; // Comma-separated allowed CORS origins
 };
 
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', honoLogger());
-app.use('*', cors({ origin: '*', allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] }));
+app.use('*', cors({
+  origin: (origin, c) => {
+    const allowed = (c.env as Env).ALLOWED_ORIGINS;
+    if (!allowed) return origin || '*';
+    const list = allowed.split(',').map(s => s.trim());
+    if (origin && list.includes(origin)) return origin;
+    return list[0] || '*';
+  },
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+}));
 app.use('*', prettyJSON());
 
 // Static file serving from Next.js export (out/ directory)

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient } from '@/lib/db/client';
 
 // Session-cookie auth guard for Next.js App Router routes.
 // This middleware applies to /api/* routes handled by Next.js only.
@@ -16,7 +17,7 @@ const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings'];
 // Auth routes are always public (login, logout, me).
 const PUBLIC_API_PREFIXES = ['/api/auth'];
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method = req.method;
 
@@ -43,6 +44,37 @@ export function middleware(req: NextRequest) {
     );
   }
 
+  // Validate session against D1 (graceful fallback if DB unavailable in dev)
+  const db = createServerClient();
+  if (db) {
+    try {
+      const now = Date.now();
+      const { results } = await db
+        .prepare('SELECT user_id, expires_at FROM user_sessions WHERE session_id = ?')
+        .bind(sessionId)
+        .all<{ user_id: string; expires_at: number }>();
+
+      if (!results.length || results[0].expires_at < now) {
+        return NextResponse.json(
+          { ok: false, error: 'Session expired' },
+          { status: 401 }
+        );
+      }
+
+      // Attach userId for downstream handlers
+      const response = NextResponse.next();
+      response.headers.set('x-user-id', results[0].user_id);
+      return response;
+    } catch {
+      // D1 query failed — deny request rather than silently allowing
+      return NextResponse.json(
+        { ok: false, error: 'Session validation failed' },
+        { status: 401 }
+      );
+    }
+  }
+
+  // No DB available (local dev) — accept with valid cookie
   return NextResponse.next();
 }
 
