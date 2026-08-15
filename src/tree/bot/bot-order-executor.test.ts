@@ -132,25 +132,6 @@ describe('executeOrder', () => {
     };
   });
 
-  it('throws when killswitch blocks trading', async () => {
-    ctx.deps.killswitch.isTradingEnabled = vi.fn().mockReturnValue(false);
-
-    await expect(executeOrder(ctx, req, 0)).rejects.toThrow(
-      'Trading halted by killswitch',
-    );
-  });
-
-  it('does not call placeOrder when killswitch blocks', async () => {
-    ctx.deps.killswitch.isTradingEnabled = vi.fn().mockReturnValue(false);
-
-    try {
-      await executeOrder(ctx, req, 0);
-    } catch {
-      // expected
-    }
-    expect(ctx.deps.exchange.placeOrder).not.toHaveBeenCalled();
-  });
-
   it('calls exchange.placeOrder with the order request', async () => {
     await executeOrder(ctx, req, 0);
 

@@ -2,6 +2,7 @@
 // Types extracted to bot-manager-types.ts, helpers to bot-manager-helpers.ts.
 
 import type { ExchangeAdapter, ExchangeId } from '../exchange/types';
+import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import { Killswitch } from './killswitch';
 import { BotInstance } from './bot-instance';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TelemetryWriter used in BotManager; TradeEventType used in emitTelemetry (line 210)
@@ -22,7 +23,7 @@ export class BotManager {
   private exchanges = new Map<string, ExchangeAdapter>();
   private queues = new Map<string, RequestQueue>();
   private killswitch: Killswitch;
-  private deps: Omit<Required<BotManagerDependencies>, 'telemetry' | 'userId'> & { telemetry?: TelemetryWriter; userId?: string };
+  private deps: Omit<Required<BotManagerDependencies>, 'telemetry' | 'userId' | 'getOrchestrator'> & { telemetry?: TelemetryWriter; userId?: string; getOrchestrator?: () => ExchangeOrchestrator | null };
 
   constructor(deps: BotManagerDependencies = {}) {
     this.deps = {
@@ -31,9 +32,11 @@ export class BotManager {
       onBotEvent: deps.onBotEvent ?? (() => {}),
       telemetry: deps.telemetry,
       userId: deps.userId,
+      getOrchestrator: deps.getOrchestrator,
     };
 
     this.killswitch = new Killswitch(
+
       {
         onHalt: (reason) => {
           this.deps.onLog(`KILLSWITCH HALT: ${reason}`);
@@ -125,7 +128,11 @@ export class BotManager {
       emitTelemetry: (type, details) => this.emitTelemetry(type, details),
     });
 
-    const bot = new BotInstance(req.id, req.config, { exchange, killswitch: this.killswitch }, callbacks);
+    const bot = new BotInstance(req.id, req.config, {
+      exchange,
+      killswitch: this.killswitch,
+      exchangeOrchestrator: this.deps.getOrchestrator?.() ?? undefined,
+    }, callbacks);
     this.bots.set(req.id, bot);
 
     if (this.deps.userId) {

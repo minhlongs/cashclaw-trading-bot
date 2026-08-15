@@ -11,11 +11,11 @@ import type {
   BotDependencies,
   BotState,
 } from './types';
-import type { StrategyChain } from './strategy-chain';
+import { evaluateChain } from './bot-strategy';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
+import type { StrategyChain } from './strategy-chain';
 import type { TradeEventType } from '../telemetry/types';
-import { evaluateChain } from './bot-strategy';
 
 export interface TickContext {
   id: string;
@@ -52,7 +52,16 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
   }
 
   try {
-    const ticker = await deps.exchange.fetchTicker(config.symbol);
+    let ticker;
+    if (deps.exchangeOrchestrator) {
+      const r = await deps.exchangeOrchestrator.fetchTicker('paper', config.symbol);
+      ticker = r.ok ? r.data : undefined;
+    } else {
+      ticker = await deps.exchange.fetchTicker(config.symbol);
+    }
+    if (!ticker) {
+      throw new Error(`Failed to fetch ticker for ${config.symbol}`);
+    }
     const price = ticker.last;
     if (price <= 0) return { lastTickPrice };
 

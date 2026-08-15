@@ -67,7 +67,16 @@ export class BotInstance {
   async start(): Promise<void> {
     if (this.state.status === 'running') return;
     try {
-      const ticker = await this.deps.exchange.fetchTicker(this.config.symbol);
+      let ticker;
+      if (this.deps.exchangeOrchestrator) {
+        const r = await this.deps.exchangeOrchestrator.fetchTicker('paper', this.config.symbol);
+        ticker = r.ok ? r.data : undefined;
+      } else {
+        ticker = await this.deps.exchange.fetchTicker(this.config.symbol);
+      }
+      if (!ticker) {
+        throw new Error(`Failed to fetch ticker for ${this.config.symbol}`);
+      }
       const price = ticker.last;
       if (price <= 0) {
         throw new Error(`Invalid price for ${this.config.symbol}: ${price}`);
@@ -164,6 +173,7 @@ export class BotInstance {
     if (!this.deps.killswitch.isTradingEnabled()) {
       throw new Error('Trading halted by killswitch');
     }
+
     const ctx: OrderContext = {
       deps: this.deps,
       config: { capital: this.config.capital, symbol: this.config.symbol },

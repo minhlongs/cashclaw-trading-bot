@@ -4,6 +4,7 @@
 import type { BotConfig, BotStatus } from './types';
 import type { ExchangeConfig } from '../exchange/types';
 import type { TelemetryWriter } from '../telemetry';
+import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 
 export interface BotManagerDependencies {
   onLog?: (msg: string) => void;
@@ -11,6 +12,7 @@ export interface BotManagerDependencies {
   onBotEvent?: (botId: string, event: string, data: Record<string, unknown>) => void;
   telemetry?: TelemetryWriter;
   userId?: string;
+  getOrchestrator?: () => ExchangeOrchestrator | null;
 }
 
 export interface CreateBotRequest {

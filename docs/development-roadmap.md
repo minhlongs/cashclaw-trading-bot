@@ -24,15 +24,14 @@
 | Phase N i18n | 18 files migrated to useTranslations(); vi.json/en.json 244 keys synced | commit `0a1b5c9` |
 | Phase O rate-limit | Fixed ok:false missing in bots/settings rate-limit responses | commit `78b29d0` |
 | Phase P dead code | Wizard maps deduplicated, empty barrel removed | commit `54973ea` |
-| Phase Q orchestrator | ExchangeOrchestrator 6 methods → Result<T>, type-guard tests added, v2 wiring documented | commit `2b2308a` |
-| Phase O rate-limit | Fixed ok:false missing in bots/settings rate-limit responses | commit `78b29d0` |
-| Phase P dead code | Wizard maps deduplicated, empty barrel removed | commit `54973ea` |
 | Phase Q orchestrator | ExchangeOrchestrator 6 methods → Result<T>, 7 type-guard tests, v2 wiring documented | commit `2b2308a` |
+| Phase R deps | 13 packages pinned exact (next 16.3.1, react 19.2.8, vitest 3.2.7, etc.); @opennextjs/cloudflare peer dep satisfied | commit `83cc365` |
+| Phase S orchestrator wiring | ExchangeOrchestrator wired into bot execution path; duplicate killswitch guard removed from order executor | commit `c0cb35a` |
 
 ## Current State
 
-- **Tests:** 1628 across 122 files, full suite green
-- **Coverage:** statements 87.5%, branches 89.2%, functions 90.2%, lines 87.5% (thresholds 80/85/85/80)
+- **Tests:** 1633 across 123 files, full suite green
+- **Coverage:** statements 88.18%, branches 88.73%, functions 90.33%, lines 88.18% (thresholds 80/85/85/80)
 - **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0`)
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean

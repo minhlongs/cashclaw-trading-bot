@@ -4,6 +4,7 @@
 import type { ExchangeAdapter } from '../exchange/types';
 import type { Killswitch } from './killswitch';
 import type { TelemetryWriter } from '../telemetry/writer';
+import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 
 // ── StrategyChain (OmniRoute Phase 4) ────────────────────────────────────────
 export interface StrategyContext {
@@ -184,4 +185,5 @@ export interface BotDependencies {
   exchange: ExchangeAdapter;
   killswitch: Killswitch;
   telemetry?: TelemetryWriter;
+  exchangeOrchestrator?: ExchangeOrchestrator;
 }

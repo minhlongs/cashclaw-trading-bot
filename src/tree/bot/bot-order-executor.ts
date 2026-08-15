@@ -33,11 +33,34 @@ export async function executeOrder(
 ): Promise<{ result: OrderResult; orderCounter: number }> {
   const { deps, config, state, botId, onTrade, emitTelemetry, emitState } = ctx;
 
-  if (!deps.killswitch.isTradingEnabled()) {
-    throw new Error('Trading halted by killswitch');
+  let result: OrderResult;
+  const orchestrated = deps.exchangeOrchestrator
+    ? await deps.exchangeOrchestrator.placeOrder(req.exchange ?? 'paper', req)
+    : null;
+  if (orchestrated) {
+    if (!orchestrated.ok) {
+      const fallback: OrderResult = {
+        id: `rejected-${Date.now()}`,
+        exchangeId: req.exchange ?? 'paper',
+        symbol: req.symbol,
+        side: req.side,
+        type: req.type,
+        price: req.price ?? 0,
+        quantity: req.quantity,
+        filled: 0,
+        fee: 0,
+        pnl: 0,
+        status: 'rejected',
+        timestamp: Date.now(),
+      };
+      emitTelemetry('error', { error: 'order rejected by orchestrator', context: 'bot.executeOrder' });
+      result = fallback;
+    } else {
+      result = orchestrated.data;
+    }
+  } else {
+    result = await deps.exchange.placeOrder(req);
   }
-
-  const result = await deps.exchange.placeOrder(req);
   state.lastOrderAt = Date.now();
   orderCounter++;
   state.totalTrades++;
