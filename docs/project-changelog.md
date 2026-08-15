@@ -79,3 +79,6 @@
 
 ### Flaky Test Fixes — Commit `66568b8`
 - Fixed deferred resolve handle in `strategy-settings.test.tsx` (eliminated 100ms setTimeout race). Added missing `await` in `client-extended.test.ts` async rejection test.
+
+### Phase VII: Queue Drain Cron — Commit `26a510a`
+- Wired CF Cron `scheduled()` handler in `src/worker.ts` to drain all exchange request queues every 5 minutes via `BotManager.drainQueues()`. Replaced raw `console.log` with `createLogger('cron')` to satisfy `no-console` rule. Fixed duplicate-imports lint in `src/tree/bot/bot-manager.ts` by consolidating type-only + value imports from `bot-manager-types.ts` into a single inline-typed statement. Changed `toD1Status` export in `bot-manager-types.ts` to arrow function so value re-export coexists with `export type` without duplicate-imports warnings. Added `triggers.crons` to `wrangler.jsonc`. Gates: 0 lint warnings, 0 TS errors, 1588/1588 Vitest tests pass.
