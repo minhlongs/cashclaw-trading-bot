@@ -53,6 +53,9 @@
 ### Dependency Modernization (Phase R) — Commit `83cc365`
 - Pinned 13 packages to exact versions: `next` 16.2.10 → 16.3.1, `react`/`react-dom` 19.2.7 → 19.2.8, `next-intl` 4.13.2 → 4.13.6, `hono` 4.12.30 → 4.13.2, `vitest`/`@vitest/coverage-v8` 3.2.4 → 3.2.7, `wrangler` 4.122.0 → 4.123.0, `lightweight-charts` 4.2.0 → 4.2.3, `@types/react` 19.2.17 → 19.2.18, `@types/react-dom` 19.2.3 → 19.2.4. Resolved pre-existing `@opennextjs/cloudflare` peer dependency violation (`next>=16.2.11` required, was at 16.2.10). All gates pass (1635 tests, 0 lint, 0 TS errors, build clean). 7 major-version upgrades deferred (eslint, vitest, zod, typescript, lightweight-charts, lucide-react, @types/node).
 
+### Killswitch Defense-in-Depth — Commit `42eb237`
+- Restored killswitch guard at top of `executeOrder` (executor-level defense-in-depth). Prevents future direct callers of `executeOrder` from bypassing the BotInstance-level killswitch. Two tests added.
+
 ### Orchestrator Wiring (Phase S) — Commit `c0cb35a`
 - ExchangeOrchestrator wired into BotManager/BotInstance/bot-tick/bot-order-executor as optional first-choice execution path, with raw adapter fallback. Duplicate killswitch guard removed from bot-order-executor (BotInstance-level guard preserved as defense-in-depth). 2 executor-level killswitch tests removed.
 

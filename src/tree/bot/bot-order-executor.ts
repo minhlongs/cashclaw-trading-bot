@@ -33,6 +33,11 @@ export async function executeOrder(
 ): Promise<{ result: OrderResult; orderCounter: number }> {
   const { deps, config, state, botId, onTrade, emitTelemetry, emitState } = ctx;
 
+  if (deps.killswitch && !deps.killswitch.isTradingEnabled()) {
+    emitTelemetry('error', { error: 'Trading halted by killswitch', context: 'bot.executeOrder' });
+    throw new Error('Trading halted by killswitch');
+  }
+
   let result: OrderResult;
   const orchestrated = deps.exchangeOrchestrator
     ? await deps.exchangeOrchestrator.placeOrder(req.exchange ?? 'paper', req)
