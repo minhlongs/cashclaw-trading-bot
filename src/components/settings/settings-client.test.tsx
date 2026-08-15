@@ -76,6 +76,7 @@ const LOADED_SETTINGS: SettingsData = {
   },
   notification: { botToken: '', chatId: '' },
   killswitch: { enabled: true, reason: null, triggeredAt: null },
+  killswitchDaily: { dailyPnl: 0, consecutiveLosses: 0, peakCapital: 0, dailyStartTime: 0 },
 };
 
 type FetchInit = RequestInit | undefined;

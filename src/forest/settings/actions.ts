@@ -35,6 +35,12 @@ export interface SettingsData {
     reason: string | null;
     triggeredAt: number | null;
   };
+  killswitchDaily: {
+    dailyPnl: number;
+    consecutiveLosses: number;
+    peakCapital: number;
+    dailyStartTime: number;
+  };
 }
 
 const SETTINGS_ROW_ID = 'settings_default';
@@ -61,6 +67,13 @@ const DEFAULT_KILLSWITCH: SettingsData['killswitch'] = {
   enabled: true,
   reason: null,
   triggeredAt: null,
+};
+
+const DEFAULT_KILLSWITCH_DAILY: SettingsData['killswitchDaily'] = {
+  dailyPnl: 0,
+  consecutiveLosses: 0,
+  peakCapital: 0,
+  dailyStartTime: Date.now(),
 };
 
 // ── D1 helpers ───────────────────────────────────────────────
@@ -115,6 +128,21 @@ function parseNotification(raw: string | undefined): SettingsData['notification'
   }
 }
 
+function parseKillswitchDaily(raw: string | undefined): SettingsData['killswitchDaily'] {
+  if (!raw) return { ...DEFAULT_KILLSWITCH_DAILY };
+  try {
+    const obj = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      dailyPnl: typeof obj.dailyPnl === 'number' ? obj.dailyPnl : 0,
+      consecutiveLosses: typeof obj.consecutiveLosses === 'number' ? obj.consecutiveLosses : 0,
+      peakCapital: typeof obj.peakCapital === 'number' ? obj.peakCapital : 0,
+      dailyStartTime: typeof obj.dailyStartTime === 'number' ? obj.dailyStartTime : Date.now(),
+    };
+  } catch {
+    return { ...DEFAULT_KILLSWITCH_DAILY };
+  }
+}
+
 async function rowToSettingsData(row: SettingsRow): Promise<SettingsData> {
   return {
     exchanges: await parseExchanges(row.exchange_creds_json),
@@ -125,6 +153,7 @@ async function rowToSettingsData(row: SettingsRow): Promise<SettingsData> {
       reason: row.killswitch_reason,
       triggeredAt: row.killswitch_triggered_at,
     },
+    killswitchDaily: parseKillswitchDaily(row.killswitch_daily_json),
   };
 }
 
@@ -137,6 +166,7 @@ async function loadCurrentSettings(): Promise<SettingsData> {
       risk: { ...DEFAULT_RISK },
       notification: { ...DEFAULT_NOTIFICATION },
       killswitch: { enabled: true, reason: null, triggeredAt: null },
+      killswitchDaily: { ...DEFAULT_KILLSWITCH_DAILY },
     };
   }
 
@@ -147,6 +177,7 @@ async function loadCurrentSettings(): Promise<SettingsData> {
       risk: { ...DEFAULT_RISK },
       notification: { ...DEFAULT_NOTIFICATION },
       killswitch: { enabled: true, reason: null, triggeredAt: null },
+      killswitchDaily: { ...DEFAULT_KILLSWITCH_DAILY },
     };
   }
 
@@ -172,6 +203,7 @@ async function persistSettings(data: SettingsData): Promise<Result<void>> {
     exchange_creds_json: JSON.stringify(encryptedExchanges),
     risk_limits_json: JSON.stringify(data.risk),
     notification_json: JSON.stringify(data.notification),
+    killswitch_daily_json: JSON.stringify(data.killswitchDaily),
     killswitch_enabled: data.killswitch.enabled ? 1 : 0,
     killswitch_reason: data.killswitch.reason,
     killswitch_triggered_at: data.killswitch.triggeredAt,
@@ -283,5 +315,24 @@ export async function resetAllBots(): Promise<Result<void>> {
     return ok(undefined);
   } catch (e) {
     return err(e instanceof Error ? e.message : 'Reset failed');
+  }
+}
+
+/**
+ * Persist killswitch daily state to D1.
+ * Called after each trade event to survive Workers cold starts.
+ */
+export async function saveKillswitchDailyState(daily: {
+  dailyPnl: number;
+  consecutiveLosses: number;
+  peakCapital: number;
+  dailyStartTime: number;
+}): Promise<void> {
+  try {
+    const current = await loadCurrentSettings();
+    current.killswitchDaily = daily;
+    await persistSettings(current);
+  } catch (e) {
+    log.error('Failed to persist killswitch daily state', e instanceof Error ? e : new Error(String(e)), { action: 'saveKillswitchDailyState' });
   }
 }

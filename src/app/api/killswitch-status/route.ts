@@ -31,34 +31,23 @@ export async function GET() {
     const haltReason = settings?.killswitch_reason ?? null;
     const haltedAt = settings?.killswitch_triggered_at ?? null;
 
-    // Compute daily PnL from today's closed trades
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayTs = Math.floor(todayStart.getTime() / 1000);
-
-    const dailyResult = await db
-      .prepare('SELECT COALESCE(SUM(pnl), 0) as daily_pnl FROM trades WHERE closed_at >= ? AND status = ?')
-      .bind(todayTs, 'filled')
-      .first<{ daily_pnl: number }>();
-    const dailyPnl = dailyResult?.daily_pnl ?? 0;
-
-    // Count consecutive losses from most recent closed trades
-    const recentTrades = await db
-      .prepare('SELECT pnl FROM trades WHERE status = ? ORDER BY closed_at DESC LIMIT 20')
-      .bind('filled')
-      .all<{ pnl: number }>();
+    // Read daily state from D1 settings (persisted by Killswitch callback)
+    let dailyPnl = 0;
     let consecutiveLosses = 0;
-    for (const trade of recentTrades.results ?? []) {
-      if (trade.pnl < 0) consecutiveLosses++;
-      else break;
+    let peakCapital = 0;
+    if (settings?.killswitch_daily_json) {
+      try {
+        const dailyState = JSON.parse(settings.killswitch_daily_json) as Record<string, unknown>;
+        if (typeof dailyState.dailyPnl === 'number') dailyPnl = dailyState.dailyPnl;
+        if (typeof dailyState.consecutiveLosses === 'number') consecutiveLosses = dailyState.consecutiveLosses;
+        if (typeof dailyState.peakCapital === 'number') peakCapital = dailyState.peakCapital;
+      } catch { /* ignore parse errors */ }
     }
 
-    // Current drawdown from latest capital snapshot
-    const snapshot = await db
-      .prepare('SELECT max_drawdown_pct FROM capital_snapshots ORDER BY created_at DESC LIMIT 1')
-      .bind()
-      .first<{ max_drawdown_pct: number }>();
-    const currentDrawdown = snapshot?.max_drawdown_pct ?? 0;
+    // Compute current drawdown from peak capital
+    const currentDrawdown = peakCapital > 0
+      ? ((peakCapital - (peakCapital + dailyPnl)) / peakCapital) * -100
+      : 0;
 
     return NextResponse.json({
       enabled,
@@ -67,7 +56,7 @@ export async function GET() {
       haltedAt,
       dailyPnl,
       consecutiveLosses,
-      currentDrawdown,
+      currentDrawdown: Math.abs(currentDrawdown),
       timestamp: Date.now(),
     });
   } catch (e) {

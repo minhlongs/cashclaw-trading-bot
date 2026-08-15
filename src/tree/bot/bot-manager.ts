@@ -49,6 +49,13 @@ export class BotManager {
         onOrderPlaced: () => {},
         onOrderFilled: () => {},
         onError: (e, ctx) => this.deps.onError(e, ctx),
+        onDailyStateChange: (daily) => {
+          import('@/forest/settings/actions').then(({ saveKillswitchDailyState }) => {
+            saveKillswitchDailyState(daily);
+          }).catch((error) => {
+            log.error('Failed to persist killswitch daily state', error instanceof Error ? error : new Error(String(error)), { action: 'onDailyStateChange' });
+          });
+        },
       },
       {
         maxDailyLossPct: 10,

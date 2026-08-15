@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS: SettingsData = {
   },
   notification: { botToken: '', chatId: '' },
   killswitch: { enabled: false, reason: null, triggeredAt: null },
+  killswitchDaily: { dailyPnl: 0, consecutiveLosses: 0, peakCapital: 0, dailyStartTime: 0 },
 };
 
 export function SettingsClient() {

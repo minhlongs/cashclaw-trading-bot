@@ -7,6 +7,7 @@ export interface KillswitchCallbacks {
   onOrderPlaced: (order: OrderResult) => void;
   onOrderFilled: (order: OrderResult) => void;
   onError: (error: Error, context: string) => void;
+  onDailyStateChange?: (daily: { dailyPnl: number; consecutiveLosses: number; peakCapital: number; dailyStartTime: number }) => void;
 }
 
 export interface KillswitchConfig {

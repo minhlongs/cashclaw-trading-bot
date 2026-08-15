@@ -39,6 +39,7 @@ export class Killswitch {
     this.botStates.set(botId, { dailyPnl: 0, consecutiveLosses: 0, capital });
     if (capital > this.state.peakCapital) {
       this.state.peakCapital = capital;
+      this.emitDailyState();
     }
   }
 
@@ -82,6 +83,7 @@ export class Killswitch {
       this.state.consecutiveLosses++;
       if (this.state.consecutiveLosses >= this.config.maxConsecutiveLosses) {
         this.halt(`Max consecutive losses reached: ${this.state.consecutiveLosses}`);
+        this.emitDailyState();
         return;
       }
     } else {
@@ -91,6 +93,7 @@ export class Killswitch {
       const dailyPnlPct = Math.abs(this.state.dailyPnl / this.state.peakCapital) * 100;
       if (this.state.dailyPnl < 0 && dailyPnlPct >= this.config.maxDailyLossPct) {
         this.halt(`Daily loss limit exceeded: ${dailyPnlPct.toFixed(1)}%`);
+        this.emitDailyState();
         return;
       }
       const cur = this.state.peakCapital + this.state.dailyPnl;
@@ -99,6 +102,7 @@ export class Killswitch {
         this.halt(`Max drawdown reached: ${this.state.currentDrawdown.toFixed(2)}%`);
       }
     }
+    this.emitDailyState();
   }
 
   updateDailyPnl(_pnl: number): void {
@@ -125,6 +129,7 @@ export class Killswitch {
     this.state.currentDrawdown = 0;
     this.state.enabled = true;
     this.botStates.clear();
+    this.emitDailyState();
   }
 
   recordError(error: Error, context: string): void {
@@ -180,6 +185,17 @@ export class Killswitch {
     this.callbacks.onHalt(reason);
   }
 
+  private emitDailyState(): void {
+    if (this.callbacks.onDailyStateChange) {
+      this.callbacks.onDailyStateChange({
+        dailyPnl: this.state.dailyPnl,
+        consecutiveLosses: this.state.consecutiveLosses,
+        peakCapital: this.state.peakCapital,
+        dailyStartTime: this.state.dailyStartTime,
+      });
+    }
+  }
+
   private scheduleDailyReset(): void {
     const tomorrow = new Date();
     tomorrow.setHours(0, 0, 0, 0);
@@ -200,5 +216,6 @@ export class Killswitch {
       bot.dailyPnl = 0;
       bot.consecutiveLosses = 0;
     }
+    this.emitDailyState();
   }
 }

@@ -34,6 +34,7 @@ const DEFAULT_SETTINGS_ROW = {
   }),
   risk_limits_json: JSON.stringify({ maxDrawdownPct: 15, dailyLossLimitPct: 10, cooldownMinutes: 60, maxOpenOrders: 10 }),
   notification_json: '{}',
+  killswitch_daily_json: '{}',
   killswitch_enabled: 1,
   killswitch_reason: null,
   killswitch_triggered_at: null,
@@ -82,6 +83,7 @@ describe('getSettings', () => {
       }),
       risk_limits_json: JSON.stringify({ maxDrawdownPct: 20, dailyLossLimitPct: 5, cooldownMinutes: 10, maxOpenOrders: 25 }),
       notification_json: '{}',
+      killswitch_daily_json: '{"dailyPnl":0,"consecutiveLosses":0,"peakCapital":0,"dailyStartTime":1700000000}',
       killswitch_enabled: 0,
       killswitch_reason: 'test halt',
       killswitch_triggered_at: 1700000000,
@@ -184,5 +186,32 @@ describe('resetAllBots', () => {
     const fn = await action('./actions', 'resetAllBots');
     const result = await fn();
     expect(result).toEqual({ ok: false, error: 'mgr down' });
+  });
+});
+
+describe('saveKillswitchDailyState', () => {
+  it('persists daily state to D1', async () => {
+    const { saveKillswitchDailyState } = await import('./actions');
+    mockFindSettings.mockResolvedValue({
+      ...DEFAULT_SETTINGS_ROW,
+      exchange_creds_json: '{}',
+    });
+
+    await saveKillswitchDailyState({ dailyPnl: -50, consecutiveLosses: 2, peakCapital: 1000, dailyStartTime: 1700000000 });
+
+    expect(mockUpsertSettings).toHaveBeenCalled();
+    const call = mockUpsertSettings.mock.calls[0] as [unknown, { killswitch_daily_json: string }];
+    const persisted = JSON.parse(call[1].killswitch_daily_json) as Record<string, unknown>;
+    expect(persisted.dailyPnl).toBe(-50);
+    expect(persisted.consecutiveLosses).toBe(2);
+    expect(persisted.peakCapital).toBe(1000);
+  });
+
+  it('does not throw on persistence failure', async () => {
+    const { saveKillswitchDailyState } = await import('./actions');
+    mockFindSettings.mockRejectedValue(new Error('D1 down'));
+
+    await expect(saveKillswitchDailyState({ dailyPnl: 0, consecutiveLosses: 0, peakCapital: 0, dailyStartTime: 0 }))
+      .resolves.toBeUndefined();
   });
 });
