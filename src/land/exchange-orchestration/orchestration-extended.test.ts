@@ -54,83 +54,122 @@ describe('ExchangeOrchestrator extended', () => {
   it('fetchOrderBook returns book from provider', async () => {
     const p = mkProvider();
     orch.registerProvider('binance', p as never);
-    const book = await orch.fetchOrderBook('binance', 'BTC/USDT');
-    expect(book.symbol).toBe('BTC/USDT');
+    const result = await orch.fetchOrderBook('binance', 'BTC/USDT');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.symbol).toBe('BTC/USDT');
+    }
   });
 
   it('fetchOrderBook reports error on failure', async () => {
     orch.registerProvider('binance', mkProvider({ fetchOrderBook: vi.fn().mockRejectedValue(new Error('depth')) }) as never);
-    await expect(orch.fetchOrderBook('binance', 'BTC/USDT')).rejects.toThrow('depth');
+    const result = await orch.fetchOrderBook('binance', 'BTC/USDT');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('depth');
+    }
     expect(onError).toHaveBeenCalledWith(expect.any(Error), 'fetchOrderBook/BTC/USDT');
   });
 
   it('fetchOrder returns order from provider', async () => {
     orch.registerProvider('binance', mkProvider() as never);
-    const order = await orch.fetchOrder('binance', 'o1', 'BTC/USDT');
-    expect(order.id).toBe('o1');
+    const result = await orch.fetchOrder('binance', 'o1', 'BTC/USDT');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.id).toBe('o1');
+    }
   });
 
   it('fetchOrder reports error on failure', async () => {
     orch.registerProvider('binance', mkProvider({ fetchOrder: vi.fn().mockRejectedValue(new Error('nf')) }) as never);
-    await expect(orch.fetchOrder('binance', 'o1', 'BTC/USDT')).rejects.toThrow('nf');
+    const result = await orch.fetchOrder('binance', 'o1', 'BTC/USDT');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('nf');
+    }
     expect(onError).toHaveBeenCalledWith(expect.any(Error), 'fetchOrder/o1');
   });
 
   it('cancelOrder delegates to provider', async () => {
     orch.registerProvider('binance', mkProvider() as never);
-    const ok = await orch.cancelOrder('binance', 'o1', 'BTC/USDT');
-    expect(ok).toBe(true);
+    const result = await orch.cancelOrder('binance', 'o1', 'BTC/USDT');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data).toBe(true);
+    }
   });
 
   it('cancelOrder reports error on failure', async () => {
     orch.registerProvider('binance', mkProvider({ cancelOrder: vi.fn().mockRejectedValue(new Error('fail')) }) as never);
-    await expect(orch.cancelOrder('binance', 'o1', 'BTC/USDT')).rejects.toThrow('fail');
+    const result = await orch.cancelOrder('binance', 'o1', 'BTC/USDT');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('fail');
+    }
     expect(onError).toHaveBeenCalledWith(expect.any(Error), 'cancelOrder/o1');
   });
 
   it('fetchBalances returns array from provider', async () => {
     orch.registerProvider('binance', mkProvider() as never);
-    const balances = await orch.fetchBalances('binance');
-    expect(balances).toHaveLength(1);
+    const result = await orch.fetchBalances('binance');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data).toHaveLength(1);
+    }
   });
 
   it('fetchBalances reports error on failure', async () => {
     orch.registerProvider('binance', mkProvider({ fetchBalances: vi.fn().mockRejectedValue(new Error('bal')) }) as never);
-    await expect(orch.fetchBalances('binance')).rejects.toThrow('bal');
+    const result = await orch.fetchBalances('binance');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('bal');
+    }
     expect(onError).toHaveBeenCalledWith(expect.any(Error), 'fetchBalances/binance');
   });
 
   it('placeOrder delegates to registered provider', async () => {
     orch.registerProvider('binance', mkProvider({ placeOrder: vi.fn().mockResolvedValue({ id: 'o2', status: 'filled' }) }) as never);
     const result = await orch.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
-    expect(result.id).toBe('o2');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.id).toBe('o2');
+    }
   });
 
-  it('placeOrder throws when killswitch disables trading', async () => {
+  it('placeOrder returns err when killswitch disables trading', async () => {
     const localKs = mkKillswitch({
       isTradingEnabled: vi.fn().mockReturnValue(false),
       haltReason: 'daily limit',
     });
     const o = new ExchangeOrchestrator({ onError, killswitch: localKs });
     o.registerProvider('binance', mkProvider() as never);
-    await expect(
-      o.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 }),
-    ).rejects.toThrow('halted');
+    const result = await o.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('Trading halted by killswitch');
+    }
+    expect(onError).toHaveBeenCalled();
     o.destroy();
   });
 
-  it('placeOrder throws when circuit breaker is open', async () => {
+  it('placeOrder returns err when circuit breaker is open', async () => {
     orch.registerProvider('binance', mkProvider({ isCircuitOpen: vi.fn().mockReturnValue(true) }) as never);
-    await expect(
-      orch.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 }),
-    ).rejects.toThrow();
+    const result = await orch.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('Trading paused');
+    }
+    expect(onError).toHaveBeenCalled();
   });
 
-  it('placeOrder reports and throws on provider failure', async () => {
+  it('placeOrder reports and returns err on provider failure', async () => {
     orch.registerProvider('binance', mkProvider({ placeOrder: vi.fn().mockRejectedValue(new Error('funds')) }) as never);
-    await expect(
-      orch.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 }),
-    ).rejects.toThrow('funds');
+    const result = await orch.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('funds');
+    }
     expect(onError).toHaveBeenCalledWith(expect.any(Error), 'placeOrder/BTC/USDT');
   });
 
@@ -138,7 +177,11 @@ describe('ExchangeOrchestrator extended', () => {
     const throwingCb = vi.fn(() => { throw new Error('cb'); });
     const o = new ExchangeOrchestrator({ onError: throwingCb, killswitch: mkKillswitch() });
     o.registerProvider('binance', mkProvider({ fetchTicker: vi.fn().mockRejectedValue(new Error('net')) }) as never);
-    await expect(o.fetchTicker('binance', 'BTC/USDT')).rejects.toThrow('net');
+    const result = await o.fetchTicker('binance', 'BTC/USDT');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('net');
+    }
     o.destroy();
   });
 

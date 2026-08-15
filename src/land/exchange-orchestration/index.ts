@@ -1,9 +1,16 @@
 // Land layer — Exchange Orchestration
 // Wraps PaperExchangeProvider (v1) + CCXT providers (v2).
 // Uses Killswitch + rate-limit guards + circuit breaker per provider.
+//
+// v2 wiring path (single point of exchange interaction):
+// - BotManager will pass orchestrator (not raw adapter) into BotDependencies
+// - BotInstance.placeOrder will call orchestrator.placeOrder() and unwrap Result
+// - Killswitch and circuit-breaker checks live ONLY in orchestrator (remove duplicates later)
+// - ExchangeAdapter interface stays unchanged
 import type { ExchangeId, Ticker, OrderBook, OrderRequest, OrderResult, Balance } from '@/tree/exchange/types';
 import { PaperExchangeProvider } from '@/tree/exchange/provider';
 import { Killswitch } from '@/tree/bot/killswitch';
+import { ok, err, type Result } from '@/lib/result';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('exchange-orchestration');
@@ -64,70 +71,79 @@ export class ExchangeOrchestrator {
   async fetchTicker(
     exchange: string,
     symbol: string,
-  ): Promise<Ticker> {
+  ): Promise<Result<Ticker>> {
     const provider = this.getOrCreateProvider(exchange);
     try {
-      return await provider.fetchTicker(exchange as ExchangeId, symbol);
-    } catch (err) {
-      this.reportError(err instanceof Error ? err : new Error(String(err)), `fetchTicker/${symbol}`);
-      throw err;
+      return ok(await provider.fetchTicker(exchange as ExchangeId, symbol));
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.reportError(error instanceof Error ? error : new Error(msg), `fetchTicker/${symbol}`);
+      return err(msg);
     }
   }
 
-  async fetchOrderBook(exchange: string, symbol: string, depth = 20): Promise<OrderBook> {
+  async fetchOrderBook(exchange: string, symbol: string, depth = 20): Promise<Result<OrderBook>> {
     const provider = this.getOrCreateProvider(exchange);
     try {
-      return await provider.fetchOrderBook(exchange as ExchangeId, symbol, depth);
-    } catch (err) {
-      this.reportError(err instanceof Error ? err : new Error(String(err)), `fetchOrderBook/${symbol}`);
-      throw err;
+      return ok(await provider.fetchOrderBook(exchange as ExchangeId, symbol, depth));
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.reportError(error instanceof Error ? error : new Error(msg), `fetchOrderBook/${symbol}`);
+      return err(msg);
     }
   }
 
-  async placeOrder(exchange: string, request: OrderRequest): Promise<OrderResult> {
+  async placeOrder(exchange: string, request: OrderRequest): Promise<Result<OrderResult>> {
     if (!this.killswitch.isTradingEnabled()) {
-      throw new Error('Trading halted by killswitch');
+      this.reportError(new Error('Trading halted by killswitch'), `placeOrder/${request.symbol}`);
+      return err('Trading halted by killswitch');
     }
     const provider = this.getOrCreateProvider(exchange);
     if (provider.isCircuitOpen()) {
       const health = provider.getHealth();
-      throw new Error(`Trading paused for ${exchange} — provider score ${health.score}, failures ${health.failureCount}`);
+      const msg = `Trading paused for ${exchange} — provider score ${health.score}, failures ${health.failureCount}`;
+      this.reportError(new Error(msg), `placeOrder/${request.symbol}`);
+      return err(msg);
     }
     try {
-      return await provider.placeOrder(exchange as ExchangeId, request);
-    } catch (err) {
-      this.reportError(err instanceof Error ? err : new Error(String(err)), `placeOrder/${request.symbol}`);
-      throw err;
-    }
-  }
-
-  async cancelOrder(exchange: string, orderId: string, symbol: string): Promise<boolean> {
-    const provider = this.getOrCreateProvider(exchange);
-    try {
-      return await provider.cancelOrder(exchange as ExchangeId, orderId, symbol);
-    } catch (err) {
-      this.reportError(err instanceof Error ? err : new Error(String(err)), `cancelOrder/${orderId}`);
-      throw err;
+      return ok(await provider.placeOrder(exchange as ExchangeId, request));
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.reportError(error instanceof Error ? error : new Error(msg), `placeOrder/${request.symbol}`);
+      return err(msg);
     }
   }
 
-  async fetchOrder(exchange: string, orderId: string, symbol: string): Promise<OrderResult> {
+  async cancelOrder(exchange: string, orderId: string, symbol: string): Promise<Result<boolean>> {
     const provider = this.getOrCreateProvider(exchange);
     try {
-      return await provider.fetchOrder(exchange as ExchangeId, orderId, symbol);
-    } catch (err) {
-      this.reportError(err instanceof Error ? err : new Error(String(err)), `fetchOrder/${orderId}`);
-      throw err;
+      return ok(await provider.cancelOrder(exchange as ExchangeId, orderId, symbol));
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.reportError(error instanceof Error ? error : new Error(msg), `cancelOrder/${orderId}`);
+      return err(msg);
     }
   }
 
-  async fetchBalances(exchange: string): Promise<Balance[]> {
+  async fetchOrder(exchange: string, orderId: string, symbol: string): Promise<Result<OrderResult>> {
     const provider = this.getOrCreateProvider(exchange);
     try {
-      return await provider.fetchBalances(exchange as ExchangeId);
-    } catch (err) {
-      this.reportError(err instanceof Error ? err : new Error(String(err)), `fetchBalances/${exchange}`);
-      throw err;
+      return ok(await provider.fetchOrder(exchange as ExchangeId, orderId, symbol));
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.reportError(error instanceof Error ? error : new Error(msg), `fetchOrder/${orderId}`);
+      return err(msg);
+    }
+  }
+
+  async fetchBalances(exchange: string): Promise<Result<Balance[]>> {
+    const provider = this.getOrCreateProvider(exchange);
+    try {
+      return ok(await provider.fetchBalances(exchange as ExchangeId));
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.reportError(error instanceof Error ? error : new Error(msg), `fetchBalances/${exchange}`);
+      return err(msg);
     }
   }
 

@@ -62,26 +62,33 @@ describe('ExchangeOrchestrator', () => {
 
   describe('fetchTicker', () => {
     it('creates auto-provider for unregistered exchange', async () => {
-      const ticker = await orchestrator.fetchTicker('binance', 'BTC/USDT');
-      expect(ticker).toBeDefined();
-      expect(ticker.symbol).toBe('BTC/USDT');
+      const result = await orchestrator.fetchTicker('binance', 'BTC/USDT');
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.symbol).toBe('BTC/USDT');
+      }
     });
 
     it('delegates to registered provider', async () => {
       const provider = makeMockProvider() as any;
       orchestrator.registerProvider('binance', provider);
 
-      const ticker = await orchestrator.fetchTicker('binance', 'BTC/USDT');
-      expect(ticker).toBeDefined();
+      const result = await orchestrator.fetchTicker('binance', 'BTC/USDT');
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data).toBeDefined();
+      }
       expect(provider.fetchTicker).toHaveBeenCalled();
     });
   });
 
   describe('fetchOrderBook', () => {
     it('creates auto-provider for unregistered exchange', async () => {
-      const book = await orchestrator.fetchOrderBook('binance', 'BTC/USDT');
-      expect(book).toBeDefined();
-      expect(book.symbol).toBe('BTC/USDT');
+      const result = await orchestrator.fetchOrderBook('binance', 'BTC/USDT');
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.symbol).toBe('BTC/USDT');
+      }
     });
   });
 
@@ -92,11 +99,14 @@ describe('ExchangeOrchestrator', () => {
 
       orchestrator = new ExchangeOrchestrator({ killswitch: ks, onError });
 
-      await expect(
-        orchestrator.placeOrder('binance', {
-          symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.001,
-        }),
-      ).rejects.toThrow();
+      const result = await orchestrator.placeOrder('binance', {
+        symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.001,
+      });
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error).toContain('Trading halted by killswitch');
+      }
+      expect(onError).toHaveBeenCalled();
     });
 
     it('allows trading when killswitch is default', async () => {
@@ -106,9 +116,10 @@ describe('ExchangeOrchestrator', () => {
       const result = await orchestrator.placeOrder('binance', {
         symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.001,
       });
-
-      expect(result).toBeDefined();
-      expect(result.status).toBe('filled');
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.status).toBe('filled');
+      }
     });
   });
 
@@ -118,28 +129,35 @@ describe('ExchangeOrchestrator', () => {
       orchestrator.registerProvider('binance', provider);
 
       const result = await orchestrator.cancelOrder('binance', 'order-1', 'BTC/USDT');
-      expect(result).toBe(true);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data).toBe(true);
+      }
       expect(provider.cancelOrder).toHaveBeenCalled();
     });
   });
 
   describe('fetchBalances', () => {
     it('auto-creates provider and fetches balances', async () => {
-      const balances = await orchestrator.fetchBalances('binance');
-      expect(balances).toBeDefined();
-      expect(balances.length).toBeGreaterThan(0);
+      const result = await orchestrator.fetchBalances('binance');
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.length).toBeGreaterThan(0);
+      }
     });
   });
 
   describe('error handling', () => {
-    it('provider errors throw to caller', async () => {
+    it('provider errors return err to caller', async () => {
       const provider = makeMockProvider() as any;
       provider.fetchTicker.mockRejectedValue(new Error('network'));
       orchestrator.registerProvider('binance', provider);
 
-      await expect(
-        orchestrator.fetchTicker('binance', 'BTC/USDT'),
-      ).rejects.toThrow('network');
+      const result = await orchestrator.fetchTicker('binance', 'BTC/USDT');
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error).toContain('network');
+      }
       expect(onError).toHaveBeenCalled();
     });
   });
