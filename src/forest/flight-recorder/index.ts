@@ -4,6 +4,9 @@
 
 import { createServerClient } from '@/lib/db/client';
 import type { D1Database } from '@/lib/db/types';
+
+export { appendAudit, ensureAuditLedgerSchema } from './audit-ledger';
+export type { AuditEntry, LedgerTail } from './audit-ledger';
  
 import type { BotRecord, NewBotInput, NewTickInput, NewFillInput } from './flight-recorder-types';
 import { formatBotRow } from './flight-recorder-helpers';
