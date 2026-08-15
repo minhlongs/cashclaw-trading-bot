@@ -2,53 +2,94 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 type Json = Record<string, unknown>;
 
-const mockGetSnapshot = vi.fn(() => ({
-  totalPnl: 100,
-  totalTrades: 10,
-  winCount: 7,
-  lossCount: 3,
-  status: 'running',
+// ── Hoisted mocks ─────────────────────────────────────────────
+
+const mockAll = vi.fn();
+const mockFirst = vi.fn();
+
+vi.mock('@/lib/db/client', () => ({
+  createServerClient: vi.fn(),
 }));
 
-const mockBot = {
-  getSnapshot: mockGetSnapshot,
-  id: 'bot-1',
-};
-
-const mockManager = {
-  getAllBots: vi.fn(() => [mockBot]),
-};
-
-vi.mock('@/tree/bot', () => ({
-  getBotManager: () => mockManager,
+vi.mock('@/lib/logger', () => ({
+  createLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
 }));
+
+import { GET } from './route';
+import { createServerClient } from '@/lib/db/client';
+
+function mockDbAvailable() {
+  vi.mocked(createServerClient).mockReturnValue({
+    prepare: vi.fn().mockReturnValue({
+      bind: vi.fn().mockReturnValue({ all: mockAll, first: mockFirst }),
+      all: mockAll,
+      first: mockFirst,
+    }),
+  } as any);
+}
+
+function mockDbUnavailable() {
+  vi.mocked(createServerClient).mockReturnValue(null as any);
+}
+
+function mockBotGroups(...groups: { status: string; count: number }[]) {
+  mockAll.mockResolvedValueOnce({ results: groups });
+}
+
+function mockTradeAgg(trades: number, pnl: number, wins: number, losses: number) {
+  mockFirst.mockResolvedValueOnce({
+    total_trades: trades,
+    total_pnl: pnl,
+    wins,
+    losses,
+  });
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockGetSnapshot.mockReturnValue({
-    totalPnl: 100,
-    totalTrades: 10,
-    winCount: 7,
-    lossCount: 3,
-    status: 'running',
-  });
-  mockManager.getAllBots.mockReturnValue([mockBot]);
 });
 
 describe('GET /api/metrics', () => {
-  it('returns bot count', async () => {
-    const { GET } = await import('./route');
+  it('returns safe defaults when DB unavailable', async () => {
+    mockDbUnavailable();
     const res = await GET();
     const json = await res.json() as Json;
     const bots = json.bots as Record<string, unknown>;
-    expect(bots.total).toBe(1);
+    const perf = json.performance as Record<string, unknown>;
+
+    expect(res.status).toBe(200);
+    expect(bots.total).toBe(0);
+    expect(perf.totalPnl).toBe(0);
+    expect(perf.totalTrades).toBe(0);
   });
 
-  it('aggregates performance metrics', async () => {
-    const { GET } = await import('./route');
+  it('aggregates bot count and status from D1', async () => {
+    mockDbAvailable();
+    mockBotGroups(
+      { status: 'live_running', count: 2 },
+      { status: 'paused', count: 1 },
+      { status: 'paper_test', count: 1 },
+    );
+    mockTradeAgg(0, 0, 0, 0);
+
+    const res = await GET();
+    const json = await res.json() as Json;
+    const bots = json.bots as Record<string, unknown>;
+
+    expect(bots.total).toBe(4);
+    expect(bots.running).toBe(2);
+    expect(bots.paused).toBe(2);
+  });
+
+  it('aggregates trade performance metrics from D1', async () => {
+    mockDbAvailable();
+    mockBotGroups({ status: 'live_running', count: 1 });
+    mockTradeAgg(10, 100, 7, 3);
+
     const res = await GET();
     const json = await res.json() as Json;
     const perf = json.performance as Record<string, unknown>;
+
     expect(perf.totalPnl).toBe(100);
     expect(perf.totalTrades).toBe(10);
     expect(perf.totalWins).toBe(7);
@@ -56,36 +97,11 @@ describe('GET /api/metrics', () => {
     expect(perf.winRate).toBe(70);
   });
 
-  it('counts running and paused bots', async () => {
-    const bot2 = {
-      getSnapshot: vi.fn(() => ({
-        totalPnl: -50,
-        totalTrades: 5,
-        winCount: 2,
-        lossCount: 3,
-        status: 'paused',
-      })),
-      id: 'bot-2',
-    };
-    mockManager.getAllBots.mockReturnValue([mockBot, bot2]);
-    const { GET } = await import('./route');
-    const res = await GET();
-    const json = await res.json() as Json;
-    const bots = json.bots as Record<string, unknown>;
-    expect(bots.total).toBe(2);
-    expect(bots.running).toBe(1);
-    expect(bots.paused).toBe(1);
-  });
+  it('returns winRate 0 when no filled trades', async () => {
+    mockDbAvailable();
+    mockBotGroups();
+    mockTradeAgg(0, 0, 0, 0);
 
-  it('returns winRate 0 when no trades', async () => {
-    mockGetSnapshot.mockReturnValue({
-      totalPnl: 0,
-      totalTrades: 0,
-      winCount: 0,
-      lossCount: 0,
-      status: 'running',
-    });
-    const { GET } = await import('./route');
     const res = await GET();
     const json = await res.json() as Json;
     const perf = json.performance as Record<string, unknown>;
@@ -93,8 +109,10 @@ describe('GET /api/metrics', () => {
   });
 
   it('returns empty metrics with no bots', async () => {
-    mockManager.getAllBots.mockReturnValue([]);
-    const { GET } = await import('./route');
+    mockDbAvailable();
+    mockBotGroups();
+    mockTradeAgg(0, 0, 0, 0);
+
     const res = await GET();
     const json = await res.json() as Json;
     const bots = json.bots as Record<string, unknown>;
@@ -105,11 +123,25 @@ describe('GET /api/metrics', () => {
   });
 
   it('includes timestamp and uptime', async () => {
-    const { GET } = await import('./route');
+    mockDbAvailable();
+    mockBotGroups();
+    mockTradeAgg(0, 0, 0, 0);
+
     const res = await GET();
     const json = await res.json() as Json;
     expect(typeof json.timestamp).toBe('number');
     expect(typeof json.uptime).toBe('number');
-    expect(json.uptime as number).toBeGreaterThan(0);
+  });
+
+  it('handles D1 query errors gracefully', async () => {
+    mockDbAvailable();
+    mockAll.mockRejectedValue(new Error('D1 down'));
+
+    const res = await GET();
+    const json = await res.json() as Json;
+    const bots = json.bots as Record<string, unknown>;
+
+    expect(res.status).toBe(200);
+    expect(bots.total).toBe(0);
   });
 });

@@ -130,16 +130,12 @@ function rowToSettingsData(row: SettingsRow): SettingsData {
 async function loadCurrentSettings(): Promise<SettingsData> {
   const db = createServerClient();
   if (!db) {
-    // D1 not available (local dev SSR) — return defaults
+    // D1 not available (local dev SSR) — return defaults with trading enabled
     return {
       exchanges: { ...DEFAULT_EXCHANGES },
       risk: { ...DEFAULT_RISK },
       notification: { ...DEFAULT_NOTIFICATION },
-      killswitch: {
-        enabled: getBotManager().getKillswitch().isTradingEnabled(),
-        reason: null,
-        triggeredAt: null,
-      },
+      killswitch: { enabled: true, reason: null, triggeredAt: null },
     };
   }
 
@@ -149,23 +145,12 @@ async function loadCurrentSettings(): Promise<SettingsData> {
       exchanges: { ...DEFAULT_EXCHANGES },
       risk: { ...DEFAULT_RISK },
       notification: { ...DEFAULT_NOTIFICATION },
-      killswitch: {
-        enabled: getBotManager().getKillswitch().isTradingEnabled(),
-        reason: null,
-        triggeredAt: null,
-      },
+      killswitch: { enabled: true, reason: null, triggeredAt: null },
     };
   }
 
-  const ks = getBotManager().getKillswitch();
-  const data = rowToSettingsData(row);
-  // Always use live killswitch state from BotManager
-  data.killswitch = {
-    enabled: ks.isTradingEnabled(),
-    reason: row.killswitch_reason,
-    triggeredAt: row.killswitch_triggered_at,
-  };
-  return data;
+  // Read killswitch directly from D1 row — no in-memory singleton
+  return rowToSettingsData(row);
 }
 
 async function persistSettings(data: SettingsData): Promise<Result<void>> {
@@ -259,8 +244,6 @@ export async function updateNotificationSettings(
 
 export async function emergencyHalt(reason: string): Promise<Result<void>> {
   try {
-    getBotManager().getKillswitch().manualHalt(reason);
-    // Persist killswitch halt to D1
     const current = await loadCurrentSettings();
     current.killswitch.enabled = false;
     current.killswitch.reason = reason;
@@ -273,8 +256,6 @@ export async function emergencyHalt(reason: string): Promise<Result<void>> {
 
 export async function resumeFromHalt(): Promise<Result<void>> {
   try {
-    getBotManager().getKillswitch().manualResume();
-    // Persist killswitch resume to D1
     const current = await loadCurrentSettings();
     current.killswitch.enabled = true;
     current.killswitch.reason = null;

@@ -1,33 +1,135 @@
 // route.test.ts — tests for /api/killswitch-status route handler
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockGetKillswitchState = vi.fn().mockReturnValue({
-  enabled: true,
-  halted: false,
-  haltReason: null,
-  haltTimestamp: null,
-  dailyPnl: 0,
-  consecutiveLosses: 0,
-  currentDrawdown: 0,
-});
+// ── Hoisted mocks ─────────────────────────────────────────────
 
-vi.mock('@/tree/bot', () => ({
-  getBotManager: vi.fn(() => ({
-    getKillswitch: vi.fn(() => ({
-      getState: (...args: unknown[]) => mockGetKillswitchState(...args),
-    })),
-  })),
+const mockFirst = vi.fn();
+const mockAll = vi.fn();
+
+vi.mock('@/lib/db/client', () => ({
+  createServerClient: vi.fn(),
 }));
 
-const { GET } = await import('./route');
+vi.mock('@/lib/db/repositories', () => ({
+  findSettingsByUser: vi.fn(),
+}));
 
-describe('/api/killswitch-status route', () => {
-  it('returns killswitch state', async () => {
+vi.mock('@/lib/logger', () => ({
+  createLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
+}));
+
+import { GET } from './route';
+import { createServerClient } from '@/lib/db/client';
+import { findSettingsByUser } from '@/lib/db/repositories';
+
+function mockDbAvailable() {
+  vi.mocked(createServerClient).mockReturnValue({
+    prepare: vi.fn().mockReturnValue({
+      bind: vi.fn().mockReturnValue({
+        first: mockFirst,
+        all: mockAll,
+      }),
+    }),
+  } as any);
+}
+
+function mockDbUnavailable() {
+  vi.mocked(createServerClient).mockReturnValue(null as any);
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(findSettingsByUser).mockResolvedValue(null as any);
+  mockFirst.mockResolvedValue(null);
+  mockAll.mockResolvedValue({ results: [] });
+});
+
+describe('GET /api/killswitch-status', () => {
+  it('returns safe defaults when DB unavailable', async () => {
+    mockDbUnavailable();
     const res = await GET();
+    const json = await res.json() as Record<string, unknown>;
+
     expect(res.status).toBe(200);
-    const body = await res.json() as Record<string, unknown>;
-    expect(body.enabled).toBe(true);
-    expect(body.halted).toBe(false);
-    expect(body).toHaveProperty('timestamp');
+    expect(json.enabled).toBe(true);
+    expect(json.halted).toBe(false);
+    expect(json.dailyPnl).toBe(0);
+    expect(json.consecutiveLosses).toBe(0);
+    expect(json.currentDrawdown).toBe(0);
+  });
+
+  it('returns killswitch state from D1 settings row', async () => {
+    mockDbAvailable();
+    vi.mocked(findSettingsByUser).mockResolvedValue({
+      id: 'settings_1',
+      user_id: null,
+      killswitch_enabled: 0,
+      killswitch_reason: 'Emergency halt',
+      killswitch_triggered_at: 1700000000,
+    } as any);
+    // dailyPnl query
+    mockFirst.mockResolvedValueOnce({ daily_pnl: -150.5 });
+    // consecutiveLosses query
+    mockAll.mockResolvedValueOnce({ results: [{ pnl: -20 }, { pnl: -15 }, { pnl: 30 }] });
+    // currentDrawdown query
+    mockFirst.mockResolvedValueOnce({ max_drawdown_pct: 12.5 });
+
+    const res = await GET();
+    const json = await res.json() as Record<string, unknown>;
+
+    expect(json.enabled).toBe(false);
+    expect(json.halted).toBe(true);
+    expect(json.haltReason).toBe('Emergency halt');
+    expect(json.haltedAt).toBe(1700000000);
+    expect(json.dailyPnl).toBe(-150.5);
+    expect(json.consecutiveLosses).toBe(2);
+    expect(json.currentDrawdown).toBe(12.5);
+  });
+
+  it('returns defaults when no settings row exists', async () => {
+    mockDbAvailable();
+    vi.mocked(findSettingsByUser).mockResolvedValue(null);
+    mockFirst.mockResolvedValue({ daily_pnl: 0 });
+    mockAll.mockResolvedValue({ results: [] });
+    mockFirst.mockResolvedValue(null);
+
+    const res = await GET();
+    const json = await res.json() as Record<string, unknown>;
+
+    expect(json.enabled).toBe(true);
+    expect(json.halted).toBe(false);
+  });
+
+  it('counts consecutive losses correctly', async () => {
+    mockDbAvailable();
+    vi.mocked(findSettingsByUser).mockResolvedValue({
+      id: 'settings_1',
+      killswitch_enabled: 1,
+      killswitch_reason: null,
+      killswitch_triggered_at: null,
+    } as any);
+    mockFirst.mockResolvedValue({ daily_pnl: 50 });
+    // Trades: loss, loss, loss, win, loss
+    mockAll.mockResolvedValue({
+      results: [{ pnl: -10 }, { pnl: -20 }, { pnl: -5 }, { pnl: 15 }, { pnl: -8 }],
+    });
+    mockFirst.mockResolvedValue({ max_drawdown_pct: 5 });
+
+    const res = await GET();
+    const json = await res.json() as Record<string, unknown>;
+
+    expect(json.consecutiveLosses).toBe(3);
+  });
+
+  it('handles D1 query errors gracefully', async () => {
+    mockDbAvailable();
+    vi.mocked(findSettingsByUser).mockRejectedValue(new Error('D1 down'));
+
+    const res = await GET();
+    const json = await res.json() as Record<string, unknown>;
+
+    expect(res.status).toBe(200);
+    expect(json.enabled).toBe(true);
+    expect(json.halted).toBe(false);
   });
 });

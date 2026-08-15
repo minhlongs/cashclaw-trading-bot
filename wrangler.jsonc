@@ -32,5 +32,9 @@
 	],
 	"images": {
 		"binding": "IMAGES"
+	},
+	// CORS — comma-separated allowed origins (set in production via Cloudflare dashboard)
+	"vars": {
+		"ALLOWED_ORIGINS": "https://cashclaw.pages.dev,http://localhost:3000"
 	}
 }
