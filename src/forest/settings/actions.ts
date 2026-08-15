@@ -10,6 +10,7 @@ import { getBotManager } from '@/tree/bot';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { createLogger } from '@/lib/logger';
 import { ok, err, type Result } from '@/lib/result';
+import { encrypt, decrypt } from '@/lib/crypto';
 
 const log = createLogger('settings-actions');
 
@@ -64,7 +65,7 @@ const DEFAULT_KILLSWITCH: SettingsData['killswitch'] = {
 
 // ── D1 helpers ───────────────────────────────────────────────
 
-function parseExchanges(raw: string): SettingsData['exchanges'] {
+async function parseExchanges(raw: string): Promise<SettingsData['exchanges']> {
   try {
     const obj = JSON.parse(raw) as Record<string, unknown>;
     const result = { ...DEFAULT_EXCHANGES };
@@ -73,8 +74,8 @@ function parseExchanges(raw: string): SettingsData['exchanges'] {
       if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
         const rec = entry as Record<string, unknown>;
         result[key] = {
-          apiKey: typeof rec.apiKey === 'string' ? rec.apiKey : '',
-          apiSecret: typeof rec.apiSecret === 'string' ? rec.apiSecret : '',
+          apiKey: typeof rec.apiKey === 'string' ? await decrypt(rec.apiKey) : '',
+          apiSecret: typeof rec.apiSecret === 'string' ? await decrypt(rec.apiSecret) : '',
           testnet: typeof rec.testnet === 'boolean' ? rec.testnet : true,
         };
       }
@@ -114,9 +115,9 @@ function parseNotification(raw: string | undefined): SettingsData['notification'
   }
 }
 
-function rowToSettingsData(row: SettingsRow): SettingsData {
+async function rowToSettingsData(row: SettingsRow): Promise<SettingsData> {
   return {
-    exchanges: parseExchanges(row.exchange_creds_json),
+    exchanges: await parseExchanges(row.exchange_creds_json),
     risk: parseRisk(row.risk_limits_json),
     notification: parseNotification(row.notification_json),
     killswitch: {
@@ -150,18 +151,25 @@ async function loadCurrentSettings(): Promise<SettingsData> {
   }
 
   // Read killswitch directly from D1 row — no in-memory singleton
-  return rowToSettingsData(row);
+  return await rowToSettingsData(row);
 }
 
 async function persistSettings(data: SettingsData): Promise<Result<void>> {
   const db = createServerClient();
   if (!db) return err('Database not available');
 
+  // Encrypt exchange credentials before persisting
+  const encryptedExchanges: SettingsData['exchanges'] = {
+    binance: { ...data.exchanges.binance, apiKey: await encrypt(data.exchanges.binance.apiKey), apiSecret: await encrypt(data.exchanges.binance.apiSecret) },
+    bybit: { ...data.exchanges.bybit, apiKey: await encrypt(data.exchanges.bybit.apiKey), apiSecret: await encrypt(data.exchanges.bybit.apiSecret) },
+    okx: { ...data.exchanges.okx, apiKey: await encrypt(data.exchanges.okx.apiKey), apiSecret: await encrypt(data.exchanges.okx.apiSecret) },
+  };
+
   const now = Math.floor(Date.now() / 1000);
   const row: SettingsRow = {
     id: SETTINGS_ROW_ID,
     user_id: null,
-    exchange_creds_json: JSON.stringify(data.exchanges),
+    exchange_creds_json: JSON.stringify(encryptedExchanges),
     risk_limits_json: JSON.stringify(data.risk),
     notification_json: JSON.stringify(data.notification),
     killswitch_enabled: data.killswitch.enabled ? 1 : 0,
