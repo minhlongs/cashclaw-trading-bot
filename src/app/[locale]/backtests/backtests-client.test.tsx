@@ -3,7 +3,6 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import BacktestsClient from './backtests-client';
 import type { BacktestResult } from '@/forest/backtest/types';
-import type { BacktestRunOutput } from '@/forest/backtest/actions';
 
 /* ------------------------------------------------------------------ */
 /* Mocks                                                              */
@@ -20,7 +19,7 @@ vi.mock('@/forest/backtest/actions', () => ({
   runBacktestAction: vi.fn(),
 }));
 
-import { runBacktestAction } from '@/forest/backtest/actions';
+import { runBacktestAction, type BacktestRunOutput } from '@/forest/backtest/actions';
 const runMock = vi.mocked(runBacktestAction);
 
 /* ------------------------------------------------------------------ */

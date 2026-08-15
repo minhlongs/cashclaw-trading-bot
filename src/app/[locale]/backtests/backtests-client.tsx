@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import { runBacktestAction } from '@/forest/backtest/actions';
 
-interface BotInfo {
+export interface BotInfo {
   id: string;
   name: string;
   strategy: string;

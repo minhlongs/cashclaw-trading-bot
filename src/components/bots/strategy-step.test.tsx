@@ -23,8 +23,7 @@ describe('StrategyStep', () => {
     expect(screen.getByRole('button', { name: /next/i })).toBeDisabled();
   });
 
-  it('enables next when strategy is selected', async () => {
-    const user = userEvent.setup();
+  it('enables next when strategy is selected', () => {
     render(<StrategyStep form={{ ...baseForm, strategy: 'grid' }} {...defaults} />);
     expect(screen.getByRole('button', { name: /next/i })).not.toBeDisabled();
   });
