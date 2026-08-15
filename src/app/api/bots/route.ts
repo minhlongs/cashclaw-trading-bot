@@ -8,6 +8,15 @@ import { botListHandler, botCreateHandler } from '@/forest/api/routes';
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
 import { z } from 'zod';
 
+const createBotConfigSchema = z.object({
+  spacingPct: z.number().positive().max(100).optional(),
+  gridLevels: z.number().int().min(2).max(500).optional(),
+  capitalPerLevelPct: z.number().positive().max(100).optional(),
+  takeProfitPct: z.number().positive().max(100).optional(),
+  stopLossPct: z.number().positive().max(100).optional(),
+  maxDrawdownPct: z.number().positive().max(100).optional(),
+});
+
 const CreateBotSchema = z.object({
   id: z.string().min(1).max(64),
   name: z.string().min(1).max(128),
@@ -16,7 +25,7 @@ const CreateBotSchema = z.object({
   exchange: z.enum(['binance', 'bybit', 'okx']),
   capital: z.number().positive().max(1_000_000),
   mode: z.enum(['paper', 'live']).optional().default('paper'),
-  config: z.record(z.string(), z.number()).optional(),
+  config: createBotConfigSchema.optional(),
   gridConfig: z.object({
     lowerPrice: z.number().positive(),
     upperPrice: z.number().positive(),

@@ -1,23 +1,64 @@
-/**
- * POST /api/bots — create a new bot
- * Persists bot config to D1 and creates BotInstance in memory.
- * v1: paper mode only — 'live' is rejected at the API level.
- */
-
 import { getBotManager, type CreateBotRequest } from '@/tree/bot';
 import type { GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 
-/** Coerce a numeric config value, clamping to [min, max] and falling back to defaultValue. */
-function coerceNum(
-  config: Record<string, number> | undefined,
-  key: string,
-  defaultValue: number,
-  min: number,
-  max: number,
-): number {
+function normalizeWizardConfig(raw?: Record<string, number>): Record<string, number> {
+  const aliases: Record<string, string> = {
+    spacing_pct: 'gridSpacingPct',
+    spacingPct: 'gridSpacingPct',
+    grid_levels: 'gridLevels',
+    gridLevels: 'gridLevels',
+    capital_per_level_pct: 'capitalPerLevelPct',
+    capitalPerLevelPct: 'capitalPerLevelPct',
+    take_profit_pct: 'takeProfitPct',
+    takeProfitPct: 'takeProfitPct',
+    stop_loss_pct: 'stopLossPct',
+    stopLossPct: 'stopLossPct',
+    max_drawdown_pct: 'maxDrawdownPct',
+    maxDrawdownPct: 'maxDrawdownPct',
+    bb_period: 'bbPeriod',
+    bbPeriod: 'bbPeriod',
+    bb_std: 'bbStdDev',
+    bbStdDev: 'bbStdDev',
+    rsi_period: 'rsiPeriod',
+    rsiPeriod: 'rsiPeriod',
+    rsi_buy: 'rsiBuyThreshold',
+    rsiBuyThreshold: 'rsiBuyThreshold',
+    rsi_sell: 'rsiSellThreshold',
+    rsiSellThreshold: 'rsiSellThreshold',
+    volume_multiplier: 'volumeMultiplier',
+    volumeMultiplier: 'volumeMultiplier',
+    position_size_pct: 'positionSizePct',
+    positionSizePct: 'positionSizePct',
+    cooldown_minutes: 'cooldownMinutes',
+    cooldownMinutes: 'cooldownMinutes',
+    lookback_period: 'lookbackPeriod',
+    lookbackPeriod: 'lookbackPeriod',
+    zscore_threshold: 'zScoreThreshold',
+    zScoreThreshold: 'zScoreThreshold',
+  };
+  const out: Record<string, number> = {};
+  for (const src in raw ?? {}) {
+    const normalized = src.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const name = aliases[normalized] ?? aliases[src] ?? src;
+    out[name] = (raw as Record<string, number>)[src];
+  }
+  return out;
+}
+
+type CoerceArgs = {
+  config: Record<string, number> | undefined;
+  key: string;
+  defaultValue: number;
+  min: number;
+  max: number;
+};
+
+function coerceNum({ config, key, defaultValue, min, max }: CoerceArgs): number {
   const raw = config?.[key];
-  if (typeof raw !== 'number' || !Number.isFinite(raw)) return defaultValue;
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) {
+    return defaultValue;
+  }
   return Math.min(max, Math.max(min, raw));
 }
 
@@ -36,7 +77,6 @@ export async function botCreateHandler(
   payload: CreateBotPayload
 ): Promise<{ ok: boolean; data?: { id: string }; error?: string }> {
   try {
-    // v1: hard-block live trading — paper mode only
     if (payload.mode === 'live') {
       return {
         ok: false,
@@ -45,43 +85,41 @@ export async function botCreateHandler(
     }
 
     await loadAllBotsFromD1();
-    const manager = getBotManager();
 
-    // Map payload to CreateBotRequest — always paper in v1
-    const cfg = payload.config;
-
-    const baseConfig = {
+    const cfg = normalizeWizardConfig(payload.config);
+    const base = {
       name: payload.name,
       symbol: payload.pair,
       exchange: payload.exchange,
       mode: 'paper' as const,
       capital: payload.capital,
-      maxDrawdownPct: coerceNum(cfg, 'max_drawdown_pct', 10, 1, 50),
+      maxDrawdownPct: coerceNum({ config: cfg, key: 'maxDrawdownPct', defaultValue: 10, min: 1, max: 50 }),
     };
 
-    const strategyConfig = payload.strategy === 'grid'
-      ? {
-          ...baseConfig,
-          strategy: 'grid' as const,
-          gridSpacingPct: coerceNum(cfg, 'spacing_pct', 1, 0.1, 20),
-          gridLevels: coerceNum(cfg, 'grid_levels', 10, 2, 200),
-          capitalPerLevelPct: coerceNum(cfg, 'capital_per_level_pct', 10, 1, 100),
-          takeProfitPct: coerceNum(cfg, 'take_profit_pct', 2, 0.1, 50),
-          stopLossPct: coerceNum(cfg, 'stop_loss_pct', 5, 0.1, 50),
-          rebalanceOnFill: false,
-        } satisfies GridBotConfig
-      : {
-          ...baseConfig,
-          strategy: 'mean_reversion' as const,
-          bbPeriod: coerceNum(cfg, 'bb_period', 20, 2, 200),
-          bbStdDev: coerceNum(cfg, 'bb_std_dev', 2, 0.5, 5),
-          rsiPeriod: coerceNum(cfg, 'rsi_period', 14, 2, 100),
-          rsiBuyThreshold: coerceNum(cfg, 'rsi_buy_threshold', 30, 5, 50),
-          rsiSellThreshold: coerceNum(cfg, 'rsi_sell_threshold', 70, 50, 95),
-          volumeMultiplier: coerceNum(cfg, 'volume_multiplier', 1.5, 0.1, 10),
-          positionSizePct: coerceNum(cfg, 'position_size_pct', 10, 1, 100),
-          cooldownMinutes: coerceNum(cfg, 'cooldown_minutes', 5, 0, 60),
-        } satisfies MeanRevBotConfig;
+    const strategyConfig =
+      payload.strategy === 'grid'
+        ? ({
+            ...base,
+            strategy: 'grid' as const,
+            gridSpacingPct: coerceNum({ config: cfg, key: 'gridSpacingPct', defaultValue: 1, min: 0.1, max: 20 }),
+            gridLevels: coerceNum({ config: cfg, key: 'gridLevels', defaultValue: 10, min: 2, max: 200 }),
+            capitalPerLevelPct: coerceNum({ config: cfg, key: 'capitalPerLevelPct', defaultValue: 10, min: 1, max: 100 }),
+            takeProfitPct: coerceNum({ config: cfg, key: 'takeProfitPct', defaultValue: 2, min: 0.1, max: 50 }),
+            stopLossPct: coerceNum({ config: cfg, key: 'stopLossPct', defaultValue: 5, min: 0.1, max: 50 }),
+            rebalanceOnFill: false,
+          } satisfies GridBotConfig)
+        : ({
+            ...base,
+            strategy: 'mean_reversion' as const,
+            bbPeriod: coerceNum({ config: cfg, key: 'bbPeriod', defaultValue: 20, min: 2, max: 200 }),
+            bbStdDev: coerceNum({ config: cfg, key: 'bbStdDev', defaultValue: 2, min: 0.5, max: 5 }),
+            rsiPeriod: coerceNum({ config: cfg, key: 'rsiPeriod', defaultValue: 14, min: 2, max: 100 }),
+            rsiBuyThreshold: coerceNum({ config: cfg, key: 'rsiBuyThreshold', defaultValue: 30, min: 5, max: 50 }),
+            rsiSellThreshold: coerceNum({ config: cfg, key: 'rsiSellThreshold', defaultValue: 70, min: 50, max: 95 }),
+            volumeMultiplier: coerceNum({ config: cfg, key: 'volumeMultiplier', defaultValue: 1.5, min: 0.1, max: 10 }),
+            positionSizePct: coerceNum({ config: cfg, key: 'positionSizePct', defaultValue: 10, min: 1, max: 100 }),
+            cooldownMinutes: coerceNum({ config: cfg, key: 'cooldownMinutes', defaultValue: 5, min: 0, max: 60 }),
+          } satisfies MeanRevBotConfig);
 
     const botConfig: CreateBotRequest = {
       id: payload.id,
@@ -97,6 +135,7 @@ export async function botCreateHandler(
       mode: 'paper',
     };
 
+    const manager = getBotManager();
     await manager.createBot(botConfig);
 
     return { ok: true, data: { id: payload.id } };

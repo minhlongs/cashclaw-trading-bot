@@ -1,215 +1,431 @@
-# OmniRoute → Trade-Bot Patterns Mapping Report
+# Vibe-Trading → CashClaw Trade-Bot: Pattern Mapping Report
 
-> **Date:** 2026-08-15  
-> **Source:** [OmniRoute](https://github.com/diegosouzapw/OmniRoute) (47k+ stars, AI Gateway)  
-> **Target:** CashClaw AI Trading Bot Platform  
-
----
-
-## 1. Pattern Applicability Matrix
-
-| # | OmniRoute Pattern | Applicability | Trade-Bot Equivalent | Gap |
-|---|---|---|---|---|
-| 1 | **Combo Routing Engine** (multi-provider fallback) | 🔴 **Critical** | No cross-exchange routing — each bot binds to 1 exchange | Each bot is exchange-locked. No failover if Binance goes down. |
-| 2 | **19 Routing Strategies** (weighted, p2c, least-used, cost-optimized) | 🟡 **High** | StrategyChain exists but only for strategy composition, not exchange routing | StrategyChain = signal composition. Exchange routing = order routing. Different concerns. |
-| 3 | **Provider Abstraction** (unified interface for 330+ providers) | 🟢 **Partial** | `ExchangeAdapter` interface + `ExchangeProvider` wrapper | Already 80% there. Need to extend for multi-exchange orchestration. |
-| 4 | **Circuit Breaker** (triple-state FSM) | 🟢 **Exists** | `CircuitBreaker` + `Killswitch` already implemented | Trade-bot has BOTH provider-level breaker AND global killswitch. More than OmniRoute. |
-| 5 | **Rate Limiting** (token-bucket, fair-share) | 🟢 **Exists** | `RateLimiter` token-bucket per exchange+endpoint | Already implemented with exponential backoff + fair-share. |
-| 6 | **Quota-Aware Scheduling** | 🟡 **High** | No exchange rate-limit awareness | Binance: 1200 req/min. Bybit: 120 req/s. OKX: 60 req/2s. No tracking. |
-| 7 | **Dashboard & Observability** (35+ pages) | 🟡 **High** | Basic dashboard (KPIs, bot cards, events) | Missing: per-exchange latency, cost tracking, order success rate, rate-limit consumption. |
-| 8 | **Compression** (RTK + Caveman) | 🔴 **N/A** | N/A for trading | Token compression irrelevant. Market data compression could help but YAGNI. |
-| 9 | **Request Queue** (admission cap, fail-open) | 🟡 **High** | No request queuing — orders go direct | Under high volatility, order flooding could hit rate limits. Queue would help. |
-| 10 | **Activity Feed** (day grouping, event filtering) | 🟢 **Partial** | `FlightRecorder` + `trade_events` table | D1 event persistence exists. UI filtering/grouping missing. |
-| 11 | **Auto-Combo** (zero-config best-provider selection) | 🟡 **High** | No auto-exchange selection | User picks exchange manually. Auto-routing to best-latency exchange = huge UX win. |
-| 12 | **Exponential Backoff + Decay** | 🟢 **Exists** | RateLimiter has exponential backoff | Already implemented. Decay on success partially there. |
+**Source:** https://github.com/HKUDS/Vibe-Trading  
+**Target:** `/Users/macbook/trade-bot` (Next.js 16 + Cloudflare Workers + D1)  
+**Date:** 2026-08-16
 
 ---
 
-## 2. Priority Mapping
+## TL;DR
 
-### Quick Wins (1-2 days each)
-
-| Priority | Pattern | Effort | Impact | Description |
-|---|---|---|---|---|
-| **P0** | Exchange Health Dashboard | 1 day | High | Add per-exchange latency, success rate, rate-limit consumption to dashboard. Already have `ProviderHealth` data — just expose it. |
-| **P0** | Rate-Limit Awareness in Scheduler | 1 day | High | Track per-exchange API call counts in `BotScheduler.tick()`. Skip bots on exchanges near rate limits. |
-| **P1** | Order Queue with Admission Cap | 1-2 days | High | Port OmniRoute's `maxQueueDepth` concept. Prevent order flooding during volatility spikes. |
-| **P1** | Activity Feed UI Enhancement | 1 day | Medium | Add day grouping + event type filtering to existing `trade_events` data. |
-
-### Strategic Investments (1-2 weeks each)
-
-| Priority | Pattern | Effort | Impact | Description |
-|---|---|---|---|---|
-| **P2** | Cross-Exchange Routing | 1-2 weeks | Critical | Extend `ExchangeOrchestrator` to route orders across exchanges based on latency + availability. OmniRoute's core innovation. |
-| **P2** | Auto-Exchange Selection | 1 week | High | Like OmniRoute's `auto` model — pick best exchange for each trade based on live latency + rate limits + balance. |
-| **P3** | Multi-Exchange Failover | 1 week | High | If primary exchange circuit-opens, auto-route to secondary. Currently bot just stops. |
-| **P3** | Cost-Optimized Routing | 1 week | Medium | Route to exchange with lowest fees for each pair. Binance 0.1%, Bybit 0.1%, OKX 0.08%. |
+Vibe-Trading's **quantlib-as-a-service via MCP**, **provenance-tracked data fallback chain**, and **hash-chained audit ledger** are the three highest-value patterns to adopt. Map quantlib to a WASM module at `src/tree/quantlib/`, data fallback to `src/tree/exchange/provider/` with circuit-breaker chaining, and audit ledger to `src/forest/flight-recorder/` with cryptographic chaining. Skip: Electron desktop shell, sandboxed code execution, and full IM adapter matrix — over-engineering for v1.
 
 ---
 
-## 3. Architecture Gaps
+## 1. Reframed Problem
 
-### What Trade-Bot is MISSING that OmniRoute does well:
+**What we're actually deciding:** Which architectural patterns from Vibe-Trading (Python/FastAPI/Electron) translate to a TypeScript/Next.js/CFW trading bot without rewriting core logic — and the priority order to implement them.
 
-**A. Multi-Target Routing**
-```
-// CURRENT: Bot → 1 Exchange
-BotInstance → ExchangeAdapter → Binance
+**Requirements:**
+- Trade-bot runs on Cloudflare Workers (edge), not a long-running Python process
+- TypeScript/React stack; no Python runtime available
+- Must preserve existing `src/tree/`, `src/forest/`, `src/land/` layer boundaries
+- v1 scope: grid + mean-reversion bots, Binance/Bybit/OKX, paper + live trading
 
-// NEEDED: Bot → Router → Best Exchange
-BotInstance → ExchangeRouter → [Binance, Bybit, OKX]
-                                ↑ health + latency + rate-limit scoring
-```
-
-**B. Exchange Health Scoring**
-```
-// CURRENT: Binary (circuit open/closed)
-ProviderState: 'healthy' | 'degraded' | 'circuit_open' | 'cooldown'
-
-// NEEDED: Continuous scoring (like OmniRoute's 12-factor)
-ExchangeScore = f(latency, successRate, rateLimitHeadroom, balance, fee)
-```
-
-**C. Request Queue**
-```
-// CURRENT: Direct execution
-placeOrder() → exchange API (may hit rate limit)
-
-// NEEDED: Queued execution
-placeOrder() → Queue → rateLimit.tryAcquire() → exchange API
-                      ↓ queue full → reject with typed error
-```
-
-**D. Exchange-Level Cost Tracking**
-```
-// CURRENT: No fee tracking per exchange
-// NEEDED: Track fees, slippage, fill rate per exchange
-//         to enable cost-optimized routing
-```
-
-### What Trade-Bot does BETTER than OmniRoute:
-
-- **Killswitch**: Trade-bot has a global safety mechanism (daily loss %, consecutive losses, drawdown) that OmniRoute doesn't need (it's not handling money)
-- **Paper Mode**: `PaperExchange` simulation for safe testing — OmniRoute can't simulate AI providers
-- **StrategyChain**: Composable strategy nodes with fallback — more sophisticated than OmniRoute's routing strategies (which are for provider selection, not signal generation)
+**Non-goals:**
+- Desktop app (Electron)
+- User-written strategy sandbox
+- 16 IM channel adapters
+- Purged cross-validation ML pipeline
 
 ---
 
-## 4. Concrete Recommendations
+## 2. Five Highest-Value Patterns from Vibe-Trading
 
-### Recommendation 1: Exchange Router (Pattern: Combo Routing)
+| # | Pattern | Vibe-Trading Location | Why It Matters |
+|---|---------|----------------------|----------------|
+| 1 | **Quantlib as read-only MCP service** | `src/quantlib/` (265 fn) + MCP `quantlib_call` | Separates math from I/O; enables agentic tool use; testable in isolation |
+| 2 | **Provenance-tracked data fallback chain** | `tools/loaders/` (24 sources) | Resilience against provider outages; audit trail for every price |
+| 3 | **Hash-chained audit ledger (fsynced)** | Governance: manifest + ledger | Tamper-evident operations log; regulatory/compliance ready |
+| 4 | **Circuit-breaker + half-open FSM** | Implicit in loader retries | Prevents cascade failures when a provider degrades |
+| 5 | **Identity gate / OHLC evidence validation** | Core agent runtime | Rejects quotes outside recorded data; prevents phantom fills |
 
-Create `ExchangeRouter` that sits between `BotInstance` and `ExchangeOrchestrator`:
+---
 
+## 3. Mapping to Trade-Bot Codebase Structure
+
+### Pattern 1: Quantlib → `src/tree/quantlib/` (WASM Module)
+
+**Vibe-Trading:** 265 pure Python functions across 17 modules (options, bonds, credit, econometrics, VaR/CVaR/EVT, attribution, event studies, purged CV). Called via MCP `quantlib_call` — **read-only, no I/O**.
+
+**Trade-Bot Mapping:**
+
+| Vibe-Trading | Trade-Bot Location | Notes |
+|--------------|-------------------|-------|
+| `src/quantlib/options/` | `src/tree/quantlib/options/` | Black-Scholes, IV, Greeks — edge-compatible WASM |
+| `src/quantlib/var_cvar_evt/` | `src/tree/quantlib/risk/` | VaR, CVaR, EVT for risk limits |
+| `src/quantlib/attribution/` | `src/tree/quantlib/attribution/` | Performance attribution (Brinson) |
+| `src/quantlib/econometrics/` | `src/tree/quantlib/stats/` | Rolling regressions, covariance |
+| **MCP `quantlib_call`** | **Hono route `/internal/api/quantlib/*`** | TypeScript wrapper calling WASM; auth-guarded |
+
+**Implementation Sketch:**
+```
+src/tree/quantlib/
+├── index.ts              # Exports all modules
+├── options/
+│   ├── black-scholes.ts
+│   ├── implied-vol.ts
+│   └── greeks.ts
+├── risk/
+│   ├── var.ts
+│   ├── cvar.ts
+│   └── evt.ts
+├── attribution/
+│   └── brinson.ts
+├── stats/
+│   ├── rolling-ols.ts
+│   └── covariance.ts
+└── wasm/
+    └── quantlib.wasm     # Compiled from Rust/AssemblyScript (or pure TS)
+```
+
+**Why WASM?** Pure TS math is fine for v1; WASM enables future parity with Python quantlib (same algorithms, numeric stability). Start with pure TS in `src/tree/quantlib/` — compile to WASM later if needed.
+
+**Integration Point:** Bot strategies (`src/tree/bot/strategies/`) import from `src/tree/quantlib/` directly (no RPC). The `/internal/api/quantlib/*` route exposes for external agents/CLI.
+
+---
+
+### Pattern 2: Data Fallback Chain → `src/tree/exchange/provider/` (Chained Providers)
+
+**Vibe-Trading:** 24 registered sources per market (A-share, HK, US, India, Korea, Canada, crypto). Fallback routing records **provenance** (which source served, unit, timestamp). Cross-source regression tests require ≤1% divergence.
+
+**Trade-Bot Mapping:**
+
+| Vibe-Trading | Trade-Bot Location | Notes |
+|--------------|-------------------|-------|
+| 24 loaders | 3 providers (Binance, Bybit, OKX) + extensible registry | Start with 3; registry pattern allows adding more |
+| Provenance per load | `ExchangeProviderResponse { data, provenance: { source, unit, timestamp, latencyMs } }` | Wrap every response |
+| Fallback ordering | `ProviderChain.execute()` — tries each until success | Circuit-breaker per provider (already exists!) |
+| Regression tests | `vitest` cross-provider consistency suite | `src/tree/exchange/provider/__tests__/consistency.test.ts` |
+
+**Existing Code Leverage:**
+- `src/tree/exchange/provider/circuit-breaker.ts` — **already implements Pattern 4**
+- `src/tree/exchange/provider/types.ts` — extend with `provenance` field
+- `src/tree/exchange/provider/index.ts` — registry entry point
+
+**Required Changes:**
 ```typescript
-// NEW: src/tree/exchange/exchange-router.ts
-interface ExchangeRouter {
-  routeOrder(request: OrderRequest): Promise<{ exchange: ExchangeId; result: OrderResult }>;
-  getScore(exchange: ExchangeId): ExchangeScore;
-  getBestExchange(symbol: string, side: Side): ExchangeId;
+// src/tree/exchange/provider/types.ts (extend)
+export interface ProviderProvenance {
+  source: 'binance' | 'bybit' | 'okx' | string;
+  unit: 'raw' | 'adjusted' | 'premium-index';
+  timestamp: number;
+  latencyMs: number;
+  requestId: string; // correlation ID
 }
 
-interface ExchangeScore {
-  exchange: ExchangeId;
-  latency: number;        // ms
-  successRate: number;    // 0-1
-  rateLimitHeadroom: number; // 0-1 (1 = plenty of room)
-  balance: number;        // available balance in quote currency
-  fee: number;            // taker fee %
-  composite: number;      // weighted score
-}
-```
-
-**Trade-off:** Adds latency (~1-2ms scoring). For HFT this matters. For 1-minute grid trading, irrelevant.
-
-### Recommendation 2: Request Queue (Pattern: Request Queue)
-
-```typescript
-// NEW: src/tree/exchange/request-queue.ts
-interface RequestQueue {
-  enqueue(request: OrderRequest): Promise<OrderResult>;
-  getDepth(exchange: ExchangeId): number;
-  getWaitTime(exchange: ExchangeId): number;
+export interface ExchangeProviderResponse<T> {
+  data: T;
+  provenance: ProviderProvenance;
 }
 ```
 
-**Trade-off:** Adds latency for queued orders. But prevents rate-limit rejections which cost MORE time (exponential backoff).
-
-### Recommendation 3: Enhanced Dashboard (Pattern: Dashboard & Observability)
-
-Add to existing dashboard:
-- Per-exchange health cards (latency, success rate, rate-limit usage)
-- Order routing visualization (which exchange handled which order)
-- Cost comparison across exchanges
-- Rate-limit consumption gauges
-
-**Trade-off:** UI work only. No backend risk.
-
-### Recommendation 4: Auto-Exchange Selection (Pattern: Auto-Combo)
-
 ```typescript
-// Like OmniRoute's `auto` — pick best exchange automatically
-// User sets: exchange = 'auto'
-// System picks: best exchange based on:
-//   1. Available balance for the pair
-//   2. Current latency
-//   3. Rate limit headroom
-//   4. Fee rate
+// src/tree/exchange/provider/chain.ts (new)
+export class ProviderChain {
+  constructor(private providers: ExchangeProvider[]) {}
+
+  async execute<T>(fn: (p: ExchangeProvider) => Promise<T>): Promise<ExchangeProviderResponse<T>> {
+    let lastError: Error | null = null;
+    for (const provider of this.providers) {
+      const cb = provider.getCircuitBreaker();
+      if (cb.getState() === 'open') continue;
+      
+      try {
+        const start = Date.now();
+        const data = await fn(provider);
+        return {
+          data,
+          provenance: { source: provider.name, unit: 'raw', timestamp: Date.now(), latencyMs: Date.now() - start, requestId: crypto.randomUUID() }
+        };
+      } catch (e) {
+        lastError = e as Error;
+      }
+    }
+    throw lastError ?? new Error('All providers exhausted');
+  }
+}
 ```
 
-**Trade-off:** User loses explicit exchange control. Need override option.
+---
+
+### Pattern 3: Hash-Chained Audit Ledger → `src/forest/flight-recorder/` (Cryptographic Chaining)
+
+**Vibe-Trading:** Every run writes a hash manifest (prompt + skills + tool registry + package versions) + hash-chained fsynced audit ledger. Tamper-evident: even a self-rehashed edit is caught one record later.
+
+**Trade-Bot Mapping:**
+
+| Vibe-Trading | Trade-Bot Location | Notes |
+|--------------|-------------------|-------|
+| Hash manifest per run | `FlightRecorder.recordManifest()` on bot start | Hash: `SHA-256(config + env + codeVersion)` |
+| Hash-chained ledger | `trade_events` table + `prev_hash` column | Each event links to previous via hash pointer |
+| fsynced durability | D1 transactions (ACID) | D1 provides durability; add `prev_hash` for chaining |
+
+**Required Schema Change:**
+```sql
+-- Add to trade_events table
+ALTER TABLE trade_events ADD COLUMN prev_hash TEXT;
+ALTER TABLE trade_events ADD COLUMN hash TEXT;
+```
+
+**Implementation:**
+```typescript
+// src/forest/flight-recorder/ledger.ts (new)
+import { createServerClient } from '@/lib/db/client';
+import type { D1Database } from '@/lib/db/types';
+
+export class AuditLedger {
+  private db: D1Database | null = null;
+  private lastHash: string = '0'.repeat(64); // genesis
+
+  private async getDb(): Promise<D1Database | null> {
+    if (this.db) return this.db;
+    this.db = createServerClient();
+    return this.db;
+  }
+
+  private computeHash(payload: string, prevHash: string): string {
+    const msg = `${prevHash}|${payload}`;
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async append(eventType: string, detail: Record<string, unknown>): Promise<string> {
+    const db = await this.getDb();
+    if (!db) return '';
+
+    const payload = JSON.stringify({ eventType, detail, timestamp: Date.now() });
+    const hash = await this.computeHash(payload, this.lastHash);
+
+    await db.prepare(`
+      INSERT INTO trade_events (id, bot_id, event_type, detail_json, created_at, prev_hash, hash)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+      detail.botId ?? 'system',
+      eventType,
+      JSON.stringify(detail),
+      Date.now(),
+      this.lastHash,
+      hash
+    ).run();
+
+    this.lastHash = hash;
+    return hash;
+  }
+
+  async verifyChain(botId: string): Promise<{ valid: boolean; brokenAt?: number }> {
+    const db = await this.getDb();
+    if (!db) return { valid: false };
+
+    const rows = await db.prepare(`
+      SELECT hash, prev_hash, created_at FROM trade_events 
+      WHERE bot_id = ? ORDER BY created_at ASC
+    `).bind(botId).all();
+
+    let prev = '0'.repeat(64);
+    for (let i = 0; i < rows.results.length; i++) {
+      const row = rows.results[i];
+      if (row.prev_hash !== prev) return { valid: false, brokenAt: i };
+      prev = row.hash;
+    }
+    return { valid: true };
+  }
+}
+```
+
+**Manifest Recording (bot start):**
+```typescript
+// In bot-manager.ts start() or FlightRecorder.recordBotStart()
+async function recordManifest(botId: string, config: BotConfig) {
+  const manifest = {
+    botId,
+    config: JSON.stringify(config),
+    codeVersion: process.env.VERSION ?? 'dev',
+    env: {
+      nodeVersion: process.version,
+      wranglerVersion: '1.x',
+      // package hashes from lockfile
+    },
+    timestamp: Date.now(),
+  };
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(manifest)));
+  // Store in audit_log or dedicated manifest table
+}
+```
 
 ---
 
-## 5. Risk Assessment
+### Pattern 4: Circuit Breaker FSM → Already Implemented ✅
 
-| Risk | Severity | Mitigation |
-|---|---|---|
-| **Multi-exchange order splitting** — partial fills across exchanges | 🔴 High | Never split a single order across exchanges. Route entire order to one exchange. |
-| **Stale health data** — routing based on outdated latency | 🟡 Medium | Use exponential moving average, not last sample. Refresh every 30s. |
-| **Rate-limit race condition** — multiple bots hit same exchange | 🟡 Medium | Global `RateLimiter` singleton already exists. Add exchange-level admission control. |
-| **Complexity creep** — too many routing options | 🟡 Medium | Start with 3 strategies only: `latency`, `balance`, `auto`. Add more later. |
-| **Paper/live divergence** — routing logic differs between modes | 🟢 Low | Paper mode should simulate routing too. `PaperExchangeRouter` mirrors real logic. |
+**Location:** `src/tree/exchange/provider/circuit-breaker.ts`
+
+**Status:** Complete triple-state FSM (`closed` → `open` → `half_open` → `closed`). Used by provider chain (Pattern 2).
+
+**Action:** No new work needed. Ensure all exchange providers (live + paper) instantiate and use it.
 
 ---
 
-## 6. Phased Adoption Roadmap
+### Pattern 5: Identity Gate / OHLC Evidence Validation → `src/forest/backtest/engine.ts` + Live Tick Validation
 
-### Phase 1: Observe (Week 1-2)
-- [ ] Add per-exchange health metrics to dashboard
-- [ ] Track rate-limit consumption in `BotScheduler`
-- [ ] Log order routing decisions (which exchange, why)
-- [ ] Add exchange latency tracking to `TelemetryWriter`
-- **Goal:** See which exchanges are actually bottlenecking
+**Vibe-Trading:** "Strict OHLC evidence validation; refuses quotes outside recorded data."
 
-### Phase 2: Queue (Week 3-4)
-- [ ] Implement `RequestQueue` with `maxQueueDepth`
-- [ ] Add order admission control per exchange
-- [ ] Expose queue depth + wait time in dashboard
-- [ ] Add typed error codes (like OmniRoute's `RATE_LIMIT_EXECUTION_TIMEOUT`)
-- **Goal:** Prevent order flooding, graceful degradation under load
+**Trade-Bot Mapping:**
 
-### Phase 3: Route (Week 5-8)
-- [ ] Implement `ExchangeRouter` with 3 strategies: `latency`, `balance`, `auto`
-- [ ] Add `ExchangeScore` continuous scoring
-- [ ] Wire `ExchangeRouter` into `BotInstance.tick()`
-- [ ] Add exchange failover (primary → secondary on circuit-open)
-- [ ] Auto-exchange selection for new bots
-- **Goal:** Orders automatically go to the best available exchange
+| Vibe-Trading | Trade-Bot Location | Notes |
+|--------------|-------------------|-------|
+| Backtest validation | `src/forest/backtest/engine.ts` | Already uses fetched candles; add gap detection |
+| Live validation | `src/tree/bot/bot-tick.ts` | Validate incoming tick against exchange min/max |
+| Phantom fill prevention | `src/tree/bot/bot-order-executor.ts` | Cross-check fill price with recent OHLC |
 
-### Phase 4: Optimize (Week 9-12)
-- [ ] Cost-optimized routing (lowest fees per pair)
-- [ ] Cross-exchange arbitrage detection (price diff > threshold → opportunity)
-- [ ] Advanced dashboard: routing visualization, cost comparison
-- [ ] A/B testing framework for routing strategies
-- **Goal:** Maximize execution quality across all exchanges
+**Required Addition:**
+```typescript
+// src/forest/backtest/validation.ts (new)
+export function validateOHLCSeries(candles: Candle[], maxGapMs: number = 3600000): { valid: boolean; gaps: number[] } {
+  const gaps: number[] = [];
+  for (let i = 1; i < candles.length; i++) {
+    const expected = candles[i - 1].timestamp + intervalToMs(candles[i - 1]); // need interval context
+    if (candles[i].timestamp - expected > maxGapMs) gaps.push(i);
+  }
+  return { valid: gaps.length === 0, gaps };
+}
+```
 
 ---
 
-## 7. Key Insight
+## 4. What NOT to Adopt (Over-Engineering for v1)
 
-OmniRoute's **core innovation** is treating multiple providers as a single unreliable resource and routing around failures automatically. Trade-bot faces the **exact same problem** with exchanges — but hasn't built the routing layer yet.
+| Pattern | Vibe-Trading Location | Reason to Skip |
+|---------|----------------------|----------------|
+| **Electron desktop shell** | `desktop/electron/` | Web-first; no desktop requirement |
+| **Sandboxed user code execution** | Agent runtime AST hardening | No user-written strategies in v1 |
+| **16 IM channel adapters** | IM channels (Telegram, Discord, Slack, WhatsApp, QQ...) | Single Telegram bot is sufficient; add later if needed |
+| **Purged cross-validation ML** | `quantlib/purged_cv/` | No ML strategies in v1 scope |
+| **Shadow Account / SignalEngine** | Core agent runtime | Complex PIT-safe reconstruction; defer to v2+ |
+| **Cost stack (STT, stamp duty, SEBI, GST)** | India-specific config | Not trading Indian markets in v1 |
+| **Scheduled research cron** | `VIBE_TRADING_ENABLE_SCHEDULER` | Separate research product; not trading bot core |
+| **MCP as primary transport** | Entire architecture | Overkill for internal TypeScript calls; use direct imports + Hono routes for external |
 
-The existing `ExchangeOrchestrator` is a **guard** (rejects bad orders), not a **router** (picks best exchange). The missing piece is the scoring + routing logic that makes OmniRoute's `auto` model work.
+---
 
-**Bottom line:** Trade-bot has 70% of OmniRoute's infrastructure (circuit breaker, rate limiter, health tracking, provider abstraction). The 30% it's missing — **cross-exchange routing with live scoring** — is the highest-impact feature to implement next.
+## 5. Implementation Priority
+
+| Priority | Task | Owner Layer | Effort | Depends On |
+|----------|------|-------------|--------|------------|
+| **P0** | Add `provenance` to `ExchangeProviderResponse` + `ProviderChain` | `src/tree/exchange/provider/` | S | Circuit-breaker (done) |
+| **P0** | Cross-provider consistency test suite (≤1% divergence) | `src/tree/exchange/provider/__tests__/` | S | P0 above |
+| **P1** | `src/tree/quantlib/` — pure TS math modules (Black-Scholes, VaR, stats) | `src/tree/quantlib/` | M | None |
+| **P1** | `AuditLedger` with hash-chained `trade_events` (+ `prev_hash` column) | `src/forest/flight-recorder/` | M | D1 migration |
+| **P1** | Manifest recording on bot start (config + code version hash) | `src/forest/bot/d1-persistence.ts` | S | P1 ledger |
+| **P2** | OHLC gap validation in backtest engine | `src/forest/backtest/engine.ts` | S | None |
+| **P2** | Live tick validation in `bot-tick.ts` | `src/tree/bot/bot-tick.ts` | S | None |
+| **P3** | `/internal/api/quantlib/*` Hono routes (expose for agents/CLI) | `src/forest/api/routes/` | S | P1 quantlib |
+| **P3** | WASM compilation of quantlib (if numeric parity needed) | `src/tree/quantlib/wasm/` | L | P1 quantlib stable |
+
+**Effort Key:** S = Small (1-2 days), M = Medium (3-5 days), L = Large (1-2 weeks)
+
+---
+
+## 6. Work Checklist
+
+### Phase 1: Data Resilience (Week 1)
+- [ ] Extend `src/tree/exchange/provider/types.ts` with `ProviderProvenance`
+- [ ] Implement `ProviderChain` in `src/tree/exchange/provider/chain.ts`
+- [ ] Wire `ProviderChain` into live + paper providers
+- [ ] Add cross-provider consistency tests (Binance vs Bybit vs OKX spot prices)
+- [ ] Verify circuit-breaker integration works end-to-end
+
+### Phase 2: Quantlib Core (Week 2)
+- [ ] Create `src/tree/quantlib/` directory structure
+- [ ] Implement Black-Scholes, implied vol, Greeks (pure TS)
+- [ ] Implement VaR/CVaR (historical + parametric)
+- [ ] Implement rolling OLS + covariance
+- [ ] Unit test against known values (Hull, NIST)
+
+### Phase 3: Audit Ledger (Week 2-3)
+- [ ] D1 migration: add `prev_hash`, `hash` to `trade_events`
+- [ ] Implement `AuditLedger` class in `src/forest/flight-recorder/ledger.ts`
+- [ ] Integrate into `FlightRecorder.recordEvent()` and `persistEvent()`
+- [ ] Add `verifyChain()` admin endpoint
+- [ ] Record manifest on bot start (config hash + code version)
+
+### Phase 4: Validation Gates (Week 3)
+- [ ] OHLC gap detection in backtest engine
+- [ ] Live tick validation against recent OHLC bounds
+- [ ] Phantom fill check in order executor
+
+### Phase 5: External API (Week 4, optional)
+- [ ] `/internal/api/quantlib/*` Hono routes
+- [ ] WASM compilation evaluation
+
+---
+
+## 7. Success Metrics
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| **Data availability** | ≥99.9% (3-provider fallback) | Synthetic monitor: 1 req/min per provider |
+| **Cross-provider divergence** | ≤1% on spot prices | Nightly regression test suite |
+| **Audit chain integrity** | 100% verifiable | `AuditLedger.verifyChain()` on deploy |
+| **Quantlib numeric parity** | Match Python quantlib to 1e-10 | Test vectors from quantlib reference |
+| **Circuit-breaker trip rate** | <0.1% of requests | Worker analytics / logs |
+| **Manifest capture** | 100% of bot starts | Audit log query |
+
+---
+
+## 8. Assumptions
+
+| Assumption | Confidence | What Would Change It |
+|------------|------------|---------------------|
+| Trade-bot stays on Cloudflare Workers (no long-running Node process) | High | If migration to Kubernetes/VMs happens, MCP + scheduler patterns become viable |
+| v1 scope = grid + mean-reversion only | High | If user strategies added → sandbox pattern needed |
+| 3 exchanges (Binance/Bybit/OKX) sufficient for v1 | Medium | If more exchanges needed → extend provider registry |
+| D1 ACID + `prev_hash` = sufficient tamper evidence | Medium | If regulatory requires external notarization → add anchor to public chain |
+| Pure TS math sufficient (no WASM needed yet) | Medium | If numeric instability found → compile to WASM from Rust |
+| No ML strategies in v1 | High | If ML added → purged CV pattern becomes relevant |
+
+---
+
+## Appendix: File Map Reference
+
+```
+trade-bot/
+├── src/
+│   ├── tree/
+│   │   ├── exchange/
+│   │   │   └── provider/
+│   │   │       ├── circuit-breaker.ts      ✅ Pattern 4 (done)
+│   │   │       ├── types.ts                → extend with Provenance
+│   │   │       ├── index.ts                → registry
+│   │   │       ├── chain.ts                → NEW: Pattern 2
+│   │   │       ├── binance-provider.ts     (or similar)
+│   │   │       ├── bybit-provider.ts
+│   │   │       ├── okx-provider.ts
+│   │   │       └── __tests__/
+│   │   │           └── consistency.test.ts → NEW: cross-provider tests
+│   │   ├── quantlib/                       → NEW: Pattern 1
+│   │   │   ├── index.ts
+│   │   │   ├── options/
+│   │   │   ├── risk/
+│   │   │   ├── attribution/
+│   │   │   ├── stats/
+│   │   │   └── wasm/                       (future)
+│   │   └── bot/
+│   │       ├── bot-tick.ts                 → add Pattern 5 validation
+│   │       ├── bot-order-executor.ts       → add Pattern 5 validation
+│   │       └── strategies/
+│   ├── forest/
+│   │   ├── backtest/
+│   │   │   ├── engine.ts                   → add Pattern 5 gap detection
+│   │   │   └── validation.ts               → NEW: Pattern 5
+│   │   ├── flight-recorder/
+│   │   │   ├── index.ts
+│   │   │   ├── ledger.ts                   → NEW: Pattern 3
+│   │   │   └── flight-recorder-types.ts    → extend
+│   │   ├── bot/
+│   │   │   └── d1-persistence.ts           → add manifest recording
+│   │   └── api/
+│   │       └── routes.ts                   → add /internal/api/quantlib/*
+│   └── worker.ts                           → Hono routes for quantlib API
+└── wrangler.jsonc                          → D1 migration for prev_hash
+```

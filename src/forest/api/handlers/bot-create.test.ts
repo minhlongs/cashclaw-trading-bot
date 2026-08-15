@@ -87,7 +87,7 @@ describe('botCreateHandler', () => {
 
     it('honors wizard config values instead of hardcoded defaults', async () => {
       await botCreateHandler(paperPayload({
-        config: { spacing_pct: 0.5, grid_levels: 5, max_drawdown_pct: 5 },
+        config: { spacingPct: 0.5, gridLevels: 5, maxDrawdownPct: 5 },
       }));
       const req = mockCreateBot.mock.calls[0][0];
       expect(req.config).toMatchObject({
