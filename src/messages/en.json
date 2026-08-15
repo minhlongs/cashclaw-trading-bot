@@ -4,7 +4,8 @@
     "bots": "Trading Bots",
     "backtests": "Backtests",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "monitoring": "Monitoring"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -66,7 +67,54 @@
     "rsiThreshold": "RSI Threshold",
     "maxDrawdown": "Max Drawdown (%)",
     "create": "Create Bot",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "title": {
+      "basic": "Basic Info",
+      "strategy": "Choose Strategy",
+      "gridConfig": "Grid Config",
+      "meanRevConfig": "Mean Reversion Config",
+      "review": "Review"
+    },
+    "botName": "Bot Name",
+    "tradingPair": "Trading Pair",
+    "capitalUsd": "Capital (USD)",
+    "select": "-- Select --",
+    "next": "Next",
+    "back": "Back",
+    "createBot": "Create Bot",
+    "submitError": "Failed to create bot",
+    "paperModeNote": "Bot will run in paper trading mode before going live.",
+    "createSuccess": "Bot created successfully! Redirecting...",
+    "strategies": {
+      "grid": {
+        "label": "Grid Trading",
+        "desc": "Multi-level limit orders"
+      },
+      "mean_reversion": {
+        "label": "Mean Reversion",
+        "desc": "Bollinger Bands + RSI"
+      }
+    },
+    "fields": {
+      "spacingPct": "Spacing (%)",
+      "levels": "Levels",
+      "capitalPerLevelPct": "Capital per level (%)",
+      "maxDrawdownPct": "Max Drawdown (%)",
+      "bbPeriod": "BB Period",
+      "bbStd": "BB Std Dev",
+      "rsiPeriod": "RSI Period",
+      "rsiBuy": "RSI Buy Level",
+      "rsiSell": "RSI Sell Level",
+      "volumeMultiplier": "Volume Multiplier",
+      "positionSizePct": "Position Size (%)"
+    },
+    "review": {
+      "name": "Name",
+      "pair": "Pair",
+      "exchange": "Exchange",
+      "capital": "Capital",
+      "strategy": "Strategy"
+    }
   },
   "botDetail": {
     "title": "Bot Details",
@@ -82,7 +130,14 @@
     "start": "Start",
     "pause": "Pause",
     "stop": "Stop",
-    "killSwitch": "Emergency Stop"
+    "killSwitch": "Emergency Stop",
+    "capitalUsed": "Capital Used",
+    "maxDrawdownLimit": "20% limit",
+    "notFound": "Bot not found",
+    "notFoundWithId": "No bot found with ID: {id}",
+    "tradeEvents": "Trade Events",
+    "eventType": "Type",
+    "eventDetails": "Details"
   },
   "settings": {
     "title": "Settings",
@@ -230,7 +285,8 @@
           "cta": "Start",
           "popular": true
         }
-      ]
+      ],
+      "popular": "Popular"
     },
     "testimonial": {
       "quote": "CashClaw saves me time and optimizes returns. No more watching charts 24/7.",
@@ -256,7 +312,8 @@
       "icon": "🚀",
       "title": "Get Started Now",
       "subtitle": "Create your first bot in minutes. We'll guide you step-by-step.",
-      "note": "Powered by Cloudflare — safe, fast, worldwide."
+      "note": "Powered by Cloudflare — safe, fast, worldwide.",
+      "createButton": "Create First Bot →"
     },
     "whatNext": {
       "title": "What happens next?",
@@ -297,5 +354,73 @@
       "button": "Sign Up & Create First Bot",
       "note": "No credit card required to start."
     }
+  },
+  "backtests": {
+    "title": "Backtest",
+    "selectBotPlaceholder": "Select a bot...",
+    "running": "Running...",
+    "run": "Run Backtest",
+    "performanceMetrics": "Performance Metrics",
+    "totalPnl": "Total PnL",
+    "winRate": "Win Rate",
+    "maxDrawdown": "Max Drawdown",
+    "sharpeRatio": "Sharpe Ratio",
+    "totalTrades": "Total Trades",
+    "equityCurve": "Equity Curve",
+    "recentTrades": "Recent Trades",
+    "side": "Side",
+    "entryTime": "Entry Time",
+    "exitTime": "Exit Time",
+    "pnlPct": "PnL %",
+    "pleaseSelectBot": "Please select a bot",
+    "botNotFound": "Bot not found",
+    "failed": "Backtest failed",
+    "requestFailed": "Request failed",
+    "chartStart": "Start",
+    "chartEnd": "End"
+  },
+  "monitoring": {
+    "systemHealth": {
+      "title": "System Health",
+      "status": "Status",
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "uptime": "Uptime",
+      "version": "Version",
+      "environment": "Environment",
+      "production": "Production"
+    },
+    "botMetrics": {
+      "title": "Bot Metrics",
+      "runningBadge": "running",
+      "total": "Total Bots",
+      "running": "Running",
+      "paused": "Paused",
+      "totalPnl": "Total P&L",
+      "winRate": "Win Rate",
+      "totalTrades": "Total Trades"
+    },
+    "killswitch": {
+      "title": "Killswitch",
+      "status": "Status",
+      "halted": "Halted",
+      "armed": "Armed",
+      "disabled": "Disabled",
+      "haltedStatus": "HALTED",
+      "armedStatus": "Normal",
+      "disabledStatus": "Disabled",
+      "reason": "Reason: ",
+      "haltedAt": "Halted At",
+      "dailyPnl": "Daily P&L",
+      "consecutiveLosses": "Consecutive Losses",
+      "drawdown": "Drawdown"
+    },
+    "alerts": {
+      "title": "Recent Alerts",
+      "empty": "No alerts"
+    },
+    "refresh": "Refresh",
+    "endpointError": "One or more API endpoints returned an error",
+    "loadFailed": "Failed to load monitoring data"
   }
 }

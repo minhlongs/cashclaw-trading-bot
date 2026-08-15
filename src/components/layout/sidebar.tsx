@@ -16,11 +16,11 @@ import {
 import Link from 'next/link';
 
 const NAV_ROUTES = [
-  { path: 'dashboard', icon: LayoutDashboard, labelVi: 'Tổng quan', labelEn: 'Dashboard' },
-  { path: 'bots', icon: Bot, labelVi: 'Bot của tôi', labelEn: 'My Bots' },
-  { path: 'backtests', icon: BookOpen, labelVi: 'Backtest', labelEn: 'Backtests' },
-  { path: 'monitoring', icon: Activity, labelVi: 'Monitoring', labelEn: 'Monitoring' },
-  { path: 'settings', icon: Settings, labelVi: 'Cài đặt', labelEn: 'Settings' },
+  { path: 'dashboard', icon: LayoutDashboard },
+  { path: 'bots', icon: Bot },
+  { path: 'backtests', icon: BookOpen },
+  { path: 'monitoring', icon: Activity },
+  { path: 'settings', icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -125,7 +125,7 @@ export default function Sidebar() {
               }}
             >
               <Icon size={18} style={{ flexShrink: 0 }} />
-              {!collapsed && <span>{item.labelVi}</span>}
+              {!collapsed && <span>{t(`nav.${item.path}`)}</span>}
             </Link>
           );
         })}

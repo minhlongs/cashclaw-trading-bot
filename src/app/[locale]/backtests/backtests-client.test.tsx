@@ -10,8 +10,65 @@ import type { BacktestResult } from '@/forest/backtest/types';
 
 const localeMock = vi.fn().mockReturnValue('vi');
 
+const MESSAGES: Record<string, string> = {
+  'vi:backtests.title': 'Backtest',
+  'vi:backtests.selectBotPlaceholder': 'Chon bot...',
+  'vi:backtests.running': 'Dang chay...',
+  'vi:backtests.run': 'Chay Backtest',
+  'vi:backtests.pleaseSelectBot': 'Chon bot truoc',
+  'vi:backtests.botNotFound': 'Khong tim thay bot',
+  'vi:backtests.failed': 'Backtest that bai',
+  'vi:backtests.requestFailed': 'Yeu cau that bai',
+  'vi:backtests.performanceMetrics': 'Chi So Hieu Suat',
+  'vi:backtests.totalPnl': 'Tong Loi Nhuan',
+  'vi:backtests.winRate': 'Ty Le Thang',
+  'vi:backtests.maxDrawdown': 'Max Drawdown',
+  'vi:backtests.sharpeRatio': 'Sharpe Ratio',
+  'vi:backtests.totalTrades': 'Tong Giao Dich',
+  'vi:backtests.equityCurve': 'Duong Equity',
+  'vi:backtests.recentTrades': 'Giao Dich Gan Day',
+  'vi:backtests.side': 'Huong',
+  'vi:backtests.entryTime': 'Thoi Gian Vao',
+  'vi:backtests.exitTime': 'Thoi Gian Ra',
+  'vi:backtests.pnlPct': 'Loi Nhuan %',
+  'vi:common.entryPrice': 'Gia Vao',
+  'vi:common.exitPrice': 'Gia Ra',
+  'vi:common.pnl': 'Loi Nhuan',
+  'en:backtests.title': 'Backtest',
+  'en:backtests.selectBotPlaceholder': 'Select a bot...',
+  'en:backtests.running': 'Running...',
+  'en:backtests.run': 'Run Backtest',
+  'en:backtests.pleaseSelectBot': 'Please select a bot',
+  'en:backtests.botNotFound': 'Bot not found',
+  'en:backtests.failed': 'Backtest failed',
+  'en:backtests.requestFailed': 'Request failed',
+  'en:backtests.performanceMetrics': 'Performance Metrics',
+  'en:backtests.totalPnl': 'Total PnL',
+  'en:backtests.winRate': 'Win Rate',
+  'en:backtests.maxDrawdown': 'Max Drawdown',
+  'en:backtests.sharpeRatio': 'Sharpe Ratio',
+  'en:backtests.totalTrades': 'Total Trades',
+  'en:backtests.equityCurve': 'Equity Curve',
+  'en:backtests.recentTrades': 'Recent Trades',
+  'en:backtests.side': 'Side',
+  'en:backtests.entryTime': 'Entry Time',
+  'en:backtests.exitTime': 'Exit Time',
+  'en:backtests.pnlPct': 'PnL %',
+  'en:common.entryPrice': 'Entry Price',
+  'en:common.exitPrice': 'Exit Price',
+  'en:common.pnl': 'PnL',
+};
+
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: (ns?: string) => {
+    const t = (key: string) => {
+      const flat = ns ? `${ns}.${key}` : key;
+      const value = MESSAGES[`${localeMock()}:${flat}`] ?? MESSAGES[`${localeMock()}:${key}`];
+      return value ?? flat;
+    };
+    t.raw = (key: string) => MESSAGES[`${localeMock()}:${ns ? ns + '.' + key : key}`] ?? (ns ? `${ns}.${key}` : key);
+    return t;
+  },
   useLocale: (...args: unknown[]) => localeMock(...args),
 }));
 

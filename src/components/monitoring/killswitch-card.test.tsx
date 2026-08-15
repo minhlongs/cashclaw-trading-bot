@@ -3,6 +3,34 @@ import { render, screen } from '@testing-library/react';
 import { KillswitchCard } from './killswitch-card';
 import type { KillswitchResponse } from './monitoring-types';
 
+vi.mock('next-intl', () => {
+  const map: Record<string, string> = {
+    'monitoring.killswitch.title': 'Killswitch',
+    'monitoring.killswitch.halted': 'Da kich hoat',
+    'monitoring.killswitch.armed': 'San sang',
+    'monitoring.killswitch.disabled': 'Tat',
+    'monitoring.killswitch.haltedStatus': 'DA KICH HOAT',
+    'monitoring.killswitch.armedStatus': 'Binh thuong',
+    'monitoring.killswitch.disabledStatus': 'Tat',
+    'monitoring.killswitch.status': 'Trang thai',
+    'monitoring.killswitch.reason': 'Ly do: ',
+    'monitoring.killswitch.haltedAt': 'Thoi gian kich hoat',
+    'monitoring.killswitch.dailyPnl': 'PnL ngay',
+    'monitoring.killswitch.consecutiveLosses': 'Lo lien tiep',
+    'monitoring.killswitch.drawdown': 'Drawdown'
+  };
+  const resolve = (ns: string, key: string) => map[ns ? `${ns}.${key}` : key] ?? (ns ? `${ns}.${key}` : key);
+  return {
+    useLocale: () => 'vi',
+    useTranslations: (ns?: string) => {
+      const t = (key: string) => resolve(ns ?? '', key);
+      t.raw = (key: string) => resolve(ns ?? '', key);
+      return t;
+    },
+  };
+});
+
+
 vi.mock('lucide-react', () => {
   const Icon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="icon" {...props} />

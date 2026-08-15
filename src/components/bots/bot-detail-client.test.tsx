@@ -33,10 +33,24 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
-  useLocale: () => 'vi',
-}));
+vi.mock('next-intl', () => {
+  const map: Record<string, string> = {
+    'botDetail.totalPnl': 'Total P&L',
+    'botDetail.winRate': 'Win Rate',
+    'botDetail.capitalUsed': 'Capital Used',
+    'botDetail.maxDrawdown': 'Max Drawdown',
+    'botDetail.maxDrawdownLimit': '20% limit',
+    'botDetail.saveConfig': 'Save Config',
+  };
+  return {
+    useTranslations: (ns?: string) => {
+      const t = (key: string) => map[ns ? `${ns}.${key}` : key] ?? (ns ? `${ns}.${key}` : key);
+      t.raw = (key: string) => map[ns ? `${ns}.${key}` : key] ?? (ns ? `${ns}.${key}` : key);
+      return t;
+    },
+    useLocale: () => 'vi',
+  };
+});
 
 /* ------------------------------------------------------------------ */
 /* Fixtures                                                           */

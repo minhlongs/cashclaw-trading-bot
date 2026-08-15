@@ -3,6 +3,23 @@ import { render, screen } from '@testing-library/react';
 import { AlertsCard } from './alerts-card';
 import type { Alert } from './monitoring-types';
 
+vi.mock('next-intl', () => {
+  const map: Record<string, string> = {
+    'monitoring.alerts.title': 'Canh bao gan day',
+    'monitoring.alerts.empty': 'Khong co canh bao nao'
+  };
+  const resolve = (ns: string, key: string) => map[ns ? `${ns}.${key}` : key] ?? (ns ? `${ns}.${key}` : key);
+  return {
+    useLocale: () => 'vi',
+    useTranslations: (ns?: string) => {
+      const t = (key: string) => resolve(ns ?? '', key);
+      t.raw = (key: string) => resolve(ns ?? '', key);
+      return t;
+    },
+  };
+});
+
+
 vi.mock('lucide-react', () => {
   const Icon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="icon" {...props} />

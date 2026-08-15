@@ -4,7 +4,8 @@
     "bots": "Bot giao dịch",
     "backtests": "Backtest",
     "settings": "Cài đặt",
-    "logout": "Đăng xuất"
+    "logout": "Đăng xuất",
+    "monitoring": "Giám sát"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -66,7 +67,54 @@
     "rsiThreshold": "Ngưỡng RSI",
     "maxDrawdown": "Max Drawdown (%)",
     "create": "Tạo bot",
-    "cancel": "Hủy"
+    "cancel": "Hủy",
+    "title": {
+      "basic": "Thông tin cơ bản",
+      "strategy": "Chọn chiến lược",
+      "gridConfig": "Cấu hình Grid",
+      "meanRevConfig": "Cấu hình Mean Reversion",
+      "review": "Xác nhận"
+    },
+    "botName": "Tên bot",
+    "tradingPair": "Cặp giao dịch",
+    "capitalUsd": "Vốn (USD)",
+    "select": "-- Chọn --",
+    "next": "Tiếp theo",
+    "back": "Quay lại",
+    "createBot": "Tạo bot",
+    "submitError": "Không thể tạo bot",
+    "paperModeNote": "Bot sẽ chạy ở chế độ paper trading trước khi chuyển sang live.",
+    "createSuccess": "Tạo bot thành công! Đang chuyển hướng...",
+    "strategies": {
+      "grid": {
+        "label": "Grid Trading",
+        "desc": "Đặt lệnh nhiều mức giá"
+      },
+      "mean_reversion": {
+        "label": "Mean Reversion",
+        "desc": "Bollinger Bands + RSI"
+      }
+    },
+    "fields": {
+      "spacingPct": "Khoảng cách (%)",
+      "levels": "Số tầng",
+      "capitalPerLevelPct": "Vốn mỗi tầng (%)",
+      "maxDrawdownPct": "Max Drawdown (%)",
+      "bbPeriod": "Chu kỳ BB",
+      "bbStd": "Độ lệch chuẩn BB",
+      "rsiPeriod": "Chu kỳ RSI",
+      "rsiBuy": "Ngưỡng mua RSI",
+      "rsiSell": "Ngưỡng bán RSI",
+      "volumeMultiplier": "Hệ số khối lượng",
+      "positionSizePct": "Kích thước vị thế (%)"
+    },
+    "review": {
+      "name": "Tên",
+      "pair": "Cặp",
+      "exchange": "Sàn",
+      "capital": "Vốn",
+      "strategy": "Chiến lược"
+    }
   },
   "botDetail": {
     "title": "Chi tiết bot",
@@ -82,7 +130,14 @@
     "start": "Chạy",
     "pause": "Tạm dừng",
     "stop": "Dừng",
-    "killSwitch": "Dừng khẩn cấp"
+    "killSwitch": "Dừng khẩn cấp",
+    "capitalUsed": "Vốn đã dùng",
+    "maxDrawdownLimit": "Giới hạn 20%",
+    "notFound": "Không tìm thấy bot",
+    "notFoundWithId": "Không tìm thấy bot với ID: {id}",
+    "tradeEvents": "Sự kiện giao dịch",
+    "eventType": "Loại",
+    "eventDetails": "Chi tiết"
   },
   "settings": {
     "title": "Cài đặt",
@@ -230,7 +285,8 @@
           "cta": "Bắt đầu",
           "popular": true
         }
-      ]
+      ],
+      "popular": "Phổ biến"
     },
     "testimonial": {
       "quote": "CashClaw tiết kiệm thời gian và tối ưu lợi nhuận. Tôi không còn phải canh sàn 24/7.",
@@ -256,7 +312,8 @@
       "icon": "🚀",
       "title": "Bắt đầu ngay",
       "subtitle": "Tạo bot đầu tiên trong vài phút. Chúng tôi hướng dẫn từng bước.",
-      "note": "Nền tảng vận hành trên Cloudflare — an toàn, nhanh, toàn cầu."
+      "note": "Nền tảng vận hành trên Cloudflare — an toàn, nhanh, toàn cầu.",
+      "createButton": "Tạo bot đầu tiên →"
     },
     "whatNext": {
       "title": "Điều gì xảy ra tiếp theo?",
@@ -297,5 +354,73 @@
       "button": "Đăng ký & tạo bot đầu tiên",
       "note": "Không cần thẻ tín dụng để bắt đầu."
     }
+  },
+  "backtests": {
+    "title": "Backtest",
+    "selectBotPlaceholder": "Chọn bot...",
+    "running": "Đang chạy...",
+    "run": "Chạy Backtest",
+    "performanceMetrics": "Chỉ số hiệu suất",
+    "totalPnl": "Tổng lợi nhuận",
+    "winRate": "Tỷ lệ thắng",
+    "maxDrawdown": "Sụt giảm tối đa",
+    "sharpeRatio": "Hệ số Sharpe",
+    "totalTrades": "Tổng giao dịch",
+    "equityCurve": "Đường cong vốn",
+    "recentTrades": "Giao dịch gần đây",
+    "side": "Hướng",
+    "entryTime": "Thời gian vào",
+    "exitTime": "Thời gian ra",
+    "pnlPct": "Lợi nhuận %",
+    "pleaseSelectBot": "Vui lòng chọn bot",
+    "botNotFound": "Không tìm thấy bot",
+    "failed": "Backtest thất bại",
+    "requestFailed": "Yêu cầu thất bại",
+    "chartStart": "Bắt đầu",
+    "chartEnd": "Kết thúc"
+  },
+  "monitoring": {
+    "systemHealth": {
+      "title": "Tình trạng hệ thống",
+      "status": "Trạng thái",
+      "healthy": "Khỏe mạnh",
+      "degraded": "Suy giảm",
+      "uptime": "Thời gian hoạt động",
+      "version": "Phiên bản",
+      "environment": "Môi trường",
+      "production": "Production"
+    },
+    "botMetrics": {
+      "title": "Chỉ số Bot",
+      "runningBadge": "đang chạy",
+      "total": "Tổng bot",
+      "running": "Đang chạy",
+      "paused": "Tạm dừng",
+      "totalPnl": "Tổng PnL",
+      "winRate": "Tỷ lệ thắng",
+      "totalTrades": "Tổng giao dịch"
+    },
+    "killswitch": {
+      "title": "Killswitch",
+      "status": "Trạng thái",
+      "halted": "Đã kích hoạt",
+      "armed": "Sẵn sàng",
+      "disabled": "Tắt",
+      "haltedStatus": "ĐÃ KÍCH HOẠT",
+      "armedStatus": "Bình thường",
+      "disabledStatus": "Tắt",
+      "reason": "Lý do: ",
+      "haltedAt": "Thời gian kích hoạt",
+      "dailyPnl": "PnL ngày",
+      "consecutiveLosses": "Lỗ liên tiếp",
+      "drawdown": "Drawdown"
+    },
+    "alerts": {
+      "title": "Cảnh báo gần đây",
+      "empty": "Không có cảnh báo nào"
+    },
+    "refresh": "Làm mới",
+    "endpointError": "Một hoặc nhiều API trả về lỗi",
+    "loadFailed": "Không thể tải dữ liệu giám sát"
   }
 }

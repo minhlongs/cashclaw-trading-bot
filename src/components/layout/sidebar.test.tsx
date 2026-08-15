@@ -32,11 +32,11 @@ import Sidebar from './sidebar';
 
 describe('Sidebar', () => {
   const navItems = [
-    { label: 'Tổng quan', href: '/vi/dashboard' },
-    { label: 'Bot của tôi', href: '/vi/bots' },
-    { label: 'Backtest', href: '/vi/backtests' },
-    { label: 'Monitoring', href: '/vi/monitoring' },
-    { label: 'Cài đặt', href: '/vi/settings' },
+    { label: 'nav.dashboard', href: '/vi/dashboard' },
+    { label: 'nav.bots', href: '/vi/bots' },
+    { label: 'nav.backtests', href: '/vi/backtests' },
+    { label: 'nav.monitoring', href: '/vi/monitoring' },
+    { label: 'nav.settings', href: '/vi/settings' },
   ];
 
   it('renders all nav items', () => {
@@ -84,7 +84,7 @@ describe('Sidebar', () => {
     render(<Sidebar />);
 
     // Mocked pathname is /vi/dashboard, so only that link carries the active style
-    const activeLink = screen.getByText('Tổng quan').closest('a') as HTMLElement;
+    const activeLink = screen.getByText('nav.dashboard').closest('a') as HTMLElement;
     expect(activeLink.style.background).toBe('rgba(0, 212, 170, 0.08)');
     expect(activeLink.style.color).toBe('var(--color-profit)');
 

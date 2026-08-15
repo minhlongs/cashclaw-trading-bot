@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
   Bot,
@@ -12,15 +12,16 @@ import {
 import Link from 'next/link';
 
 const NAV_ROUTES = [
-  { path: 'dashboard', icon: LayoutDashboard, labelVi: 'Tổng quan', labelEn: 'Dashboard' },
-  { path: 'bots', icon: Bot, labelVi: 'Bot', labelEn: 'Bots' },
-  { path: 'backtests', icon: BookOpen, labelVi: 'Backtest', labelEn: 'Backtests' },
-  { path: 'monitoring', icon: Activity, labelVi: 'Monitor', labelEn: 'Monitor' },
-  { path: 'settings', icon: Settings, labelVi: 'Cài đặt', labelEn: 'Settings' },
+  { path: 'dashboard', icon: LayoutDashboard },
+  { path: 'bots', icon: Bot },
+  { path: 'backtests', icon: BookOpen },
+  { path: 'monitoring', icon: Activity },
+  { path: 'settings', icon: Settings },
 ];
 
 export default function MobileNav() {
   const locale = useLocale();
+  const t = useTranslations('nav');
   const pathname = usePathname();
 
   const navItems = NAV_ROUTES.map((item) => ({
@@ -43,7 +44,7 @@ export default function MobileNav() {
           >
             <item.icon size={20} />
             <span className="mobile-nav-label">
-              {item.labelVi}
+              {t(item.path)}
             </span>
           </Link>
         );

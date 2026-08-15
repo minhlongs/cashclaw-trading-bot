@@ -3,6 +3,29 @@ import { render, screen } from '@testing-library/react';
 import { BotMetricsCard } from './bot-metrics-card';
 import type { MetricsResponse } from './monitoring-types';
 
+vi.mock('next-intl', () => {
+  const map: Record<string, string> = {
+    'monitoring.botMetrics.title': 'Bot Metrics',
+    'monitoring.botMetrics.runningBadge': 'dang chay',
+    'monitoring.botMetrics.total': 'Tong bot',
+    'monitoring.botMetrics.running': 'Dang chay',
+    'monitoring.botMetrics.paused': 'Tam dung',
+    'monitoring.botMetrics.totalPnl': 'Tong PnL',
+    'monitoring.botMetrics.winRate': 'Win Rate',
+    'monitoring.botMetrics.totalTrades': 'Tong giao dich'
+  };
+  const resolve = (ns: string, key: string) => map[ns ? `${ns}.${key}` : key] ?? (ns ? `${ns}.${key}` : key);
+  return {
+    useLocale: () => 'vi',
+    useTranslations: (ns?: string) => {
+      const t = (key: string) => resolve(ns ?? '', key);
+      t.raw = (key: string) => resolve(ns ?? '', key);
+      return t;
+    },
+  };
+});
+
+
 vi.mock('lucide-react', () => {
   const Icon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="icon" {...props} />

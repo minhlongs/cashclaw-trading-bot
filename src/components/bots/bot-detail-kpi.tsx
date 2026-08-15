@@ -1,6 +1,7 @@
 'use client';
 
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { BotDetailData } from '@/forest/dashboard/actions';
 
 interface BotDetailKpiProps {
@@ -8,13 +9,14 @@ interface BotDetailKpiProps {
 }
 
 export function BotDetailKpi({ bot }: BotDetailKpiProps) {
+  const t = useTranslations('botDetail');
   const totalTrades = bot.winCount + bot.lossCount;
   const winRate = totalTrades > 0 ? ((bot.winCount / totalTrades) * 100).toFixed(1) : '0';
 
   return (
     <div className="kpi-grid">
       <div className="kpi-card">
-        <div className="kpi-label">Total P&L</div>
+        <div className="kpi-label">{t('totalPnl')}</div>
         <div className={`kpi-value mono ${bot.totalPnl >= 0 ? 'profit' : 'loss'}`}>
           {bot.totalPnl >= 0 ? '+' : ''}{bot.totalPnl.toFixed(2)}
         </div>
@@ -24,14 +26,14 @@ export function BotDetailKpi({ bot }: BotDetailKpiProps) {
         </div>
       </div>
       <div className="kpi-card">
-        <div className="kpi-label">Win Rate</div>
+        <div className="kpi-label">{t('winRate')}</div>
         <div className="kpi-value mono" style={{ color: 'var(--color-profit)' }}>{winRate}%</div>
         <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>
           {bot.winCount}W / {bot.lossCount}L
         </div>
       </div>
       <div className="kpi-card">
-        <div className="kpi-label">Capital Used</div>
+        <div className="kpi-label">{t('capitalUsed')}</div>
         <div className="kpi-value mono">
           ${bot.capitalUsed.toLocaleString()}
         </div>
@@ -40,9 +42,9 @@ export function BotDetailKpi({ bot }: BotDetailKpiProps) {
         </div>
       </div>
       <div className="kpi-card">
-        <div className="kpi-label">Max Drawdown</div>
+        <div className="kpi-label">{t('maxDrawdown')}</div>
         <div className="kpi-value mono text-warning">-{bot.maxDrawdownPct}%</div>
-        <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>Giới hạn 20%</div>
+        <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>{t('maxDrawdownLimit')}</div>
       </div>
     </div>
   );

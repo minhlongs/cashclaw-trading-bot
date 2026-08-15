@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { BotDetailClient } from '@/components/bots/bot-detail-client';
 
 interface BotDetailData {
@@ -62,6 +63,8 @@ interface TradeEventRow {
 
 export default function BotDetailPageClient({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const t = useTranslations('botDetail');
+  const common = useTranslations('common');
   const [bot, setBot] = useState<BotDetailData | null>(null);
   const [trades, setTrades] = useState<TradeRow[]>([]);
   const [tradeEvents, setTradeEvents] = useState<TradeEventRow[]>([]);
@@ -116,7 +119,7 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
     return (
       <div className="main-content">
         <div className="card" style={{ textAlign: 'center', padding: '60px' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
+          <p style={{ color: 'var(--text-secondary)' }}>{common('loading')}</p>
         </div>
       </div>
     );
@@ -126,9 +129,9 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
     return (
       <div className="main-content">
         <div className="card" style={{ textAlign: 'center', padding: '60px' }}>
-          <h2 style={{ color: 'var(--text-secondary)' }}>Bot not found</h2>
+          <h2 style={{ color: 'var(--text-secondary)' }}>{t('notFound')}</h2>
           <p style={{ color: 'var(--text-tertiary)', marginTop: '8px' }}>
-            Không tìm thấy bot / No bot found with ID: {id}
+            {t('notFoundWithId', { id })}
           </p>
         </div>
       </div>
@@ -141,15 +144,15 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
       {tradeEvents.length > 0 && (
         <div className="card" style={{ marginTop: 'var(--space-4)' }}>
           <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-3)' }}>
-            Trade Events
+            {t('tradeEvents')}
           </h3>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', fontSize: 'var(--text-sm)' }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>Time</th>
-                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>Type</th>
-                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>Details</th>
+                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>{common('time')}</th>
+                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>{t('eventType')}</th>
+                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>{t('eventDetails')}</th>
                 </tr>
               </thead>
               <tbody>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, AlertTriangle, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { MonitoringData } from './monitoring-types';
 import { SystemHealthCard } from './system-health-card';
 import { BotMetricsCard } from './bot-metrics-card';
@@ -9,6 +10,7 @@ import { KillswitchCard } from './killswitch-card';
 import { AlertsCard } from './alerts-card';
 
 export function MonitoringClient() {
+  const t = useTranslations('monitoring');
   const [data, setData] = useState<MonitoringData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export function MonitoringClient() {
       ]);
 
       if (!healthRes.ok || !metricsRes.ok || !killswitchRes.ok) {
-        throw new Error('One or more API endpoints returned an error');
+        throw new Error(t('endpointError'));
       }
 
       const [health, metrics, killswitch] = await Promise.all([
@@ -37,12 +39,12 @@ export function MonitoringClient() {
       setData({ health, metrics, killswitch, alerts: [] });
       setLastRefresh(new Date());
     } catch (fetchError) {
-      const msg = fetchError instanceof Error ? fetchError.message : 'Failed to load monitoring data';
+      const msg = fetchError instanceof Error ? fetchError.message : t('loadFailed');
       setError(msg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchData is useCallback-memoized; setState only fires on async completion
@@ -75,7 +77,7 @@ export function MonitoringClient() {
         <AlertTriangle size={48} />
         <p style={{ color: 'var(--color-loss)' }}>{error}</p>
         <button className="btn btn-ghost" onClick={fetchData}>
-          Thu lai
+          {t('refresh')}
         </button>
       </div>
     );
@@ -88,15 +90,15 @@ export function MonitoringClient() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-            He thong
+            {t('systemHealth.title')}
           </h2>
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)', margin: 0 }}>
-            Cap nhat lan cuoi: {lastRefresh.toLocaleTimeString('vi-VN')}
+            {lastRefresh.toLocaleTimeString('vi-VN')}
           </p>
         </div>
         <button className="btn btn-ghost" onClick={fetchData} disabled={loading}>
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-          Lam moi
+          {t('refresh')}
         </button>
       </div>
 

@@ -4,7 +4,30 @@ import userEvent from '@testing-library/user-event';
 import { BotWizardClient } from './bot-wizard-client';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock('next-intl', () => ({ useLocale: () => 'en' }));
+vi.mock('next-intl', () => {
+  const map: Record<string, string> = {
+    'botWizard.next': 'Next',
+    'botWizard.back': 'Back',
+    'botWizard.createBot': 'Create Bot',
+    'botWizard.title.basic': 'Basic Info',
+    'botWizard.title.strategy': 'Choose Strategy',
+    'botWizard.title.gridConfig': 'Grid Config',
+    'botWizard.title.meanRevConfig': 'Mean Reversion Config',
+    'botWizard.title.review': 'Review',
+    'botWizard.strategies.grid.label': 'Grid Trading',
+    'botWizard.strategies.grid.desc': 'Multi-level limit orders',
+    'botWizard.strategies.mean_reversion.label': 'Mean Reversion',
+    'botWizard.strategies.mean_reversion.desc': 'Bollinger Bands + RSI',
+  };
+  return {
+    useLocale: () => 'en',
+    useTranslations: (ns?: string) => {
+      const t = (key: string) => map[ns ? `${ns}.${key}` : key] ?? (ns ? `${ns}.${key}` : key);
+      t.raw = (key: string) => map[ns ? `${ns}.${key}` : key] ?? (ns ? `${ns}.${key}` : key);
+      return t;
+    },
+  };
+});
 
 const originalFetch = global.fetch;
 let fetchSpy: ReturnType<typeof vi.fn>;
@@ -57,6 +80,6 @@ describe('BotWizardClient', () => {
     await user.click(screen.getByText('Grid Trading'));
     await user.click(screen.getByRole('button', { name: /next/i }));
     await user.click(screen.getByRole('button', { name: /next/i }));
-    expect(screen.getByText(/review/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /review/i })).toBeInTheDocument();
   });
 });

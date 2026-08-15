@@ -140,7 +140,7 @@ describe('BotDetailKpi', () => {
     it('shows drawdown percentage with warning text', () => {
       render(<BotDetailKpi bot={makeBot({ maxDrawdownPct: 5.2 })} />);
       expect(screen.getByText('-5.2%')).toBeInTheDocument();
-      expect(screen.getByText('Giới hạn 20%')).toBeInTheDocument();
+      expect(screen.getByText('20% limit')).toBeInTheDocument();
     });
 
     it('renders text-warning class for drawdown', () => {

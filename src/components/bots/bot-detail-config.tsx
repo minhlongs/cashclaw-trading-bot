@@ -1,10 +1,13 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface BotDetailConfigProps {
   config: Record<string, number>;
 }
 
 export function BotDetailConfig({ config }: BotDetailConfigProps) {
+  const t = useTranslations('botDetail');
   const configEntries = Object.entries(config);
 
   return (
@@ -21,7 +24,7 @@ export function BotDetailConfig({ config }: BotDetailConfigProps) {
         </div>
       ))}
       <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-        <button className="btn btn-primary">Save Config</button>
+        <button className="btn btn-primary">{t('saveConfig')}</button>
       </div>
     </div>
   );

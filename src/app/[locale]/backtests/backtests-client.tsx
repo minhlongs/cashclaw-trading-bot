@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { runBacktestAction } from '@/forest/backtest/actions';
 
 export interface BotInfo {
@@ -54,8 +54,7 @@ interface BacktestResult {
 const INTERVALS = ['1h', '4h', '1d'] as const;
 
 export default function BacktestsClient({ initialBots = [] }: { initialBots?: BotInfo[] }) {
-  const locale = useLocale();
-  const isEn = locale === 'en';
+  const t = useTranslations('backtests');
   const [selectedBotId, setSelectedBotId] = useState<string>('');
   const [interval, setInterval] = useState<string>('1h');
   const [isRunning, setIsRunning] = useState(false);
@@ -64,7 +63,7 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
 
   const runBacktest = useCallback(async () => {
     if (!selectedBotId) {
-      setError(isEn ? 'Please select a bot' : 'Chon bot truoc');
+      setError(t('pleaseSelectBot'));
       return;
     }
     setIsRunning(true);
@@ -72,7 +71,7 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
     try {
       const bot = initialBots.find(b => b.id === selectedBotId);
       if (!bot) {
-        setError(isEn ? 'Bot not found' : 'Khong tim thay bot');
+        setError(t('botNotFound'));
         return;
       }
       const config = JSON.parse(bot.configJson || '{}');
@@ -93,19 +92,19 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
       if (data.success && data.result) {
         setResult(data.result as BacktestResult);
       } else {
-        setError(data.error ?? (isEn ? 'Backtest failed' : 'Backtest that bai'));
+        setError(data.error ?? t('failed'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : (isEn ? 'Request failed' : 'Yeu cau that bai'));
+      setError(err instanceof Error ? err.message : t('requestFailed'));
     } finally {
       setIsRunning(false);
     }
-  }, [selectedBotId, interval, initialBots, isEn]);
+  }, [selectedBotId, interval, initialBots, t]);
 
   return (
     <div style={{ padding: 'var(--space-6)', maxWidth: 'var(--content-max)', margin: '0 auto' }}>
       <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>
-        {isEn ? 'Backtest' : 'Backtest'}
+        {t('title')}
       </h1>
 
       {/* Bot Selector */}
@@ -115,7 +114,7 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
           onChange={(e) => setSelectedBotId(e.target.value)}
           style={{ width: '100%', padding: 'var(--space-3)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}
         >
-          <option value="">{isEn ? 'Select a bot...' : 'Chon bot...'}</option>
+          <option value="">{t('selectBotPlaceholder')}</option>
           {initialBots.map((bot) => (
             <option key={bot.id} value={bot.id}>{bot.name} ({bot.strategy})</option>
           ))}
@@ -138,63 +137,66 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
         className="btn btn-primary"
         style={{ marginBottom: 'var(--space-6)', opacity: isRunning || !selectedBotId ? 0.5 : 1 }}
       >
-        {isRunning ? (isEn ? 'Running...' : 'Dang chay...') : (isEn ? 'Run Backtest' : 'Chay Backtest')}
+        {isRunning ? t('running') : t('run')}
       </button>
 
       {error && <p style={{ color: 'var(--color-loss)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>{error}</p>}
 
-      {result && <BacktestResults result={result} isEn={isEn} />}
+      {result && <BacktestResults result={result} />}
     </div>
   );
 }
 
-function BacktestResults({ result, isEn }: { result: BacktestResult; isEn: boolean }) {
+function BacktestResults({ result }: { result: BacktestResult }) {
+  const t = useTranslations('backtests');
   const { total_pnl, win_rate, max_drawdown, sharpe_ratio, total_trades, equity_curve_json, trades_json, win_count, loss_count } = result;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
       <div className="card">
         <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
-          {isEn ? 'Performance Metrics' : 'Chi So Hieu Suat'}
+          {t('performanceMetrics')}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-4)' }}>
-          <MetricCard label={isEn ? 'Total PnL' : 'Tong Loi Nhuan'} value={`${total_pnl > 0 ? '+' : ''}$${total_pnl.toFixed(2)}`} positive={total_pnl > 0} />
-          <MetricCard label={isEn ? 'Win Rate' : 'Ty Le Thang'} value={`${win_rate.toFixed(1)}%`} />
-          <MetricCard label={isEn ? 'Max Drawdown' : 'Max Drawdown'} value={`-${max_drawdown.toFixed(1)}%`} positive={false} />
-          <MetricCard label="Sharpe Ratio" value={(sharpe_ratio ?? 0).toFixed(2)} />
-          <MetricCard label={isEn ? 'Total Trades' : 'Tong Giao Dich'} value={`${total_trades} (${win_count}W / ${loss_count}L)`} />
+          <MetricCard label={t('totalPnl')} value={`${total_pnl > 0 ? '+' : ''}$${total_pnl.toFixed(2)}`} positive={total_pnl > 0} />
+          <MetricCard label={t('winRate')} value={`${win_rate.toFixed(1)}%`} />
+          <MetricCard label={t('maxDrawdown')} value={`-${max_drawdown.toFixed(1)}%`} positive={false} />
+          <MetricCard label={t('sharpeRatio')} value={(sharpe_ratio ?? 0).toFixed(2)} />
+          <MetricCard label={t('totalTrades')} value={`${total_trades} (${win_count}W / ${loss_count}L)`} />
         </div>
       </div>
 
       <div className="card">
         <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
-          {isEn ? 'Equity Curve' : 'Duong Equity'}
+          {t('equityCurve')}
         </h3>
         <EquityCurveChart data={equity_curve_json} />
       </div>
 
-      <RecentTradesTable trades={trades_json} isEn={isEn} />
+      <RecentTradesTable trades={trades_json} />
     </div>
   );
 }
 
-function RecentTradesTable({ trades, isEn }: { trades: BacktestResult['trades_json']; isEn: boolean }) {
+function RecentTradesTable({ trades }: { trades: BacktestResult['trades_json'] }) {
+  const t = useTranslations('backtests');
+  const common = useTranslations('common');
   return (
     <div className="card">
       <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
-        {isEn ? 'Recent Trades' : 'Giao Dich Gan Day'}
+        {t('recentTrades')}
       </h3>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-              <th style={thStyle}>{isEn ? 'Side' : 'Huong'}</th>
-              <th style={thStyle}>{isEn ? 'Entry Time' : 'Thoi Gian Vao'}</th>
-              <th style={thStyle}>{isEn ? 'Entry Price' : 'Gia Vao'}</th>
-              <th style={thStyle}>{isEn ? 'Exit Time' : 'Thoi Gian Ra'}</th>
-              <th style={thStyle}>{isEn ? 'Exit Price' : 'Gia Ra'}</th>
-              <th style={thStyle}>{isEn ? 'PnL' : 'Loi Nhuan'}</th>
-              <th style={thStyle}>{isEn ? 'PnL %' : 'Loi Nhuan %'}</th>
+              <th style={thStyle}>{t('side')}</th>
+              <th style={thStyle}>{t('entryTime')}</th>
+              <th style={thStyle}>{common('entryPrice')}</th>
+              <th style={thStyle}>{t('exitTime')}</th>
+              <th style={thStyle}>{common('exitPrice')}</th>
+              <th style={thStyle}>{common('pnl')}</th>
+              <th style={thStyle}>{t('pnlPct')}</th>
             </tr>
           </thead>
           <tbody>
@@ -236,6 +238,7 @@ function MetricCard({ label, value, positive }: { label: string; value: string; 
 }
 
 function EquityCurveChart({ data }: { data: { timestamp: number; equity: number; drawdownPct: number }[] }) {
+  const t = useTranslations('backtests');
   if (data.length < 2) return null;
 
   const width = 600;
@@ -288,8 +291,8 @@ function EquityCurveChart({ data }: { data: { timestamp: number; equity: number;
       <line x1={padding.left} y1={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} x2={width - padding.right} y2={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} stroke="var(--text-tertiary)" strokeWidth="1" strokeDasharray="2,2" />
 
       {/* Labels */}
-      <text x={padding.left} y={height - 5} fill="var(--text-secondary)" fontSize="10">Start</text>
-      <text x={width - padding.right} y={height - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="end">End</text>
+      <text x={padding.left} y={height - 5} fill="var(--text-secondary)" fontSize="10">{t('chartStart')}</text>
+      <text x={width - padding.right} y={height - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="end">{t('chartEnd')}</text>
     </svg>
   );
 }

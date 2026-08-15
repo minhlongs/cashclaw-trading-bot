@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type Alert, timeAgo, levelColors, levelBadges } from './monitoring-types';
 
 interface AlertsCardProps {
@@ -8,12 +9,14 @@ interface AlertsCardProps {
 }
 
 export function AlertsCard({ alerts }: AlertsCardProps) {
+  const t = useTranslations('monitoring.alerts');
+
   return (
     <div className="panel">
       <div className="panel-header">
         <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <AlertTriangle size={16} style={{ color: 'var(--color-warning)' }} />
-          Canh bao gan day
+          {t('title')}
         </div>
         <div className="panel-actions">
           <span className="badge badge-neutral">{alerts.length}</span>
@@ -22,7 +25,7 @@ export function AlertsCard({ alerts }: AlertsCardProps) {
       <div style={{ maxHeight: 280, overflowY: 'auto' }}>
         {alerts.length === 0 ? (
           <p style={{ padding: '1rem 0', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)' }}>
-            Khong co canh bao nao
+            {t('empty')}
           </p>
         ) : (
           alerts.map((alert) => (

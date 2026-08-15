@@ -3,6 +3,30 @@ import { render, screen } from '@testing-library/react';
 import { MonitoringClient } from './monitoring-client';
 import type { HealthResponse, MetricsResponse, KillswitchResponse } from './monitoring-types';
 
+vi.mock('next-intl', () => {
+  const map: Record<string, string> = {
+    'monitoring.endpointError': 'One or more API endpoints returned an error',
+    'monitoring.loadFailed': 'Failed to load monitoring data',
+    'monitoring.killswitch.armedStatus': 'Binh thuong',
+    'monitoring.killswitch.haltedStatus': 'DA KICH HOAT'
+  };
+  const resolve = (ns: string, key: string) => map[ns ? `${ns}.${key}` : key] ?? (ns ? `${ns}.${key}` : key);
+  const cache = new Map<string, (key: string) => string>();
+  return {
+    useLocale: () => 'vi',
+    useTranslations: (ns?: string) => {
+      const nsKey = ns ?? '';
+      const cached = cache.get(nsKey);
+      if (cached) return cached;
+      const t = (key: string) => resolve(nsKey, key);
+      t.raw = (key: string) => resolve(nsKey, key);
+      cache.set(nsKey, t);
+      return t;
+    },
+  };
+});
+
+
 const health: HealthResponse = { status: 'ok', timestamp: 1720000000000, version: '1.0.0', environment: 'test' };
 const metrics: MetricsResponse = {
   bots: { total: 2, running: 1, paused: 1 },

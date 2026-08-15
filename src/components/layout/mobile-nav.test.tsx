@@ -6,6 +6,7 @@ const mockPathname = vi.hoisted(() => ({ current: '/vi/dashboard' }));
 
 vi.mock('next-intl', () => ({
   useLocale: () => mockLocale.current,
+  useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -41,24 +42,24 @@ describe('MobileNav', () => {
     mockLocale.current = 'vi';
     mockPathname.current = '/vi/dashboard';
     render(<MobileNav />);
-    expect(screen.getByText('Tổng quan').closest('a')).toHaveAttribute('href', '/vi/dashboard');
-    expect(screen.getByText('Cài đặt').closest('a')).toHaveAttribute('href', '/vi/settings');
+    expect(screen.getByText('nav.dashboard').closest('a')).toHaveAttribute('href', '/vi/dashboard');
+    expect(screen.getByText('nav.settings').closest('a')).toHaveAttribute('href', '/vi/settings');
   });
 
   it('builds hrefs from the active locale — en', () => {
     mockLocale.current = 'en';
     mockPathname.current = '/en/dashboard';
     render(<MobileNav />);
-    expect(screen.getByText('Tổng quan').closest('a')).toHaveAttribute('href', '/en/dashboard');
-    expect(screen.getByText('Cài đặt').closest('a')).toHaveAttribute('href', '/en/settings');
+    expect(screen.getByText('nav.dashboard').closest('a')).toHaveAttribute('href', '/en/dashboard');
+    expect(screen.getByText('nav.settings').closest('a')).toHaveAttribute('href', '/en/settings');
   });
 
   it('highlights the item matching the current pathname', () => {
     mockLocale.current = 'vi';
     mockPathname.current = '/vi/settings';
     render(<MobileNav />);
-    const settings = screen.getByText('Cài đặt').closest('a');
-    const dashboard = screen.getByText('Tổng quan').closest('a');
+    const settings = screen.getByText('nav.settings').closest('a');
+    const dashboard = screen.getByText('nav.dashboard').closest('a');
     expect(settings).toHaveStyle({ color: 'var(--color-profit)' });
     expect(dashboard).toHaveStyle({ color: 'var(--text-tertiary)' });
   });
@@ -67,6 +68,6 @@ describe('MobileNav', () => {
     mockLocale.current = 'en';
     mockPathname.current = '/en/bots';
     render(<MobileNav />);
-    expect(screen.getByText('Bot').closest('a')).toHaveStyle({ color: 'var(--color-profit)' });
+    expect(screen.getByText('nav.bots').closest('a')).toHaveStyle({ color: 'var(--color-profit)' });
   });
 });
