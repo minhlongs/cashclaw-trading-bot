@@ -72,7 +72,7 @@ export async function POST(req: Request) {
   const rateLimit = checkRateLimit('settings:update');
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { error: 'Rate limit exceeded' },
+      { ok: false, error: 'Rate limit exceeded' },
       { status: 429, headers: getRateLimitHeaders(rateLimit) }
     );
   }

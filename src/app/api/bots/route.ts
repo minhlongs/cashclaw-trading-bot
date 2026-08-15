@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const rateLimit = checkRateLimit('bots:create');
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { error: 'Rate limit exceeded' },
+      { ok: false, error: 'Rate limit exceeded' },
       { status: 429, headers: getRateLimitHeaders(rateLimit) }
     );
   }

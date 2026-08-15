@@ -58,6 +58,7 @@ describe('/api/bots route', () => {
       });
       const res = await POST(req);
       expect(res.status).toBe(429);
+      expect(await res.json()).toEqual({ ok: false, error: 'Rate limit exceeded' });
     });
 
     it('returns 400 when bot creation fails', async () => {
