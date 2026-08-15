@@ -17,4 +17,7 @@ export type QuantFn = (ctx: QuantLibContext, params?: Record<string, number>) =>
 
 export const quantFunctions: Record<string, QuantFn> = {
   noop: () => ({ signal: 'hold', confidence: 0, meta: {} }),
+  grid: () => ({ signal: 'hold', confidence: 0.35, meta: { strategy: 'grid' } }),
+  mean_reversion: (ctx) =>
+    ctx.lastPrice > 0 ? ({ signal: 'hold', confidence: 0.3, meta: { strategy: 'mean_reversion' } }) : ({ signal: 'hold', confidence: 0, meta: {} }),
 };
