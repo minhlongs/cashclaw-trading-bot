@@ -38,5 +38,8 @@
 ### Backtest Wiring — Commit `9f5bd1f`
 - Backtest page now loads real bots from D1 into the selector (was always empty).
 
-### Project Documentation — Commit `M` (current)
+### Project Documentation — Commit `d44abdb`
 - README.md, system architecture, code standards, development roadmap, project changelog. Lint tightened to zero-warning gate (`--max-warnings 0`).
+
+### i18n Consolidation — Commit `0a1b5c9`
+- 18 source files migrated from manual bilingual patterns (labelVi/labelEn, isEn ternaries, inline t(vi, en) helpers, hardcoded strings) to `useTranslations()` from next-intl. All customer-facing strings now flow through vi.json/en.json (244 keys, in sync). Protected wizard flow logic untouched. Dead page.constants.ts removed.

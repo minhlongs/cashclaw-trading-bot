@@ -20,7 +20,8 @@
 | E2E smoke | Customer-journey API smoke tests | commit `bfa4697` |
 | Phase L quality | ESLint 86→0 warnings; coverage 75%→87.5%; 1628 tests; thresholds ratcheted | commit `1a2cd16` |
 | Backtest wiring | Backtest page loads real bots from D1 into selector (was empty) | commit `9f5bd1f` |
-| Phase M docs | README + architecture/code-standards/roadmap/changelog; lint zero-warning gate | current |
+| Phase M docs | README + architecture/code-standards/roadmap/changelog; lint zero-warning gate | commit `d44abdb` |
+| Phase N i18n | 18 files migrated to useTranslations(); vi.json/en.json 244 keys synced | commit `0a1b5c9` |
 
 ## Current State
 
