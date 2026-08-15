@@ -7,6 +7,7 @@
 import { getBotManager } from '@/tree/bot';
 import { createLogger } from '@/lib/logger';
 import { createServerClient } from '@/lib/db/client';
+import { serializeDetail } from './serialize-detail';
 
 const log = createLogger('api/killswitch');
 
@@ -16,9 +17,10 @@ async function recordAudit(action: 'halt' | 'resume', reason: string): Promise<v
     if (!db) return;
     const now = Date.now();
     const id = `ks_${now.toString(36)}_${(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : '0')}`;
+    const detail = { executor: 'system', action, reason: reason.slice(0, 200) };
     await db.prepare(
       'INSERT INTO killswitch_events (id, action, user_id, reason, bot_id, detail_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    ).bind(id, action, null, reason.slice(0, 200), 'all', '{}', now).run();
+    ).bind(id, action, null, reason.slice(0, 200), 'all', serializeDetail(detail), now).run();
   } catch (error) {
     log.warn('killswitch audit write failed', { action, error: error instanceof Error ? error.message : String(error) });
   }

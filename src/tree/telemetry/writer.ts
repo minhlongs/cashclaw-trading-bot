@@ -4,6 +4,7 @@
 import type { TradeEvent, TradeEventType } from './types';
 import type { Balance } from '../exchange/types';
 import { createLogger } from '@/lib/logger';
+import { serializeDetail } from '@/forest/api/handlers/serialize-detail';
 
 const log = createLogger('telemetry-writer');
 
@@ -162,7 +163,7 @@ export class TelemetryWriter {
             `INSERT INTO trade_events (id, bot_id, event_type, detail_json, created_at)
              VALUES (?, ?, ?, ?, ?)
              ON CONFLICT(id) DO NOTHING`,
-            [event.id, event.botId, event.eventType, JSON.stringify(event.details), event.timestamp]
+            [event.id, event.botId, event.eventType, serializeDetail(event.details), event.timestamp]
           );
         } catch (e) {
           // Retry transient errors up to N times, then drop (telemetry is lossy-tolerable)
