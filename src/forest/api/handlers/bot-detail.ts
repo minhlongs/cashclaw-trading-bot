@@ -101,6 +101,7 @@ export async function botControlHandler(
   action: BotControlAction,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
+    await loadAllBotsFromD1();
     const manager = getBotManager();
     const bot = manager.getBot(botId);
     if (!bot) return { ok: false, error: `Bot not found: ${botId}` };

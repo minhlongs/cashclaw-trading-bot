@@ -6,6 +6,7 @@
 import { getBotManager, isGridConfig, isMeanRevConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
 import { getBotCards, type BotCardData } from './bot-kpis';
+import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
 import { createLogger } from '@/lib/logger';
 
@@ -82,6 +83,7 @@ function botToDetail(bot: BotInstance): BotDetailData {
 
 // ── Server Actions ──────────────────────────────────────────────
 export async function getBotDetail(id: string): Promise<BotDetailData | null> {
+  await loadAllBotsFromD1();
   const manager = getBotManager();
   const bot = manager.getBot(id);
   if (!bot) return null;
