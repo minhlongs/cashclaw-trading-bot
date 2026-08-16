@@ -189,6 +189,18 @@ describe('RateLimiter — budget, canProceed, reset, defaults', () => {
     });
   });
 
+  // --------------------------------------- acquire — timeoutMs branch
+  describe('acquire — with timeoutMs', () => {
+    it('rejects with RateLimitExecutionTimeout when timeout fires first', async () => {
+      for (let i = 0; i < 20; i++) rl.tryAcquire('okx', 'api');
+      expect(rl.tryAcquire('okx', 'api').allowed).toBe(false);
+
+      const promise = rl.acquire('okx', 'api', 100);
+      vi.advanceTimersByTime(100);
+      await expect(promise).rejects.toThrow('timed out after 100ms');
+    });
+  });
+
   // ------------------------------------------------ singleton export
   describe('rateLimiter singleton', () => {
     it('is an instance of RateLimiter', () => {
