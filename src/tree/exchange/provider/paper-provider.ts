@@ -55,7 +55,6 @@ export class PaperExchangeProvider implements ExchangeProvider {
 
     // Default circuit breaker config; can be overridden in future via ProviderConfig
     this.breaker = new CircuitBreaker({
-      threshold: 3,
       cooldownMs: 60_000,     // 1 minute cooldown after tripping
       halfOpenAfterMs: 30_000, // try half-open after 30s
     });

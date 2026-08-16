@@ -3,6 +3,12 @@
 
 import type { KillswitchCallbacks, KillswitchConfig, KillswitchState } from './killswitch-types';
 import type { OrderResult } from '@/tree/exchange/types';
+import { appendAudit } from '@/forest/flight-recorder/audit-ledger';
+import { serializeDetail } from '@/forest/api/handlers/serialize-detail';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('killswitch');
+
 export type { KillswitchCallbacks, KillswitchConfig, KillswitchState };
 
 export class Killswitch {
@@ -11,9 +17,11 @@ export class Killswitch {
   private state: KillswitchState;
   private botStates = new Map<string, { dailyPnl: number; consecutiveLosses: number; capital: number }>();
   private resetTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly auditEnabled: boolean;
 
-  constructor(callbacks: KillswitchCallbacks, config: Partial<KillswitchConfig> = {}) {
+  constructor(callbacks: KillswitchCallbacks, config: Partial<KillswitchConfig> = {}, auditEnabled = true) {
     this.callbacks = callbacks;
+    this.auditEnabled = auditEnabled;
     this.config = {
       maxDailyLossPct: config.maxDailyLossPct ?? 10,
       maxConsecutiveLosses: config.maxConsecutiveLosses ?? 5,
@@ -184,6 +192,17 @@ export class Killswitch {
     this.state.haltTimestamp = Date.now();
     this.state.cooldownUntil = Date.now() + this.config.cooldownMinutes * 60_000;
     this.callbacks.onHalt(reason);
+    if (this.auditEnabled) {
+      const botId = this.botStates.keys().next().value ?? undefined;
+      void appendAudit({
+        action: 'killswitch.halt',
+        botId,
+        detailJson: serializeDetail({ reason, dailyPnl: this.state.dailyPnl }),
+      }).catch((auditError) => {
+        const error = auditError instanceof Error ? auditError : new Error(String(auditError));
+        log.warn('killswitch audit write failed', { action: 'killswitch.halt', detail: error.message });
+      });
+    }
   }
 
   private emitDailyState(): void {

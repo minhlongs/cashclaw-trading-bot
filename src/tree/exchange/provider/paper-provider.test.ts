@@ -157,7 +157,7 @@ describe('PaperExchangeProvider — circuit breaker integration', () => {
     vi.useRealTimers();
   });
 
-  it('trips circuit breaker after 3 consecutive adapter failures', async () => {
+  it('trips circuit breaker after threshold consecutive adapter failures', async () => {
     // PaperExchange.placeOrder never throws, so we mock the adapter's method
     const adapter = (provider as unknown as { adapter: { fetchTicker: () => Promise<never> } }).adapter;
     const origFetchTicker = adapter.fetchTicker.bind(adapter);
@@ -165,14 +165,14 @@ describe('PaperExchangeProvider — circuit breaker integration', () => {
     let callCount = 0;
     adapter.fetchTicker = vi.fn().mockImplementation(async () => {
       callCount++;
-      if (callCount <= 3) {
+      if (callCount <= 4) {
         throw new Error('simulated failure');
       }
       return origFetchTicker();
     });
 
-    // 3 consecutive failures via the provider wrapper (through circuit breaker)
-    for (let i = 0; i < 3; i++) {
+    // 4 consecutive failures: 3 → degraded, 4 → OPEN (unknown kind threshold = 3 + 1)
+    for (let i = 0; i < 4; i++) {
       try {
         await provider.fetchTicker('binance', 'BTCUSDT');
       } catch {
@@ -192,18 +192,19 @@ describe('PaperExchangeProvider — circuit breaker integration', () => {
     let callCount = 0;
     adapter.fetchTicker = vi.fn().mockImplementation(async () => {
       callCount++;
-      if (callCount <= 3) {
+      if (callCount <= 4) {
         throw new Error('simulated failure');
       }
       return { symbol: 'BTCUSDT', last: 50000, bid: 49999, ask: 50001, high24h: 51000, low24h: 49000, volume24h: 1000, timestamp: Date.now() };
     });
 
-    for (let i = 0; i < 3; i++) {
+    // 4 failures → degraded on 3, OPEN on 4
+    for (let i = 0; i < 4; i++) {
       try { await provider.fetchTicker('binance', 'BTCUSDT'); } catch { /* expected */ }
     }
     expect(provider.isCircuitOpen()).toBe(true);
 
-    // Advance past cooldown (co=60s, halfOpen=30s → total ~90s)
+    // Advance past cooldown (co=60s, halfOpen=30s → total ~90s since trip)
     vi.advanceTimersByTime(91_000);
 
     // Now half-open — one trial call succeeds → circuit closes

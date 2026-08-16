@@ -6,8 +6,8 @@ Next.js 16 App Router application that renders the bilingual UI and serves user-
 
 ```
 src/
-├── tree/    Pure domain logic — no I/O
-├── forest/  Orchestration — API handlers, persistence, workflows
+├── tree/    Pure domain logic — no I/O (exchange providers, circuit breaker, quantlib)
+├── forest/  Orchestration — API handlers, persistence, workflows (flight recorder audit ledger)
 ├── land/    Cross-cutting coordination
 ├── lib/     Shared primitives (db client, auth, crypto, logger, Result)
 ├── app/     Next.js App Router ([locale] pages + /api routes)
@@ -39,7 +39,7 @@ Dependency direction is strict: pages → forest → tree; land coordinates fore
 
 ## D1 Schema
 
-Migrations in `migrations/` (`0001_initial_schema.sql` … `0006_add_killswitch_daily_state.sql`):
+Migrations in `migrations/` (`0001_initial_schema.sql` … `0007_killswitch_audit_trail.sql`):
 
 | Table | Purpose |
 |---|---|
@@ -50,6 +50,7 @@ Migrations in `migrations/` (`0001_initial_schema.sql` … `0006_add_killswitch_
 | `trade_events` | Append-only event/telemetry log per bot |
 | `capital_snapshots` | Time-series of capital/P&L for dashboards |
 | `audit_log` | User+bot audit trail |
+| `killswitch_audit` | Killswitch halt/resume event history |
 | `user_sessions` | Session tokens (id, expires_at) |
 | `settings` | Exchange creds JSON, risk limits, killswitch state, notification config |
 
@@ -58,6 +59,11 @@ Apply migrations locally with `npm run db:apply`, remotely with `npm run db:appl
 ## Key Patterns
 
 - **Result type** (`lib/result.ts`) — explicit `ok`/`err` outcomes instead of thrown errors across domain logic.
+- **Canonical JSON** (`lib/canonical-json.ts`) — deterministic serialization for hashing and audit entries; used by the audit ledger and telemetry writer.
+- **ProviderChain** (`tree/exchange/provider/provider.ts`) — primary/fallback exchange routing with per-attempt provenance (provider, latency, circuit state). Max 1 fallback.
+- **CircuitBreaker** (`tree/exchange/provider/circuit-breaker.ts`) — 4-state breaker (`closed | degraded | open | half_open`) with kind-aware thresholds per `FailureKind` (timeout, rate_limit, server_error, network, unknown). State-change callback fires on every transition.
+- **Audit ledger** (`forest/flight-recorder/audit-ledger.ts`) — hash-chained append-only telemetry entries using SHA-256 over canonical JSON payloads.
+- **Quantlib** (`tree/quantlib/`) — mathematical function registry for strategy composition (Phase 01 stub).
 - **BotManager** — in-memory registry of `BotInstance`s hydrated from D1; monitoring/detail flows read D1 directly to avoid per-request hydration dependency on cold-start state.
 - **Killswitch** — emergency halt persisted to D1 daily state so it survives Workers cold starts.
 - **Logger** (`lib/logger.ts`) — structured, level-filtered logging; replaces `console.*` everywhere.

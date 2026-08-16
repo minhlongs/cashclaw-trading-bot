@@ -25,8 +25,8 @@ describe('SQL object structure', () => {
     expect(indexKeys).toContain('CREATE_INDEX_BACKTEST_BOT');
   });
 
-  it('has exactly 15 SQL statements total', () => {
-    expect(Object.keys(SQL)).toHaveLength(15);
+  it('has exactly 18 SQL statements total', () => {
+    expect(Object.keys(SQL)).toHaveLength(18);
   });
 });
 

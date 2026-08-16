@@ -14,6 +14,7 @@
 | Security (Phase F) | CORS domain restriction, middleware session validation, backtest wiring, notification persistence | commit `7e4cb92` |
 | Fail-closed auth | Reject when D1 unavailable; strip spoofable `x-user-id` header | commit `f1c0949` |
 | Monitoring | Real health/metrics/killswitch cards from D1; in-memory BotManager reads dropped for D1 | commit `69e683a` |
+| Go-live readiness | Expanded health route with circuitBreaker + rateLimiter probes; deploy runbook created | docs/deploy-runbook.md |
 | Killswitch durability | Daily halt state persisted to D1 to survive Workers cold starts | commit `ab7424c` |
 | Credential encryption | Exchange credentials encrypted at rest; secrets masked in API responses | commit `cae6dbd` |
 | Bot detail hydration | Bot detail + control handlers hydrate from D1 before serving | commit `16c6f45` |
@@ -33,6 +34,10 @@
 | Phase V dead code | Deleted create-bot.ts + 3 tests + quality-gates.json + bot-management/ module (556 lines). Flaky test fixes in 7 client components (setState-after-teardown) | commits `514bf30`, `e2d19aa` |
 | Phase VI layer fix | Eliminated BotManager layer violation: ExchangeOrchestrator type re-exported from tree/bot/bot-manager-types.ts | commit `8e4c85f` |
 | Phase VII queue drain cron | CF Cron trigger fires every 5 minutes to drain exchange request queues; worker.ts scheduled() handler wired with logger; wrangler.jsonc triggers.crons added; duplicate-imports lint issue fixed via consolidated type+value import | commit `ddb0309` |
+| **P0.4 — Canonical JSON + error normalizer** | `src/lib/canonical-json.ts` deterministic serialization; exchange error normalizer for consistent classification | commit `03fbabc` |
+| **P0.5 — 4-state CircuitBreaker** | `circuit-breaker.ts` with `closed \| degraded \| open \| half_open` states; kind-aware thresholds per `FailureKind` in `circuit-breaker-kinds.ts`; state-change callback wired into all transitions | commits `96d937a`, `5e31701` |
+| **P0.6 — ProviderChain + provenance** | `src/tree/exchange/provider/provider.ts` primary/fallback routing with per-attempt provenance record; max 1 fallback attempt | commit `26734ef` |
+| **P0.7 — Killswitch audit trail + credential barrier** | D1 migration `0007_killswitch_audit_trail.sql`; `validateStartCredentials()` pre-check scoped to bot owner; hash-chained audit ledger (`audit-ledger.ts`); safe D1 detail serializer (`serialize-detail.ts`) | commits `404b665`, `48425a5`, `253659f` |
 
 ## Current State
 

@@ -53,7 +53,7 @@ describe('killswitchHaltHandler', () => {
     });
     const result = await killswitchHaltHandler('test');
     expect(result.ok).toBe(false);
-    expect(result.error).toBe('halt failed');
+    expect(result.error).toBe('Killswitch halt failed');
   });
 });
 

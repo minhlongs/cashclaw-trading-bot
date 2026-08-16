@@ -3,6 +3,7 @@
 // Vibe-Trading pattern: append-only + fsync (represented here as await insert).
 
 import { createServerClient } from '@/lib/db/client';
+import { canonicalize } from '@/lib/canonical-json';
 
 export interface AuditEntry {
   readonly action: string;
@@ -64,15 +65,20 @@ export async function appendAudit(entry: AuditEntry): Promise<LedgerTail> {
     .first<{ hash: string; created_at: string }>();
 
   const prevHash = prev?.hash ?? null;
-  const payload = `${entry.action}\n${entry.userId ?? ''}\n${entry.botId ?? ''}\n${entry.detailJson ?? ''}`;
-  const hash = await computeHash(prevHash, payload);
+  const canonicalPayload = canonicalize({
+    action: entry.action,
+    userId: entry.userId ?? '',
+    botId: entry.botId ?? '',
+    detailJson: entry.detailJson ?? '',
+  });
+  const hash = await computeHash(prevHash, canonicalPayload);
   const createdAt = new Date().toISOString();
   const id = `audit_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 
   await db.prepare(
     `INSERT INTO audit_ledger (id, prev_hash, hash, action, user_id, bot_id, detail_json, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(id, prevHash, hash, entry.action, entry.userId ?? null, entry.botId ?? null, entry.detailJson ?? null, createdAt);
+  ).bind(id, prevHash, hash, entry.action, entry.userId ?? null, entry.botId ?? null, entry.detailJson ?? null, createdAt).run();
 
   return { hash, prevHash, createdAt };
 }

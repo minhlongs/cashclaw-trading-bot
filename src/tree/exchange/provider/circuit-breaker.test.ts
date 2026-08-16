@@ -10,16 +10,9 @@ function successFn(): Promise<string> {
 }
 
 describe('CircuitBreaker', () => {
-  let cb: CircuitBreaker;
-
   beforeEach(() => {
     vi.useFakeTimers();
-    // halfOpenAt = tripTime + cooldownMs(5000) + halfOpenAfterMs(2000) = tripTime + 7000ms
-    cb = new CircuitBreaker({
-      threshold: 3,
-      cooldownMs: 5000,
-      halfOpenAfterMs: 2000,
-    });
+    // tripTime + 5000ms cooldown + 2000ms half-open delay = 7000ms to half_open
   });
 
   afterEach(() => {
@@ -27,55 +20,61 @@ describe('CircuitBreaker', () => {
   });
 
   describe('initial state', () => {
-    it('starts in closed state', () => {
+    it('starts closed', () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       expect(cb.getState()).toBe('closed');
     });
 
-    it('starts with zero failure count', () => {
+    it('tracks zero failures on start', () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       expect(cb.getFailureCount()).toBe(0);
     });
   });
 
-  describe('success behavior', () => {
-    it('returns result on success', async () => {
+  describe('success', () => {
+    it('returns the wrapped value', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       const result = await cb.execute(successFn);
       expect(result).toBe('ok');
     });
 
-    it('resets failure count on success', async () => {
+    it('resets failure count and closes circuit on success', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      expect(cb.getFailureCount()).toBe(2);
+      expect(cb.getFailureCount()).toBe(1);
 
       await cb.execute(successFn);
       expect(cb.getFailureCount()).toBe(0);
+      expect(cb.getState()).toBe('closed');
     });
   });
 
-  describe('failure threshold triggering OPEN', () => {
-    it('transitions to open after threshold consecutive failures', async () => {
+  describe('degraded threshold', () => {
+    it('enters degraded after threshold consecutive failures', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('closed');
       await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('closed');
 
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('degraded');
+    });
+
+    it('next failure in degraded trips OPEN', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+      await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('degraded');
+
+      await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('open');
     });
 
-    it('does not open on failures below threshold', async () => {
+    it('blocks calls when open via CircuitOpenError', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-
-      expect(cb.getState()).toBe('closed');
-    });
-
-    it('increments failure count on each failure', async () => {
-      await cb.execute(failingFn).catch(() => {});
-      expect(cb.getFailureCount()).toBe(1);
-      await cb.execute(failingFn).catch(() => {});
-      expect(cb.getFailureCount()).toBe(2);
-    });
-
-    it('throws CircuitOpenError when circuit is open', async () => {
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
@@ -83,7 +82,9 @@ describe('CircuitBreaker', () => {
       await expect(cb.execute(successFn)).rejects.toThrow(CircuitOpenError);
     });
 
-    it('provides retryAfterMs in error', async () => {
+    it('error includes retry delay', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+      await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
@@ -95,24 +96,44 @@ describe('CircuitBreaker', () => {
         expect((e as CircuitOpenError).retryAfterMs).toBeGreaterThan(0);
       }
     });
+
+    it('accumulates failure count correctly', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getFailureCount()).toBe(1);
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getFailureCount()).toBe(2);
+    });
+
+    it('does not open until threshold (3) reached', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('closed');
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('closed');
+    });
   });
 
-  describe('HALF_OPEN state', () => {
+  describe('half_open trials', () => {
     it('transitions to half_open after full cooldown (7s)', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('open');
 
-      // halfOpenAt = tripTime + 5000 + 2000 = tripTime + 7000
       vi.advanceTimersByTime(7001);
-
       expect(cb.getState()).toBe('half_open');
     });
 
-    it('allows trial execution in half_open', async () => {
+    it('half_open success closes circuit', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('open');
 
       vi.advanceTimersByTime(7001);
 
@@ -121,91 +142,151 @@ describe('CircuitBreaker', () => {
       expect(cb.getState()).toBe('closed');
     });
 
-    it('reopens circuit on failed trial in half_open', async () => {
+    it('half_open failure reopens', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('open');
 
       vi.advanceTimersByTime(7001);
 
       await cb.execute(failingFn).catch(() => {});
-
       expect(cb.getState()).toBe('open');
     });
 
-    it('does not transition before cooldown', async () => {
+    it('blocks opens before cooldown elapses', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+      await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
 
-      vi.advanceTimersByTime(3000);
-
+      vi.advanceTimersByTime(5000);
       expect(cb.getState()).toBe('open');
-    });
-  });
-
-  describe('custom threshold', () => {
-    it('opens after custom threshold', async () => {
-      const custom = new CircuitBreaker({
-        threshold: 1,
-        cooldownMs: 5000,
-        halfOpenAfterMs: 2000,
-      });
-
-      await custom.execute(failingFn).catch(() => {});
-
-      expect(custom.getState()).toBe('open');
     });
   });
 
   describe('reset', () => {
-    it('resets to initial state', async () => {
+    it('resets circuit back to closed', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('open');
 
       cb.reset();
-
       expect(cb.getState()).toBe('closed');
       expect(cb.getFailureCount()).toBe(0);
     });
   });
 
-  describe('onStateChange callback', () => {
-    it('notifies on state transitions', async () => {
+  describe('state change notifications', () => {
+    it('fires callback on state change with kind and timestamp', async () => {
       const onChange = vi.fn();
-      const tracked = new CircuitBreaker({
-        threshold: 2,
-        cooldownMs: 5000,
-        halfOpenAfterMs: 2000,
-        onStateChange: onChange,
-      });
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000, onStateChange: onChange });
 
-      await tracked.execute(failingFn).catch(() => {});
-      await tracked.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      expect(onChange).not.toHaveBeenCalled();
+
+      await cb.execute(failingFn).catch(() => {});
       expect(onChange).toHaveBeenCalledTimes(1);
-      expect(onChange).toHaveBeenLastCalledWith('closed', 'open', expect.any(Number));
+      expect(onChange).toHaveBeenLastCalledWith('closed', 'degraded', expect.any(Number), 'unknown');
+
+      await cb.execute(failingFn).catch(() => {});
+      expect(onChange).toHaveBeenLastCalledWith('degraded', 'open', expect.any(Number), 'unknown');
 
       vi.advanceTimersByTime(7001);
-      tracked.getState(); // triggers half_open transition
-      expect(onChange).toHaveBeenLastCalledWith('open', 'half_open', expect.any(Number));
+      cb.getState();
 
-      await tracked.execute(successFn);
-      expect(onChange).toHaveBeenLastCalledWith('half_open', 'closed', expect.any(Number));
-      expect(onChange).toHaveBeenCalledTimes(3);
+      expect(onChange).toHaveBeenLastCalledWith('open', 'half_open', expect.any(Number), undefined);
+
+      await cb.execute(successFn);
+      expect(onChange).toHaveBeenLastCalledWith('half_open', 'closed', expect.any(Number), undefined);
+      expect(onChange).toHaveBeenCalledTimes(4);
     });
 
-    it('does not notify when state stays the same', async () => {
+    it('does not fire when state does not change', async () => {
       const onChange = vi.fn();
-      const tracked = new CircuitBreaker({
-        threshold: 5,
-        cooldownMs: 1000,
-        halfOpenAfterMs: 1000,
-        onStateChange: onChange,
-      });
-
-      await tracked.execute(failingFn).catch(() => {});
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000, onStateChange: onChange });
+      await cb.execute(failingFn).catch(() => {});
       expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('kind-aware thresholds', () => {
+    it('timeout trips after 3', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+      const err = new Error('ETIMEDOUT');
+
+      await cb.execute(() => Promise.reject(err)).catch(() => {});
+      expect(cb.getState()).toBe('closed');
+
+      await cb.execute(() => Promise.reject(err)).catch(() => {});
+      expect(cb.getState()).toBe('closed');
+
+      await cb.execute(() => Promise.reject(err)).catch(() => {});
+      expect(cb.getState()).toBe('degraded');
+    });
+
+    it('rate_limit trips after 5', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+      const err = new Error('429 Too Many Requests');
+
+      for (let i = 0; i < 4; i++) {
+        await cb.execute(() => Promise.reject(err)).catch(() => {});
+      }
+      expect(cb.getState()).toBe('closed');
+
+      await cb.execute(() => Promise.reject(err)).catch(() => {});
+      expect(cb.getState()).toBe('degraded');
+    });
+
+    it('unknown trips after 3', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+      await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      expect(cb.getState()).toBe('degraded');
+    });
+
+    it('different kinds use independent counters', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+
+      await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
+      await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
+      expect(cb.getState()).toBe('closed');
+
+      await cb.execute(() => Promise.reject(new Error('ENOTFOUND'))).catch(() => {});
+      expect(cb.getState()).toBe('closed');
+
+      await cb.execute(() => Promise.reject(new Error('ENOTFOUND'))).catch(() => {});
+      expect(cb.getState()).toBe('degraded');
+    });
+
+    it('onStateChange receives kind for same-kind degraded→open', async () => {
+      const onChange = vi.fn();
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000, onStateChange: onChange });
+
+      await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
+      await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
+      await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith('closed', 'degraded', expect.any(Number), 'timeout');
+    });
+
+    it('unknown kind uses kind-specific threshold (3)', async () => {
+      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
+
+      await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      await cb.execute(failingFn).catch(() => {});
+      // ranks up at kind-specific unknown threshold (3)
+      expect(cb.getState()).toBe('degraded');
     });
   });
 });

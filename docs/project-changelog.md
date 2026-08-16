@@ -20,6 +20,12 @@
 ### Monitoring — Commit `69e683a`
 - Real health, metrics, and killswitch cards from D1. In-memory BotManager reads dropped in favor of direct D1 queries.
 
+### Go-Live Readiness — health route + deploy runbook
+- `/api/health` expanded with `circuitBreaker` and `rateLimiter` probes; response keeps `status` as `ok | degraded`, DB + CB determine overall status, rateLimiter is informational only.
+- `documentation-management.md` protocol followed: roadmap and changelog updated post-feature.
+- Deploy runbook added: pre-deploy checks, deploy steps, post-deploy smoke tests, rollback procedure, emergency contacts (bilingual VN+EN).
+- Real health, metrics, and killswitch cards from D1. In-memory BotManager reads dropped in favor of direct D1 queries.
+
 ### Killswitch Durability — Commit `ab7424c`
 - Daily halt state persisted to D1 so it survives Workers cold starts.
 
@@ -82,3 +88,14 @@
 
 ### Phase VII: Queue Drain Cron — Commit `26a510a`
 - Wired CF Cron `scheduled()` handler in `src/worker.ts` to drain all exchange request queues every 5 minutes via `BotManager.drainQueues()`. Replaced raw `console.log` with `createLogger('cron')` to satisfy `no-console` rule. Fixed duplicate-imports lint in `src/tree/bot/bot-manager.ts` by consolidating type-only + value imports from `bot-manager-types.ts` into a single inline-typed statement. Changed `toD1Status` export in `bot-manager-types.ts` to arrow function so value re-export coexists with `export type` without duplicate-imports warnings. Added `triggers.crons` to `wrangler.jsonc`. Gates: 0 lint warnings, 0 TS errors, 1588/1588 Vitest tests pass.
+
+### P0: Exchange Resilience Batch — Commits `26734ef`, `48425a5`, `404b665`, `96d937a`, `5e31701`, `253659f`
+
+- **ProviderChain with provenance** (`src/tree/exchange/provider/provider.ts`): primary/fallback routing with per-attempt `provenance` record (provider name, latencyMs, circuitState). Max 1 fallback attempt.
+- **Hash-chained audit ledger** (`src/forest/flight-recorder/audit-ledger.ts`): append-only telemetry entries with SHA-256 chain. Uses `canonicalize()` from `src/lib/canonical-json.ts` for deterministic serialization before hashing.
+- **4-state CircuitBreaker** (`src/tree/exchange/provider/circuit-breaker.ts`): states `closed | degraded | open | half_open`. State-change callback fires on every transition for observability wiring.
+- **Kind-aware thresholds** (`src/tree/exchange/provider/circuit-breaker-kinds.ts`): per-`FailureKind` (timeout, rate_limit, server_error, network, unknown) independent threshold/cooldown pairs. `classifyFailure()` infers kind from error message regex.
+- **Killswitch audit trail**: D1 migration `0007_killswitch_audit_trail.sql`. Killswitch halt/resume events written to `killswitch_audit` table.
+- **Bot credential pre-validation**: `validateStartCredentials()` in `src/forest/api/handlers/bot-control.ts` checks exchange API keys exist before starting a bot. Scoped to bot owner via `getBotOwnerId()`.
+- **Safe D1 detail serializer** (`src/forest/api/handlers/serialize-detail.ts`): strips non-serializable D1 columns from bot detail responses.
+- **Rate limiter hardening**: added `ok: false` to rate-limit responses missing it; exchange error normalizer added for consistent error classification.

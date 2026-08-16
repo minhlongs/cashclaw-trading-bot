@@ -120,6 +120,21 @@ CREATE TABLE IF NOT EXISTS audit_log (
 `,
 CREATE_INDEX_USER_AUDIT: `CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id, created_at)`,
 CREATE_INDEX_BOT_AUDIT: `CREATE INDEX IF NOT EXISTS idx_audit_bot ON audit_log(bot_id, created_at)`,
+
+// Hash-chained audit ledger (Vibe-Trading pattern)
+CREATE_AUDIT_LEDGER: `
+CREATE TABLE IF NOT EXISTS audit_ledger (
+  id TEXT PRIMARY KEY,
+  prev_hash TEXT,
+  hash TEXT NOT NULL,
+  action TEXT NOT NULL,
+  user_id TEXT,
+  bot_id TEXT,
+  detail_json TEXT,
+  created_at INTEGER NOT NULL
+)
+`,
+CREATE_INDEX_AUDIT_LEDGER_CREATED: `CREATE INDEX IF NOT EXISTS idx_audit_ledger_created ON audit_ledger(created_at)`,
 CREATE_INDEX_BOT_USER: `CREATE INDEX IF NOT EXISTS idx_bots_user ON bots(user_id)`,
 CREATE_INDEX_TRADES_BOT: `CREATE INDEX IF NOT EXISTS idx_trades_bot ON trades(bot_id, opened_at)`,
 
@@ -147,6 +162,18 @@ CREATE TABLE IF NOT EXISTS backtest_results (
 )
 `,
 CREATE_INDEX_BACKTEST_BOT: `CREATE INDEX IF NOT EXISTS idx_backtest_bot ON backtest_results(bot_id, created_at)`,
+
+// Circuit Breaker State (provider health persistence across CF Worker restarts)
+CREATE_CIRCUIT_BREAKER: `
+CREATE TABLE IF NOT EXISTS circuit_breaker_state (
+  id TEXT PRIMARY KEY,
+  provider TEXT NOT NULL,
+  state TEXT NOT NULL,
+  failure_count INTEGER NOT NULL DEFAULT 0,
+  cooldown_until INTEGER,
+  updated_at INTEGER NOT NULL
+)
+`,
 };
 
 export const MIGRATION = `
@@ -157,6 +184,8 @@ ${SQL.CREATE_CREDENTIALS};
 ${SQL.CREATE_TRADE_EVENTS};
 ${SQL.CREATE_CAPITAL_SNAPSHOTS};
 ${SQL.CREATE_AUDIT_LOG};
+${SQL.CREATE_AUDIT_LEDGER};
+${SQL.CREATE_INDEX_AUDIT_LEDGER_CREATED};
 ${SQL.CREATE_BACKTEST_RESULTS};
 ${SQL.CREATE_INDEX_USER_AUDIT};
 ${SQL.CREATE_INDEX_BOT_AUDIT};
@@ -165,4 +194,5 @@ ${SQL.CREATE_INDEX_TRADES_BOT};
 ${SQL.CREATE_INDEX_EVENTS_BOT_TIME};
 ${SQL.CREATE_INDEX_SNAPSHOTS_BOT};
 ${SQL.CREATE_INDEX_BACKTEST_BOT};
+${SQL.CREATE_CIRCUIT_BREAKER};
 `;

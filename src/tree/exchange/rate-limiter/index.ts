@@ -2,6 +2,10 @@
 // CF Workers constraint: respect exchange rate limits to avoid HTTP 429
 // Phases 3+5: exponential backoff + fair-share budget hooks
 
+import { parseRateLimitHeaders } from './headers';
+import { WedgeWatchdog } from './wedge-watchdog';
+import { RateLimitExecutionTimeout } from './errors';
+
 export type EndpointCategory = 'api' | 'order' | 'ws';
 
 export interface TokenBucket {
@@ -25,6 +29,7 @@ export class RateLimiter {
   private buckets = new Map<string, TokenBucket>();
   private backoffState = new Map<string, { delayMs: number; expiresAt: number }>();
   private budgetMap = new Map<string, number>();
+  private wedgeWatchdog: WedgeWatchdog | null = null;
 
   private getKey(exchange: string, category: EndpointCategory): string {
     return `${exchange}:${category}`;
@@ -56,13 +61,35 @@ export class RateLimiter {
   /**
    * Legacy acquire: wait for token then consume (backward compat).
    */
-  acquire(exchange: string, category: EndpointCategory): Promise<number> {
-    return new Promise<number>((resolve) => {
+  acquire(
+    exchange: string,
+    category: EndpointCategory,
+    timeoutMs?: number,
+  ): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
       const key = this.getKey(exchange, category);
       const bucket = this.refill(key);
 
+      let timer: ReturnType<typeof setTimeout> | undefined;
+
+      const cleanup = () => {
+        if (timer !== undefined) clearTimeout(timer);
+      };
+
+      if (timeoutMs !== undefined) {
+        timer = setTimeout(() => {
+          cleanup();
+          reject(new RateLimitExecutionTimeout(
+            `Rate limit acquire timed out after ${timeoutMs}ms`,
+            timeoutMs,
+          ));
+        }, timeoutMs);
+      }
+
       if (bucket.tokens >= 1 && this.getBackoff(exchange, category) === 0) {
+        cleanup();
         bucket.tokens -= 1;
+        this.wedgeWatchdog?.poke();
         resolve(0);
       } else {
         const waitMs =
@@ -70,8 +97,10 @@ export class RateLimiter {
           Math.max(0, this.getBackoff(exchange, category));
 
         setTimeout(() => {
+          cleanup();
           const refreshed = this.refill(key);
           refreshed.tokens = Math.max(0, refreshed.tokens - 1);
+          this.wedgeWatchdog?.poke();
           resolve(waitMs);
         }, waitMs + 50);
       }
@@ -89,6 +118,7 @@ export class RateLimiter {
 
     if (bucket.tokens >= 1 && backoffRemaining === 0) {
       bucket.tokens -= 1;
+      this.wedgeWatchdog?.poke();
       return { allowed: true as const };
     }
 
@@ -142,6 +172,41 @@ export class RateLimiter {
   }
 
   /**
+   * Adjust bucket tokens based on exchange rate-limit response headers.
+   */
+  updateFromHeaders(
+    exchange: string,
+    category: EndpointCategory,
+    headers: Headers,
+  ): void {
+    const parsed = parseRateLimitHeaders(headers);
+    if (parsed === null) return;
+
+    const key = this.getKey(exchange, category);
+    this.buckets.set(key, {
+      tokens: parsed.remaining,
+      lastRefill: parsed.resetAt,
+    });
+  }
+
+  /**
+   * Attach a WedgeWatchdog. When the queue appears stuck, `onWedge`
+   * fires and the corresponding bucket is reset.
+   */
+  initWedgeWatchdog(onWedge: (exchange: string, category: EndpointCategory) => void): void {
+    this.wedgeWatchdog = new WedgeWatchdog();
+    this.wedgeWatchdog.start(() => {
+      // Fire callback for all active buckets — caller decides action.
+      for (const key of this.buckets.keys()) {
+        const [exchange, category] = key.split(':') as [string, EndpointCategory];
+        this.buckets.delete(key);
+        this.backoffState.delete(key);
+        onWedge(exchange, category);
+      }
+    });
+  }
+
+  /**
    * Phase 5: remaining budget count for adapter selection.
    */
   getRemainingBudget(exchange: string, category: EndpointCategory): number {
@@ -176,6 +241,7 @@ export class RateLimiter {
       this.buckets.clear();
       this.backoffState.clear();
       this.budgetMap.clear();
+      this.wedgeWatchdog?.stop();
     }
   }
 }
