@@ -3,7 +3,7 @@
   "entry": ["src/app/**/page.tsx", "src/app/**/layout.tsx", "src/app/api/**/route.ts", "src/worker.ts", "src/tree/**/index.ts"],
   "project": ["src/**/*.ts", "src/**/*.tsx"],
   "ignoreDependencies": ["lightweight-charts", "@typescript-eslint/eslint-plugin", "@typescript-eslint/parser", "eslint-plugin-react", "eslint-plugin-sonarjs", "husky"],
-  "ignoreFiles": ["src/lib/db/schema-backtest.ts", "src/tree/quantlib/functions.ts"],
+  "ignoreFiles": ["src/lib/db/schema-backtest.ts"],
   "ignoreExportsUsedInFile": true,
   "exclude": ["types"],
   "ignoreIssues": {
@@ -12,6 +12,7 @@
     "src/forest/flight-recorder/audit-ledger.ts": ["exports"],
     "src/forest/flight-recorder/index.ts": ["exports"],
     "src/tree/exchange/rate-limiter/errors.ts": ["exports"],
-    "src/tree/exchange/types.ts": ["exports"]
+    "src/tree/exchange/types.ts": ["exports"],
+    "src/tree/quantlib/functions.ts": ["exports"]
   }
 }
