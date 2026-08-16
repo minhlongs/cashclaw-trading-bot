@@ -18,7 +18,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "rollback:worker": "node -e \"const{execSync}=require('child_process');const list=execSync('npx wrangler versions list --json').toString();const versions=JSON.parse(list);const prev=versions.length>1?versions[1].id:null;if(!prev){console.error('No previous version to rollback to');process.exit(1)}console.log('Rolling back to:',prev);execSync('npx wrangler rollback '+prev+' --yes',{stdio:'inherit'})\"",
+    "rollback:worker": "node -e \"const{execFileSync}=require('child_process');const list=execFileSync('npx',['wrangler','versions','list','--json']).toString();const versions=JSON.parse(list);const prev=versions.length>1?versions[1].id:null;if(!prev){console.error('No previous version to rollback to');process.exit(1)}console.log('Rolling back to:',prev);execFileSync('npx',['wrangler','rollback',prev,'--yes'],{stdio:'inherit'})\"",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
