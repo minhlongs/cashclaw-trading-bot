@@ -33,6 +33,7 @@ export class PaperExchange implements GridStrategyCallbacks, MeanRevStrategyCall
   private feePct: number;
   private slipPct: number;
   private _candleTs = 0;
+  private _candleIdx = 0;
 
   constructor(capital: number, feePct: number, slipPct: number) {
     this.capital = capital;
@@ -42,6 +43,10 @@ export class PaperExchange implements GridStrategyCallbacks, MeanRevStrategyCall
 
   setTimestamp(ts: number): void {
     this._candleTs = ts;
+  }
+
+  setCandleIndex(idx: number): void {
+    this._candleIdx = idx;
   }
 
   getCapital(): number {
@@ -67,7 +72,7 @@ export class PaperExchange implements GridStrategyCallbacks, MeanRevStrategyCall
       this.capital += price * qty - fee;
     }
 
-    this.fills.push({ candleIndex: 0, timestamp: this._candleTs, side: req.side, price, quantity: qty, fee });
+    this.fills.push({ candleIndex: this._candleIdx, timestamp: this._candleTs, side: req.side, price, quantity: qty, fee });
     return { id: `paper_${req.side}_${this.fills.length}`, exchangeId: '', symbol: req.symbol, side: req.side, type: req.type, price, quantity: qty, filled: qty, status: 'filled', fee, feeCurrency: '', timestamp: this._candleTs, pnl: 0 };
   }
 
@@ -86,7 +91,7 @@ export class PaperExchange implements GridStrategyCallbacks, MeanRevStrategyCall
       this.capital += fillPrice * quantity - fee;
     }
 
-    this.fills.push({ candleIndex: 0, timestamp: this._candleTs, side, price: fillPrice, quantity, fee });
+    this.fills.push({ candleIndex: this._candleIdx, timestamp: this._candleTs, side, price: fillPrice, quantity, fee });
     return { id: `paper_${side}_${this.fills.length}`, exchangeId: '', symbol: '', side, type: 'market', price: fillPrice, quantity, filled: quantity, status: 'filled', fee, feeCurrency: '', timestamp: this._candleTs, pnl: 0 };
   }
 

@@ -40,6 +40,7 @@ export function runBacktest(opts: RunBacktestOptions): BacktestResult {
 
   for (let i = 0; i < candles.length; i++) {
     paper.setTimestamp(candles[i].timestamp);
+    paper.setCandleIndex(i);
     const t: Ticker = {
       symbol: config.symbol,
       last: candles[i].close,
