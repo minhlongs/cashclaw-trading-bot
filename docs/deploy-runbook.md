@@ -78,7 +78,12 @@ Output mong đợi: `Deployed to https://<worker-name>.workers.dev`
 npm run rollback:worker
 ```
 
-Note: This route is a no-op if rollback is not configured. If so, revert code, commit with message `fix: revert deploy <date>`, then re-deploy. If user traffic is impacted, pause new traffic first and escalate to Tech Lead.
+This command:
+1. Lists all deployed Worker versions via `wrangler versions list --json`
+2. Selects the previous version (2nd in list)
+3. Runs `wrangler rollback <version-id> --yes`
+
+If there is no previous version (first deploy), the command will fail with "No previous version to rollback to." In that case, revert code, commit with message `fix: revert deploy <date>`, then re-deploy. If user traffic is impacted, pause new traffic first and escalate to Tech Lead.
 
 ### Vietnamese
 
