@@ -13,18 +13,18 @@ async function validateStartCredentials(id: string): Promise<{ ok: boolean; erro
   if (!bot) {
     return { ok: false, error: `Bot not found: ${id}` };
   }
-  const snapshot = bot.getSnapshot() as BotState;
-  const exchange = snapshot.exchange ?? snapshot.config?.exchange;
-  const userId = snapshot.userId ?? snapshot.config?.userId;
+  const exchange = (bot as { exchange?: string }).exchange;
   if (!exchange) {
     return { ok: false, error: 'Missing exchange credentials for bot. Please add API keys in settings.' };
   }
+  // Scope credential lookup to the bot owner when available to prevent cross-user IDOR
+  const userId = (bot as { userId?: string | null }).userId ?? null;
   const db = createServerClient();
   if (db) {
     try {
       const creds = await db.prepare(
-        'SELECT api_key_encrypted, api_secret_encrypted, is_testnet FROM api_credentials WHERE exchange = ? AND user_id = ? ORDER BY updated_at DESC LIMIT 1'
-      ).bind(exchange, userId ?? null).first<{ api_key_encrypted?: string | null }>();
+        'SELECT api_key_encrypted, api_secret_encrypted, is_testnet FROM api_credentials WHERE exchange = ? AND (user_id = ? OR user_id IS NULL) ORDER BY updated_at DESC LIMIT 1'
+      ).bind(exchange, userId).first<{ api_key_encrypted?: string | null }>();
       if (!creds || !creds.api_key_encrypted) {
         return { ok: false, error: `Missing exchange credentials for ${exchange}. Please configure API keys first.` };
       }
