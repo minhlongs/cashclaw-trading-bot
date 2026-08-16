@@ -5,6 +5,7 @@ const mockBot = {
   stop: vi.fn(),
   pause: vi.fn(),
   id: 'bot-1',
+  exchange: 'binance',
 };
 
 const mockManager = {
@@ -17,6 +18,7 @@ const mockManager = {
 
 vi.mock('@/tree/bot', () => ({ getBotManager: () => mockManager }));
 vi.mock('@/forest/bot/d1-adapter', () => ({ loadAllBotsFromD1: vi.fn(async () => {}) }));
+vi.mock('@/lib/db/client', () => ({ createServerClient: vi.fn(() => null) }));
 
 beforeEach(() => {
   vi.clearAllMocks();

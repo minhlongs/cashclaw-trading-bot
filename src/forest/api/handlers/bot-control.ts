@@ -52,7 +52,7 @@ export async function botControlHandler(
       case 'start': {
         const preflight = await validateStartCredentials(id);
         if (!preflight.ok) return preflight;
-        manager.getBot(id)!.start();
+        await manager.getBot(id)!.start();
         break;
       }
       case 'stop':

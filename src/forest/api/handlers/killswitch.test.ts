@@ -10,7 +10,15 @@ vi.mock('@/tree/bot', () => ({
 }));
 
 vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({ error: vi.fn() }),
+  createLogger: () => ({ error: vi.fn(), warn: vi.fn() }),
+}));
+
+vi.mock('@/lib/db/client', () => ({
+  createServerClient: vi.fn(() => null),
+}));
+
+vi.mock('./serialize-detail', () => ({
+  serializeDetail: (v: unknown) => JSON.stringify(v),
 }));
 
 import { killswitchHaltHandler, killswitchResumeHandler } from './killswitch';
