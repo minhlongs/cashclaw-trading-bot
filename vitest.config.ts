@@ -21,6 +21,10 @@ export default defineConfig({
         branches: 85,
         functions: 85,
         lines: 82,
+        // Per-path: money-critical modules must independently meet global thresholds
+        'src/tree/exchange/**': { statements: 82, branches: 85, functions: 85, lines: 82 },
+        'src/tree/bot/**': { statements: 82, branches: 85, functions: 85, lines: 82 },
+        'src/tree/quantlib/**': { statements: 82, branches: 85, functions: 85, lines: 82 },
       },
     },
   },
