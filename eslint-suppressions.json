@@ -1,0 +1,46 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "frozen": true,
+  "baseline": {
+    "count": 6,
+    "entries": [
+      {
+        "file": "src/components/monitoring/monitoring-client.tsx",
+        "line": 54,
+        "rule": "react-hooks/set-state-in-effect",
+        "reason": "fetchData is useCallback-memoized; setState only fires on async completion"
+      },
+      {
+        "file": "src/forest/settings/actions.test.ts",
+        "line": 19,
+        "rule": "@typescript-eslint/no-unused-vars",
+        "reason": "imports trigger vitest mock wiring; actual calls go through action() helper"
+      },
+      {
+        "file": "src/lib/logger.ts",
+        "line": 57,
+        "rule": "no-console",
+        "reason": "logger is the terminal output layer; console is intentional"
+      },
+      {
+        "file": "src/lib/logger.ts",
+        "line": 68,
+        "rule": "no-console",
+        "reason": "logger is the terminal output layer; console is intentional"
+      },
+      {
+        "file": "src/lib/logger.ts",
+        "line": 86,
+        "rule": "no-console",
+        "reason": "logger is the terminal output layer; console is intentional"
+      },
+      {
+        "file": "src/lib/logger.ts",
+        "line": 98,
+        "rule": "no-console",
+        "reason": "logger is the terminal output layer; console is intentional"
+      }
+    ]
+  },
+  "rule": "New eslint-disable comments require documented exception with tracked issue URL. Baseline only decreases over time."
+}
