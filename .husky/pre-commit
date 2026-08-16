@@ -1,2 +1,12 @@
 #!/usr/bin/env sh
-npx gitleaks protect --staged || true
+
+# Block commits if staged changes contain secrets.
+# Requires gitleaks binary: brew install gitleaks
+# Without it the hook prints a warning but does not block.
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged
+else
+  echo "⚠  gitleaks binary not found — secret scan skipped locally."
+  echo "   Install: brew install gitleaks"
+  echo "   CI pipeline enforces secret detection regardless."
+fi
