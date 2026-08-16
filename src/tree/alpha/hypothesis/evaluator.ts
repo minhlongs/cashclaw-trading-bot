@@ -4,7 +4,7 @@
 
 import type { IndicatorCandle, IndicatorResult } from '../indicator-types';
 import type { AlphaSignal, AlphaDirection } from '../types';
-import type { RegimeLabel } from '../../regime/types';
+import { RegimeLabel } from '../../regime/types';
 import type { AlphaHypothesis, HypothesisEvaluation, RegimePerf } from './types';
 import { indicators } from '../indicators';
 import { combineSignals } from '../combiner';
@@ -81,19 +81,19 @@ function classifyRegimeAt(
 ): RegimeLabel {
   const start = Math.max(0, candles.length - lookback);
   const window = candles.slice(start);
-  if (window.length < 2) return 'UNKNOWN';
+  if (window.length < 2) return RegimeLabel.UNKNOWN;
 
   const closes = window.map((c) => c.close);
   const returns = closes.slice(1).map((c, i) => Math.log(c / closes[i]!));
   const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
   const vol = Math.sqrt(returns.reduce((a, b) => a + (b - mean) ** 2, 0) / returns.length);
 
-  if (vol > 0.03) return 'HIGH_VOLATILITY';
-  if (vol < 0.005) return 'LOW_VOLATILITY';
+  if (vol > 0.03) return RegimeLabel.HIGH_VOLATILITY;
+  if (vol < 0.005) return RegimeLabel.LOW_VOLATILITY;
   const trend = (closes[closes.length - 1]! - closes[0]!) / closes[0]!;
-  if (trend > 0.02) return 'TREND_UP';
-  if (trend < -0.02) return 'TREND_DOWN';
-  return 'RANGE';
+  if (trend > 0.02) return RegimeLabel.TREND_UP;
+  if (trend < -0.02) return RegimeLabel.TREND_DOWN;
+  return RegimeLabel.RANGE;
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
@@ -165,7 +165,7 @@ export function evaluateHypothesis(
     avgConfidence: combined.confidence,
     passRate,
     winRate,
-    regimePerformance: { [regime]: perf },
+    regimePerformance: { [regime as string]: perf } as Record<string, RegimePerf>,
   };
 }
 
@@ -176,6 +176,6 @@ function empty(hypothesisId: string): HypothesisEvaluation {
     avgConfidence: 0,
     passRate: 0,
     winRate: 0,
-    regimePerformance: {} as Record<RegimeLabel, RegimePerf>,
+    regimePerformance: {} as Record<string, RegimePerf>,
   };
 }

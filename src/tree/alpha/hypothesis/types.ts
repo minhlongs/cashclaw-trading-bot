@@ -4,7 +4,7 @@
 import type { CombinerMethod, AlphaDirection } from '../types';
 import type { IndicatorFn, IndicatorRegistry } from '../indicator-types';
 import type { BarrierConfig } from '../labeling';
-import type { RegimeLabel } from '../../regime/types';
+import { RegimeLabel } from '../../regime/types';
 import type { OptimizerMethod } from '../portfolio/types';
 
 // ── Indicator Preset ───────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ export interface HypothesisEvaluation {
   /** Fraction of signals that resolved with a valid label (0–1). */
   passRate: number;
   /** Performance breakdown by regime. */
-  regimePerformance: Record<RegimeLabel, RegimePerf>;
+  regimePerformance: Record<string, RegimePerf>;
   /** Overall win rate (0–1). */
   winRate: number;
 }

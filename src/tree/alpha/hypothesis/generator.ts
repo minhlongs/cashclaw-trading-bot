@@ -1,8 +1,9 @@
 // Hypothesis Engine — Generator
 // Systematically creates and evolves alpha hypotheses.
 
-import type { CombinerMethod, BarrierConfig } from '../types';
-import type { RegimeLabel } from '../../regime/types';
+import type { CombinerMethod } from '../types';
+import type { BarrierConfig } from '../labeling';
+import { RegimeLabel } from '../../regime/types';
 import type { OptimizerMethod } from '../portfolio/types';
 import type {
   AlphaHypothesis,
@@ -19,8 +20,8 @@ const ALL_INDICATORS = [
 ] as const;
 
 const ALL_COMBINERS: CombinerMethod[] = ['weighted_sum', 'voting', 'max_confidence'];
-const ALL_OPTIMIZERS: OptimizerMethod[] = ['equal_weight', 'risk_parity', 'signal_weighted', 'regime_sized'];
-const ALL_REGIMES: RegimeLabel[] = ['TREND_UP', 'TREND_DOWN', 'RANGE', 'HIGH_VOLATILITY', 'LOW_VOLATILITY', 'SHOCK'];
+const ALL_OPTIMIZERS: OptimizerMethod[] = ['equal_weight', 'risk_parity', 'confidence_weighted', 'regime_sized'];
+const ALL_REGIMES: RegimeLabel[] = [RegimeLabel.TREND_UP, RegimeLabel.TREND_DOWN, RegimeLabel.RANGE, RegimeLabel.HIGH_VOLATILITY, RegimeLabel.LOW_VOLATILITY, RegimeLabel.SHOCK];
 
 const LOOKBACK_RANGE: [number, number] = [14, 200];
 const DEFAULT_BARRIER: BarrierConfig = { takeProfitPct: 0.02, stopLossPct: 0.01, maxHoldingMs: 24 * 3600_000 };
