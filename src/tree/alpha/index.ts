@@ -13,4 +13,6 @@ export type {
   AlphaCompositeResult,
 } from './types';
 
+export type { BarrierConfig, BarrierLabel, LabeledEvent } from './labeling';
+export { labelEvent } from './labeling';
 export { combineSignals } from './combiner';
