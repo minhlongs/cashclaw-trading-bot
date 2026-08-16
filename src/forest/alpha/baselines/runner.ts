@@ -6,6 +6,7 @@ import type { BacktestTrade } from '@/forest/backtest/types';
 import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
 import type { CostConfig, StressMode } from '@/forest/backtest/cost-model';
 import type { BaselineConfig } from './types';
+import { indicators } from '@/tree/alpha/indicators';
 import { buildReport, emptyReport } from './report-builder';
 
 // ── Deterministic PRNG (LCG) ──────────────────────────────
@@ -60,20 +61,18 @@ function randomEntry(candles: Candle[], cfg: CostConfig, seed: number): Backtest
   return trades;
 }
 
-// ── Indicators ────────────────────────────────────────────
+// ── Indicators (delegates to canonical @/tree/alpha/indicators) ────
+
+/** Canonical indicators operate from the end of the array; this adapter
+ *  restores the original (candles, end, period) contract by slicing. */
 function sma(candles: Candle[], end: number, period: number): number {
-  let sum = 0;
-  for (let i = end - period + 1; i <= end; i++) sum += candles[i].close;
-  return sum / period;
+  const result = indicators.sma(candles.slice(0, end + 1), period);
+  return typeof result.value === 'number' ? result.value : 0;
 }
 
 function atr(candles: Candle[], end: number, period: number): number {
-  let sum = 0;
-  for (let i = end - period + 1; i <= end; i++) {
-    const prev = i > 0 ? candles[i - 1].close : candles[i].open;
-    sum += Math.max(candles[i].high - candles[i].low, Math.abs(candles[i].high - prev), Math.abs(candles[i].low - prev));
-  }
-  return sum / period;
+  const result = indicators.atr(candles.slice(0, end + 1), period);
+  return typeof result.value === 'number' ? result.value : 0;
 }
 
 // ── Signal: Simple Momentum ──────────────────────────────

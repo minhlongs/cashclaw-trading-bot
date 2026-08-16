@@ -2,6 +2,7 @@
 // Each feature is computed from data available AT the timestamp (no future data)
 
 import type { Candle } from '@/forest/backtest/ohlcv';
+import { sma } from '@/tree/alpha/indicators';
 import type { RegimeFeatures, RegimeConfig } from './types';
 
 /**
@@ -54,21 +55,6 @@ function trueRanges(candles: Candle[]): number[] {
     }
   }
   return trs;
-}
-
-/**
- * Compute Simple Moving Average of close prices.
- */
-function sma(closes: number[], period: number): number[] {
-  const result: number[] = [];
-  for (let i = period - 1; i < closes.length; i++) {
-    let sum = 0;
-    for (let j = i - period + 1; j <= i; j++) {
-      sum += closes[j];
-    }
-    result.push(sum / period);
-  }
-  return result;
 }
 
 /**
@@ -180,7 +166,11 @@ export function extractRegimeFeatures(
 
   // 4. MA slope: normalized slope of SMA
   const smaPeriod = Math.min(20, window.length);
-  const smaValues = sma(closes, smaPeriod);
+  const smaValues: number[] = [];
+  for (let i = smaPeriod; i <= closes.length; i++) {
+    const value = sma(closes.slice(0, i), smaPeriod);
+    if (value !== null) smaValues.push(value);
+  }
   const maSlope = linearSlope(smaValues);
 
   // 5. Return dispersion: std of cross-candle returns

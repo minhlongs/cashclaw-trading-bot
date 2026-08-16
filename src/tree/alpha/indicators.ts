@@ -24,7 +24,7 @@ function closes(candles: readonly IndicatorCandle[]): number[] {
   return candles.map((c) => c.close);
 }
 
-function sma(values: number[], period: number): number | null {
+export function sma(values: number[], period: number): number | null {
   if (values.length < period) return null;
   const slice = values.slice(values.length - period);
   return slice.reduce((s, v) => s + v, 0) / period;
@@ -61,6 +61,46 @@ const emaIndicator: IndicatorFn = (candles, lookback, tf = '1h') => {
   return result('ema', tf, lookback, last.timestamp, ema);
 };
 
+// ── Pure math (reusable without IndicatorFn wrapper) ──────────────────────────
+
+/** Wilder RSI from a raw price array. Returns null if insufficient data. */
+export function computeRSI(
+  values: readonly number[],
+  period: number,
+): number | null {
+  if (values.length < period + 1) return null;
+  let gain = 0;
+  let loss = 0;
+  for (let i = values.length - period; i < values.length; i++) {
+    const delta = values[i] - values[i - 1];
+    if (delta >= 0) gain += delta;
+    else loss -= delta;
+  }
+  const avgGain = gain / period;
+  const avgLoss = loss / period;
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - 100 / (1 + rs);
+}
+
+/** Bollinger Bands from a raw price array. Returns null if insufficient data. */
+export function bollingerBands(
+  values: readonly number[],
+  period: number,
+  stdDevMultiplier = 2,
+): { upper: number; middle: number; lower: number; bandwidth: number; percentB: number } | null {
+  if (values.length < period) return null;
+  const window = values.slice(-period);
+  const middle = window.reduce((s, v) => s + v, 0) / period;
+  const sd = stdDev(window, middle);
+  const upper = middle + stdDevMultiplier * sd;
+  const lower = middle - stdDevMultiplier * sd;
+  const bandwidth = middle !== 0 ? (upper - lower) / middle : 0;
+  const lastVal = window[window.length - 1];
+  const percentB = upper !== lower ? (lastVal - lower) / (upper - lower) : 0.5;
+  return { upper, middle, lower, bandwidth, percentB };
+}
+
 // ── 3. RSI ────────────────────────────────────────────────────────────────────
 
 const rsiIndicator: IndicatorFn = (candles, lookback, tf = '1h') => {
@@ -68,17 +108,8 @@ const rsiIndicator: IndicatorFn = (candles, lookback, tf = '1h') => {
   if (!last) return result('rsi', tf, lookback, 0, null);
   const needed = lookback + 1;
   if (candles.length < needed) return result('rsi', tf, lookback, last.timestamp, null);
-  let gain = 0;
-  let loss = 0;
-  for (let i = candles.length - lookback; i < candles.length; i++) {
-    const delta = candles[i].close - candles[i - 1].close;
-    if (delta >= 0) gain += delta;
-    else loss -= delta;
-  }
-  const avgGain = gain / lookback;
-  const avgLoss = loss / lookback;
-  const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-  const rsi = 100 - 100 / (1 + rs);
+  const rsi = computeRSI(closes(candles), lookback);
+  if (rsi === null) return result('rsi', tf, lookback, last.timestamp, null);
   return result('rsi', tf, lookback, last.timestamp, {
     rsi,
     overbought: rsi >= 70,
@@ -111,17 +142,9 @@ const atrIndicator: IndicatorFn = (candles, lookback, tf = '1h') => {
 const bollingerIndicator: IndicatorFn = (candles, lookback, tf = '1h') => {
   const last = candles[candles.length - 1];
   if (!last) return result('bollinger', tf, lookback, 0, null);
-  const vals = closes(candles).slice(-lookback);
-  if (vals.length < lookback) return result('bollinger', tf, lookback, last.timestamp, null);
-  const middle = vals.reduce((s, v) => s + v, 0) / lookback;
-  const sd = stdDev(vals, middle);
-  const upper = middle + 2 * sd;
-  const lower = middle - 2 * sd;
-  const bandwidth = middle !== 0 ? (upper - lower) / middle : 0;
-  const percentB = upper !== lower ? (last.close - lower) / (upper - lower) : 0.5;
-  return result('bollinger', tf, lookback, last.timestamp, {
-    upper, middle, lower, bandwidth, percentB,
-  });
+  const bb = bollingerBands(closes(candles), lookback);
+  if (!bb) return result('bollinger', tf, lookback, last.timestamp, null);
+  return result('bollinger', tf, lookback, last.timestamp, bb);
 };
 
 // ── 6. MACD ───────────────────────────────────────────────────────────────────
