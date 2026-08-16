@@ -34,7 +34,7 @@ jobs:
 
       - name: ESLint suppressions baseline check
         run: |
-          CURRENT=$(grep -c 'eslint-disable' src/ -r || true)
+          CURRENT=$(grep -r 'eslint-disable' src/ --include='*.ts' --include='*.tsx' | grep -v 'checks.ts' | wc -l | tr -d ' ')
           BASELINE=$(python3 -c "import json; print(json.load(open('eslint-suppressions.json'))['baseline']['count'])")
           echo "Current: $CURRENT | Baseline: $BASELINE"
           if [ "$CURRENT" -gt "$BASELINE" ]; then

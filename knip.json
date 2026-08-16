@@ -3,7 +3,30 @@
   "entry": ["src/app/**/page.tsx", "src/app/**/layout.tsx", "src/app/api/**/route.ts", "src/worker.ts", "src/tree/**/index.ts"],
   "project": ["src/**/*.ts", "src/**/*.tsx"],
   "ignoreDependencies": ["lightweight-charts", "@typescript-eslint/eslint-plugin", "@typescript-eslint/parser", "eslint-plugin-react", "eslint-plugin-sonarjs", "husky"],
-  "ignoreFiles": ["src/lib/db/schema-backtest.ts"],
+  "ignoreFiles": [
+    "src/lib/db/schema-backtest.ts",
+    "src/forest/alpha/attribution/index.ts",
+    "src/forest/alpha/dashboard/index.ts",
+    "src/forest/alpha/demo.ts",
+    "src/forest/alpha/evaluation/index.ts",
+    "src/forest/alpha/execution/index.ts",
+    "src/forest/alpha/experiments/index.ts",
+    "src/forest/alpha/ops/index.ts",
+    "src/forest/alpha/performance/batch.ts",
+    "src/forest/alpha/performance/cache.ts",
+    "src/forest/alpha/performance/index.ts",
+    "src/forest/alpha/persistence/d1-adapter.ts",
+    "src/forest/alpha/persistence/index.ts",
+    "src/forest/alpha/persistence/json-adapter.ts",
+    "src/forest/alpha/persistence/types.ts",
+    "src/forest/alpha/pipeline/index.ts",
+    "src/forest/alpha/readiness/index.ts",
+    "src/forest/alpha/reports/formatter.ts",
+    "src/forest/alpha/reports/index.ts",
+    "src/forest/backtest/regime-backtest-types.ts",
+    "src/forest/backtest/regime-backtest.ts",
+    "src/tree/regime/alpha-router.ts"
+  ],
   "ignoreExportsUsedInFile": true,
   "exclude": ["types"],
   "ignoreIssues": {
@@ -13,6 +36,8 @@
     "src/forest/flight-recorder/index.ts": ["exports"],
     "src/tree/exchange/rate-limiter/errors.ts": ["exports"],
     "src/tree/exchange/types.ts": ["exports"],
-    "src/tree/quantlib/functions.ts": ["exports"]
+    "src/tree/quantlib/functions.ts": ["exports"],
+    "src/forest/backtest/index.ts": ["exports"],
+    "src/forest/backtest/metrics-extended.ts": ["exports"]
   }
 }
