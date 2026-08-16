@@ -52,7 +52,7 @@ function extractTrades(
     const grossPnl = c.close - ep;
     const notional = Math.abs(ep);
     const cost = costCfg
-      ? applyCosts(grossPnl, notional, { ...costCfg, stressMode: 'normal' })
+      ? applyCosts(grossPnl, notional, costCfg)
       : { netPnl: grossPnl, fees: 0, slippage: 0, marketImpact: 0 };
     return {
       entryTimestamp: et, exitTimestamp: c.timestamp, side: 'buy' as const,

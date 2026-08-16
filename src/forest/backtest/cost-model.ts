@@ -14,8 +14,6 @@ export interface CostConfig {
   slipPct: number;
   /** Market impact as a decimal fraction applied via square-root model. */
   marketImpactPct: number;
-  /** Stress scenario selector. */
-  stressMode: StressMode;
 }
 
 export interface CostBreakdown {
@@ -28,6 +26,7 @@ export interface CostBreakdown {
 export interface StressConfig {
   readonly feePct: number;
   readonly slipPct: number;
+  readonly marketImpactPct: number;
 }
 
 // ──────────────────────────────────────────────
@@ -35,9 +34,10 @@ export interface StressConfig {
 // ──────────────────────────────────────────────
 
 const STRESS_CONFIGS: Record<StressMode, StressConfig> = {
-  normal:      { feePct: 0.0005, slipPct: 0.0005 },  //  5 bps
-  conservative: { feePct: 0.0010, slipPct: 0.0010 },  // 10 bps
-  adverse:     { feePct: 0.0020, slipPct: 0.0020 },  // 20 bps
+  // 2026-realistic: Binance/Bybit/OKX retail maker+taker range
+  normal:       { feePct: 0.0008, slipPct: 0.0003, marketImpactPct: 0.0005 },  //  11 bps total
+  conservative: { feePct: 0.0010, slipPct: 0.0007, marketImpactPct: 0.0010 },  //  17 bps total
+  adverse:      { feePct: 0.0010, slipPct: 0.0020, marketImpactPct: 0.0020 },  //  30 bps total
 };
 
 // ──────────────────────────────────────────────

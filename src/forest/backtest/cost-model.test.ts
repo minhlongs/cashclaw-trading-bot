@@ -17,7 +17,7 @@ function makeConfig(
   slipPct: number,
   marketImpactPct = 0,
 ): CostConfig {
-  return { feePct, slipPct, marketImpactPct, stressMode: 'normal' };
+  return { feePct, slipPct, marketImpactPct };
 }
 
 // ──────────────────────────────────────────────

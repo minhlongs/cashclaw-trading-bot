@@ -1,8 +1,10 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { fetchOHLCV } from './data-fetcher';
+import { clearCache } from './ohlcv-cache';
 
 const spy = vi.spyOn(globalThis, 'fetch');
-afterEach(() => { spy.mockReset(); });
+beforeEach(() => { spy.mockClear(); clearCache(); });
+afterEach(() => { spy.mockClear(); clearCache(); });
 
 function ok(body: unknown) {
   return { ok: true, status: 200, json: () => Promise.resolve(body), text: () => Promise.resolve(JSON.stringify(body)) };

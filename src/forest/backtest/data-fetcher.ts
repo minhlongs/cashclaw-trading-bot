@@ -2,6 +2,7 @@
 // Supports binance, bybit, okx (all have public kline endpoints)
 
 import type { Candle } from './ohlcv';
+import { loadCandles, saveCandles, getCacheKey } from './ohlcv-cache';
 
 const KLINE_LIMIT = 1000;
 
@@ -76,6 +77,16 @@ export async function fetchOHLCV(
   startMs: number,
   endMs: number,
 ): Promise<Candle[]> {
+  // 1. Check cache before hitting exchange
+  const cacheKey = getCacheKey(exchange, symbol, interval);
+  const cached = loadCandles(cacheKey);
+  if (cached && cached.candles.length > 0) {
+    const lastCached = cached.candles[cached.candles.length - 1].timestamp;
+    if (lastCached >= endMs) {
+      return cached.candles.filter((c) => c.timestamp >= startMs && c.timestamp <= endMs);
+    }
+  }
+
   const all: Candle[] = [];
   let cursorEnd = endMs;
 
@@ -117,13 +128,20 @@ export async function fetchOHLCV(
 
   // Filter to requested range, dedupe by timestamp, sort asc
   const seen = new Set<number>();
-  return all
+  const result = all
     .filter((c) => c.timestamp >= startMs && c.timestamp <= endMs && !seen.has(c.timestamp))
     .map((c) => {
       seen.add(c.timestamp);
       return c;
     })
     .sort((a, b) => a.timestamp - b.timestamp);
+
+  // 2. Persist to cache (non-fatal if write fails)
+  if (result.length > 0) {
+    saveCandles(cacheKey, result);
+  }
+
+  return result;
 }
 
 function buildRequest(

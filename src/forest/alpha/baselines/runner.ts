@@ -18,7 +18,7 @@ function lcg(seed: number): () => number {
 // ── Cost helper ──────────────────────────────────────────
 function costConfig(stressMode: StressMode, feePct: number, slipPct: number): CostConfig {
   const m = stressMode === 'conservative' ? 2 : stressMode === 'adverse' ? 3 : 1;
-  return { feePct: feePct * m, slipPct: slipPct * m, marketImpactPct: 0, stressMode };
+  return { feePct: feePct * m, slipPct: slipPct * m, marketImpactPct: 0 };
 }
 
 function makeTrade(
