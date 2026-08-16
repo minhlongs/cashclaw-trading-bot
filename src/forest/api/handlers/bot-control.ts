@@ -6,7 +6,6 @@
 import { getBotManager } from '@/tree/bot';
 import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
-import type { BotState } from '@/tree/bot/types';
 
 async function validateStartCredentials(id: string): Promise<{ ok: boolean; error?: string }> {
   const bot = getBotManager().getBot(id);
