@@ -26,6 +26,18 @@ const TOP_N = 10;
 
 function elapsed(t0: number): number { return performance.now() - t0; }
 
+/** Parse timeframe like '1h', '15m', '4h', '1d' into minutes. Defaults to 60. */
+function parseCandleIntervalMinutes(timeframe: string): number {
+  const m = timeframe.match(/^(\d+)([mhd])$/);
+  if (!m) return 60;
+  const n = Number(m[1]);
+  const unit = m[2];
+  if (unit === 'm') return n;
+  if (unit === 'h') return n * 60;
+  if (unit === 'd') return n * 1440;
+  return 60;
+}
+
 // ── Trade Extraction ──────────────────────────────────────────────────────────
 
 function extractTrades(
@@ -202,7 +214,8 @@ export class AlphaResearchPipeline {
           const dd = peak > 0 ? ((peak - equity) / peak) * 100 : 0;
           eq.push({ timestamp: t.exitTimestamp, equity, drawdownPct: dd });
         }
-        const sp = eq.length >= 2 ? computeSharpe(eq) : 0;
+        const intervalMin = parseCandleIntervalMinutes(this.cfg.timeframe);
+        const sp = eq.length >= 2 ? computeSharpe(eq, intervalMin) : 0;
         return { sharpe: sp, totalTrades: tc, passed: sp >= minSharpe && tc >= minTrades } as WalkforwardData;
       }
 
@@ -224,17 +237,29 @@ export class AlphaResearchPipeline {
           max_drawdown_duration: 0, calmar_ratio: 0, avg_trade: 0, median_trade: 0,
           turnover: 0, recovery_factor: 0, exposure_pct: 0,
         };
+        // Compute cost breakdown from trades for the report
+        const totalFees = trades.reduce((s, t) => s + t.fee, 0);
+        const grossPnl = trades.reduce((s, t) => s + t.pnl, 0) + totalFees;
+        const costBreakdown = { fees: totalFees, slippage: 0, marketImpact: 0 };
         const regimeLabel = rd?.regimes[0]?.label ?? RegimeLabel.UNKNOWN;
-        return { report: generateReport({ experimentId: `pipeline-${this.cfg.symbol}-${this.cfg.timeframe}`, symbol: this.cfg.symbol, timeframe: this.cfg.timeframe, regime: regimeLabel, metrics: m }, candles) } as EvalData;
+        return { report: generateReport({
+          experimentId: `pipeline-${this.cfg.symbol}-${this.cfg.timeframe}`,
+          symbol: this.cfg.symbol, timeframe: this.cfg.timeframe, regime: regimeLabel,
+          metrics: m, costBreakdown,
+        }, candles) } as EvalData;
       }
 
       case 'compute_costs': {
         const ev = this.map.get('evaluate') as EvalData | undefined;
         const report = ev?.report;
+        const fees = report?.fees ?? 0;
+        const slippage = report?.slippage ?? 0;
+        const grossPnl = (report?.netPnl ?? 0) + fees + slippage;
         return {
-          grossPnl: report?.netPnl ?? 0,
+          grossPnl,
           netPnl: report?.netPnl ?? 0,
-          fees: report?.fees ?? 0,
+          fees,
+          slippage,
         } as CostData;
       }
 

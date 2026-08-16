@@ -91,10 +91,13 @@ export function buildEquity(
 
 /**
  * Compute annualized Sharpe ratio from equity curve.
- * Uses 8760 factor (hourly candles -> annualized).
- * Returns 0 if there are fewer than 2 data points.
+ * @param curve Equity curve in chronological order.
+ * @param candleIntervalMinutes Candle interval in minutes (default 60 = 1h).
  */
-export function computeSharpe(curve: BacktestEquityPoint[]): number {
+export function computeSharpe(
+  curve: BacktestEquityPoint[],
+  candleIntervalMinutes = 60,
+): number {
   if (curve.length < 2) return 0;
 
   const rets: number[] = [];
@@ -109,5 +112,6 @@ export function computeSharpe(curve: BacktestEquityPoint[]): number {
   const variance = rets.reduce((a, b) => a + (b - mean) ** 2, 0) / rets.length;
   const std = Math.sqrt(variance);
   if (std === 0) return 0;
-  return (mean / std) * Math.sqrt(8760); // 1h candles -> 8760/year
+  const periodsPerYear = (365 * 24 * 60) / candleIntervalMinutes;
+  return (mean / std) * Math.sqrt(periodsPerYear);
 }

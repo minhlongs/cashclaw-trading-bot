@@ -62,6 +62,8 @@ export interface ExperimentInput {
   timeframe: string;
   regime: RegimeLabel;
   metrics: ExtendedBacktestMetrics;
+  /** Optional cost breakdown (fees/slippage) from applyCosts. */
+  costBreakdown?: { fees: number; slippage: number; marketImpact: number } | null;
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -71,7 +73,7 @@ export function generateReport(
   input: ExperimentInput,
   candles: Candle[],
 ): EvaluationReport {
-  const { experimentId, symbol, timeframe, regime, metrics } = input;
+  const { experimentId, symbol, timeframe, regime, metrics, costBreakdown } = input;
   const trades: BacktestTrade[] = metrics.trades_json;
 
   // Segment by regime
@@ -131,7 +133,8 @@ export function generateReport(
     medianTrade: metrics.median_trade,
     numTrades: metrics.total_trades,
     turnover: metrics.turnover,
-    fees: 0, slippage: 0,
+    fees: costBreakdown?.fees ?? 0,
+    slippage: costBreakdown?.slippage ?? 0,
     exposure: metrics.exposure_pct,
     recoveryFactor: metrics.recovery_factor,
     byRegime, byMonth,
