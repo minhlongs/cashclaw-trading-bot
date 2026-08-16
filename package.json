@@ -14,7 +14,7 @@
     "db:generate": "wrangler d1 migrations create cashclaw-db --local",
     "db:apply": "wrangler d1 migrations apply cashclaw-db --local",
     "db:apply:remote": "wrangler d1 migrations apply cashclaw-db",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "node -e \"const{execSync}=require('child_process');const sha=execSync('git rev-parse HEAD').toString().trim();process.env.GIT_COMMIT_SHA=sha;process.env.BUILD_TIMESTAMP=new Date().toISOString();require('child_process').execSync('npx @opennextjs/cloudflare build',{stdio:'inherit',env:process.env});require('child_process').execSync('npx @opennextjs/cloudflare deploy',{stdio:'inherit',env:process.env})\"",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
