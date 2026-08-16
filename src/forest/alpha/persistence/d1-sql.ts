@@ -1,62 +1,90 @@
-// Alpha Persistence — D1 SQL Constants
-// Table DDL and migration statements for alpha results and experiments.
+// Alpha Persistence — D1 SQL Migration
+// DDL statements for alpha research tables (EXPERIMENTS, EXPERIMENT_RESULTS,
+// ALPHA_EVALUATIONS) targeting Cloudflare D1 (SQLite-compatible).
 
-export const CREATE_ALPHA_RESULTS = `
-CREATE TABLE IF NOT EXISTS alpha_results (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  source TEXT NOT NULL,
-  result_json TEXT NOT NULL,
-  created_at INTEGER NOT NULL
-)`;
+// ── EXPERIMENTS ───────────────────────────────────────────────────────────────
 
-export const CREATE_ALPHA_EXPERIMENTS = `
-CREATE TABLE IF NOT EXISTS alpha_experiments (
+export const EXPERIMENTS_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS EXPERIMENTS (
   id TEXT PRIMARY KEY,
-  hypothesis TEXT NOT NULL,
-  dataset TEXT NOT NULL,
-  symbol TEXT NOT NULL,
-  timeframe TEXT NOT NULL,
-  feature_set_json TEXT NOT NULL,
-  regime_filter_json TEXT NOT NULL,
-  entry_rule_json TEXT NOT NULL,
-  exit_rule_json TEXT NOT NULL,
-  position_sizing_json TEXT NOT NULL,
-  fee_model_json TEXT NOT NULL,
-  slippage_model_json TEXT NOT NULL,
-  train_period_json TEXT NOT NULL,
-  validation_period_json TEXT NOT NULL,
-  test_period_json TEXT NOT NULL,
+  name TEXT,
+  description TEXT,
+  hypothesis TEXT,
+  config_snapshot TEXT,
+  symbol TEXT,
+  timeframe TEXT,
+  feature_set TEXT,
+  regime_filter TEXT,
+  entry_rule TEXT,
+  exit_rule TEXT,
+  position_sizing TEXT,
+  fee_model TEXT,
+  slippage_model TEXT,
+  train_period TEXT,
+  validation_period TEXT,
+  test_period TEXT,
   random_seed INTEGER,
   git_commit TEXT,
-  config_snapshot_json TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-)`;
+  status TEXT DEFAULT 'pending',
+  created_at INTEGER,
+  updated_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_experiments_status ON EXPERIMENTS(status);
+`;
 
-export const CREATE_ALPHA_EXP_RESULTS = `
-CREATE TABLE IF NOT EXISTS alpha_experiment_results (
+// ── EXPERIMENT_RESULTS ────────────────────────────────────────────────────────
+
+export const EXPERIMENT_RESULTS_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS EXPERIMENT_RESULTS (
   id TEXT PRIMARY KEY,
-  experiment_id TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  result_json TEXT NOT NULL,
-  artifacts_json TEXT NOT NULL DEFAULT '[]',
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-)`;
+  experiment_id TEXT REFERENCES EXPERIMENTS(id),
+  window_index INTEGER,
+  train_metrics TEXT,
+  validate_metrics TEXT,
+  test_metrics TEXT,
+  regime TEXT,
+  sharpe_ratio REAL,
+  total_pnl REAL,
+  win_rate REAL,
+  total_trades INTEGER,
+  created_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_experiment_results_experiment ON EXPERIMENT_RESULTS(experiment_id);
+`;
 
-export const CREATE_IDX_ALPHA_RESULTS_NAME = `
-CREATE INDEX IF NOT EXISTS idx_alpha_results_name ON alpha_results(name)`;
+// ── ALPHA_EVALUATIONS ─────────────────────────────────────────────────────────
 
-export const CREATE_IDX_ALPHA_EXP_EXPERIMENT = `
-CREATE INDEX IF NOT EXISTS idx_alpha_exp_experiment ON alpha_experiment_results(experiment_id)`;
+export const ALPHA_EVALUATIONS_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS ALPHA_EVALUATIONS (
+  id TEXT PRIMARY KEY,
+  experiment_id TEXT REFERENCES EXPERIMENTS(id),
+  alpha_id TEXT,
+  alpha_name TEXT,
+  total_contribution REAL,
+  wins_contribution REAL,
+  losses_contribution REAL,
+  avg_confidence REAL,
+  feature_importance TEXT,
+  regime_breakdown TEXT,
+  created_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_alpha_evaluations_experiment ON ALPHA_EVALUATIONS(experiment_id);
+`;
 
-/** Combined migration SQL — run each statement via .run(). */
-export const ALPHA_D1_MIGRATION = [
-  CREATE_ALPHA_RESULTS,
-  CREATE_ALPHA_EXPERIMENTS,
-  CREATE_ALPHA_EXP_RESULTS,
-  CREATE_IDX_ALPHA_RESULTS_NAME,
-  CREATE_IDX_ALPHA_EXP_EXPERIMENT,
-].join(';');
+// ── Combined migration ────────────────────────────────────────────────────────
+
+/** All three CREATE TABLE + index statements concatenated for migration. */
+export const MIGRATION_SQL = [
+  EXPERIMENTS_TABLE_SQL,
+  EXPERIMENT_RESULTS_TABLE_SQL,
+  ALPHA_EVALUATIONS_TABLE_SQL,
+].join('\n');
+
+// ── Rollback ──────────────────────────────────────────────────────────────────
+
+/** DROP TABLE IF EXISTS statements for rollback. */
+export const ROLLBACK_SQL = [
+  'DROP TABLE IF EXISTS ALPHA_EVALUATIONS;',
+  'DROP TABLE IF EXISTS EXPERIMENT_RESULTS;',
+  'DROP TABLE IF EXISTS EXPERIMENTS;',
+].join('\n');
