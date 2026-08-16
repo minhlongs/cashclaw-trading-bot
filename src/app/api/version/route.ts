@@ -10,6 +10,5 @@ export async function GET() {
     fullSha: process.env.GIT_COMMIT_SHA || 'dev',
     buildTime: process.env.BUILD_TIMESTAMP || new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    region: process.env.CF_WORKER_REGION || 'unknown',
   });
 }
