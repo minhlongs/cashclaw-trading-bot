@@ -31,14 +31,18 @@ describe('fetchOHLCV — binance', () => {
 
   it('fetches multiple pages when KLINE_LIMIT returned', async () => {
     const interval = 3600000;
-    const page1Start = 1704067200000 + 200 * interval;
+    const startMs = 1704067200000;
+    // Page 1 covers the upper half of the range (200h–1199h from start).
+    const page1Start = startMs + 200 * interval;
     const page1 = Array.from({ length: 1000 }, (_, i) => mk(page1Start + i * interval));
-    const page2Start = 1704067200000 + 50 * interval;
+    // Page 2 covers the lower half and ends AT startMs so the pagination loop
+    // terminates: cursorEnd = startMs − 1 < startMs after page 2.
+    const page2Start = startMs;
     const page2 = Array.from({ length: 1000 }, (_, i) => mk(page2Start + i * interval));
     spy
       .mockResolvedValueOnce(ok(page1) as Response)
       .mockResolvedValueOnce(ok(page2) as Response);
-    const candles = await fetchOHLCV('binance', 'BTCUSDT', '1h', 1704067200000, 1704067200000 + 2500 * interval);
+    const candles = await fetchOHLCV('binance', 'BTCUSDT', '1h', startMs, startMs + 2500 * interval);
     expect(spy).toHaveBeenCalledTimes(2);
     expect(candles.length).toBeGreaterThanOrEqual(1000);
   });

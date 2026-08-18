@@ -1,8 +1,8 @@
 # Out-of-Sample Validation — Funding-Rate Fade
 
 **Date:** 2026-08-18
-**Train:** 2024-08-18 → 2025-12-05 (475 days)
-**Test:**  2025-12-05 → 2026-08-18 (256 days)
+**Train:** 2023-09-20 → 2025-01-07 (475 days)
+**Test:**  2025-01-07 → 2025-09-19 (256 days)
 **Cost Model:** conservative
 
 ---
@@ -11,18 +11,18 @@
 
 | Config | Train Trades | Train PnL | Train Sharpe | Test Trades | Test PnL | Test Sharpe | CI 5% | CI 95% | Degradation | OOS |
 |---|---|---|---|---|---|---|---|---|---|---|
-| SOL: thresh=0.0001 maxHold=24 | 50 | $-6339 | -0.78 | 25 | $-3688 | -1.00 | $-384 | $83 | N/A% | ❌ |
-| SOL: thresh=0.0001 maxHold=12 | 82 | $-8304 | -1.13 | 44 | $-1229 | -0.29 | $-187 | $136 | N/A% | ❌ |
-| SOL: thresh=0.0001 maxHold=6 | 130 | $-11176 | -1.84 | 68 | $-2254 | -0.54 | $-133 | $66 | N/A% | ❌ |
-| SOL: thresh=0.0003 maxHold=12 | 10 | $-256 | -0.12 | 5 | $37 | 0.02 | $-633 | $572 | N/A% | ⚠️ |
-| ETH: thresh=0.0003 maxHold=12 | 5 | $384 | 0.27 | 1 | $754 | 0.00 | $754 | $754 | 100%% | ⚠️ |
-| ETH: thresh=0.0001 maxHold=12 | 63 | $-8292 | -1.27 | 27 | $4155 | 1.28 | $-37 | $376 | N/A% | ⚠️ |
-| ETH: thresh=0.0001 maxHold=6 | 98 | $-6688 | -1.27 | 32 | $3300 | 1.51 | $-5 | $221 | N/A% | ⚠️ |
+| SOL: thresh=0.0001 maxHold=24 | 52 | $-13659 | -1.50 | 27 | $-6862 | -1.22 | $-591 | $104 | N/A% | ❌ |
+| SOL: thresh=0.0001 maxHold=12 | 92 | $-15462 | -1.97 | 45 | $-4523 | -0.79 | $-321 | $118 | N/A% | ❌ |
+| SOL: thresh=0.0001 maxHold=6 | 162 | $-19522 | -2.27 | 69 | $-7122 | -1.65 | $-212 | $0 | N/A% | ❌ |
+| SOL: thresh=0.0003 maxHold=12 | 28 | $-4336 | -0.84 | 4 | $-2620 | -3.07 | $-1006 | $-288 | N/A% | ❌ |
+| ETH: thresh=0.0003 maxHold=12 | 18 | $-134 | -0.05 | 0 | $0 | 0.00 | $0 | $0 | N/A% | ❌ |
+| ETH: thresh=0.0001 maxHold=12 | 89 | $-6857 | -1.17 | 31 | $-7153 | -1.50 | $-512 | $21 | N/A% | ❌ |
+| ETH: thresh=0.0001 maxHold=6 | 157 | $-9056 | -1.79 | 45 | $-5474 | -1.42 | $-264 | $24 | N/A% | ❌ |
 
 ## Verdict
 
 **PASSED OOS:** 0/7 configurations
-**MARGINAL:** 2/7 (positive PnL but CI crosses zero)
-**FAILED:** 5/7
+**MARGINAL:** 0/7 (positive PnL but CI crosses zero)
+**FAILED:** 7/7
 
 **No configuration passed out-of-sample validation.** The in-sample results may be overfit.

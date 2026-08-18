@@ -93,15 +93,17 @@ This is valid falsification, not failure. System correctly identified that no st
 | ETHUSDT | 20/48 | 5 | funding≥0.0003, maxHold=12 | 6 | +$494/trade | 20.55 |
 | BTCUSDT | 0/48 | 0 | None | 0-1 | N/A | N/A |
 
-**Out-of-sample validation** (train 65% → test 35%, 7 configs):
-| Config | Train PnL | Test PnL | Test Sharpe | OOS |
-|---|---|---|---|---|
-| SOL: thresh=0.0001, maxHold=24 | -$6,339 | -$3,688 | -1.00 | ❌ |
-| SOL: thresh=0.0001, maxHold=12 | -$7,078 | +$618 | 0.17 | ⚠️ |
-| ETH: thresh=0.0001, maxHold=12 | -$8,292 | +$4,155 | 1.28 | ⚠️ |
-| All others | — | — | — | ❌ |
+**Out-of-sample validation** (train 65% → test 35%, 7 configs, end-date pinned to sweep's original 2025-09-19):
+| Config | Train PnL | Train Sharpe | Test PnL | Test Sharpe | OOS |
+|---|---|---|---|---|---|
+| SOL: thresh=0.0001, maxHold=24 | -$13,659 | -1.50 | -$6,862 | -1.22 | ❌ |
+| SOL: thresh=0.0001, maxHold=12 | -$15,462 | -1.97 | -$4,523 | -0.79 | ❌ |
+| SOL: thresh=0.0003, maxHold=12 | -$4,336 | -0.84 | -$2,620 | -3.07 | ❌ |
+| ETH: thresh=0.0001, maxHold=12 | -$6,857 | -1.17 | -$7,153 | -1.50 | ❌ |
+| ETH: thresh=0.0001, maxHold=6 | -$9,056 | -1.79 | -$5,474 | -1.42 | ❌ |
+| All others | — | — | — | — | ❌ |
 
-**PASSED OOS: 0/7.** The funding-rate fade signal does NOT survive out-of-sample validation. In-sample results are overfit. ETH marginal (2/7 with positive PnL but CIs cross zero).
+**PASSED OOS: 0/7.** Methodology bug fixed (pinned end-date to match sweep window). The original OOS validation used a rolling `Date.now()` window that tested on dates (Dec 2025–Aug 2026) the in-sample sweep never saw — making the original "OOS test" invalid. After correction: **no config passes, even the "marginal" ones.** The in-sample Sharpe of 5.35 was entirely regime-driven — the train period Sharpe is already -1.50, indicating the signal only appeared in specific market conditions.
 
 **OI limitation:** Binance API returns only ~60 days of OI history (21 data points). OI-only and combined modes produce 0 trades across all assets.
 

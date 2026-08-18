@@ -2,14 +2,20 @@
 // Out-of-Sample Validation for Funding-Rate Fade Strategy
 //
 // Splits 730-day dataset into:
-//   Train:  first ~65% (2024-10-21 → 2025-05-15, ~206 days)
-//   Test:   last ~35% (2025-05-15 → 2025-09-19, ~127 days)
+//   Train:  first ~65% (~475 days)
+//   Test:   last ~35% (~256 days)
 //
 // Tests the best SOL and ETH configs from in-sample sweep on UNSEEN data.
 // If out-of-sample Sharpe is positive with 10+ trades → signal may be real.
 //
+// IMPORTANT: The end-date is PINNED to 2025-09-19 by default so the OOS
+// window matches the sweep's original run window exactly. Without this pin,
+// Date.now() would produce a rolling window that never existed in the
+// in-sample data, making the "OOS test" invalid.
+//
 // Usage:
 //   npx tsx src/forest/backtest/derivative-out-of-sample.ts
+//   npx tsx src/forest/backtest/derivative-out-of-sample.ts --end-date=2025-09-19
 
 import { resolveStressConfig, applyCosts, type StressConfig, type StressMode } from './cost-model';
 import * as fs from 'fs';
@@ -157,10 +163,12 @@ function computeMetrics(trades: Trade[], costConfig: StressConfig): Metrics {
     return { totalTrades: 0, netPnL: 0, winRate: 0, expectancy: 0, sharpe: 0, profitFactor: 0, bootstrapPValue: 1, bootstrapCI: [0, 0] };
   }
 
-  const costed = trades.map(t => {
-    const tc = applyCosts(t.pnlUsd, INITIAL_CAPITAL, costConfig);
-    return { ...t, netPnl: tc.netPnl, fees: tc.fees + tc.slippage + tc.marketImpact };
-  });
+  const costed = trades
+    .filter(t => Number.isFinite(t.pnlUsd))
+    .map(t => {
+      const tc = applyCosts(t.pnlUsd, INITIAL_CAPITAL, costConfig);
+      return { ...t, netPnl: tc.netPnl, fees: tc.fees + tc.slippage + tc.marketImpact };
+    });
 
   const wins = costed.filter(t => t.netPnl > 0);
   const losses = costed.filter(t => t.netPnl <= 0);
@@ -203,8 +211,12 @@ function computeMetrics(trades: Trade[], costConfig: StressConfig): Metrics {
 async function main() {
   const costConfig = resolveStressConfig('conservative');
 
-  // Use same date range as derivative-sweep (730 days from Date.now())
-  const fullEnd = Date.now();
+  // Pin end-date to match sweep's original run window (default: 2025-09-19,
+  // the sweep report's stated end date). Pass --end-date=YYYY-MM-DD to override.
+  const args = process.argv.slice(2);
+  const endArg = args.find(a => a.startsWith('--end-date='));
+  const endDate = endArg ? endArg.split('=')[1] : '2025-09-19';
+  const fullEnd = new Date(endDate).getTime() + 86400000 - 1; // end of that day UTC
   const fullStart = fullEnd - 730 * 86400000;
   // Train/Test split: 65%/35%
   const splitDate = fullStart + Math.round((fullEnd - fullStart) * 0.65);
