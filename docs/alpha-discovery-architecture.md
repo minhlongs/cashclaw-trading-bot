@@ -266,7 +266,7 @@ The pipeline step `fetch_derivatives` runs between `fetch_data` and `compute_ind
 - `generateDerivativeSignals` requires a non-empty `symbol`; it throws rather than emit `symbol: ''` (which would misattribute signals downstream).
 - A non-neutral signal requires a **1.5x confidence-weighted vote margin** between the long and short camps — plain direction agreement is not enough.
 
-**Known limitation:** from this environment all four `/fapi/v1/*` endpoints return HTTP 403; only spot endpoints (`/api/v3/klines`, `/api/v3/time`) return 200. The derivative fetchers are untested against live data and degrade to empty features on any failure. The layer is exercised deterministically via the `derivatives?: DerivativeData` injection point on `PipelineConfig`.
+**Known limitation:** from this environment all four `/fapi/v1/*` endpoints return HTTP 403 with an empty body; only spot endpoints (`/api/v3/klines`, `/api/v3/time`) return 200. Confirmed by repeated direct `curl` checks (2026-08-18) — this is an environment-level egress block, not a transient failure or a code bug. The derivative fetchers are therefore untested against live data and degrade to empty features on any failure. The layer is exercised deterministically via the `derivatives?: DerivativeData` injection point on `PipelineConfig`. `scripts/alpha-real-data-backtest.ts` exercises this path against live data and prints the fetch result for each source.
 
 **Cache safety:** `cache.ts` reuses the path-safety pattern from `ohlcv-cache.ts` — a `realpathSync` guard rejects any key that resolves outside `.cache/derivatives/`, and caching is disabled under test (`NODE_ENV === 'test'` or `VITEST === '1'`) so test runs never write to the cache.
 
