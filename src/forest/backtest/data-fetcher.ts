@@ -6,19 +6,22 @@ import { loadCandles, saveCandles, getCacheKey } from './ohlcv-cache';
 
 const KLINE_LIMIT = 1000;
 
-function binanceUrl(symbol: string, interval: string, startMs: number, endMs: number): string {
+function binanceUrl(symbol: string, interval: string, startMs: number | undefined, endMs: number): string {
   const s = encodeURIComponent(symbol.replace('/', ''));
-  return `https://api.binance.com/api/v3/klines?symbol=${s}&interval=${interval}&startTime=${startMs}&endTime=${endMs}&limit=${KLINE_LIMIT}`;
+  const start = startMs !== undefined ? `&startTime=${startMs}` : '';
+  return `https://api.binance.com/api/v3/klines?symbol=${s}&interval=${interval}${start}&endTime=${endMs}&limit=${KLINE_LIMIT}`;
 }
 
-function bybitUrl(symbol: string, interval: string, startMs: number, endMs: number): string {
+function bybitUrl(symbol: string, interval: string, startMs: number | undefined, endMs: number): string {
   const s = encodeURIComponent(symbol.replace('/', ''));
-  return `https://api.bybit.com/v5/market/kline?category=spot&symbol=${s}&interval=${interval}&start=${startMs}&end=${endMs}&limit=${KLINE_LIMIT}`;
+  const start = startMs !== undefined ? `&start=${startMs}` : '';
+  return `https://api.bybit.com/v5/market/kline?category=spot&symbol=${s}&interval=${interval}${start}&end=${endMs}&limit=${KLINE_LIMIT}`;
 }
 
-function okxUrl(symbol: string, interval: string, startMs: number, endMs: number): string {
+function okxUrl(symbol: string, interval: string, startMs: number | undefined, endMs: number): string {
   const s = encodeURIComponent(symbol.replace('/', '-'));
-  return `https://www.okx.com/api/v5/market/history-candles?instId=${s}&bar=${interval}&after=${endMs}&before=${startMs}&limit=${KLINE_LIMIT}`;
+  const after = startMs !== undefined ? `&after=${startMs}` : '';
+  return `https://www.okx.com/api/v5/market/history-candles?instId=${s}&bar=${interval}${after}&before=${endMs}&limit=${KLINE_LIMIT}`;
 }
 
 function parseBinance(raw: unknown): Candle[] {
@@ -87,11 +90,15 @@ export async function fetchOHLCV(
     }
   }
 
+  const seen = new Set<number>();
   const all: Candle[] = [];
   let cursorEnd = endMs;
 
   while (cursorEnd > startMs) {
-    const { url, parse } = buildRequest(exchange, symbol, interval, startMs, cursorEnd);
+    // Binance endTime-only returns up to 1000 candles up to that point.  This
+    // lets us page backwards through time reliably.  We filter to [startMs,
+    // endMs] after the loop.
+    const { url, parse } = buildRequestCapped(exchange, symbol, interval, cursorEnd);
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -104,19 +111,13 @@ export async function fetchOHLCV(
 
     if (batch.length === 0) break;
 
-    // Remove duplicates across pagination windows
-    if (all.length > 0) {
-      const firstTs = batch[0].timestamp;
-      const lastExisting = all[all.length - 1].timestamp;
-      if (firstTs <= lastExisting) {
-        const dupIdx = batch.findIndex((c) => c.timestamp > lastExisting);
-        if (dupIdx === -1) break;
-        all.push(...batch.slice(dupIdx));
-      } else {
-        all.push(...batch);
+    // Binance returns in descending order when endTime-only is used; normalise
+    // to ascending and dedupe by timestamp.
+    for (const c of batch) {
+      if (!seen.has(c.timestamp)) {
+        seen.add(c.timestamp);
+        all.push(c);
       }
-    } else {
-      all.push(...batch);
     }
 
     cursorEnd = batch[0].timestamp - 1;
@@ -126,15 +127,10 @@ export async function fetchOHLCV(
     await new Promise((r) => setTimeout(r, 120));
   }
 
-  // Filter to requested range, dedupe by timestamp, sort asc
-  const seen = new Set<number>();
+  // Sort ascending, filter to requested range
   const result = all
-    .filter((c) => c.timestamp >= startMs && c.timestamp <= endMs && !seen.has(c.timestamp))
-    .map((c) => {
-      seen.add(c.timestamp);
-      return c;
-    })
-    .sort((a, b) => a.timestamp - b.timestamp);
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .filter((c) => c.timestamp >= startMs && c.timestamp <= endMs);
 
   // 2. Persist to cache (non-fatal if write fails)
   if (result.length > 0) {
@@ -142,6 +138,39 @@ export async function fetchOHLCV(
   }
 
   return result;
+}
+
+function buildRequestCapped(
+  exchange: string,
+  symbol: string,
+  interval: string,
+  endMs: number,
+): { url: string; parse: (data: unknown) => Candle[] } {
+  switch (exchange) {
+    case 'binance': {
+      const s = encodeURIComponent(symbol.replace('/', ''));
+      return {
+        url: `https://api.binance.com/api/v3/klines?symbol=${s}&interval=${interval}&endTime=${endMs}&limit=${KLINE_LIMIT}`,
+        parse: parseBinance,
+      };
+    }
+    case 'bybit': {
+      const s = encodeURIComponent(symbol.replace('/', ''));
+      return {
+        url: `https://api.bybit.com/v5/market/kline?category=spot&symbol=${s}&interval=${interval}&end=${endMs}&limit=${KLINE_LIMIT}`,
+        parse: parseBybit,
+      };
+    }
+    case 'okx': {
+      const s = encodeURIComponent(symbol.replace('/', '-'));
+      return {
+        url: `https://www.okx.com/api/v5/market/history-candles?instId=${s}&bar=${interval}&after=${endMs}&limit=${KLINE_LIMIT}`,
+        parse: parseOkx,
+      };
+    }
+    default:
+      throw new Error(`Unsupported exchange: ${exchange}`);
+  }
 }
 
 function buildRequest(

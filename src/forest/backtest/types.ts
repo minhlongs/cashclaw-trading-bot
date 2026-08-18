@@ -19,6 +19,8 @@ export interface BacktestTrade {
   fee: number;
   pnlPct: number;
   holdingMinutes: number;
+  exitReason?: string;
+  entryRegime?: string;
 }
 
 export interface BacktestEquityPoint {
