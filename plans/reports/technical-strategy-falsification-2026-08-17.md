@@ -1,12 +1,12 @@
 # Technical Strategy Falsification Report
 
-**Date:** 2026-08-17
+**Date:** 2026-08-17 (updated 2026-08-18)
 **Researcher:** Alpha Lab automated pipeline
-**Scope:** Simple TA strategies on BTC/ETH/SOL (1h and 4h timeframes)
+**Scope:** Simple TA strategies on BTC/ETH/SOL (1h, 4h, 1d) + derivative (funding rate fade)
 
 ## Executive Summary
 
-Across 12+ strategy archetypes, 844 RSI parameter combinations, and 2 timeframes (1h, 4h), NO statistically robust edge was found. Only "significant" results had ≤6 trades (statistically meaningless) or failed to replicate across timeframes.
+Across 12+ strategy archetypes, 844 RSI parameter combinations, 3 timeframes (1h, 4h, 1d), and derivative signals (funding rate fade on 48 configs × 3 assets), NO statistically robust edge was found. The funding-rate fade hypothesis — the most promising lead — failed out-of-sample validation (0/7 configs pass OOS). Every signal that appeared in-sample was either overfit or from insufficient trade counts.
 
 ## Hypotheses Tested
 
@@ -76,9 +76,40 @@ Simple technical analysis (trend-following, mean-reversion, volatility-based, br
 
 This is valid falsification, not failure. System correctly identified that no strategy in this class should trade live capital.
 
+## Daily Timeframe (2026-08-16)
+
+14 of 15 strategy-asset combinations are net negative. Only positive: ETH Simple Momentum (+$535.63, 15 trades, Sharpe 1.22) — too small a sample to trust. BTC Mean Reversion worst at -$39.5k despite 63.6% win rate (avg loss 2× avg win).
+
+**Verdict:** Daily timeframe hostile. TA falsification complete.
+
+## Derivative Signals (2026-08-18)
+
+**Hypothesis:** Extreme funding rates indicate crowded positions → fade the crowd.
+
+**In-sample sweep** (48 configs × 3 assets, 730 days, conservative costs):
+| Asset | Positive | Significant | Best Config | Trades | Expectancy | Sharpe |
+|---|---|---|---|---|---|---|
+| SOLUSDT | 32/48 | 11 | funding≥0.0001, maxHold=24 | 46 | +$1,034/trade | 5.35 |
+| ETHUSDT | 20/48 | 5 | funding≥0.0003, maxHold=12 | 6 | +$494/trade | 20.55 |
+| BTCUSDT | 0/48 | 0 | None | 0-1 | N/A | N/A |
+
+**Out-of-sample validation** (train 65% → test 35%, 7 configs):
+| Config | Train PnL | Test PnL | Test Sharpe | OOS |
+|---|---|---|---|---|
+| SOL: thresh=0.0001, maxHold=24 | -$6,339 | -$3,688 | -1.00 | ❌ |
+| SOL: thresh=0.0001, maxHold=12 | -$7,078 | +$618 | 0.17 | ⚠️ |
+| ETH: thresh=0.0001, maxHold=12 | -$8,292 | +$4,155 | 1.28 | ⚠️ |
+| All others | — | — | — | ❌ |
+
+**PASSED OOS: 0/7.** The funding-rate fade signal does NOT survive out-of-sample validation. In-sample results are overfit. ETH marginal (2/7 with positive PnL but CIs cross zero).
+
+**OI limitation:** Binance API returns only ~60 days of OI history (21 data points). OI-only and combined modes produce 0 trades across all assets.
+
+**Verdict:** Derivative alpha falsified. Funding-rate fade is not a viable alpha source at current thresholds.
+
 ## Next Steps
 
-1. Daily timeframe (last check for TA)
-2. Non-technical signals (funding rate, OI, liquidations, on-chain)
+1. ~~Daily timeframe~~ ✓ Complete
+2. ~~Non-technical signals (funding rate, OI, liquidations, on-chain)~~ ✓ Complete — falsified
 3. ML-based regime detection with walk-forward validation
 4. Cross-asset correlation signals
