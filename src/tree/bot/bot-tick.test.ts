@@ -53,7 +53,7 @@ const mkCtx = (o: Partial<TickContext> = {}): TickContext => ({
   strategyChain: o.strategyChain ?? null, lastTickPrice: o.lastTickPrice ?? null,
   placeOrder: o.placeOrder ?? vi.fn().mockResolvedValue({ id: '1' }),
   pause: o.pause ?? vi.fn(), emitTelemetry: o.emitTelemetry ?? vi.fn(),
-  emitState: o.emitState ?? vi.fn(),
+  emitState: o.emitState ?? vi.fn(), recentCandles: o.recentCandles ?? [],
 });
 
 describe('tick', () => {

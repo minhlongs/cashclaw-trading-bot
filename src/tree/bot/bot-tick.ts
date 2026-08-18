@@ -16,6 +16,8 @@ import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
 import type { StrategyChain } from './strategy-chain';
 import type { TradeEventType } from '../telemetry/types';
+import type { Candle } from '@/forest/backtest/ohlcv';
+import { computeRegimeContext } from '@/tree/regime/bot-context';
 
 export interface TickContext {
   id: string;
@@ -30,6 +32,7 @@ export interface TickContext {
   pause: () => void;
   emitTelemetry: (eventType: TradeEventType, details: Record<string, unknown>) => void;
   emitState: () => void;
+  recentCandles?: Candle[];
 }
 
 export interface TickResult {
@@ -40,6 +43,7 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
   const {
     id, config, deps, callbacks, state,
     strategy, strategyChain, placeOrder, pause, emitTelemetry, emitState,
+    recentCandles = [],
   } = ctx;
 
   let lastTickPrice = ctx.lastTickPrice;
@@ -69,6 +73,9 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
     state.lastTickAt = Date.now();
     state.updatedAt = Date.now();
 
+    // Regime context: read-only, informational — no execution decisions are gated on this
+    const regimeCtx = computeRegimeContext(config.symbol, recentCandles);
+
     const chainOrder = evaluateChain({
       config,
       strategyChain,
@@ -91,7 +98,11 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
       strategy.onTicker(ticker);
     }
 
-    emitTelemetry('tick', { price, pnl: state.totalPnl });
+    emitTelemetry('tick', {
+      price,
+      pnl: state.totalPnl,
+      ...(regimeCtx ? { entryRegime: { label: regimeCtx.label, confidence: regimeCtx.confidence } } : {}),
+    });
     emitState();
   } catch (error) {
     emitTelemetry('error', { error: error instanceof Error ? error.message : 'unknown', context: 'bot.tick' });
