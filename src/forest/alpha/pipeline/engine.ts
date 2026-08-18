@@ -11,14 +11,14 @@ import type {
   PipelineConfig, PipelineStep, PipelineStepResult,
   AlphaResearchReport, IndicatorData, RegimeData,
   SignalData, EventData, WalkforwardData,
-  CostData, EvalData, AttributeData, BaselineData,
+  CostData, EvalData, AttributeData, BaselineData, DerivativeData,
 } from './types';
-import type { DerivativeData } from './types';
 import { extractRegimeFeatures } from '@/tree/regime/features';
 import {
   fetchFundingRate,
   fetchOpenInterestHistory,
   fetchLiquidations,
+  fetchPremiumIndex,
   computeDerivativeFeatures,
   generateDerivativeSignals,
 } from '@/tree/alpha/signals';
@@ -137,15 +137,23 @@ export class AlphaResearchPipeline {
         // optional alpha source. Failures fall back to empty features.
         const empty: DerivativeData = { features: [], signals: [] };
         try {
-          const [funding, oi, liquidations] = await Promise.all([
-            fetchFundingRate(symbol, t0, t1),
-            fetchOpenInterestHistory(symbol, '1h', t0, t1),
-            fetchLiquidations(symbol, t0),
+          // Fetch each source independently so a single 403/timeout does not
+          // wipe the others; failures are logged and degrade to empty arrays.
+          const fetchWithLog = async <T>(label: string, p: Promise<T>): Promise<T> => {
+            try { return await p; }
+            catch (err) { console.warn(`[pipeline] derivative source '${label}' failed`, err instanceof Error ? err.message : err); return [] as unknown as T; }
+          };
+          const [funding, oi, liquidations, premium] = await Promise.all([
+            fetchWithLog('funding', fetchFundingRate(symbol, t0, t1)),
+            fetchWithLog('oi', fetchOpenInterestHistory(symbol, '1h', t0, t1)),
+            fetchWithLog('liquidations', fetchLiquidations(symbol, t0)),
+            fetchWithLog('premiumIndex', fetchPremiumIndex(symbol, t0, t1)),
           ]);
-          const features = computeDerivativeFeatures(candles, funding, oi, liquidations);
-          const signals = generateDerivativeSignals(candles, features);
+          const features = computeDerivativeFeatures(candles, funding, oi, liquidations, premium);
+          const signals = generateDerivativeSignals(candles, features, symbol);
           return { features, signals } as DerivativeData;
-        } catch {
+        } catch (err) {
+          console.warn('[pipeline] fetch_derivatives failed entirely', err instanceof Error ? err.message : err);
           return empty;
         }
       }

@@ -2,13 +2,12 @@
 // Orchestrator types for the end-to-end alpha research pipeline.
 
 import type { Candle } from '@/forest/backtest/ohlcv';
-import type { RegimeConfig, RegimeLabel } from '@/tree/regime/types';
+import type { RegimeConfig, RegimeLabel, RegimeResult } from '@/tree/regime/types';
 import type { WindowConfig } from '@/forest/backtest/walkforward';
 import type { StressMode } from '@/forest/backtest/cost-model';
 import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
 import type { AlphaSignal } from '@/tree/alpha/types';
-import type { RegimeResult } from '@/tree/regime/types';
-import type { DerivativeSignal } from '@/tree/alpha/signals';
+import type { DerivativeFeatures, DerivativeSignal } from '@/tree/alpha/signals';
 import type { AttributionResult } from '@/forest/alpha/attribution/types';
 import type { BaselineConfig } from '@/forest/alpha/baselines/types';
 
@@ -82,8 +81,8 @@ export interface IndicatorData {
 
 /** Data produced by the fetch_derivatives step (non-TA market-structure signals). */
 export interface DerivativeData {
-  features: import('@/tree/alpha/signals').DerivativeFeatures[];
-  signals: import('@/tree/alpha/signals').DerivativeSignal[];
+  features: DerivativeFeatures[];
+  signals: DerivativeSignal[];
 }
 
 /** Data produced by the detect_regimes step. */

@@ -16,8 +16,8 @@ export interface FundingRatePoint {
 export interface OpenInterestPoint {
   timestamp: number;
   symbol: string;
-  openInterest: number; // contract notional
-  notionalUsd: number;
+  openInterest: number; // contract notional (raw, from Binance)
+  notionalUsd: number | null; // null when the source endpoint has no price to convert with
 }
 
 export interface LiquidationPoint {
@@ -100,7 +100,7 @@ export async function fetchOpenInterestHistory(
     timestamp: Number(r.timestamp),
     symbol,
     openInterest: Number(r.openInterest),
-    notionalUsd: Number(r.openInterest) * Number(r.price ?? 0),
+    notionalUsd: typeof r.price === 'number' ? Number(r.openInterest) * Number(r.price) : null,
   })).sort((a, b) => a.timestamp - a.timestamp);
 }
 
@@ -129,18 +129,27 @@ export async function fetchLiquidations(
 }
 
 /**
- * Fetch premium index (perpetual mark vs spot).
+ * Fetch premium index history (perpetual mark vs spot).
  * Endpoint: /fapi/v1/premiumIndex — public, no auth.
+ * Returns an array so basis can be z-scored over a lookback window.
  */
-export async function fetchPremiumIndex(symbol: string): Promise<{ timestamp: number; basis: number } | null> {
+export async function fetchPremiumIndex(
+  symbol: string,
+  startTime?: number,
+  endTime?: number,
+): Promise<{ timestamp: number; basis: number }[]> {
   const s = encodeURIComponent(symbol.replace('/', ''));
-  const data = await fetchJson(`${BASE}/fapi/v1/premiumIndex?symbol=${s}`);
-  if (!data || typeof data !== 'object') return null;
-  const d = data as Record<string, unknown>;
-  return {
-    timestamp: Number(d.time),
-    basis: (Number(d.markPrice) - Number(d.indexPrice)) / Number(d.indexPrice),
-  };
+  const params = new URLSearchParams({ symbol: s });
+  if (startTime) params.set('startTime', String(startTime));
+  if (endTime) params.set('endTime', String(endTime));
+  const data = await fetchJson(`${BASE}/fapi/v1/premiumIndex?${params}`);
+  if (!Array.isArray(data)) return [];
+  return (data as Record<string, unknown>[])
+    .map(d => ({
+      timestamp: Number(d.time),
+      basis: (Number(d.markPrice) - Number(d.indexPrice)) / Number(d.indexPrice),
+    }))
+    .sort((a, b) => a.timestamp - b.timestamp);
 }
 
 // ── Feature computation ──────────────────────────────────────────────────────
@@ -163,69 +172,105 @@ function rollingStd(values: number[], window: number): number | null {
  * Compute derivative features aligned to candle timestamps.
  * Causal: only uses data with timestamp <= candle timestamp.
  */
+// Per-feature computation. Each helper takes the already-causal slice of its
+// source (timestamp <= t) plus the lookback window, and returns the fields for
+// one DerivativeFeatures entry. Splitting out keeps the main loop flat and
+// keeps each branch's complexity under the lint ceiling.
+function fundingFields(
+  funding: FundingRatePoint[],
+  t: number,
+): { fundingRate: number | null; fundingRateAvg8h: number | null; fundingRateSlope: number | null } {
+  const hist = funding.filter(f => f.timestamp <= t).map(f => f.fundingRate);
+  return {
+    fundingRate: hist.length > 0 ? hist[hist.length - 1] : null,
+    fundingRateAvg8h: rollingMean(hist, 3), // ~3 x 8h = 24h
+    fundingRateSlope: hist.length >= 3 ? hist[hist.length - 1] - hist[hist.length - 3] : null,
+  };
+}
+
+function oiFields(
+  oi: OpenInterestPoint[],
+  t: number,
+  lookbackBars: number,
+): { openInterest: number | null; oiChange: number | null; oiZScore: number | null } {
+  // notionalUsd may be null when the source endpoint has no price to convert
+  // with; drop nulls so they don't propagate NaN into oiChange / oiZScore.
+  const hist = oi.filter(o => o.timestamp <= t && o.notionalUsd !== null).map(o => o.notionalUsd as number);
+  return {
+    openInterest: hist.length > 0 ? hist[hist.length - 1] : null,
+    oiChange: hist.length >= 2
+      ? (hist[hist.length - 1] - hist[hist.length - 2]) / hist[hist.length - 2]
+      : null,
+    oiZScore: hist.length >= lookbackBars
+      ? (hist[hist.length - 1] - (rollingMean(hist, lookbackBars) ?? 0)) /
+        (rollingStd(hist, lookbackBars) ?? 1)
+      : null,
+  };
+}
+
+function liquidationFields(
+  liquidations: LiquidationPoint[],
+  t: number,
+  lookbackBars: number,
+  candleIntervalMs: number,
+): { liquidationImbalance: number; liquidationZScore: number | null } {
+  // Window length is derived from the actual candle spacing, not a hardcoded
+  // 4h assumption, so it stays correct for 1h / 4h / 1d bars alike.
+  const windowStart = t - lookbackBars * candleIntervalMs;
+  const liqWindow = liquidations.filter(l => l.timestamp >= windowStart && l.timestamp <= t);
+  const longNotional = liqWindow.filter(l => l.side === 'long').reduce((s, l) => s + l.notionalUsd, 0);
+  const shortNotional = liqWindow.filter(l => l.side === 'short').reduce((s, l) => s + l.notionalUsd, 0);
+  const liquidationImbalance = longNotional - shortNotional;
+  const allLiquidations = liqWindow.map(l => l.notionalUsd);
+  const liqMean = rollingMean(allLiquidations, Math.min(allLiquidations.length, lookbackBars)) ?? 0;
+  const liqStd = rollingStd(allLiquidations, Math.min(allLiquidations.length, lookbackBars)) ?? 1;
+  // Standard z-score: deviation from the rolling mean, not from zero.
+  return {
+    liquidationImbalance,
+    liquidationZScore: liqStd > 0 ? (liquidationImbalance - liqMean) / liqStd : null,
+  };
+}
+
+function basisFields(
+  premiumIndex: { timestamp: number; basis: number }[],
+  t: number,
+  lookbackBars: number,
+): { basis: number | null; basisZScore: number | null } {
+  // Basis = perpetual mark vs spot (premium index), not the funding rate.
+  // The funding rate is a cost/decay signal; basis is the futures premium.
+  const basisPoint = premiumIndex.find(p => p.timestamp <= t);
+  const basis = basisPoint ? basisPoint.basis : null;
+  const hist = premiumIndex.filter(p => p.timestamp <= t).map(p => p.basis);
+  return {
+    basis,
+    basisZScore: basis !== null && hist.length >= lookbackBars
+      ? (basis - (rollingMean(hist, lookbackBars) ?? 0)) /
+        (rollingStd(hist, lookbackBars) ?? 1)
+      : null,
+  };
+}
+
 export function computeDerivativeFeatures(
   candles: Candle[],
   funding: FundingRatePoint[],
   oi: OpenInterestPoint[],
   liquidations: LiquidationPoint[],
+  premiumIndex: { timestamp: number; basis: number }[] = [],
   lookbackBars = 20,
 ): DerivativeFeatures[] {
   const result: DerivativeFeatures[] = [];
+  const candleIntervalMs = candles.length >= 2
+    ? candles[1].timestamp - candles[0].timestamp
+    : 4 * 3_600_000;
 
   for (const candle of candles) {
     const t = candle.timestamp;
-
-    // Funding rate at or before this candle
-    const histFunding = funding
-      .filter(f => f.timestamp <= t)
-      .map(f => f.fundingRate);
-    const fundingRate = histFunding.length > 0 ? histFunding[histFunding.length - 1] : null;
-    const fundingRateAvg8h = rollingMean(histFunding, 3); // ~3 x 8h = 24h
-    const fundingRateSlope = histFunding.length >= 3
-      ? histFunding[histFunding.length - 1] - histFunding[histFunding.length - 3]
-      : null;
-
-    // Open interest at or before this candle
-    const histOI = oi.filter(o => o.timestamp <= t).map(o => o.notionalUsd);
-    const oiChange = histOI.length >= 2
-      ? (histOI[histOI.length - 1] - histOI[histOI.length - 2]) / histOI[histOI.length - 2]
-      : null;
-    const oiZScore = histOI.length >= lookbackBars
-      ? (histOI[histOI.length - 1] - (rollingMean(histOI, lookbackBars) ?? 0)) /
-        (rollingStd(histOI, lookbackBars) ?? 1)
-      : null;
-
-    // Liquidations in lookback window
-    const windowStart = t - lookbackBars * 4 * 3600_000; // ~4h per bar
-    const liqWindow = liquidations.filter(l => l.timestamp >= windowStart && l.timestamp <= t);
-    const longNotional = liqWindow.filter(l => l.side === 'long').reduce((s, l) => s + l.notionalUsd, 0);
-    const shortNotional = liqWindow.filter(l => l.side === 'short').reduce((s, l) => s + l.notionalUsd, 0);
-    const liquidationImbalance = longNotional - shortNotional;
-    const allLiquidations = liqWindow.map(l => l.notionalUsd);
-    const liqMean = rollingMean(allLiquidations, Math.min(allLiquidations.length, lookbackBars)) ?? 0;
-    const liqStd = rollingStd(allLiquidations, Math.min(allLiquidations.length, lookbackBars)) ?? 1;
-    const liquidationZScore = liqStd > 0 ? liquidationImbalance / liqStd : null;
-
-    // Basis
-    const basisPoint = funding.find(f => f.timestamp <= t);
-    const basis = basisPoint ? basisPoint.fundingRate : null;
-    const basisZScore = basis !== null && histFunding.length >= lookbackBars
-      ? (basis - (rollingMean(histFunding, lookbackBars) ?? 0)) /
-        (rollingStd(histFunding, lookbackBars) ?? 1)
-      : null;
-
     result.push({
       timestamp: t,
-      fundingRate,
-      fundingRateAvg8h,
-      fundingRateSlope,
-      openInterest: histOI.length > 0 ? histOI[histOI.length - 1] : null,
-      oiChange,
-      oiZScore,
-      liquidationImbalance,
-      liquidationZScore,
-      basis,
-      basisZScore,
+      ...fundingFields(funding, t),
+      ...oiFields(oi, t, lookbackBars),
+      ...liquidationFields(liquidations, t, lookbackBars, candleIntervalMs),
+      ...basisFields(premiumIndex, t, lookbackBars),
     });
   }
 

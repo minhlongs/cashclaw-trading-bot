@@ -148,14 +148,16 @@ describe('AlphaResearchPipeline', () => {
     const candles = makeCandles(120);
     const features = candles.map(c => ({
       timestamp: c.timestamp,
+      symbol: 'BTCUSDT',
       fundingRate: -0.001, fundingRateAvg8h: -0.0005, fundingRateSlope: -0.0003,
       openInterest: 1e6, oiChange: 0.15, oiZScore: 2.0,
       liquidationImbalance: -50000, liquidationZScore: -3.0,
       basis: 0.002, basisZScore: 2.5,
     }));
     const { generateDerivativeSignals } = await import('@/tree/alpha/signals');
-    const signals = generateDerivativeSignals(candles, features);
+    const signals = generateDerivativeSignals(candles, features, 'BTCUSDT');
     expect(signals.length).toBeGreaterThan(0);
+    expect(signals[0].symbol).toBe('BTCUSDT');
 
     const pipeline = new AlphaResearchPipeline(makeConfig({
       candles,
@@ -164,6 +166,14 @@ describe('AlphaResearchPipeline', () => {
     await pipeline.run();
     const sigResult = pipeline.getResults().find(r => r.step === 'generate_signals');
     expect(sigResult?.status).toBe('success');
+    // Prove the merged signals actually carry the injected derivative signal
+    // (not just that the step returned success).
+    const merged = (sigResult?.data as { signals: { direction: string; metadata: { features: unknown } }[] }).signals;
+    const derivativeMerged = merged.filter(s => s.metadata &&
+      (s.metadata as { features: { liquidationImbalance: number } }).features &&
+      (s.metadata as { features: { liquidationImbalance: number } }).features.liquidationImbalance === -50000);
+    expect(derivativeMerged.length).toBe(signals.length);
+    expect(derivativeMerged.every(s => s.direction === 'buy')).toBe(true);
   });
 
   it('top features are extracted from attributions', async () => {

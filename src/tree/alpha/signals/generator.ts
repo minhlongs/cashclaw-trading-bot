@@ -127,13 +127,18 @@ function basisSignal(f: DerivativeFeatures): { direction: 'long' | 'short' | 'ne
 
 /**
  * Combine all derivative signals into a single directional signal.
- * Signals must agree on direction to produce a non-neutral signal.
+ * A non-neutral signal requires a 1.5x confidence-weighted vote margin
+ * between long and short camps (plain direction agreement is not enough).
  */
 export function generateDerivativeSignals(
   candles: Candle[],
   features: DerivativeFeatures[],
+  symbol = '',
 ): DerivativeSignal[] {
   const signals: DerivativeSignal[] = [];
+  // A missing symbol would otherwise default to '' and silently misattribute
+  // attribution/grouping downstream — require the caller to pass it.
+  if (!symbol) throw new Error('generateDerivativeSignals requires a symbol');
 
   for (let i = 0; i < candles.length; i++) {
     const f = features[i];
@@ -174,7 +179,7 @@ export function generateDerivativeSignals(
     if (direction !== 'neutral') {
       signals.push({
         timestamp: candles[i].timestamp,
-        symbol: '',
+        symbol,
         direction,
         confidence,
         features: f,
