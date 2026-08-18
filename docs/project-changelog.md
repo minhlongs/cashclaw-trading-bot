@@ -2,6 +2,15 @@
 
 ## v1 Paper-Trading Platform
 
+### Production Deploy (Go-Live) — 2026-08-19
+- **Deployed to Cloudflare Workers:** `https://cashclaw-trading-bot.agencyos-openclaw.workers.dev`. Paper-only — no real orders, no live capital. Preceded by the falsification campaign NO-GO, so the platform ships as a research/paper system.
+- **Deploy runbook fixed:** referenced nonexistent `npm run deploy:worker` → corrected to `npm run deploy` (the real script that injects `GIT_COMMIT_SHA` + `BUILD_TIMESTAMP` and runs OpenNext build + deploy).
+- **KV binding checklist removed:** runbook asked for a KV binding that no longer exists in `wrangler.jsonc`. `CACHE` is declared optional in `src/lib/db/types.ts` but never read at runtime. Checklist now documents actual required secrets/vars.
+- **`.env.example` added** (was missing entirely). Documents `ADMIN_TOKEN`, `ENCRYPTION_KEY`, `ALLOWED_ORIGINS`, `VERSION`, `GIT_COMMIT_SHA`, `BUILD_TIMESTAMP`, `NODE_ENV`. Un-ignored in `.gitignore` (the `.env.*` glob was catching it).
+- **Pre-deploy gates:** type-check clean, lint 0 warnings, build clean, 1880/1880 tests pass.
+- **Post-deploy smoke:** `/api/health` → `status: "ok"` with `db`/`circuitBreaker`/`rateLimiter` all `"ok"`; `/api/version` reports `shortSha: 00c81b3f`; `/api/killswitch-status` and `/api/metrics` return 200.
+- **Open item:** `ENCRYPTION_KEY` secret unset on Cloudflare. Not a data-loss risk today (`api_credentials` is empty; `getEncryptionKey()` falls back to plaintext), but must be set before any customer stores credentials.
+
 ### Alpha Discovery Campaign — Complete (2026-08-18)
 - **Falsification campaign concluded:** 24 hypothesis classes tested across TA, funding rates, ML regime detection, cross-asset pairs, sentiment, composites, and market-structure signals. **Zero persistent out-of-sample positive expectancy.**
 - **Walk-forward validation** (`funding-price-extreme-walkforward.ts`): 6 rolling windows (548d train / 182d test), 162 OOS tests, 1,032 total OOS trades. Last candidate (funding × price extreme interaction) scored 10/162 OOS passes (6%), aggregate PnL -$455,090 — regime-locked to mid-2022 bear market, pure overfitting.

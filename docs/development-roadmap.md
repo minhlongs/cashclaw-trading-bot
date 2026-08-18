@@ -42,6 +42,33 @@
 | **P0.9 — Real-data backtest script** | `scripts/alpha-real-data-backtest.ts` — live Binance OHLCV + all four derivative sources through the full pipeline; verified end-to-end, graceful degradation on 403 | commit `ac4b5ff` |
 | **P0.10 — Archive/tsc alignment** | `archive/` added to `tsconfig.json` exclude so archived files don't block type-check; real-data backtest script aligned with current `RegimeConfig`/`WindowConfig`/`Logger` signatures | commit `ec53022` |
 
+## Go-Live — Production Deploy (2026-08-19)
+
+CashClaw paper-trading platform deployed to Cloudflare Workers production at
+`https://cashclaw-trading-bot.agencyos-openclaw.workers.dev`. Paper-only — no
+real orders, no live capital. Deploy preceded by the falsification campaign
+NO-GO (all 24 hypothesis classes falsified, zero persistent OOS positive
+expectancy), so the system ships as a research/paper platform, not a live
+trader.
+
+**Deploy blockers fixed first:**
+- `docs/deploy-runbook.md` referenced nonexistent `npm run deploy:worker` —
+  corrected to `npm run deploy` (the real script that injects `GIT_COMMIT_SHA`
+  + `BUILD_TIMESTAMP` and runs OpenNext build + deploy).
+- Runbook listed a KV binding that no longer exists in `wrangler.jsonc` —
+  `CACHE` is declared optional in `src/lib/db/types.ts` but never read at
+  runtime. Checklist now documents the actual required secrets/vars.
+- Added `.env.example` (was missing entirely — developers had to read source to
+  learn required secrets). Un-ignored in `.gitignore` (the `.env.*` glob was
+  catching it).
+
+**Pre-deploy gates:** type-check clean, lint 0 warnings, build clean, 1880/1880
+tests pass.
+
+**Post-deploy smoke:** `/api/health` returns `status: "ok"` with
+`db`/`circuitBreaker`/`rateLimiter` all `"ok"`; `/api/version` reports
+`shortSha: 00c81b3f`; `/api/killswitch-status` and `/api/metrics` return 200.
+
 ## Current State
 
 - **Tests:** 1880 across 130 files, full suite green
