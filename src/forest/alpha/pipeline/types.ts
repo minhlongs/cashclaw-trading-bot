@@ -8,6 +8,7 @@ import type { StressMode } from '@/forest/backtest/cost-model';
 import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
 import type { AlphaSignal } from '@/tree/alpha/types';
 import type { RegimeResult } from '@/tree/regime/types';
+import type { DerivativeSignal } from '@/tree/alpha/signals';
 import type { AttributionResult } from '@/forest/alpha/attribution/types';
 import type { BaselineConfig } from '@/forest/alpha/baselines/types';
 
@@ -21,6 +22,13 @@ export interface PipelineConfig {
   timeframe: string;
   /** Pre-fetched OHLCV candle data. */
   candles: Candle[];
+  /**
+   * Optional pre-fetched derivative data.
+   * When set, `fetch_derivatives` uses it directly instead of calling Binance.
+   * Lets tests exercise the derivative alpha path deterministically offline.
+   * When unset, the step fetches live data and degrades to empty on network failure.
+   */
+  derivatives?: DerivativeData;
   /** Indicator computation parameters (keyed by indicator name). */
   indicatorSet: Record<string, number>;
   /** Regime classifier configuration. */
@@ -41,6 +49,7 @@ export interface PipelineConfig {
 
 export type PipelineStep =
   | 'fetch_data'
+  | 'fetch_derivatives'
   | 'compute_indicators'
   | 'detect_regimes'
   | 'generate_signals'
@@ -69,6 +78,12 @@ export interface PipelineStepResult {
 export interface IndicatorData {
   features: Record<string, number>[];
   names: string[];
+}
+
+/** Data produced by the fetch_derivatives step (non-TA market-structure signals). */
+export interface DerivativeData {
+  features: import('@/tree/alpha/signals').DerivativeFeatures[];
+  signals: import('@/tree/alpha/signals').DerivativeSignal[];
 }
 
 /** Data produced by the detect_regimes step. */

@@ -13,7 +13,15 @@ import type {
   SignalData, EventData, WalkforwardData,
   CostData, EvalData, AttributeData, BaselineData,
 } from './types';
+import type { DerivativeData } from './types';
 import { extractRegimeFeatures } from '@/tree/regime/features';
+import {
+  fetchFundingRate,
+  fetchOpenInterestHistory,
+  fetchLiquidations,
+  computeDerivativeFeatures,
+  generateDerivativeSignals,
+} from '@/tree/alpha/signals';
 import { RuleBasedRegimeClassifier } from '@/tree/regime/classifier';
 import { attributePerformance } from '@/forest/alpha/attribution/analyzer';
 import { generateReport, type EvaluationReport } from '@/forest/alpha/evaluation/report';
@@ -88,7 +96,7 @@ export class AlphaResearchPipeline {
 
     // evaluate must come before compute_costs so cost step can read eval results
     const steps: PipelineStep[] = [
-      'fetch_data', 'compute_indicators', 'detect_regimes',
+      'fetch_data', 'fetch_derivatives', 'compute_indicators', 'detect_regimes',
       'generate_signals', 'label_events', 'run_walkforward',
       'evaluate', 'compute_costs', 'attribute', 'compare_baselines', 'generate_report',
     ];
@@ -97,7 +105,7 @@ export class AlphaResearchPipeline {
       if (this.stopped) { this.results.push({ step, status: 'skipped', data: null, duration: 0 }); continue; }
       const t0 = performance.now();
       try {
-        const data = this.doStep(step);
+        const data = await this.doStep(step);
         this.map.set(step, data);
         this.results.push({ step, status: 'success', data, duration: elapsed(t0) });
         if (step === 'run_walkforward' && !(data as { passed: boolean }).passed) this.stopped = true;
@@ -112,12 +120,35 @@ export class AlphaResearchPipeline {
 
   getResults(): PipelineStepResult[] { return [...this.results]; }
 
-  private doStep(step: PipelineStep): unknown {
+  private async doStep(step: PipelineStep): Promise<unknown> {
     const { candles, indicatorSet, regimeConfig, walkforwardConfig, costMode, minSharpe, minTrades, baselinesEnabled } = this.cfg;
     switch (step) {
       case 'fetch_data':
         if (candles.length === 0) throw new Error('No candles');
         return candles;
+
+      case 'fetch_derivatives': {
+        // Allow tests to inject pre-fetched derivative data offline.
+        if (this.cfg.derivatives) return this.cfg.derivatives;
+        const symbol = this.cfg.symbol;
+        const t0 = candles[0]?.timestamp ?? 0;
+        const t1 = candles[candles.length - 1]?.timestamp ?? Date.now();
+        // Network failures must not abort the pipeline — derivatives are an
+        // optional alpha source. Failures fall back to empty features.
+        const empty: DerivativeData = { features: [], signals: [] };
+        try {
+          const [funding, oi, liquidations] = await Promise.all([
+            fetchFundingRate(symbol, t0, t1),
+            fetchOpenInterestHistory(symbol, '1h', t0, t1),
+            fetchLiquidations(symbol, t0),
+          ]);
+          const features = computeDerivativeFeatures(candles, funding, oi, liquidations);
+          const signals = generateDerivativeSignals(candles, features);
+          return { features, signals } as DerivativeData;
+        } catch {
+          return empty;
+        }
+      }
 
       case 'compute_indicators': {
         const names = Object.keys(indicatorSet);
@@ -156,6 +187,7 @@ export class AlphaResearchPipeline {
       case 'generate_signals': {
         const rd = this.map.get('detect_regimes') as { regimes: RegimeResult[] } | undefined;
         const id = this.map.get('compute_indicators') as IndicatorData | undefined;
+        const dd = this.map.get('fetch_derivatives') as DerivativeData | undefined;
         const signals: AlphaSignal[] = [];
         const off = regimeConfig.lookback, lb = indicatorSet['lookback'] ?? 20;
         for (let i = 0; rd && id && i < rd.regimes.length; i++) {
@@ -168,6 +200,19 @@ export class AlphaResearchPipeline {
           else if (rsi > 70 && regime === RegimeLabel.TREND_DOWN) { name = 'rsi_regime_sell'; dir = 'sell'; conf = (rsi - 70) / 30; }
           else { name = 'hold'; dir = 'hold'; }
           signals.push({ name, direction: dir, confidence: conf, features: fv, source: 'indicator', timestamp: ts, metadata: {} });
+        }
+        // Merge non-TA derivative signals (funding rate, OI, liquidations, basis)
+        for (const ds of dd?.signals ?? []) {
+          const dir: AlphaSignal['direction'] = ds.direction === 'short' ? 'sell' : ds.direction === 'long' ? 'buy' : 'hold';
+          const fv: FeatureVector = {
+            features: [{ id: 'derivative', value: ds.confidence, causal: true }],
+            computedAt: ds.timestamp, symbol: ds.symbol, lookback: 20,
+          };
+          signals.push({
+            name: ds.reasons[0] ?? 'derivative', direction: dir, confidence: ds.confidence,
+            features: fv, source: 'indicator', timestamp: ds.timestamp,
+            metadata: { reasons: ds.reasons, features: ds.features },
+          });
         }
         return { signals } as SignalData;
       }

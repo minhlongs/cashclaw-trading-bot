@@ -241,6 +241,24 @@ The `filterByRegime` function maps regime labels to preferred signal directions:
 
 Signals that do not match the regime's preferred directions are filtered out. Remaining signals are ranked by confidence and sliced to `topN`.
 
+### 5.5 Non-TA Signal Sources (Market Structure)
+
+Technical indicators alone were falsified on 2026 crypto data (see `plans/reports/technical-strategy-falsification-2026-08-17.md`). The system therefore ingests **market-structure alpha** from Binance public endpoints that require no authentication:
+
+| Source | Endpoint | Signal |
+|---|---|---|
+| Funding rate | `/fapi/v1/fundingRate` | Extreme positive funding → crowded longs → fade short |
+| Open interest | `/fapi/v1/openInterest/history` | OI surge → new money entering trend |
+| Liquidations | `/fapi/v1/liquidationOrders` | Long cascade → forced selling → short bias |
+| Basis / premium | `/fapi/v1/premiumIndex` | Futures premium → bullish sentiment |
+
+Implemented in `src/tree/alpha/signals/`:
+- **`funding.ts`** — fetchers + causal `computeDerivativeFeatures` (only data with `timestamp <= candle.timestamp` is used)
+- **`cache.ts`** — filesystem cache (`.cache/derivatives/`) reusing the path-safety pattern from `ohlcv-cache.ts`
+- **`generator.ts`** — four generators (`fundingSignal`, `oiSignal`, `liquidationSignal`, `basisSignal`) aggregated by `generateDerivativeSignals`, which requires a **1.5x confidence-weighted vote margin** before emitting a non-neutral signal
+
+The pipeline step `fetch_derivatives` runs between `fetch_data` and `compute_indicators`. Network failures are **non-fatal** — the step falls back to empty features so a Binance outage never aborts a research run.
+
 ---
 
 ## 6. Walk-Forward Validation

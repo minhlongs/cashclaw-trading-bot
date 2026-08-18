@@ -62,7 +62,7 @@ describe('AlphaResearchPipeline', () => {
 
     expect(report.symbol).toBe('BTCUSDT');
     expect(report.timeframe).toBe('1h');
-    expect(report.totalSteps).toBe(11);
+    expect(report.totalSteps).toBe(12);
     expect(report.passedSteps).toBeGreaterThan(0);
     expect(typeof report.finalSharpe).toBe('number');
     expect(report.recommendation).toMatch(/^(deploy|refine|discard)$/);
@@ -73,7 +73,7 @@ describe('AlphaResearchPipeline', () => {
     await pipeline.run();
     const results = pipeline.getResults();
 
-    expect(results).toHaveLength(11);
+    expect(results).toHaveLength(12);
     const steps = results.map((r) => r.step);
     expect(steps).toContain('fetch_data');
     expect(steps).toContain('compute_indicators');
@@ -141,6 +141,29 @@ describe('AlphaResearchPipeline', () => {
       const data = baselineResult.data as { baselines: unknown[] };
       expect(data.baselines).toHaveLength(0);
     }
+  });
+
+  it('wires injected derivative signals through to trade extraction', async () => {
+    // Build synthetic derivative features that fire a strong long signal.
+    const candles = makeCandles(120);
+    const features = candles.map(c => ({
+      timestamp: c.timestamp,
+      fundingRate: -0.001, fundingRateAvg8h: -0.0005, fundingRateSlope: -0.0003,
+      openInterest: 1e6, oiChange: 0.15, oiZScore: 2.0,
+      liquidationImbalance: -50000, liquidationZScore: -3.0,
+      basis: 0.002, basisZScore: 2.5,
+    }));
+    const { generateDerivativeSignals } = await import('@/tree/alpha/signals');
+    const signals = generateDerivativeSignals(candles, features);
+    expect(signals.length).toBeGreaterThan(0);
+
+    const pipeline = new AlphaResearchPipeline(makeConfig({
+      candles,
+      derivatives: { features, signals },
+    }));
+    await pipeline.run();
+    const sigResult = pipeline.getResults().find(r => r.step === 'generate_signals');
+    expect(sigResult?.status).toBe('success');
   });
 
   it('top features are extracted from attributions', async () => {
