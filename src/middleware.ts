@@ -9,10 +9,10 @@ import { createServerClient } from '@/lib/db/client';
 const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
 
 // API route prefixes that require auth for mutating requests.
-const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings'];
+const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha'];
 
 // GET routes that contain sensitive data — bot capital, PnL, config, settings.
-const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings'];
+const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha'];
 
 // Auth routes are always public (login, logout, me).
 const PUBLIC_API_PREFIXES = ['/api/auth'];
