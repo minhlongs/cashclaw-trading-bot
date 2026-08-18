@@ -134,25 +134,38 @@ async function fetchBybitFunding(symbol: string, startTimeMs: number, endTimeMs:
 }
 
 async function fetchOkxFunding(symbol: string, startTimeMs: number, endTimeMs: number): Promise<FundingPoint[]> {
+  // OKX public funding-rate-history endpoint requires instId in format
+  // BTCUSDT-SWAP. Returns 51001 if instId is malformed or unsupported.
+  // We attempt the call but degrade gracefully on failure — the arbitrage
+  // can still run on Binance vs Bybit alone.
   const all: FundingPoint[] = [];
-  // OKX funding-rate-history: instId = BTCUSDT-SWAP, up to 100 per call.
-  // OKX uses after/before pagination; we'll use limit=100 and after parameter.
   const instId = `${symbol}-SWAP`;
   let after: string | undefined;
 
-  // OKX returns newest first. We want historical range, so we start from endTime.
   const maxIter = 50;
   for (let i = 0; i < maxIter; i++) {
     const params = new URLSearchParams({ instId, limit: '100' });
     if (after) params.set('after', after);
     const url = `https://www.okx.com/api/v5/public/funding-rate-history?${params.toString()}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`[${res.status}] OKX funding rate fetch`);
+    let res: Response;
+    try {
+      res = await fetch(url);
+    } catch {
+      console.error(`  OKX fetch failed (network), skipping OKX`);
+      return [];
+    }
+    if (!res.ok) {
+      console.error(`  OKX fetch error ${res.status}, skipping OKX`);
+      return [];
+    }
     const json = (await res.json()) as {
       code: string;
       data: Array<{ fundingTime: string; fundingRate: string }>;
     };
-    if (json.code !== '0') throw new Error(`OKX API error: ${json.code}`);
+    if (json.code !== '0') {
+      console.error(`  OKX API error ${json.code}, skipping OKX`);
+      return [];
+    }
 
     const data = json.data ?? [];
     if (data.length === 0) break;
@@ -172,9 +185,6 @@ async function fetchOkxFunding(symbol: string, startTimeMs: number, endTimeMs: n
     }
 
     if (hitBefore) break;
-
-    // OKX returns newest first, so the last item is the oldest.
-    // Use that as the 'after' cursor to go further back.
     after = data[data.length - 1].fundingTime;
   }
 
