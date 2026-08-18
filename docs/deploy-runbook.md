@@ -24,7 +24,7 @@
 - [ ] **Type-check sạch:** `npx tsc --noEmit` (hoặc `npm run type-check`)
 - [ ] **Lint sạch:** `npm run lint`
 - [ ] **Working tree sạch:** `git status` không có thay đổi chưa commit
-- [ ] **Env vars đã set trên Cloudflare:** D1 binding, KV binding, API key của provider
+- [ ] **Env vars đã set trên Cloudflare:** D1 binding, `ALLOWED_ORIGINS` var, `ADMIN_TOKEN` secret, `ENCRYPTION_KEY` secret (không có KV binding — `CACHE` được khai báo optional trong `src/lib/db/types.ts` nhưng không bao giờ đọc ở runtime)
 - [ ] **D1 tồn tại:** `wrangler d1 migrations apply cashclaw-db --remote` (idempotent)
 - [ ] **Secrets đã load:** `wrangler secret list` hiển thị các key bắt buộc
 
