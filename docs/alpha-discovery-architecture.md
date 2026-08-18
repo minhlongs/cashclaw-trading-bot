@@ -259,6 +259,17 @@ Implemented in `src/tree/alpha/signals/`:
 
 The pipeline step `fetch_derivatives` runs between `fetch_data` and `compute_indicators`. Network failures are **non-fatal** — the step falls back to empty features so a Binance outage never aborts a research run.
 
+**Causal guarantees (enforced, not just documented):**
+- `computeDerivativeFeatures` only consumes source points with `timestamp <= candle.timestamp`.
+- The liquidation lookback window length is derived from the actual candle spacing (`candles[1] - candles[0]`), not a hardcoded 4h assumption — correct for 1h / 4h / 1d bars alike.
+- Z-scores are computed against a rolling mean, never against zero.
+- `generateDerivativeSignals` requires a non-empty `symbol`; it throws rather than emit `symbol: ''` (which would misattribute signals downstream).
+- A non-neutral signal requires a **1.5x confidence-weighted vote margin** between the long and short camps — plain direction agreement is not enough.
+
+**Known limitation:** from this environment all four `/fapi/v1/*` endpoints return HTTP 403; only spot endpoints (`/api/v3/klines`, `/api/v3/time`) return 200. The derivative fetchers are untested against live data and degrade to empty features on any failure. The layer is exercised deterministically via the `derivatives?: DerivativeData` injection point on `PipelineConfig`.
+
+**Cache safety:** `cache.ts` reuses the path-safety pattern from `ohlcv-cache.ts` — a `realpathSync` guard rejects any key that resolves outside `.cache/derivatives/`, and caching is disabled under test (`NODE_ENV === 'test'` or `VITEST === '1'`) so test runs never write to the cache.
+
 ---
 
 ## 6. Walk-Forward Validation

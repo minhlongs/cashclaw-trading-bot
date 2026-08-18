@@ -99,3 +99,13 @@
 - **Bot credential pre-validation**: `validateStartCredentials()` in `src/forest/api/handlers/bot-control.ts` checks exchange API keys exist before starting a bot. Scoped to bot owner via `getBotOwnerId()`.
 - **Safe D1 detail serializer** (`src/forest/api/handlers/serialize-detail.ts`): strips non-serializable D1 columns from bot detail responses.
 - **Rate limiter hardening**: added `ok: false` to rate-limit responses missing it; exchange error normalizer added for consistent error classification.
+
+### Non-TA Market-Structure Alpha Layer — Commits `52d9ef9`, `7a1c8c2`
+- **Four Binance public signal sources** (`src/tree/alpha/signals/`): funding rate, open interest, liquidation cascade, and basis (premium index). No auth required.
+- **Causal feature computation**: `computeDerivativeFeatures` consumes only source points with `timestamp <= candle.timestamp`. Liquidation lookback window derived from actual candle spacing (not a hardcoded 4h assumption). Z-scores computed against a rolling mean, never against zero.
+- **Signal aggregation with a 1.5x vote margin**: `generateDerivativeSignals` requires a 1.5x confidence-weighted margin between long and short camps before emitting a non-neutral signal. Requires a non-empty `symbol` — throws rather than emit `symbol: ''`.
+- **Pipeline wiring**: `fetch_derivatives` step runs between `fetch_data` and `compute_indicators`. Network failures are non-fatal; the step falls back to empty features so a Binance outage never aborts a research run. Each source is fetched independently and its failure is logged.
+- **Deterministic offline testing**: `derivatives?: DerivativeData` injection point on `PipelineConfig` lets the derivative alpha path be exercised without live Binance access.
+- **Cache safety**: `cache.ts` reuses the path-safety pattern from `ohlcv-cache.ts` — `realpathSync` guard rejects keys that resolve outside `.cache/derivatives/`, and caching is disabled under test.
+- **Code-review remediation** (`7a1c8c2`): fixed silent NaN in OI notional (Binance OI history has no price field), empty-string symbol misattribution, phantom injection test, and dead `fetchPremiumIndex` (now wired into basis computation).
+- **Known limitation**: all four `/fapi/v1/*` endpoints return HTTP 403 from this environment; only spot endpoints return 200. Derivative fetchers are untested against live data.
