@@ -38,12 +38,13 @@
 | **P0.5 — 4-state CircuitBreaker** | `circuit-breaker.ts` with `closed \| degraded \| open \| half_open` states; kind-aware thresholds per `FailureKind` in `circuit-breaker-kinds.ts`; state-change callback wired into all transitions | commits `96d937a`, `5e31701` |
 | **P0.6 — ProviderChain + provenance** | `src/tree/exchange/provider/provider.ts` primary/fallback routing with per-attempt provenance record; max 1 fallback attempt | commit `26734ef` |
 | **P0.7 — Killswitch audit trail + credential barrier** | D1 migration `0007_killswitch_audit_trail.sql`; `validateStartCredentials()` pre-check scoped to bot owner; hash-chained audit ledger (`audit-ledger.ts`); safe D1 detail serializer (`serialize-detail.ts`) | commits `404b665`, `48425a5`, `253659f` |
-| **P0.8 — Quality gate restoration** | 48 archived files moved to tracked `archive/falsification/` (knip project glob excludes it); 5 stale `ignoreFiles` entries removed; dead `evaluator/data-fetcher.ts` stub deleted; `quality:gate` exits 0 | commit `ac4b5ff` |
+| **P0.8 — Quality gate restoration** | 48 archived files moved to tracked `archive/falsification/` (knip project glob excludes it); 5 stale `ignoreFiles` entries removed; dead `evaluator/data-fetcher.ts` stub deleted; `quality:gate` exits 0 | commit `f0b0ce7` |
 | **P0.9 — Real-data backtest script** | `scripts/alpha-real-data-backtest.ts` — live Binance OHLCV + all four derivative sources through the full pipeline; verified end-to-end, graceful degradation on 403 | commit `ac4b5ff` |
+| **P0.10 — Archive/tsc alignment** | `archive/` added to `tsconfig.json` exclude so archived files don't block type-check; real-data backtest script aligned with current `RegimeConfig`/`WindowConfig`/`Logger` signatures | commit `ec53022` |
 
 ## Current State
 
-- **Tests:** 1880 across 119 files, full suite green
+- **Tests:** 1880 across 130 files, full suite green
 - **Coverage:** statements 89.06%, branches 88.72%, functions 90.66%, lines 89.06% (thresholds 80/85/85/80)
 - **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0` + `reportUnusedDisableDirectives: error`)
 - **TypeScript:** 0 errors on `tsc --noEmit`

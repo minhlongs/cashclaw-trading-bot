@@ -8,12 +8,14 @@
 - **Definitive report:** `docs/falsification-report.md` — methodology, results by signal class, data limitations, and implications for platform design.
 - **Roadmap updated** to reflect campaign completion and the gate on new data infrastructure for future alpha research.
 
-### Quality Gate Restoration — Commit `ac4b5ff`
-- **Archival bug fixed:** 48 files deleted from the working tree but still tracked in HEAD were breaking knip (its `src/**/*.ts` glob scans deleted-but-tracked files). Moved them into tracked `archive/falsification/` — knip's project glob excludes `archive/`, so they no longer register as dead source. Verified byte-identical to HEAD versions before moving.
-- **Knip cleanup:** removed 5 stale `ignoreFiles` entries (`demo.ts`, `regime-backtest-types.ts`, `regime-backtest.ts`, `paper-simulator.ts`, `real-data-runner.ts`) whose targets now live in `archive/` and were producing Configuration hints. Added `ignoreIssues` entries for 6 exports only referenced by archived code.
-- **Dead code removed:** `src/forest/alpha/evaluator/data-fetcher.ts` — an unwired stub with zero references, zero tests, zero callers. Deleted the directory.
+### Quality Gate Restoration — Commits `ac4b5ff`, `f0b0ce7`, `e113f39`, `ec53022`
+- **Archival bug fixed:** 48 files deleted from the working tree but still tracked in HEAD were breaking knip (its `src/**/*.ts` glob scans deleted-but-tracked files). Moved them into tracked `archive/falsification/` — knip's project glob excludes `archive/`, so they no longer register as dead source. Verified byte-identical to HEAD versions before moving. (`f0b0ce7`)
+- **Knip cleanup:** removed 5 stale `ignoreFiles` entries (`demo.ts`, `regime-backtest-types.ts`, `regime-backtest.ts`, `paper-simulator.ts`, `real-data-runner.ts`) whose targets now live in `archive/` and were producing Configuration hints. Added `ignoreIssues` entries for 6 exports only referenced by archived code. (`f0b0ce7`)
+- **Dead code removed:** `src/forest/alpha/evaluator/data-fetcher.ts` — an unwired stub with zero references, zero tests, zero callers. Deleted the directory. (`f0b0ce7`)
+- **Archive cleanup:** `e113f39` deleted the `src/` copies of the 48 files already archived in `f0b0ce7`, so the working tree no longer retains duplicate dead source.
+- **tsc alignment:** `archive/` added to `tsconfig.json` exclude so archived files don't block `tsc --noEmit`. (`ec53022`)
 - **Result:** `npm run quality:gate` exits 0 (type-check + lint + coverage + knip). Test count 1588 → 1880.
-- **Real-data backtest script:** `scripts/alpha-real-data-backtest.ts` added — fetches live Binance OHLCV plus all four derivative sources (funding, OI, liquidations, premium) and runs the full `AlphaResearchPipeline`. Verified end-to-end. All four `/fapi/v1/*` endpoints return HTTP 403 from this environment; the script degrades gracefully to empty features and reports honestly, so a Binance outage never aborts a research run.
+- **Real-data backtest script:** `scripts/alpha-real-data-backtest.ts` added — fetches live Binance OHLCV plus all four derivative sources (funding, OI, liquidations, premium) and runs the full `AlphaResearchPipeline`. Verified end-to-end. All four `/fapi/v1/*` endpoints return HTTP 403 from this environment; the script degrades gracefully to empty features and reports honestly, so a Binance outage never aborts a research run. Aligned with current `RegimeConfig`/`WindowConfig`/`Logger` signatures. (`ac4b5ff`, `ec53022`)
 
 ### Core Platform
 - Next.js 16 App Router scaffold, bilingual i18n (vi/en), D1 schema (users/bots/trades/events/snapshots), paper exchange simulator, grid + mean-reversion strategy chain.

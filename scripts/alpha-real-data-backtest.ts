@@ -26,9 +26,18 @@ function parseArgs(): { symbol: string; timeframe: string; limit: number } {
   return { symbol, timeframe, limit: Number(limitStr) };
 }
 
+type OiPeriod = '5m' | '15m' | '30m' | '1h' | '2h' | '4h' | '6h' | '12h' | '1d';
+const VALID_PERIODS: readonly OiPeriod[] = ['5m', '15m', '30m', '1h', '2h', '4h', '6h', '12h', '1d'];
+
 async function main(): Promise<void> {
   const { symbol, timeframe, limit } = parseArgs();
   log.info('fetching real data', { symbol, timeframe, limit });
+
+  // Binance OI history only accepts a fixed set of periods; fall back to 1h
+  // for anything the API rejects (e.g. an unsupported CLI arg) so the script
+  // never aborts a research run on an invalid period.
+  const oiPeriod: OiPeriod = VALID_PERIODS.includes(timeframe as OiPeriod) ? (timeframe as OiPeriod) : '1h';
+  if (oiPeriod !== timeframe) log.warn('unsupported OI period, using 1h', { requested: timeframe });
 
   const cfg: FetchConfig = { source: 'binance', symbol, timeframe, limit };
   const data = await fetchResearchData([cfg]);
@@ -45,7 +54,7 @@ async function main(): Promise<void> {
   // the pipeline degrades to empty features, exactly as it does offline.
   const [funding, oi, liquidations, premium] = await Promise.all([
     fetchFundingRate(symbol, t0, t1).catch(e => { log.warn('funding fetch failed', { error: String(e) }); return []; }),
-    fetchOpenInterestHistory(symbol, '1h', t0, t1).catch(e => { log.warn('oi fetch failed', { error: String(e) }); return []; }),
+    fetchOpenInterestHistory(symbol, oiPeriod, t0, t1).catch(e => { log.warn('oi fetch failed', { error: String(e) }); return []; }),
     fetchLiquidations(symbol, t0).catch(e => { log.warn('liquidations fetch failed', { error: String(e) }); return []; }),
     fetchPremiumIndex(symbol, t0, t1).catch(e => { log.warn('premium fetch failed', { error: String(e) }); return []; }),
   ]);
