@@ -107,9 +107,23 @@ This is valid falsification, not failure. System correctly identified that no st
 
 **Verdict:** Derivative alpha falsified. Funding-rate fade is not a viable alpha source at current thresholds.
 
+## ML Regime Detection (2026-08-18)
+
+**Hypothesis:** Can a learned regime classifier improve signal filtering over rule-based, or does it just overfit?
+
+**Method:** Decision tree (depth=4, minLeaf=20) trained on 6 regime features, walk-forward expanding window, pseudo-labels from forward 48h returns.
+
+| Asset | ML Accuracy | ML vs Unfiltered | ML vs Rule | ML % RANGE |
+|---|---|---|---|---|
+| SOLUSDT | 62.6% | +11% Sharpe | +26% Sharpe | 95.3% |
+| ETHUSDT | 69.9% | -0.5% Sharpe | +10% Sharpe | 95.6% |
+| BTCUSDT | 88.6% | 0% (identical) | Worse | **100%** |
+
+**Verdict: FALSIFIED.** The classifier collapses to majority-class prediction (RANGE) for 95-100% of periods. High "accuracy" is an artifact of class imbalance, not predictive power. ML filter removes 0-1 trades across all assets — functionally equivalent to no filtering. Rule-based filtering also doesn't improve strategy performance.
+
 ## Next Steps
 
 1. ~~Daily timeframe~~ ✓ Complete
 2. ~~Non-technical signals (funding rate, OI, liquidations, on-chain)~~ ✓ Complete — falsified
-3. ML-based regime detection with walk-forward validation
+3. ~~ML-based regime detection with walk-forward validation~~ ✓ Complete — falsified
 4. Cross-asset correlation signals
