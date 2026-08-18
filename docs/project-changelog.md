@@ -116,3 +116,24 @@
 - **Feature declaration contract** (`src/tree/alpha/indicator-types.ts`): every feature now declares `name`, `timeframe`, `source`, `lookback`, `availability`, and `causal`. `declareFeature()` validates all six and **rejects any non-causal feature** with an explicit error, so look-ahead bias cannot enter a feature vector, label, regime classification, or execution decision through this path.
 - **`FeatureSource` / `FeatureAvailability` types**: `ohlcv` / `derivatives` / `orderbook` / `trades` / `synthetic`; `always` / `when_listed` / `when_derivatives_listed`.
 - **OHLCV indicators** (`src/tree/alpha/indicators.ts`) now emit `source: 'ohlcv', availability: 'always'` on every result envelope.
+
+### Alpha Lab Phases 5–10: Evaluation Engine + Hypothesis Sweep — Commit `6fa3a1d`
+- **Evaluation engine** (`src/forest/alpha/evaluation/`): full strategy evaluation report with Sharpe, Sortino, profit factor, expectancy, max drawdown, fees, exposure, regime/month/volatility/trade-duration breakdowns.
+- **Hypothesis sweep** (`src/forest/alpha/hypothesis-sweep.ts`): parameter grid search over RSI + filter combinations, ranked by expectancy with bootstrap p-values.
+- **Baselines** (`src/forest/alpha/baselines/`): Buy & Hold, Random Entry, Simple Momentum, Simple Mean Reversion benchmarks for comparison.
+
+### Alpha Lab API Wiring — Commit `4649980`
+- **`POST /api/alpha/research`** (`src/app/api/alpha/research/route.ts`): wires the 12-step AlphaResearchPipeline to the app UI. Session-cookie auth delegated to middleware (no auth logic in handler). Zod validation on symbol/timeframe/candles/config, rate limiting (5 req/min), 120s pipeline timeout. Paper-only: fetches public OHLCV, runs deterministic simulation, returns structured report.
+- **Middleware** (`src/middleware.ts`): `/api/alpha` added to `PROTECTED_API_PREFIXES` and `SENSITIVE_GET_PREFIXES`.
+- **5 route tests** (`route.test.ts`): success, 400, 429, 422, 500 — all pass.
+
+### Backtest Infrastructure Hardening — Commit `8927373`
+- **OHLCV pagination fix** (`data-fetcher.ts`): Binance endTime-only paging fetches up to 1000 candles before endTime, then filters to [startMs, endMs] after the loop. Eliminates duplicate-window overlap from the old startTime+endTime per-page approach.
+- **Path traversal guard** (`ohlcv-cache.ts`): `realpathSync` on the resolved cache path rejects any key escaping `CACHE_DIR` before writing. `clearCacheEntry()` added for targeted cache invalidation.
+- **BacktestTrade type** (`types.ts`): added optional `exitReason` and `entryRegime` fields for richer trade attribution.
+
+### Real-Data Backtest Scripts — Commit `71cd080`
+- Six standalone backtest scripts using live Binance 1h/4h data (cached): `baseline-compare`, `breakout-momentum-test`, `breakout-momentum-4h-test`, `range-mean-reversion-test`, `volatility-strategy-test`, `sol-regime-analysis`. All apply realistic fee/slippage cost models and compute bootstrap p-values.
+
+### Strategy Falsification Research Reports — Commit `011958a`
+- Nine markdown reports in `plans/reports/`. **Key finding**: across 844 RSI parameter combinations, 12+ strategy archetypes, and 2 timeframes on BTC/ETH/SOL, no statistically robust edge was found. This is valid falsification — the system correctly refuses to trade live capital on simple TA signals.

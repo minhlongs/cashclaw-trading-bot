@@ -69,6 +69,14 @@ Four Binance signal sources (funding rate, OI, liquidation, premium index) with 
 
 **Falsification result:** Zero strategies with positive out-of-sample expectancy on 2026 data (see `plans/reports/technical-strategy-falsification-2026-08-17.md`). This is the honest answer — nothing works yet.
 
+## Alpha Lab — API Wiring + Real-Data Backtests
+
+**API endpoint** (`POST /api/alpha/research`): wires the 12-step AlphaResearchPipeline to the app UI. Session-cookie auth via middleware. Zod validation, rate limiting (5 req/min), 120s timeout. Paper-only.
+
+**Real-data backtest scripts:** six standalone scripts using live Binance 1h/4h data (cached) — baseline comparison, breakout momentum (1h/4h), range mean-reversion, volatility strategy, regime analysis. All apply realistic fee/slippage cost models and compute bootstrap p-values.
+
+**Infrastructure hardening:** Binance endTime-only pagination (no duplicate-window overlap), path-traversal guard in OHLCV cache, `exitReason`/`entryRegime` on `BacktestTrade`.
+
 ## Known Backlog (v2 and beyond)
 
 - **BotManager hydration architecture** — replace in-memory registry + per-request hydration with a cold-start-resilient store (Durable Objects or direct-D1 reads everywhere).
