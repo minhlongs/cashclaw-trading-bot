@@ -13,7 +13,7 @@
 - [ ] **Type-check clean:** `npx tsc --noEmit` (or `npm run type-check`)
 - [ ] **Lint clean:** `npm run lint`
 - [ ] **Working tree clean:** `git status` shows no uncommitted changes for this change set
-- [ ] **Env vars set in Cloudflare:** D1 binding, KV binding, any provider API keys
+- [ ] **Env vars set in Cloudflare:** D1 binding, `ALLOWED_ORIGINS` var, `ADMIN_TOKEN` secret, `ENCRYPTION_KEY` secret (no KV binding — `CACHE` is declared optional in `src/lib/db/types.ts` but never read at runtime)
 - [ ] **D1 exists:** `wrangler d1 migrations apply cashclaw-db --remote` (idempotent)
 - [ ] **Secrets loaded:** `wrangler secret list` shows required keys
 
@@ -35,16 +35,20 @@
 ### English (Cloudflare Workers via OpenNext)
 
 ```
-npm run deploy:worker
+npm run deploy
 ```
+
+This script injects `GIT_COMMIT_SHA` and `BUILD_TIMESTAMP` from the current commit, then runs `@opennextjs/cloudflare build` followed by `@opennextjs/cloudflare deploy`.
 
 Expected output: `Deployed to https://<worker-name>.workers.dev`
 
 ### Vietnamese (Cloudflare Workers qua OpenNext)
 
 ```
-npm run deploy:worker
+npm run deploy
 ```
+
+Script này tiêm `GIT_COMMIT_SHA` và `BUILD_TIMESTAMP` từ commit hiện tại, sau đó chạy `@opennextjs/cloudflare build` rồi `@opennextjs/cloudflare deploy`.
 
 Output mong đợi: `Deployed to https://<worker-name>.workers.dev`
 
