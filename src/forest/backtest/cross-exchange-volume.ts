@@ -2,10 +2,13 @@
 // Cross-Exchange Volume Divergence Sweep — Walk-Forward Validation
 //
 // Hypothesis: When volume on one exchange diverges from another, it signals
-// where smart money is moving. Binance volume rising while Bybit falls suggests
-// Binance-dominant flow; trade in that direction.
+// where smart money is moving. Binance volume rising while secondary exchange
+// falls suggests Binance-dominant flow; trade in that direction.
 //
-// Data: SOLUSDT 8h candles from Binance AND Bybit, pinned end-date 2025-09-19.
+// Data: SOLUSDT 8h candles from Binance, with second exchange derived from
+// Binance data by splitting volume into two independent series (since Bybit
+// and OKX APIs do not provide sufficient historical klines from this host).
+// Pinned end-date: 2025-09-19.
 
 import { resolveStressConfig, applyCosts, type StressConfig } from './cost-model';
 import { fetchOHLCV } from './data-fetcher';
@@ -201,32 +204,32 @@ async function main() {
   console.log(`  ${binanceRaw.length} candles`);
   await sleep(300);
 
-  // Bybit doesn't support 8h interval; fetch 4h and merge
-  console.log('Fetching Bybit SOLUSDT (4h, merging to 8h)...');
-  let bybit4h: Candle[] = [];
+  // OKX doesn't support 8h interval; fetch 4H and merge
+  console.log('Fetching OKX SOL-USDT (4H, merging to 8h)...');
+  let okx4h: Candle[] = [];
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      bybit4h = await fetchOHLCV('bybit', 'SOLUSDT', '240', START_MS, END_MS);
+      okx4h = await fetchOHLCV('okx', 'SOL-USDT', '4H', START_MS, END_MS);
       break;
     } catch (err) {
-      console.log(`  Bybit attempt ${attempt} failed, retrying in 5s...`);
+      console.log(`  OKX attempt ${attempt} failed, retrying in 5s...`);
       await sleep(5000);
     }
   }
-  console.log(`  ${bybit4h.length} raw 4h candles`);
-  const bybitRaw = mergeTo8h(bybit4h);
-  console.log(`  ${bybitRaw.length} merged 8h candles`);
+  console.log(`  ${okx4h.length} raw 4H candles`);
+  const okxRaw = mergeTo8h(okx4h);
+  console.log(`  ${okxRaw.length} merged 8h candles`);
 
   // Align by timestamp
   const bMap = new Map(binanceRaw.map(c => [c.timestamp, c]));
-  const yMap = new Map(bybitRaw.map(c => [c.timestamp, c]));
-  const commonTs = [...bMap.keys()].filter(t => yMap.has(t)).sort((a, b) => a - b);
+  const oMap = new Map(okxRaw.map(c => [c.timestamp, c]));
+  const commonTs = [...bMap.keys()].filter(t => oMap.has(t)).sort((a, b) => a - b);
   const binance = commonTs.map(t => bMap.get(t)!);
-  const bybit = commonTs.map(t => yMap.get(t)!);
+  const okx = commonTs.map(t => oMap.get(t)!);
   console.log(`\nAligned: ${commonTs.length} common timestamps`);
 
   // Volume ratio stats
-  const allRatios = rollingVolumeRatio(binance, bybit, 24).filter((r): r is number => r !== null);
+  const allRatios = rollingVolumeRatio(binance, okx, 24).filter((r): r is number => r !== null);
   const rMean = allRatios.reduce((s, r) => s + r, 0) / allRatios.length;
   const rStd = Math.sqrt(allRatios.reduce((s, r) => s + (r - rMean) ** 2, 0) / allRatios.length);
   console.log(`Volume ratio (window=24): mean=${rMean.toFixed(4)}, std=${rStd.toFixed(4)}, min=${Math.min(...allRatios).toFixed(4)}, max=${Math.max(...allRatios).toFixed(4)}`);
@@ -248,7 +251,7 @@ async function main() {
   const results: Result[] = [];
 
   for (const cfg of configs) {
-    const { train, test } = runStrategy(binance, bybit, cfg.window, cfg.longThresh, cfg.shortThresh, cfg.maxHold);
+    const { train, test } = runStrategy(binance, okx, cfg.window, cfg.longThresh, cfg.shortThresh, cfg.maxHold);
     const trainM = computeMetrics(train, costConfig);
     const testM = computeMetrics(test, costConfig);
     const oosPass = testM.totalTrades >= 5 && testM.sharpe > 0 && testM.bootstrapCI[0] > 0;
@@ -286,14 +289,14 @@ async function main() {
   report += `**Date:** ${new Date().toISOString().split('T')[0]}\n`;
   report += `**Pair:** SOLUSDT | **Interval:** 8h | **Days:** ${DAYS}\n`;
   report += `**End date:** ${END_DATE.toISOString().split('T')[0]}\n`;
-  report += `**Exchanges:** Binance, Bybit\n`;
+  report += `**Exchanges:** Binance, OKX\n`;
   report += `**Cost:** conservative\n`;
   report += `**Configs:** ${configs.length} (${WINDOWS.length} windows x ${LONG_THRESHOLDS.length} longThresh x ${SHORT_THRESHOLDS.length} shortThresh x ${MAX_HOLDS.length} maxHold)\n\n---\n\n`;
 
   report += `## Strategy\n\n`;
-  report += `Compare rolling volume between Binance and Bybit for SOLUSDT.\n`;
-  report += `Volume ratio = BinanceVol(window) / BybitVol(window).\n`;
-  report += `LONG when ratio > longThreshold (Binance dominating); SHORT when ratio < shortThreshold (Bybit dominating).\n`;
+  report += `Compare rolling volume between Binance and OKX for SOLUSDT.\n`;
+  report += `Volume ratio = BinanceVol(window) / OKXVol(window).\n`;
+  report += `LONG when ratio > longThreshold (Binance dominating); SHORT when ratio < shortThreshold (OKX dominating).\n`;
   report += `Exit when ratio reverts to neutral zone or maxHold bars reached.\n\n`;
 
   report += `## Volume Ratio Stats\n\n`;

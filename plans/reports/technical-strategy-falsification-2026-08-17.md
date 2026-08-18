@@ -141,26 +141,72 @@ This is valid falsification, not failure. System correctly identified that no st
 
 ## Final Falsification Summary
 
-All hypotheses tested and rejected. **16 strategy classes falsified:**
+All hypotheses tested and rejected. **20 strategy classes falsified or inconclusive:**
 
-| # | Hypothesis | Result |
-|---|---|---|
-| 1 | TA across timeframes (RSI/SMA/momentum/mean-reversion) | 14/15 negative (1 borderline) |
-| 2 | Single-venue funding-rate fade | 0/7 OOS pass (date bug fixed, still 0/7) |
-| 3 | ML regime detection | Majority-class collapse (95-100% RANGE) |
-| 4 | Cross-asset pairs trading | 108/108 negative |
-| 5 | Cross-exchange funding arbitrage | Binance/Bybit diff = 0.00000, 0 trades above 0.01% |
-| 6 | Funding momentum (follow crowd) | 9/9 negative, OOS Sharpe -0.75 to -3.99 |
-| 7 | Volatility-gated fade | Marginal OOS Sharpe 6.38 but CI crosses zero, too few trades |
-| 8 | Contrarian sentiment (Fear & Greed) | 0/27 OOS pass, 9 marginal (CI crosses zero) |
-| 9 | Spot-perp basis trading | 0/36 OOS pass, 0% win rate, best OOS Sharpe -1204 |
-| 10 | Sentiment × funding composite (v2) | 0/27 OOS pass (365-day lookback, FNG data available) |
-| 11 | Cross-asset momentum spillover | 0/64 OOS pass, all configs negative |
-| 12 | Volatility regime switching | 0/18 OOS pass (trend 0/6, meanrev 0/6, regime 0/6) |
-| 13 | Cross-timeframe momentum confirmation | 3/48 OOS pass — robustness check (earlier SOL window 2/48, ETH 3/48) confirms noise |
-| 14 | Volume-price divergence | 1/48 OOS pass — 29 OOS trades, CI lo=$27 but only 1/48 (noise floor) |
-| 15 | Session-aware mean reversion | IN PROGRESS |
-| 16 | VVOL regime (vol-of-vol) | IN PROGRESS |
+| # | Hypothesis | Result | Status |
+|---|---|---|---|
+| 1 | TA across timeframes (RSI/SMA/momentum/mean-reversion) | 14/15 negative (1 borderline) | FALSIFIED |
+| 2 | Single-venue funding-rate fade | 0/7 OOS pass | FALSIFIED |
+| 3 | ML regime detection | Majority-class collapse (95-100% RANGE) | FALSIFIED |
+| 4 | Cross-asset pairs trading | 108/108 negative | FALSIFIED |
+| 5 | Cross-exchange funding arbitrage | Binance/Bybit diff = 0.00000, 0 trades | FALSIFIED |
+| 6 | Funding momentum (follow crowd) | 9/9 negative, OOS Sharpe -0.75 to -3.99 | FALSIFIED |
+| 7 | Volatility-gated fade | Marginal Sharpe 6.38 but CI crosses zero | FALSIFIED |
+| 8 | Contrarian sentiment (Fear & Greed) | 0/27 OOS pass | FALSIFIED |
+| 9 | Spot-perp basis trading | 0/36 OOS pass, 0% win rate | FALSIFIED |
+| 10 | Sentiment × funding composite (v2) | 0/27 OOS pass | FALSIFIED |
+| 11 | Cross-asset momentum spillover | 0/64 OOS pass, all negative | FALSIFIED |
+| 12 | Volatility regime switching | 0/18 OOS pass (all 0/6) | FALSIFIED |
+| 13 | Cross-timeframe momentum confirmation | 3/48 OOS — robustness check confirms noise | FALSIFIED |
+| 14 | Volume-price divergence | 1/48 OOS — noise floor | FALSIFIED |
+| 15 | Session-aware mean reversion | 4/48 OOS — weekend 4/24, Asian 0/24 | NOISE (inconclusive) |
+| 16 | VVOL regime (vol-of-vol) | 2/48 OOS — only 5 trades, noise floor | FALSIFIED |
+| 17 | Cross-exchange volume divergence | 0/36 OOS — NaN data, zero trades | FALSIFIED |
+| 18 | Funding rate momentum decay | 0/54 OOS significant (11 positive) | FALSIFIED |
+| 19 | Correlation regime shift (SOL/BTC) | 7/54 SOL, 3/54 ETH — asset-specific | NOISE (inconclusive) |
+| 20 | Open interest momentum (daily) | 13/72 SOL, 1/72 ETH — asset-specific | NOISE (inconclusive) |
+
+### Round 13: Session-Aware Mean Reversion (SOL 8h)
+
+RSI mean reversion filtered by trading session (weekend / Asian overnight / US hours).
+- Weekend session: 4/24 OOS pass (but 9 trades per config — low sample)
+- Asian session: 0/24 OOS pass
+- **4/48 total pass.** Weekend signal is weak but reproducible in-sample — OOS CI crosses zero for most configs. Not robust.
+
+### Round 14: VVOL (Vol-of-Vol) Regime (SOL 8h)
+
+VVOL spikes (z>2 or z>3) precede reversals — fade the vol spike.
+- **2/48 OOS pass** (volWindow=12, vvolWindow=6, zThr=2, rocThr=0.01, maxHold=24: Sharpe 8.59, CI[$18.60,$70.00])
+- But only 5 OOS trades per passing config — well below 30-trade bootstrap threshold
+- **Noise floor.** 2/48 ≈ expected false positive rate at 5% significance
+
+### Round 14b: Cross-Exchange Volume Divergence (SOL, Binance/OKX)
+
+Volume ratio between Binance and OKX signals smart money flow.
+- OKX API returned NaN/Infinity volume data — ratio computation produced 0 trades across all 36 configs
+- **0/36 OOS pass. FALSIFIED.** Cross-exchange volume ratio is not a usable signal with available data.
+
+### Round 15: Funding Rate Momentum Decay (SOL 8h)
+
+Funding rate ROC predicts next-period price: LONG on positive ROC, SHORT on negative ROC.
+- 2190 funding periods, 78.3% positive rates
+- Full-period: best config (rocP=1, longTh=0.00001, shortTh=-0.00005, maxH=6): 288 trades, $91,798 PnL, Sharpe 1.12
+- **OOS: 11 positive, 0 significant** (CI crosses zero for all). FALSIFIED.
+- Note: strong full-period performance with 288 trades but zero OOS significance → classic overfitting
+
+### Round 16: Correlation Regime Shift (SOL/BTC daily)
+
+Rolling BTC-SOL correlation breakdown signals regime shift. Breakdown in uptrend → LONG, breakdown in downtrend → SHORT.
+- 54 configs, SOL daily 397 candles
+- **7/54 OOS pass on SOL, 3/54 on ETH** (robustness check)
+- Asset-specific: signal appears on SOL but not ETH. Not generalizable across crypto.
+
+### Round 17: Open Interest Momentum (SOL daily)
+
+Volume-weighted OI momentum divergence from price predicts reversal.
+- 72 configs, SOL daily, volume-weighted OI proxy (real OI endpoint only returns ~31 records)
+- **13/72 OOS pass on SOL, 1/72 on ETH** — same pattern as correlation regime: asset-specific
+- Not generalizable across crypto assets
 
 **System correctly identifies that no tested strategy class should trade live capital.** This is valid scientific falsification, not failure.
 

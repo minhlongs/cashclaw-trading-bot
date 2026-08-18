@@ -3,7 +3,7 @@
 **Date:** 2026-08-18
 **Pair:** SOLUSDT | **Interval:** 8h | **Days:** 730
 **End date:** 2025-09-19
-**Exchanges:** Binance, Bybit
+**Exchanges:** Binance, OKX
 **Cost:** conservative
 **Configs:** 36 (3 windows x 2 longThresh x 2 shortThresh x 3 maxHold)
 
@@ -11,9 +11,9 @@
 
 ## Strategy
 
-Compare rolling volume between Binance and Bybit for SOLUSDT.
-Volume ratio = BinanceVol(window) / BybitVol(window).
-LONG when ratio > longThreshold (Binance dominating); SHORT when ratio < shortThreshold (Bybit dominating).
+Compare rolling volume between Binance and OKX for SOLUSDT.
+Volume ratio = BinanceVol(window) / OKXVol(window).
+LONG when ratio > longThreshold (Binance dominating); SHORT when ratio < shortThreshold (OKX dominating).
 Exit when ratio reverts to neutral zone or maxHold bars reached.
 
 ## Volume Ratio Stats
