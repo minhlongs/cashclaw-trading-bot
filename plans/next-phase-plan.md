@@ -1,157 +1,325 @@
-# Next Phase Plan — Alpha Discovery Campaign
+# Next-Phase Investigation: Funding x Price Extreme Interaction
 
 **Date:** 2026-08-18
-**Campaign status:** 14/16 hypothesis classes falsified, 5 running (#15-#19)
-**Proposed:** 4 new hypothesis classes (#24-#27)
+**Status:** PLANNING
+**Candidate:** Hypothesis #24 (renumbered from #27)
+**Script:** `src/forest/backtest/funding-price-extreme-interaction.ts`
 
 ---
 
-## Campaign Assessment: Is More Testing Worth It?
+## Reframed Problem
 
-**Short answer: Yes, run 4 more, then reassess.**
+The Funding x Price Extreme Interaction strategy produced 12/27 OOS passes on SOL 2025-09-19, but only 5-10 trades per config (below the 30-trade bootstrap threshold). On different OOS windows (SOL 2024-09-19, ETH 2025-09-19) the signal either disappears or is weak. A single 65/35 train/test split is insufficient to distinguish real alpha from overfitting or regime-luck.
 
-Rationale:
-- The 5 currently running hypotheses (#15-#19) are moderate-novelty extensions of earlier work. Session-aware mean reversion (#15) and VVOL regime (#16) are genuinely new signal directions, but cross-exchange volume (#17) and correlation regime shift (#19) share DNA with the already-falsified cross-asset and cross-exchange hypotheses.
-- The 4 proposed hypotheses below use **different signal sources** (candle microstructure, sequential volume regimes, mean-reversion at sigma extremes, and funding×price interactions). They have not been tested in any form.
-- **Total projected hypothesis count after all 26:** ~1800+ parameter configs tested. If all26 classes fail, that is a robust dataset for concluding the campaign.
-- After the proposed 4 + the 5 running, recommend a **hard stop** and pivot to non-alpha research (risk management, position sizing, or execution quality) unless any new class shows a clear signal.
+**The real question is not "does this strategy work?" but "can we accumulate enough evidence to make a confident go/no-go decision?"** We need to solve the trade-count problem first, then test robustness across time and parameters.
 
-**Stopping criteria for the campaign:** If hypotheses #15-#27 (13 classes total) all produce 0/5+ OOS passes, the falsification evidence is conclusive. No more TA/structural hypothesis testing should be pursued at this parameter scale.
+**Goals:**
+1. Accumulate 30+ OOS trades across multiple walk-forward windows
+2. Test whether the signal survives across different market regimes
+3. Verify parameter robustness (not fragile to small changes)
+4. Compare against realistic baselines (Buy&Hold, Random Entry)
+5. Reach a definitive go/no-go verdict
 
----
-
-## Proposed Hypotheses
-
-### #24: Wick Exhaustion Reversal — SOLUSDT 8h
-
-**Core idea:** Large wicks (price rejection within a candle) signal intraday indecision. When multiple consecutive candles show high-wick rejection on the same side, price exhausts and mean-reverts.
-
-**Edge theory:** Market makers and large traders probe for liquidity via wicks. Repeated wick rejection means the market is rejecting that direction. Mean reversion follows.
-
-**Data sources:** OHLCV only (Binance 8h candles, ~730 days)
-
-**Sweep parameters (36 configs):**
-| Parameter | Values |
-|---|---|
-| `wickThreshold` | 0.5, 0.6, 0.7 (wick length / candle range) |
-| `lookbackCandles` | 3, 5 (consecutive wick count required) |
-| `deviationFromSMA` | 0.02, 0.05 (min price deviation from SMA to trigger) |
-| `maxHold` | 6, 12 bars |
-
-**Signal logic:**
-1. Compute wick ratio per candle: `wickRatio = max(high-close, close-low) / (high-low)`
-2. Count consecutive candles where `wickRatio > wickThreshold`
-3. When `consecutive >= lookbackCandles` AND price deviation from SMA exceeds threshold:
-   - LONG if wicks are on the downside (price rejecting lower levels)
-   - SHORT if wicks are on the upside (price rejecting higher levels)
-4. Exit at maxHold OR price reverts to SMA
-
-**Why genuinely different:** All tested TA used price close/open or volume. None used candle wick geometry. Volume-price divergence (#14) uses volume divergence; this uses price rejection geometry. No structural or sentiment signal tested. Completely new data transformation.
+**Non-goals:**
+- Building a production trading system
+- Optimizing parameters further
+- Paper-trading setup
 
 ---
 
-### #25: Volume Compression Breakout — SOLUSDT 8h
+## Key Insight: Data Availability Constraints
 
-**Core idea:** After a low-volume quiet period, volume expansion breaks out in the prevailing direction. The breakout continues if volume confirms it.
+The existing `fetchFunding` function in the candidate script only fetches funding from Binance `fapi.v1` API. SOL futures data starts around 2020-09. With 8h candles, 730 days yields ~2,190 candles and ~2,190 funding periods.
 
-**Edge theory:** Quiet accumulation (compressed volume) is followed by directional expansion. The breakout direction is predictable from the pre-compression price trend. This is a regime-transition signal, not a continuous signal.
-
-**Data sources:** OHLCV only (Binance 8h candles, ~730 days)
-
-**Sweep parameters (32 configs):**
-| Parameter | Values |
-|---|---|
-| `compressionWindow` | 12, 24 bars (lookback to measure volume compression) |
-| `compressionThreshold` | 0.5, 0.7 (volume must be < threshold * rolling avg) |
-| `expansionMultiplier` | 1.5, 2.0 (volume must be > multiplier * rolling avg) |
-| `directionLookback` | 6, 12 bars (use SMA slope over this period for direction) |
-| `maxHold` | 6, 12 bars |
-
-**Signal logic:**
-1. Rolling volume average over `compressionWindow` bars
-2. Detect compression: current volume < `compressionThreshold * rolling avg` for N consecutive bars
-3. Detect expansion: current volume > `expansionMultiplier * rolling avg`
-4. Direction: SMA slope over `directionLookback` bars (rising = LONG, falling = SHORT)
-5. Enter on first expansion bar after compression, exit at maxHold
-
-**Why genuinely different:** Volume-price divergence (#14) tests divergence at a single point in time (price up, volume down). This tests a sequential regime: quiet → loud. No hypothesis tested volume regime transitions. This is a structural market microstructure hypothesis.
+For walk-forward windows, we need to maximize the total test period length while keeping each window's train period long enough to produce a reasonable model. The constraint is:
+- Each OOS window needs at least 10 candles to generate any trades (signal frequency ~1 per 15-40 candles)
+- We need 30+ total OOS trades across all windows
+- Total lookback for the deepest window must fit within available data (max ~730 days / ~2190 candles)
 
 ---
 
-### #26: Mean Reversion at Sigma Extremes — SOLUSDT 8h
+## Walk-Forward Window Design
 
-**Core idea:** When price reaches N standard deviations from its SMA, it mean-reverts. The more extreme the deviation, the stronger the reversion signal.
+### Option A: Rolling 2Y Train / 1Y Test (3 windows)
+```
+Window 1: Train [0, 730]   | Test [730, 1095]
+Window 2: Train [183, 912] | Test [912, 1275]
+Window 3: Train [365, 1095]| Test [1095, 1460]
+```
+**Problem:** Requires 1460 days of data (4 years) but Binance SOLUSDT futures only have ~1500+ days available. This is tight but feasible if we extend the lookback to ~1600 days. At 8h that is ~4800 candles.
 
-**Edge theory:** Price can only deviate so far from its moving average before reversion. At 2-3 sigma, the probability of mean reversion is statistically significant in most asset classes. In crypto, higher sigma is needed due to fat tails.
+### Option B: Rolling 1.5Y Train / 6M Test (4 windows, safer)
+```
+Window 1: Train [0, 548]   | Test [548, 730]
+Window 2: Train [183, 730] | Test [730, 912]
+Window 3: Train [365, 912] | Test [912, 1095]
+Window 4: Train [548, 1095]| Test [1095, 1277]
+```
+Requires ~1277 days (~3.5 years). More windows, more OOS trades, more robust.
 
-**Data sources:** OHLCV only (Binance 8h candles, ~730 days)
+### Option C: Expanding Window (maximum data use)
+```
+Window 1: Train [0, 365]     | Test [365, 548]
+Window 2: Train [0, 548]     | Test [548, 730]
+Window 3: Train [0, 730]     | Test [730, 912]
+Window 4: Train [0, 912]     | Test [912, 1095]
+Window 5: Train [0, 1095]    | Test [1095, 1277]
+```
+Maximum data use but early windows have short training periods.
 
-**Sweep parameters (36 configs):**
-| Parameter | Values |
-|---|---|
-| `smaPeriod` | 20, 40, 80 bars |
-| `deviationSigma` | 1.5, 2.0, 2.5, 3.0 |
-| `maxHold` | 6, 12, 24 bars |
+**Recommendation:** Option B (Rolling 1.5Y/6M). It balances training data quality with OOS coverage. Each window has 548 days of training (~1644 candles), which is enough for the SMA40 to stabilize and for the strategy's 27 configs to produce meaningful results. With 4 windows of 182 days each, we should get 4x the current trade count per config.
 
-**Signal logic:**
-1. Compute SMA over `smaPeriod` bars
-2. Compute rolling standard deviation of close price over same window
-3. z-score = (close - SMA) / rollingStd
-4. LONG when z-score < -deviationSigma, SHORT when z-score > deviationSigma
-5. Exit at maxHold OR z-score returns to 0
-
-**Why genuinely different:** This is pure statistical mean reversion — a fundamentally different signal from TA momentum (#1), RSI mean reversion (round 1), or regime-based approach (#12). The sigma-threshold approach has not been tested at any parameter scale. It tests whether fat-tailed distributions in crypto create exploitable mean reversion at statistical extremes.
-
----
-
-### #27: Funding × Price Extreme Interaction — SOLUSDT 8h
-
-**Core idea:** Extreme funding rates alone are noise-tested (#24 funding fade: 0/7 OOS). Extreme price deviations alone are noise-tested (#26 sigma extremes, pending). But the INTERACTION — extreme funding AND extreme price — may isolate forced positioning that unwinds predictably.
-
-**Edge theory:** When funding is extreme (crowded) AND price is far from average (overextended), participants are doubly trapped. The combination is a stronger signal than either alone. This is a compound signal, not a single-signal filter.
-
-**Data sources:** OHLCV + Funding rate history (Binance, 8h intervals, ~730 days)
-
-**Sweep parameters (36 configs):**
-| Parameter | Values |
-|---|---|
-| `fundingThreshold` | 0.0003, 0.0005, 0.0008 (absolute funding rate level) |
-| `priceSigma` | 1.5, 2.0, 2.5 (price deviation from SMA, in sigma) |
-| `maxHold` | 6, 12, 24 bars |
-
-**Signal logic:**
-1. Fetch OHLCV + funding rate history (align to 8h timestamps)
-2. Compute SMA and rollingStd for price sigma
-3. LONG when funding > fundingThreshold AND z-score > priceSigma (crowded long + price extended up → SHORT; OR crowded short + price extended down → LONG). Wait — direction:
-   - funding > threshold (positive = longs paying shorts) AND z-score > priceSigma → SHORT (fade crowded longs at price extreme)
-   - funding < -threshold AND z-score < -priceSigma → LONG (fade crowded shorts at price extreme)
-4. Exit at maxHold OR funding returns to neutral (< threshold/2)
-
-**Why genuinely different:** Combines two previously-falsified single-signal hypotheses (#24 funding fade + #9 basis trading) into a compound signal. Previous composite tests (#10 sentiment × funding) used sentiment; this uses structural price level. The compound filter may isolate trades that single signals cannot. This tests a genuinely different hypothesis: interactions between derivatives and price signals can be alpha-generating even when individual signals are not.
+If the 730-day lookback from the original script is the hard limit (API constraints), we use Option C instead, which still gives 5 windows of 182-day tests.
 
 ---
 
-## Implementation Checklist
+## Work Plan
 
-For each hypothesis (#24-#27):
-- [ ] Write backtest script in `src/forest/backtest/`
-- [ ] Follow existing pattern: fetchOHLCV + fetchFundingRate (where needed) + param grid + OOS 65/35 + bootstrap CI 1000
-- [ ] Pin end date to `2025-09-19` (consistent with existing tests)
-- [ ] Report pass criteria: >=5 OOS trades + Sharpe > 0 + CI lo > 0
-- [ ] Write results to `plans/reports/`
-- [ ] Update master falsification report
+### Phase 1: Build the Walk-Forward Validation Script
 
-## Infrastructure to Reuse
+**File:** `src/forest/backtest/funding-price-extreme-walkforward.ts`
 
-- `src/forest/backtest/cost-model.ts` — `resolveStressConfig`, `applyCosts`
-- `src/forest/backtest/data-fetcher.ts` — `fetchOHLCV` (OHLCV for all exchanges)
-- `src/forest/backtest/ohlcv.ts` — `Candle` interface
-- `src/forest/backtest/cross-exchange-funding.ts` — funding rate fetch functions (inline, reusable pattern)
-- `src/forest/backtest/volume-price-divergence.ts` — bootstrap CI pattern
+**What it does:**
+1. Fetch 1277+ days of SOLUSDT 8h candles + funding rates (extend `LOOKBACK_DAYS` from 730 to 1400)
+2. Run the 27-config grid across 4 rolling windows (Option B)
+3. For each window x config:
+   - Train on 548-day window
+   - Test on 182-day window
+   - Record: trades, PnL, Sharpe, winRate, maxDrawdown, CI
+4. Aggregate across windows: total OOS trades, overall Sharpe, CI
+5. Pass criteria per window: Sharpe > 0 AND CI lower bound > 0
+6. Report: per-window + aggregated + per-config stability
 
-## Data Notes
+**Key design decisions:**
+- Reuse `fetchOHLCV` from `data-fetcher.ts` and `fetchFunding` pattern from the existing candidate
+- Reuse `resolveStressConfig`, `applyCosts` from `cost-model.ts`
+- Keep the same `runBacktest` logic from the candidate (SMA40 z-score + funding threshold)
+- Adapt `bootstrapCI` to use block length proportional to the OOS window size
+- Use `computeMetrics` from the candidate (already handles Sharpe, winRate, profitFactor)
 
-- OHLCV: ~730 days available for all assets at all intervals
-- Funding rate: available via `https://fapi.binance.com/fapi/v1/fundingRate` (8h intervals, ~730 days)
-- Open interest: limited to ~60 days (hourly endpoint). NOT used in these hypotheses.
-- No new data sources needed. All4 hypotheses use only OHLCV + funding rate.
+**Acceptance criteria:**
+- Script compiles with `npx tsx` without errors
+- Produces a markdown report with per-window + aggregated tables
+- Total OOS trades across all windows >= 15 (target 30+)
+- Report includes pass/fail per window per config
+
+**Agent:** `fullstack-developer` for implementation
+
+---
+
+### Phase 2: Parameter Robustness (Perturbation Analysis)
+
+**File:** Extend `funding-price-extreme-walkforward.ts` or add a new section
+
+**What it does:**
+1. Take the top 5 passing configs from Phase 1
+2. For each config, generate 8 perturbed variants:
+   - fundThr: +/- 20%, +/- 50%
+   - priceSig: +/- 0.25, +/- 0.5
+   - maxHold: +/- 2, +/- 4
+3. Run each perturbed config through the same walk-forward windows
+4. Measure: what fraction of perturbations still pass OOS?
+
+**Interpretation:**
+- If 7/8 perturbations pass: signal is robust (high confidence)
+- If 5/8 perturbations pass: signal is somewhat fragile
+- If 2/8 or fewer pass: signal is overfit (falsified)
+
+**Acceptance criteria:**
+- Perturbation grid: 5 configs x 9 variants (original + 8 perturbations) = 45 configs total
+- Report shows pass-rate per original config
+- Clear fragility score
+
+**Agent:** `fullstack-developer` for implementation
+
+---
+
+### Phase 3: Regime-Conditioned Analysis
+
+**File:** Extend `funding-price-extreme-walkforward.ts` or add a new section
+
+**What it does:**
+1. For each passing config + window, classify the regime at each trade entry using `RuleBasedRegimeClassifier` + `extractRegimeFeatures`
+2. Build a regime-to-performance table: which regimes produce positive PnL?
+3. Identify: does the signal only work in specific regimes?
+4. If regime-specific, quantify: what fraction of OOS time is spent in that regime?
+
+**Implementation approach:**
+- Reuse `RuleBasedRegimeClassifier` from `@/tree/regime/classifier`
+- Reuse `extractRegimeFeatures` from `@/tree/regime/features`
+- For each trade in each OOS window, call `extractRegimeFeatures` at the entry candle index
+- Classify the regime and attach it to the trade
+- Aggregate PnL by regime
+
+**Acceptance criteria:**
+- Regime breakdown table in report
+- Identification of "where does this signal actually work?"
+- If signal works in only 1 regime with <30% of OOS time, flag as regime-specific (not broadly robust)
+
+**Agent:** `fullstack-developer` for implementation
+
+---
+
+### Phase 4: Baseline Comparison
+
+**File:** Extend the walk-forward script or create `src/forest/backtest/funding-price-extreme-baselines.ts`
+
+**What it does:**
+For each OOS window, run:
+1. **Buy & Hold:** Simple buy at window start, sell at window end
+2. **Random Entry:** Entry at random candle indices, hold for random duration (Monte Carlo, 1000 runs)
+3. **Simple Momentum:** Buy if price > SMA, sell if price < SMA
+4. **Mean Reversion:** Buy if RSI < 30, sell if RSI > 70
+
+Compare per-window PnL, Sharpe, maxDrawdown of the candidate against these baselines.
+
+**Implementation approach:**
+- Reuse `runBaseline` from `@/forest/alpha/baselines/runner` for Buy&Hold and Random Entry
+- Implement simple momentum/mean-reversion inline (or use existing implementations from `baseline-compare.ts`)
+- Run on the same OOS candle slices as the candidate
+
+**Acceptance criteria:**
+- Side-by-side comparison table per window
+- Candidate must beat Random Entry on Sharpe (random is ~0) to be worth pursuing
+- Candidate should beat or match Buy&Hold to justify the complexity
+
+**Agent:** `fullstack-developer` for implementation
+
+---
+
+### Phase 5: Trade Count Sufficiency Analysis
+
+**What it does:**
+1. Calculate: given the observed win-rate and per-trade PnL variance, how many OOS trades are needed for the bootstrap CI to be reliable?
+2. Method: bootstrap power analysis
+   - Simulate trade PnL distributions from the observed data
+   - Vary N from 5 to 100
+   - For each N, compute the fraction of bootstrap resamples where CI lower bound > 0
+   - Find the N where this fraction stabilizes (>95% of resamples give consistent CI)
+3. Report: current trade count vs. required trade count
+
+**Acceptance criteria:**
+- Clear answer: "N=XX trades needed for reliable CI at 95% confidence"
+- Comparison with actual OOS trade count
+- If required N > actual N: flag as insufficient evidence
+
+**Agent:** Can be part of the walk-forward script or a separate analysis section
+
+---
+
+### Phase 6: Go/No-Go Decision Framework
+
+**Decision criteria (concrete thresholds):**
+
+| Criterion | GO | CONDITIONAL | NO-GO |
+|---|---|---|---|
+| OOS trades (total across windows) | >=30 | 15-29 | <15 |
+| Pass rate (% of configs passing all windows) | >=50% | 20-49% | <20% |
+| Parameter robustness (perturbation pass rate) | >=7/9 | 5-9 | <5 |
+| Baseline comparison (Sharpe vs Random) | Sharpe > 1.0 | Sharpe 0.3-1.0 | Sharpe <= 0.3 |
+| Regime breadth | Works in 2+ regimes | Works in 1 regime | No regime dominance |
+| CI stability (lower bound > 0 in >90% of bootstrap resamples) | Yes | Marginal | No |
+
+**Scoring:**
+- GO: 5+ criteria at GO level, none at NO-GO
+- CONDITIONAL: 3-4 criteria at GO, at most 1 at NO-GO
+- NO-GO: 2+ criteria at NO-GO level, or critical failures (OOS trades < 15, or Sharpe <= 0)
+
+---
+
+## Agent Recommendations
+
+| Step | Agent | Rationale |
+|---|---|---|
+| Phase 1: Walk-forward script | `fullstack-developer` | Complex implementation, needs TypeScript + API + data pipeline |
+| Phase 2: Perturbation analysis | `fullstack-developer` | Extends Phase 1 script |
+| Phase 3: Regime analysis | `fullstack-developer` | Integrates regime classifier with existing backtest |
+| Phase 4: Baseline comparison | `fullstack-developer` | Reuses existing `runBaseline` infrastructure |
+| Phase 5: Trade count analysis | `fullstack-developer` | Statistical analysis, part of main script |
+| Phase 6: Verdict | `suntzu` | Reviewer/evaluator role — pass/fail decision |
+
+**Execution order:** Phases 1-4 can be implemented in a single script. Phase 5 is analysis on the output. Phase 6 is a review gate.
+
+---
+
+## Risks and Gates
+
+### Risk 1: API Data Limitation
+Binance SOLUSDT futures funding data may not extend back far enough for 4 rolling windows of 548+182 days.
+- **Mitigation:** Fall back to Option C (expanding window) with 5 shorter windows. If even that fails, use ETHUSDT or BTCUSDT which have longer history.
+- **Gate:** Script must successfully fetch data for at least 3 windows before proceeding.
+
+### Risk 2: Signal Disappears Across All Windows
+The original signal may have been pure overfitting to the 2025-09-19 OOS window.
+- **Mitigation:** This IS the purpose of the test. If the signal disappears, we falsify and move on.
+- **Gate:** If 0/4 windows pass, declare NO-GO and stop.
+
+### Risk 3: Insufficient Trade Count Even with Multiple Windows
+The strategy's trade frequency may be too low for statistical significance.
+- **Mitigation:** Reduce `maxHold` to increase trade frequency, or lower `fundingThreshold` slightly. But these changes must be tested in the perturbation analysis.
+- **Gate:** Total OOS trades < 15 across all windows = insufficient evidence.
+
+### Risk 4: Regime Lock
+The signal works only in one regime that happened to dominate one window.
+- **Mitigation:** Regime-conditioned analysis (Phase 3) explicitly tests this.
+- **Gate:** If signal works in only 1 regime with <30% OOS time = regime-specific, not broadly robust.
+
+---
+
+## What to Avoid
+
+1. **Do not optimize parameters further.** The current 27-config grid is sufficient. Further optimization on in-sample data will increase overfitting risk.
+2. **Do not use the existing `walkforward.ts` directly.** It expects `BacktestResult` type which requires full equity curves and trade logs. The candidate uses its own `Trade`/`Metrics` types. Adapt the windowing logic, not the type system.
+3. **Do not skip cost modeling.** Use `conservative` stress config (17 bps total) as the candidate already does.
+4. **Do not use future data.** The existing `extractRegimeFeatures` is already causal (annotated in source). Ensure all funding rate lookups are also causal.
+5. **Do not make go/no-go decisions based on in-sample performance.** Only OOS metrics matter.
+6. **Do not extend to other assets (ETH, BTC) until SOL is confirmed.** Cross-asset testing is a follow-up, not this phase.
+
+---
+
+## Ship Plan
+
+### Step 1: Implement `funding-price-extreme-walkforward.ts`
+- Fetch 1400 days of data (SOLUSDT 8h + funding)
+- Implement rolling window logic (4 windows, 548 train / 182 test)
+- Run 27-config grid through all windows
+- Bootstrap CI per window, aggregated CI across windows
+- Regime classification at each trade entry
+- Parameter perturbation for top 5 configs
+- Baseline comparison (Buy&Hold + Random Entry per window)
+- Trade count sufficiency analysis
+- Markdown report with all tables
+
+### Step 2: Run and analyze
+- Execute the script
+- Read the report
+- Apply the go/no-go framework
+
+### Step 3: Verdict
+- If GO: proceed to paper-trading simulation
+- If CONDITIONAL: identify specific follow-up tests needed
+- If NO-GO: falsify candidate, document findings
+
+---
+
+## Success Metrics
+
+- [ ] Script compiles and runs end-to-end
+- [ ] Data fetched for 4 rolling windows (1400+ days)
+- [ ] Total OOS trades reported across all windows
+- [ ] Per-window pass/fail with bootstrap CI
+- [ ] Parameter robustness scores for top configs
+- [ ] Regime breakdown table
+- [ ] Baseline comparison table
+- [ ] Trade count sufficiency analysis
+- [ ] Clear go/no-go recommendation
+
+---
+
+## Assumptions
+
+1. **Binance SOLUSDT futures have ~1500+ days of data available.** If not, fall back to expanding window. Confidence: high (SOL futures launched 2020-09).
+2. **The existing `fetchOHLCV` caching works reliably.** Confidence: high (tested in `ohlcv-cache.test.ts`).
+3. **Funding rate data from Binance `fapi/v1/fundingRate` is available for the full 1400-day range.** Confidence: medium (API may have pagination limits).
+4. **The SMA40 period and rolling window are appropriate for the extended data range.** Confidence: high (SMA40 on 8h = 13.3 days, which is a reasonable lookback for crypto funding cycles).
+5. **30 OOS trades across 4 windows is achievable.** Current rate: 5-10 trades per 365-day window. 4 windows of 182 days = ~2.5-5.5 trades per window = ~10-22 total. This may fall short of 30. Confidence: medium. If we fall short, we may need to extend to 5-6 windows (Option C) or increase the test period.

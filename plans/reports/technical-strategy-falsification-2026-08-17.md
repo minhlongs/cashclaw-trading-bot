@@ -241,10 +241,18 @@ Price reaching N std devs from SMA → mean reverts. More extreme = stronger sig
 - Second: fundThr=0.0003, priceSig=2.0, maxHold=24 → 6 OOS trades, $2,695 PnL, Sharpe 1.53, CI[$395,$942]
 - **Robustness check complete:**
   - SOL 2025-09-19 window: **12/27 PASS** (strong in-sample)
-  - SOL 2024-09-19 window (different OOS period): **0/27 PASS** — signal disappears
+  - SOL 2024-09-19 window: **0/27 PASS — DATA FETCH FAILURE (only 95 candles fetched, invalid test)**
   - ETH 2025-09-19 window (different asset): **2/27 PASS** — weak
-- **Verdict: INCONCLUSIVE / regime-specific.** Signal is NOT robust across OOS windows on the same asset. The 12/27 on SOL with the 2025-09-19 window is likely regime-specific (the OOS period happened to have conditions favoring the strategy). Only 5-10 OOS trades per passing config — below 30-trade bootstrap threshold.
-- **Classification: CANDIDATE for further investigation, NOT confirmed alpha.** Requires larger sample + multi-asset + multi-window verification before any capital allocation.
+- **WALK-FORWARD VALIDATION COMPLETE — NO-GO.** 6 rolling windows (548d train / 182d test, 2020-2024), 27 configs × 6 windows = 162 OOS tests, 1032 total OOS trades.
+  - Window 1 (Apr–Oct 2022): **9/27 PASS**
+  - Window 2 (Oct 2022–Apr 2023): **0/27 PASS**
+  - Window 3 (Apr–Oct 2023): **1/27 PASS**
+  - Window 4 (Oct 2023–Apr 2024): **0/27 PASS**
+  - Window 5 (Apr–Oct 2024): **0/27 PASS**
+  - Window 6 (Oct 2024–Apr 2025): **0/27 PASS**
+  - **Total: 10/162 OOS passes (6%), aggregate PnL -$455,090.**
+  - **No config passes in more than 1/6 windows.** Signal is purely regime-locked to mid-2022 bear market.
+  - **Classification: FALSIFIED.** This is regime-specific overfitting, not persistent alpha. The 12/27 on SOL 2025-09-19 was an artifact of the 2022-2023 recovery regime, not a reproducible edge. See `funding-price-extreme-walkforward.ts` and report `plans/reports/funding-price-extreme-walkforward-solusdt-1758240000000.md`.
 
 **System correctly identifies that no tested strategy class should trade live capital.** This is valid scientific falsification, not failure.
 
