@@ -47,12 +47,35 @@
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean
 
+## Alpha Discovery Engine (Phases 1–10)
+
+All 10 phases of the autonomous alpha discovery + regime-aware research engine are complete.
+
+| Phase | What shipped | Evidence |
+|---|---|---|
+| 1. Reconnaissance | Full architecture audit, reuse map, risk map, data flow diagram, `docs/alpha-discovery-architecture.md` | architecture doc |
+| 2. Alpha Lab | Modular research layer: `tree/alpha/` (indicators, labeling, correlation, factors, hypothesis, portfolio, signals) + `forest/alpha/` (pipeline, baselines, evaluation, attribution, experiments) | modules + 244 tests |
+| 3. Regime Engine | Deterministic `RuleBasedRegimeClassifier` with 7 regimes, `extractRegimeFeatures` (6 features), causal regression tests (`leakage.test.ts`, 6 tests), hysteresis, alpha routing | `src/tree/regime/` |
+| 4. Feature Pipeline | `declareFeature()` gate requiring name/timeframe/source/lookback/availability/causal; rejects non-causal features; `FeatureSource` / `FeatureAvailability` types | `indicator-types.ts` |
+| 5. Triple-Barrier Labeling | `labelEvent()` with configurable TP/SL/timeout, 17 tests covering TP-first, SL-first, simultaneous, timeout, edge cases | `labeling.ts` |
+| 6. Experiment Engine | `ExperimentConfig` with hypothesis/dataset/feature set/regime filter/entry+exit rules/cost+slippage model/train+val+test periods/seed/git-commit; deterministic `runExperiment` with DI | `experiments/` |
+| 7. Walk-Forward Validation | Rolling/expanding windows: train → validate → test; in-sample, validation, out-of-sample metrics | `walkforward.ts` |
+| 8. Cost Model | `applyCosts()` with NORMAL/CONSERVATIVE/ADVERSE stress modes (5/10/20+ bps); gross → net PnL | `cost-model.ts` |
+| 9. Strategy Evaluation | Full evaluation report: Sharpe, Sortino, profit factor, expectancy, max drawdown, fees, exposure, regime breakdown, monthly breakdown | `evaluation/report.ts` |
+| 10. Baselines | Buy & Hold, Random Entry, Simple Momentum, Simple Mean Reversion benchmarks | `baselines/` |
+
+**Non-TA market-structure layer (commits `52d9ef9`, `7a1c8c2`, `57db6ae`):**
+Four Binance signal sources (funding rate, OI, liquidation, premium index) with causal feature computation, 1.5x vote-margin aggregation, per-source failure logging, cache safety, and deterministic offline injection.
+
+**Falsification result:** Zero strategies with positive out-of-sample expectancy on 2026 data (see `plans/reports/technical-strategy-falsification-2026-08-17.md`). This is the honest answer — nothing works yet.
+
 ## Known Backlog (v2 and beyond)
 
 - **BotManager hydration architecture** — replace in-memory registry + per-request hydration with a cold-start-resilient store (Durable Objects or direct-D1 reads everywhere).
 - **Cross-exchange routing** — routing across binance/bybit/okx at runtime.
 - **Live exchange** — CCXT on Workers feasibility is unresolved; requires D1 provisioning, live engine wiring, and explicit customer opt-in.
 - **Coverage tail** — 87.5%→90% possible (page-client, LandingClient, CtaClient) but low signal for v1; revisit after more business-logic tests.
+- **Live derivative data** — all four `/fapi/v1/*` endpoints return HTTP 403 from this environment; derivative fetchers are exercised only via offline injection.
 
 ## Conventions
 
