@@ -44,7 +44,7 @@ describe('declareFeature', () => {
   });
 
   it('rejects a missing availability', () => {
-    expect(() => declareFeature({ ...VALID, availability: undefined as unknown as string })).toThrow(/availability/);
+    expect(() => declareFeature({ ...VALID, availability: undefined as unknown as never })).toThrow(/availability/);
   });
 
   it('rejects a missing causal flag', () => {
