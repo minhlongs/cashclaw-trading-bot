@@ -23,7 +23,6 @@
     "src/lib/db/schema-backtest.ts",
     "src/forest/alpha/attribution/index.ts",
     "src/forest/alpha/dashboard/index.ts",
-    "src/forest/alpha/demo.ts",
     "src/forest/alpha/evaluation/index.ts",
     "src/forest/alpha/execution/index.ts",
     "src/forest/alpha/experiments/index.ts",
@@ -39,11 +38,7 @@
     "src/forest/alpha/readiness/index.ts",
     "src/forest/alpha/reports/formatter.ts",
     "src/forest/alpha/reports/index.ts",
-    "src/forest/backtest/regime-backtest-types.ts",
-    "src/forest/backtest/regime-backtest.ts",
-    "src/tree/regime/alpha-router.ts",
-    "src/forest/backtest/paper-simulator.ts",
-    "src/forest/backtest/real-data-runner.ts"
+    "src/tree/regime/alpha-router.ts"
   ],
   "ignoreExportsUsedInFile": true,
   "exclude": [
@@ -75,6 +70,21 @@
       "exports"
     ],
     "src/forest/backtest/metrics-extended.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/data-fetcher.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/integration/fixtures.ts": [
+      "exports"
+    ],
+    "src/forest/backtest/actions.ts": [
+      "exports"
+    ],
+    "src/forest/backtest/cost-model.ts": [
+      "exports"
+    ],
+    "src/forest/backtest/ohlcv-cache.ts": [
       "exports"
     ]
   }
