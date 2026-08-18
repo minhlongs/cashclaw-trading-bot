@@ -2,6 +2,12 @@
 
 ## v1 Paper-Trading Platform
 
+### Alpha Discovery Campaign — Complete (2026-08-18)
+- **Falsification campaign concluded:** 24 hypothesis classes tested across TA, funding rates, ML regime detection, cross-asset pairs, sentiment, composites, and market-structure signals. **Zero persistent out-of-sample positive expectancy.**
+- **Walk-forward validation** (`funding-price-extreme-walkforward.ts`): 6 rolling windows (548d train / 182d test), 162 OOS tests, 1,032 total OOS trades. Last candidate (funding × price extreme interaction) scored 10/162 OOS passes (6%), aggregate PnL -$455,090 — regime-locked to mid-2022 bear market, pure overfitting.
+- **Definitive report:** `docs/falsification-report.md` — methodology, results by signal class, data limitations, and implications for platform design.
+- **Roadmap updated** to reflect campaign completion and the gate on new data infrastructure for future alpha research.
+
 ### Core Platform
 - Next.js 16 App Router scaffold, bilingual i18n (vi/en), D1 schema (users/bots/trades/events/snapshots), paper exchange simulator, grid + mean-reversion strategy chain.
 
