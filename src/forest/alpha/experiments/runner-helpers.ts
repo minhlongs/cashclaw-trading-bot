@@ -1,7 +1,7 @@
 // Experiment Engine — Runner Helpers
 // Pure functions extracted to keep runner.ts under 200 lines.
 
-import type { PeriodMetrics, RegimePerformance, RegimePerformanceEntry, SymbolPerformance, SymbolPerformanceEntry } from './types';
+import type { PeriodMetrics, RegimePerformance, SymbolPerformance, SymbolPerformanceEntry } from './types';
 import type { BacktestResult } from '@/forest/backtest/types';
 import { RegimeLabel } from '@/tree/regime/types';
 

@@ -13,6 +13,7 @@ import type {
   SignalData, EventData, WalkforwardData,
   CostData, EvalData, AttributeData, BaselineData, DerivativeData,
 } from './types';
+import { createLogger } from '@/lib/logger';
 import { extractRegimeFeatures } from '@/tree/regime/features';
 import {
   fetchFundingRate,
@@ -31,6 +32,7 @@ import { applyCosts, resolveStressConfig, type StressMode } from '@/forest/backt
 import { runBaseline } from '@/forest/alpha/baselines';
 
 const TOP_N = 10;
+const log = createLogger('pipeline');
 
 function elapsed(t0: number): number { return performance.now() - t0; }
 
@@ -120,227 +122,233 @@ export class AlphaResearchPipeline {
 
   getResults(): PipelineStepResult[] { return [...this.results]; }
 
+  // ── Step dispatcher (complexity kept low) ─────────────────────────────────
+
   private async doStep(step: PipelineStep): Promise<unknown> {
-    const { candles, indicatorSet, regimeConfig, walkforwardConfig, costMode, minSharpe, minTrades, baselinesEnabled } = this.cfg;
     switch (step) {
-      case 'fetch_data':
-        if (candles.length === 0) throw new Error('No candles');
-        return candles;
-
-      case 'fetch_derivatives': {
-        // Allow tests to inject pre-fetched derivative data offline.
-        if (this.cfg.derivatives) return this.cfg.derivatives;
-        const symbol = this.cfg.symbol;
-        const t0 = candles[0]?.timestamp ?? 0;
-        const t1 = candles[candles.length - 1]?.timestamp ?? Date.now();
-        // Network failures must not abort the pipeline — derivatives are an
-        // optional alpha source. Failures fall back to empty features.
-        const empty: DerivativeData = { features: [], signals: [] };
-        try {
-          // Fetch each source independently so a single 403/timeout does not
-          // wipe the others; failures are logged and degrade to empty arrays.
-          const fetchWithLog = async <T>(label: string, p: Promise<T>): Promise<T> => {
-            try { return await p; }
-            catch (err) { console.warn(`[pipeline] derivative source '${label}' failed`, err instanceof Error ? err.message : err); return [] as unknown as T; }
-          };
-          const [funding, oi, liquidations, premium] = await Promise.all([
-            fetchWithLog('funding', fetchFundingRate(symbol, t0, t1)),
-            fetchWithLog('oi', fetchOpenInterestHistory(symbol, '1h', t0, t1)),
-            fetchWithLog('liquidations', fetchLiquidations(symbol, t0)),
-            fetchWithLog('premiumIndex', fetchPremiumIndex(symbol, t0, t1)),
-          ]);
-          const features = computeDerivativeFeatures(candles, funding, oi, liquidations, premium);
-          const signals = generateDerivativeSignals(candles, features, symbol);
-          return { features, signals } as DerivativeData;
-        } catch (err) {
-          console.warn('[pipeline] fetch_derivatives failed entirely', err instanceof Error ? err.message : err);
-          return empty;
-        }
-      }
-
-      case 'compute_indicators': {
-        const names = Object.keys(indicatorSet);
-        const features: Record<string, number>[] = [];
-        for (let i = 0; i < candles.length; i++) {
-          const win = candles.slice(Math.max(0, i - (indicatorSet.lookback ?? 20) + 1), i + 1);
-          const f: Record<string, number> = {};
-          for (const n of names) {
-            if (n === 'lookback') continue;
-            const fn = indicators[n];
-            if (fn) {
-              const result = fn(win, 20, '1h');
-              const v = typeof result.value === 'number' ? result.value : 0;
-              f[n] = v;
-            }
-          }
-          features.push(f);
-        }
-        return { features, names } as IndicatorData;
-      }
-
-      case 'detect_regimes': {
-        const classifier = new RuleBasedRegimeClassifier();
-        const regimes: RegimeResult[] = [];
-        for (let i = 0; i < candles.length; i++) {
-          const window = candles.slice(Math.max(0, i - 50), i + 1);
-          if (window.length < 2) continue;
-          const features = extractRegimeFeatures(window, regimeConfig);
-          if (!features) continue;
-          const result = classifier.classify(features, regimeConfig);
-          regimes.push(result);
-        }
-        return { regimes, history: regimes } as RegimeData;
-      }
-
-      case 'generate_signals': {
-        const rd = this.map.get('detect_regimes') as { regimes: RegimeResult[] } | undefined;
-        const id = this.map.get('compute_indicators') as IndicatorData | undefined;
-        const dd = this.map.get('fetch_derivatives') as DerivativeData | undefined;
-        const signals: AlphaSignal[] = [];
-        const off = regimeConfig.lookback, lb = indicatorSet['lookback'] ?? 20;
-        for (let i = 0; rd && id && i < rd.regimes.length; i++) {
-          const idx = i + off, f = id.features[idx];
-          if (!f) continue;
-          const rsi = f['rsi'] ?? 50, regime = rd.regimes[i].label, ts = candles[idx].timestamp;
-          const fv: FeatureVector = { features: Object.entries(f).map(([id2, v]) => ({ id: id2, value: v, causal: false })), computedAt: ts, symbol: this.cfg.symbol, lookback: lb };
-          let name: string, dir: AlphaSignal['direction'], conf = 0;
-          if (rsi < 30 && regime === RegimeLabel.TREND_UP) { name = 'rsi_regime_buy'; dir = 'buy'; conf = (30 - rsi) / 30; }
-          else if (rsi > 70 && regime === RegimeLabel.TREND_DOWN) { name = 'rsi_regime_sell'; dir = 'sell'; conf = (rsi - 70) / 30; }
-          else { name = 'hold'; dir = 'hold'; }
-          signals.push({ name, direction: dir, confidence: conf, features: fv, source: 'indicator', timestamp: ts, metadata: {} });
-        }
-        // Merge non-TA derivative signals (funding rate, OI, liquidations, basis)
-        for (const ds of dd?.signals ?? []) {
-          const dir: AlphaSignal['direction'] = ds.direction === 'short' ? 'sell' : ds.direction === 'long' ? 'buy' : 'hold';
-          const fv: FeatureVector = {
-            features: [{ id: 'derivative', value: ds.confidence, causal: true }],
-            computedAt: ds.timestamp, symbol: ds.symbol, lookback: 20,
-          };
-          signals.push({
-            name: ds.reasons[0] ?? 'derivative', direction: dir, confidence: ds.confidence,
-            features: fv, source: 'indicator', timestamp: ds.timestamp,
-            metadata: { reasons: ds.reasons, features: ds.features },
-          });
-        }
-        return { signals } as SignalData;
-      }
-
-      case 'label_events': {
-        const sd = this.map.get('generate_signals') as SignalData | undefined;
-        return { labels: (sd?.signals ?? []).map(s => s.direction) } as EventData;
-      }
-
-      case 'run_walkforward': {
-        const sd = this.map.get('generate_signals') as SignalData | undefined;
-        if (!sd) throw new Error('No signals for walkforward');
-        const trainBars = walkforwardConfig.trainBars ?? 20;
-        const testBars = walkforwardConfig.testBars ?? 10;
-        const stepBars = walkforwardConfig.stepBars ?? 10;
-        const total = trainBars + testBars * 3;
-        if (candles.length < total) throw new Error(`Not enough candles: ${candles.length} < ${total}`);
-        const _ = { trainBars, testBars, stepBars };
-
-        // Extract trades for walkforward using canonical extractTrades
-        const off = regimeConfig.lookback;
-        const costCfgWf = resolveStressConfig(costMode as StressMode);
-        const trades = extractTrades(sd.signals, candles.slice(0, total), off, { ...costCfgWf, marketImpactPct: 0 });
-        const tc = trades.length;
-        const tp = trades.reduce((s, t) => s + t.pnl, 0);
-        const wc = trades.filter(t => t.pnl > 0).length;
-        const m: ExtendedBacktestMetrics = {
-          id: '', bot_id: '', strategy: 'alpha-research', pair: this.cfg.symbol, exchange: '',
-          start_date: 0, end_date: Date.now(),
-          total_trades: trades.length, win_count: wc, loss_count: trades.length - wc,
-          win_rate: trades.length ? wc / trades.length : 0, total_pnl: tp, max_drawdown: 0,
-          sharpe_ratio: null, params_json: '{}', equity_curve_json: [], trades_json: trades,
-          created_at: Date.now(), profit_factor: 0, expectancy: 0, sortino_ratio: null,
-          max_drawdown_duration: 0, calmar_ratio: 0, avg_trade: 0, median_trade: 0,
-          turnover: 0, recovery_factor: 0, exposure_pct: 0,
-        };
-
-        // Compute equity curve from trades for Sharpe
-        const eq: BacktestEquityPoint[] = [];
-        let equity = 10000, peak = equity;
-        for (const t of trades) {
-          equity += t.pnl;
-          peak = Math.max(peak, equity);
-          const dd = peak > 0 ? ((peak - equity) / peak) * 100 : 0;
-          eq.push({ timestamp: t.exitTimestamp, equity, drawdownPct: dd });
-        }
-        const intervalMin = parseCandleIntervalMinutes(this.cfg.timeframe);
-        const sp = eq.length >= 2 ? computeSharpe(eq, intervalMin) : 0;
-        return { sharpe: sp, totalTrades: tc, passed: sp >= minSharpe && tc >= minTrades } as WalkforwardData;
-      }
-
-      case 'evaluate': {
-        const sd = this.map.get('generate_signals') as SignalData | undefined;
-        const rd = this.map.get('detect_regimes') as RegimeData | undefined;
-        const off = regimeConfig.lookback;
-        const costCfg = resolveStressConfig(costMode as StressMode);
-        const trades = extractTrades(sd?.signals ?? [], candles, off, { ...costCfg, marketImpactPct: 0 });
-        const tp = trades.reduce((s, t) => s + t.pnl, 0);
-        const wc = trades.filter(t => t.pnl > 0).length;
-        const m: ExtendedBacktestMetrics = {
-          id: '', bot_id: '', strategy: 'alpha-research', pair: this.cfg.symbol, exchange: '',
-          start_date: 0, end_date: Date.now(),
-          total_trades: trades.length, win_count: wc, loss_count: trades.length - wc,
-          win_rate: trades.length ? wc / trades.length : 0, total_pnl: tp, max_drawdown: 0,
-          sharpe_ratio: null, params_json: '{}', equity_curve_json: [], trades_json: trades,
-          created_at: Date.now(), profit_factor: 0, expectancy: 0, sortino_ratio: null,
-          max_drawdown_duration: 0, calmar_ratio: 0, avg_trade: 0, median_trade: 0,
-          turnover: 0, recovery_factor: 0, exposure_pct: 0,
-        };
-        // Compute cost breakdown from trades for the report
-        const totalFees = trades.reduce((s, t) => s + t.fee, 0);
-        const grossPnl = trades.reduce((s, t) => s + t.pnl, 0) + totalFees;
-        const costBreakdown = { fees: totalFees, slippage: 0, marketImpact: 0 };
-        const regimeLabel = rd?.regimes[0]?.label ?? RegimeLabel.UNKNOWN;
-        return { report: generateReport({
-          experimentId: `pipeline-${this.cfg.symbol}-${this.cfg.timeframe}`,
-          symbol: this.cfg.symbol, timeframe: this.cfg.timeframe, regime: regimeLabel,
-          metrics: m, costBreakdown,
-        }, candles) } as EvalData;
-      }
-
-      case 'compute_costs': {
-        const ev = this.map.get('evaluate') as EvalData | undefined;
-        const report = ev?.report;
-        const fees = report?.fees ?? 0;
-        const slippage = report?.slippage ?? 0;
-        const grossPnl = (report?.netPnl ?? 0) + fees + slippage;
-        return {
-          grossPnl,
-          netPnl: report?.netPnl ?? 0,
-          fees,
-          slippage,
-        } as CostData;
-      }
-
-      case 'attribute': {
-        const sd = this.map.get('generate_signals') as SignalData | undefined;
-        const rd = this.map.get('detect_regimes') as RegimeData | undefined;
-        const trades = extractTrades(sd?.signals ?? [], candles, regimeConfig.lookback);
-        const obs = (rd?.regimes ?? []).map(r => ({ timestamp: r.timestamp, label: r.label }));
-        return { attributions: attributePerformance(trades, sd?.signals ?? [], obs) } as AttributeData;
-      }
-
-      case 'compare_baselines': {
-        if (!baselinesEnabled) return { baselines: [], reports: {} } as BaselineData;
-        const sm = costMode as StressMode;
-        const baselineStrategies: BaselineStrategy[] = ['buy_hold', 'simple_momentum'];
-        const configs: BaselineConfig[] = baselineStrategies.map(s => ({
-          strategy: s, symbol: this.cfg.symbol, timeframe: this.cfg.timeframe,
-          stressMode: sm, feePct: 0.001, slipPct: 0.0005,
-        }));
-        const reports: Record<string, EvaluationReport> = {};
-        for (const c of configs) {
-          reports[c.strategy] = runBaseline(candles, c);
-        }
-        return { baselines: configs, reports } as BaselineData;
-      }
-
+      case 'fetch_data': return this.stepFetchData();
+      case 'fetch_derivatives': return this.stepFetchDerivatives();
+      case 'compute_indicators': return this.stepComputeIndicators();
+      case 'detect_regimes': return this.stepDetectRegimes();
+      case 'generate_signals': return this.stepGenerateSignals();
+      case 'label_events': return this.stepLabelEvents();
+      case 'run_walkforward': return this.stepRunWalkforward();
+      case 'evaluate': return this.stepEvaluate();
+      case 'compute_costs': return this.stepComputeCosts();
+      case 'attribute': return this.stepAttribute();
+      case 'compare_baselines': return this.stepCompareBaselines();
       default: return null;
     }
+  }
+
+  // ── Individual step implementations ───────────────────────────────────────
+
+  private stepFetchData(): Candle[] {
+    if (this.cfg.candles.length === 0) throw new Error('No candles');
+    return this.cfg.candles;
+  }
+
+  private async stepFetchDerivatives(): Promise<DerivativeData> {
+    if (this.cfg.derivatives) return this.cfg.derivatives;
+    const symbol = this.cfg.symbol;
+    const { candles } = this.cfg;
+    const t0 = candles[0]?.timestamp ?? 0;
+    const t1 = candles[candles.length - 1]?.timestamp ?? Date.now();
+    const empty: DerivativeData = { features: [], signals: [] };
+    try {
+      const fetchWithLog = async <T>(label: string, p: Promise<T>): Promise<T> => {
+        try { return await p; }
+        catch (err) { log.warn(`derivative source '${label}' failed`, { action: 'fetchDerivatives', error: err instanceof Error ? err.message : String(err) }); return [] as unknown as T; }
+      };
+      const [funding, oi, liquidations, premium] = await Promise.all([
+        fetchWithLog('funding', fetchFundingRate(symbol, t0, t1)),
+        fetchWithLog('oi', fetchOpenInterestHistory(symbol, '1h', t0, t1)),
+        fetchWithLog('liquidations', fetchLiquidations(symbol, t0)),
+        fetchWithLog('premiumIndex', fetchPremiumIndex(symbol, t0, t1)),
+      ]);
+      const features = computeDerivativeFeatures(candles, funding, oi, liquidations, premium);
+      const signals = generateDerivativeSignals(candles, features, symbol);
+      return { features, signals } as DerivativeData;
+    } catch (err) {
+      log.warn('fetch_derivatives failed entirely', { action: 'fetchDerivatives', error: err instanceof Error ? err.message : String(err) });
+      return empty;
+    }
+  }
+
+  private stepComputeIndicators(): IndicatorData {
+    const { candles, indicatorSet } = this.cfg;
+    const names = Object.keys(indicatorSet);
+    const features: Record<string, number>[] = [];
+    for (let i = 0; i < candles.length; i++) {
+      const win = candles.slice(Math.max(0, i - (indicatorSet.lookback ?? 20) + 1), i + 1);
+      const f: Record<string, number> = {};
+      for (const n of names) {
+        if (n === 'lookback') continue;
+        const fn = indicators[n];
+        if (fn) {
+          const result = fn(win, 20, '1h');
+          const v = typeof result.value === 'number' ? result.value : 0;
+          f[n] = v;
+        }
+      }
+      features.push(f);
+    }
+    return { features, names };
+  }
+
+  private stepDetectRegimes(): RegimeData {
+    const { candles, regimeConfig } = this.cfg;
+    const classifier = new RuleBasedRegimeClassifier();
+    const regimes: RegimeResult[] = [];
+    for (let i = 0; i < candles.length; i++) {
+      const window = candles.slice(Math.max(0, i - 50), i + 1);
+      if (window.length < 2) continue;
+      const features = extractRegimeFeatures(window, regimeConfig);
+      if (!features) continue;
+      const result = classifier.classify(features, regimeConfig);
+      regimes.push(result);
+    }
+    return { regimes, history: regimes };
+  }
+
+  private stepGenerateSignals(): SignalData {
+    const { candles, regimeConfig, indicatorSet } = this.cfg;
+    const rd = this.map.get('detect_regimes') as { regimes: RegimeResult[] } | undefined;
+    const id = this.map.get('compute_indicators') as IndicatorData | undefined;
+    const dd = this.map.get('fetch_derivatives') as DerivativeData | undefined;
+    const signals: AlphaSignal[] = [];
+    const off = regimeConfig.lookback, lb = indicatorSet['lookback'] ?? 20;
+    for (let i = 0; rd && id && i < rd.regimes.length; i++) {
+      const idx = i + off, f = id.features[idx];
+      if (!f) continue;
+      const rsi = f['rsi'] ?? 50, regime = rd.regimes[i].label, ts = candles[idx].timestamp;
+      const fv: FeatureVector = { features: Object.entries(f).map(([id2, v]) => ({ id: id2, value: v, causal: false })), computedAt: ts, symbol: this.cfg.symbol, lookback: lb };
+      let name: string, dir: AlphaSignal['direction'], conf = 0;
+      if (rsi < 30 && regime === RegimeLabel.TREND_UP) { name = 'rsi_regime_buy'; dir = 'buy'; conf = (30 - rsi) / 30; }
+      else if (rsi > 70 && regime === RegimeLabel.TREND_DOWN) { name = 'rsi_regime_sell'; dir = 'sell'; conf = (rsi - 70) / 30; }
+      else { name = 'hold'; dir = 'hold'; }
+      signals.push({ name, direction: dir, confidence: conf, features: fv, source: 'indicator', timestamp: ts, metadata: {} });
+    }
+    this.mergeDerivativeSignals(signals, dd);
+    return { signals };
+  }
+
+  /** Merge non-TA derivative signals (funding rate, OI, liquidations, basis) into signal array. */
+  private mergeDerivativeSignals(signals: AlphaSignal[], dd: DerivativeData | undefined): void {
+    for (const ds of dd?.signals ?? []) {
+      const dir: AlphaSignal['direction'] = ds.direction === 'short' ? 'sell' : ds.direction === 'long' ? 'buy' : 'hold';
+      const fv: FeatureVector = {
+        features: [{ id: 'derivative', value: ds.confidence, causal: true }],
+        computedAt: ds.timestamp, symbol: ds.symbol, lookback: 20,
+      };
+      signals.push({
+        name: ds.reasons[0] ?? 'derivative', direction: dir, confidence: ds.confidence,
+        features: fv, source: 'indicator', timestamp: ds.timestamp,
+        metadata: { reasons: ds.reasons, features: ds.features },
+      });
+    }
+  }
+
+  private stepLabelEvents(): EventData {
+    const sd = this.map.get('generate_signals') as SignalData | undefined;
+    return { labels: (sd?.signals ?? []).map(s => s.direction) };
+  }
+
+  private stepRunWalkforward(): WalkforwardData {
+    const { candles, regimeConfig, walkforwardConfig, costMode, minSharpe, minTrades } = this.cfg;
+    const sd = this.map.get('generate_signals') as SignalData | undefined;
+    if (!sd) throw new Error('No signals for walkforward');
+    const trainBars = walkforwardConfig.trainBars ?? 20;
+    const testBars = walkforwardConfig.testBars ?? 10;
+    const total = trainBars + testBars * 3;
+    if (candles.length < total) throw new Error(`Not enough candles: ${candles.length} < ${total}`);
+
+    // Extract trades for walkforward using canonical extractTrades
+    const off = regimeConfig.lookback;
+    const costCfgWf = resolveStressConfig(costMode as StressMode);
+    const trades = extractTrades(sd.signals, candles.slice(0, total), off, { ...costCfgWf, marketImpactPct: 0 });
+    const tc = trades.length;
+
+    // Compute equity curve from trades for Sharpe
+    const eq: BacktestEquityPoint[] = [];
+    let equity = 10000, peak = equity;
+    for (const t of trades) {
+      equity += t.pnl;
+      peak = Math.max(peak, equity);
+      const dd = peak > 0 ? ((peak - equity) / peak) * 100 : 0;
+      eq.push({ timestamp: t.exitTimestamp, equity, drawdownPct: dd });
+    }
+    const intervalMin = parseCandleIntervalMinutes(this.cfg.timeframe);
+    const sp = eq.length >= 2 ? computeSharpe(eq, intervalMin) : 0;
+    return { sharpe: sp, totalTrades: tc, passed: sp >= minSharpe && tc >= minTrades };
+  }
+
+  private stepEvaluate(): EvalData {
+    const { candles, regimeConfig, costMode } = this.cfg;
+    const sd = this.map.get('generate_signals') as SignalData | undefined;
+    const rd = this.map.get('detect_regimes') as RegimeData | undefined;
+    const off = regimeConfig.lookback;
+    const costCfg = resolveStressConfig(costMode as StressMode);
+    const trades = extractTrades(sd?.signals ?? [], candles, off, { ...costCfg, marketImpactPct: 0 });
+    const tp = trades.reduce((s, t) => s + t.pnl, 0);
+    const wc = trades.filter(t => t.pnl > 0).length;
+    const m: ExtendedBacktestMetrics = {
+      id: '', bot_id: '', strategy: 'alpha-research', pair: this.cfg.symbol, exchange: '',
+      start_date: 0, end_date: Date.now(),
+      total_trades: trades.length, win_count: wc, loss_count: trades.length - wc,
+      win_rate: trades.length ? wc / trades.length : 0, total_pnl: tp, max_drawdown: 0,
+      sharpe_ratio: null, params_json: '{}', equity_curve_json: [], trades_json: trades,
+      created_at: Date.now(), profit_factor: 0, expectancy: 0, sortino_ratio: null,
+      max_drawdown_duration: 0, calmar_ratio: 0, avg_trade: 0, median_trade: 0,
+      turnover: 0, recovery_factor: 0, exposure_pct: 0,
+    };
+    // Compute cost breakdown from trades for the report
+    const totalFees = trades.reduce((s, t) => s + t.fee, 0);
+    const costBreakdown = { fees: totalFees, slippage: 0, marketImpact: 0 };
+    const regimeLabel = rd?.regimes[0]?.label ?? RegimeLabel.UNKNOWN;
+    return { report: generateReport({
+      experimentId: `pipeline-${this.cfg.symbol}-${this.cfg.timeframe}`,
+      symbol: this.cfg.symbol, timeframe: this.cfg.timeframe, regime: regimeLabel,
+      metrics: m, costBreakdown,
+    }, candles) };
+  }
+
+  private stepComputeCosts(): CostData {
+    const ev = this.map.get('evaluate') as EvalData | undefined;
+    const report = ev?.report;
+    const fees = report?.fees ?? 0;
+    const slippage = report?.slippage ?? 0;
+    const grossPnl = (report?.netPnl ?? 0) + fees + slippage;
+    return {
+      grossPnl,
+      netPnl: report?.netPnl ?? 0,
+      fees,
+      slippage,
+    };
+  }
+
+  private stepAttribute(): AttributeData {
+    const { candles, regimeConfig } = this.cfg;
+    const sd = this.map.get('generate_signals') as SignalData | undefined;
+    const rd = this.map.get('detect_regimes') as RegimeData | undefined;
+    const trades = extractTrades(sd?.signals ?? [], candles, regimeConfig.lookback);
+    const obs = (rd?.regimes ?? []).map(r => ({ timestamp: r.timestamp, label: r.label }));
+    return { attributions: attributePerformance(trades, sd?.signals ?? [], obs) };
+  }
+
+  private stepCompareBaselines(): BaselineData {
+    if (!this.cfg.baselinesEnabled) return { baselines: [], reports: {} };
+    const sm = this.cfg.costMode as StressMode;
+    const baselineStrategies: BaselineStrategy[] = ['buy_hold', 'simple_momentum'];
+    const configs: BaselineConfig[] = baselineStrategies.map(s => ({
+      strategy: s, symbol: this.cfg.symbol, timeframe: this.cfg.timeframe,
+      stressMode: sm, feePct: 0.001, slipPct: 0.0005,
+    }));
+    const reports: Record<string, EvaluationReport> = {};
+    for (const c of configs) {
+      reports[c.strategy] = runBaseline(this.cfg.candles, c);
+    }
+    return { baselines: configs, reports };
   }
 
   private report(): AlphaResearchReport {

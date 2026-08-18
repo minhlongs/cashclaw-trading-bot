@@ -106,7 +106,7 @@ export interface WalkforwardData {
   sharpe: number;
   totalTrades: number;
   passed: boolean;
-  result: unknown;
+  result?: unknown;
 }
 
 /** Data produced by compute_costs step. */
@@ -114,6 +114,7 @@ export interface CostData {
   grossPnl: number;
   netPnl: number;
   fees: number;
+  slippage: number;
 }
 
 /** Data produced by evaluate step. */

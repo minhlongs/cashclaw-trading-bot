@@ -51,14 +51,6 @@ function pickN<T>(arr: readonly T[], min: number, max: number): T[] {
   return shuffled.slice(0, count);
 }
 
-function buildWeightedCombinerConfig(indicators: IndicatorPreset[]): Record<string, number> {
-  const weights: Record<string, number> = {};
-  indicators.forEach((ind, i) => {
-    weights[ind.indicator] = 1 / (i + 1);
-  });
-  return weights;
-}
-
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }

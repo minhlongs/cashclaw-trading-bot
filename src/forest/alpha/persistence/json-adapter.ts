@@ -46,8 +46,8 @@ export class JsonPersistenceAdapter implements PersistenceAdapter {
     if (!raw) return null;
     try {
       const obj = JSON.parse(raw) as AlphaResult & { _storedAt: number };
-      const { _storedAt, ...rest } = obj;
-      return rest;
+      delete (obj as unknown as Record<string, unknown>)._storedAt;
+      return obj as AlphaResult;
     } catch { return null; }
   }
 
@@ -61,8 +61,10 @@ export class JsonPersistenceAdapter implements PersistenceAdapter {
     if (!raw) return null;
     try {
       const obj = JSON.parse(raw) as Experiment & { _createdAt: number; _updatedAt: number };
-      const { _createdAt, _updatedAt, ...rest } = obj;
-      return rest as Experiment;
+      const mutable = obj as unknown as Record<string, unknown>;
+      delete mutable._createdAt;
+      delete mutable._updatedAt;
+      return obj as Experiment;
     } catch { return null; }
   }
 

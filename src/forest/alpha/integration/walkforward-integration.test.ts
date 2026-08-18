@@ -1,11 +1,10 @@
 // Integration tests for walk-forward validation.
 import { describe, it, expect } from 'vitest';
-import { runWalkForward } from '@/forest/backtest/walkforward';
+import { runWalkForward, type WindowConfig } from '@/forest/backtest/walkforward';
 import type { BacktestResult } from '@/forest/backtest/types';
 import type { Candle } from '@/forest/backtest/ohlcv';
-import type { WindowConfig } from '@/forest/backtest/walkforward';
 import { RegimeLabel } from '@/tree/regime/types';
-import { generateSyntheticCandles, generateTrendingCandles, generateSyntheticCandlesWithRegimes } from './fixtures';
+import { generateTrendingCandles, generateSyntheticCandlesWithRegimes } from './fixtures';
 
 function makeCandles(n: number): Candle[] {
   return generateTrendingCandles(n, 'up');

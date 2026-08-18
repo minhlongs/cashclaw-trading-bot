@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { quantFunctions, type QuantLibContext, type QuantResult, type QuantFn } from './index';
+import { quantFunctions, type QuantLibContext, type QuantResult } from './index';
 
 const ctx: QuantLibContext = { symbol: 'BTC/USDT', balance: 1000, lastPrice: 50000 };
 

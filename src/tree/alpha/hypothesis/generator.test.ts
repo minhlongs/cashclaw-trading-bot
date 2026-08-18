@@ -3,7 +3,7 @@ import type { IndicatorCandle } from '../indicator-types';
 import { RegimeLabel } from '../../regime/types';
 import { HypothesisGenerator } from './generator';
 import { evaluateHypothesis } from './evaluator';
-import type { AlphaHypothesis, HypothesisTemplate } from './types';
+import type { HypothesisTemplate } from './types';
 
 // ── Test Fixtures ──────────────────────────────────────────────────────────────
 

@@ -1,8 +1,7 @@
 // Hypothesis Engine — Types
 // Alpha hypothesis generation, templates, and evaluation results.
 
-import type { CombinerMethod, AlphaDirection } from '../types';
-import type { IndicatorFn, IndicatorRegistry } from '../indicator-types';
+import type { CombinerMethod } from '../types';
 import type { BarrierConfig } from '../labeling';
 import { RegimeLabel } from '../../regime/types';
 import type { OptimizerMethod } from '../portfolio/types';

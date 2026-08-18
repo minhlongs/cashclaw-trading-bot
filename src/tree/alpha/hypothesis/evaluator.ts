@@ -9,16 +9,6 @@ import type { AlphaHypothesis, HypothesisEvaluation, RegimePerf } from './types'
 import { indicators } from '../indicators';
 import { combineSignals } from '../combiner';
 import { labelEvent } from '../labeling';
-import type { LabeledEvent } from '../labeling';
-
-// ── Internal Types ─────────────────────────────────────────────────────────────
-
-interface SignalEvaluation {
-  direction: AlphaDirection;
-  confidence: number;
-  label: LabeledEvent | null;
-  regime: RegimeLabel;
-}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -53,26 +43,28 @@ function numericValue(val: IndicatorResult['value']): number | null {
   return null;
 }
 
+function defaultDirection(v: number): AlphaDirection {
+  return v > 0 ? 'buy' : v < 0 ? 'sell' : 'hold';
+}
+
+type DirectionRule = (v: number) => AlphaDirection;
+
+const DIRECTION_RULES: Record<string, DirectionRule> = {
+  rsi: (v) => (v < 30 ? 'buy' : v > 70 ? 'sell' : 'hold'),
+  macd: defaultDirection,
+  bollinger: (v) => (v < -1 ? 'buy' : v > 1 ? 'sell' : 'hold'),
+  momentum: defaultDirection,
+  returns: defaultDirection,
+  log_returns: defaultDirection,
+  atr: (v) => (v > 1 ? 'sell' : v < -1 ? 'buy' : 'hold'),
+  realized_volatility: (v) => (v > 1 ? 'sell' : v < -1 ? 'buy' : 'hold'),
+  volume_zscore: (v) => (v > 1 ? 'sell' : v < -1 ? 'buy' : 'hold'),
+};
+
 function inferDirection(indicator: string, value: number | null): AlphaDirection {
   if (value === null) return 'hold';
-  switch (indicator) {
-    case 'rsi':
-      return value < 30 ? 'buy' : value > 70 ? 'sell' : 'hold';
-    case 'macd':
-      return value > 0 ? 'buy' : value < 0 ? 'sell' : 'hold';
-    case 'bollinger':
-      return value < -1 ? 'buy' : value > 1 ? 'sell' : 'hold';
-    case 'momentum':
-    case 'returns':
-    case 'log_returns':
-      return value > 0 ? 'buy' : value < 0 ? 'sell' : 'hold';
-    case 'atr':
-    case 'realized_volatility':
-    case 'volume_zscore':
-      return value > 1 ? 'sell' : value < -1 ? 'buy' : 'hold';
-    default:
-      return value > 0 ? 'buy' : value < 0 ? 'sell' : 'hold';
-  }
+  const directionFn = DIRECTION_RULES[indicator];
+  return directionFn ? directionFn(value) : defaultDirection(value);
 }
 
 function classifyRegimeAt(
@@ -145,7 +137,6 @@ export function evaluateHypothesis(
   }
 
   // Label with triple barrier
-  const entryTs = candles[candles.length - 1]!.timestamp;
   const barrierWindow = candles.slice(Math.max(0, candles.length - Math.ceil(hypothesis.barrierConfig.maxHoldingMs / 60_000)));
   const label = labelEvent(barrierWindow, 0, hypothesis.barrierConfig);
 

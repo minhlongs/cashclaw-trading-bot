@@ -6,24 +6,6 @@ import { loadCandles, saveCandles, getCacheKey } from './ohlcv-cache';
 
 const KLINE_LIMIT = 1000;
 
-function binanceUrl(symbol: string, interval: string, startMs: number | undefined, endMs: number): string {
-  const s = encodeURIComponent(symbol.replace('/', ''));
-  const start = startMs !== undefined ? `&startTime=${startMs}` : '';
-  return `https://api.binance.com/api/v3/klines?symbol=${s}&interval=${interval}${start}&endTime=${endMs}&limit=${KLINE_LIMIT}`;
-}
-
-function bybitUrl(symbol: string, interval: string, startMs: number | undefined, endMs: number): string {
-  const s = encodeURIComponent(symbol.replace('/', ''));
-  const start = startMs !== undefined ? `&start=${startMs}` : '';
-  return `https://api.bybit.com/v5/market/kline?category=spot&symbol=${s}&interval=${interval}${start}&end=${endMs}&limit=${KLINE_LIMIT}`;
-}
-
-function okxUrl(symbol: string, interval: string, startMs: number | undefined, endMs: number): string {
-  const s = encodeURIComponent(symbol.replace('/', '-'));
-  const after = startMs !== undefined ? `&after=${startMs}` : '';
-  return `https://www.okx.com/api/v5/market/history-candles?instId=${s}&bar=${interval}${after}&before=${endMs}&limit=${KLINE_LIMIT}`;
-}
-
 function parseBinance(raw: unknown): Candle[] {
   const arr = raw as unknown[];
   return arr.map((k) => {
@@ -173,30 +155,3 @@ function buildRequestCapped(
   }
 }
 
-function buildRequest(
-  exchange: string,
-  symbol: string,
-  interval: string,
-  startMs: number,
-  endMs: number,
-): { url: string; parse: (data: unknown) => Candle[] } {
-  switch (exchange) {
-    case 'binance':
-      return {
-        url: binanceUrl(symbol, interval, startMs, endMs),
-        parse: parseBinance,
-      };
-    case 'bybit':
-      return {
-        url: bybitUrl(symbol, interval, startMs, endMs),
-        parse: parseBybit,
-      };
-    case 'okx':
-      return {
-        url: okxUrl(symbol, interval, startMs, endMs),
-        parse: parseOkx,
-      };
-    default:
-      throw new Error(`Unsupported exchange: ${exchange}`);
-  }
-}

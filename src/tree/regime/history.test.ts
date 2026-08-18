@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RegimeHistoryStore } from './history';
-import { RegimeLabel } from './types';
-import type { RegimeFeatures, RegimeResult } from './types';
+import { RegimeLabel, type RegimeFeatures, type RegimeResult } from './types';
 
 const dummyFeatures: RegimeFeatures = {
   realizedVol: 0.02,

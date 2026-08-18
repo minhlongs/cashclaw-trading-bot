@@ -1,9 +1,7 @@
 // Integration tests for triple-barrier labeling on synthetic candles.
 import { describe, it, expect } from 'vitest';
-import { labelEvent } from '@/tree/alpha/labeling';
-import type { BarrierConfig } from '@/tree/alpha/labeling';
+import { labelEvent, type BarrierConfig } from '@/tree/alpha/labeling';
 import type { Candle } from '@/forest/backtest/ohlcv';
-import { generateSyntheticCandlesWithRegimes, generateTrendingCandles } from './fixtures';
 
 const CONFIG: BarrierConfig = {
   takeProfitPct: 0.02,

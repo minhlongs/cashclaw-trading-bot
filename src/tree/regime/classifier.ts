@@ -1,13 +1,7 @@
 // Deterministic rule-based regime classifier — no ML, no LLM, no randomness
 // All transitions gated by minDuration + confidenceThreshold
 
-import { RegimeLabel } from './types';
-import type {
-  RegimeClassifier,
-  RegimeFeatures,
-  RegimeConfig,
-  RegimeResult,
-} from './types';
+import { RegimeLabel, type RegimeClassifier, type RegimeFeatures, type RegimeConfig, type RegimeResult } from './types';
 
 /** Tuneable feature thresholds — hidden from public config to keep API surface small */
 interface Thresholds {
@@ -122,7 +116,6 @@ export class RuleBasedRegimeClassifier implements RegimeClassifier {
     const now = Date.now();
     const f = features;
 
-    // Edge case: null / invalid features → return previous regime or UNKNOWN
     if (!f || !isValidFeatures(f)) {
       return this.buildResult(
         EMPTY_FEATURES,
@@ -135,21 +128,38 @@ export class RuleBasedRegimeClassifier implements RegimeClassifier {
     const rawLabel = determineLabel(f, this.t);
     const rawConfidence = computeConfidence(f, rawLabel, this.t);
 
-    // First classification or cold start
     if (this.state.currentLabel === RegimeLabel.UNKNOWN) {
-      this.state.previousLabel = null;
-      this.state.currentLabel = rawLabel;
-      this.state.duration = 1;
-      return this.buildResult(f, 1, now, rawConfidence);
+      return this.handleColdStart(f, rawLabel, rawConfidence, now);
     }
 
-    // Same regime — extend duration
     if (rawLabel === this.state.currentLabel) {
       this.state.duration++;
       return this.buildResult(f, this.state.duration, now, rawConfidence);
     }
 
-    // Different regime proposed — check transition gates
+    const transition = this.attemptTransition(rawLabel, rawConfidence, config);
+    return this.buildResult(f, this.state.duration, now, transition.confidence);
+  }
+
+  /** Cold start: first valid features set the initial regime */
+  private handleColdStart(
+    f: RegimeFeatures,
+    rawLabel: RegimeLabel,
+    rawConfidence: number,
+    now: number,
+  ): RegimeResult {
+    this.state.previousLabel = null;
+    this.state.currentLabel = rawLabel;
+    this.state.duration = 1;
+    return this.buildResult(f, 1, now, rawConfidence);
+  }
+
+  /** Evaluate transition gates; mutates state and returns effective confidence */
+  private attemptTransition(
+    rawLabel: RegimeLabel,
+    rawConfidence: number,
+    config: RegimeConfig,
+  ): { confidence: number } {
     const meetsDuration = this.state.duration >= config.minDuration;
     const meetsConfidence = rawConfidence >= config.confidenceThreshold;
 
@@ -157,20 +167,18 @@ export class RuleBasedRegimeClassifier implements RegimeClassifier {
       this.state.previousLabel = this.state.currentLabel;
       this.state.currentLabel = rawLabel;
       this.state.duration = 1;
-      return this.buildResult(f, 1, now, rawConfidence);
+      return { confidence: rawConfidence };
     }
 
-    // TRANSITIONING: near threshold but not past — dampen confidence, stay in current
     const nearThreshold =
       rawConfidence >= config.confidenceThreshold - this.t.transitionBuffer;
     if (nearThreshold && meetsDuration) {
       this.state.duration++;
-      return this.buildResult(f, this.state.duration, now, rawConfidence * 0.5);
+      return { confidence: rawConfidence * 0.5 };
     }
 
-    // Cannot transition — remain in current regime
     this.state.duration++;
-    return this.buildResult(f, this.state.duration, now, rawConfidence);
+    return { confidence: rawConfidence };
   }
 
   private buildResult(

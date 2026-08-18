@@ -101,7 +101,7 @@ export async function fetchOpenInterestHistory(
     symbol,
     openInterest: Number(r.openInterest),
     notionalUsd: typeof r.price === 'number' ? Number(r.openInterest) * Number(r.price) : null,
-  })).sort((a, b) => a.timestamp - a.timestamp);
+  })).sort((a, b) => a.timestamp - b.timestamp);
 }
 
 /**

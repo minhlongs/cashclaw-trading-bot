@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { indicators } from '@/tree/alpha/indicators';
 import type { Candle } from '@/forest/backtest/ohlcv';
-import { generateSyntheticCandles, generateTrendingCandles, generateHighVolCandles, generateRangingCandles } from './fixtures';
+import { generateSyntheticCandles, generateTrendingCandles } from './fixtures';
 
 const N = 60;
 const LB = 20;

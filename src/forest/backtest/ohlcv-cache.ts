@@ -20,8 +20,8 @@ export function cachePath(key: string): string {
     if (!realFullPath.startsWith(realCacheDir + sep)) {
       throw new Error('Path traversal attempt detected');
     }
-  } catch (err) {
-    if (err instanceof Error && err.message.includes('Path traversal')) throw err;
+  } catch (_err) {
+    if (_err instanceof Error && _err.message.includes('Path traversal')) throw _err;
     // realpathSync can fail if path doesn't exist yet — that's OK for new cache entries
   }
   return fullPath;
@@ -47,7 +47,7 @@ export function saveCandles(key: string, candles: Array<{ timestamp: number; ope
   try {
     if (!existsSync(CACHE_DIR)) mkdirSync(CACHE_DIR, { recursive: true });
     writeFileSync(cachePath(key), JSON.stringify(candles), 'utf-8');
-  } catch (err) {
+  } catch {
     // Non-fatal — caller still has candles in memory
   }
 }

@@ -5,22 +5,6 @@
 import type { Experiment, ExperimentResult, ExperimentDeps, RegimePerformance } from './types';
 import { metricsFromBacktest, computeRegimePerformance, computeSymbolPerformance, emptyBacktest } from './runner-helpers';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Extract git commit hash via subprocess; returns undefined on failure. */
-async function getGitCommit(): Promise<string | undefined> {
-  try {
-    const { execFile } = await import('node:child_process');
-    return await new Promise<string | undefined>((resolve) => {
-      execFile('git', ['rev-parse', '--short', 'HEAD'], (_err, stdout) => {
-        resolve(stdout.trim() || undefined);
-      });
-    });
-  } catch {
-    return undefined;
-  }
-}
-
 // ── Runner ───────────────────────────────────────────────────────────────────
 
 /**
@@ -52,7 +36,6 @@ export async function runExperiment(
 
     const regimePerformance = computeRegimePerformance(testBt, deps.classifyRegime, []);
     const symbolPerformance = computeSymbolPerformance(testBt, exp.symbol);
-    const gitCommit = exp.gitCommit ?? (await getGitCommit());
 
     return {
       experimentId: exp.id,

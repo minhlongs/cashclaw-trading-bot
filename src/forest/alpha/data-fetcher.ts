@@ -2,6 +2,9 @@
 // Fetches OHLCV candles for alpha signal research using public exchange REST APIs.
 
 import { rateLimiter } from '@/tree/exchange/rate-limiter';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('alpha-data-fetcher');
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -157,7 +160,7 @@ class HttpCandleSource implements CandleSource {
 
 // ── Factory ───────────────────────────────────────────────────────────────────
 
-export function createCandleSource(source: DataSource): CandleSource {
+export function createCandleSource(_source: DataSource): CandleSource {
   return new HttpCandleSource();
 }
 
@@ -174,8 +177,7 @@ export async function fetchResearchData(configs: FetchConfig[]): Promise<Map<str
         const candles = await source.fetchCandles(cfg);
         results.set(key, candles);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.warn(`[data-fetcher] ${key} failed: ${msg}`);
+        log.warn(`${key} failed`, { action: 'fetchResearchData', key, error: err instanceof Error ? err : new Error(String(err)) });
         // Partial results OK — other sources may succeed
       }
     }),

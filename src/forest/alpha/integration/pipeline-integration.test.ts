@@ -1,8 +1,7 @@
 // Integration tests for the full alpha research pipeline.
 import { describe, it, expect } from 'vitest';
 import { AlphaResearchPipeline } from '@/forest/alpha/pipeline/engine';
-import { RegimeLabel, type RegimeConfig } from '@/tree/regime/types';
-import type { Candle } from '@/forest/backtest/ohlcv';
+import type { RegimeConfig } from '@/tree/regime/types';
 import type { WindowConfig } from '@/forest/backtest/walkforward';
 import type { PipelineConfig } from '@/forest/alpha/pipeline/types';
 import { generateTrendingCandles } from './fixtures';
@@ -62,7 +61,7 @@ describe('pipeline integration', () => {
 
   it('pipeline result has all expected steps', async () => {
     const pipeline = new AlphaResearchPipeline(pipelineConfig);
-    const report = await pipeline.run();
+    await pipeline.run();
     const expectedSteps = [
       'fetch_data',
       'compute_indicators',

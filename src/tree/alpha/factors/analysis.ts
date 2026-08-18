@@ -152,7 +152,6 @@ export function multiFactorAnalysis(
   const n = returns.length;
   const X = factors.map((f) => f.values.slice(0, n));
   const y = returns.slice(0, n);
-  const k = factors.length;
   const design = y.map((_, i) => X.map((col) => col[i]!));
   const { coefficients, residualVariance, nObs } = ols(y, design);
   const predicted = design.map((row) =>

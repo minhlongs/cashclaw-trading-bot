@@ -1,7 +1,6 @@
 // Alpha Execution Layer — Types
 // Paper-trading execution engine for alpha signals.
 
-import type { AlphaSignal } from '@/tree/alpha/types';
 import type { RegimeLabel } from '@/tree/regime/types';
 
 // ── Configuration ──────────────────────────────────────────────────────────────

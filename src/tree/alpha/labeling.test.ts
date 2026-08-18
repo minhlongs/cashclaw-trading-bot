@@ -1,8 +1,7 @@
 // Alpha Lab — Triple-Barrier Labeling Tests
 
 import { describe, it, expect } from 'vitest';
-import { labelEvent } from './labeling';
-import type { BarrierConfig } from './labeling';
+import { labelEvent, type BarrierConfig } from './labeling';
 import type { Candle } from '@/forest/backtest/ohlcv';
 
 const DEFAULT_CONFIG: BarrierConfig = {
