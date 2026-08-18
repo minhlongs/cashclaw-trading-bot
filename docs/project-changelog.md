@@ -11,6 +11,9 @@
 - **Post-deploy smoke:** `/api/health` → `status: "ok"` with `db`/`circuitBreaker`/`rateLimiter` all `"ok"`; `/api/version` reports `shortSha: 00c81b3f`; `/api/killswitch-status` and `/api/metrics` return 200.
 - **Open item:** `ENCRYPTION_KEY` secret unset on Cloudflare. Not a data-loss risk today (`api_credentials` is empty; `getEncryptionKey()` falls back to plaintext), but must be set before any customer stores credentials.
 
+### Code Review Fix — Commit `c99791a`
+- **Vietnamese checklist aligned with English.** Code review returned CONDITIONAL PASS: the Vietnamese section of `docs/deploy-runbook.md` still listed a KV binding that does not exist in `wrangler.jsonc`, contradicting the English fix. Aligned to D1 binding, `ALLOWED_ORIGINS` var, `ADMIN_TOKEN` secret, `ENCRYPTION_KEY` secret with the same "no KV binding" rationale. Review criteria (a)–(f) now all PASS.
+
 ### Alpha Discovery Campaign — Complete (2026-08-18)
 - **Falsification campaign concluded:** 24 hypothesis classes tested across TA, funding rates, ML regime detection, cross-asset pairs, sentiment, composites, and market-structure signals. **Zero persistent out-of-sample positive expectancy.**
 - **Walk-forward validation** (`funding-price-extreme-walkforward.ts`): 6 rolling windows (548d train / 182d test), 162 OOS tests, 1,032 total OOS trades. Last candidate (funding × price extreme interaction) scored 10/162 OOS passes (6%), aggregate PnL -$455,090 — regime-locked to mid-2022 bear market, pure overfitting.
