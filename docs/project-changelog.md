@@ -109,3 +109,10 @@
 - **Cache safety**: `cache.ts` reuses the path-safety pattern from `ohlcv-cache.ts` — `realpathSync` guard rejects keys that resolve outside `.cache/derivatives/`, and caching is disabled under test.
 - **Code-review remediation** (`7a1c8c2`): fixed silent NaN in OI notional (Binance OI history has no price field), empty-string symbol misattribution, phantom injection test, and dead `fetchPremiumIndex` (now wired into basis computation).
 - **Known limitation**: all four `/fapi/v1/*` endpoints return HTTP 403 from this environment; only spot endpoints return 200. Derivative fetchers are untested against live data.
+
+### Alpha Lab Phase 3–4: Causal Regime Engine + Feature Declaration — Commit `TBD`
+- **Future-data leakage tests** (`src/tree/regime/leakage.test.ts`, 6 tests): extracts regime features at a fixed historical index and proves the result is invariant to everything after that index, including an injected crash/spike. Catches a leaky classifier that peeks at the next candle's close or a volume spike that hasn't happened yet.
+- **`atIndex` parameter on `extractRegimeFeatures`** (defaults to last candle): lets callers extract features for any historical point, which is what makes causality testable at arbitrary indices instead of only at the end of the series.
+- **Feature declaration contract** (`src/tree/alpha/indicator-types.ts`): every feature now declares `name`, `timeframe`, `source`, `lookback`, `availability`, and `causal`. `declareFeature()` validates all six and **rejects any non-causal feature** with an explicit error, so look-ahead bias cannot enter a feature vector, label, regime classification, or execution decision through this path.
+- **`FeatureSource` / `FeatureAvailability` types**: `ohlcv` / `derivatives` / `orderbook` / `trades` / `synthetic`; `always` / `when_listed` / `when_derivatives_listed`.
+- **OHLCV indicators** (`src/tree/alpha/indicators.ts`) now emit `source: 'ohlcv', availability: 'always'` on every result envelope.

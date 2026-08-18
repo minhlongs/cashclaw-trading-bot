@@ -139,17 +139,28 @@ function adxLike(candles: Candle[], period: number): number {
  * Extract regime features from candle data.
  * Returns null if insufficient data.
  * All computations are causal — only uses data at or before the timestamp.
+ *
+ * `atIndex` defaults to the last candle. Passing an explicit index lets callers
+ * extract features for a historical point; the result must then be invariant
+ * to any candles that come after that index, which is what the leakage tests
+ * rely on.
  */
 export function extractRegimeFeatures(
   candles: Candle[],
   config: RegimeConfig,
+  atIndex = candles.length - 1,
 ): RegimeFeatures | null {
-  if (candles.length < config.minCandles) {
+  if (atIndex < 0 || atIndex >= candles.length) {
+    return null;
+  }
+  // The window ending at atIndex must contain at least minCandles.
+  if (atIndex + 1 < config.minCandles) {
     return null;
   }
 
-  // Take last `lookback` candles for feature computation
-  const window = candles.slice(-config.lookback);
+  // Take the `lookback` candles ending at `atIndex`. Slicing at atIndex + 1 is
+  // what makes this causal: candles after the index are never read.
+  const window = candles.slice(Math.max(0, atIndex - config.lookback + 1), atIndex + 1);
   const closes = window.map((c) => c.close);
   const volumes = window.map((c) => c.volume);
 

@@ -10,6 +10,12 @@ import type {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+// All indicators in this library are derived from OHLCV candles, so they
+// share one source/availability. Kept as a constant rather than threading
+// two more parameters through every call site.
+const OHLCV_SOURCE: IndicatorResult['source'] = 'ohlcv';
+const OHLCV_AVAILABILITY: IndicatorResult['availability'] = 'always';
+
 function result(
   name: string,
   timeframe: string,
@@ -17,7 +23,11 @@ function result(
   timestamp: number,
   value: IndicatorResult['value'],
 ): IndicatorResult {
-  return { name, timeframe, lookback, causal: true, timestamp, value };
+  return {
+    name, timeframe, lookback, causal: true,
+    source: OHLCV_SOURCE, availability: OHLCV_AVAILABILITY,
+    timestamp, value,
+  };
 }
 
 function closes(candles: readonly IndicatorCandle[]): number[] {

@@ -270,6 +270,38 @@ The pipeline step `fetch_derivatives` runs between `fetch_data` and `compute_ind
 
 **Cache safety:** `cache.ts` reuses the path-safety pattern from `ohlcv-cache.ts` — a `realpathSync` guard rejects any key that resolves outside `.cache/derivatives/`, and caching is disabled under test (`NODE_ENV === 'test'` or `VITEST === '1'`) so test runs never write to the cache.
 
+### 5.6 Feature Declaration Contract
+
+Every feature in the alpha library declares six properties up front, in
+`src/tree/alpha/indicator-types.ts`:
+
+| Property | Meaning |
+|---|---|
+| `name` | Stable identifier, matches the registry key |
+| `timeframe` | The bar the feature is computed over (e.g. `1h`) |
+| `source` | `ohlcv` / `derivatives` / `orderbook` / `trades` / `synthetic` |
+| `lookback` | Bars required for a valid computation |
+| `availability` | `always` / `when_listed` / `when_derivatives_listed` |
+| `causal` | `true` iff the feature never reads data after its timestamp |
+
+`declareFeature()` is the gate: it validates every property and **rejects any
+non-causal feature** with an explicit error. A feature that peeks at the next
+candle's close cannot pass the gate, so look-ahead bias cannot enter a feature
+vector, a label, a regime classification, or an execution decision through this
+path. All OHLCV-derived indicators share one `source`/`availability` pair; the
+derivative features in `src/tree/alpha/signals/funding.ts` are `source:
+'derivatives', availability: 'when_derivatives_listed'`.
+
+### 5.7 Causal Regression Tests
+
+`src/tree/regime/leakage.test.ts` exists specifically to detect future-data
+leakage in the regime engine. It extracts features at a fixed historical index
+and proves the result is invariant to everything that happens after that
+index — including a deliberately injected crash/spike in the future. The
+feature extractor also gained an explicit `atIndex` parameter (defaulting to
+the last candle) so causality can be tested at any historical point rather
+than only at the end of the series.
+
 ---
 
 ## 6. Walk-Forward Validation
