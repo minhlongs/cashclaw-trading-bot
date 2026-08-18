@@ -141,13 +141,47 @@ This is valid falsification, not failure. System correctly identified that no st
 
 ## Final Falsification Summary
 
-All four hypotheses tested and rejected:
+All hypotheses tested and rejected. **11 strategy classes falsified:**
 
-| Phase | Hypothesis | Result |
+| # | Hypothesis | Result |
 |---|---|---|
-| 1. TA across timeframes | RSI/SMA/momentum/mean-reversion on BTC/ETH/SOL | 14/15 negative (1 borderline) |
-| 2. Derivative signals | Funding-rate fade | 0/7 OOS pass |
-| 3. ML regime detection | Learned classifier improves filtering | Majority-class collapse (95-100% RANGE) |
-| 4. Cross-asset correlation | Pairs mean-reversion | 108/108 negative |
+| 1 | TA across timeframes (RSI/SMA/momentum/mean-reversion) | 14/15 negative (1 borderline) |
+| 2 | Single-venue funding-rate fade | 0/7 OOS pass (date bug fixed, still 0/7) |
+| 3 | ML regime detection | Majority-class collapse (95-100% RANGE) |
+| 4 | Cross-asset pairs trading | 108/108 negative |
+| 5 | Cross-exchange funding arbitrage | Binance/Bybit diff = 0.00000, 0 trades above 0.01% |
+| 6 | Funding momentum (follow crowd) | 9/9 negative, OOS Sharpe -0.75 to -3.99 |
+| 7 | Volatility-gated fade | Marginal OOS Sharpe 6.38 but CI crosses zero, too few trades |
+| 8 | Contrarian sentiment (Fear & Greed) | 0/27 OOS pass, 9 marginal (CI crosses zero) |
+| 9 | Spot-perp basis trading | 0/36 OOS pass, 0% win rate, best OOS Sharpe -1204 |
 
 **System correctly identifies that no tested strategy class should trade live capital.** This is valid scientific falsification, not failure.
+
+### Key finding: funding rate is not a standalone alpha source
+
+Funding rates were tested in every direction:
+- **Fade** (short when funding > 0): 0/7 OOS pass
+- **Follow** (long when funding > 0): 9/9 negative
+- **Vol-gated fade**: marginal improvement, CI crosses zero
+- **Cross-exchange arb**: Binance/Bybit differential is 0.00000
+- **Basis trading** (delta-neutral convergence): 0/36 OOS pass, 0% win rate
+
+The market is efficient — funding rates are priced in. Any edge must come from combining funding with another signal (regime, sentiment, order flow) or from a completely different data source.
+
+### Sentiment (Fear & Greed Index)
+
+The F&G Index (daily 0-100, 729 aligned trading days) was tested contrarian-style:
+- Buy when F&G < 15/20/25 (extreme fear), short when F&G > 75/80/85 (extreme greed)
+- Exit on maxHold (3/7/14 days) or F&G reverts to neutral (40-60)
+- **0/27 configs pass OOS.** 9 configs show positive in-sample PnL but bootstrap CIs cross zero — indistinguishable from noise. Classic overfitting: Fear<25/Greed>85 showed +$1,316 to +$2,240 train PnL but -$1,679 to -$2,686 test PnL. F&G Index is not a tradeable alpha source.
+
+### Basis trading (spot-perp convergence)
+
+Delta-neutral basis trading (short perp + long spot when funding z-score > 2.0, long perp + short spot when z < -2.0) tested on 36 configs across BTCUSDT:
+- **0/36 configs pass OOS.** Best OOS config (zEntry=2.5, zExit=0.3, maxHold=12): -$26.07/trade, Sharpe -1204, 0% win rate.
+- Buy-and-hold returned +9.76% over the same window — basis trading massively underperformed.
+- The spot-perp basis is too efficient for retail-level extraction.
+
+### Reproducibility
+
+All backtest scripts are in `src/forest/backtest/`. Run instructions in `plans/reports/engine-reproducibility.md`. End-date pinning is critical for OOS validation — see `plans/reports/funding-rate-deep-analysis.md`.
