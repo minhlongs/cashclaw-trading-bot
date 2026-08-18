@@ -18,3 +18,4 @@ tsconfig.tsbuildinfo
 !.dev.vars.example
 coverage/
 .cache/
+archive/

@@ -45,7 +45,7 @@
 ## Current State
 
 - **Tests:** 1880 across 130 files, full suite green
-- **Coverage:** statements 89.06%, branches 88.72%, functions 90.66%, lines 89.06% (thresholds 80/85/85/80)
+- **Coverage:** statements 82.47%, branches 86.37%, functions 90.75%, lines 82.47% (thresholds 82/85/85/82)
 - **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0` + `reportUnusedDisableDirectives: error`)
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean
