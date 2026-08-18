@@ -6,6 +6,7 @@ tsconfig.tsbuildinfo
 .dev.vars
 .env
 .env.*
+!.env.example
 .DS_Store
 /tmp-*
 
