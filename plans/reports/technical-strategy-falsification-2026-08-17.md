@@ -141,7 +141,7 @@ This is valid falsification, not failure. System correctly identified that no st
 
 ## Final Falsification Summary
 
-All hypotheses tested and rejected. **14 strategy classes falsified:**
+All hypotheses tested and rejected. **16 strategy classes falsified:**
 
 | # | Hypothesis | Result |
 |---|---|---|
@@ -154,9 +154,13 @@ All hypotheses tested and rejected. **14 strategy classes falsified:**
 | 7 | Volatility-gated fade | Marginal OOS Sharpe 6.38 but CI crosses zero, too few trades |
 | 8 | Contrarian sentiment (Fear & Greed) | 0/27 OOS pass, 9 marginal (CI crosses zero) |
 | 9 | Spot-perp basis trading | 0/36 OOS pass, 0% win rate, best OOS Sharpe -1204 |
-| 10 | Sentiment × funding composite | UNTESTED — FNG API quota exceeded, 0 data days |
+| 10 | Sentiment × funding composite (v2) | 0/27 OOS pass (365-day lookback, FNG data available) |
 | 11 | Cross-asset momentum spillover | 0/64 OOS pass, all configs negative |
 | 12 | Volatility regime switching | 0/18 OOS pass (trend 0/6, meanrev 0/6, regime 0/6) |
+| 13 | Cross-timeframe momentum confirmation | 3/48 OOS pass — robustness check (earlier SOL window 2/48, ETH 3/48) confirms noise |
+| 14 | Volume-price divergence | 1/48 OOS pass — 29 OOS trades, CI lo=$27 but only 1/48 (noise floor) |
+| 15 | Session-aware mean reversion | IN PROGRESS |
+| 16 | VVOL regime (vol-of-vol) | IN PROGRESS |
 
 **System correctly identifies that no tested strategy class should trade live capital.** This is valid scientific falsification, not failure.
 
@@ -185,11 +189,12 @@ Delta-neutral basis trading (short perp + long spot when funding z-score > 2.0, 
 - Buy-and-hold returned +9.76% over the same window — basis trading massively underperformed.
 - The spot-perp basis is too efficient for retail-level extraction.
 
-### Round 10: Sentiment × Funding Composite (SOL)
+### Round 10: Sentiment × Funding Composite (SOL, v2)
 
 Double-contrarian filter: require BOTH F&G extreme AND funding extreme to agree before entering.
 - F&G < threshold AND funding > 0 → SHORT; F&G > (100-threshold) AND funding < 0 → LONG
-- **0/27 configs pass OOS.** Note: FNG API returned 0 days (quota exceeded), so this test is inconclusive — the composite filter could not be validated on real data. Funding-only leg also produced 0 trades (no bar met both conditions simultaneously). **This hypothesis is UNTESTED, not falsified.**
+- v2 uses 365-day lookback ending at Date.now() so FNG data is available (v1 used 730-day with pinned end-date yielding 0 FNG days).
+- **0/27 configs pass OOS.** Only 1 config (FNG<15, fund>0.0001, H6) produced 5 OOS trades but with Sharpe -4590 and CI crossing zero. The composite filter does not produce reliable alpha on SOLUSDT.
 
 ### Round 11: Cross-Asset Momentum Spillover (SOL)
 
