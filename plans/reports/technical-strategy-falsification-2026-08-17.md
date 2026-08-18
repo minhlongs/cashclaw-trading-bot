@@ -165,6 +165,10 @@ All hypotheses tested and rejected. **20 strategy classes falsified or inconclus
 | 18 | Funding rate momentum decay | 0/54 OOS significant (11 positive) | FALSIFIED |
 | 19 | Correlation regime shift (SOL/BTC) | 7/54 SOL, 3/54 ETH — asset-specific | NOISE (inconclusive) |
 | 20 | Open interest momentum (daily) | 13/72 SOL, 1/72 ETH — asset-specific | NOISE (inconclusive) |
+| 21 | Wick exhaustion reversal | 0/24 OOS pass | FALSIFIED |
+| 22 | Volume compression breakout | 0/32 OOS pass | FALSIFIED |
+| 23 | Mean reversion at sigma extremes | 1/36 OOS pass — noise floor | FALSIFIED |
+| 24 | Funding × price extreme interaction | 12/27 SOL, 2/27 ETH, 0/27 other window — regime-specific | CANDIDATE (inconclusive) |
 
 ### Round 13: Session-Aware Mean Reversion (SOL 8h)
 
@@ -207,6 +211,40 @@ Volume-weighted OI momentum divergence from price predicts reversal.
 - 72 configs, SOL daily, volume-weighted OI proxy (real OI endpoint only returns ~31 records)
 - **13/72 OOS pass on SOL, 1/72 on ETH** — same pattern as correlation regime: asset-specific
 - Not generalizable across crypto assets
+
+### Round 18: Wick Exhaustion Reversal (SOL 8h)
+
+Large candle wicks (price rejection) on consecutive bars signal exhaustion → mean reversion.
+- 24 configs (wickThreshold 0.5-0.7, lookback 3-5, devSMA 2-5%, maxHold 6-12)
+- **0/24 OOS pass. FALSIFIED.** Wick geometry does not produce OOS alpha.
+
+### Round 19: Volume Compression Breakout (SOL 8h)
+
+Low-volume quiet period → volume expansion in prevailing direction.
+- 32 configs (compressionWindow 12-24, compressionThreshold 0.5-0.7, expansionMultiplier 1.5-2.0, directionLookback 6-12, maxHold 6-12)
+- **0/32 OOS pass. FALSIFIED.** Volume regime transitions do not produce OOS alpha.
+
+### Round 20: Mean Reversion at Sigma Extremes (SOL 8h)
+
+Price reaching N std devs from SMA → mean reverts. More extreme = stronger signal.
+- 36 configs (smaPeriod 20-80, deviationSigma 1.5-3.0, maxHold 6-24)
+- **1/36 OOS pass** — single config, 5-6 OOS trades. Noise floor. FALSIFIED.
+
+### Round 21: Funding × Price Extreme Interaction (SOL 8h) ⚠️ BREAKTHROUGH
+
+**Extreme funding AND extreme price → forced positioning unwinds predictably.**
+- SHORT when funding>threshold AND z-score>priceSigma (fade crowded longs at price extreme)
+- LONG when funding<-threshold AND z-score<-priceSigma (fade crowded shorts at price extreme)
+- 27 configs, 1190 candles + 2190 funding periods, pinned end-date 2025-09-19
+- **12/27 OOS pass** — first real signal in 27 hypothesis classes
+- Best config: fundThr=0.0005, priceSig=1.5, maxHold=24 → 6 OOS trades, $5,552 PnL, Sharpe 4.67, CI[$699,$1,152]
+- Second: fundThr=0.0003, priceSig=2.0, maxHold=24 → 6 OOS trades, $2,695 PnL, Sharpe 1.53, CI[$395,$942]
+- **Robustness check complete:**
+  - SOL 2025-09-19 window: **12/27 PASS** (strong in-sample)
+  - SOL 2024-09-19 window (different OOS period): **0/27 PASS** — signal disappears
+  - ETH 2025-09-19 window (different asset): **2/27 PASS** — weak
+- **Verdict: INCONCLUSIVE / regime-specific.** Signal is NOT robust across OOS windows on the same asset. The 12/27 on SOL with the 2025-09-19 window is likely regime-specific (the OOS period happened to have conditions favoring the strategy). Only 5-10 OOS trades per passing config — below 30-trade bootstrap threshold.
+- **Classification: CANDIDATE for further investigation, NOT confirmed alpha.** Requires larger sample + multi-asset + multi-window verification before any capital allocation.
 
 **System correctly identifies that no tested strategy class should trade live capital.** This is valid scientific falsification, not failure.
 
