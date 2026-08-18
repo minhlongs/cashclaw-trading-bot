@@ -34,7 +34,7 @@ async function main(): Promise<void> {
   const data = await fetchResearchData([cfg]);
   const candles = data.get(`binance:${symbol}:${timeframe}`) ?? [];
   if (candles.length < 50) {
-    log.error('not enough candles', { count: candles.length });
+    log.error('not enough candles', undefined, { count: candles.length });
     process.exit(1);
   }
 
@@ -64,8 +64,8 @@ async function main(): Promise<void> {
     symbol, timeframe, candles,
     derivatives: { features, signals },
     indicatorSet: { rsi: 14, lookback: 20 },
-    regimeConfig: { lookback: 20, minDuration: 3, confidenceThreshold: 0.5 },
-    walkforwardConfig: { trainBars: 50, testBars: 20, stepBars: 10 },
+    regimeConfig: { lookback: 20, minDuration: 3, minCandles: 50, confidenceThreshold: 0.5 },
+    walkforwardConfig: { trainBars: 50, validateBars: 10, testBars: 20, stepBars: 10 },
     costMode: 'normal',
     minSharpe: 0.5, minTrades: 5,
     baselinesEnabled: true,
@@ -104,6 +104,6 @@ async function main(): Promise<void> {
 }
 
 main().catch(err => {
-  log.error('backtest failed', { error: String(err) });
+  log.error('backtest failed', err instanceof Error ? err : undefined, { error: String(err) });
   process.exit(1);
 });
