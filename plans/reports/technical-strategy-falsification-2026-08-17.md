@@ -141,7 +141,7 @@ This is valid falsification, not failure. System correctly identified that no st
 
 ## Final Falsification Summary
 
-All hypotheses tested and rejected. **11 strategy classes falsified:**
+All hypotheses tested and rejected. **14 strategy classes falsified:**
 
 | # | Hypothesis | Result |
 |---|---|---|
@@ -154,6 +154,9 @@ All hypotheses tested and rejected. **11 strategy classes falsified:**
 | 7 | Volatility-gated fade | Marginal OOS Sharpe 6.38 but CI crosses zero, too few trades |
 | 8 | Contrarian sentiment (Fear & Greed) | 0/27 OOS pass, 9 marginal (CI crosses zero) |
 | 9 | Spot-perp basis trading | 0/36 OOS pass, 0% win rate, best OOS Sharpe -1204 |
+| 10 | Sentiment × funding composite | UNTESTED — FNG API quota exceeded, 0 data days |
+| 11 | Cross-asset momentum spillover | 0/64 OOS pass, all configs negative |
+| 12 | Volatility regime switching | 0/18 OOS pass (trend 0/6, meanrev 0/6, regime 0/6) |
 
 **System correctly identifies that no tested strategy class should trade live capital.** This is valid scientific falsification, not failure.
 
@@ -181,6 +184,26 @@ Delta-neutral basis trading (short perp + long spot when funding z-score > 2.0, 
 - **0/36 configs pass OOS.** Best OOS config (zEntry=2.5, zExit=0.3, maxHold=12): -$26.07/trade, Sharpe -1204, 0% win rate.
 - Buy-and-hold returned +9.76% over the same window — basis trading massively underperformed.
 - The spot-perp basis is too efficient for retail-level extraction.
+
+### Round 10: Sentiment × Funding Composite (SOL)
+
+Double-contrarian filter: require BOTH F&G extreme AND funding extreme to agree before entering.
+- F&G < threshold AND funding > 0 → SHORT; F&G > (100-threshold) AND funding < 0 → LONG
+- **0/27 configs pass OOS.** Note: FNG API returned 0 days (quota exceeded), so this test is inconclusive — the composite filter could not be validated on real data. Funding-only leg also produced 0 trades (no bar met both conditions simultaneously). **This hypothesis is UNTESTED, not falsified.**
+
+### Round 11: Cross-Asset Momentum Spillover (SOL)
+
+BTC intraday 8h return predicts SOL intraday return — does BTC act as market leader?
+- LONG SOL when BTC return > threshold (0.5-3%), SHORT when BTC return < threshold (-3% to -0.5%)
+- **0/64 configs pass OOS.** All configs negative, OOS Sharpe -0.26 to -11.98. Best config (L3%/S-1%/H6) had -$661 OOS PnL with CI [-$162, +$143] crossing zero. BTC momentum does NOT spill into SOL at retail scale.
+
+### Round 12: Volatility Regime Switching (SOL)
+
+Regime-aware strategy: trend-follow in HIGH_VOL/TREND, mean-rev in LOW_VOL/RANGE.
+- Computed causal regimes from BTC (SHOCK > HIGH_VOL > TREND > LOW_VOL > RANGE)
+- Regime distribution: HIGH_VOL 229, TREND 175, LOW_VOL 256, RANGE 485, SHOCK 23
+- **0/18 configs pass OOS** — trend-follow 0/6, mean-reversion 0/6, regime-switch 0/6
+- Regime switching performed WORSE than standalone strategies (regime OOS Sharpe -1.93 to -5.12 vs trend -0.42 to -2.72). Regime-awareness adds no value at this parameter scale.
 
 ### Reproducibility
 
