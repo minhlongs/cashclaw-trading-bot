@@ -121,9 +121,31 @@ This is valid falsification, not failure. System correctly identified that no st
 
 **Verdict: FALSIFIED.** The classifier collapses to majority-class prediction (RANGE) for 95-100% of periods. High "accuracy" is an artifact of class imbalance, not predictive power. ML filter removes 0-1 trades across all assets — functionally equivalent to no filtering. Rule-based filtering also doesn't improve strategy performance.
 
-## Next Steps
+## Cross-Asset Correlation (2026-08-18)
 
-1. ~~Daily timeframe~~ ✓ Complete
-2. ~~Non-technical signals (funding rate, OI, liquidations, on-chain)~~ ✓ Complete — falsified
-3. ~~ML-based regime detection with walk-forward validation~~ ✓ Complete — falsified
-4. Cross-asset correlation signals
+**Hypothesis:** When correlated crypto assets diverge (spread z-score extreme), does the spread mean-revert after costs?
+
+**Method:** Pairs trading on BTC/ETH, BTC/SOL, ETH/SOL. 36 configs per pair (z-score entries × exits × hold periods). Walk-forward 65/35 split. Conservative costs.
+
+| Pair | Best Test Sharpe | Trades | PnL |
+|---|---|---|---|
+| BTC/ETH | -7.86 | 21 | -$4,584 |
+| BTC/SOL | -8.00 | 45 | -$7,383 |
+| ETH/SOL | -8.34 | 38 | -$6,405 |
+
+**108/108 configs failed.** Zero marginal, zero passed. Strongest negative Sharpe across all pairs and parameters. Cross-asset correlation pairs trading does NOT produce positive expectancy after conservative costs.
+
+**Verdict:** FALSIFIED. Pairs trading on major crypto pairs loses money in every configuration tested.
+
+## Final Falsification Summary
+
+All four hypotheses tested and rejected:
+
+| Phase | Hypothesis | Result |
+|---|---|---|
+| 1. TA across timeframes | RSI/SMA/momentum/mean-reversion on BTC/ETH/SOL | 14/15 negative (1 borderline) |
+| 2. Derivative signals | Funding-rate fade | 0/7 OOS pass |
+| 3. ML regime detection | Learned classifier improves filtering | Majority-class collapse (95-100% RANGE) |
+| 4. Cross-asset correlation | Pairs mean-reversion | 108/108 negative |
+
+**System correctly identifies that no tested strategy class should trade live capital.** This is valid scientific falsification, not failure.
