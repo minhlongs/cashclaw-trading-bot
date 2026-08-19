@@ -100,7 +100,7 @@ Cross-venue latency arbitrage is excluded outright — it requires co-located fe
 
 Every backtest script is standalone and reproducible:
 - `src/forest/backtest/*.ts` — individual hypothesis sweeps
-- `src/forest/backtest/funding-price-extreme-walkforward.ts` — the 6-window walk-forward that falsified the last candidate
+- `archive/falsification/backtest/funding-price-extreme-walkforward.ts` — the 6-window walk-forward that falsified the last candidate
 - All scripts pin end-dates for reproducibility and use the conservative cost model
 - Full results in `plans/reports/technical-strategy-falsification-2026-08-17.md`
 

@@ -1,7 +1,13 @@
 # Next-Phase Investigation: Funding x Price Extreme Interaction
 
 **Date:** 2026-08-18
-**Status:** PLANNING
+**Status:** FALSIFIED (CLOSED)
+
+> **Closure note (2026-08-19):** This plan is superseded. Phase 1 was executed (commit `808e40b`); the candidate was falsified across 6 walk-forward windows (10/162 OOS passes = 6%, aggregate PnL -$455,090). Per the plan's own Phase 6 decision framework, this is a NO-GO. All 24 hypothesis classes tested across the falsification campaign show zero persistent OOS positive expectancy. Signal space on OHLCV/funding/OI data is exhausted.
+
+---
+
+# Next-Phase Investigation: Funding x Price Extreme Interaction (CLOSED)
 **Candidate:** Hypothesis #24 (renumbered from #27)
 **Script:** `src/forest/backtest/funding-price-extreme-interaction.ts`
 
