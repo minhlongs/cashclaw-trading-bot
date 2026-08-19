@@ -2,7 +2,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import * as React from 'react';
 import BotDetailPageClient from './page-client';
 
 /* ------------------------------------------------------------------ */
@@ -21,26 +20,6 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// Mock React's `use()` (used for unwrapping `params` Promise) to return the
-// resolved value synchronously instead of suspending the component.
-// The Suspense boundary lives in page.tsx, not this component, so throwing
-// would error out of the test rather than fall back gracefully.
-vi.mock('react', () => {
-  const actual = vi.importActual<typeof import('react')>('react');
-  return {
-    ...actual,
-    use: (promise: any) => {
-      if (promise && typeof promise.then === 'function') {
-        // Promise.resolve() — extract the resolved value synchronously
-        if (promise.status === 'fulfilled') return promise.value;
-        // For genuinely pending promises, throw to trigger Suspense
-        throw promise;
-      }
-      return actual.use(promise);
-    },
-  };
-});
-
 vi.mock('@/components/bots/bot-detail-client', () => ({
   BotDetailClient: ({ bot }: any) => (
     <div data-testid="bot-detail-client">
@@ -53,6 +32,31 @@ vi.mock('@/components/bots/bot-detail-client', () => ({
 /* ------------------------------------------------------------------ */
 /* Helpers                                                            */
 /* ------------------------------------------------------------------ */
+
+// React 19's `use()` unwraps thenables by checking `status === 'fulfilled'`
+// and returning `value` synchronously. Standard Promise.resolve() lacks
+// these fields, so `use()` treats it as pending and suspends. We construct
+// a thenable carrying the React promise protocol fields so `use()` resolves
+// without a mock and without Suspense.
+function resolvedParams<T>(value: T): Promise<T> {
+  const p = Promise.resolve(value) as Promise<T> & {
+    status: 'fulfilled';
+    value: T;
+  };
+  Object.defineProperty(p, 'status', {
+    value: 'fulfilled',
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
+  Object.defineProperty(p, 'value', {
+    value,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
+  return p;
+}
 
 interface ApiBotDetail {
   id: string;
@@ -143,7 +147,7 @@ describe('BotDetailPageClient', () => {
 
   it('shows loading text immediately on mount', () => {
     fetchMock.mockReturnValue(new Promise(() => {}));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
     expect(screen.getByText('loading')).toBeInTheDocument();
   });
 
@@ -153,7 +157,7 @@ describe('BotDetailPageClient', () => {
 
   it('shows not found message when API returns ok but no data', async () => {
     fetchMock.mockResolvedValue(jsonResponse(true, null));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       expect(screen.getByText('notFound')).toBeInTheDocument();
@@ -162,7 +166,7 @@ describe('BotDetailPageClient', () => {
 
   it('shows not found message with bot id', async () => {
     fetchMock.mockResolvedValue(jsonResponse(true, null));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'missing-bot' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'missing-bot' })} />);
 
     await waitFor(() => {
       expect(screen.getByText(/notFoundWithId/)).toBeInTheDocument();
@@ -175,7 +179,7 @@ describe('BotDetailPageClient', () => {
 
   it('renders BotDetailClient with bot data when fetch succeeds', async () => {
     fetchMock.mockResolvedValue(jsonResponse(true, makeBotDetail()));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       expect(screen.getByTestId('bot-detail-client')).toBeInTheDocument();
@@ -186,7 +190,7 @@ describe('BotDetailPageClient', () => {
 
   it('calls /api/bots/{id} with correct URL', async () => {
     fetchMock.mockResolvedValue(jsonResponse(true, makeBotDetail()));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-42' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-42' })} />);
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/bots/bot-42');
@@ -199,7 +203,7 @@ describe('BotDetailPageClient', () => {
 
   it('shows not found when fetch returns non-ok HTTP status', async () => {
     fetchMock.mockResolvedValue(httpError(404));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       expect(screen.getByText('notFound')).toBeInTheDocument();
@@ -208,7 +212,7 @@ describe('BotDetailPageClient', () => {
 
   it('shows not found when body.ok is false', async () => {
     fetchMock.mockResolvedValue(jsonResponse(false, null, 'Bot not found'));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       expect(screen.getByText('notFound')).toBeInTheDocument();
@@ -217,7 +221,7 @@ describe('BotDetailPageClient', () => {
 
   it('shows not found when fetch throws a network error', async () => {
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       expect(screen.getByText('notFound')).toBeInTheDocument();
@@ -226,7 +230,7 @@ describe('BotDetailPageClient', () => {
 
   it('shows not found when non-Error is thrown', async () => {
     fetchMock.mockRejectedValue('string error');
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       expect(screen.getByText('notFound')).toBeInTheDocument();
@@ -245,7 +249,7 @@ describe('BotDetailPageClient', () => {
       ],
     });
     fetchMock.mockResolvedValue(jsonResponse(true, bot));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       expect(screen.getByText('tradeEvents')).toBeInTheDocument();
@@ -258,7 +262,7 @@ describe('BotDetailPageClient', () => {
   it('does not render trade events table when recentEvents is empty', async () => {
     const bot = makeBotDetail({ recentEvents: [] });
     fetchMock.mockResolvedValue(jsonResponse(true, bot));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       expect(screen.getByTestId('bot-detail-client')).toBeInTheDocument();
@@ -270,7 +274,7 @@ describe('BotDetailPageClient', () => {
     const bot = makeBotDetail();
     delete bot.recentEvents;
     fetchMock.mockResolvedValue(jsonResponse(true, bot));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       expect(screen.getByTestId('bot-detail-client')).toBeInTheDocument();
@@ -285,7 +289,7 @@ describe('BotDetailPageClient', () => {
       ],
     });
     fetchMock.mockResolvedValue(jsonResponse(true, bot));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       const badge = screen.getByText('fill');
@@ -300,7 +304,7 @@ describe('BotDetailPageClient', () => {
       ],
     });
     fetchMock.mockResolvedValue(jsonResponse(true, bot));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       const badge = screen.getByText('error');
@@ -315,7 +319,7 @@ describe('BotDetailPageClient', () => {
       ],
     });
     fetchMock.mockResolvedValue(jsonResponse(true, bot));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       const badge = screen.getByText('tick');
@@ -330,7 +334,7 @@ describe('BotDetailPageClient', () => {
       ],
     });
     fetchMock.mockResolvedValue(jsonResponse(true, bot));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
       // JSON.stringify produces {"price":100,"qty":0.5}
@@ -347,13 +351,13 @@ describe('BotDetailPageClient', () => {
     }));
     const bot = makeBotDetail({ recentEvents: events });
     fetchMock.mockResolvedValue(jsonResponse(true, bot));
-    render(<BotDetailPageClient params={Promise.resolve({ id: 'bot-1' })} />);
+    render(<BotDetailPageClient params={resolvedParams({ id: 'bot-1' })} />);
 
     await waitFor(() => {
-      // Only events 10-59 should render (slice(0,50) of 60 = first 50)
-      expect(screen.getByText('evt-0')).toBeInTheDocument();
-      expect(screen.getByText('evt-49')).toBeInTheDocument();
-      expect(screen.queryByText('evt-50')).not.toBeInTheDocument();
+      // Component slices tradeEvents to max 50 rows (slice(0,50)).
+      // Each row renders a fill badge, so count badges to verify the cap.
+      const badges = screen.getAllByText('fill');
+      expect(badges.length).toBe(50);
     });
   });
 });
