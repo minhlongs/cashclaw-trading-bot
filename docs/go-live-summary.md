@@ -1,7 +1,20 @@
 # Go-Live Summary — Alpha Discovery Engine
 
-**Date:** 2026-08-17
-**Status:** Production-ready — all checks passing
+**Date:** 2026-08-19
+**Status:** DEPLOYED — worker serving on Cloudflare production
+
+## Live deployment
+
+| Item | Value |
+|---|---|
+| Worker | `cashclaw-trading-bot` |
+| URL | `https://cashclaw-trading-bot.agencyos-openclaw.workers.dev` |
+| Health | `{"status":"ok","environment":"production","checks":{"db":"ok","circuitBreaker":"ok","rateLimiter":"ok"}}` |
+| Secrets | `ADMIN_TOKEN`, `ENCRYPTION_KEY` (AES-256-GCM) |
+| Deployed | 2026-08-19 23:32 UTC |
+
+See `docs/DEPLOYMENT-SAFETY.md` for the safety boundary — this deployment is
+infrastructure-only and does NOT enable live trading.
 
 ---
 
@@ -87,9 +100,8 @@ Build passes now. Resolves automatically once TypeScript errors are fixed. `next
 1. **Paper trading only** — v1 scope is simulated exchange; no real money flows
 2. **Single exchange** — no cross-exchange routing (binance/bybit/okx) yet
 3. **BotManager hydration** — in-memory registry not cold-start resilient; needs Durable Objects or direct-D1 reads
-4. **Coverage tail** — 89% overall; page-client, LandingClient, CtaClient below threshold
-5. **CCXT on Workers** — live exchange feasibility unresolved for v2
-6. **Missing .env.example** — environment variables documented in README and deploy-runbook but no dedicated example file
+4. **CCXT on Workers** — live exchange feasibility unresolved for v2
+5. **Missing .env.example** — environment variables documented in README and deploy-runbook but no dedicated example file
 
 ---
 
