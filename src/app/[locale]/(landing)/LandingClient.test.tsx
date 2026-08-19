@@ -54,33 +54,6 @@ vi.mock('next/link', () => ({
 }));
 
 /* ------------------------------------------------------------------ */
-/* Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
-function makeFeature(overrides: Partial<{ icon: string; title: string; desc: string }> = {}) {
-  return { icon: '⚡', title: 'Speed', desc: 'Fast execution', ...overrides };
-}
-
-function makeStat(overrides: Partial<{ value: string; label: string }> = {}) {
-  return { value: '10k', label: 'Users', ...overrides };
-}
-
-function makeStep(overrides: Partial<{ n: string; title: string; desc: string }> = {}) {
-  return { n: '1', title: 'Sign up', desc: 'Create account', ...overrides };
-}
-
-function makePricingPlan(overrides: Partial<{ name: string; price: string; unit: string; features: string[]; cta: string; popular?: boolean }> = {}) {
-  return {
-    name: 'Free',
-    price: '$0',
-    unit: '/mo',
-    features: ['1 bot'],
-    cta: 'Get started',
-    ...overrides,
-  };
-}
-
-/* ------------------------------------------------------------------ */
 /* Tests                                                              */
 /* ------------------------------------------------------------------ */
 
