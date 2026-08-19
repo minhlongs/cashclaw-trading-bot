@@ -27,11 +27,11 @@ export interface Provider {
 }
 
 export interface TickerProvider extends Provider {
-  fetchTicker(symbol: string): Promise<ProviderResult<Ticker>>;
+  fetchTicker(symbol: string): Promise<Ticker>;
 }
 
 export interface OrderProvider extends Provider {
-  placeOrder(req: OrderRequest): Promise<ProviderResult<OrderResult>>;
+  placeOrder(req: OrderRequest): Promise<OrderResult>;
 }
 
 export class ProviderChain {

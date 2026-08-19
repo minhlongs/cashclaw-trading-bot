@@ -2,6 +2,16 @@
 
 ## v1 Paper-Trading Platform
 
+### ProviderChain Wiring — 2026-08-19
+- **Wired ProviderChain into ExchangeOrchestrator** — `fetchTicker` and `placeOrder` now route through `ProviderChain` instead of calling `PaperExchangeProvider` directly, enabling future failover + provenance tracking.
+- **Interface fix (Phase 0):** `TickerProvider.fetchTicker` / `OrderProvider.placeOrder` changed from returning `ProviderResult<T>` to raw `Promise<Ticker>` / `Promise<OrderResult>`. This eliminates a double-wrap bug where `ProviderChain.execute` would produce `ProviderResult<ProviderResult<Ticker>>`.
+- **New `PaperProviderAdapter`** (`src/tree/exchange/provider/paper-provider-adapter.ts`) bridges `PaperExchangeProvider` to `TickerProvider & OrderProvider` — exposes `name`, `circuitBreaker`, `healthCheck()`, and delegates `fetchTicker`/`placeOrder` with the exchangeId bound. Added `getCircuitBreaker()` getter to `PaperExchangeProvider`.
+- **Provenance propagation:** new `getLastProvenance(exchangeId)` accessor on `ExchangeOrchestrator` returns the last `ProviderResult` metadata (provider name, latencyMs, circuitState) after any chain-backed call.
+- **Error reporting preserved:** `reportError` is called when `chainResult.ok === false` (the C3 gap from the plan).
+- **YAGNI:** `fetchOrderBook`, `cancelOrder`, `fetchOrder`, `fetchBalances` remain direct provider calls — ProviderChain only supports ticker + order methods.
+- **Quality gates:** 1892/1892 tests pass, lint 0 warnings, `tsc --noEmit` clean, `npm run build` clean.
+- **Files:** `provider.ts`, `paper-provider.ts`, `paper-provider-adapter.ts` (new), `provider/index.ts`, `exchange-orchestration/index.ts`, `exchange-orchestration/index.test.ts`, `exchange-orchestration/orchestration-extended.test.ts`, `paper-provider-adapter.test.ts` (new).
+
 ### Production Deploy (Go-Live) — 2026-08-19
 - **Deployed to Cloudflare Workers:** `https://cashclaw-trading-bot.agencyos-openclaw.workers.dev`. Paper-only — no real orders, no live capital. Preceded by the falsification campaign NO-GO, so the platform ships as a research/paper system.
 - **Deploy runbook fixed:** referenced nonexistent `npm run deploy:worker` → corrected to `npm run deploy` (the real script that injects `GIT_COMMIT_SHA` + `BUILD_TIMESTAMP` and runs OpenNext build + deploy).

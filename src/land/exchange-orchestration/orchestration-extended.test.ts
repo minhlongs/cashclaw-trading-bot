@@ -23,6 +23,10 @@ function mkKillswitch(overrides: Record<string, unknown> = {}) {
 
 function mkProvider(overrides: Record<string, unknown> = {}) {
   return {
+    id: 'provider:binance:paper',
+    name: 'binance',
+    circuitBreaker: { getState: vi.fn().mockReturnValue('closed') },
+    healthCheck: vi.fn().mockResolvedValue(true),
     fetchTicker: vi.fn().mockResolvedValue({ symbol: 'BTC/USDT', last: 50000 }),
     fetchOrderBook: vi.fn().mockResolvedValue({ symbol: 'BTC/USDT', bids: [], asks: [], timestamp: 1 }),
     placeOrder: vi.fn().mockResolvedValue({ id: 'o1', status: 'filled' }),
@@ -34,6 +38,7 @@ function mkProvider(overrides: Record<string, unknown> = {}) {
     recordFailure: vi.fn(),
     recordSuccess: vi.fn(),
     isUnhealthy: vi.fn().mockReturnValue(false),
+    getCircuitBreaker: vi.fn().mockReturnValue({ getState: vi.fn().mockReturnValue('closed') }),
     ...overrides,
   };
 }
@@ -183,6 +188,30 @@ describe('ExchangeOrchestrator extended', () => {
       expect(result.error).toContain('net');
     }
     o.destroy();
+  });
+
+  // ── provenance ──────────────────────────────────────────────────────────────
+  it('stores provenance after fetchTicker', async () => {
+    orch.registerProvider('binance', mkProvider() as never);
+    await orch.fetchTicker('binance', 'BTC/USDT');
+    const provenance = orch.getLastProvenance('binance');
+    expect(provenance).toBeDefined();
+    expect(provenance?.ok).toBe(true);
+    expect(provenance?.provenance.provider).toBe('binance');
+    expect(typeof provenance?.provenance.latencyMs).toBe('number');
+  });
+
+  it('stores provenance after placeOrder', async () => {
+    orch.registerProvider('binance', mkProvider() as never);
+    await orch.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
+    const provenance = orch.getLastProvenance('binance');
+    expect(provenance).toBeDefined();
+    expect(provenance?.ok).toBe(true);
+    expect(provenance?.provenance.provider).toBe('binance');
+  });
+
+  it('returns undefined for unregistered exchange', () => {
+    expect(orch.getLastProvenance('unknown')).toBeUndefined();
   });
 
   // ── singleton ──────────────────────────────────────────────────────────────

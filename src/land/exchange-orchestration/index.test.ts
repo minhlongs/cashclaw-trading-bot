@@ -13,6 +13,10 @@ vi.mock('@/lib/logger', () => ({
 
 function makeMockProvider() {
   return {
+    id: 'provider:binance:paper',
+    name: 'binance',
+    circuitBreaker: { getState: vi.fn().mockReturnValue('closed') },
+    healthCheck: vi.fn().mockResolvedValue(true),
     fetchTicker: vi.fn().mockResolvedValue({
       symbol: 'BTC/USDT', last: 50000, bid: 49990, ask: 50010,
       high24h: 52000, low24h: 48000, volume24h: 1000, timestamp: Date.now(),
@@ -36,6 +40,7 @@ function makeMockProvider() {
     ]),
     isCircuitOpen: vi.fn().mockReturnValue(false),
     isUnhealthy: vi.fn().mockReturnValue(false),
+    getCircuitBreaker: vi.fn().mockReturnValue({ getState: vi.fn().mockReturnValue('closed') }),
   };
 }
 
@@ -159,6 +164,38 @@ describe('ExchangeOrchestrator', () => {
         expect(result.error).toContain('network');
       }
       expect(onError).toHaveBeenCalled();
+    });
+  });
+
+  describe('provenance', () => {
+    let ks: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      ks = vi.fn().mockReturnValue(true);
+      orchestrator = new ExchangeOrchestrator({ onError, killswitch: { isTradingEnabled: ks } as never });
+    });
+
+    it('stores provenance after fetchTicker', async () => {
+      await orchestrator.fetchTicker('binance', 'BTC/USDT');
+      const provenance = orchestrator.getLastProvenance('binance');
+      expect(provenance).toBeDefined();
+      expect(provenance?.ok).toBe(true);
+      expect(provenance?.provenance.provider).toBe('binance');
+      expect(typeof provenance?.provenance.latencyMs).toBe('number');
+    });
+
+    it('stores provenance after placeOrder', async () => {
+      await orchestrator.placeOrder('binance', {
+        symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.001,
+      });
+      const provenance = orchestrator.getLastProvenance('binance');
+      expect(provenance).toBeDefined();
+      expect(provenance?.ok).toBe(true);
+      expect(provenance?.provenance.provider).toBe('binance');
+    });
+
+    it('returns undefined for unregistered exchange', () => {
+      expect(orchestrator.getLastProvenance('unknown')).toBeUndefined();
     });
   });
 });

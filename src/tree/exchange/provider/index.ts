@@ -8,6 +8,7 @@ export type {
   ExchangeProvider,
 } from './types';
 export { PaperExchangeProvider } from './paper-provider';
+export { PaperProviderAdapter } from './paper-provider-adapter';
 export { CircuitBreaker, CircuitOpenError } from './circuit-breaker';
 export { ProviderChain } from './provider';
 export type { FailureKind } from './circuit-breaker-kinds';

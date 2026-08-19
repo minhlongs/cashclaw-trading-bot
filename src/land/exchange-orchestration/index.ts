@@ -8,7 +8,7 @@
 // - Killswitch and circuit-breaker checks live ONLY in orchestrator (remove duplicates later)
 // - ExchangeAdapter interface stays unchanged
 import type { ExchangeId, Ticker, OrderBook, OrderRequest, OrderResult, Balance } from '@/tree/exchange/types';
-import { PaperExchangeProvider } from '@/tree/exchange/provider';
+import { PaperExchangeProvider, PaperProviderAdapter, ProviderChain, type ProviderResult } from '@/tree/exchange/provider';
 import { Killswitch } from '@/tree/bot/killswitch';
 import { ok, err, type Result } from '@/lib/result';
 import { createLogger } from '@/lib/logger';
@@ -22,6 +22,8 @@ export interface ExchangeOrchestratorDeps {
 
 export class ExchangeOrchestrator {
   private providers: Map<string, PaperExchangeProvider> = new Map();
+  private chains: Map<string, ProviderChain> = new Map();
+  private lastProvenance: Map<string, ProviderResult<Ticker | OrderResult>> = new Map();
   private killswitch: Killswitch;
   private onError?: (err: Error, ctx: string) => void;
 
@@ -41,6 +43,7 @@ export class ExchangeOrchestrator {
   /** Register a provider for an exchange id (e.g. 'binance:mainnet') */
   registerProvider(exchangeId: string, provider: PaperExchangeProvider): void {
     this.providers.set(exchangeId, provider);
+    this.chains.set(exchangeId, new ProviderChain({ primary: new PaperProviderAdapter(provider, exchangeId as ExchangeId) }));
   }
 
   /** Get already-registered provider */
@@ -48,11 +51,9 @@ export class ExchangeOrchestrator {
     return this.providers.get(exchangeId);
   }
 
-  /** Pick the healthiest provider for the exchange (null-op for v1 single-provider) */
-  selectHealthyProvider(exchangeId: string): PaperExchangeProvider | undefined {
-    const p = this.providers.get(exchangeId);
-    if (p && !p.isUnhealthy()) return p;
-    return undefined;
+  /** Get the last ProviderChain provenance for an exchange, if any */
+  getLastProvenance(exchangeId: string): ProviderResult<Ticker | OrderResult> | undefined {
+    return this.lastProvenance.get(exchangeId);
   }
 
   private getOrCreateProvider(exchange: string): PaperExchangeProvider {
@@ -64,22 +65,30 @@ export class ExchangeOrchestrator {
         initialBalances: [{ currency: 'USDT', total: 10000 }],
       });
       this.providers.set(exchange, provider);
+      this.chains.set(exchange, new ProviderChain({ primary: new PaperProviderAdapter(provider, exchange as ExchangeId) }));
     }
     return provider;
+  }
+
+  private chainFor(exchange: string): ProviderChain {
+    const chain = this.chains.get(exchange);
+    if (!chain) throw new Error(`No provider chain registered for ${exchange}`);
+    return chain;
   }
 
   async fetchTicker(
     exchange: string,
     symbol: string,
   ): Promise<Result<Ticker>> {
-    const provider = this.getOrCreateProvider(exchange);
-    try {
-      return ok(await provider.fetchTicker(exchange as ExchangeId, symbol));
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      this.reportError(error instanceof Error ? error : new Error(msg), `fetchTicker/${symbol}`);
-      return err(msg);
+    this.getOrCreateProvider(exchange);
+    const chain = this.chainFor(exchange);
+    const chainResult = await chain.execute((p) => p.fetchTicker(symbol));
+    this.lastProvenance.set(exchange, chainResult);
+    if (!chainResult.ok || chainResult.data === undefined) {
+      this.reportError(new Error(chainResult.ok ? 'Empty ticker data' : chainResult.error), `fetchTicker/${symbol}`);
+      return err(chainResult.ok ? 'Empty ticker data' : chainResult.error ?? 'Unknown error');
     }
+    return ok(chainResult.data);
   }
 
   async fetchOrderBook(exchange: string, symbol: string, depth = 20): Promise<Result<OrderBook>> {
@@ -105,13 +114,14 @@ export class ExchangeOrchestrator {
       this.reportError(new Error(msg), `placeOrder/${request.symbol}`);
       return err(msg);
     }
-    try {
-      return ok(await provider.placeOrder(exchange as ExchangeId, request));
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      this.reportError(error instanceof Error ? error : new Error(msg), `placeOrder/${request.symbol}`);
-      return err(msg);
+    const chain = this.chainFor(exchange);
+    const chainResult = await chain.execute((p) => p.placeOrder(request));
+    this.lastProvenance.set(exchange, chainResult);
+    if (!chainResult.ok || chainResult.data === undefined) {
+      this.reportError(new Error(chainResult.ok ? 'Empty order data' : chainResult.error), `placeOrder/${request.symbol}`);
+      return err(chainResult.ok ? 'Empty order data' : chainResult.error ?? 'Unknown error');
     }
+    return ok(chainResult.data);
   }
 
   async cancelOrder(exchange: string, orderId: string, symbol: string): Promise<Result<boolean>> {
@@ -155,6 +165,8 @@ export class ExchangeOrchestrator {
 
   destroy(): void {
     this.providers.clear();
+    this.chains.clear();
+    this.lastProvenance.clear();
   }
 }
 

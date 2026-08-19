@@ -195,4 +195,9 @@ export class PaperExchangeProvider implements ExchangeProvider {
   isCircuitOpen(): boolean {
     return this.breaker.getState() === 'open';
   }
+
+  /** Expose circuit breaker for adapter/chain wiring */
+  getCircuitBreaker(): CircuitBreaker {
+    return this.breaker;
+  }
 }
