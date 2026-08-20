@@ -14,7 +14,6 @@ import { createD1Callbacks, persistNewBot } from './bot-manager-helpers';
 import { createLogger } from '@/lib/logger';
 import { createPaperAdapter } from './paper-adapter';
 import { RequestQueue, QueuedExchangeAdapter } from '../exchange/queue';
-import { LiveExchange } from '../exchange/live';
 
 const log = createLogger('bot-manager');
 
@@ -98,12 +97,10 @@ export class BotManager {
         const paperRaw = createPaperAdapter(req.config.capital);
         raw = Object.assign(paperRaw, { id: exchangeId, name: `${exchangeId}-paper` });
       } else {
-        raw = new LiveExchange(exchangeId, req.exchangeConfig, {
-          isTradingEnabled: () => this.killswitch.isTradingEnabled(),
-          onOrderPlaced: (order) => this.killswitch.onOrderPlaced(order),
-          onOrderFilled: (order) => this.killswitch.onOrderFilled(order),
-          onError: (error, context) => this.deps.onError(error, context),
-        });
+        throw new Error(
+          'Live trading not available — this system is paper/backtest only. ' +
+          'See docs/DEPLOYMENT-SAFETY.md',
+        );
       }
 
       // Wrap with cost-aware queue for budget tracking

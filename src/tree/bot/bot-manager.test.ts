@@ -399,12 +399,12 @@ describe('BotManager', () => {
       await expect(mgr.createBot(mockRequest('dup'))).rejects.toThrow('Bot already exists: dup');
     });
 
-    it('forces paper mode regardless of request mode', async () => {
+    it('rejects live mode with explicit error', async () => {
       const mgr = createManager();
-      await mgr.createBot({ ...mockRequest('live-1'), mode: 'live' as const });
-      const bot = mgr.getBot('live-1');
-      expect(bot).toBeDefined();
-      // The logger should report paper-only lockdown
+      await expect(
+        mgr.createBot({ ...mockRequest('live-1'), mode: 'live' as const }),
+      ).rejects.toThrow('Live trading not available');
+      expect(mgr.getBot('live-1')).toBeUndefined();
     });
   });
 
