@@ -80,7 +80,7 @@ tests pass.
 
 ## Alpha Discovery Engine (Phases 1–10)
 
-All 10 phases of the autonomous alpha discovery + regime-aware research engine are complete.
+All 12 phases of the autonomous alpha discovery + regime-aware research engine are complete.
 
 | Phase | What shipped | Evidence |
 |---|---|---|
@@ -94,6 +94,9 @@ All 10 phases of the autonomous alpha discovery + regime-aware research engine a
 | 8. Cost Model | `applyCosts()` with NORMAL/CONSERVATIVE/ADVERSE stress modes (5/10/20+ bps); gross → net PnL | `cost-model.ts` |
 | 9. Strategy Evaluation | Full evaluation report: Sharpe, Sortino, profit factor, expectancy, max drawdown, fees, exposure, regime breakdown, monthly breakdown | `evaluation/report.ts` |
 | 10. Baselines | Buy & Hold, Random Entry, Simple Momentum, Simple Mean Reversion benchmarks | `baselines/` |
+| 11. Ablation testing | `runAblation()` — full model vs. one-indicator-removed per feature; reports deltaWinRate/deltaPassRate/materialImpact and flags unnecessary features. Pure function, 100% covered, 9 tests | `ablation.ts` |
+| 12. Alpha routing | `routeAlphas()` — regime-conditioned alpha filter/ranker (SHOCK blocks, UNKNOWN pass-through, per-regime direction + confidence thresholds, topN cap, overrides). Pure function, 96% covered, 18 tests | `alpha-router.ts` |
+| 15. Survival gate | `runSurvivalGate()` — 8 configurable research checks (trades, expectancy, profit factor, drawdown, Sharpe, regime coverage, fee stress, slippage stress). Returns PAPER_CANDIDATE or KILLED, never LIVE. Pure function, 13 tests | `survival-gate.ts` |
 
 **Non-TA market-structure layer (commits `52d9ef9`, `7a1c8c2`, `57db6ae`):**
 Four Binance signal sources (funding rate, OI, liquidation, premium index) with causal feature computation, 1.5x vote-margin aggregation, per-source failure logging, cache safety, and deterministic offline injection.

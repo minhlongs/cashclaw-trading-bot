@@ -2,6 +2,14 @@
 
 ## v1 Paper-Trading Platform
 
+### Ablation Testing + Alpha Routing + Survival Gate — 2026-08-20
+- **Ablation testing module shipped** (`src/tree/alpha/hypothesis/ablation.ts`, mission Phase 13 — was previously missing entirely). `runAblation(hypothesis, candles, config)` evaluates the full hypothesis, then removes each indicator one at a time and re-evaluates, reporting `deltaWinRate`, `deltaPassRate`, and `materialImpact` per variant plus a `flaggedUnnecessary` list. Pure function, no I/O, no randomness, 100% covered by 9 tests. Material-impact threshold is strict `>` (a zero delta never counts as material).
+- **Alpha routing shipped** (`src/tree/regime/alpha-router.ts`). `routeAlphas(regime, signals, config)` is a regime-conditioned alpha filter/ranker: SHOCK blocks everything, UNKNOWN passes through sorted by confidence, and every other regime filters by per-regime direction preference + confidence threshold, then caps at topN. Supports `confidenceOverrides` and `directionOverrides`. Pure function, 96% covered by 18 tests.
+- **Strategy Survival Gate shipped** (`src/forest/alpha/gate/survival-gate.ts`, mission Phase 15). `runSurvivalGate(report, config)` runs 8 configurable research checks — min trades, min expectancy, min profit factor, max drawdown, min Sharpe, min regime coverage, fee stress, slippage stress — and returns `PAPER_CANDIDATE` or `KILLED`. The `GateStatus` union type is `'PAPER_CANDIDATE' | 'KILLED'`, so LIVE promotion is impossible at the type level, not just by convention. Pure function, 13 tests.
+- **Live-trading landmine closed:** removed the `LiveExchange` import from `bot-manager.ts` and replaced the live-mode branch with an explicit throw (`'Live trading not available — this system is paper/backtest only'`). No live path is reachable through a `mode` string. Test updated to assert rejection.
+- **Quality gates:** 1975/1975 tests pass, lint 0 warnings, `tsc --noEmit` clean, coverage gate green (ablation 100%, survival gate 100%).
+- **Docs:** roadmap phases 11–12, 15 added; changelog updated.
+
 ### ProviderChain Wiring — 2026-08-19
 - **Wired ProviderChain into ExchangeOrchestrator** — `fetchTicker` and `placeOrder` now route through `ProviderChain` instead of calling `PaperExchangeProvider` directly, enabling future failover + provenance tracking.
 - **Interface fix (Phase 0):** `TickerProvider.fetchTicker` / `OrderProvider.placeOrder` changed from returning `ProviderResult<T>` to raw `Promise<Ticker>` / `Promise<OrderResult>`. This eliminates a double-wrap bug where `ProviderChain.execute` would produce `ProviderResult<ProviderResult<Ticker>>`.
