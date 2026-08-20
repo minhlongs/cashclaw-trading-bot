@@ -80,7 +80,7 @@ tests pass.
 
 ## Alpha Discovery Engine (Phases 1–10)
 
-All 12 phases of the autonomous alpha discovery + regime-aware research engine are complete.
+All 14 phases of the autonomous alpha discovery + regime-aware research engine are complete.
 
 | Phase | What shipped | Evidence |
 |---|---|---|
@@ -96,7 +96,8 @@ All 12 phases of the autonomous alpha discovery + regime-aware research engine a
 | 10. Baselines | Buy & Hold, Random Entry, Simple Momentum, Simple Mean Reversion benchmarks | `baselines/` |
 | 11. Ablation testing | `runAblation()` — full model vs. one-indicator-removed per feature; reports deltaWinRate/deltaPassRate/materialImpact and flags unnecessary features. Pure function, 100% covered, 9 tests | `ablation.ts` |
 | 12. Alpha routing | `routeAlphas()` — regime-conditioned alpha filter/ranker (SHOCK blocks, UNKNOWN pass-through, per-regime direction + confidence thresholds, topN cap, overrides). Pure function, 96% covered, 18 tests | `alpha-router.ts` |
-| 15. Survival gate | `runSurvivalGate()` — 8 configurable research checks (trades, expectancy, profit factor, drawdown, Sharpe, regime coverage, fee stress, slippage stress). Returns PAPER_CANDIDATE or KILLED, never LIVE. Pure function, 13 tests | `survival-gate.ts` |
+| 15. Survival gate | `runSurvivalGate()` — 8 configurable research checks (trades, expectancy, profit factor, drawdown, Sharpe, regime coverage, fee stress, slippage stress). Returns PAPER_CANDIDATE or KILLED, never LIVE. Pure function, 15 tests | `survival-gate.ts` |
+| 17. Promotion state machine | `transitionStrategy()` — 9-state lifecycle (RESEARCH→BACKTEST→OOS_PASS→ROBUSTNESS_PASS→PAPER→SHADOW→MANUAL_APPROVAL→LIVE, with KILLED terminal). `gate_passed` is capped at SHADOW; MANUAL_APPROVAL and LIVE are reachable only via explicit human triggers. `gateResultToTrigger()` wires the survival gate output in with zero adapter code. Pure function, 23 tests | `promotion-states.ts` |
 
 **Non-TA market-structure layer (commits `52d9ef9`, `7a1c8c2`, `57db6ae`):**
 Four Binance signal sources (funding rate, OI, liquidation, premium index) with causal feature computation, 1.5x vote-margin aggregation, per-source failure logging, cache safety, and deterministic offline injection.
