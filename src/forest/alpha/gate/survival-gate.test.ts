@@ -208,6 +208,14 @@ describe('runSurvivalGate', () => {
     expect(covCheck.actual).toBeCloseTo(5 / 7, 5);
   });
 
+  it('kills when no regimes are observed at all', () => {
+    const result = runSurvivalGate(makeReport({ byRegime: {} as Record<RegimeLabel, Partial<Report>> }));
+    expect(result.status).toBe('KILLED');
+    const covCheck = result.checks.find((c) => c.name === 'min_regime_coverage')!;
+    expect(covCheck.passed).toBe(false);
+    expect(covCheck.actual).toBe(0);
+  });
+
   it('reports the failing check names in the reason', () => {
     const result = runSurvivalGate(makeReport({ numTrades: 1, expectancy: -1 }));
     expect(result.status).toBe('KILLED');
