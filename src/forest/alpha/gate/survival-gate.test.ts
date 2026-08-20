@@ -108,6 +108,20 @@ describe('runSurvivalGate', () => {
     expect(sharpeCheck.actual).toBe(-Infinity);
   });
 
+  it('kills when Sharpe is non-null but below threshold', () => {
+    const result = runSurvivalGate(makeReport({ sharpe: 0.3 }));
+    expect(result.status).toBe('KILLED');
+    const sharpeCheck = result.checks.find((c) => c.name === 'min_sharpe')!;
+    expect(sharpeCheck.passed).toBe(false);
+    expect(sharpeCheck.actual).toBe(0.3);
+  });
+
+  it('passes when Sharpe is exactly at threshold', () => {
+    const result = runSurvivalGate(makeReport({ sharpe: 0.5 }));
+    const sharpeCheck = result.checks.find((c) => c.name === 'min_sharpe')!;
+    expect(sharpeCheck.passed).toBe(true);
+  });
+
   it('kills when regime coverage is too low', () => {
     // All 7 regimes observed, but only 2 produced trades → 29% coverage, below default 0.5.
     const byRegime = makeReport().byRegime;
