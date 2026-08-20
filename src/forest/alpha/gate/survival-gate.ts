@@ -77,7 +77,11 @@ export function runSurvivalGate(
   checks.push(checkSharpe(report.sharpe, minSharpe));
   checks.push(checkRegimeCoverage(report.byRegime, minRegimeCoverage));
   checks.push(checkNetPnlAfterFees(report.netPnl, minNetPnlAfterFees));
-  checks.push(checkNetPnlAdverse(report.netPnl, minNetPnlAdverse));
+  // Adverse stress: apply the recorded slippage cost on top of the normal-stress
+  // net PnL. The report carries a single netPnl (after normal-stress fees) and a
+  // separate slippage field; subtracting it models the adverse scenario without
+  // requiring a second report field.
+  checks.push(checkNetPnlAdverse(report.netPnl - report.slippage, minNetPnlAdverse));
 
   const failed = checks.filter((c) => !c.passed);
   if (failed.length === 0) {
@@ -158,10 +162,9 @@ function checkRegimeCoverage(
     (key) => byRegime[key] !== undefined && byRegime[key] !== null,
   );
   // Coverage is the share of observed regimes that produced at least one trade.
-  const traded = regimes.filter((key) => {
-    const entry = byRegime[key];
-    return entry !== undefined && entry !== null && (entry.numTrades ?? 0) > 0;
-  });
+  const traded = regimes.filter(
+    (key) => (byRegime[key]?.numTrades ?? 0) > 0,
+  );
   const coverage = regimes.length === 0 ? 0 : traded.length / regimes.length;
   return {
     name: 'min_regime_coverage',

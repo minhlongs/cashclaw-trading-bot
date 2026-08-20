@@ -131,6 +131,29 @@ describe('runSurvivalGate', () => {
     expect(result.checks.find((c) => c.name === 'min_net_pnl_after_fees')!.passed).toBe(false);
   });
 
+  it('kills when adverse slippage stress pushes net PnL below threshold', () => {
+    // Net PnL is positive after normal-stress fees, but recorded slippage is
+    // larger than the profit → adverse-stress PnL is negative → fails.
+    const result = runSurvivalGate(makeReport({ netPnl: 10, slippage: 20 }));
+    expect(result.status).toBe('KILLED');
+    const afterFees = result.checks.find((c) => c.name === 'min_net_pnl_after_fees')!;
+    const adverse = result.checks.find((c) => c.name === 'min_net_pnl_adverse')!;
+    expect(afterFees.passed).toBe(true);
+    expect(adverse.passed).toBe(false);
+    expect(adverse.actual).toBe(-10);
+  });
+
+  it('adverse check can be tuned independently of the normal-stress check', () => {
+    // netPnl 10, slippage 20 → adverse = -10. Tightening the adverse threshold
+    // to -20 lets it pass while the normal-stress check still passes.
+    const result = runSurvivalGate(
+      makeReport({ netPnl: 10, slippage: 20 }),
+      { minNetPnlAdverse: -20 },
+    );
+    expect(result.status).toBe('PAPER_CANDIDATE');
+    expect(result.checks.find((c) => c.name === 'min_net_pnl_adverse')!.passed).toBe(true);
+  });
+
   it('applies custom thresholds', () => {
     // Tighten trade count so the passing report now fails.
     const result = runSurvivalGate(makeReport({ numTrades: 50 }), { minTrades: 200 });

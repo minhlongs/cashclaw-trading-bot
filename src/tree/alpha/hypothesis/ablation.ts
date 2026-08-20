@@ -66,7 +66,8 @@ export function runAblation(
   const ablations: AblationVariant[] = [];
   const flaggedUnnecessary: string[] = [];
 
-  // Ablation requires at least two indicators; with 0-1 there is nothing to remove.
+  // Iterate over every indicator. With 0 indicators the loop is a no-op; with 1
+  // indicator the variant has an empty signal set.
   for (const preset of hypothesis.indicatorSet) {
     const variant: AlphaHypothesis = {
       ...hypothesis,

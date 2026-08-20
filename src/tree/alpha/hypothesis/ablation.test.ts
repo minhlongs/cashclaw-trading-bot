@@ -16,12 +16,12 @@ import type { AlphaHypothesis, HypothesisTemplate } from './types';
 
 function makeCandles(n: number, basePrice = 100): IndicatorCandle[] {
   return Array.from({ length: n }, (_, i) => ({
-    timestamp: Date.now() + i * 60_000,
+    timestamp: 1_700_000_000_000 + i * 60_000,
     open: basePrice + Math.sin(i / 5) * 2,
     high: basePrice + Math.sin(i / 5) * 3 + 1,
     low: basePrice + Math.sin(i / 5) * 3 - 1,
     close: basePrice + Math.sin(i / 5) * 2.5,
-    volume: 1000 + Math.random() * 500,
+    volume: 1000 + (i % 7) * 50,
   }));
 }
 
