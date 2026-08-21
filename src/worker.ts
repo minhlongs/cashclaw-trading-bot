@@ -38,6 +38,7 @@ import {
 
 import { authGuard } from './forest/api/auth-guard';
 import { getBotManager } from './tree/bot';
+import { loadAllBotsFromD1 } from './forest/bot/d1-adapter';
 import { BotScheduler } from './forest/bot/scheduler';
 
 const logger = createLogger('worker');
@@ -89,7 +90,8 @@ app.use('*', async (c, next) => {
 });
 
 // Health check
-app.get('/api/health', (c) => {
+app.get('/api/health', async (c) => {
+  await loadAllBotsFromD1();
   const manager = getBotManager();
   return c.json({
     status: 'ok',
@@ -195,6 +197,7 @@ export default app;
 // CF Cron trigger — fires every 5 minutes per wrangler.jsonc [[triggers]]
 // Drains exchange request queues and logs outcome for observability.
 export async function scheduled(_event: { scheduledTime: number }, _env: Env, _ctx: ExecutionContext): Promise<void> {
+  await loadAllBotsFromD1();
   const manager = getBotManager();
   const report = await manager.drainQueues();
   const entries = Object.values(report);

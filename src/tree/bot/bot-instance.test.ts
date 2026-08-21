@@ -441,6 +441,51 @@ describe('BotInstance', () => {
     });
   });
 
+  describe('hasStrategy()', () => {
+    it('returns false for a newly created bot', () => {
+      const config = makeBotConfig();
+      const bot = new BotInstance(
+        BOT_ID,
+        config,
+        { exchange, killswitch, telemetry },
+        callbacks,
+      );
+
+      expect(bot.hasStrategy()).toBe(false);
+    });
+
+    it('returns true after start() succeeds', async () => {
+      const config = makeBotConfig();
+      const bot = new BotInstance(
+        BOT_ID,
+        config,
+        { exchange, killswitch, telemetry },
+        callbacks,
+      );
+
+      await bot.start();
+
+      expect(bot.hasStrategy()).toBe(true);
+    });
+
+    it('returns false after stop()', async () => {
+      const config = makeBotConfig();
+      const bot = new BotInstance(
+        BOT_ID,
+        config,
+        { exchange, killswitch, telemetry },
+        callbacks,
+      );
+
+      await bot.start();
+      expect(bot.hasStrategy()).toBe(true);
+
+      bot.stop();
+
+      expect(bot.hasStrategy()).toBe(false);
+    });
+  });
+
   describe('State management', () => {
     it('updates state timestamp on tick', async () => {
       const config = makeBotConfig();

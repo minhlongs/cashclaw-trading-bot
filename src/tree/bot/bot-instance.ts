@@ -62,6 +62,10 @@ export class BotInstance {
 
   getConfig(): GridBotConfig | MeanRevBotConfig { return { ...this.config }; }
 
+  hasStrategy(): boolean {
+    return this.strategy !== null;
+  }
+
   // ── Lifecycle ──────────────────────────────────────────────
 
   async start(): Promise<void> {

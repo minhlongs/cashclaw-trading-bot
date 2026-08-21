@@ -4,8 +4,9 @@
 
 import { getBotManager } from '@/tree/bot';
 import { createServerClient } from '@/lib/db/client';
+import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import type { BotInstance } from '@/tree/bot/bot-instance';
- 
+
 import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import { createLogger } from '@/lib/logger';
 
@@ -40,11 +41,33 @@ export class BotScheduler {
       return { tickCount: this.tickCount, botsEvaluated: 0, halted: true, errors: [], rateLimitUsage: {} };
     }
 
+    // Hydrate from D1 before reading running bots. After a Workers cold start
+    // the in-memory registry is empty — without this call the scheduler would
+    // tick zero bots and drain an empty queue.
+    await loadAllBotsFromD1();
+
     const manager = getBotManager();
     const runningBots = manager.getRunningBots();
 
     const errors: SchedulerError[] = [];
     const orchestrator = this.deps.getOrchestrator?.();
+
+    // Auto-restart bots that were running before cold start but lost their
+    // strategy instance. After hydration they report `running` in status but
+    // have no tick cycle — start() reinitializes the strategy with a fresh
+    // ticker price. Paper-only, so no credentials are needed.
+    for (const bot of runningBots) {
+      if (!bot.hasStrategy()) {
+        try {
+          await bot.start();
+        } catch (err) {
+          errors.push({
+            botId: bot.id,
+            message: `Auto-restart failed: ${err instanceof Error ? err.message : String(err)}`,
+          });
+        }
+      }
+    }
 
     for (const bot of runningBots) {
       // Circuit-open guard: skip bot if its exchange provider circuit is open.

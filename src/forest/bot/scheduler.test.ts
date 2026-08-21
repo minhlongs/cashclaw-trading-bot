@@ -12,6 +12,11 @@ vi.mock('@/lib/logger', () => ({
   createLogger: vi.fn(() => mockLogger),
 }));
 
+const mockLoadAllBotsFromD1 = vi.fn().mockResolvedValue(undefined);
+vi.mock('./d1-adapter', () => ({
+  loadAllBotsFromD1: (...args: unknown[]) => mockLoadAllBotsFromD1(...args),
+}));
+
 const mockGetBotManager = vi.fn();
 vi.mock('@/tree/bot', () => ({
   getBotManager: (...args: unknown[]) => mockGetBotManager(...args),
@@ -39,7 +44,8 @@ vi.mock('@/land/exchange-orchestration', () => ({
 
 const mockD1Run = vi.fn().mockResolvedValue({ success: true });
 const mockD1Bind = vi.fn().mockReturnValue({ run: mockD1Run });
-const mockD1Prepare = vi.fn().mockReturnValue({ bind: mockD1Bind });
+const mockD1All = vi.fn().mockResolvedValue({ results: [] });
+const mockD1Prepare = vi.fn().mockReturnValue({ bind: mockD1Bind, all: mockD1All });
 vi.mock('@/lib/db/client', () => ({
   createServerClient: vi.fn().mockReturnValue({
     prepare: (...args: unknown[]) => mockD1Prepare(...args),
@@ -53,26 +59,35 @@ vi.mock('@/tree/telemetry/writer', () => ({
   })),
 }));
 
+const mockFindAllBots = vi.fn().mockResolvedValue([]);
+vi.mock('@/lib/db/repositories', () => ({
+  findBotsByUser: vi.fn(),
+  findAllBots: (...args: unknown[]) => mockFindAllBots(...args),
+}));
+
 // ─── Import after mocks ─────────────────────────────────────────────────────
 
 describe('BotScheduler', () => {
   let tickCount = 0;
 
   function makeMockBot(overrides: Record<string, unknown> = {}) {
+    const { hasStrategy: hs, ...rest } = overrides;
     return {
-      id: overrides.id ?? 'bot-1',
-      getStatus: vi.fn().mockReturnValue(overrides.status ?? 'running'),
+      id: rest.id ?? 'bot-1',
+      getStatus: vi.fn().mockReturnValue(rest.status ?? 'running'),
       getConfig: vi.fn().mockReturnValue({
-        exchange: overrides.exchange ?? 'binance',
-        symbol: overrides.symbol ?? 'BTC/USDT',
-        capital: overrides.capital ?? 1000,
+        exchange: rest.exchange ?? 'binance',
+        symbol: rest.symbol ?? 'BTC/USDT',
+        capital: rest.capital ?? 1000,
       }),
       tick: vi.fn().mockResolvedValue(undefined),
+      hasStrategy: vi.fn().mockReturnValue(hs ?? true),
+      start: vi.fn().mockResolvedValue(undefined),
       getSnapshot: vi.fn().mockReturnValue({
-        id: overrides.id ?? 'bot-1',
-        totalPnl: overrides.totalPnl ?? 0,
+        id: rest.id ?? 'bot-1',
+        totalPnl: rest.totalPnl ?? 0,
       }),
-      ...overrides,
+      ...rest,
     };
   }
 
@@ -81,14 +96,17 @@ describe('BotScheduler', () => {
     tickCount = 0;
 
     // Re-establish mock implementations cleared by clearAllMocks
+    mockLoadAllBotsFromD1.mockResolvedValue(undefined);
     mockGetBotManager.mockReturnValue({
       getRunningBots: vi.fn().mockReturnValue([]),
       getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
+      drainQueues: vi.fn().mockResolvedValue({}),
     });
     mockKillswitchInstance.isTradingEnabled.mockReturnValue(true);
     mockOrchestratorInstance.getProvider.mockReturnValue(mockProvider);
     mockProvider.isCircuitOpen.mockReturnValue(false);
     mockD1Run.mockResolvedValue({ success: true });
+    mockD1All.mockResolvedValue({ results: [] });
     mockLogger.warn.mockImplementation(() => {});
     mockLogger.error.mockImplementation(() => {});
   });
@@ -102,6 +120,14 @@ describe('BotScheduler', () => {
   }
 
   describe('tick()', () => {
+    it('hydrates bots from D1 before reading the manager', async () => {
+      const scheduler = await createScheduler();
+      await scheduler.tick();
+
+      expect(mockLoadAllBotsFromD1).toHaveBeenCalledTimes(1);
+      expect(mockGetBotManager).toHaveBeenCalledBefore(mockLoadAllBotsFromD1);
+    });
+
     it('returns tickCount incremented and botsEvaluated = 0 when no running bots', async () => {
       const scheduler = await createScheduler();
       const report = await scheduler.tick();
@@ -259,6 +285,53 @@ describe('BotScheduler', () => {
       const stats = scheduler.getStats();
       expect(stats.tickCount).toBe(1);
       expect(stats.lastTickAt).toBeGreaterThan(0);
+    });
+  });
+
+  describe('auto-restart after cold-start hydration', () => {
+    it('starts running bots that have no strategy instance', async () => {
+      const bot = makeMockBot({ id: 'b1', hasStrategy: false });
+      mockGetBotManager.mockReturnValue({
+        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
+      });
+
+      const scheduler = await createScheduler();
+      await scheduler.tick();
+
+      expect(bot.start).toHaveBeenCalledTimes(1);
+      expect(bot.tick).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not start bots that already have a strategy', async () => {
+      const bot = makeMockBot({ id: 'b1', hasStrategy: true });
+      mockGetBotManager.mockReturnValue({
+        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
+      });
+
+      const scheduler = await createScheduler();
+      await scheduler.tick();
+
+      expect(bot.start).not.toHaveBeenCalled();
+      expect(bot.tick).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports auto-restart failures without blocking the tick', async () => {
+      const bot = makeMockBot({ id: 'b1', hasStrategy: false });
+      bot.start.mockRejectedValue(new Error('ticker fetch failed'));
+      mockGetBotManager.mockReturnValue({
+        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
+      });
+
+      const scheduler = await createScheduler();
+      const report = await scheduler.tick();
+
+      expect(bot.start).toHaveBeenCalledTimes(1);
+      expect(report.errors).toHaveLength(1);
+      expect(report.errors[0].botId).toBe('b1');
+      expect(report.errors[0].message).toContain('Auto-restart failed');
     });
   });
 

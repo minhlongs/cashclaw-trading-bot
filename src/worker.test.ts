@@ -9,7 +9,13 @@ vi.mock('./lib/logger', () => ({
 const mockManager = {
   getAllBots: vi.fn().mockReturnValue([]),
   getRunningBots: vi.fn().mockReturnValue([]),
+  drainQueues: vi.fn().mockResolvedValue({}),
 };
+
+const mockLoadAllBotsFromD1 = vi.fn().mockResolvedValue(undefined);
+vi.mock('./forest/bot/d1-adapter', () => ({
+  loadAllBotsFromD1: (...args: unknown[]) => mockLoadAllBotsFromD1(...args),
+}));
 vi.mock('./tree/bot', () => ({
   getBotManager: vi.fn(() => mockManager),
 }));
@@ -148,6 +154,31 @@ describe('worker routes', () => {
       const assets = { fetch: vi.fn().mockResolvedValue(new Response('not found', { status: 404 })) };
       const res = await app.request('/missing', {}, mkEnv({ ASSETS: assets }));
       expect(res.status).toBe(404);
+    });
+  });
+
+  // ── GET /api/health hydration ──────────────────────────────────────────────
+  describe('GET /api/health hydration', () => {
+    it('calls loadAllBotsFromD1 before returning health', async () => {
+      mockLoadAllBotsFromD1.mockClear();
+      const res = await app.request('/api/health', {}, mkEnv());
+      expect(res.status).toBe(200);
+      expect(mockLoadAllBotsFromD1).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ── scheduled() function ───────────────────────────────────────────────────
+  describe('scheduled() function', () => {
+    it('calls loadAllBotsFromD1 before drainQueues', async () => {
+      const drainQueuesResult = { binance: { processed: 0, skipped: 0, pending: 0 } };
+      mockManager.drainQueues = vi.fn().mockResolvedValue(drainQueuesResult);
+      mockLoadAllBotsFromD1.mockClear();
+
+      const { scheduled } = await import('./worker');
+      await scheduled({ scheduledTime: Date.now() }, {} as any, {} as any);
+
+      expect(mockLoadAllBotsFromD1).toHaveBeenCalledTimes(1);
+      expect(mockManager.drainQueues).toHaveBeenCalledTimes(1);
     });
   });
 });
