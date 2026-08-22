@@ -4,7 +4,15 @@
 import type { AlphaResult } from '@/tree/alpha/types';
 import type { Experiment, ExperimentResult, ExperimentStatus } from '@/forest/alpha/experiments/types';
 import type { D1Database } from '@/lib/db/types';
-import type { PersistenceAdapter } from './types';
+import type {
+  PersistenceAdapter,
+  StoredHypothesisNode,
+  StoredRegistryEntry,
+} from './types';
+import {
+  RESEARCH_HYPOTHESES_TABLE_SQL,
+  RESEARCH_REGISTRY_TABLE_SQL,
+} from './d1-sql';
 
 const MIGRATE = `
 CREATE TABLE IF NOT EXISTS alpha_results (
@@ -31,6 +39,8 @@ CREATE TABLE IF NOT EXISTS alpha_experiment_results (
 );
 CREATE INDEX IF NOT EXISTS idx_alpha_results_name ON alpha_results(name);
 CREATE INDEX IF NOT EXISTS idx_alpha_exp_experiment ON alpha_experiment_results(experiment_id);
+${RESEARCH_HYPOTHESES_TABLE_SQL}
+${RESEARCH_REGISTRY_TABLE_SQL}
 `;
 
 export class D1PersistenceAdapter implements PersistenceAdapter {
@@ -184,6 +194,128 @@ export class D1PersistenceAdapter implements PersistenceAdapter {
     return results.map(r => { try { return JSON.parse(r.result_json) as ExperimentResult; } catch { return null; } })
       .filter((x): x is ExperimentResult => x !== null);
   }
+
+  // ── Research registry (append-only — no UPDATE paths) ─────────────────────
+
+  async saveRegistryEntry(entry: StoredRegistryEntry): Promise<void> {
+    await this.db.prepare(INSERT_RESEARCH_REGISTRY_ENTRY_SQL).bind(
+      entry.entryId, entry.hypothesis, entry.dataSourcesJson, entry.featureSetJson,
+      entry.regime, entry.periodsJson, entry.costsJson, entry.slippageJson,
+      entry.seed, entry.gitCommit, entry.resultJson, entry.falsificationReason,
+      entry.status, entry.experimentHash, entry.reproducibility, entry.createdAt,
+    ).run();
+  }
+
+  async listRegistry(): Promise<StoredRegistryEntry[]> {
+    const { results } = await this.db.prepare(SELECT_RESEARCH_REGISTRY_SQL)
+      .all<RegistryRow>();
+    return (results ?? []).map(rowToRegistryEntry);
+  }
+
+  async saveHypothesisNode(node: StoredHypothesisNode): Promise<void> {
+    await this.db.prepare(INSERT_RESEARCH_HYPOTHESIS_SQL).bind(
+      node.id, node.parentId, node.mutation, node.status, node.evidenceJson, node.createdAt,
+    ).run();
+  }
+
+  async loadLineage(): Promise<StoredHypothesisNode[]> {
+    const { results } = await this.db.prepare(SELECT_RESEARCH_HYPOTHESES_SQL)
+      .all<HypothesisRow>();
+    return (results ?? []).map(rowToHypothesisNode);
+  }
+}
+
+// ── Research registry row shapes ─────────────────────────────────────────────
+
+// ── Research registry SQL (append-only — no UPDATE paths) ────────────────────
+const INSERT_RESEARCH_HYPOTHESIS_SQL = `
+INSERT INTO research_hypotheses (id, parent_id, mutation, status, evidence_json, created_at)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT(id) DO NOTHING
+`;
+
+const SELECT_RESEARCH_HYPOTHESES_SQL = `
+SELECT id, parent_id, mutation, status, evidence_json, created_at
+FROM research_hypotheses
+ORDER BY created_at ASC, id ASC
+`;
+
+const INSERT_RESEARCH_REGISTRY_ENTRY_SQL = `
+INSERT INTO research_registry (
+  entry_id, hypothesis, data_sources_json, feature_set_json, regime,
+  periods_json, costs_json, slippage_json, seed, git_commit,
+  result_json, falsification_reason, status, experiment_hash, reproducibility, created_at
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(entry_id) DO NOTHING
+`;
+
+const SELECT_RESEARCH_REGISTRY_SQL = `
+SELECT entry_id, hypothesis, data_sources_json, feature_set_json, regime,
+       periods_json, costs_json, slippage_json, seed, git_commit,
+       result_json, falsification_reason, status, experiment_hash, reproducibility, created_at
+FROM research_registry
+ORDER BY created_at DESC, entry_id DESC
+`;
+
+interface RegistryRow {
+  entry_id: string;
+  hypothesis: string;
+  data_sources_json: string;
+  feature_set_json: string;
+  regime: string | null;
+  periods_json: string;
+  costs_json: string;
+  slippage_json: string;
+  seed: string | null;
+  git_commit: string | null;
+  result_json: string | null;
+  falsification_reason: string | null;
+  status: StoredRegistryEntry['status'];
+  experiment_hash: string | null;
+  reproducibility: string | null;
+  created_at: number;
+}
+
+interface HypothesisRow {
+  id: string;
+  parent_id: string | null;
+  mutation: string | null;
+  status: StoredHypothesisNode['status'];
+  evidence_json: string;
+  created_at: number;
+}
+
+function rowToRegistryEntry(r: RegistryRow): StoredRegistryEntry {
+  return {
+    entryId: r.entry_id,
+    hypothesis: r.hypothesis,
+    dataSourcesJson: r.data_sources_json,
+    featureSetJson: r.feature_set_json,
+    regime: r.regime,
+    periodsJson: r.periods_json,
+    costsJson: r.costs_json,
+    slippageJson: r.slippage_json,
+    seed: r.seed,
+    gitCommit: r.git_commit,
+    resultJson: r.result_json,
+    falsificationReason: r.falsification_reason,
+    status: r.status,
+    experimentHash: r.experiment_hash,
+    reproducibility: r.reproducibility,
+    createdAt: r.created_at,
+  };
+}
+
+function rowToHypothesisNode(r: HypothesisRow): StoredHypothesisNode {
+  return {
+    id: r.id,
+    parentId: r.parent_id,
+    mutation: r.mutation,
+    status: r.status,
+    evidenceJson: r.evidence_json,
+    createdAt: r.created_at,
+  };
 }
 
 export function createD1Adapter(db: D1Database): D1PersistenceAdapter {

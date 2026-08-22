@@ -42,6 +42,10 @@ export interface AlphaHypothesis {
   confidence: number;
   /** ISO timestamp of creation. */
   createdAt: string;
+  /** Lineage: id of the parent hypothesis this was derived from (null/undefined = root). */
+  parentId?: string | null;
+  /** Lineage: description of the mutation applied from the parent. */
+  mutation?: string | null;
 }
 
 // ── Hypothesis Template ────────────────────────────────────────────────────────

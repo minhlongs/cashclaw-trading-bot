@@ -145,4 +145,75 @@ describe('runExperiment', () => {
     expect(result.regimePerformance[RegimeLabel.HIGH_VOLATILITY]).toBeDefined();
     expect(result.regimePerformance[RegimeLabel.HIGH_VOLATILITY].sampleCount).toBe(1);
   });
+
+  it('produces a deterministic experimentHash for identical inputs', async () => {
+    const exp = makeExperiment({ randomSeed: 42, gitCommit: 'abc123' });
+
+    const first = await runExperiment(exp, baseDeps);
+    const second = await runExperiment(exp, baseDeps);
+
+    expect(first.experimentHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(second.experimentHash).toBe(first.experimentHash);
+  });
+
+  it('produces a deterministic experimentHash without gitCommit', async () => {
+    const exp = makeExperiment({ randomSeed: 42 });
+
+    const first = await runExperiment(exp, baseDeps);
+    const second = await runExperiment(exp, baseDeps);
+
+    expect(first.experimentHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(second.experimentHash).toBe(first.experimentHash);
+  });
+
+  it('produces different hashes when gitCommit differs', async () => {
+    const withCommit = await runExperiment(makeExperiment({ randomSeed: 42, gitCommit: 'abc123' }), baseDeps);
+    const withoutCommit = await runExperiment(makeExperiment({ randomSeed: 42 }), baseDeps);
+
+    expect(withCommit.experimentHash).not.toBe(withoutCommit.experimentHash);
+  });
+
+  it('produces different hashes when seed or config differs', async () => {
+    const base = await runExperiment(makeExperiment({ randomSeed: 42 }), baseDeps);
+    const otherSeed = await runExperiment(makeExperiment({ randomSeed: 43 }), baseDeps);
+    const otherConfig = await runExperiment(
+      makeExperiment({ randomSeed: 42, configSnapshot: { lr: 0.01 } }),
+      baseDeps,
+    );
+
+    expect(otherSeed.experimentHash).not.toBe(base.experimentHash);
+    expect(otherConfig.experimentHash).not.toBe(base.experimentHash);
+  });
+
+  it('populates falsificationReason from gate output on failed runs', async () => {
+    const deps: ExperimentDeps = {
+      ...baseDeps,
+      runBacktest: vi.fn(async () => {
+        throw new Error('boom');
+      }),
+    };
+
+    const result = await runExperiment(makeExperiment(), deps, {
+      gateReason: 'Failed 3/8 checks: min_trades, min_sharpe',
+    });
+
+    expect(result.status).toBe('failed');
+    expect(result.falsificationReason).toBe('Failed 3/8 checks: min_trades, min_sharpe');
+    expect(result.error).toBe('boom');
+    expect(result.experimentHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('falls back to the error message when no gate reason is provided', async () => {
+    const deps: ExperimentDeps = {
+      ...baseDeps,
+      runBacktest: vi.fn(async () => {
+        throw new Error('boom');
+      }),
+    };
+
+    const result = await runExperiment(makeExperiment(), deps);
+
+    expect(result.status).toBe('failed');
+    expect(result.falsificationReason).toBe('boom');
+  });
 });
