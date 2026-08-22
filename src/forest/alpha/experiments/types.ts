@@ -120,10 +120,6 @@ export interface Experiment {
   randomSeed?: number;
   gitCommit?: string;
   configSnapshot: Record<string, unknown>;
-  /** Optional lineage link to the hypothesis this experiment tests. */
-  hypothesisId?: string;
-  /** Optional lineage link to the parent experiment this one derives from. */
-  parentId?: string;
 }
 
 // ── Experiment Result ────────────────────────────────────────────────────────
@@ -149,15 +145,6 @@ export interface ExperimentResult {
   artifacts: string[];
   /** Error message when status is 'failed'. */
   error?: string;
-  /** Why the run was falsified (failed/killed) — from gate output when provided. */
-  falsificationReason?: string;
-  /**
-   * SHA-256 over the canonical JSON of (config + seed + gitCommit).
-   * Reproducibility anchor: identical inputs always yield the identical hash.
-   */
-  experimentHash: string;
-  /** Optional link to the research-registry entry recording this run. */
-  registryEntryId?: string;
 }
 
 // ── Dependency Injection ─────────────────────────────────────────────────────

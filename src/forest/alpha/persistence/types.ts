@@ -82,73 +82,6 @@ export interface StoredExperimentResult {
   updatedAt: number;
 }
 
-// ── Research Registry Models ─────────────────────────────────────────────────
-
-/** Lifecycle status of a research registry entry. */
-export type RegistryEntryStatus = 'PROPOSED' | 'RUNNING' | 'SURVIVED' | 'FALSIFIED' | 'ARCHIVED';
-
-/** Lifecycle status of a hypothesis lineage node. */
-export type HypothesisNodeStatus = 'proposed' | 'testing' | 'survived' | 'falsified' | 'archived';
-
-/**
- * Persisted research registry entry — JSON-serializable snapshot of a
- * ResearchEntry (tree/alpha/registry). Append-only: rows are never updated
- * after insert; status changes are recorded as new evidence.
- */
-export interface StoredRegistryEntry {
-  /** Unique entry identifier. */
-  entryId: string;
-  /** Human-readable hypothesis statement. */
-  hypothesis: string;
-  /** JSON-serialized data source identifiers. */
-  dataSourcesJson: string;
-  /** JSON-serialized feature set. */
-  featureSetJson: string;
-  /** Regime label the entry targets, if any. */
-  regime: string | null;
-  /** JSON-serialized train/validation/OOS periods. */
-  periodsJson: string;
-  /** JSON-serialized cost model. */
-  costsJson: string;
-  /** JSON-serialized slippage model. */
-  slippageJson: string;
-  /** Random seed used for reproducibility, if any. */
-  seed: string | null;
-  /** Git commit hash the entry was produced at, if any. */
-  gitCommit: string | null;
-  /** JSON-serialized result payload, if any. */
-  resultJson: string | null;
-  /** Why the entry was falsified, if applicable. */
-  falsificationReason: string | null;
-  /** Entry lifecycle status. */
-  status: RegistryEntryStatus;
-  /** SHA-256 hash over canonical config+seed+gitCommit for reproducibility. */
-  experimentHash: string | null;
-  /** Reproducibility verdict, if any. */
-  reproducibility: string | null;
-  /** Unix timestamp when stored. */
-  createdAt: number;
-}
-
-/**
- * Persisted hypothesis lineage node — one row per hypothesis in the research
- * graph. Append-only: historical nodes are never mutated.
- */
-export interface StoredHypothesisNode {
-  /** Node identifier (e.g. 'H001', 'H001-A'). */
-  id: string;
-  /** Parent node id, or null for root hypotheses. */
-  parentId: string | null;
-  /** Mutation description relative to the parent, if any. */
-  mutation: string | null;
-  /** Node lifecycle status. */
-  status: HypothesisNodeStatus;
-  /** JSON-serialized evidence strings. */
-  evidenceJson: string;
-  /** Unix timestamp when stored. */
-  createdAt: number;
-}
-
 // ── Adapter Interface ────────────────────────────────────────────────────────
 
 /** Unified persistence adapter for alpha results and experiments. */
@@ -173,24 +106,4 @@ export interface PersistenceAdapter {
 
   /** Load experiment results for a given experiment, newest first. */
   loadExperimentResults(experimentId: string): Promise<ExperimentResult[]>;
-
-  // ── Research registry (optional — append-only) ────────────────────────────
-
-  /**
-   * Save a research registry entry. Append-only: an existing entry with the
-   * same id is never overwritten or mutated.
-   */
-  saveRegistryEntry?(entry: StoredRegistryEntry): Promise<void>;
-
-  /** List all research registry entries, newest first. */
-  listRegistry?(): Promise<StoredRegistryEntry[]>;
-
-  /**
-   * Save a hypothesis lineage node. Append-only: an existing node with the
-   * same id is never overwritten or mutated.
-   */
-  saveHypothesisNode?(node: StoredHypothesisNode): Promise<void>;
-
-  /** Load all hypothesis lineage nodes, oldest first. */
-  loadLineage?(): Promise<StoredHypothesisNode[]>;
 }

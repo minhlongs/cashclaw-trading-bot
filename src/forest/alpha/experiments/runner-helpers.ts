@@ -1,10 +1,9 @@
 // Experiment Engine — Runner Helpers
 // Pure functions extracted to keep runner.ts under 200 lines.
 
-import type { Experiment, PeriodMetrics, RegimePerformance, SymbolPerformance, SymbolPerformanceEntry } from './types';
+import type { PeriodMetrics, RegimePerformance, SymbolPerformance, SymbolPerformanceEntry } from './types';
 import type { BacktestResult } from '@/forest/backtest/types';
 import { RegimeLabel } from '@/tree/regime/types';
-import { canonicalize } from '@/lib/canonical-json';
 
 /** Derive PeriodMetrics from a BacktestResult. */
 export function metricsFromBacktest(bt: BacktestResult): PeriodMetrics {
@@ -58,24 +57,6 @@ export function computeSymbolPerformance(bt: BacktestResult, symbol: string): Sy
     maxDrawdown: bt.max_drawdown,
   };
   return { [symbol]: entry };
-}
-
-/**
- * Compute the reproducibility hash for an experiment: SHA-256 over the
- * canonical JSON of (config + seed + gitCommit). Deterministic — identical
- * inputs always yield the identical hash, with or without gitCommit.
- */
-export async function computeExperimentHash(exp: Experiment): Promise<string> {
-  const payload = {
-    config: exp.configSnapshot,
-    seed: exp.randomSeed,
-    gitCommit: exp.gitCommit,
-  };
-  const encoded = new TextEncoder().encode(canonicalize(payload));
-  const digest = await crypto.subtle.digest('SHA-256', encoded);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
 }
 
 /** Produce an empty BacktestResult for failure paths. */

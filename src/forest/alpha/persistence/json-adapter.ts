@@ -3,11 +3,7 @@
 
 import type { AlphaResult } from '@/tree/alpha/types';
 import type { Experiment, ExperimentResult } from '@/forest/alpha/experiments/types';
-import type {
-  PersistenceAdapter,
-  StoredHypothesisNode,
-  StoredRegistryEntry,
-} from './types';
+import type { PersistenceAdapter } from './types';
 
 const DIR = 'alpha-artifacts';
 
@@ -38,14 +34,6 @@ export class JsonPersistenceAdapter implements PersistenceAdapter {
 
   private experimentPath(id: string): string {
     return `${this.baseDir}/experiments/${id}.json`;
-  }
-
-  private registryPath(entryId: string): string {
-    return `${this.baseDir}/registry/${entryId}.json`;
-  }
-
-  private lineagePath(nodeId: string): string {
-    return `${this.baseDir}/lineage/${nodeId}.json`;
   }
 
   async saveResult(id: string, result: AlphaResult): Promise<void> {
@@ -133,56 +121,6 @@ export class JsonPersistenceAdapter implements PersistenceAdapter {
   async loadExperimentResults(experimentId: string): Promise<ExperimentResult[]> {
     const raw = readFile(`${this.baseDir}/experiments/${experimentId}.results.json`);
     return fromJson<ExperimentResult[]>(raw) ?? [];
-  }
-
-  // ── Research registry (append-only — never overwrites existing entries) ───
-
-  async saveRegistryEntry(entry: StoredRegistryEntry): Promise<void> {
-    const p = this.registryPath(entry.entryId);
-    if (readFile(p) !== null) return; // append-only: never mutate history
-    writeFile(p, toJson(entry));
-  }
-
-  async listRegistry(): Promise<StoredRegistryEntry[]> {
-    const fs = require('fs');
-    const path = require('path');
-    const dir = `${this.baseDir}/registry`;
-    try {
-      const files = fs.readdirSync(dir).filter((f: string) => f.endsWith('.json'));
-      const list: StoredRegistryEntry[] = [];
-      for (const file of files) {
-        const raw = readFile(path.join(dir, file));
-        if (!raw) continue;
-        const entry = fromJson<StoredRegistryEntry>(raw);
-        if (entry) list.push(entry);
-      }
-      list.sort((a, b) => b.createdAt - a.createdAt || b.entryId.localeCompare(a.entryId));
-      return list;
-    } catch { return []; }
-  }
-
-  async saveHypothesisNode(node: StoredHypothesisNode): Promise<void> {
-    const p = this.lineagePath(node.id);
-    if (readFile(p) !== null) return; // append-only: never mutate history
-    writeFile(p, toJson(node));
-  }
-
-  async loadLineage(): Promise<StoredHypothesisNode[]> {
-    const fs = require('fs');
-    const path = require('path');
-    const dir = `${this.baseDir}/lineage`;
-    try {
-      const files = fs.readdirSync(dir).filter((f: string) => f.endsWith('.json'));
-      const list: StoredHypothesisNode[] = [];
-      for (const file of files) {
-        const raw = readFile(path.join(dir, file));
-        if (!raw) continue;
-        const node = fromJson<StoredHypothesisNode>(raw);
-        if (node) list.push(node);
-      }
-      list.sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
-      return list;
-    } catch { return []; }
   }
 }
 

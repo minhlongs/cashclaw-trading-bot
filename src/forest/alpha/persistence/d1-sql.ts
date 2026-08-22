@@ -71,63 +71,19 @@ CREATE TABLE IF NOT EXISTS ALPHA_EVALUATIONS (
 CREATE INDEX IF NOT EXISTS idx_alpha_evaluations_experiment ON ALPHA_EVALUATIONS(experiment_id);
 `;
 
-// ── RESEARCH_HYPOTHESES ──────────────────────────────────────────────────────
-
-export const RESEARCH_HYPOTHESES_TABLE_SQL = `
-CREATE TABLE IF NOT EXISTS research_hypotheses (
-  id TEXT PRIMARY KEY,
-  parent_id TEXT,
-  mutation TEXT,
-  status TEXT NOT NULL DEFAULT 'proposed',
-  evidence_json TEXT NOT NULL DEFAULT '[]',
-  created_at INTEGER NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_research_hypotheses_parent ON research_hypotheses(parent_id);
-CREATE INDEX IF NOT EXISTS idx_research_hypotheses_status ON research_hypotheses(status);
-`;
-
-// ── RESEARCH_REGISTRY ────────────────────────────────────────────────────────
-
-export const RESEARCH_REGISTRY_TABLE_SQL = `
-CREATE TABLE IF NOT EXISTS research_registry (
-  entry_id TEXT PRIMARY KEY,
-  hypothesis TEXT NOT NULL,
-  data_sources_json TEXT NOT NULL,
-  feature_set_json TEXT NOT NULL,
-  regime TEXT,
-  periods_json TEXT NOT NULL,
-  costs_json TEXT NOT NULL,
-  slippage_json TEXT NOT NULL,
-  seed TEXT,
-  git_commit TEXT,
-  result_json TEXT,
-  falsification_reason TEXT,
-  status TEXT NOT NULL DEFAULT 'PROPOSED',
-  experiment_hash TEXT,
-  reproducibility TEXT,
-  created_at INTEGER NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_research_registry_status ON research_registry(status);
-CREATE INDEX IF NOT EXISTS idx_research_registry_created ON research_registry(created_at);
-`;
-
 // ── Combined migration ────────────────────────────────────────────────────────
 
-/** All CREATE TABLE + index statements concatenated for migration. */
+/** All three CREATE TABLE + index statements concatenated for migration. */
 export const MIGRATION_SQL = [
   EXPERIMENTS_TABLE_SQL,
   EXPERIMENT_RESULTS_TABLE_SQL,
   ALPHA_EVALUATIONS_TABLE_SQL,
-  RESEARCH_HYPOTHESES_TABLE_SQL,
-  RESEARCH_REGISTRY_TABLE_SQL,
 ].join('\n');
 
 // ── Rollback ──────────────────────────────────────────────────────────────────
 
 /** DROP TABLE IF EXISTS statements for rollback. */
 export const ROLLBACK_SQL = [
-  'DROP TABLE IF EXISTS research_registry;',
-  'DROP TABLE IF EXISTS research_hypotheses;',
   'DROP TABLE IF EXISTS ALPHA_EVALUATIONS;',
   'DROP TABLE IF EXISTS EXPERIMENT_RESULTS;',
   'DROP TABLE IF EXISTS EXPERIMENTS;',

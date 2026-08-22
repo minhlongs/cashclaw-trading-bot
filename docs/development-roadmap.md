@@ -71,8 +71,8 @@ tests pass.
 
 ## Current State
 
-- **Tests:** 2129 across 168 files, full suite green (3 consecutive runs)
-- **Coverage:** statements 85.82%, branches 86.98%, functions 92.35%, lines 85.82% (thresholds 82/85/85/82)
+- **Tests:** 1880 across 130 files, full suite green
+- **Coverage:** statements 82.47%, branches 86.37%, functions 90.75%, lines 82.47% (thresholds 82/85/85/82)
 - **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0` + `reportUnusedDisableDirectives: error`)
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean
@@ -104,23 +104,7 @@ Four Binance signal sources (funding rate, OI, liquidation, premium index) with 
 
 **Falsification result:** Zero strategies with positive out-of-sample expectancy on 2026 data (see `plans/reports/technical-strategy-falsification-2026-08-17.md`). This is the honest answer — nothing works yet.
 
-**Campaign complete (2026-08-18):** All 30 hypothesis classes now falsified (count corrected from 24 to match the definitive report). The last candidate (funding × price extreme interaction) failed 6-window walk-forward: 10/162 OOS passes (6%), aggregate PnL -$455,090, no config passing in more than 1/6 windows. Signal was regime-locked to mid-2022 bear market — pure overfitting. Definitive report: `docs/falsification-report.md`. **Do not re-test dead hypotheses on OHLCV/funding/OI data — the signal space is exhausted.**
-
-## Alpha Research OS — Phase 1 (2026-08-22)
-
-Converts the repo from an app that *ran* a research campaign into an OS that *accumulates* research: every hypothesis, feature, experiment, and kill becomes a machine-readable, reproducible, lineage-tracked artifact. Phase 1 is research-side only — zero execution-path changes; gates, killswitch, and promotion state machine untouched. Full roadmap: `docs/alpha-research-os-implementation-plan.md`.
-
-| Component | What shipped | Evidence |
-|---|---|---|
-| Research registry | Immutable machine-readable registry of research entries (hypothesis, data sources, feature set, periods, costs, seed, git commit, result, falsification reason, status). Seeded with the 30 falsified classes (class-level reproducibility) so dead hypotheses are machine-guarded | `src/tree/alpha/registry/`, 25 tests |
-| Hypothesis lineage | Parent/mutation-tracked hypothesis graph (`H001 → H001-A → …`): cycle/self-parent rejection, ancestors/descendants, dead-end detection, registry bridge. Additive `parentId`/`mutation` on `AlphaHypothesis` | `src/tree/alpha/hypothesis/lineage.ts` |
-| Microstructure contracts | 9 causal feature declarations (spread, order-book/depth/trade imbalance, aggressive volume, volume delta, liquidity shock, realized spread, price impact) through the existing `declareFeature()` gate; missing data stays `null` (never forward-filled). Contracts only — no data fetching | `src/tree/alpha/microstructure/`, 12 tests |
-| Cross-sectional universe | Universe creation/validation, asset ranking, percentile normalization, long/short selection, market-neutral weights (sum ≈ 0), basket neutralization | `src/tree/alpha/universe/` |
-| Regime transition matrix | 7×7 `P(regime[t+1] \| regime[t])` from consecutive observed pairs only (causal by construction): persistence probs, Shannon entropy, average duration, hazard, alpha-decay hook. 97% covered | `src/tree/regime/transition-matrix.ts`, 19 tests |
-| Experiment metadata | Additive: `hypothesisId`/`parentId` lineage links; `falsificationReason`, `experimentHash` (SHA-256 over canonical JSON of config+seed+gitCommit), `registryEntryId` on results | `src/forest/alpha/experiments/` |
-| D1 persistence | Migration `0009_research_registry.sql` (`research_registry` + `research_hypotheses`, append-only, idempotent) applied via `npm run db:apply` (9/9); `saveRegistryEntry`/`listRegistry`/`saveHypothesisNode`/`loadLineage` on both D1 and JSON adapters | `migrations/0009`, `src/forest/alpha/persistence/` |
-
-**Gates:** 2129/2129 tests pass (3 consecutive runs — flake check), coverage 85.82/86.98/92.35/85.82 (thresholds 82/85/85/82), lint 0 warnings, `tsc --noEmit` clean, all new files ≤200 lines, 0 `:any`, 0 new eslint-disable.
+**Campaign complete (2026-08-18):** All 24 hypothesis classes now falsified. The last candidate (funding × price extreme interaction) failed 6-window walk-forward: 10/162 OOS passes (6%), aggregate PnL -$455,090, no config passing in more than 1/6 windows. Signal was regime-locked to mid-2022 bear market — pure overfitting. Definitive report: `docs/falsification-report.md`. **Do not re-test dead hypotheses on OHLCV/funding/OI data — the signal space is exhausted.**
 
 ## Alpha Lab — API Wiring + Real-Data Backtests
 
