@@ -2,13 +2,13 @@
 
 **Date:** 2026-08-18
 **Status:** FINAL
-**Scope:** 24 hypothesis classes tested on SOLUSDT/ETHUSDT/BTCUSDT across 8h, 1d, and 1h timeframes
+**Scope:** 30 hypothesis classes tested on SOLUSDT/ETHUSDT/BTCUSDT across 8h, 1d, and 1h timeframes
 
 ---
 
 ## Executive Summary
 
-**No strategy class tested produced persistent out-of-sample positive expectancy.** Across 24 hypothesis classes, 162+ walk-forward OOS tests, and ~10,000 total OOS trades, every signal that appeared in-sample was either overfit, regime-specific, or below the noise floor after realistic costs.
+**No strategy class tested produced persistent out-of-sample positive expectancy.** Across 30 hypothesis classes, 162+ walk-forward OOS tests, and ~10,000 total OOS trades, every signal that appeared in-sample was either overfit, regime-specific, or below the noise floor after realistic costs.
 
 This is a valid scientific negative result, not a failure. The market appears efficient at the data resolution (OHLCV + funding rate + open interest + liquidation + Fear & Greed Index) and execution scale (retail-tier latency, 17–27 bps round-trip costs) available to this system.
 
@@ -74,7 +74,7 @@ No config passed in more than 1 of 6 windows. The signal was regime-locked to th
 
 ## What Would Be Needed for the Next Tier
 
-The 24 classes tested exhaust the signal space derivable from OHLCV + funding + OI + liquidation + sentiment at retail data resolution. Genuinely untested alpha requires **fundamentally different data infrastructure**:
+The 30 classes tested exhaust the signal space derivable from OHLCV + funding + OI + liquidation + sentiment at retail data resolution. Genuinely untested alpha requires **fundamentally different data infrastructure**:
 
 | Untested Class | Data Required | Infrastructure Gap |
 |---|---|---|
@@ -90,7 +90,7 @@ Cross-venue latency arbitrage is excluded outright — it requires co-located fe
 ## Implications for Platform Design
 
 1. **Do not present any tested strategy as "alpha" or "proven."** Every one is falsified. The platform's value is the paper-trading framework, regime awareness, and risk management — not signal generation.
-2. **Position honestly:** "We tested 24 strategy classes so you don't have to" is a stronger, more trustworthy message than "automated trading bot."
+2. **Position honestly:** "We tested 30 strategy classes so you don't have to" is a stronger, more trustworthy message than "automated trading bot."
 3. **Regime engine still has value** even without alpha signals: bot execution awareness (avoid SHOCK regime), risk management (regime-adjusted position sizing), and dashboard context.
 4. **Future alpha research is gated on new data infrastructure**, not more hypothesis sweeps on existing data.
 

@@ -39,7 +39,7 @@ Dependency direction is strict: pages → forest → tree; land coordinates fore
 
 ## D1 Schema
 
-Migrations in `migrations/` (`0001_initial_schema.sql` … `0007_killswitch_audit_trail.sql`):
+Migrations in `migrations/` (`0001_initial_schema.sql` … `0009_research_registry.sql`):
 
 | Table | Purpose |
 |---|---|
@@ -68,6 +68,22 @@ Apply migrations locally with `npm run db:apply`, remotely with `npm run db:appl
 - **Killswitch** — emergency halt persisted to D1 daily state so it survives Workers cold starts.
 - **Logger** (`lib/logger.ts`) — structured, level-filtered logging; replaces `console.*` everywhere.
 - **Flight recorder** — durable per-bot telemetry feed for dashboards and trade history.
+
+## Alpha Research OS (Phase 1)
+
+Research-side modules that make every hypothesis, feature, experiment, and kill a machine-readable, reproducible, lineage-tracked artifact. Zero execution-path changes — gates, killswitch, and promotion state machine are untouched.
+
+| Module | Layer | Role |
+|---|---|---|
+| `tree/alpha/registry/` | tree | Immutable research registry: entries carry hypothesis, data sources, feature set, periods, costs, seed, git commit, result, falsification reason, status. Seeded with the 30 falsified classes so dead hypotheses are machine-guarded |
+| `tree/alpha/hypothesis/lineage.ts` | tree | Hypothesis provenance graph (parent/mutation links, cycle rejection, dead-end detection) with a bridge into the registry |
+| `tree/alpha/microstructure/` | tree | 9 causal microstructure feature contracts declared through `declareFeature()`; missing data stays `null` (never forward-filled). Contracts only — no data fetching |
+| `tree/alpha/universe/` | tree | Cross-sectional universe: ranking, percentile normalization, long/short selection, market-neutral and basket-neutral weights |
+| `tree/regime/transition-matrix.ts` | tree | 7×7 `P(regime[t+1] \| regime[t])` from consecutive observed pairs, plus persistence, entropy, duration, hazard statistics |
+| `forest/alpha/experiments/` | forest | Additive experiment metadata: lineage links plus `experimentHash` (SHA-256 over canonical JSON of config+seed+gitCommit) and `falsificationReason` |
+| `forest/alpha/persistence/` + `migrations/0009` | forest | Append-only `research_registry` / `research_hypotheses` D1 tables; registry + lineage methods on the D1 and JSON adapters |
+
+Layering follows the existing contract: all pure domain logic lives in `tree/` (no I/O); `forest/` owns the D1 persistence adapters and the experiment runner metadata; `land/` and the execution path are unchanged.
 
 ## Auth
 
