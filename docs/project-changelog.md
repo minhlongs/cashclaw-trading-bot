@@ -184,3 +184,12 @@
 
 ### Strategy Falsification Research Reports — Commit `011958a`
 - Nine markdown reports in `plans/reports/`. **Key finding**: across 844 RSI parameter combinations, 12+ strategy archetypes, and 2 timeframes on BTC/ETH/SOL, no statistically robust edge was found. This is valid falsification — the system correctly refuses to trade live capital on simple TA signals.
+
+### BotManager Cold-Start Hydration Fix — Commit `3e9a814`
+- **Problem**: Cloudflare Workers cold starts leave the in-memory `BotInstance` map empty, so bots show `idle` and the scheduler/cron never rehydrates them from D1.
+- **`src/forest/bot/d1-hydration.ts`**: `toBotStatus()` reverse-maps D1 status strings (`draft`, `paper_test`, `live_running`, `paused`, `error`, `stopped`) to runtime `BotStatus` values; `restoreBotStateFromRow()` patches the `status` field on restore.
+- **`src/forest/bot/scheduler.ts`**: `tick()` now calls `loadAllBotsFromD1()` before reading the manager, then auto-restarts any running bot without a strategy instance (`hasStrategy()` false) — failures are reported as errors without blocking the tick.
+- **`src/tree/bot/bot-instance.ts`**: `hasStrategy()` public method (`this.strategy !== null`).
+- **`src/worker.ts`**: `loadAllBotsFromD1()` called in `scheduled()` (CF Cron trigger) and `GET /api/health` before operating on the manager.
+- **Tests (15 new, all pass)**: 7 status-mapping tests in `d1-hydration.test.ts`, 5 hydration + auto-restart tests in `scheduler.test.ts`, 3 `hasStrategy()` tests in `bot-instance.test.ts`, 2 hydration tests in `worker.test.ts`.
+- **Full suite**: 2018/2018 pass, `tsc` 0 errors, `eslint` clean, `build` clean. Deployed to `https://cashclaw-trading-bot.agencyos-openclaw.workers.dev` (Worker `743bae0d`).

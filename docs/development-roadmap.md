@@ -125,4 +125,4 @@ Four Binance signal sources (funding rate, OI, liquidation, premium index) with 
 ## Conventions
 
 - Every task runs through the orchestration pipeline (plan → gate → execute → verify → SHIP) before committing.
-- Conventional commit messages, no AI references or phase labels in messages.
+- Conventional commit messages, no AI references or phase labels in messages.| BotManager cold-start hydration | Scheduler + cron + health rehydrate running bots from D1 on every Workers cold start; auto-restart bots without a strategy instance | commit `3e9a814` |
