@@ -34,6 +34,7 @@
     "src/forest/alpha/persistence/index.ts",
     "src/forest/alpha/persistence/json-adapter.ts",
     "src/forest/alpha/persistence/types.ts",
+    "src/forest/alpha/multiple-testing/index.ts",
     "src/forest/alpha/pipeline/index.ts",
     "src/forest/alpha/readiness/index.ts",
     "src/forest/alpha/reports/formatter.ts",

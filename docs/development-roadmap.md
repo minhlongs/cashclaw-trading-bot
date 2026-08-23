@@ -41,6 +41,7 @@
 | **P0.8 — Quality gate restoration** | 48 archived files moved to tracked `archive/falsification/` (knip project glob excludes it); 5 stale `ignoreFiles` entries removed; dead `evaluator/data-fetcher.ts` stub deleted; `quality:gate` exits 0 | commit `f0b0ce7` |
 | **P0.9 — Real-data backtest script** | `scripts/alpha-real-data-backtest.ts` — live Binance OHLCV + all four derivative sources through the full pipeline; verified end-to-end, graceful degradation on 403 | commit `ac4b5ff` |
 | **P0.10 — Archive/tsc alignment** | `archive/` added to `tsconfig.json` exclude so archived files don't block type-check; real-data backtest script aligned with current `RegimeConfig`/`WindowConfig`/`Logger` signatures | commit `ec53022` |
+| **Alpha Research OS Phase 2** (2026-08-23) | Research queue with 7-state lifecycle (`PROPOSED→VALIDATING→RUNNING→EVALUATED→SURVIVED/FALSIFIED→ARCHIVED`, duplicate prevention via configHash, fail-closed `validateJobSpec`) in `src/tree/alpha/queue/`; multiple-testing defense (bootstrap CI, permutation/random-entry baseline, counters, PBO proxy, parameter sensitivity, walk-forward + cross-asset consistency, `evaluateSurvival` ANY-fail→falsified) in `src/forest/alpha/multiple-testing/`; append-only D1 store `migrations/0010_research_queue.sql` + `queue-d1-store.ts`. 184 new tests (2307 total), coverage 86.98% | branch `feat/alpha-research-os-phase2` |
 
 ## Go-Live — Production Deploy (2026-08-19)
 

@@ -1,6 +1,6 @@
 # Alpha Research OS — Implementation Plan
 
-**Status:** Phase 1 implemented · **Date:** 2026-08-23
+**Status:** Phase 1 + Phase 2 implemented (Phase 2 shipped 2026-08-23) · **Date:** 2026-08-23
 **Source:** Master Mission (`.orchestrate/latest/task.md`), execution plan (`.orchestrate/latest/plan.md`), falsification results (`docs/falsification-report.md`)
 
 ---
@@ -145,25 +145,91 @@ Extends — does not replace — the deterministic regime classifier (Mission §
 - Tests: `transition-matrix.test.ts` (hand-computed fixture match; existing
   `leakage.test.ts` remains green).
 
-### 3.6 Experiment Metadata Expansion
+### 3.6 Experiment Metadata Expansion — Actual Scope (corrected)
 
-Additive expansion of the experiment engine (Mission §2 registry fields + §22 Q12).
+Phase 1 shipped the **tree-layer registry and hypothesis-lineage domains only**
+(§3.1, §3.2). The earlier draft of this section overstated the experiment-engine
+integration; the verified state is:
 
-- `src/forest/alpha/experiments/types.ts` — `Experiment` gains `hypothesisId?` / `parentId?`
-  (lineage link); `ExperimentResult` gains `falsificationReason?`, `experimentHash`
-  (SHA-256 over canonical JSON of config + seed + git commit via `src/lib/canonical-json.ts`),
-  and `registryEntryId?`.
-- `src/forest/alpha/experiments/runner.ts` (+ `runner-helpers.ts`) — computes the
-  reproducibility hash at run start; populates `falsificationReason` from gate output on
-  failed/killed runs. DI shape preserved.
-- Persistence: `src/forest/alpha/persistence/{types,d1-adapter,json-adapter,d1-sql}.ts`
-  extended with append-only `saveRegistryEntry` / `listRegistry` / `saveHypothesisNode` /
-  `loadLineage`; `migrations/0009_research_registry.sql` adds `research_registry` and
-  `research_hypotheses` tables (plain SQLite DDL, `CREATE TABLE IF NOT EXISTS`, additive only).
-- Tests: `runner.test.ts` updated; hash determinism tested (same input → same hash).
+- `src/forest/alpha/experiments/types.ts` — **unchanged** by Phase 1. `Experiment` /
+  `ExperimentResult` carry no `hypothesisId`, `parentId`, `experimentHash`, or
+  `registryEntryId` fields.
+- `src/forest/alpha/experiments/runner.ts` — **does not compute** a reproducibility hash.
+  Run-level experiment hashing remains a standard (§6), not implemented behavior.
+- Persistence: `src/forest/alpha/persistence/{types,d1-adapter,json-adapter}.ts` expose
+  only `saveResult` / `loadResult` / `saveExperiment` / `loadExperiment` /
+  `listExperiments` / `saveExperimentResult` / `loadExperimentResults` — **no**
+  `saveRegistryEntry` / `listRegistry` / `saveHypothesisNode` / `loadLineage`.
+- `migrations/0009_research_registry.sql` adds the `research_registry` and
+  `research_hypotheses` tables (plain SQLite DDL, `CREATE TABLE IF NOT EXISTS`, additive
+  only). These tables back the tree-layer domains of §3.1/§3.2; queue persistence is a
+  **separate, new** D1 store introduced in Phase 2 (`migrations/0010_research_queue.sql`,
+  `src/forest/alpha/persistence/queue-d1-store.ts`) — not an extension of the Phase 1
+  adapters.
 
 **Untouched by design:** `src/forest/alpha/gate/*` (survival gate), promotion state machine,
 killswitch, credentials, `src/land/`, middleware, worker cron, and all archived research code.
+
+---
+
+## 3B. Phase 2 Scope (Implemented — shipped 2026-08-23)
+
+Phase 2 adds the research queue and the multiple-testing defense layer (Mission §9, §11).
+Research-side only: no UI, no API routes, no execution-path changes. All modules are pure
+functions (tree/forest domain), Cloudflare Workers compatible.
+
+### 3B.1 Research Queue (`src/tree/alpha/queue/`)
+
+- `types.ts` — `QueueState` 7-state lifecycle:
+  `PROPOSED → VALIDATING → RUNNING → EVALUATED → SURVIVED/FALSIFIED → ARCHIVED`;
+  `QueueTrigger` events (`validate`, `withdraw`, `validation_passed`, `validation_failed`,
+  `evaluation_complete`, `run_failed`, `survived`, `falsified`, `archive`);
+  `ResearchQueueJob`, `TransitionRecord` (audit record per applied transition),
+  `QueueJobSpec`, `QueueSummary`.
+- `transitions.ts` — pure transition table: `canTransitionJob()`, `getJobTransition()`,
+  `transitionJob()`, `isTerminalQueueState()`. Illegal transitions are rejected, never
+  silently coerced.
+- `queue.ts` — `createQueue()`, `enqueue()` (rejects duplicate jobs via `configHash` —
+  `jobConfigHash(spec)` over the canonical job spec), `transitionQueueJob()`,
+  `summarizeQueue()`.
+- `validation.ts` — `validateJobSpec()` is **fail-closed**: an invalid spec is rejected
+  with explicit reasons rather than enqueued with defaults.
+- Tests: `queue.test.ts`, `validation.test.ts`.
+
+### 3B.2 Multiple-Testing Defense (`src/forest/alpha/multiple-testing/`)
+
+All seven Mission §9 safeguards, each a pure deterministic module:
+
+| Safeguard | Module | Key functions |
+|---|---|---|
+| Bootstrap confidence intervals | `bootstrap.ts` | `bootstrapCi()`, `ciExcludesZero()` |
+| Permutation / random-entry baseline | `permutation-baseline.ts` | `permutationTest()`, `compareAgainstRandomEntry()` |
+| Multiple-testing counters | `counters.ts` | `emptyCounters()`, `incrementForJob()`, `computeCounters()` |
+| PBO (overfitting) proxy | `overfitting-proxy.ts` | `pboProxy()`, `parameterSensitivity()` |
+| Parameter sensitivity | `overfitting-proxy.ts` | `parameterSensitivity()` (normalized-spread threshold `DEFAULT_MAX_NORMALIZED_SPREAD = 0.5`) |
+| Walk-forward consistency | `walk-forward-consistency.ts` | `assessWalkForwardConsistency()` |
+| Cross-asset validation | `cross-asset-consistency.ts` | `assessCrossAssetConsistency()` |
+
+- `evaluate.ts` — `evaluateSurvival()` composes the checks into a single `SurvivalVerdict`:
+  **ANY check fails → verdict `falsified`**; only zero failures yields `survived`
+  (`DEFAULT_SIGNIFICANCE_LEVEL = 0.05`).
+- `seeded-prng.ts` — seeded PRNG (mulberry32) so every randomized check is deterministic.
+- Tests: one `*.test.ts` per module (10 new test files, 184 Phase-2 tests total).
+
+### 3B.3 Queue Persistence (`migrations/0010_research_queue.sql`)
+
+A **new, separate** D1 store — not an extension of the Phase 1 persistence adapters:
+
+- Tables: `research_queue_jobs`, `research_queue_events`, `research_testing_counters`
+  (`CREATE TABLE IF NOT EXISTS`, additive only).
+- `src/forest/alpha/persistence/queue-store-types.ts` — `ResearchQueueStore` interface:
+  `appendJob()`, `appendEvent()`, `listJobs()`, `loadEvents()`, `appendCounterSnapshot()`;
+  plus `QueueEventRecord`, `CounterSnapshot`.
+- `src/forest/alpha/persistence/queue-d1-store.ts` — `D1ResearchQueueStore` /
+  `createD1QueueStore(db)`. **INSERT/SELECT only** — append-only doctrine, no UPDATE paths.
+
+**Untouched by design (Phase 2):** survival gate, promotion state machine, killswitch,
+credentials, `src/land/`, middleware, worker cron, all API routes and UI.
 
 ---
 
@@ -194,7 +260,7 @@ remains bound by §2 safety constraints.
 
 | Phase | Scope | Mission refs |
 |---|---|---|
-| 2 | Research queue (`PROPOSED → VALIDATING → RUNNING → EVALUATED → SURVIVED → FALSIFIED → ARCHIVED`) + multiple-testing defense (bootstrap CIs, permutation baselines, walk-forward consistency, overfitting proxy) | §9, §11 |
+| ~~2~~ **IMPLEMENTED** (see §3B) | Research queue + multiple-testing defense — shipped 2026-08-23 | §9, §11 |
 | 3 | Microstructure **data** infrastructure (L2/L3 depth stream + storage pipeline) feeding the Phase 1 contracts | §3A, falsification report |
 | 4 | Cross-sectional engine: evaluation suite (gross/net return, turnover, costs, exposure, beta, Sharpe/Sortino, drawdown, regime performance), beta-aware sizing | §3C |
 | 5 | Relative-value research: pair definitions, spread construction, hedge ratios, cointegration diagnostics, half-life — reusing `src/tree/alpha/correlation/` | §4 |
@@ -214,10 +280,13 @@ interaction-hypothesis support.
 
 Every experiment must be reproducible from a git SHA + dataset + seed (Mission §22 Q12).
 
-1. **Experiment hash.** SHA-256 over the canonical JSON serialization
-   (`src/lib/canonical-json.ts`) of `config + seed + gitCommit`. Same input → same hash,
-   always; determinism is itself tested. The pattern follows the existing hash-chained
-   audit ledger (`src/forest/flight-recorder/audit-ledger.ts`).
+1. **Experiment hash (standard, not yet implemented in the runner).** Target: SHA-256 over
+   the canonical JSON serialization (`src/lib/canonical-json.ts`) of `config + seed +
+   gitCommit`. Same input → same hash, always. The pattern follows the existing
+   hash-chained audit ledger (`src/forest/flight-recorder/audit-ledger.ts`). The queue's
+   `jobConfigHash()` (`src/tree/alpha/queue/queue.ts`) applies this pattern today for
+   duplicate prevention; the experiment runner does not yet compute a run-level hash
+   (see §3.6).
 2. **Append-only evidence.** Research tables (`research_registry`, `research_hypotheses`)
    use append-only semantics: adapters expose save/list/load only — no UPDATE paths.
 3. **Never mutate historical experiment rows.** A corrected or re-run experiment is a new
@@ -232,5 +301,5 @@ Every experiment must be reproducible from a git SHA + dataset + seed (Mission �
 
 ---
 
-*This plan documents only behavior that exists (Phase 1) or is committed in the phased
-roadmap. It makes no promise of live trading — by design.*
+*This plan documents only behavior that exists (Phase 1 + Phase 2) or is committed in the
+phased roadmap. It makes no promise of live trading — by design.*
