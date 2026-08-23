@@ -1,4 +1,4 @@
-// Research Registry — seed entries for the 24 falsified hypothesis classes.
+// Research Registry — seed entries for the 30 falsified hypothesis classes.
 // Source of truth: docs/falsification-report.md (campaign final, 2026-08-18).
 // These are CLASS-LEVEL seeds: per-config granularity is not reconstructable
 // from the markdown report, so gitCommit/seed are null and reproducibility is
@@ -96,5 +96,5 @@ function toEntry(spec: SeedSpec): ResearchEntry {
   };
 }
 
-/** The 24 falsified hypothesis classes as machine-readable seed entries. */
+/** The 30 falsified hypothesis classes as machine-readable seed entries. */
 export const SEED_FALSIFIED: readonly ResearchEntry[] = SPECS.map(toEntry);
