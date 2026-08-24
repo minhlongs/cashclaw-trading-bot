@@ -233,6 +233,60 @@ credentials, `src/land/`, middleware, worker cron, all API routes and UI.
 
 ---
 
+## 3D. Phase 4 Scope (Implemented — shipped 2026-08-24)
+
+Cross-sectional engine per Mission §3C: turn the Phase 1 cross-sectional primitives into a
+causal evaluation engine for ranked multi-asset portfolios. Research-only — no API routes,
+UI, worker cron, persistence, or execution-path changes.
+
+### 3D.1 Portfolio Simulator (`src/tree/alpha/cross-sectional/`)
+
+- `simulator.ts` — `runCrossSectionalSim(universe, snapshots, returnSeries, config)`.
+  **Causality contract:** weights decided at snapshot t earn the return over t→t+1; the
+  last snapshot is the terminal boundary (`periods = snapshots.length − 1`). Fail-closed
+  on empty/misaligned inputs or symbols missing from the return panel (throw); a symbol
+  missing one period's return → warning + exclusion, never forward-fill.
+- `turnover.ts` — one-sided turnover `½·Σ|Δw|` (full rotation = 1.0) + `sumTurnover`.
+- `weight-builder.ts` — default `selectLongShort` + equal weights or injected
+  `WeighterFn`; cost fraction from explicit `costBps` override or `resolveStressConfig`
+  fee+slippage+impact sum.
+- Leakage invariance tests: mutating any snapshot at index > t does not change period-t
+  results; shifting snapshots by one changes them (proves no off-by-one future use).
+
+### 3D.2 Beta-Aware Sizing (`beta-sizing.ts`, `beta-tilt.ts`)
+
+- `estimateRollingBetas` — rolling OLS via `computeFactorExposure`, window sliced
+  strictly `[t−window, t)` before each sizing timestamp; null when insufficient aligned
+  observations or zero benchmark variance (never invents beta=1).
+- `scaleWeightsToTargetBeta` — targetBeta=0 achieved via `basketNeutralize` (division by
+  βp is degenerate), not scaling; non-zero targets scale `w × targetBeta/βp`; fail-closed
+  fallback returns input weights unchanged with `fallbackReason`.
+- `inverseBetaTilt` — |w| ∝ 1/|β| with signs preserved and gross exposure maintained;
+  same fail-closed rules.
+- Benchmark is caller-supplied (`benchmarkReturns`) — required when targetBeta ≠ 0.
+
+### 3D.3 Evaluation Suite (`src/forest/alpha/cross-sectional-eval/`)
+
+- `return-metrics.ts` — annualized Sharpe/Sortino computed on the portfolio **return
+  series** (not trade PnL); max drawdown on the compounded equity curve from 1.0.
+- `attribution.ts` — long/short PnL attribution (precise + proportional fallback),
+  cost attribution totals equal Σ per-period sim costs.
+- `regime-breakdown.ts` — groups periods by caller-injected precomputed `RegimeLabel[]`
+  only; length mismatch throws. No classifier instantiation (the deterministic classifier
+  calls `Date.now()` internally).
+- `report.ts` / `evaluate.ts` — `buildCrossSectionalReport` and the wire-in seam
+  `evaluateCrossSectional(universe, snapshots, assetReturnSeries, config)` returning
+  `{ sim, report, sizing }`; composition order validate → causal per-rebalance beta
+  sizing → simulate → report; errors propagate verbatim.
+
+### 3D.4 Untouched by design (Phase 4)
+
+Walk-forward composition (deferred to Phase 6 — the seam follows the `DetectRegimeFn`
+injection pattern), survival-gate consumption (Phase 2's `evaluateSurvival` can call this
+seam later), persistence, API/UI/worker, all execution paths.
+
+---
+
 ## 4. Known Simplifications / Escrow
 
 Deliberate scope reductions from the Mission, recorded here so they are answered truthfully
@@ -262,7 +316,7 @@ remains bound by §2 safety constraints.
 |---|---|---|
 | ~~2~~ **IMPLEMENTED** (see §3B) | Research queue + multiple-testing defense — shipped 2026-08-23 | §9, §11 |
 | ~~3~~ **IMPLEMENTED** — shipped 2026-08-24 | Microstructure **data** infrastructure: fail-closed REST polling ingestion (Binance `depth?limit=20` + `aggTrades`), append-only D1 storage (`migrations/0011_microstructure_data.sql`, 4 tables), causal feature computer for the 9 Phase 1 contracts with publication-lag `asOf` gate, worker cron wiring gated on `MICRO_INGEST_ENABLED` (default OFF). 93 new tests, 2412/2412 full suite | §3A, falsification report |
-| 4 | Cross-sectional engine: evaluation suite (gross/net return, turnover, costs, exposure, beta, Sharpe/Sortino, drawdown, regime performance), beta-aware sizing | §3C |
+| ~~4~~ **IMPLEMENTED** — shipped 2026-08-24 | Cross-sectional engine: causal portfolio simulator (`runCrossSectionalSim` in `src/tree/alpha/cross-sectional/` — weights decided at snapshot t earn the return t→t+1, one-sided turnover, fees+slippage every sim, fail-closed), beta-aware sizing (`estimateRollingBetas` strictly-before-window OLS; targetBeta=0 via neutralization, never ÷βp; fail-closed fallback with `fallbackReason`; `inverseBetaTilt`), evaluation suite (`src/forest/alpha/cross-sectional-eval/` — Sharpe/Sortino on portfolio return series, drawdown on equity curve, long/short + cost attribution, exposure series, regime breakdown via injected labels only), wire-in seam `evaluateCrossSectional`. 90 new tests, 2502/2502 full suite. Walk-forward composition deferred to Phase 6 | §3C |
 | 5 | Relative-value research: pair definitions, spread construction, hedge ratios, cointegration diagnostics, half-life — reusing `src/tree/alpha/correlation/` | §4 |
 | 6 | Alpha composition (`regime × alpha × confidence × expected cost × expected turnover`) + deterministic portfolio engine with risk applied after alpha generation; realistic cost model (NORMAL/CONSERVATIVE/ADVERSE/EXTREME) | §6, §7, §8 |
 | 7 | `ResearchAgent` safe role only — hypotheses, explanations, summaries, next-experiment suggestions; never orders, promotion state, thresholds, or historical data | §10 |
