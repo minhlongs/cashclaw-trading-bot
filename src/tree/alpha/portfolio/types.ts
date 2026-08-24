@@ -55,3 +55,45 @@ export interface OptimizerConfig {
   /** Maximum number of simultaneous positions. */
   maxPositions: number;
 }
+
+// ── Portfolio Engine ─────────────────────────────────────────────────────────
+// Deterministic risk overlays for composed-alpha scoring pipeline (Mission §7).
+
+/** Risk overlay configuration for portfolio construction. */
+export interface PortfolioConfig {
+  readonly targetVolatility: number;
+  readonly maxPositionWeight: number;
+  readonly maxGrossExposure: number;
+  readonly maxNetExposure: number;
+  readonly maxCorrelatedExposure: number;
+  readonly correlationBucketThreshold: number;
+  readonly maxBetaExposure: number;
+  readonly maxTurnover: number;
+  readonly drawdownThreshold: number;
+  readonly deRiskFactor: number;
+}
+
+/** Causally-bounded risk inputs computed from historical data (t < now). */
+export interface RiskInputs {
+  readonly realizedVolatility: number;
+  readonly correlationMatrix: ReadonlyMap<string, ReadonlyMap<string, number>>;
+  readonly betas: ReadonlyMap<string, number | null>;
+  readonly currentDrawdown: number;
+}
+
+/** Single position in the target portfolio. */
+export interface PortfolioPosition {
+  readonly alphaId: string;
+  readonly targetWeight: number;
+  readonly turnover: number;
+}
+
+/** Deterministic portfolio construction result. */
+export interface PortfolioResult {
+  readonly positions: readonly PortfolioPosition[];
+  readonly grossExposure: number;
+  readonly netExposure: number;
+  readonly totalTurnover: number;
+  readonly riskAdjustments: readonly string[];
+  readonly drawdownDeRisked: boolean;
+}
