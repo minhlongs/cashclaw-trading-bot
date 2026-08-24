@@ -1,6 +1,6 @@
 # Alpha Research OS — Implementation Plan
 
-**Status:** Phase 1 + Phase 2 implemented (Phase 2 shipped 2026-08-23) · **Date:** 2026-08-23
+**Status:** Phase 1 + Phase 2 + Phase 3 implemented (Phase 3 shipped 2026-08-24) · **Date:** 2026-08-24
 **Source:** Master Mission (`.orchestrate/latest/task.md`), execution plan (`.orchestrate/latest/plan.md`), falsification results (`docs/falsification-report.md`)
 
 ---
@@ -261,7 +261,7 @@ remains bound by §2 safety constraints.
 | Phase | Scope | Mission refs |
 |---|---|---|
 | ~~2~~ **IMPLEMENTED** (see §3B) | Research queue + multiple-testing defense — shipped 2026-08-23 | §9, §11 |
-| 3 | Microstructure **data** infrastructure (L2/L3 depth stream + storage pipeline) feeding the Phase 1 contracts | §3A, falsification report |
+| ~~3~~ **IMPLEMENTED** — shipped 2026-08-24 | Microstructure **data** infrastructure: fail-closed REST polling ingestion (Binance `depth?limit=20` + `aggTrades`), append-only D1 storage (`migrations/0011_microstructure_data.sql`, 4 tables), causal feature computer for the 9 Phase 1 contracts with publication-lag `asOf` gate, worker cron wiring gated on `MICRO_INGEST_ENABLED` (default OFF). 93 new tests, 2412/2412 full suite | §3A, falsification report |
 | 4 | Cross-sectional engine: evaluation suite (gross/net return, turnover, costs, exposure, beta, Sharpe/Sortino, drawdown, regime performance), beta-aware sizing | §3C |
 | 5 | Relative-value research: pair definitions, spread construction, hedge ratios, cointegration diagnostics, half-life — reusing `src/tree/alpha/correlation/` | §4 |
 | 6 | Alpha composition (`regime × alpha × confidence × expected cost × expected turnover`) + deterministic portfolio engine with risk applied after alpha generation; realistic cost model (NORMAL/CONSERVATIVE/ADVERSE/EXTREME) | §6, §7, §8 |
@@ -301,5 +301,5 @@ Every experiment must be reproducible from a git SHA + dataset + seed (Mission �
 
 ---
 
-*This plan documents only behavior that exists (Phase 1 + Phase 2) or is committed in the
-phased roadmap. It makes no promise of live trading — by design.*
+*This plan documents only behavior that exists (Phase 1 + Phase 2 + Phase 3) or is committed
+in the phased roadmap. It makes no promise of live trading — by design.*

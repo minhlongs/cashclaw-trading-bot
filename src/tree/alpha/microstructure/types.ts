@@ -1,6 +1,8 @@
 // Microstructure data contracts — pure types, no I/O, no runtime code.
 // Invariant: missing data is represented as null and is NEVER forward-filled.
 
+import type { DepthPayload } from './snapshot-types';
+
 /** Timestamped raw orderbook/trade inputs captured at a single instant. */
 export interface MicrostructureSnapshot {
   /** Capture time in ms epoch. All inputs belong to this instant only. */
@@ -33,4 +35,29 @@ export interface FeatureVector {
    * null = missing/insufficient data at this timestamp.
    */
   features: Record<string, number | null>;
+}
+
+/** A trade print already aggregated for feature computation. */
+export interface AggregatedTrades {
+  /** Timestamp this aggregation window ends at (snapshot instant). */
+  timestamp: number;
+  /** Taker-buy (aggressive buy) notional volume within the window. */
+  buyVolume: number;
+  /** Taker-sell (aggressive sell) notional volume within the window. */
+  sellVolume: number;
+  /** Whether the batch fully covered the expected poll window. */
+  complete: boolean;
+}
+
+/**
+ * A depth snapshot that has passed quality validation, paired with the trade
+ * aggregation ending at the same instant. `trades` is null when no validated
+ * trade batch covers this snapshot's window — trade-based features then stay
+ * null (no forward-fill from neighbouring windows).
+ */
+export interface ValidatedSnapshot {
+  timestamp: number;
+  symbol: string;
+  depth: DepthPayload;
+  trades: AggregatedTrades | null;
 }
