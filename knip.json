@@ -39,7 +39,8 @@
     "src/forest/alpha/readiness/index.ts",
     "src/forest/alpha/reports/formatter.ts",
     "src/forest/alpha/reports/index.ts",
-    "src/tree/regime/alpha-router.ts"
+    "src/tree/regime/alpha-router.ts",
+    "src/forest/alpha/cross-sectional-eval/index.ts"
   ],
   "ignoreExportsUsedInFile": true,
   "exclude": [
