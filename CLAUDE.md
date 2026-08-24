@@ -1,11 +1,10 @@
 # Project Context
 
-## Current Status (2026-08-20)
-- **ProviderChain wiring** is complete (commit `8ca4a2d`) — fetchTicker/placeOrder route through ProviderChain with provenance metadata
-- **Alpha Discovery** — 14 of 17 phases complete; 24 hypothesis classes falsified (0 OOS positive expectancy); signal space exhausted on OHLCV/funding/OI data
-- **Shipped this session:** Phase 13 ablation (`8117503`), Phase 15 survival gate (`8873d69`), Phase 17 promotion state machine (`7eda726`)
-- **System state:** Paper/backtest only. No live capital. 2003/2003 tests passing, quality gate green
-- **Next work:** Awaiting user direction — no in-flight implementation plan. Phase 14 (robustness) deferred — revisit only when new data infrastructure produces a strategy that survives OOS walk-forward.
+## Current Status (2026-08-25)
+- **Alpha Research OS** — Phase 5 of 6 complete. Phase 5 relative-value research shipped 2026-08-25 (PR #5, commit `b3f51fc`): causal pair-spread engine + fail-closed tradability gate + relative-value evaluation suite in `src/tree/alpha/relative-value/` and `src/forest/alpha/relative-value-eval/`
+- **Prior phases:** 1 (evaluator engine), 2 (research queue + multiple-testing), 3 (microstructure data), 4 (cross-sectional engine, `b7d5454`)
+- **System state:** Paper/backtest only. No live capital. 2619/2619 tests passing, quality gate green, coverage 88.03%
+- **Next work:** Phase 6 — composition (multi-pair scan, walk-forward, survival-gate consumption of the evaluation seams). See `docs/alpha-research-os-implementation-plan.md` §5.
 
 ## Safety Rules
 1. PAPER/BACKTEST ONLY — no real orders, no live trading

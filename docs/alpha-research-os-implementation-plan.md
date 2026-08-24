@@ -287,6 +287,65 @@ seam later), persistence, API/UI/worker, all execution paths.
 
 ---
 
+## 3E. Phase 5 Scope (Implemented — shipped 2026-08-25)
+
+Mission §4: relative-value research — pair definitions, spread construction, hedge ratios,
+rolling correlation, cointegration diagnostics, spread z-score, half-life, entry/exit rules,
+transaction costs, beta neutrality. Doctrine: "Do not assume any pair is tradable. The
+system must statistically validate the relationship first."
+
+### 3E.1 Tree domain (`src/tree/alpha/relative-value/`)
+
+- `runPairSpreadSim(panel, definition, config)` — causal pair-spread engine. Hedge ratio
+  β(t) estimated from closes with timestamps strictly < t (mirrors the Phase 4
+  `alignedPairs` strictly-before pattern); spread built from closes prior to t; decision
+  at t earns the return t→t+1. Returns are derived internally from the same panel
+  (`close[i+1]/close[i] − 1` attributed to i), so decision/return misalignment is
+  structurally impossible.
+- `estimateRollingHedgeRatio` — rolling OLS via `computeFactorExposure`, discriminated
+  union return; five distinct fail-closed degeneracy classes (insufficient observations,
+  zero x-variance, non-finite, |β| < 1e-9, β ≤ 0), never a silent β = 1.
+- `buildSpreadSeries` — spread state at each decision time with partial-state semantics
+  (β and spread survive during z-window warm-up; only zScore is null).
+- `validatePairTradable` — conjunctive fail-closed gate run before first entry and every
+  `revalidateEvery` periods: observation count, cointegration (p < 0.05 baked into
+  `testCointegration`), finite half-life ≤ maxHalfLife, |correlation| ≥ minCorrelation.
+  Failing pair → FLAT with tradeCount 0; NO TRADE is a first-class output.
+- Entry-exit state machine — `flat | long_spread | short_spread`, entry/exit z thresholds,
+  optional hard stop, null z ⇒ hold previous position with warning, config validation
+  (entryZ > exitZ ≥ 0) throws.
+- Leakage tests: mutate-future invariance (records before the mutation are byte-identical)
+  and shift-boundary change, on both the spread builder and the full simulator.
+- `src/tree/alpha/cost-stress.ts` — tree-local `StressMode` + `resolveStressConfig`
+  mirroring the forest cost-model values exactly (16/27/50 bps totals), so tree domain
+  code never imports `@/forest`.
+
+### 3E.2 Forest evaluation (`src/forest/alpha/relative-value-eval/`)
+
+- `evaluateRelativeValue(panel, definition, config) → { sim, report }` wire-in seam:
+  validate → simulate → report; errors propagate verbatim.
+- Parallel `RelativeValueReport` type (not extending `CrossSectionalReport`): annualized
+  Sharpe/Sortino, max drawdown on the compounded equity curve, cost attribution equal to
+  Σ per-period costs (runtime invariant, tolerance 1e-12), realized pair-beta diagnostic
+  via `estimateRollingBetas` strictly-before windows.
+
+### 3E.3 Constraints honored
+
+All files kebab-case ≤ 200 lines, 0 `:any`, no `Math.random`/`Date.now` in domain logic,
+no new ESLint suppressions, knip clean (forest barrel in `ignoreFiles`, tree barrel via
+entry glob). 117 new tests; full suite 2619/2619 green ×3 consecutive runs; coverage
+88.03% ≥ thresholds 82/85/85/82.
+
+### 3E.4 Untouched by design (Phase 5)
+
+Multi-pair portfolio scan (`findCointegratedPairs` + `filterDiversified` wiring), walk-forward
+composition, beta-targeted sizing (beta neutrality ships as measurement/diagnostic only —
+Mission §4 reading accepted pending mission-owner confirmation), a dedicated
+rolling-correlation series in the report (covered instead as the per-revalidation
+correlation diagnostic), persistence, API/UI/worker, all execution paths.
+
+---
+
 ## 4. Known Simplifications / Escrow
 
 Deliberate scope reductions from the Mission, recorded here so they are answered truthfully
@@ -317,7 +376,7 @@ remains bound by §2 safety constraints.
 | ~~2~~ **IMPLEMENTED** (see §3B) | Research queue + multiple-testing defense — shipped 2026-08-23 | §9, §11 |
 | ~~3~~ **IMPLEMENTED** — shipped 2026-08-24 | Microstructure **data** infrastructure: fail-closed REST polling ingestion (Binance `depth?limit=20` + `aggTrades`), append-only D1 storage (`migrations/0011_microstructure_data.sql`, 4 tables), causal feature computer for the 9 Phase 1 contracts with publication-lag `asOf` gate, worker cron wiring gated on `MICRO_INGEST_ENABLED` (default OFF). 93 new tests, 2412/2412 full suite | §3A, falsification report |
 | ~~4~~ **IMPLEMENTED** — shipped 2026-08-24 | Cross-sectional engine: causal portfolio simulator (`runCrossSectionalSim` in `src/tree/alpha/cross-sectional/` — weights decided at snapshot t earn the return t→t+1, one-sided turnover, fees+slippage every sim, fail-closed), beta-aware sizing (`estimateRollingBetas` strictly-before-window OLS; targetBeta=0 via neutralization, never ÷βp; fail-closed fallback with `fallbackReason`; `inverseBetaTilt`), evaluation suite (`src/forest/alpha/cross-sectional-eval/` — Sharpe/Sortino on portfolio return series, drawdown on equity curve, long/short + cost attribution, exposure series, regime breakdown via injected labels only), wire-in seam `evaluateCrossSectional`. 90 new tests, 2502/2502 full suite. Walk-forward composition deferred to Phase 6 | §3C |
-| 5 | Relative-value research: pair definitions, spread construction, hedge ratios, cointegration diagnostics, half-life — reusing `src/tree/alpha/correlation/` | §4 |
+| ~~5~~ **IMPLEMENTED** — shipped 2026-08-25 | Relative-value research: causal pair-spread engine (`runPairSpreadSim` in `src/tree/alpha/relative-value/` — hedge ratio β(t) from data strictly < t, decision at t earns return t→t+1, internally derived returns), fail-closed tradability gate (`validatePairTradable` — cointegration + finite half-life + correlation floor, revalidated on cadence), 3-state entry-exit machine, tree-local cost-stress module (tree never imports forest), evaluation suite (`src/forest/alpha/relative-value-eval/` — parallel `RelativeValueReport`, cost attribution, realized-beta diagnostic), wire-in seam `evaluateRelativeValue`. 117 new tests, 2619/2619 full suite. Multi-pair scan + walk-forward deferred to Phase 6 | §4 |
 | 6 | Alpha composition (`regime × alpha × confidence × expected cost × expected turnover`) + deterministic portfolio engine with risk applied after alpha generation; realistic cost model (NORMAL/CONSERVATIVE/ADVERSE/EXTREME) | §6, §7, §8 |
 | 7 | `ResearchAgent` safe role only — hypotheses, explanations, summaries, next-experiment suggestions; never orders, promotion state, thresholds, or historical data | §10 |
 | 8 | Paper/shadow observability: alpha/portfolio/risk decisions, hypothetical orders & fills, expected-vs-realized edge and slippage, feature snapshot hashes, data freshness, provider provenance | §14 |
