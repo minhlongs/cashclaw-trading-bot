@@ -35,7 +35,7 @@ export interface BuildReportConfig {
   /** Periods per year for annualization (e.g. 365*24 for hourly). */
   readonly periodsPerYear: number;
   /** Cost stress mode for cost attribution decomposition. */
-  readonly stressMode?: 'normal' | 'conservative' | 'adverse';
+  readonly stressMode?: 'normal' | 'conservative' | 'adverse' | 'extreme';
   /** Optional per-asset returns for precise long/short attribution. */
   readonly assetPeriodReturns?: readonly PreciseAttributionInput[];
   /** Optional precomputed regime labels (aligned to periods). */

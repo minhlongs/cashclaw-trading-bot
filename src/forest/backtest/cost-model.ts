@@ -5,7 +5,7 @@
 // Types
 // ──────────────────────────────────────────────
 
-export type StressMode = 'normal' | 'conservative' | 'adverse';
+export type StressMode = 'normal' | 'conservative' | 'adverse' | 'extreme';
 
 export interface CostConfig {
   /** Taker fee as a decimal fraction (e.g. 0.0005 = 5 bps). */
@@ -35,9 +35,11 @@ export interface StressConfig {
 
 const STRESS_CONFIGS: Record<StressMode, StressConfig> = {
   // 2026-realistic: Binance/Bybit/OKX retail maker+taker range
-  normal:       { feePct: 0.0008, slipPct: 0.0003, marketImpactPct: 0.0005 },  //  11 bps total
-  conservative: { feePct: 0.0010, slipPct: 0.0007, marketImpactPct: 0.0010 },  //  17 bps total
-  adverse:      { feePct: 0.0010, slipPct: 0.0020, marketImpactPct: 0.0020 },  //  30 bps total
+  normal:       { feePct: 0.0008, slipPct: 0.0003, marketImpactPct: 0.0005 },  //  16 bps total
+  conservative: { feePct: 0.0010, slipPct: 0.0007, marketImpactPct: 0.0010 },  //  27 bps total
+  adverse:      { feePct: 0.0010, slipPct: 0.0020, marketImpactPct: 0.0020 },  //  50 bps total
+  // Severe market dislocation: wider spreads, deeper impact, higher fees — 100 bps total
+  extreme:      { feePct: 0.0015, slipPct: 0.0040, marketImpactPct: 0.0045 },  // 100 bps total
 };
 
 // ──────────────────────────────────────────────

@@ -47,4 +47,30 @@ describe('resolveStressConfig (tree layer — mirrors forest/backtest/cost-model
       sum(resolveStressConfig('adverse')),
     );
   });
+
+  it('extreme mode returns correct 3 fields (100 bps total)', () => {
+    const c = resolveStressConfig('extreme');
+    expect(c.feePct).toBeCloseTo(0.0015, 12);
+    expect(c.slipPct).toBeCloseTo(0.0040, 12);
+    expect(c.marketImpactPct).toBeCloseTo(0.0045, 12);
+    expect((c.feePct + c.slipPct + c.marketImpactPct) * 10_000).toBeCloseTo(100, 9);
+  });
+
+  it('extreme total cost ≈ 0.01', () => {
+    const c = resolveStressConfig('extreme');
+    expect(c.feePct + c.slipPct + c.marketImpactPct).toBeCloseTo(0.01, 10);
+  });
+
+  it('adverse mode still sums to 50 bps (regression pin)', () => {
+    const c = resolveStressConfig('adverse');
+    expect((c.feePct + c.slipPct + c.marketImpactPct) * 10_000).toBeCloseTo(50, 9);
+  });
+
+  it('strict ordering: normal < conservative < adverse < extreme', () => {
+    const sum = (m: ReturnType<typeof resolveStressConfig>) =>
+      m.feePct + m.slipPct + m.marketImpactPct;
+    expect(sum(resolveStressConfig('adverse'))).toBeLessThan(
+      sum(resolveStressConfig('extreme')),
+    );
+  });
 });
