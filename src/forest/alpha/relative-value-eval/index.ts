@@ -30,3 +30,22 @@ export type {
   OosSpan,
 } from './benchmarks';
 export { BENCHMARK_STRATEGIES, oosSpan, runBenchmarks } from './benchmarks';
+export type {
+  RvAblationInput,
+  RvAblationResult,
+  RvAblationVariant,
+  RvComponent,
+} from './ablation';
+export { RV_COMPONENTS, runRvAblation } from './ablation';
+export type {
+  RvRobustnessEntry,
+  RvRobustnessInput,
+  RvRobustnessReport,
+} from './robustness';
+export {
+  ROBUSTNESS_ENTRY_Z,
+  ROBUSTNESS_HEDGE_WINDOWS,
+  ROBUSTNESS_RUN_COUNT,
+  ROBUSTNESS_STRESS_MODES,
+  runRvRobustness,
+} from './robustness';
