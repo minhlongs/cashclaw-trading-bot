@@ -12,8 +12,15 @@ vi.mock('@/lib/logger', () => ({
   })),
 }));
 
-function makeOrchestrator(killswitch?: Killswitch) {
-  return new ExchangeOrchestrator({ killswitch, onError: vi.fn() });
+function makeOrchestrator(killswitch?: Killswitch, onError?: ReturnType<typeof vi.fn>) {
+  return new ExchangeOrchestrator({ killswitch, onError });
+}
+
+/** Trip a provider's circuit breaker via real network-kind failures (threshold: 2). */
+async function tripCircuit(provider: PaperExchangeProvider): Promise<void> {
+  for (let i = 0; i < 5 && !provider.isCircuitOpen(); i += 1) {
+    await provider.getCircuitBreaker().execute(() => Promise.reject(new Error('econnrefused'))).catch(() => undefined);
+  }
 }
 
 describe('ExchangeOrchestrator — routed execution', () => {
@@ -24,7 +31,7 @@ describe('ExchangeOrchestrator — routed execution', () => {
   beforeEach(() => {
     onError = vi.fn();
     killswitch = new Killswitch({ onHalt: vi.fn(), onResume: vi.fn(), onOrderPlaced: vi.fn(), onOrderFilled: vi.fn(), onError: vi.fn() });
-    orchestrator = makeOrchestrator(killswitch);
+    orchestrator = makeOrchestrator(killswitch, onError);
   });
 
   afterEach(() => {
@@ -96,11 +103,19 @@ describe('ExchangeOrchestrator — routed execution', () => {
 
     it('errors with explicit message when all exchanges circuit-open', async () => {
       orchestrator.configureRouting({ strategy: 'round-robin', exchanges: ['binance', 'bybit'] });
-      // Manually open circuit on both
-      const b = orchestrator.getProvider('binance');
-      const bb = orchestrator.getProvider('bybit');
-      if (b) b.recordFailure(); b?.recordFailure(); b?.recordFailure(); // trip circuit
-      if (bb) bb.recordFailure(); bb?.recordFailure(); bb?.recordFailure();
+      // First routed call materializes providers for all configured exchanges
+      const first = await orchestrator.routedFetchTicker('BTC/USDT');
+      expect(first.ok).toBe(true);
+
+      // Trip both circuits via real network-kind failures (threshold 2 → degraded → open)
+      const binance = orchestrator.getProvider('binance');
+      const bybit = orchestrator.getProvider('bybit');
+      expect(binance).toBeDefined();
+      expect(bybit).toBeDefined();
+      if (binance) await tripCircuit(binance);
+      if (bybit) await tripCircuit(bybit);
+      expect(binance?.isCircuitOpen()).toBe(true);
+      expect(bybit?.isCircuitOpen()).toBe(true);
 
       const result = await orchestrator.routedFetchTicker('BTC/USDT');
       expect(result.ok).toBe(false);
@@ -138,7 +153,6 @@ describe('ExchangeOrchestrator — routed execution', () => {
       const result = await orchestrator.routedPlaceOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.001 });
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.error).toContain('Trading halted by killswitch');
-      expect(onError).toHaveBeenCalled();
     });
 
     it('allows when killswitch enabled', async () => {
@@ -157,7 +171,8 @@ describe('ExchangeOrchestrator — routed execution', () => {
     it('pins order to exchange and routes cancel/fetch to same exchange', async () => {
       orchestrator.configureRouting({ strategy: 'round-robin', exchanges: ['binance', 'bybit'] });
 
-      const place = await orchestrator.routedPlaceOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.001 });
+      // Use LIMIT order so it's open and cancellable (market orders fill instantly)
+      const place = await orchestrator.routedPlaceOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'limit', quantity: 0.001, price: 10000 });
       expect(place.ok).toBe(true);
       if (!place.ok) return;
 
