@@ -28,7 +28,7 @@ export {
   POSITION_SHORT,
 } from './entry-exit';
 
-export { runPairSpreadSim } from './simulator';
+export { runPairSpreadSim, GATE_SKIPPED_REASON } from './simulator';
 
 
 export type {

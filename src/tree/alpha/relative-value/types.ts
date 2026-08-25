@@ -67,6 +67,23 @@ export interface PairSimConfig {
   readonly stressMode?: StressMode;
   /** Minimum panel length required to run (fail-closed below it). */
   readonly minObservations: number;
+  /**
+   * Hedge-ratio policy: 'rolling' (default) re-estimates β(t) from strictly
+   * prior data at every timestamp; 'frozen' estimates β ONCE at the first
+   * timestamp with strictly-prior data and holds it constant afterwards.
+   * Optional — omit for current behavior.
+   */
+  readonly hedgeMode?: 'rolling' | 'frozen';
+  /**
+   * In-simulator tradability gate toggle. Default TRUE (fail-closed
+   * preserved); false skips gate runs entirely (trail records 'skipped').
+   */
+  readonly inSimTradabilityGate?: boolean;
+  /**
+   * Pure causal entry filter: entries (FLAT → position) are suppressed when
+   * this returns false at the decision timestamp. Exits are NEVER blocked.
+   */
+  readonly entryFilter?: (timestamp: number) => boolean;
 }
 
 /**
