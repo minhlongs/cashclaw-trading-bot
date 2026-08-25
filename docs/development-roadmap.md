@@ -41,6 +41,7 @@
 | **P0.8 — Quality gate restoration** | 48 archived files moved to tracked `archive/falsification/` (knip project glob excludes it); 5 stale `ignoreFiles` entries removed; dead `evaluator/data-fetcher.ts` stub deleted; `quality:gate` exits 0 | commit `f0b0ce7` |
 | **P0.9 — Real-data backtest script** | `scripts/alpha-real-data-backtest.ts` — live Binance OHLCV + all four derivative sources through the full pipeline; verified end-to-end, graceful degradation on 403 | commit `ac4b5ff` |
 | **P0.10 — Archive/tsc alignment** | `archive/` added to `tsconfig.json` exclude so archived files don't block type-check; real-data backtest script aligned with current `RegimeConfig`/`WindowConfig`/`Logger` signatures | commit `ec53022` |
+| **Cross-exchange routing (paper-only)** | Runtime selection across binance/bybit/okx: `RoutingConfig` + Zod schema (`routing-types.ts`), pure `ExchangeRouter` (pinned / round-robin / best-health policies, deterministic), `RoutingChain` ordered multi-provider fallback preserving `ProviderResult` provenance; wired into `ExchangeOrchestrator` via `RoutedExecution` (`configureRouting`, `routedFetchTicker`, `routedPlaceOrder`, `routedCancelOrder`, `routedFetchOrder`) with orderId→exchange affinity so cancel/fetch return to the placing exchange. Killswitch guard preserved on the routed order path. Paper-only invariant: type-level `@ts-expect-error` guards prove `LiveExchange` cannot enter routing slots; source-level test forbids live/ccxt imports in routing files. 6 guard tests + 14 router tests + 9 chain tests + 14 routed-execution tests | commits `92db712`, `c473423`, `d93a2f1`, `21d32c6` |
 
 ## Go-Live — Production Deploy (2026-08-19)
 
@@ -117,7 +118,6 @@ Four Binance signal sources (funding rate, OI, liquidation, premium index) with 
 ## Known Backlog (v2 and beyond)
 
 - **BotManager hydration architecture** — replace in-memory registry + per-request hydration with a cold-start-resilient store (Durable Objects or direct-D1 reads everywhere).
-- **Cross-exchange routing** — routing across binance/bybit/okx at runtime.
 - **Live exchange** — CCXT on Workers feasibility is unresolved; requires D1 provisioning, live engine wiring, and explicit customer opt-in.
 - **Coverage tail** — 87.5%→90% possible (page-client, LandingClient, CtaClient) but low signal for v1; revisit after more business-logic tests.
 - **Live derivative data** — all four `/fapi/v1/*` endpoints return HTTP 403 from this environment; derivative fetchers are exercised only via offline injection.

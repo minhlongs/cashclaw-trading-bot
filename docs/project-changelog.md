@@ -2,6 +2,21 @@
 
 ## v1 Paper-Trading Platform
 
+### Cross-Exchange Routing (paper-only) — 2026-08-25
+- **Routing layer added** — cross-exchange ticker/order selection across binance/bybit/okx at runtime.
+- **`RoutingConfig` + Zod schema** (`src/tree/exchange/provider/routing-types.ts`): `pinned` / `round-robin` / `best-health` strategies; config validated at every boundary (`RoutingConfigSchema.safeParse`).
+- **`ExchangeRouter`** (`src/tree/exchange/provider/exchange-router.ts`): pure selection logic, no I/O, deterministic (same config + context = same decision). 14 tests cover all strategies × healthy / circuit-open / all-open, tie-break determinism, fallback order.
+- **`RoutingChain`** (`src/tree/exchange/provider/routing-chain.ts`): ordered multi-provider fallback execution preserving `ProviderResult` provenance shape (provider name, latencyMs, circuitState). Per-attempt latency on success; aggregate error lists every exchange on total failure. 9 tests cover success/fallback/all-fail/latency/circuit-state/non-Error-rejections/half_open/breaker-read-only.
+- **`RoutedExecution`** (`src/land/exchange-orchestration/routed-execution.ts`): wires router + chain into `ExchangeOrchestrator` — `configureRouting()`, `routedFetchTicker()`, `routedPlaceOrder()`, `routedCancelOrder()`, `routedFetchOrder()`, `getOrderAffinity()`. Order affinity (orderId → exchange) pins cancel/fetch to the placing exchange; no order failover mid-flight. Killswitch check preserved as first gate in `routedPlaceOrder`.
+- **ExchangeOrchestrator delegates** (`src/land/exchange-orchestration/index.ts`): 6 new public methods, all existing signatures unchanged.
+- **Paper-only invariant enforced at three layers**:
+  - Compile-time: `@ts-expect-error` directives prove `LiveExchange` cannot enter any paper-only slot (`routing-paper-only.test.ts`).
+  - Runtime: live-style `ExchangeAdapter` rejected by `PaperProviderAdapter` (missing `circuitBreaker`, `healthCheck`).
+  - Source: grep test verifies no routing file imports from `live/` or `ccxt/`.
+- **Quality gates:** 2070/2070 tests pass, lint 0 warnings, `tsc --noEmit` clean, `npm run build` clean, `knip` exit 0.
+- **Files created:** `routing-types.ts`, `routing-types.test.ts`, `exchange-router.ts`, `exchange-router.test.ts`, `routing-chain.ts`, `routing-chain.test.ts`, `routed-execution.ts`, `routed-execution.test.ts`, `routed-execution-affinity.test.ts`, `routing-paper-only.test.ts`.
+- **Commits:** `92db712`, `20a1fd2`, `c473423`, `d93a2f1`, `21d32c6`.
+
 ### Ablation Testing + Alpha Routing + Survival Gate + Promotion State Machine — 2026-08-20
 - **Ablation testing module shipped** (`src/tree/alpha/hypothesis/ablation.ts`, mission Phase 13 — was previously missing entirely). `runAblation(hypothesis, candles, config)` evaluates the full hypothesis, then removes each indicator one at a time and re-evaluates, reporting `deltaWinRate`, `deltaPassRate`, and `materialImpact` per variant plus a `flaggedUnnecessary` list. Pure function, no I/O, no randomness, 100% covered by 9 tests. Material-impact threshold is strict `>` (a zero delta never counts as material).
 - **Alpha routing shipped** (`src/tree/regime/alpha-router.ts`). `routeAlphas(regime, signals, config)` is a regime-conditioned alpha filter/ranker: SHOCK blocks everything, UNKNOWN passes through sorted by confidence, and every other regime filters by per-regime direction preference + confidence threshold, then caps at topN. Supports `confidenceOverrides` and `directionOverrides`. Pure function, 96% covered by 18 tests.
