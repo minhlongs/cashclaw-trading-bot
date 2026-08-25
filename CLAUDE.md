@@ -1,10 +1,10 @@
 # Project Context
 
 ## Current Status (2026-08-25)
-- **Alpha Research OS** — Phase 5 of 6 complete. Phase 5 relative-value research shipped 2026-08-25 (PR #5, commit `b3f51fc`): causal pair-spread engine + fail-closed tradability gate + relative-value evaluation suite in `src/tree/alpha/relative-value/` and `src/forest/alpha/relative-value-eval/`
-- **Prior phases:** 1 (evaluator engine), 2 (research queue + multiple-testing), 3 (microstructure data), 4 (cross-sectional engine, `b7d5454`)
-- **System state:** Paper/backtest only. No live capital. 2619/2619 tests passing, quality gate green, coverage 88.03%
-- **Next work:** Phase 6 — composition (multi-pair scan, walk-forward, survival-gate consumption of the evaluation seams). See `docs/alpha-research-os-implementation-plan.md` §5.
+- **Alpha Research OS** — All 6 phases complete. Phase 6 composition shipped 2026-08-25 (PR #6, commit `985c9f1`): alpha composition scoring, 9-overlay portfolio engine, EXTREME cost mode, forest evaluation seam with leakage-isolation suite
+- **Prior phases:** 1 (evaluator engine), 2 (research queue + multiple-testing), 3 (microstructure data), 4 (cross-sectional engine, `b7d5454`), 5 (relative-value research, `b3f51fc`)
+- **System state:** Paper/backtest only. No live capital. 2671/2671 tests passing, quality gate green, coverage 88.22%
+- **Next work:** Known backlog items (multi-pair scan wiring, walk-forward composition, rolling-correlation, import unification, survival-gate consumption). See `docs/development-roadmap.md` §Known Backlog.
 
 ## Safety Rules
 1. PAPER/BACKTEST ONLY — no real orders, no live trading

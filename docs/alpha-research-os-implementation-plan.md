@@ -346,6 +346,80 @@ correlation diagnostic), persistence, API/UI/worker, all execution paths.
 
 ---
 
+## 3F. Phase 6 Scope (Implemented — shipped 2026-08-25)
+
+Mission §6/§7/§8: alpha composition (`regime × alpha × confidence × expected cost ×
+expected turnover`), deterministic portfolio engine with risk applied AFTER alpha
+generation, realistic cost model with EXTREME mode. Doctrine honored: "Do NOT optimize
+weights against the test set" and "A strategy cannot pass merely because gross PnL is
+positive. Promotion uses NET PnL."
+
+### 3F.1 Tree domain — composition (`src/tree/alpha/composition/`)
+
+- `ComposedAlpha` — standardized 10-field object (alphaId, direction buy/sell/hold,
+  confidence, expectedReturn, expectedCost, expectedTurnover, regime, horizon,
+  provenance, featureDependencies, timestamp).
+- `scoreAlpha(alpha, config)` — deterministic net-edge scoring:
+  `net_edge = w.return × confidence × expectedReturn − w.cost × expectedCost −
+  w.risk × (1−confidence) − w.turnover × expectedTurnover`. Weights are declared
+  configuration (`CompositionWeights`), never learned. Fail-closed discriminated
+  result: non-finite inputs yield `{score: null, reason}` — never a silent zero.
+  Hold direction scores exactly 0 with explicit reason. Timestamp is opaque to scoring.
+- `scoreComposedAlphas(alphas, config)` → `{scored, rejected}` sorted score-desc with
+  alphaId tie-break; minNetEdge / maxTurnover filters record rejection reasons.
+
+### 3F.2 Tree domain — portfolio engine (`src/tree/alpha/portfolio/engine.ts`, `constraints.ts`)
+
+- `buildPortfolio(scoredAlphas, currentWeights, riskInputs, config)` — nine sequential
+  deterministic overlays applied AFTER alpha scoring: base weight (score × direction ×
+  confidence) → volatility targeting → position cap → gross exposure cap → net exposure
+  cap → correlated-bucket cap → beta exposure → turnover vs previous weights → drawdown
+  de-risk. Every binding overlay appends a figure-bearing line to `riskAdjustments`.
+- Null betas are excluded from the beta calc AND flagged in adjustments (fail-closed —
+  never silently assumed β=0 or β=1). Pure clip/scale overlays live in `constraints.ts`;
+  `engine.ts` stays orchestration-only.
+- Beta-exposure overlay consumes `estimateRollingBetas` output computed by the caller —
+  closing the prior-phase escrow that conditioned consolidation on Phase 6 wiring beta
+  exposure into the portfolio engine.
+
+### 3F.3 Cost model — EXTREME stress mode
+
+- `'extreme'` added to both `StressMode` unions (tree `cost-stress.ts`, forest
+  `cost-model.ts`) with byte-identical values: fee 0.0015 + slippage 0.0040 +
+  market impact 0.0045 = 100 bps total. Pin tests verify both modules identically;
+  full ordering normal < conservative < adverse < extreme asserted.
+- Stale bps comments corrected to actual sums (16 / 27 / 50 / 100). Two consumers with
+  hardcoded 3-literal unions widened additively (`baselines/types.ts`,
+  `cross-sectional-eval/report.ts`). Promotion semantics unchanged — NET PnL only.
+
+### 3F.4 Forest evaluation seam (`src/forest/alpha/composition-eval/`)
+
+- `evaluateComposition(alphasAtEachT, returnSeriesAtEachT, riskInputsAtEachT, config)`
+  — per-decision-time score → portfolio → period record pipeline with cost attribution
+  and compounding equity curve; Sharpe/Sortino/max-drawdown reused directly from the
+  cross-sectional metrics module.
+- Fail-closed: missing return or riskInputs key for any decision time throws with the
+  timestamp; empty/rejected alphas produce a flat period with previous weights sticky.
+- Leakage isolation suite: mutate-future returns leave earlier periods byte-identical
+  (JSON.stringify comparison), shift-boundary moves flatten exactly the boundary period,
+  determinism, ΣcostPct == totalCosts at 1e-12, all-rejected flat path.
+
+### 3F.5 Constraints honored
+
+All files kebab-case ≤ 200 lines, 0 `:any`, no `Math.random`/`Date.now` in new code,
+no new ESLint suppressions, tree purity preserved (no `@/forest` imports), knip clean.
+52 new tests; full suite 2671/2671 green ×3 consecutive runs; coverage
+88.22% ≥ thresholds 82/85/85/82.
+
+### 3F.6 Untouched by design (Phase 6)
+
+Multi-pair scan wiring (`generatePairSignals` full-array look-ahead needs redesign),
+walk-forward composition, rolling-correlation series wiring, unifying cross-sectional
+StressMode imports onto the tree module, survival-gate consumption (awaits paper-trading
+pipeline), persistence, API/UI/worker, all execution paths.
+
+---
+
 ## 4. Known Simplifications / Escrow
 
 Deliberate scope reductions from the Mission, recorded here so they are answered truthfully
@@ -377,7 +451,7 @@ remains bound by §2 safety constraints.
 | ~~3~~ **IMPLEMENTED** — shipped 2026-08-24 | Microstructure **data** infrastructure: fail-closed REST polling ingestion (Binance `depth?limit=20` + `aggTrades`), append-only D1 storage (`migrations/0011_microstructure_data.sql`, 4 tables), causal feature computer for the 9 Phase 1 contracts with publication-lag `asOf` gate, worker cron wiring gated on `MICRO_INGEST_ENABLED` (default OFF). 93 new tests, 2412/2412 full suite | §3A, falsification report |
 | ~~4~~ **IMPLEMENTED** — shipped 2026-08-24 | Cross-sectional engine: causal portfolio simulator (`runCrossSectionalSim` in `src/tree/alpha/cross-sectional/` — weights decided at snapshot t earn the return t→t+1, one-sided turnover, fees+slippage every sim, fail-closed), beta-aware sizing (`estimateRollingBetas` strictly-before-window OLS; targetBeta=0 via neutralization, never ÷βp; fail-closed fallback with `fallbackReason`; `inverseBetaTilt`), evaluation suite (`src/forest/alpha/cross-sectional-eval/` — Sharpe/Sortino on portfolio return series, drawdown on equity curve, long/short + cost attribution, exposure series, regime breakdown via injected labels only), wire-in seam `evaluateCrossSectional`. 90 new tests, 2502/2502 full suite. Walk-forward composition deferred to Phase 6 | §3C |
 | ~~5~~ **IMPLEMENTED** — shipped 2026-08-25 | Relative-value research: causal pair-spread engine (`runPairSpreadSim` in `src/tree/alpha/relative-value/` — hedge ratio β(t) from data strictly < t, decision at t earns return t→t+1, internally derived returns), fail-closed tradability gate (`validatePairTradable` — cointegration + finite half-life + correlation floor, revalidated on cadence), 3-state entry-exit machine, tree-local cost-stress module (tree never imports forest), evaluation suite (`src/forest/alpha/relative-value-eval/` — parallel `RelativeValueReport`, cost attribution, realized-beta diagnostic), wire-in seam `evaluateRelativeValue`. 117 new tests, 2619/2619 full suite. Multi-pair scan + walk-forward deferred to Phase 6 | §4 |
-| 6 | Alpha composition (`regime × alpha × confidence × expected cost × expected turnover`) + deterministic portfolio engine with risk applied after alpha generation; realistic cost model (NORMAL/CONSERVATIVE/ADVERSE/EXTREME) | §6, §7, §8 |
+| ~~6~~ **IMPLEMENTED** — shipped 2026-08-25 | Alpha composition: standardized `ComposedAlpha` object + deterministic config-driven net-edge scoring with fail-closed rejection reasons (`scoreAlpha`/`scoreComposedAlphas` in `src/tree/alpha/composition/`); portfolio engine with nine sequential risk overlays applied after alpha scoring (`buildPortfolio` in `src/tree/alpha/portfolio/engine.ts`, pure overlays in `constraints.ts`, null-beta fail-closed flagging); EXTREME cost mode (100 bps) mirrored byte-identical in tree and forest cost modules with pin tests; composition evaluation seam with leakage-isolation suite (`evaluateComposition` in `src/forest/alpha/composition-eval/`). 52 new tests, 2671/2671 full suite. Multi-pair scan + walk-forward remain deferred (§3F.6) | §6, §7, §8 |
 | 7 | `ResearchAgent` safe role only — hypotheses, explanations, summaries, next-experiment suggestions; never orders, promotion state, thresholds, or historical data | §10 |
 | 8 | Paper/shadow observability: alpha/portfolio/risk decisions, hypothetical orders & fills, expected-vs-realized edge and slippage, feature snapshot hashes, data freshness, provider provenance | §14 |
 | 9 | Strengthened promotion gates (15-point checklist incl. fee/slippage stress, parameter & cross-asset robustness, baseline comparison, reproducible experiment hash). The gate remains incapable of reaching LIVE automatically; shadow trading precedes any human promotion trigger | §13, §14 |
