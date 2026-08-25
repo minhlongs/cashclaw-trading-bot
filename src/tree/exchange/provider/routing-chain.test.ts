@@ -133,7 +133,7 @@ describe('RoutingChain', () => {
     bybit.placeOrder = vi.fn().mockResolvedValue({ id: 'o2' });
     const chain = new RoutingChain([binance, bybit]);
 
-    const result = await chain.execute((p) => p.placeOrder({
+    await chain.execute((p) => p.placeOrder({
       symbol: 'BTC/USDT', side: 'sell', type: 'market', quantity: 0.002,
     }));
 
