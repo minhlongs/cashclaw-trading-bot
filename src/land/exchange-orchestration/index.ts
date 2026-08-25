@@ -1,17 +1,15 @@
 // Land layer — Exchange Orchestration
 // Wraps PaperExchangeProvider (v1) + CCXT providers (v2).
 // Uses Killswitch + rate-limit guards + circuit breaker per provider.
-//
-// v2 wiring path (single point of exchange interaction):
-// - BotManager will pass orchestrator (not raw adapter) into BotDependencies
-// - BotInstance.placeOrder will call orchestrator.placeOrder() and unwrap Result
-// - Killswitch and circuit-breaker checks live ONLY in orchestrator (remove duplicates later)
-// - ExchangeAdapter interface stays unchanged
+// v2 wiring path: BotManager passes orchestrator into BotDependencies;
+// BotInstance.placeOrder calls orchestrator.placeOrder() and unwraps Result;
+// killswitch + circuit-breaker checks live ONLY here; ExchangeAdapter unchanged.
 import type { ExchangeId, Ticker, OrderBook, OrderRequest, OrderResult, Balance } from '@/tree/exchange/types';
 import { PaperExchangeProvider, PaperProviderAdapter, ProviderChain, type ProviderResult } from '@/tree/exchange/provider';
 import { Killswitch } from '@/tree/bot/killswitch';
 import { ok, err, type Result } from '@/lib/result';
 import { createLogger } from '@/lib/logger';
+import { RoutedExecution } from './routed-execution';
 
 const log = createLogger('exchange-orchestration');
 
@@ -26,10 +24,12 @@ export class ExchangeOrchestrator {
   private lastProvenance: Map<string, ProviderResult<Ticker | OrderResult>> = new Map();
   private killswitch: Killswitch;
   private onError?: (err: Error, ctx: string) => void;
+  private routed: RoutedExecution;
 
   constructor(deps: ExchangeOrchestratorDeps = {}) {
     this.killswitch = deps.killswitch ?? ({} as Killswitch);
     this.onError = deps.onError;
+    this.routed = new RoutedExecution({ providers: this.providers, killswitch: this.killswitch, onProvenance: (exchange, result) => this.lastProvenance.set(exchange, result), reportError: (err, ctx) => this.reportError(err, ctx) });
   }
 
   private reportError(err: Error, ctx: string): void {
@@ -168,6 +168,19 @@ export class ExchangeOrchestrator {
     this.chains.clear();
     this.lastProvenance.clear();
   }
+
+  /** Configure cross-exchange routing (paper-only, Zod-validated). */
+  configureRouting(config: unknown): Result<void> { return this.routed.configureRouting(config); }
+  /** Fetch ticker using configured routing strategy. */
+  async routedFetchTicker(symbol: string): Promise<Result<Ticker>> { return this.routed.fetchTicker(symbol); }
+  /** Place order using configured routing strategy; affinity pins cancel/fetch. */
+  async routedPlaceOrder(request: OrderRequest): Promise<Result<OrderResult>> { return this.routed.placeOrder(request); }
+  /** Cancel order on the exchange where it was originally placed. */
+  async routedCancelOrder(orderId: string, symbol: string): Promise<Result<boolean>> { return this.routed.cancelOrder(orderId, symbol); }
+  /** Fetch order on the exchange where it was originally placed. */
+  async routedFetchOrder(orderId: string, symbol: string): Promise<Result<OrderResult>> { return this.routed.fetchOrder(orderId, symbol); }
+  /** Get the exchange affinity for a routed order (for tests/inspection). */
+  getOrderAffinity(orderId: string): string | undefined { return this.routed.getOrderAffinity(orderId); }
 }
 
 // Singleton
