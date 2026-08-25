@@ -23,3 +23,10 @@ export { toEvaluationReport } from './survival-adapter';
 export { toWalkForwardShim } from './survival-shim';
 export type { SurvivalAssemblyConfig } from './survival-input';
 export { assembleSurvivalInput } from './survival-input';
+export type {
+  BenchmarkComparison,
+  BenchmarkComparisonRow,
+  BenchmarkOptions,
+  OosSpan,
+} from './benchmarks';
+export { BENCHMARK_STRATEGIES, oosSpan, runBenchmarks } from './benchmarks';

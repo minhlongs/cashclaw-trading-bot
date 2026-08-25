@@ -5,8 +5,9 @@
 // re-simulates or re-ranks. Pure and deterministic — no I/O, no network.
 //
 // Unit convention: expectancy/PnL fields carry PORTFOLIO-FRACTION returns
-// (per-trade net return), matching the baselines' runBaselineFractions()
-// variant — never mix with the price-unit runBaseline() reports.
+// (per-period net return of the stitched OOS series). The price-unit
+// runBaseline() benchmark reports live in benchmarks.ts and are compared
+// directionally only — never mix the two unit systems in one table.
 
 import { RegimeLabel } from '@/tree/regime/types';
 import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
