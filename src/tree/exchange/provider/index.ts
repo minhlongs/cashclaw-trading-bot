@@ -13,6 +13,8 @@ export { CircuitBreaker, CircuitOpenError } from './circuit-breaker';
 export { ProviderChain } from './provider';
 export type { RoutingStrategy, RoutingConfig, RouteDecision } from './routing-types';
 export { RoutingConfigSchema } from './routing-types';
+export { ExchangeRouter } from './exchange-router';
+export type { ExchangeRouteHealth, RouteContext } from './exchange-router';
 export type { FailureKind } from './circuit-breaker-kinds';
 export { FAILURE_KIND_THRESHOLDS, classifyFailure } from './circuit-breaker-kinds';
 export type { LoadedCircuitState } from './circuit-persistence';
