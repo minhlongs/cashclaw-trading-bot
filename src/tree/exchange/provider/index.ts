@@ -15,6 +15,7 @@ export type { RoutingStrategy, RoutingConfig, RouteDecision } from './routing-ty
 export { RoutingConfigSchema } from './routing-types';
 export { ExchangeRouter } from './exchange-router';
 export type { ExchangeRouteHealth, RouteContext } from './exchange-router';
+export { RoutingChain } from './routing-chain';
 export type { FailureKind } from './circuit-breaker-kinds';
 export { FAILURE_KIND_THRESHOLDS, classifyFailure } from './circuit-breaker-kinds';
 export type { LoadedCircuitState } from './circuit-persistence';
