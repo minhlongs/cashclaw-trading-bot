@@ -37,3 +37,10 @@ export type {
   PairValidationResult,
 } from './validation';
 export { validatePairTradable, VALIDATION_REASONS } from './validation';
+
+export type {
+  PairStabilityConfig,
+  PairStabilityComponents,
+  PairStabilityResult,
+} from './stability';
+export { computePairStability, STABILITY_REASONS } from './stability';
