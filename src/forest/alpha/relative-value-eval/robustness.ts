@@ -19,12 +19,12 @@ import type {
   UniversePanel,
 } from '@/tree/alpha/relative-value';
 import type { WindowConfig, WindowMode } from '@/forest/backtest/walkforward';
-import {
-  parameterSensitivity,
-  type GridResult,
-  type ParameterSensitivityOptions,
-  type ParameterSensitivityResult,
-} from '@/forest/alpha/multiple-testing';
+import { parameterSensitivity } from '@/forest/alpha/multiple-testing/overfitting-proxy';
+import type {
+  GridResult,
+  ParameterSensitivityOptions,
+  ParameterSensitivityResult,
+} from '@/forest/alpha/multiple-testing/overfitting-types';
 import { extractRoundTrips } from './round-trips';
 import { runRVWalkForward } from './walk-forward';
 import { bucketWindowStats, oosExpectancy } from './oos-windows';

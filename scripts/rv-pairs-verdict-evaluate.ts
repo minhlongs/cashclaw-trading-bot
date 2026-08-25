@@ -6,17 +6,17 @@ import type { UniversePanel } from '@/tree/alpha/relative-value';
 import type { Candle } from '@/forest/backtest/ohlcv';
 import { runSurvivalGate } from '@/forest/alpha/gate/survival-gate';
 import type { SurvivalGateResult } from '@/forest/alpha/gate/survival-gate';
-import { evaluateSurvival } from '@/forest/alpha/multiple-testing';
-import type { SurvivalVerdict } from '@/forest/alpha/multiple-testing';
+import { evaluateSurvival } from '@/forest/alpha/multiple-testing/evaluate';
+import type { SurvivalVerdict } from '@/forest/alpha/multiple-testing/types';
 import {
   assembleSurvivalInput,
   oosSpan,
   runBenchmarks,
   runRvAblation,
   runRvRobustness,
-  runRVWalkForward,
   toEvaluationReport,
 } from '@/forest/alpha/relative-value-eval';
+import { runRVWalkForward } from '@/forest/alpha/relative-value-eval/walk-forward';
 import type { RVWalkForwardResult } from '@/forest/alpha/relative-value-eval';
 import {
   ADAPTER,

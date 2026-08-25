@@ -17,7 +17,18 @@ export { computeRealizedPairBetaSeries } from './realized-beta';
 export { evaluateRelativeValue } from './evaluate';
 export type { PairRoundTrip, RoundTripExtraction } from './round-trips';
 export { extractRoundTrips } from './round-trips';
-export * from './walk-forward';
+// Type-only re-export: the walk-forward VALUE API stays on the deep path
+// ('./walk-forward') because every internal consumer imports it there;
+// re-exporting values through this barrel pulls the sibling barrel into
+// knip's module graph and flags its value exports as unused.
+export type {
+  RVWindowBounds,
+  RVWindowResult,
+  RVPairWindowResult,
+  RVStitchedResult,
+  RVWalkForwardResult,
+  RVPlannedWindow,
+} from './walk-forward';
 export type { RVAdapterOptions } from './survival-adapter';
 export { toEvaluationReport } from './survival-adapter';
 export { toWalkForwardShim } from './survival-shim';
