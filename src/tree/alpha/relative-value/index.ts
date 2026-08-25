@@ -44,3 +44,11 @@ export type {
   PairStabilityResult,
 } from './stability';
 export { computePairStability, STABILITY_REASONS } from './stability';
+
+export type {
+  UniversePanel,
+  PairSelectionConfig,
+  PairSelectionDiagnostics,
+  SelectedPair,
+} from './pair-selection';
+export { selectPairs } from './pair-selection';
