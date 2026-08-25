@@ -86,7 +86,7 @@ function averageResults(results: BacktestResult[]): AggregatedMetrics {
   } as AggregatedMetrics;
 }
 
-interface WindowSlice {
+export interface WindowSlice {
   trainStart: number;
   trainEnd: number;
   validateStart: number;
@@ -95,7 +95,8 @@ interface WindowSlice {
   testEnd: number;
 }
 
-function computeSlices(totalBars: number, cfg: WindowConfig, mode: WindowMode): WindowSlice[] {
+/** Exported additively for relative-value walk-forward planning (same semantics). */
+export function computeSlices(totalBars: number, cfg: WindowConfig, mode: WindowMode): WindowSlice[] {
   const minBars = cfg.trainBars + cfg.validateBars + cfg.testBars;
   if (totalBars < minBars) {
     throw new Error(`Not enough candles: ${totalBars} < ${minBars} (train+validate+test)`);

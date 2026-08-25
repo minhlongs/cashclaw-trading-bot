@@ -42,6 +42,7 @@
     "src/tree/regime/alpha-router.ts",
     "src/forest/alpha/cross-sectional-eval/index.ts",
     "src/forest/alpha/relative-value-eval/index.ts",
+    "src/forest/alpha/relative-value-eval/walk-forward/index.ts",
     "src/forest/alpha/composition-eval/index.ts"
   ],
   "ignoreExportsUsedInFile": true,
