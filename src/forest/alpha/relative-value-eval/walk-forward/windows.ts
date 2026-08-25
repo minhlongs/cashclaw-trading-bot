@@ -70,10 +70,11 @@ export function planWindows(
   }
 
   return slices.map((s) => {
-    // Warmup overlap: the simulated panel keeps the WARMUP_BARS immediately
-    // preceding testStart (validate span first, spilling into the TRAIN tail
-    // when WARMUP_BARS exceeds it) plus the full test span — contiguous bars,
-    // never touching anything at or after testStart.
+    // Warmup overlap: the simulated panel keeps up to WARMUP_BARS immediately
+    // preceding testStart, clamped at train so the overlap always lies in
+    // the validate span (never the train tail; with WARMUP_BARS=30 <
+    // validateBars=50 it is fully inside validate), plus the full test span —
+    // contiguous bars, never touching anything at or after testStart.
     const simStart = Math.max(s.testStart - WARMUP_BARS, s.trainEnd);
     const trainEndTime = universe.timestamps[s.trainEnd - 1]! + 1;
     const testStartTime = universe.timestamps[s.testStart]!;

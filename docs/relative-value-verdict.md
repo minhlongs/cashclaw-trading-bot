@@ -61,16 +61,25 @@ This is a genuine empirical result of the pre-registered configuration, not a da
 
 | Strategy | Expectancy (price units) | Profit factor | Trades | Max DD |
 |---|---|---|---|---|
-| buy_hold | +3957.65 | n/a (long-only) | 8 | 0 |
+| buy_hold | +3957.65 | 0† | 8 | 0 |
 | random_entry | +31.28 | 1.55 | 144 | 2792.39 |
 | simple_momentum | −396.66 | 0.67 | 24 | 3219.53 |
 | simple_mean_reversion | +311.69 | 2.78 | 69 | 886.77 |
 
 Benchmark reports are price-unit (equity anchored at 1000) while RV reports are portfolio-fraction; they are compared directionally only, never numerically mixed.
 
-## Protocol deviation recorded
+† buy_hold profit factor serializes as 0 in the artifact (report-helper convention when gross wins are undefined for a long-only single-position series); treat as not-applicable rather than zero.
 
-Initial protocol draft used zWindow 5 before any real run. Population-std z-score caps |z| at √(zWindow−1), so with zWindow 5 the maximum attainable |z| ≈ 2.0 made entryZ = 2.0 unreachable by construction (first run: 0 trades across ALL arms including M1). Corrected to zWindow 20 (√19 ≈ 4.36 ceiling, covers the robustness grid up to entryZ 2.5) BEFORE the verdict run; the correction and reason are recorded here rather than silently patched.
+## Protocol deviations recorded
+
+All changes below were made BEFORE the verdict run and apply uniformly to all four arms; none was introduced after seeing results.
+
+- **zWindow 5 → 20.** The initial protocol draft used zWindow 5. Population-std z-score caps |z| at √(zWindow−1), so with zWindow 5 the maximum attainable |z| ≈ 2.0 made entryZ = 2.0 unreachable by construction (first run: 0 trades across ALL arms including M1). Corrected to zWindow 20 (√19 ≈ 4.36 ceiling, covers the robustness grid up to entryZ 2.5).
+- **trainBars 400 → 250.** The frozen audit-doc protocol specified trainBars 400; with validate 50 + test 100 + step 100 that yields only ~3 OOS windows on 1000 bars. trainBars 250 doubles the OOS window count to 7, giving the multiple-testing battery more windows to work with — a strictly more demanding evaluation, not a looser one.
+- **stressMode adverse → conservative as primary.** Conservative (fees 0.08% + slippage 0.03% per leg) is milder than the frozen adverse choice; this is the one drift that could in principle flatter the strategy. It cannot change this verdict: M4 completes 0 trades, so no cost is ever paid, and M1's expectancy stays negative even under conservative stress — adverse stress would only deepen the KILLED.
+- **Rolling-only walk-forward (expanding dropped).** Expanding mode exercises a different train-length regime but shares the same per-window mechanics; it was omitted to keep the real run within one deterministic pass. Listed here for completeness; a re-run adding expanding windows should reuse every other parameter exactly as executed.
+
+The primary-arm pre-registration itself (M4 = sole verdict arm) is unchanged from the audit doc.
 
 ## Conclusion
 
