@@ -17,7 +17,7 @@
 
 - **No live trading.** No `placeOrder` calls are routed to a real exchange. The ProviderChain routes through mock/test providers in the research layer; production execution paths remain disabled.
 - **No real capital.** All strategy evaluation is PAPER/BACKTEST ONLY.
-- **No strategy is presented as profitable.** All 24 hypothesis classes tested across the alpha discovery campaign were falsified (0 OOS positive expectancy). See `docs/falsification-report.md`.
+- **No strategy is presented as profitable.** All 30 hypothesis classes tested across the alpha discovery campaign were falsified (0 OOS positive expectancy). See `docs/falsification-report.md`.
 
 ## Safety rules still in force
 

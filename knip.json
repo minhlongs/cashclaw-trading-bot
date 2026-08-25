@@ -34,11 +34,15 @@
     "src/forest/alpha/persistence/index.ts",
     "src/forest/alpha/persistence/json-adapter.ts",
     "src/forest/alpha/persistence/types.ts",
+    "src/forest/alpha/multiple-testing/index.ts",
     "src/forest/alpha/pipeline/index.ts",
     "src/forest/alpha/readiness/index.ts",
     "src/forest/alpha/reports/formatter.ts",
     "src/forest/alpha/reports/index.ts",
-    "src/tree/regime/alpha-router.ts"
+    "src/tree/regime/alpha-router.ts",
+    "src/forest/alpha/cross-sectional-eval/index.ts",
+    "src/forest/alpha/relative-value-eval/index.ts",
+    "src/forest/alpha/composition-eval/index.ts"
   ],
   "ignoreExportsUsedInFile": true,
   "exclude": [

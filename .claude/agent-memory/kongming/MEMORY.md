@@ -1,2 +1,4 @@
 - [trade-bot state: gaps closed, gates flaky](project_tradebot_golive_gap.md) — 2026-08-12 gaps now fixed; live issue is `npm test` flaky-red ~60% + coverage thresholds never run in CI.
 - [Verify full user journey, not just task scope](feedback_verify_full_user_journey.md) — for "go live" questions, curl real URLs + grep TODOs; don't trust a pipeline's own PASS/GO-LIVE label at face value.
+- [Phase 5 relative-value planned](project_phase5_relative_value.md) — 2026-08-24 plan at .orchestrate/latest/plan.md; fail-closed tradability gate, causal β/z strictly-before-t, knip forest-barrel trap.
+- [Phase 6 composition+portfolio+cost planned](project_phase6_plan_written.md) — 2026-08-25 plan: 4 steps (A composition scorer, B portfolio engine, C EXTREME cost, D eval seam), 5 escrows deferred; pairs.ts path corrected.

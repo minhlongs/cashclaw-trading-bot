@@ -2,13 +2,13 @@
 
 **Date:** 2026-08-18
 **Status:** FINAL
-**Scope:** 24 hypothesis classes tested on SOLUSDT/ETHUSDT/BTCUSDT across 8h, 1d, and 1h timeframes
+**Scope:** 30 hypothesis classes tested on SOLUSDT/ETHUSDT/BTCUSDT across 8h, 1d, and 1h timeframes
 
 ---
 
 ## Executive Summary
 
-**No strategy class tested produced persistent out-of-sample positive expectancy.** Across 24 hypothesis classes, 162+ walk-forward OOS tests, and ~10,000 total OOS trades, every signal that appeared in-sample was either overfit, regime-specific, or below the noise floor after realistic costs.
+**No strategy class tested produced persistent out-of-sample positive expectancy.** Across 30 hypothesis classes, 162+ walk-forward OOS tests, and ~10,000 total OOS trades, every signal that appeared in-sample was either overfit, regime-specific, or below the noise floor after realistic costs.
 
 This is a valid scientific negative result, not a failure. The market appears efficient at the data resolution (OHLCV + funding rate + open interest + liquidation + Fear & Greed Index) and execution scale (retail-tier latency, 17–27 bps round-trip costs) available to this system.
 

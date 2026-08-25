@@ -10,7 +10,7 @@ export interface BaselineConfig {
   strategy: BaselineStrategy;
   symbol: string;
   timeframe: string;
-  stressMode: 'normal' | 'conservative' | 'adverse';
+  stressMode: 'normal' | 'conservative' | 'adverse' | 'extreme';
   feePct: number;
   slipPct: number;
 }

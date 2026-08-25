@@ -1,11 +1,10 @@
 # Project Context
 
-## Current Status (2026-08-20)
-- **ProviderChain wiring** is complete (commit `8ca4a2d`) — fetchTicker/placeOrder route through ProviderChain with provenance metadata
-- **Alpha Discovery** — 14 of 17 phases complete; 24 hypothesis classes falsified (0 OOS positive expectancy); signal space exhausted on OHLCV/funding/OI data
-- **Shipped this session:** Phase 13 ablation (`8117503`), Phase 15 survival gate (`8873d69`), Phase 17 promotion state machine (`7eda726`)
-- **System state:** Paper/backtest only. No live capital. 2003/2003 tests passing, quality gate green
-- **Next work:** Awaiting user direction — no in-flight implementation plan. Phase 14 (robustness) deferred — revisit only when new data infrastructure produces a strategy that survives OOS walk-forward.
+## Current Status (2026-08-25)
+- **Alpha Research OS** — All 6 phases complete. Phase 6 composition shipped 2026-08-25 (PR #6, commit `985c9f1`): alpha composition scoring, 9-overlay portfolio engine, EXTREME cost mode, forest evaluation seam with leakage-isolation suite
+- **Prior phases:** 1 (evaluator engine), 2 (research queue + multiple-testing), 3 (microstructure data), 4 (cross-sectional engine, `b7d5454`), 5 (relative-value research, `b3f51fc`)
+- **System state:** Paper/backtest only. No live capital. 2671/2671 tests passing, quality gate green, coverage 88.22%
+- **Next work:** Known backlog items (multi-pair scan wiring, walk-forward composition, rolling-correlation, import unification, survival-gate consumption). See `docs/development-roadmap.md` §Known Backlog.
 
 ## Safety Rules
 1. PAPER/BACKTEST ONLY — no real orders, no live trading

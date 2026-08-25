@@ -19,8 +19,8 @@ src/
 
 | Layer | Responsibility | Examples |
 |---|---|---|
-| `tree/` | Pure trading domain: bot state machine, strategy chain, exchange adapters (paper), telemetry writer | `tree/bot/`, `tree/exchange/`, `tree/telemetry/` |
-| `forest/` | Orchestrates domain against infrastructure: D1 persistence/hydration, backtest engine, settings, monitoring, flight recorder, API handlers | `forest/bot/`, `forest/backtest/`, `forest/settings/`, `forest/api/` |
+| `tree/` | Pure trading domain: bot state machine, strategy chain, exchange adapters (paper), telemetry writer, alpha research domain (registry, hypothesis lineage, research queue, microstructure parse/quality/feature-computer) | `tree/bot/`, `tree/exchange/`, `tree/telemetry/`, `tree/alpha/queue/`, `tree/alpha/microstructure/` |
+| `forest/` | Orchestrates domain against infrastructure: D1 persistence/hydration, backtest engine, settings, monitoring, flight recorder, API handlers, alpha multiple-testing defense, microstructure ingestion + D1 store | `forest/bot/`, `forest/backtest/`, `forest/settings/`, `forest/api/`, `forest/alpha/multiple-testing/`, `forest/alpha/microstructure/` |
 | `land/` | Coordinates across domains: bot management, exchange orchestration | `land/bot-management/`, `land/exchange-orchestration/` |
 | `lib/` | Framework-agnostic primitives used by all layers | `lib/db/`, `lib/auth/`, `lib/crypto.ts`, `lib/logger.ts`, `lib/result.ts` |
 
@@ -39,7 +39,7 @@ Dependency direction is strict: pages → forest → tree; land coordinates fore
 
 ## D1 Schema
 
-Migrations in `migrations/` (`0001_initial_schema.sql` … `0007_killswitch_audit_trail.sql`):
+Migrations in `migrations/` (`0001_initial_schema.sql` … `0011_microstructure_data.sql`):
 
 | Table | Purpose |
 |---|---|
@@ -53,6 +53,10 @@ Migrations in `migrations/` (`0001_initial_schema.sql` … `0007_killswitch_audi
 | `killswitch_audit` | Killswitch halt/resume event history |
 | `user_sessions` | Session tokens (id, expires_at) |
 | `settings` | Exchange creds JSON, risk limits, killswitch state, notification config |
+| `circuit_breaker_state` | Persisted circuit-breaker state per provider (0008) |
+| `research_registry` / `research_hypotheses` | Alpha research registry + hypothesis lineage (0009, append-only) |
+| `research_queue_jobs` / `research_queue_events` / `research_testing_counters` | Research queue lifecycle, transition audit, multiple-testing counters (0010, INSERT/SELECT only) |
+| `micro_depth_snapshots` / `micro_trade_batches` / `micro_feature_vectors` / `micro_ingest_log` | Microstructure depth snapshots, trade batches, causal feature vectors, ingest audit log (0011, INSERT/SELECT only) |
 
 Apply migrations locally with `npm run db:apply`, remotely with `npm run db:apply:remote`.
 
