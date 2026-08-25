@@ -18,3 +18,8 @@ export { evaluateRelativeValue } from './evaluate';
 export type { PairRoundTrip, RoundTripExtraction } from './round-trips';
 export { extractRoundTrips } from './round-trips';
 export * from './walk-forward';
+export type { RVAdapterOptions } from './survival-adapter';
+export { toEvaluationReport } from './survival-adapter';
+export { toWalkForwardShim } from './survival-shim';
+export type { SurvivalAssemblyConfig } from './survival-input';
+export { assembleSurvivalInput } from './survival-input';
