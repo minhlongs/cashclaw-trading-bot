@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-08-25T22:59:20.637Z",
+  "protocol": {
+    "universe": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "BNBUSDT",
+      "SOLUSDT",
+      "XRPUSDT",
+      "ADAUSDT",
+      "DOGEUSDT",
+      "LINKUSDT"
+    ],
+    "timeframe": "1d",
+    "limit": 1000,
+    "windowConfig": {
+      "trainBars": 250,
+      "validateBars": 50,
+      "testBars": 100,
+      "stepBars": 100
+    },
+    "primaryArm": "M4",
+    "adapterOptions": {
+      "experimentId": "rv-m4-oos-verdict",
+      "symbol": "PAIRS/M4-primary",
+      "timeframe": "1d",
+      "periodsPerYear": 365,
+      "stressMode": "conservative"
+    }
+  },
+  "arms": [
+    {
+      "id": "M1",
+      "expectancy": -0.020430560264644827,
+      "periods": 3465,
+      "completedTrades": 722,
+      "selectedPairCount": 35,
+      "gateStatus": "KILLED",
+      "gateReason": "Failed 6/8 checks: min_expectancy, min_profit_factor, max_drawdown, min_sharpe, min_net_pnl_after_fees, min_net_pnl_adverse"
+    },
+    {
+      "id": "M2",
+      "expectancy": 0,
+      "periods": 297,
+      "completedTrades": 0,
+      "selectedPairCount": 3,
+      "gateStatus": "KILLED",
+      "gateReason": "Failed 4/8 checks: min_trades, min_profit_factor, min_sharpe, min_regime_coverage"
+    },
+    {
+      "id": "M3",
+      "expectancy": 0,
+      "periods": 297,
+      "completedTrades": 0,
+      "selectedPairCount": 3,
+      "gateStatus": "KILLED",
+      "gateReason": "Failed 4/8 checks: min_trades, min_profit_factor, min_sharpe, min_regime_coverage"
+    },
+    {
+      "id": "M4",
+      "expectancy": 0,
+      "periods": 297,
+      "completedTrades": 0,
+      "selectedPairCount": 3,
+      "gateStatus": "KILLED",
+      "gateReason": "Failed 4/8 checks: min_trades, min_profit_factor, min_sharpe, min_regime_coverage"
+    }
+  ],
+  "primarySurvivalVerdict": "falsified",
+  "failedChecks": [
+    "survival_input: assembleSurvivalInput: at least 2 completed trades required for bootstrap, got 0"
+  ],
+  "gateStatus": "KILLED",
+  "gateReason": "Failed 4/8 checks: min_trades, min_profit_factor, min_sharpe, min_regime_coverage",
+  "finalVerdict": "KILLED"
+}
