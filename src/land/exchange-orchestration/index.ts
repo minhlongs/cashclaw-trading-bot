@@ -12,6 +12,7 @@ import { PaperExchangeProvider, PaperProviderAdapter, ProviderChain, type Provid
 import { Killswitch } from '@/tree/bot/killswitch';
 import { ok, err, type Result } from '@/lib/result';
 import { createLogger } from '@/lib/logger';
+import { RoutedExecution } from './routed-execution';
 
 const log = createLogger('exchange-orchestration');
 
@@ -26,10 +27,17 @@ export class ExchangeOrchestrator {
   private lastProvenance: Map<string, ProviderResult<Ticker | OrderResult>> = new Map();
   private killswitch: Killswitch;
   private onError?: (err: Error, ctx: string) => void;
+  private routed: RoutedExecution;
 
   constructor(deps: ExchangeOrchestratorDeps = {}) {
     this.killswitch = deps.killswitch ?? ({} as Killswitch);
     this.onError = deps.onError;
+    this.routed = new RoutedExecution({
+      providers: this.providers,
+      killswitch: this.killswitch,
+      onProvenance: (exchange, result) => this.lastProvenance.set(exchange, result),
+      reportError: (err, ctx) => this.reportError(err, ctx),
+    });
   }
 
   private reportError(err: Error, ctx: string): void {
@@ -167,6 +175,36 @@ export class ExchangeOrchestrator {
     this.providers.clear();
     this.chains.clear();
     this.lastProvenance.clear();
+  }
+
+  /** Configure cross-exchange routing (paper-only). Accepts config via Zod boundary. */
+  configureRouting(config: unknown): Result<void> {
+    return this.routed.configureRouting(config);
+  }
+
+  /** Fetch ticker using configured routing strategy. */
+  async routedFetchTicker(symbol: string): Promise<Result<Ticker>> {
+    return this.routed.fetchTicker(symbol);
+  }
+
+  /** Place order using configured routing strategy; affinity pins cancel/fetch. */
+  async routedPlaceOrder(request: OrderRequest): Promise<Result<OrderResult>> {
+    return this.routed.placeOrder(request);
+  }
+
+  /** Cancel order on the exchange where it was originally placed. */
+  async routedCancelOrder(orderId: string, symbol: string): Promise<Result<boolean>> {
+    return this.routed.cancelOrder(orderId, symbol);
+  }
+
+  /** Fetch order on the exchange where it was originally placed. */
+  async routedFetchOrder(orderId: string, symbol: string): Promise<Result<OrderResult>> {
+    return this.routed.fetchOrder(orderId, symbol);
+  }
+
+  /** Get the exchange affinity for a routed order (for tests/inspection). */
+  getOrderAffinity(orderId: string): string | undefined {
+    return this.routed.getOrderAffinity(orderId);
   }
 }
 
