@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { runPairSpreadSim } from './simulator';
 import { buildSpreadSeries } from './spread';
-import { GATE_SKIPPED_REASON } from './simulator';
+import { GATE_SKIPPED_REASON, runPairSpreadSim } from './simulator';
 import { ouPanel, simConfig, ENTRY_IDX } from './simulator-fixtures';
 
 describe('additive simulator options (defaults unchanged)', () => {

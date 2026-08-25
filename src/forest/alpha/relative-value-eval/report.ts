@@ -1,7 +1,9 @@
 // Relative-value report builder.
 // Pure, deterministic — composes Phase 4 return metrics and attribution.
+// Additive extension: trade-level round-trip metrics, explicit funding N/A,
+// optional injected stability map and regime breakdown.
 
-import type { PairSimResult } from '@/tree/alpha/relative-value';
+import type { PairPeriodRecord, PairSimResult } from '@/tree/alpha/relative-value';
 import {
   annualizedSharpe,
   annualizedSortino,
@@ -9,11 +11,18 @@ import {
   compoundReturn,
 } from '@/forest/alpha/cross-sectional-eval/return-metrics';
 import { attributeCosts } from '@/forest/alpha/cross-sectional-eval/attribution';
+import { breakdownByRegime } from '@/forest/alpha/cross-sectional-eval/regime-breakdown';
+import { extractRoundTrips } from './round-trips';
 import type {
   RelativeValueEvalConfig,
   RelativeValueReport,
+  RelativeValueReportOptions,
   RelativeValueValidationSummary,
+  RoundTripMetrics,
 } from './types';
+
+/** Funding is documented N/A: derivative endpoints 403; spot assumption. */
+export const FUNDING_NOTE = 'N/A — derivative endpoints 403; spot assumption';
 
 function uniqueReasons(sim: PairSimResult): string[] {
   const reasons = new Set<string>();
@@ -49,9 +58,33 @@ function assertCostAttribution(sim: PairSimResult, report: RelativeValueReport):
   }
 }
 
+/**
+ * Trade-level metrics over completed round trips. Conventions inherited from
+ * evaluation/report-helpers.ts: profit factor serializes to 0 when undefined
+ * (no losses or no trades), win rate and expectancy use completed trades only.
+ */
+function computeRoundTripMetrics(periods: readonly PairPeriodRecord[]): RoundTripMetrics {
+  const { roundTrips } = extractRoundTrips(periods);
+  if (roundTrips.length === 0) {
+    return { expectancyPerTrade: 0, profitFactor: 0, winRate: 0, completedTrades: 0 };
+  }
+  const nets = roundTrips.map((t) => t.netReturn);
+  const grossProfit = nets.filter((r) => r > 0).reduce((a, b) => a + b, 0);
+  const grossLoss = Math.abs(nets.filter((r) => r < 0).reduce((a, b) => a + b, 0));
+  const wins = nets.filter((r) => r > 0).length;
+  const rawProfitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
+  return {
+    expectancyPerTrade: nets.reduce((a, b) => a + b, 0) / nets.length,
+    profitFactor: Number.isFinite(rawProfitFactor) ? rawProfitFactor : 0,
+    winRate: wins / nets.length,
+    completedTrades: roundTrips.length,
+  };
+}
+
 export function buildRelativeValueReport(
   sim: PairSimResult,
   config: RelativeValueEvalConfig,
+  options: RelativeValueReportOptions = {},
 ): RelativeValueReport {
   if (!Number.isFinite(config.periodsPerYear) || config.periodsPerYear <= 0) {
     throw new Error('buildRelativeValueReport: periodsPerYear must be positive finite');
@@ -60,6 +93,12 @@ export function buildRelativeValueReport(
   const grossReturns = sim.periods.map((p) => p.grossReturn);
   const totalReturn = compoundReturn(netReturns);
   const costAttribution = attributeCosts(sim.periods, config.stressMode ?? 'conservative');
+
+  let regimeBreakdown: RelativeValueReport['regimeBreakdown'];
+  if (options.regimeLabels !== undefined) {
+    // Fail-closed inside breakdownByRegime on length mismatch.
+    regimeBreakdown = breakdownByRegime(sim.periods, options.regimeLabels, config.periodsPerYear);
+  }
 
   const report: RelativeValueReport = {
     experimentId: config.experimentId,
@@ -82,6 +121,11 @@ export function buildRelativeValueReport(
     validationSummary: summarizeValidation(sim),
     periodCount: sim.periods.length,
     periodsPerYear: config.periodsPerYear,
+    roundTripMetrics: computeRoundTripMetrics(sim.periods),
+    fundingPct: 0,
+    fundingNote: FUNDING_NOTE,
+    pairStability: options.pairStability,
+    regimeBreakdown,
   };
   assertCostAttribution(sim, report);
   return report;

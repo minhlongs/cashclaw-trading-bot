@@ -1,8 +1,11 @@
 // Relative-value walk-forward types.
 // Pure types only — no I/O, no network.
 
-import type { SelectedPair } from '@/tree/alpha/relative-value';
-import type { PairPanel, PairPeriodRecord } from '@/tree/alpha/relative-value';
+import type {
+  PairPanel,
+  PairPeriodRecord,
+  SelectedPair,
+} from '@/tree/alpha/relative-value';
 
 /** Window bounds in BAR INDICES (from computeSlices) and timestamps. */
 export interface RVWindowBounds {

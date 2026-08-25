@@ -73,6 +73,43 @@ function crossingRate(closesA: number[], closesB: number[], beta: number): numbe
   return crossings / Math.max(1, residuals.length - 1);
 }
 
+/** (a) Fraction of contiguous sub-windows passing the conjunctive gate. */
+function gatePassFraction(
+  panel: PairPanel,
+  config: PairStabilityConfig,
+  idx: readonly number[],
+  size: number,
+): number {
+  let passes = 0;
+  for (let w = 0; w < config.subWindows; w++) {
+    const endIdx = idx[Math.min(idx.length - 1, (w + 1) * size - 1)]!;
+    const verdict = validatePairTradable(panel, config, panel.timestamps[endIdx]! + 1);
+    if (verdict.tradable) passes++;
+  }
+  return passes / config.subWindows;
+}
+
+/** (b) 1 − normalized β drift over sub-window boundaries; null when β unavailable. */
+function betaDriftPenalty(
+  panel: PairPanel,
+  config: PairStabilityConfig,
+  idx: readonly number[],
+  size: number,
+): number | null {
+  const betas: number[] = [];
+  for (let w = 1; w <= config.subWindows; w++) {
+    const boundaryIdx = idx[Math.min(idx.length - 1, w * size - 1)]!;
+    const est = estimateRollingHedgeRatio(
+      panel, config.hedgeWindow, config.minObs, panel.timestamps[boundaryIdx]! + 1,
+    );
+    if (est.hedgeRatio === null) return null;
+    betas.push(est.hedgeRatio);
+  }
+  const first = betas[0]!;
+  const last = betas[betas.length - 1]!;
+  return 1 - Math.min(1, Math.abs(last - first) / Math.abs(first));
+}
+
 /**
  * Score pair stability as of `windowEndAsOf` using only rows with timestamp
  * STRICTLY BEFORE it. Fails closed (score 0 + reason) when the pre-asOf
@@ -106,31 +143,16 @@ export function computePairStability(
     return { score: 0, components: null, reason: STABILITY_REASONS.insufficientObservations };
   }
 
-  // (a) Gate pass fraction over contiguous sub-windows.
-  let passes = 0;
   const size = Math.floor(n / config.subWindows);
-  for (let w = 0; w < config.subWindows; w++) {
-    const endIdx = idx[Math.min(n - 1, (w + 1) * size - 1)]!;
-    const verdict = validatePairTradable(panel, config, panel.timestamps[endIdx]! + 1);
-    if (verdict.tradable) passes++;
-  }
-  const gatePassFraction = passes / config.subWindows;
+
+  // (a) Gate pass fraction over contiguous sub-windows.
+  const gateFraction = gatePassFraction(panel, config, idx, size);
 
   // (b) β drift across sub-window boundaries.
-  const betas: number[] = [];
-  for (let w = 1; w <= config.subWindows; w++) {
-    const boundaryIdx = idx[Math.min(n - 1, w * size - 1)]!;
-    const est = estimateRollingHedgeRatio(
-      panel, config.hedgeWindow, config.minObs, panel.timestamps[boundaryIdx]! + 1,
-    );
-    if (est.hedgeRatio === null) {
-      return { score: 0, components: null, reason: STABILITY_REASONS.betaUnavailable };
-    }
-    betas.push(est.hedgeRatio);
+  const driftPenalty = betaDriftPenalty(panel, config, idx, size);
+  if (driftPenalty === null) {
+    return { score: 0, components: null, reason: STABILITY_REASONS.betaUnavailable };
   }
-  const first = betas[0]!;
-  const last = betas[betas.length - 1]!;
-  const betaDriftPenalty = 1 - Math.min(1, Math.abs(last - first) / Math.abs(first));
 
   // (c) Zero-crossing consistency vs half-life expectation on the full slice.
   const fullEst = estimateRollingHedgeRatio(panel, config.hedgeWindow, config.minObs, windowEndAsOf);
@@ -147,7 +169,11 @@ export function computePairStability(
     : 0;
   const crossingConsistency = Math.max(0, 1 - Math.abs(observed - expected));
 
-  const components: PairStabilityComponents = { gatePassFraction, betaDriftPenalty, crossingConsistency };
-  const score = (gatePassFraction + betaDriftPenalty + crossingConsistency) / 3;
+  const components: PairStabilityComponents = {
+    gatePassFraction: gateFraction,
+    betaDriftPenalty: driftPenalty,
+    crossingConsistency,
+  };
+  const score = (gateFraction + driftPenalty + crossingConsistency) / 3;
   return { score, components };
 }
