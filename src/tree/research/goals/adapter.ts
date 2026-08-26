@@ -61,7 +61,7 @@ export function bindHypothesisToGoal(
 }
 
 /**
- * Produce the GOAL → HYPOTHESES linkage view for a goal. Pure: evaluates
+ * Produce the GOAL → HYPOTHESES linkage view for a goal. Pure: checks
  * each hypothesis independently and never mutates inputs.
  */
 export function goalBindingSummary(

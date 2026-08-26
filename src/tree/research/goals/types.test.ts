@@ -5,8 +5,10 @@
 import { describe, expect, it } from 'vitest';
 import { parseResearchGoal } from './types';
 import { bindHypothesisToGoal, goalBindingSummary } from './adapter';
-import { parseResearchHypothesis } from '@/tree/research/hypothesis/types';
-import type { ResearchHypothesis } from '@/tree/research/hypothesis/types';
+import {
+  parseResearchHypothesis,
+  type ResearchHypothesis,
+} from '@/tree/research/hypothesis/types';
 
 function makeGoalInput(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {

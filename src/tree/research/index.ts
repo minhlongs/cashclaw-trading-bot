@@ -17,9 +17,6 @@ export {
 
 export {
   MECHANISM_MIN_LENGTH,
-  BLOCKLIST_PATTERNS,
-  CAUSAL_CONNECTIVES,
-  DOMAIN_TOKENS,
   type MechanismGateResult,
   checkMechanism,
 } from './hypothesis/mechanism-gate';
@@ -65,3 +62,24 @@ export {
   buildNormalizedRepresentation,
   validateProvenance,
 } from './alpha/provenance';
+
+// Experiment spec + deterministic compiler
+export {
+  type DataWindow,
+  type ExperimentPeriod,
+  type ExperimentSpec,
+  type CompileResult,
+  type CompileFailureCode,
+  BARRIER_DERIVATION,
+  MIN_TRAIN_BARS,
+  DEFAULT_SEED,
+  deriveBarrierConfig,
+  derivePeriods,
+  deriveSeedFromSpecId,
+  parseTimeframeToMs,
+} from './alpha/experiment-spec';
+
+export {
+  compile,
+  type CompilerContext,
+} from './alpha/compiler';

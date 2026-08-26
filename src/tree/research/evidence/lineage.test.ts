@@ -5,10 +5,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { buildLineage, spawnFromFalsified } from './lineage';
-import { EVIDENCE_KINDS, EVIDENCE_VERDICTS } from './types';
-import type { EvidenceObject } from './types';
-import { parseResearchHypothesis } from '@/tree/research/hypothesis/types';
-import type { ResearchHypothesis } from '@/tree/research/hypothesis/types';
+import { EVIDENCE_KINDS, EVIDENCE_VERDICTS, type EvidenceObject } from './types';
+import { parseResearchHypothesis, type ResearchHypothesis } from '@/tree/research/hypothesis/types';
 
 function makeHypothesis(id: string, parentHypothesisId: string | null): ResearchHypothesis {
   const result = parseResearchHypothesis({
