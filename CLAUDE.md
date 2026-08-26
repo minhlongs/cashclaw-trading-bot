@@ -1,9 +1,10 @@
 # Project Context
 
-## Current Status (2026-08-25)
+## Current Status (2026-08-26)
+- **CashClaw × Vibe-Trading Research Contracts Phase 1** — Complete. Tree-layer purity research contracts: `ResearchHypothesis` + `ResearchGoal` Zod schemas with mechanism gate, `AlphaProvenance` (formula hash + normalized representation + validation), `EvidenceObject`/`ResearchLineage` append-only lineage graph, deterministic `AlphaCompiler` pipeline (6 stages: Zod+mechanism gate → causal validation via `declareFeature(causal:true)` → feature validation → data/universe window coverage → cost validation via `resolveStressConfig` → emit `ExperimentSpec` with SHA-256 specId). All pure — no I/O, no eval/exec, WebCrypto only. 53 new tests (2912 total), coverage 88.86% ≥ 88.22% baseline.
 - **Alpha Research OS** — All 6 phases complete. Phase 6 composition shipped 2026-08-25 (PR #6, commit `985c9f1`): alpha composition scoring, 9-overlay portfolio engine, EXTREME cost mode, forest evaluation seam with leakage-isolation suite
 - **Prior phases:** 1 (evaluator engine), 2 (research queue + multiple-testing), 3 (microstructure data), 4 (cross-sectional engine, `b7d5454`), 5 (relative-value research, `b3f51fc`)
-- **System state:** Paper/backtest only. No live capital. 2671/2671 tests passing, quality gate green, coverage 88.22%
+- **System state:** Paper/backtest only. No live capital. 2912/2912 tests passing, quality gate green, coverage 88.86%
 - **Next work:** Known backlog items (multi-pair scan wiring, walk-forward composition, rolling-correlation, import unification, survival-gate consumption). See `docs/development-roadmap.md` §Known Backlog.
 
 ## Safety Rules
