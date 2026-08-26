@@ -2,6 +2,16 @@
 
 ## v1 Paper-Trading Platform
 
+### CashClaw × Vibe-Trading Alpha Zoo Evaluator + IC/IR Falsification Bridge — 2026-08-26
+- **Zoo alpha evaluator shipped** (`src/tree/research/alpha/zoo/operator-{ast,tokenizer,parser,kernels,cross,pair,evaluator}.ts`): 17-op vocabulary with alias table (`normalizeFormula`), fail-closed formula normalizer (placeholder/conditional/unknown-operator/non-causal classification), deterministic parser (`parseFormula`) with append-invariant lookahead-free evaluation (`evaluateFormula`). No I/O, no eval/exec, WebCrypto only. 124 kernel tests + 254 parser tests.
+- **Factor panel + IC/IR analysis shipped** (`src/tree/alpha/factors/{panel,ic-analysis,ic-metrics,ic-quantile}.ts`): `SymbolPanel` + `validateAlignedPanels`, `buildForwardReturnSeries` (causal, no future data), `analyzeIc` (per-horizon Spearman IC, bootstrap CI, permutation p-value, walk-forward shim checks, quantile spread, turnover). 82 new tests.
+- **Forest-layer falsification bridge shipped** (`src/forest/research/zoo-falsification/`): `runZooFalsification(manifest, panels, config)` — import → parse → evaluate → analyzeIc → three-terminal verdicts (ALIVE/FALSIFIED/NOT_EVALUABLE) with fail-closed Σ≡N accounting (`assertNoSilentSkips`) and deterministic FNV-1a32 seeds. Report types + verdict mapping + walk-forward shim.
+- **Seed run + committed artifact** (`scripts/zoo-phase3-falsify.ts`, `zoo-phase3-config.ts`): executes the committed 12-entry phase-2 manifest on the cached 3-symbol Binance 1d panel (BTCUSDT/ETHUSDT/SOLUSDT, 730 bars) with ALL zoo market tags mapped to the crypto universe (documented adaptation, Phase 2 D4 precedent) → `plans/reports/zoo-phase3-falsification-report.json` (0 alive / 2 falsified / 2 not-evaluable / 8 import-skipped, Σ≡12) + `docs/zoo-seed-falsification-report.md` with external-validity caveat (equity-designed alphas on a 3-asset crypto panel = pipeline demonstration, not tradable conclusion). Thin data / missing symbols exits non-zero BLOCKED.
+- **Consistency test** (`zoo-phase3-artifact.test.ts`): re-runs the bridge on cached inputs and pins the committed artifact byte-for-byte; pins schema, Σ≡12, and per-alpha verdicts from the golden audit.
+- **Barrel exports added** (`src/tree/research/index.ts`): `parseFormula`, `evaluateFormula`, AST types. `src/tree/alpha/factors/index.ts` already complete from Phase 3 Lane B.
+- **Scope:** research-only — no API routes, UI, worker cron, persistence, or execution-path changes. All files kebab-case ≤200 lines, 0 `:any`, no `Math.random`/`Date.now` in domain logic, no new ESLint suppressions, tree purity preserved (no `@/forest` imports in new tree code).
+- **Quality gates:** 158 new tests (8 new test files); full suite 3152/3152 green; type-check 0 errors; lint 0 warnings; knip clean; build exit 0; coverage 89.64% ≥ 89.09% baseline.
+
 ### Cross-Exchange Routing (paper-only) — 2026-08-25
 - **Routing layer added** — cross-exchange ticker/order selection across binance/bybit/okx at runtime.
 - **`RoutingConfig` + Zod schema** (`src/tree/exchange/provider/routing-types.ts`): `pinned` / `round-robin` / `best-health` strategies; config validated at every boundary (`RoutingConfigSchema.safeParse`).
