@@ -83,3 +83,55 @@ export {
   compile,
   type CompilerContext,
 } from './alpha/compiler';
+
+// Alpha Zoo adapter (Phase 2) — fail-closed ingestion of Vibe-Trading zoo
+// manifests into validated ResearchHypothesis candidates.
+export {
+  importAlphaZooManifest,
+  type AlphaZooImportReport,
+  type RegisteredAlpha,
+} from './alpha/zoo/zoo-adapter';
+
+export {
+  ALPHA_IMPORT_OUTCOMES,
+  ZOO_IMPORTER_VERSION,
+  type AlphaImportOutcome,
+  type AlphaImportReport,
+  type AlphaImportTotals,
+  type PerAlphaResult,
+  type ZooAdapterConfig,
+  computeTotals,
+  sumBuckets,
+  summarizeReport,
+  assertNoSilentSkips,
+} from './alpha/zoo/import-report';
+
+export {
+  ZOO_MARKET_TAGS,
+  ZOO_THEMES,
+  SUPPORTED_DATA_FIELDS,
+  alphaZooEntrySchema,
+  alphaZooManifestSchema,
+  parseAlphaZooEntry,
+  parseAlphaZooManifest,
+  type ZooMarketTag,
+  type ZooTheme,
+  type SupportedDataField,
+  type AlphaZooEntry,
+  type AlphaZooManifest,
+} from './alpha/zoo/zoo-metadata';
+
+export {
+  SUPPORTED_OPERATORS,
+  OPERATOR_ALIASES,
+  normalizeFormula,
+  type SupportedOperator,
+  type NormalizedFormula,
+} from './alpha/zoo/operator-vocabulary';
+
+export {
+  PHASE2_SEED_MANIFEST,
+  loadPhase2SeedManifest,
+  seedEnvelopeSchema,
+  type Phase2SeedEnvelope,
+} from './alpha/zoo/seeds/seed-manifest';
