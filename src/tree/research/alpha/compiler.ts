@@ -3,7 +3,6 @@
 // Each stage fail-closed with reason codes. Compiler NEVER executes experiments.
 
 import { canonicalize } from '@/lib/canonical-json';
-import { z } from 'zod';
 import type { AlphaProvenance } from './provenance';
 import { type ResearchHypothesis, researchHypothesisSchema } from '../hypothesis/types';
 import { checkMechanism } from '../hypothesis/mechanism-gate';
@@ -16,12 +15,18 @@ import {
   deriveBarrierConfig,
   derivePeriods,
   deriveSeedFromSpecId,
-  MIN_TRAIN_BARS,
+  type ExperimentPeriod,
   type ExperimentSpec,
   type CompileResult,
-  type CompileFailureCode,
   type DataWindow,
 } from './experiment-spec';
+import {
+  mapZodErrors,
+  inferFeatureSource,
+  validateFeatures,
+  validateDataAndUniverse,
+  validateCost,
+} from './compile-stages';
 
 /** Context supplied to compiler (caller provides data window + optional goal/provenance). */
 export interface CompilerContext {
@@ -43,7 +48,7 @@ export interface CompilerContext {
  * 3. Feature validation: no duplicates; lookbacks finite positive; lookback ≤ dataWindow bars
  * 4. Data/universe validation: universe non-empty; timeframe non-empty; window covers maxLookback + horizon + MIN_TRAIN_BARS
  * 5. Cost validation: costAssumption resolves via resolveStressConfig
- * 6. Emit spec with specId = SHA-256 of canonical JSON (excl compiledAt)
+ * 6. Emit spec with specId = SHA-256 of canonical JSON (excl seed + compiledAt); seed derived from specId
  */
 export async function compile(
   hypothesis: unknown,
@@ -123,39 +128,29 @@ async function buildSpec(
   ctx: CompilerContext,
   costConfig: StressConfig,
   barrierConfig: BarrierConfig,
-  periods: { train: { startTimestamp: number; endTimestamp: number; barCount: number }; validation: { startTimestamp: number; endTimestamp: number; barCount: number }; test: { startTimestamp: number; endTimestamp: number; barCount: number } },
+  periods: { train: ExperimentPeriod; validation: ExperimentPeriod; test: ExperimentPeriod },
 ): Promise<CompileResult> {
-  const seed = deriveSeedFromSpecId(''); // temporary, will recompute after specId
   const specBody = buildSpecBody({
-    hypothesisId: h.id,
-    goalId: ctx.goalId ?? null,
-    universe: h.universe,
-    timeframe: h.timeframe,
-    horizonBars: h.horizon,
+    hypothesisId: h.id, goalId: ctx.goalId ?? null,
+    universe: h.universe, timeframe: h.timeframe, horizonBars: h.horizon,
     features,
-    transformations: h.transformations,
-    regimeConstraints: h.regimeConstraints,
-    expectedDirection: h.expectedDirection,
-    costMode: h.costAssumption,
-    costConfig,
-    barrierConfig,
-    trainPeriod: periods.train,
-    validationPeriod: periods.validation,
-    testPeriod: periods.test,
-    seed, // placeholder
+    transformations: h.transformations, regimeConstraints: h.regimeConstraints,
+    expectedDirection: h.expectedDirection, costMode: h.costAssumption,
+    costConfig, barrierConfig,
+    trainPeriod: periods.train, validationPeriod: periods.validation, testPeriod: periods.test,
     provenance: ctx.provenance ?? null,
   });
 
-  // Compute specId from specBody (excl compiledAt)
+  // Compute specId from specBody (excl seed + compiledAt), then derive seed from specId
   const specId = await hashSpecBody(specBody);
-  const finalSeed = deriveSeedFromSpecId(specId);
+  const seed = deriveSeedFromSpecId(specId);
 
-  // Final spec with specId, finalSeed, and compiledAt
+  // Final spec with specId, seed, and compiledAt
   const compiledAt = new Date().toISOString();
   const spec: ExperimentSpec = {
     ...specBody,
     specId,
-    seed: finalSeed,
+    seed,
     compiledAt,
     compilerVersion: 1,
   };
@@ -163,7 +158,7 @@ async function buildSpec(
   return { ok: true, value: spec };
 }
 
-/** Build the spec body (without specId, compiledAt for hashing). */
+/** Build the spec body (without specId, seed, compiledAt for hashing). */
 function buildSpecBody(params: {
   hypothesisId: string;
   goalId: string | null;
@@ -177,29 +172,19 @@ function buildSpecBody(params: {
   costMode: StressMode;
   costConfig: StressConfig;
   barrierConfig: BarrierConfig;
-  trainPeriod: { readonly startTimestamp: number; readonly endTimestamp: number; readonly barCount: number };
-  validationPeriod: { readonly startTimestamp: number; readonly endTimestamp: number; readonly barCount: number };
-  testPeriod: { readonly startTimestamp: number; readonly endTimestamp: number; readonly barCount: number };
-  seed: number;
+  trainPeriod: ExperimentPeriod;
+  validationPeriod: ExperimentPeriod;
+  testPeriod: ExperimentPeriod;
   provenance: AlphaProvenance | null;
-}): Omit<ExperimentSpec, 'specId' | 'compiledAt' | 'compilerVersion'> {
+}): Omit<ExperimentSpec, 'specId' | 'seed' | 'compiledAt' | 'compilerVersion'> {
   return {
-    hypothesisId: params.hypothesisId,
-    goalId: params.goalId,
-    universe: params.universe,
-    timeframe: params.timeframe,
-    horizonBars: params.horizonBars,
+    hypothesisId: params.hypothesisId, goalId: params.goalId,
+    universe: params.universe, timeframe: params.timeframe, horizonBars: params.horizonBars,
     features: params.features,
-    transformations: params.transformations,
-    regimeConstraints: params.regimeConstraints,
-    expectedDirection: params.expectedDirection,
-    costMode: params.costMode,
-    costConfig: params.costConfig,
-    barrierConfig: params.barrierConfig,
-    trainPeriod: params.trainPeriod,
-    validationPeriod: params.validationPeriod,
-    testPeriod: params.testPeriod,
-    seed: params.seed,
+    transformations: params.transformations, regimeConstraints: params.regimeConstraints,
+    expectedDirection: params.expectedDirection, costMode: params.costMode,
+    costConfig: params.costConfig, barrierConfig: params.barrierConfig,
+    trainPeriod: params.trainPeriod, validationPeriod: params.validationPeriod, testPeriod: params.testPeriod,
     provenance: params.provenance,
   };
 }
@@ -212,116 +197,4 @@ async function hashSpecBody(body: object): Promise<string> {
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
-}
-
-/** Map Zod validation errors to CompileFailureCode. */
-function mapZodErrors(issues: readonly z.ZodIssue[]): CompileFailureCode[] {
-  return issues.map((issue) => {
-    const path = issue.path.join('.');
-    if (path === 'expectedMechanism') {
-      if (issue.code === 'too_small') return 'MECHANISM_REJECTED';
-      return 'MECHANISM_REJECTED';
-    }
-    if (path === 'universe.symbols' || path === 'universe') return 'EMPTY_UNIVERSE';
-    if (path === 'timeframe') return 'EMPTY_TIMEFRAME';
-    if (path === 'costAssumption') return 'INVALID_COST_MODE';
-    if (path.startsWith('features') && issue.code === 'too_small') return 'INVALID_LOOKBACK';
-    return 'INTERNAL_ERROR';
-  }) as CompileFailureCode[];
-}
-
-/** Keyword → FeatureSource mapping for name-based inference. */
-const SOURCE_KEYWORDS: ReadonlyArray<{ readonly source: FeatureDeclaration['source']; readonly keywords: readonly string[] }> = [
-  { source: 'derivatives', keywords: ['funding', 'oi', 'open_interest', 'liquidation', 'basis'] },
-  { source: 'orderbook', keywords: ['spread', 'depth', 'imbalance', 'orderbook'] },
-  { source: 'trades', keywords: ['trade', 'volume_delta', 'tape'] },
-  { source: 'synthetic', keywords: ['synthetic', 'computed', 'derived'] },
-];
-
-/** Infer FeatureSource from feature name heuristic (can be extended). */
-function inferFeatureSource(name: string): FeatureDeclaration['source'] {
-  const n = name.toLowerCase();
-  for (const entry of SOURCE_KEYWORDS) {
-    if (entry.keywords.some((kw) => n.includes(kw))) {
-      return entry.source;
-    }
-  }
-  return 'ohlcv';
-}
-
-/** Validate features: duplicates, lookbacks, supported allowlist, window coverage. */
-function validateFeatures(
-  features: readonly FeatureDeclaration[],
-  supportedFeatures: readonly string[] | undefined,
-  dataWindow: DataWindow,
-): { ok: true } | { ok: false; reasons: readonly CompileFailureCode[] } {
-  const reasons: CompileFailureCode[] = [];
-
-  // No duplicate names
-  const names = new Set<string>();
-  for (const f of features) {
-    if (names.has(f.name)) {
-      reasons.push('DUPLICATE_FEATURE');
-    }
-    names.add(f.name);
-  }
-
-  // Lookbacks finite positive
-  for (const f of features) {
-    if (f.lookback <= 0 || !Number.isFinite(f.lookback)) {
-      reasons.push('INVALID_LOOKBACK');
-    }
-    if (f.lookback > dataWindow.barCount) {
-      reasons.push('LOOKBACK_EXCEEDS_WINDOW');
-    }
-  }
-
-  // Supported features allowlist (if provided)
-  if (supportedFeatures && supportedFeatures.length > 0) {
-    const allowed = new Set(supportedFeatures);
-    for (const f of features) {
-      if (!allowed.has(f.name)) {
-        reasons.push('UNSUPPORTED_FEATURE');
-      }
-    }
-  }
-
-  if (reasons.length > 0) return { ok: false, reasons };
-  return { ok: true };
-}
-
-/** Validate universe, timeframe, and data window coverage. */
-function validateDataAndUniverse(
-  h: ResearchHypothesis,
-  features: readonly FeatureDeclaration[],
-  dataWindow: DataWindow,
-): { ok: true } | { ok: false; reasons: readonly CompileFailureCode[] } {
-  const reasons: CompileFailureCode[] = [];
-
-  if (!h.universe || h.universe.symbols.length === 0) {
-    reasons.push('EMPTY_UNIVERSE');
-  }
-
-  if (!h.timeframe || h.timeframe.trim() === '') {
-    reasons.push('EMPTY_TIMEFRAME');
-  }
-
-  const maxLookback = Math.max(...features.map((f) => f.lookback), 0);
-  const requiredBars = maxLookback + h.horizon + MIN_TRAIN_BARS;
-  if (dataWindow.barCount < requiredBars) {
-    reasons.push('INSUFFICIENT_DATA_WINDOW');
-  }
-
-  if (reasons.length > 0) return { ok: false, reasons };
-  return { ok: true };
-}
-
-/** Validate cost assumption resolves to a valid StressConfig. */
-function validateCost(costAssumption: StressMode): { ok: true } | { ok: false; reasons: readonly CompileFailureCode[] } {
-  try {
-    resolveStressConfig(costAssumption);
-    return { ok: true };
-  } catch {
-    return { ok: false, reasons: ['INVALID_COST_MODE'] };
-  }
 }
