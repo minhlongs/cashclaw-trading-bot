@@ -120,6 +120,14 @@ Four Binance signal sources (funding rate, OI, liquidation, premium index) with 
 
 **Infrastructure hardening:** Binance endTime-only pagination (no duplicate-window overlap), path-traversal guard in OHLCV cache, `exitReason`/`entryRegime` on `BacktestTrade`.
 
+## Pairs / Relative-Value Alpha Family — Falsified (2026-08-26)
+
+Lane B (Steps 7–11) shipped the survival evaluation layer and ran the real-data verdict: **KILLED**.
+
+- **Shipped** (`b9578be`, `664f097`, `1519835`, `056aaf3`): survival adapters (`toEvaluationReport`/`toWalkForwardShim`/`assembleSurvivalInput`), benchmark wiring over the identical OOS span, component ablation + 36-run parameter robustness grid feeding `pboProxy`, and the manual-only verdict script (`scripts/rv-pairs-verdict.ts`). 35 new tests.
+- **Verdict**: primary arm M4 completes **0 trades** out-of-sample on Binance daily klines (8 symbols, 1000 aligned bars, 7 rolling windows) — the conjunctive tradability gate never certifies a tradable pair-window, so bootstrap/permutation cannot run. Comparative M1 (gate off) trades 722 times at expectancy −0.0204 net of both-leg costs. Full evidence: `docs/relative-value-verdict.md` + `plans/reports/rv-pairs-{verdict,m4-survival}.json`.
+- **Status**: family does not advance to paper-trading candidacy. The evaluation infrastructure (adapters, benchmarks, ablation, robustness, gates) remains reusable for future families.
+
 ## Known Backlog (v2 and beyond)
 
 - **BotManager hydration architecture** — replace in-memory registry + per-request hydration with a cold-start-resilient store (Durable Objects or direct-D1 reads everywhere).

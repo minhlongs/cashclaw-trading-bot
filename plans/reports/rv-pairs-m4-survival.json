@@ -1,0 +1,174 @@
+{
+  "survival": {
+    "verdict": "falsified",
+    "reasons": [
+      "survival_input: assembleSurvivalInput: at least 2 completed trades required for bootstrap, got 0"
+    ]
+  },
+  "gateChecks": [
+    {
+      "name": "min_trades",
+      "passed": false,
+      "actual": 0,
+      "threshold": 20,
+      "detail": "0 trades vs. minimum 20"
+    },
+    {
+      "name": "min_expectancy",
+      "passed": true,
+      "actual": 0,
+      "threshold": 0,
+      "detail": "Expectancy 0.0000 vs. minimum 0"
+    },
+    {
+      "name": "min_profit_factor",
+      "passed": false,
+      "actual": 0,
+      "threshold": 1.2,
+      "detail": "Profit factor 0.00 vs. minimum 1.2"
+    },
+    {
+      "name": "max_drawdown",
+      "passed": true,
+      "actual": 0,
+      "threshold": 0.3,
+      "detail": "Max drawdown 0.0000 vs. maximum 0.3"
+    },
+    {
+      "name": "min_sharpe",
+      "passed": false,
+      "actual": null,
+      "threshold": 0.5,
+      "detail": "Sharpe is null (insufficient data) — fails"
+    },
+    {
+      "name": "min_regime_coverage",
+      "passed": false,
+      "actual": 0,
+      "threshold": 0.5,
+      "detail": "0/1 regimes traded vs. minimum 50%"
+    },
+    {
+      "name": "min_net_pnl_after_fees",
+      "passed": true,
+      "actual": 0,
+      "threshold": 0,
+      "detail": "Net PnL after NORMAL-stress fees 0.00 vs. minimum 0"
+    },
+    {
+      "name": "min_net_pnl_adverse",
+      "passed": true,
+      "actual": 0,
+      "threshold": 0,
+      "detail": "Net PnL under ADVERSE slippage 0.00 vs. minimum 0"
+    }
+  ],
+  "benchmarks": [
+    {
+      "strategy": "buy_hold",
+      "symbols": 8,
+      "expectancy": 3957.6464728269884,
+      "profitFactor": 0,
+      "sharpe": null,
+      "maxDrawdown": 0,
+      "netPnl": 3957.6464728269884,
+      "numTrades": 8
+    },
+    {
+      "strategy": "random_entry",
+      "symbols": 8,
+      "expectancy": 31.282142640004707,
+      "profitFactor": 1.553757071363448,
+      "sharpe": 23.794733228502448,
+      "maxDrawdown": 2792.393203743036,
+      "netPnl": 563.0785675200848,
+      "numTrades": 144
+    },
+    {
+      "strategy": "simple_momentum",
+      "symbols": 8,
+      "expectancy": -396.6557042478854,
+      "profitFactor": 0.6674643911616893,
+      "sharpe": -697.7876355361283,
+      "maxDrawdown": 3219.528074570305,
+      "netPnl": -2238.6546192863334,
+      "numTrades": 24
+    },
+    {
+      "strategy": "simple_mean_reversion",
+      "symbols": 8,
+      "expectancy": 311.691747262863,
+      "profitFactor": 2.7752096418651604,
+      "sharpe": 25.08024929179593,
+      "maxDrawdown": 886.7659653605576,
+      "netPnl": 4507.607110011977,
+      "numTrades": 69
+    }
+  ],
+  "ablation": {
+    "fullExpectancy": 0,
+    "fullPeriods": 297,
+    "variants": [
+      {
+        "removedComponent": "regime_entry_filter",
+        "expectancy": 0,
+        "deltaExpectancy": 0,
+        "materialImpact": false,
+        "periods": 297
+      },
+      {
+        "removedComponent": "stability_ranked_selection",
+        "expectancy": 0,
+        "deltaExpectancy": 0,
+        "materialImpact": false,
+        "periods": 297
+      },
+      {
+        "removedComponent": "dynamic_beta",
+        "expectancy": 0,
+        "deltaExpectancy": 0,
+        "materialImpact": false,
+        "periods": 297
+      },
+      {
+        "removedComponent": "stop_z",
+        "expectancy": 0,
+        "deltaExpectancy": 0,
+        "materialImpact": false,
+        "periods": 297
+      },
+      {
+        "removedComponent": "in_sim_gate",
+        "expectancy": 0.011342651245048654,
+        "deltaExpectancy": -0.011342651245048654,
+        "materialImpact": false,
+        "periods": 297
+      }
+    ],
+    "flaggedUnnecessary": [
+      "regime_entry_filter",
+      "stability_ranked_selection",
+      "dynamic_beta",
+      "stop_z",
+      "in_sim_gate"
+    ]
+  },
+  "robustnessSensitivity": {
+    "maxDelta": 0,
+    "normalizedSpread": 0,
+    "sensitive": false
+  },
+  "robustnessGridSize": 36,
+  "pboMatrixShape": {
+    "configs": 36,
+    "windows": 7
+  },
+  "report": {
+    "expectancy": 0,
+    "numTrades": 0,
+    "profitFactor": 0,
+    "sharpe": null,
+    "maxDrawdownFraction": 0,
+    "totalReturn": 0
+  }
+}

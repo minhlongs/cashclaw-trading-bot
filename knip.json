@@ -20,12 +20,14 @@
     "husky"
   ],
   "ignoreFiles": [
-    "src/lib/db/schema-backtest.ts",
     "src/forest/alpha/attribution/index.ts",
+    "src/forest/alpha/composition-eval/index.ts",
+    "src/forest/alpha/cross-sectional-eval/index.ts",
     "src/forest/alpha/dashboard/index.ts",
     "src/forest/alpha/evaluation/index.ts",
     "src/forest/alpha/execution/index.ts",
     "src/forest/alpha/experiments/index.ts",
+    "src/forest/alpha/multiple-testing/index.ts",
     "src/forest/alpha/ops/index.ts",
     "src/forest/alpha/performance/batch.ts",
     "src/forest/alpha/performance/cache.ts",
@@ -34,15 +36,13 @@
     "src/forest/alpha/persistence/index.ts",
     "src/forest/alpha/persistence/json-adapter.ts",
     "src/forest/alpha/persistence/types.ts",
-    "src/forest/alpha/multiple-testing/index.ts",
     "src/forest/alpha/pipeline/index.ts",
     "src/forest/alpha/readiness/index.ts",
+    "src/forest/alpha/relative-value-eval/index.ts",
     "src/forest/alpha/reports/formatter.ts",
     "src/forest/alpha/reports/index.ts",
-    "src/tree/regime/alpha-router.ts",
-    "src/forest/alpha/cross-sectional-eval/index.ts",
-    "src/forest/alpha/relative-value-eval/index.ts",
-    "src/forest/alpha/composition-eval/index.ts"
+    "src/lib/db/schema-backtest.ts",
+    "src/tree/regime/alpha-router.ts"
   ],
   "ignoreExportsUsedInFile": true,
   "exclude": [
@@ -89,6 +89,9 @@
       "exports"
     ],
     "src/forest/backtest/ohlcv-cache.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/relative-value-eval/walk-forward/index.ts": [
       "exports"
     ]
   }

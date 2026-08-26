@@ -11,7 +11,27 @@ import type {
   CostAttributionBreakdown,
   ExposureSeries,
 } from '@/forest/alpha/cross-sectional-eval/types';
+import type { RegimeLabel } from '@/tree/regime/types';
 import type { AssetReturnSeries } from '@/tree/alpha/cross-sectional/types';
+
+/** Per-regime OOS sub-report (injected labels; cross-sectional precedent). */
+export interface RVRegimeSubReport {
+  readonly netReturn: number;
+  readonly annualizedSharpe: number | null;
+  readonly turnoverTotal: number;
+}
+
+/** Trade-level performance metrics over completed round trips. */
+export interface RoundTripMetrics {
+  /** Mean net return per completed trade (0 when no completed trades). */
+  readonly expectancyPerTrade: number;
+  /** Gross profit / gross loss over completed trades (0 when undefined). */
+  readonly profitFactor: number;
+  /** Winning trades / completed trades (0 when no completed trades). */
+  readonly winRate: number;
+  /** Completed round-trip count backing the metrics above. */
+  readonly completedTrades: number;
+}
 
 /** Flat, JSON-safe summary of simulator validation gate outcomes. */
 export interface RelativeValueValidationSummary {
@@ -41,6 +61,28 @@ export interface RelativeValueReport {
   readonly validationSummary: RelativeValueValidationSummary;
   readonly periodCount: number;
   readonly periodsPerYear: number;
+  /** Trade-level metrics over completed round trips (additive, Step 6+). */
+  readonly roundTripMetrics: RoundTripMetrics;
+  /**
+   * Funding carry share of returns. Constantly 0 — Binance derivative
+   * endpoints return HTTP 403 from this environment (roadmap Known Backlog);
+   * spot assumption documented in docs/PAIRS_RESEARCH_INTEGRATION.md §3.
+   */
+  readonly fundingPct: number;
+  /** Why fundingPct carries no data. */
+  readonly fundingNote: string;
+  /** Stability scores per pair label, when supplied by the caller. */
+  readonly pairStability?: Readonly<Record<string, number>>;
+  /** Per-regime breakdown via injected causal labels (optional, additive). */
+  readonly regimeBreakdown?: Readonly<Record<RegimeLabel, RVRegimeSubReport>>;
+}
+
+/** Extended report input beyond the sim + base config. */
+export interface RelativeValueReportOptions {
+  /** Stability scores keyed by pair label (e.g. 'AAA/BBB'). */
+  readonly pairStability?: Readonly<Record<string, number>>;
+  /** Timestamp-aligned causal regime labels, one per sim period. */
+  readonly regimeLabels?: readonly RegimeLabel[];
 }
 
 /** Full evaluation artifact: raw sim, report, and raw validation trail. */
