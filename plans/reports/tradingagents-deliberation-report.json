@@ -1,0 +1,777 @@
+{
+  "honestyLabel": "This demo uses DeterministicFixtureProvider (D11 TEST seam) — not real LLM deliberation quality.",
+  "summary": "DeliberationReport: 7 stages — completed 7, failed 0, skipped 0, rejected 0",
+  "report": {
+    "researchGoalId": "goal-demo",
+    "proposalId": "prop-demo",
+    "decisionProposal": {
+      "proposalId": "prop-demo",
+      "researchGoalId": "goal-demo",
+      "thesis": "{\"thesis\":\"Momentum persists in trending regime\",\"evidence\":[\"Trend strength above 20-day MA\",\"Volume confirmation\"],\"mechanism\":\"Trend-following momentum drives continued returns due to persistent investor flows\",\"expectedDirection\":\"long\",\"horizon\":20,\"features\":[\"momentum_20d\",\"volume_ratio\"]}",
+      "counterThesis": "{\"thesis\":\"Mean reversion dominates after overextension\",\"evidence\":[\"RSI above 70\",\"Divergence in volume\"],\"mechanism\":\"Overextension in momentum leads to reversal as positioning unwinds\",\"expectedDirection\":\"short\",\"horizon\":20,\"features\":[\"rsi_14\",\"volume_divergence\"]}",
+      "evidence": [
+        {
+          "claim": "Bull thesis",
+          "source": "bull-researcher"
+        },
+        {
+          "claim": "Bear thesis",
+          "source": "bear-researcher"
+        },
+        {
+          "claim": "Research synthesis",
+          "source": "research-manager"
+        }
+      ],
+      "assumptions": [
+        "Market regime persistence",
+        "Liquidity availability",
+        "Correlation stability"
+      ],
+      "invalidationConditions": [
+        "Regime shift",
+        "Liquidity crisis",
+        "Correlation breakdown"
+      ],
+      "catalyst": [
+        "Earnings",
+        "Macro event",
+        "Technical breakout"
+      ],
+      "horizon": 20,
+      "confidence": 0.65,
+      "proposedDirection": "long",
+      "proposedPosition": 0.1,
+      "proposedEntry": "market",
+      "proposedExit": "target or stop",
+      "proposedStop": "2% below entry",
+      "riskFactors": [
+        "{\"expectedRegime\":\"TREND_UP\",\"keyRisks\":[\"Regime shift\",\"Liquidity gap\"],\"failureConditions\":[\"Drawdown exceeds 5%\",\"Correlation spike\"],\"maxAcceptableExposure\":0.6,\"liquidityConcern\":\"moderate\",\"volatilityConcern\":\"high\",\"correlationConcern\":\"low\"}",
+        "{\"expectedRegime\":\"TREND_UP\",\"keyRisks\":[\"Regime shift\",\"Liquidity gap\"],\"failureConditions\":[\"Drawdown exceeds 5%\",\"Correlation spike\"],\"maxAcceptableExposure\":0.6,\"liquidityConcern\":\"moderate\",\"volatilityConcern\":\"high\",\"correlationConcern\":\"low\"}",
+        "{\"expectedRegime\":\"TREND_UP\",\"keyRisks\":[\"Regime shift\",\"Liquidity gap\"],\"failureConditions\":[\"Drawdown exceeds 5%\",\"Correlation spike\"],\"maxAcceptableExposure\":0.6,\"liquidityConcern\":\"moderate\",\"volatilityConcern\":\"high\",\"correlationConcern\":\"low\"}"
+      ],
+      "dataProvenance": [
+        {
+          "dataset": "ohlcv",
+          "provider": "binance",
+          "timestamp": "2026-08-26T00:00:00.000Z"
+        },
+        {
+          "dataset": "regime",
+          "provider": "internal",
+          "timestamp": "2026-08-26T00:00:00.000Z"
+        }
+      ],
+      "agentProvenance": {
+        "agentRole": "analyst",
+        "agentId": "debate-orchestrator",
+        "providerId": "Anthropic",
+        "modelId": "fixture-fast"
+      },
+      "modelProvenance": {
+        "providerId": "Anthropic",
+        "modelId": "fixture-fast",
+        "tier": "FAST",
+        "promptTokens": 100,
+        "completionTokens": 50,
+        "latencyMs": 10
+      },
+      "createdAt": "2026-08-26T00:00:00.000Z"
+    },
+    "debateState": {
+      "researchGoalId": "goal-demo",
+      "proposalId": "prop-demo",
+      "rounds": [
+        {
+          "agentRole": "analyst",
+          "agentId": "analyst-0",
+          "content": "{\"claim\":\"Fundamental metrics support the thesis\",\"evidence\":[\"Revenue growth 15%\",\"Margin expansion\"]}",
+          "round": 0
+        },
+        {
+          "agentRole": "analyst",
+          "agentId": "analyst-1",
+          "content": "{\"claim\":\"Fundamental metrics support the thesis\",\"evidence\":[\"Revenue growth 15%\",\"Margin expansion\"]}",
+          "round": 0
+        },
+        {
+          "agentRole": "analyst",
+          "agentId": "analyst-2",
+          "content": "{\"claim\":\"Fundamental metrics support the thesis\",\"evidence\":[\"Revenue growth 15%\",\"Margin expansion\"]}",
+          "round": 0
+        },
+        {
+          "agentRole": "analyst",
+          "agentId": "analyst-3",
+          "content": "{\"claim\":\"Fundamental metrics support the thesis\",\"evidence\":[\"Revenue growth 15%\",\"Margin expansion\"]}",
+          "round": 0
+        },
+        {
+          "agentRole": "bull-researcher",
+          "agentId": "bull-0",
+          "content": "{\"thesis\":\"Momentum persists in trending regime\",\"evidence\":[\"Trend strength above 20-day MA\",\"Volume confirmation\"],\"mechanism\":\"Trend-following momentum drives continued returns due to persistent investor flows\",\"expectedDirection\":\"long\",\"horizon\":20,\"features\":[\"momentum_20d\",\"volume_ratio\"]}",
+          "round": 1
+        },
+        {
+          "agentRole": "bear-researcher",
+          "agentId": "bear-0",
+          "content": "{\"thesis\":\"Mean reversion dominates after overextension\",\"evidence\":[\"RSI above 70\",\"Divergence in volume\"],\"mechanism\":\"Overextension in momentum leads to reversal as positioning unwinds\",\"expectedDirection\":\"short\",\"horizon\":20,\"features\":[\"rsi_14\",\"volume_divergence\"]}",
+          "round": 1
+        },
+        {
+          "agentRole": "research-manager",
+          "agentId": "synthesis",
+          "content": "{\"thesis\":\"Momentum with mean-reversion guard\",\"strongestEvidence\":\"Trend strength above 20-day MA\",\"strongestCounterEvidence\":\"RSI above 70\",\"unresolvedUncertainty\":\"Regime transition timing\",\"falsifiableAssumptions\":[{\"statement\":\"Trend persists 20 bars\",\"howToFalsify\":\"Break below 20-day MA\"}],\"proposedExperiments\":[{\"hypothesisRef\":\"momentum-20d\",\"method\":\"Walk-forward OOS\"}]}",
+          "round": 2
+        },
+        {
+          "agentRole": "risk-advisor",
+          "agentId": "risk-aggressive",
+          "content": "{\"expectedRegime\":\"TREND_UP\",\"keyRisks\":[\"Regime shift\",\"Liquidity gap\"],\"failureConditions\":[\"Drawdown exceeds 5%\",\"Correlation spike\"],\"maxAcceptableExposure\":0.6,\"liquidityConcern\":\"moderate\",\"volatilityConcern\":\"high\",\"correlationConcern\":\"low\"}",
+          "round": 3
+        },
+        {
+          "agentRole": "risk-advisor",
+          "agentId": "risk-neutral",
+          "content": "{\"expectedRegime\":\"TREND_UP\",\"keyRisks\":[\"Regime shift\",\"Liquidity gap\"],\"failureConditions\":[\"Drawdown exceeds 5%\",\"Correlation spike\"],\"maxAcceptableExposure\":0.6,\"liquidityConcern\":\"moderate\",\"volatilityConcern\":\"high\",\"correlationConcern\":\"low\"}",
+          "round": 3
+        },
+        {
+          "agentRole": "risk-advisor",
+          "agentId": "risk-conservative",
+          "content": "{\"expectedRegime\":\"TREND_UP\",\"keyRisks\":[\"Regime shift\",\"Liquidity gap\"],\"failureConditions\":[\"Drawdown exceeds 5%\",\"Correlation spike\"],\"maxAcceptableExposure\":0.6,\"liquidityConcern\":\"moderate\",\"volatilityConcern\":\"high\",\"correlationConcern\":\"low\"}",
+          "round": 3
+        },
+        {
+          "agentRole": "portfolio-advisor",
+          "agentId": "portfolio",
+          "content": "{\"assets\":[\"alpha-momentum\"],\"weights\":[0.3],\"hedge\":\"volatility overlay\",\"rebalance\":\"weekly\",\"exposure\":0.5}",
+          "round": 4
+        }
+      ],
+      "status": "complete"
+    },
+    "hypotheses": [
+      {
+        "id": "delib-bull-21e8f0a3",
+        "title": "Bull case: Momentum persists in trending regime",
+        "description": "Momentum persists in trending regime",
+        "rationale": "Debate bull side evidence: Trend strength above 20-day MA; Volume confirmation",
+        "source": "deliberation",
+        "parentHypothesisId": null,
+        "universe": {
+          "id": "universe-demo",
+          "symbols": [
+            "BTC-USD"
+          ],
+          "weighting": "equal",
+          "rebalanceRule": "daily"
+        },
+        "timeframe": "1d",
+        "horizon": 20,
+        "features": [
+          {
+            "name": "momentum_20d",
+            "lookback": 20,
+            "params": {}
+          },
+          {
+            "name": "volume_ratio",
+            "lookback": 20,
+            "params": {}
+          }
+        ],
+        "transformations": [],
+        "regimeConstraints": [],
+        "expectedMechanism": "Trend-following momentum drives continued returns due to persistent investor flows",
+        "expectedDirection": "long",
+        "expectedHoldingPeriod": 20,
+        "costAssumption": "normal",
+        "generatedBy": "deliberation-adapter@1",
+        "createdAt": "2026-08-26T00:00:00.000Z",
+        "experimentVersion": 1
+      },
+      {
+        "id": "delib-bear-bae51363",
+        "title": "Bear case: Mean reversion dominates after overextension",
+        "description": "Mean reversion dominates after overextension",
+        "rationale": "Debate bear side evidence: RSI above 70; Divergence in volume",
+        "source": "deliberation",
+        "parentHypothesisId": null,
+        "universe": {
+          "id": "universe-demo",
+          "symbols": [
+            "BTC-USD"
+          ],
+          "weighting": "equal",
+          "rebalanceRule": "daily"
+        },
+        "timeframe": "1d",
+        "horizon": 20,
+        "features": [
+          {
+            "name": "rsi_14",
+            "lookback": 20,
+            "params": {}
+          },
+          {
+            "name": "volume_divergence",
+            "lookback": 20,
+            "params": {}
+          }
+        ],
+        "transformations": [],
+        "regimeConstraints": [],
+        "expectedMechanism": "Overextension in momentum leads to reversal as positioning unwinds",
+        "expectedDirection": "short",
+        "expectedHoldingPeriod": 20,
+        "costAssumption": "normal",
+        "generatedBy": "deliberation-adapter@1",
+        "createdAt": "2026-08-26T00:00:00.000Z",
+        "experimentVersion": 1
+      }
+    ],
+    "experimentSpecs": [
+      {
+        "hypothesisId": "delib-bull-21e8f0a3",
+        "goalId": "goal-demo",
+        "universe": {
+          "id": "universe-demo",
+          "symbols": [
+            "BTC-USD"
+          ],
+          "weighting": "equal",
+          "rebalanceRule": "daily"
+        },
+        "timeframe": "1d",
+        "horizonBars": 20,
+        "features": [
+          {
+            "name": "momentum_20d",
+            "timeframe": "1d",
+            "source": "ohlcv",
+            "lookback": 20,
+            "availability": "always",
+            "causal": true
+          },
+          {
+            "name": "volume_ratio",
+            "timeframe": "1d",
+            "source": "ohlcv",
+            "lookback": 20,
+            "availability": "always",
+            "causal": true
+          }
+        ],
+        "transformations": [],
+        "regimeConstraints": [],
+        "expectedDirection": "long",
+        "costMode": "normal",
+        "costConfig": {
+          "feePct": 0.0008,
+          "slipPct": 0.0003,
+          "marketImpactPct": 0.0005
+        },
+        "barrierConfig": {
+          "takeProfitPct": 0.04,
+          "stopLossPct": 0.02,
+          "maxHoldingMs": 5184000000
+        },
+        "trainPeriod": {
+          "startTimestamp": 1767225600000,
+          "endTimestamp": 1781559360000,
+          "barCount": 700
+        },
+        "validationPeriod": {
+          "startTimestamp": 1781559360000,
+          "endTimestamp": 1784630880000,
+          "barCount": 150
+        },
+        "testPeriod": {
+          "startTimestamp": 1784630880000,
+          "endTimestamp": 1787702400000,
+          "barCount": 150
+        },
+        "provenance": null,
+        "specId": "40431a8d29b1e4af96e930489bd19f6283a32ab425799961f976271ffb5a5bf3",
+        "seed": 1078139533,
+        "compiledAt": "2026-08-26T00:00:00.000Z",
+        "compilerVersion": 1
+      },
+      {
+        "hypothesisId": "delib-bear-bae51363",
+        "goalId": "goal-demo",
+        "universe": {
+          "id": "universe-demo",
+          "symbols": [
+            "BTC-USD"
+          ],
+          "weighting": "equal",
+          "rebalanceRule": "daily"
+        },
+        "timeframe": "1d",
+        "horizonBars": 20,
+        "features": [
+          {
+            "name": "rsi_14",
+            "timeframe": "1d",
+            "source": "ohlcv",
+            "lookback": 20,
+            "availability": "always",
+            "causal": true
+          },
+          {
+            "name": "volume_divergence",
+            "timeframe": "1d",
+            "source": "ohlcv",
+            "lookback": 20,
+            "availability": "always",
+            "causal": true
+          }
+        ],
+        "transformations": [],
+        "regimeConstraints": [],
+        "expectedDirection": "short",
+        "costMode": "normal",
+        "costConfig": {
+          "feePct": 0.0008,
+          "slipPct": 0.0003,
+          "marketImpactPct": 0.0005
+        },
+        "barrierConfig": {
+          "takeProfitPct": 0.04,
+          "stopLossPct": 0.02,
+          "maxHoldingMs": 5184000000
+        },
+        "trainPeriod": {
+          "startTimestamp": 1767225600000,
+          "endTimestamp": 1781559360000,
+          "barCount": 700
+        },
+        "validationPeriod": {
+          "startTimestamp": 1781559360000,
+          "endTimestamp": 1784630880000,
+          "barCount": 150
+        },
+        "testPeriod": {
+          "startTimestamp": 1784630880000,
+          "endTimestamp": 1787702400000,
+          "barCount": 150
+        },
+        "provenance": null,
+        "specId": "a2374d57bf85f42cf3f374925325821a8b1732c6bc7490ad4d75d540d84866ca",
+        "seed": 2721533271,
+        "compiledAt": "2026-08-26T00:00:00.000Z",
+        "compilerVersion": 1
+      }
+    ],
+    "lineage": {
+      "parentOf": {},
+      "childrenOf": {}
+    },
+    "riskAdvisory": {
+      "goalId": "goal-demo",
+      "proposalId": "prop-demo",
+      "advisories": [
+        {
+          "view": "aggressive",
+          "keyConcerns": [
+            "Regime: TREND_UP",
+            "Max exposure: 60.0%",
+            "Liquidity: moderate",
+            "Volatility: high",
+            "Correlation: low"
+          ],
+          "recommendedMaxExposure": 0.6,
+          "hedgeSuggestions": [
+            "Consider volatility overlay or straddle hedge"
+          ],
+          "monitoringSignals": [
+            "Drawdown exceeds 5%",
+            "Correlation spike",
+            "Regime shift",
+            "Liquidity gap"
+          ]
+        },
+        {
+          "view": "neutral",
+          "keyConcerns": [
+            "Regime: TREND_UP",
+            "Max exposure: 60.0%",
+            "Liquidity: moderate",
+            "Volatility: high",
+            "Correlation: low"
+          ],
+          "recommendedMaxExposure": 0.6,
+          "hedgeSuggestions": [
+            "Consider volatility overlay or straddle hedge"
+          ],
+          "monitoringSignals": [
+            "Drawdown exceeds 5%",
+            "Correlation spike",
+            "Regime shift",
+            "Liquidity gap"
+          ]
+        },
+        {
+          "view": "conservative",
+          "keyConcerns": [
+            "Regime: TREND_UP",
+            "Max exposure: 60.0%",
+            "Liquidity: moderate",
+            "Volatility: high",
+            "Correlation: low"
+          ],
+          "recommendedMaxExposure": 0.6,
+          "hedgeSuggestions": [
+            "Consider volatility overlay or straddle hedge"
+          ],
+          "monitoringSignals": [
+            "Drawdown exceeds 5%",
+            "Correlation spike",
+            "Regime shift",
+            "Liquidity gap"
+          ]
+        }
+      ],
+      "summary": "Risk views from 3 advisors"
+    },
+    "portfolioResult": {
+      "portfolioResult": {
+        "positions": [
+          {
+            "alphaId": "alpha-momentum",
+            "targetWeight": 0.3,
+            "turnover": 0.3
+          }
+        ],
+        "grossExposure": 0.3,
+        "netExposure": 0.3,
+        "totalTurnover": 0.3,
+        "riskAdjustments": [
+          "vol target: scaled by 2.0833 (port vol 0.0720 -> 0.1500)",
+          "position cap: clipped 1 position(s), largest alpha-momentum 0.7500 -> 0.3000"
+        ],
+        "drawdownDeRisked": false
+      },
+      "rejected": false,
+      "rejectionReasons": []
+    },
+    "modelProvenance": [
+      {
+        "agentRole": "analyst",
+        "task": "data-extraction",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-fast",
+          "tier": "FAST",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "analyst",
+        "task": "summarization",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-fast",
+          "tier": "FAST",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "analyst",
+        "task": "data-extraction",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-fast",
+          "tier": "FAST",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "analyst",
+        "task": "summarization",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-fast",
+          "tier": "FAST",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "bull-researcher",
+        "task": "debate",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-reasoning",
+          "tier": "REASONING",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "bear-researcher",
+        "task": "debate",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-reasoning",
+          "tier": "REASONING",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "research-manager",
+        "task": "research-synthesis",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-reasoning",
+          "tier": "REASONING",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "risk-advisor",
+        "task": "repetitive-research",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-local",
+          "tier": "LOCAL",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "risk-advisor",
+        "task": "repetitive-research",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-local",
+          "tier": "LOCAL",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "risk-advisor",
+        "task": "repetitive-research",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-local",
+          "tier": "LOCAL",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      },
+      {
+        "agentRole": "portfolio-advisor",
+        "task": "repetitive-research",
+        "provenance": {
+          "providerId": "Anthropic",
+          "modelId": "fixture-local",
+          "tier": "LOCAL",
+          "promptTokens": 100,
+          "completionTokens": 50,
+          "latencyMs": 10
+        }
+      }
+    ],
+    "toolProvenance": [],
+    "stageResults": [
+      {
+        "stage": "analyst-output",
+        "outcome": "completed",
+        "reasons": []
+      },
+      {
+        "stage": "debate-output",
+        "outcome": "completed",
+        "reasons": []
+      },
+      {
+        "stage": "research-synthesis",
+        "outcome": "completed",
+        "reasons": []
+      },
+      {
+        "stage": "risk-proposal",
+        "outcome": "completed",
+        "reasons": []
+      },
+      {
+        "stage": "portfolio-proposal",
+        "outcome": "completed",
+        "reasons": []
+      },
+      {
+        "stage": "cashclaw-validation",
+        "outcome": "completed",
+        "reasons": []
+      },
+      {
+        "stage": "human-decision",
+        "outcome": "completed",
+        "reasons": []
+      }
+    ],
+    "totals": {
+      "completed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "rejected": 0,
+      "total": 7
+    },
+    "createdAt": "2026-08-26T00:00:00.000Z"
+  },
+  "decisionLog": {
+    "entries": [
+      {
+        "hash": "1bf17b0de2590e615969ff37e9cc0fdb00e03a27119ee37fe80c9500f36a304e",
+        "kind": "analyst-output",
+        "payloadJson": "{\"agentId\":\"analyst-0\",\"agentRole\":\"analyst\",\"content\":\"{\\\"claim\\\":\\\"Fundamental metrics support the thesis\\\",\\\"evidence\\\":[\\\"Revenue growth 15%\\\",\\\"Margin expansion\\\"]}\",\"round\":0}",
+        "prevHash": null,
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 0,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "75305838eeef8115b582eb9ba618b4b85117a71ba062f4d82d7919090fbdf081",
+        "kind": "analyst-output",
+        "payloadJson": "{\"agentId\":\"analyst-1\",\"agentRole\":\"analyst\",\"content\":\"{\\\"claim\\\":\\\"Fundamental metrics support the thesis\\\",\\\"evidence\\\":[\\\"Revenue growth 15%\\\",\\\"Margin expansion\\\"]}\",\"round\":0}",
+        "prevHash": "1bf17b0de2590e615969ff37e9cc0fdb00e03a27119ee37fe80c9500f36a304e",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 1,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "25e2f67950869288b17de46923cf17ae75546dda5a099f3d6425fa2edbfcc6d6",
+        "kind": "analyst-output",
+        "payloadJson": "{\"agentId\":\"analyst-2\",\"agentRole\":\"analyst\",\"content\":\"{\\\"claim\\\":\\\"Fundamental metrics support the thesis\\\",\\\"evidence\\\":[\\\"Revenue growth 15%\\\",\\\"Margin expansion\\\"]}\",\"round\":0}",
+        "prevHash": "75305838eeef8115b582eb9ba618b4b85117a71ba062f4d82d7919090fbdf081",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 2,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "8d9b2b8a2e1749f77b8c7be3a882edef74e99b5013b87ce29836f55b3915f643",
+        "kind": "analyst-output",
+        "payloadJson": "{\"agentId\":\"analyst-3\",\"agentRole\":\"analyst\",\"content\":\"{\\\"claim\\\":\\\"Fundamental metrics support the thesis\\\",\\\"evidence\\\":[\\\"Revenue growth 15%\\\",\\\"Margin expansion\\\"]}\",\"round\":0}",
+        "prevHash": "25e2f67950869288b17de46923cf17ae75546dda5a099f3d6425fa2edbfcc6d6",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 3,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "6d368986bbfee9226dcc7fd43fbfb71f755604aca2bce0f437df257f68d1a5c2",
+        "kind": "debate-output",
+        "payloadJson": "{\"agentId\":\"bull-0\",\"agentRole\":\"bull-researcher\",\"content\":\"{\\\"thesis\\\":\\\"Momentum persists in trending regime\\\",\\\"evidence\\\":[\\\"Trend strength above 20-day MA\\\",\\\"Volume confirmation\\\"],\\\"mechanism\\\":\\\"Trend-following momentum drives continued returns due to persistent investor flows\\\",\\\"expectedDirection\\\":\\\"long\\\",\\\"horizon\\\":20,\\\"features\\\":[\\\"momentum_20d\\\",\\\"volume_ratio\\\"]}\",\"round\":1}",
+        "prevHash": "8d9b2b8a2e1749f77b8c7be3a882edef74e99b5013b87ce29836f55b3915f643",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 4,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "0dc308020de4d82e78ddd98cb3407717031aad14f52d827aaa6951cf87267bd0",
+        "kind": "debate-output",
+        "payloadJson": "{\"agentId\":\"bear-0\",\"agentRole\":\"bear-researcher\",\"content\":\"{\\\"thesis\\\":\\\"Mean reversion dominates after overextension\\\",\\\"evidence\\\":[\\\"RSI above 70\\\",\\\"Divergence in volume\\\"],\\\"mechanism\\\":\\\"Overextension in momentum leads to reversal as positioning unwinds\\\",\\\"expectedDirection\\\":\\\"short\\\",\\\"horizon\\\":20,\\\"features\\\":[\\\"rsi_14\\\",\\\"volume_divergence\\\"]}\",\"round\":1}",
+        "prevHash": "6d368986bbfee9226dcc7fd43fbfb71f755604aca2bce0f437df257f68d1a5c2",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 5,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "d58bdd21ee2733e64b3d087203c944a3192d538fa2a26ad659594eb261a9221e",
+        "kind": "research-synthesis",
+        "payloadJson": "{\"agentProvenance\":{\"agentId\":\"debate-orchestrator\",\"agentRole\":\"analyst\",\"modelId\":\"fixture-fast\",\"providerId\":\"Anthropic\"},\"assumptions\":[\"Market regime persistence\",\"Liquidity availability\",\"Correlation stability\"],\"catalyst\":[\"Earnings\",\"Macro event\",\"Technical breakout\"],\"confidence\":0.65,\"counterThesis\":\"{\\\"thesis\\\":\\\"Mean reversion dominates after overextension\\\",\\\"evidence\\\":[\\\"RSI above 70\\\",\\\"Divergence in volume\\\"],\\\"mechanism\\\":\\\"Overextension in momentum leads to reversal as positioning unwinds\\\",\\\"expectedDirection\\\":\\\"short\\\",\\\"horizon\\\":20,\\\"features\\\":[\\\"rsi_14\\\",\\\"volume_divergence\\\"]}\",\"createdAt\":\"2026-08-26T00:00:00.000Z\",\"dataProvenance\":[{\"dataset\":\"ohlcv\",\"provider\":\"binance\",\"timestamp\":\"2026-08-26T00:00:00.000Z\"},{\"dataset\":\"regime\",\"provider\":\"internal\",\"timestamp\":\"2026-08-26T00:00:00.000Z\"}],\"evidence\":[{\"claim\":\"Bull thesis\",\"source\":\"bull-researcher\"},{\"claim\":\"Bear thesis\",\"source\":\"bear-researcher\"},{\"claim\":\"Research synthesis\",\"source\":\"research-manager\"}],\"horizon\":20,\"invalidationConditions\":[\"Regime shift\",\"Liquidity crisis\",\"Correlation breakdown\"],\"modelProvenance\":{\"completionTokens\":50,\"latencyMs\":10,\"modelId\":\"fixture-fast\",\"promptTokens\":100,\"providerId\":\"Anthropic\",\"tier\":\"FAST\"},\"proposalId\":\"prop-demo\",\"proposedDirection\":\"long\",\"proposedEntry\":\"market\",\"proposedExit\":\"target or stop\",\"proposedPosition\":0.1,\"proposedStop\":\"2% below entry\",\"researchGoalId\":\"goal-demo\",\"riskFactors\":[\"{\\\"expectedRegime\\\":\\\"TREND_UP\\\",\\\"keyRisks\\\":[\\\"Regime shift\\\",\\\"Liquidity gap\\\"],\\\"failureConditions\\\":[\\\"Drawdown exceeds 5%\\\",\\\"Correlation spike\\\"],\\\"maxAcceptableExposure\\\":0.6,\\\"liquidityConcern\\\":\\\"moderate\\\",\\\"volatilityConcern\\\":\\\"high\\\",\\\"correlationConcern\\\":\\\"low\\\"}\",\"{\\\"expectedRegime\\\":\\\"TREND_UP\\\",\\\"keyRisks\\\":[\\\"Regime shift\\\",\\\"Liquidity gap\\\"],\\\"failureConditions\\\":[\\\"Drawdown exceeds 5%\\\",\\\"Correlation spike\\\"],\\\"maxAcceptableExposure\\\":0.6,\\\"liquidityConcern\\\":\\\"moderate\\\",\\\"volatilityConcern\\\":\\\"high\\\",\\\"correlationConcern\\\":\\\"low\\\"}\",\"{\\\"expectedRegime\\\":\\\"TREND_UP\\\",\\\"keyRisks\\\":[\\\"Regime shift\\\",\\\"Liquidity gap\\\"],\\\"failureConditions\\\":[\\\"Drawdown exceeds 5%\\\",\\\"Correlation spike\\\"],\\\"maxAcceptableExposure\\\":0.6,\\\"liquidityConcern\\\":\\\"moderate\\\",\\\"volatilityConcern\\\":\\\"high\\\",\\\"correlationConcern\\\":\\\"low\\\"}\"],\"thesis\":\"{\\\"thesis\\\":\\\"Momentum persists in trending regime\\\",\\\"evidence\\\":[\\\"Trend strength above 20-day MA\\\",\\\"Volume confirmation\\\"],\\\"mechanism\\\":\\\"Trend-following momentum drives continued returns due to persistent investor flows\\\",\\\"expectedDirection\\\":\\\"long\\\",\\\"horizon\\\":20,\\\"features\\\":[\\\"momentum_20d\\\",\\\"volume_ratio\\\"]}\"}",
+        "prevHash": "0dc308020de4d82e78ddd98cb3407717031aad14f52d827aaa6951cf87267bd0",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 6,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "b1c2d0d267d9adfc7fc74b13e95806e620fdd0a90de0d430d0712f77e7d0704a",
+        "kind": "risk-proposal",
+        "payloadJson": "{\"advisories\":[{\"hedgeSuggestions\":[\"Consider volatility overlay or straddle hedge\"],\"keyConcerns\":[\"Regime: TREND_UP\",\"Max exposure: 60.0%\",\"Liquidity: moderate\",\"Volatility: high\",\"Correlation: low\"],\"monitoringSignals\":[\"Drawdown exceeds 5%\",\"Correlation spike\",\"Regime shift\",\"Liquidity gap\"],\"recommendedMaxExposure\":0.6,\"view\":\"aggressive\"},{\"hedgeSuggestions\":[\"Consider volatility overlay or straddle hedge\"],\"keyConcerns\":[\"Regime: TREND_UP\",\"Max exposure: 60.0%\",\"Liquidity: moderate\",\"Volatility: high\",\"Correlation: low\"],\"monitoringSignals\":[\"Drawdown exceeds 5%\",\"Correlation spike\",\"Regime shift\",\"Liquidity gap\"],\"recommendedMaxExposure\":0.6,\"view\":\"neutral\"},{\"hedgeSuggestions\":[\"Consider volatility overlay or straddle hedge\"],\"keyConcerns\":[\"Regime: TREND_UP\",\"Max exposure: 60.0%\",\"Liquidity: moderate\",\"Volatility: high\",\"Correlation: low\"],\"monitoringSignals\":[\"Drawdown exceeds 5%\",\"Correlation spike\",\"Regime shift\",\"Liquidity gap\"],\"recommendedMaxExposure\":0.6,\"view\":\"conservative\"}],\"goalId\":\"goal-demo\",\"proposalId\":\"prop-demo\",\"summary\":\"Risk views from 3 advisors\"}",
+        "prevHash": "d58bdd21ee2733e64b3d087203c944a3192d538fa2a26ad659594eb261a9221e",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 7,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "dcda3b2795b3f5e5421c999d6ea41b2b8676f2e0f897b12701db440169444dad",
+        "kind": "portfolio-proposal",
+        "payloadJson": "{\"portfolioResult\":{\"drawdownDeRisked\":false,\"grossExposure\":0.3,\"netExposure\":0.3,\"positions\":[{\"alphaId\":\"alpha-momentum\",\"targetWeight\":0.3,\"turnover\":0.3}],\"riskAdjustments\":[\"vol target: scaled by 2.0833 (port vol 0.0720 -> 0.1500)\",\"position cap: clipped 1 position(s), largest alpha-momentum 0.7500 -> 0.3000\"],\"totalTurnover\":0.3},\"rejected\":false,\"rejectionReasons\":[]}",
+        "prevHash": "b1c2d0d267d9adfc7fc74b13e95806e620fdd0a90de0d430d0712f77e7d0704a",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 8,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "59c5f1ab6df5dfe67dd64fa25a0924a09f834a26cfc0c3f85dc434755ab7b5f6",
+        "kind": "cashclaw-validation",
+        "payloadJson": "{\"portfolioRejected\":false}",
+        "prevHash": "dcda3b2795b3f5e5421c999d6ea41b2b8676f2e0f897b12701db440169444dad",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 9,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "hash": "dfc63956684e5491b514b0f93e5122e986d3b330b2e1984fcb5bc44f85bca3e9",
+        "kind": "human-decision",
+        "payloadJson": "{\"final\":\"APPROVE_FOR_SHADOW\"}",
+        "prevHash": "59c5f1ab6df5dfe67dd64fa25a0924a09f834a26cfc0c3f85dc434755ab7b5f6",
+        "proposalId": "prop-demo",
+        "researchGoalId": "goal-demo",
+        "seq": 10,
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      }
+    ],
+    "tailHash": "dfc63956684e5491b514b0f93e5122e986d3b330b2e1984fcb5bc44f85bca3e9"
+  },
+  "accounting": {
+    "callCount": 11,
+    "totalPromptTokens": 1100,
+    "totalCompletionTokens": 550,
+    "totalTokens": 1650,
+    "totalLatencyMs": 110,
+    "byTier": {
+      "FAST": {
+        "calls": 4,
+        "tokens": 600
+      },
+      "REASONING": {
+        "calls": 3,
+        "tokens": 450
+      },
+      "LOCAL": {
+        "calls": 4,
+        "tokens": 600
+      }
+    }
+  }
+}

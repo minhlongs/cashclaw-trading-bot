@@ -38,6 +38,9 @@ export interface CompilerContext {
   readonly provenance?: AlphaProvenance | null;
   /** Allowlist of supported feature names (from caller's indicator registry). */
   readonly supportedFeatures?: readonly string[];
+  /** Optional deterministic timestamp override (ISO string). Preserves replay
+   *  determinism when the caller supplies a fixed clock instead of `new Date()`. */
+  readonly nowIso?: string;
 }
 
 /**
@@ -146,7 +149,7 @@ async function buildSpec(
   const seed = deriveSeedFromSpecId(specId);
 
   // Final spec with specId, seed, and compiledAt
-  const compiledAt = new Date().toISOString();
+  const compiledAt = ctx.nowIso ?? new Date().toISOString();
   const spec: ExperimentSpec = {
     ...specBody,
     specId,

@@ -152,3 +152,7 @@ export {
   type ParsedFormula,
   type ParseFormulaResult,
 } from './alpha/zoo/operator-ast';
+
+// TradingAgents deliberation layer — fail-closed contracts for untrusted
+// multi-agent output (decision proposals, debate, risk, calibration).
+export * from './tradingagents';
