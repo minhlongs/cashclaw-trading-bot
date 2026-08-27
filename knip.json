@@ -27,7 +27,6 @@
     "src/forest/alpha/evaluation/index.ts",
     "src/forest/alpha/execution/index.ts",
     "src/forest/alpha/experiments/index.ts",
-    "src/forest/alpha/multiple-testing/index.ts",
     "src/forest/alpha/ops/index.ts",
     "src/forest/alpha/performance/batch.ts",
     "src/forest/alpha/performance/cache.ts",
@@ -43,8 +42,7 @@
     "src/forest/alpha/reports/index.ts",
     "src/forest/research/tradingagents/index.ts",
     "src/forest/research/tradingagents/checkpoint-adapter.ts",
-    "src/lib/db/schema-backtest.ts",
-    "src/tree/regime/alpha-router.ts"
+    "src/lib/db/schema-backtest.ts"
   ],
   "ignoreExportsUsedInFile": true,
   "exclude": [
