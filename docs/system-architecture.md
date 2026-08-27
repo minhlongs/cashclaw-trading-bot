@@ -19,8 +19,8 @@ src/
 
 | Layer | Responsibility | Examples |
 |---|---|---|
-| `tree/` | Pure trading domain: bot state machine, strategy chain, exchange adapters (paper), telemetry writer, alpha research domain (registry, hypothesis lineage, research queue, microstructure parse/quality/feature-computer) | `tree/bot/`, `tree/exchange/`, `tree/telemetry/`, `tree/alpha/queue/`, `tree/alpha/microstructure/` |
-| `forest/` | Orchestrates domain against infrastructure: D1 persistence/hydration, backtest engine, settings, monitoring, flight recorder, API handlers, alpha multiple-testing defense, microstructure ingestion + D1 store | `forest/bot/`, `forest/backtest/`, `forest/settings/`, `forest/api/`, `forest/alpha/multiple-testing/`, `forest/alpha/microstructure/` |
+| `tree/` | Pure trading domain: bot state machine, strategy chain, exchange adapters (paper), telemetry writer, alpha research domain (registry, hypothesis lineage, research queue, microstructure parse/quality/feature-computer, zoo alpha evaluator, factor IC/IR analysis) | `tree/bot/`, `tree/exchange/`, `tree/telemetry/`, `tree/alpha/queue/`, `tree/alpha/microstructure/`, `tree/research/alpha/zoo/`, `tree/alpha/factors/` |
+| `forest/` | Orchestrates domain against infrastructure: D1 persistence/hydration, backtest engine, settings, monitoring, flight recorder, API handlers, alpha multiple-testing defense, microstructure ingestion + D1 store, zoo falsification bridge + seed run | `forest/bot/`, `forest/backtest/`, `forest/settings/`, `forest/api/`, `forest/alpha/multiple-testing/`, `forest/alpha/microstructure/`, `forest/research/zoo-falsification/` |
 | `land/` | Coordinates across domains: bot management, exchange orchestration | `land/bot-management/`, `land/exchange-orchestration/` |
 | `lib/` | Framework-agnostic primitives used by all layers | `lib/db/`, `lib/auth/`, `lib/crypto.ts`, `lib/logger.ts`, `lib/result.ts` |
 

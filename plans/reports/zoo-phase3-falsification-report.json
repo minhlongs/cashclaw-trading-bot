@@ -1,0 +1,176 @@
+{
+  "totals": {
+    "evaluatedAlive": 0,
+    "falsified": 2,
+    "notEvaluable": 2,
+    "skippedImport": 8,
+    "total": 12
+  },
+  "rows": [
+    {
+      "sourceAlphaId": "alpha101_006",
+      "hypothesisId": "zoo-alpha101_006",
+      "verdict": "FALSIFIED",
+      "reasons": [
+        "permutation: pValue 0.4440 >= 0.05"
+      ],
+      "checks": [
+        {
+          "check": "bootstrap_ic_ci",
+          "passed": true,
+          "detail": "CI [0.009024, 0.113504] excludes 0"
+        },
+        {
+          "check": "permutation",
+          "passed": false,
+          "detail": "pValue 0.4440 >= 0.05"
+        },
+        {
+          "check": "ic_walk_forward_consistency",
+          "passed": true,
+          "detail": "positiveFraction 0.667, signFlips 3"
+        }
+      ],
+      "icStats": {
+        "icMean": 0.05909162545112086,
+        "icStd": 0.7216521338905459,
+        "icIr": 0.0818838089378994,
+        "validIcCount": 716
+      }
+    },
+    {
+      "sourceAlphaId": "alpha101_001",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "IMPORT_SKIPPED:unsupported",
+        "UNSUPPORTED_EXPRESSION_FORM:conditional"
+      ]
+    },
+    {
+      "sourceAlphaId": "alpha101_048",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "IMPORT_SKIPPED:unsupported",
+        "UNSUPPORTED_OPERATOR:INDNEUTRALIZE",
+        "UNSUPPORTED_OPERATOR:SUM"
+      ]
+    },
+    {
+      "sourceAlphaId": "gtja191_001",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "IMPORT_SKIPPED:unsupported",
+        "UNSUPPORTED_OPERATOR:LOG"
+      ]
+    },
+    {
+      "sourceAlphaId": "gtja191_122",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "IMPORT_SKIPPED:unsupported",
+        "FORMULA_UNPARSEABLE"
+      ]
+    },
+    {
+      "sourceAlphaId": "qlib158_beta5",
+      "hypothesisId": "zoo-qlib158_beta5",
+      "verdict": "FALSIFIED",
+      "reasons": [
+        "bootstrap_ic_ci: CI [-0.043993, 0.057169] includes 0",
+        "permutation: pValue 0.5580 >= 0.05",
+        "ic_walk_forward_consistency: positiveFraction 0.500, signFlips 3"
+      ],
+      "checks": [
+        {
+          "check": "bootstrap_ic_ci",
+          "passed": false,
+          "detail": "CI [-0.043993, 0.057169] includes 0"
+        },
+        {
+          "check": "permutation",
+          "passed": false,
+          "detail": "pValue 0.5580 >= 0.05"
+        },
+        {
+          "check": "ic_walk_forward_consistency",
+          "passed": false,
+          "detail": "positiveFraction 0.500, signFlips 3"
+        }
+      ],
+      "icStats": {
+        "icMean": 0.006449525081795932,
+        "icStd": 0.7161270744775731,
+        "icIr": 0.009006118203952798,
+        "validIcCount": 720
+      }
+    },
+    {
+      "sourceAlphaId": "qlib158_vsump5",
+      "hypothesisId": "zoo-qlib158_vsump5",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "EVAL_UNSUPPORTED_TOKEN:sum"
+      ]
+    },
+    {
+      "sourceAlphaId": "qlib158_vsump10",
+      "hypothesisId": "zoo-qlib158_vsump10",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "EVAL_UNSUPPORTED_TOKEN:sum"
+      ]
+    },
+    {
+      "sourceAlphaId": "academic_strev",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "IMPORT_SKIPPED:unsupported",
+        "UNSUPPORTED_OPERATOR:BIGL"
+      ]
+    },
+    {
+      "sourceAlphaId": "academic_high52w",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "IMPORT_SKIPPED:unsupported",
+        "UNSUPPORTED_OPERATOR:BIGL",
+        "UNSUPPORTED_OPERATOR:_MAX"
+      ]
+    },
+    {
+      "sourceAlphaId": "academic_corr_rewire",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "IMPORT_SKIPPED:unsupported",
+        "UNSUPPORTED_OPERATOR:BIGL"
+      ]
+    },
+    {
+      "sourceAlphaId": "fund_roe",
+      "verdict": "NOT_EVALUABLE",
+      "reasons": [
+        "IMPORT_SKIPPED:validation-error",
+        "columns_required.0: Invalid enum value. Expected 'close' | 'open' | 'high' | 'low' | 'volume' | 'vwap', received 'fund:roe'"
+      ]
+    }
+  ],
+  "meta": {
+    "manifestEntries": 12,
+    "deferredChecks": [
+      {
+        "check": "pbo_proxy",
+        "reason": "pboProxy needs ≥2 configs × ≥2 OOS windows; the single-config seed run is degenerate. A horizon/quantile config axis is Phase 4 tuning-surface scope."
+      },
+      {
+        "check": "random_entry",
+        "reason": "compareAgainstRandomEntry needs trade-level EvaluationReport pairs; an IC study produces none by design."
+      }
+    ],
+    "caveats": [
+      "permutation statistic is elementwise returns×signals covariance proxy, NOT Pearson IC (escrow O-1)",
+      "pooled permutation global null ignores panel structure (acceptable research triage)",
+      "walk-forward shim degradationRatio:1 is neutral and unused by the consistency boolean",
+      "verdicts are research records only — no promotion-state or paper/live surface"
+    ]
+  }
+}

@@ -135,3 +135,20 @@ export {
   seedEnvelopeSchema,
   type Phase2SeedEnvelope,
 } from './alpha/zoo/seeds/seed-manifest';
+
+// Alpha Zoo operator evaluator (Phase 3) — pure formula parse + evaluate.
+// No I/O, no randomness; lookahead-free by construction (append-invariant).
+export { parseFormula } from './alpha/zoo/operator-parser';
+
+export {
+  evaluateFormula,
+  type EvalResult,
+  type SymbolPanel as EvalSymbolPanel,
+} from './alpha/zoo/operator-evaluator';
+
+export {
+  OperatorParseError,
+  type AstNode,
+  type ParsedFormula,
+  type ParseFormulaResult,
+} from './alpha/zoo/operator-ast';
