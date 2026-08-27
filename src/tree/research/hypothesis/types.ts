@@ -10,7 +10,7 @@ import type { StressMode } from '@/forest/backtest/cost-model';
 import { checkMechanism } from './mechanism-gate';
 
 /** Where a research hypothesis originated. */
-export const RESEARCH_SOURCES = ['vibe-zoo', 'swarm', 'mcp', 'human', 'import'] as const;
+export const RESEARCH_SOURCES = ['vibe-zoo', 'swarm', 'mcp', 'human', 'import', 'deliberation'] as const;
 export type ResearchSource = (typeof RESEARCH_SOURCES)[number];
 
 /** Expected trade direction of a hypothesis. */
