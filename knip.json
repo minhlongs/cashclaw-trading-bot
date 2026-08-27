@@ -41,6 +41,8 @@
     "src/forest/alpha/relative-value-eval/index.ts",
     "src/forest/alpha/reports/formatter.ts",
     "src/forest/alpha/reports/index.ts",
+    "src/forest/research/tradingagents/index.ts",
+    "src/forest/research/tradingagents/checkpoint-adapter.ts",
     "src/lib/db/schema-backtest.ts",
     "src/tree/regime/alpha-router.ts"
   ],
@@ -92,6 +94,18 @@
       "exports"
     ],
     "src/forest/alpha/relative-value-eval/walk-forward/index.ts": [
+      "exports"
+    ],
+    "src/forest/research/tradingagents/debate-quality.ts": [
+      "exports"
+    ],
+    "src/forest/research/tradingagents/model-router.ts": [
+      "exports"
+    ],
+    "src/forest/research/tradingagents/provider-adapter.ts": [
+      "exports"
+    ],
+    "src/forest/research/tradingagents/test-fixtures.ts": [
       "exports"
     ]
   }

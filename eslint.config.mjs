@@ -35,6 +35,12 @@ export default [
     },
   },
   {
+    files: ['scripts/*.ts', 'scripts/*.tsx'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     // Downgrade pre-existing react-hooks errors to warnings (not enforced before lint config existed)
     rules: {
       'react-hooks/rules-of-hooks': 'warn',
