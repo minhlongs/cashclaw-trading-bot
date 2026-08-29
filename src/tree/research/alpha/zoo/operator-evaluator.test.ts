@@ -184,3 +184,41 @@ describe('evaluator determinism and append-invariance', () => {
     for (let t = 0; t < 14; t += 1) expect(b.value[0][t]).toEqual(a.value[0][t]);
   });
 });
+
+describe('evaluator abs operator', () => {
+  // The abs AST node (parser source: |expr|) applies Math.abs elementwise
+  // and preserves causal nulls — it never fabricates a warmup value.
+  it('|delta(close,1)| is non-negative and preserves warmup nulls', () => {
+    const formula = normalized('|delta(close, 1)|');
+    const panel = makePanel(['AAA', 'BBB'], 12, 5);
+    const r = evaluateFormula(formula, panel);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const close = panel.fields.close;
+    for (let s = 0; s < panel.symbols.length; s += 1) {
+      // t=0 is delta warmup → null, preserved by abs
+      expect(r.value[s][0]).toBeNull();
+      for (let t = 1; t < 12; t += 1) {
+        const v = r.value[s][t];
+        expect(v).not.toBeNull();
+        if (v !== null) {
+          expect(v).toBeGreaterThanOrEqual(0);
+          expect(v).toBeCloseTo(Math.abs((close[s][t] as number) - (close[s][t - 1] as number)), 9);
+        }
+      }
+    }
+  });
+
+  it('abs of a negative literal field is positive', () => {
+    // Force a sign-flipped panel: abs(-close) == close, value-wise.
+    const formula = normalized('|-1 * close|');
+    const panel = makePanel(['AAA'], 6, 2);
+    const r = evaluateFormula(formula, panel);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const close = panel.fields.close[0];
+    for (let t = 0; t < 6; t += 1) {
+      expect(r.value[0][t]).toBeCloseTo(Math.abs(-(close[t] as number)), 9);
+    }
+  });
+});
