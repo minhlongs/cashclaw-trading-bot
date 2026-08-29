@@ -100,4 +100,42 @@ describe('combineSignals', () => {
     const signals = [make('a', 'hold', 1)];
     expect(combineSignals(signals, cfg)).toBeNull();
   });
+
+  it('weighted_sum with net-negative weighted sum picks sell', () => {
+    const cfg: AlphaCombinerConfig = { ...baseCfg, weights: {} };
+    const signals = [make('rsi', 'sell', 0.8), make('macd', 'buy', 0.3)];
+    const result = combineSignals(signals, cfg);
+    expect(result).not.toBeNull();
+    expect(result!.direction).toBe('sell');
+  });
+
+  it('weighted_sum with zero total weight → null', () => {
+    // All signals carry zero weight (no config weight, zero confidence)
+    // so the weighted sum never gets computed.
+    const cfg: AlphaCombinerConfig = { ...baseCfg, weights: {} };
+    const signals = [make('rsi', 'buy', 0)];
+    expect(combineSignals(signals, cfg)).toBeNull();
+  });
+
+  it('voting majority below minConfidence → null', () => {
+    // buy (0.5) beats sell (0.1) but conf = 0.5/0.6 ≈ 0.83 < 0.9.
+    const cfg: AlphaCombinerConfig = { ...baseCfg, method: 'voting', weights: {}, minConfidence: 0.9 };
+    const signals = [make('a', 'buy', 0.5), make('b', 'sell', 0.1)];
+    expect(combineSignals(signals, cfg)).toBeNull();
+  });
+
+  it('voting with net-zero total weight yields zero confidence → null', () => {
+    // Negative config weight makes the weight sum zero while one side still
+    // wins the tally, exercising the division guard.
+    const cfg: AlphaCombinerConfig = {
+      ...baseCfg, method: 'voting', weights: { a: 0.5, b: -0.5 }, minConfidence: 0.1,
+    };
+    const signals = [make('a', 'buy', 1), make('b', 'sell', 1)];
+    expect(combineSignals(signals, cfg)).toBeNull();
+  });
+
+  it('unknown method → null', () => {
+    const cfg = { ...baseCfg, method: 'bogus' as AlphaCombinerConfig['method'] };
+    expect(combineSignals([make('a', 'buy', 0.5)], cfg)).toBeNull();
+  });
 });
