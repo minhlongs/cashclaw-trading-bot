@@ -99,3 +99,37 @@ export class FailingProvider implements LlmProvider {
     throw new Error('provider intentionally failed');
   }
 }
+
+/**
+ * Build a deterministic fixture provider with a SPECIFIC providerId.
+ * The `DeterministicFixtureProvider` class hardcodes its id to 'Anthropic'
+ * (every instance reports the same id), so a registry built from two
+ * instances trips the duplicate-id guard. Use this factory when you need
+ * two DISTINCT providers (primary + fallback) in the same registry.
+ */
+export function makeFixtureProvider(providerId: SupportedProvider): LlmProvider {
+  return {
+    providerId,
+    displayName: `Fixture ${providerId} (TEST)`,
+    models: { FAST: 'fixture-fast', REASONING: 'fixture-reasoning', LOCAL: 'fixture-local' },
+    isConfigured: true,
+    async call(input: LlmProviderInput): Promise<LlmProviderResult> {
+      const role = detectRole(input.systemPrompt);
+      const text = CANNED_RESPONSES[role] ?? CANNED_RESPONSES.analyst;
+      return { text, usage: { promptTokens: 100, completionTokens: 50 }, latencyMs: 10 };
+    },
+  };
+}
+
+/** A failing fixture provider with a configurable id (for fallback tests). */
+export function makeFailingFixtureProvider(providerId: SupportedProvider): LlmProvider {
+  return {
+    providerId,
+    displayName: `Failing ${providerId} (TEST)`,
+    models: { FAST: 'failing-fast', REASONING: 'failing-reasoning', LOCAL: 'failing-local' },
+    isConfigured: true,
+    async call(): Promise<LlmProviderResult> {
+      throw new Error('provider intentionally failed');
+    },
+  };
+}
