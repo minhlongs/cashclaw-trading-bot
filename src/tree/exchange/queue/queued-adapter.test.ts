@@ -34,11 +34,11 @@ function makeMockAdapter(overrides: Partial<ExchangeAdapter> = {}): ExchangeAdap
   };
 }
 
-function makeAdapter(adapter?: ExchangeAdapter, maxDepth = 10) {
+function makeAdapter(adapter?: ExchangeAdapter, maxDepth = 10, budget = 1000) {
   const inner = adapter ?? makeMockAdapter();
   const queue = new RequestQueue({
     maxDepth: { binance: maxDepth, bybit: maxDepth, okx: maxDepth },
-    dailyBudget: { binance: 1000, bybit: 1000, okx: 1000 },
+    dailyBudget: { binance: budget, bybit: budget, okx: budget },
     drainBatchSize: 20,
   });
   return { adapter: new QueuedExchangeAdapter({ inner, queue }), queue, inner };
@@ -145,5 +145,71 @@ describe('QueuedExchangeAdapter', () => {
     });
     expect(result.id).toBe('order-1');
     expect(inner.placeOrder).toHaveBeenCalled();
+  });
+
+  it('drainQueue processes enqueued items and reports results', async () => {
+    const { adapter, queue } = makeAdapter();
+    let executed = false;
+    queue.enqueue({
+      priority: RequestPriority.LIVE_TRADE,
+      exchange: 'binance',
+      cost: 1,
+      execute: async () => { executed = true; },
+      label: 'drain-test',
+    });
+
+    const result = await adapter.drainQueue();
+    expect(result.processed).toBe(1);
+    expect(result.skipped).toBe(0);
+    expect(executed).toBe(true);
+  });
+
+  it('drainQueue skips items whose execute throws', async () => {
+    const { adapter, queue } = makeAdapter();
+    const throwingExecute = vi.fn().mockRejectedValue(new Error('fail'));
+    queue.enqueue({
+      priority: RequestPriority.LIVE_TRADE,
+      exchange: 'binance',
+      cost: 1,
+      execute: throwingExecute,
+      label: 'fail-test',
+    });
+
+    const result = await adapter.drainQueue();
+    expect(result.processed).toBe(0);
+    expect(result.skipped).toBe(1);
+    expect(throwingExecute).toHaveBeenCalled();
+  });
+
+  it('drainQueue returns empty results when queue is empty', async () => {
+    const { adapter } = makeAdapter();
+    const result = await adapter.drainQueue();
+    expect(result.processed).toBe(0);
+    expect(result.skipped).toBe(0);
+    expect(result.pending).toBe(0);
+  });
+
+  it('uses default cost of 1 for unknown method names', async () => {
+    const { adapter, queue } = makeAdapter();
+    // Call the private enqueueAndWait with a method name absent from COST —
+    // exercises the `COST[method] ?? 1` default on both the enqueue and recordCost paths.
+    const ea = adapter as unknown as {
+      enqueueAndWait: (m: string, p: number, fn: () => Promise<unknown>) => Promise<unknown>;
+    };
+    await ea.enqueueAndWait('unknown-method', RequestPriority.STRATEGY_EVAL, async () => 'ok');
+
+    const snap = queue.getCostSnapshot();
+    expect(snap.binance.used).toBeGreaterThan(0);
+  });
+
+  it('falls back to direct execution when enqueue succeeds but dequeue rejects on budget', async () => {
+    // Zero daily budget: enqueue succeeds (enqueue only checks queue depth),
+    // but dequeue returns null because isOverBudget is true — triggers the
+    // defensive fallback at line 182.
+    const { adapter, inner } = makeAdapter(makeMockAdapter(), 10, 0);
+    const req = { symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50000, quantity: 0.1 };
+    const result = await adapter.placeOrder(req);
+    expect(result.id).toBe('order-1');
+    expect(inner.placeOrder).toHaveBeenCalledWith(req);
   });
 });
