@@ -298,6 +298,77 @@ describe('executeOrder', () => {
     );
   });
 
+  it('uses the orchestrator result when present and ok', async () => {
+    const orchestrated = { ok: true as const, data: makeResult({ id: 'orch-1', price: 99999 }) };
+    ctx.deps.exchangeOrchestrator = {
+      placeOrder: vi.fn().mockResolvedValue(orchestrated),
+    } as never;
+    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(makeResult({ id: 'unused' }));
+
+    const { result } = await executeOrder(ctx, req, 0);
+
+    expect(ctx.deps.exchangeOrchestrator.placeOrder).toHaveBeenCalledWith('binance', req);
+    expect(ctx.deps.exchange.placeOrder).not.toHaveBeenCalled();
+    expect(result).toBe(orchestrated.data);
+    expect(result.id).toBe('orch-1');
+  });
+
+  it('falls back to a rejected order when orchestrator returns !ok', async () => {
+    ctx.deps.exchangeOrchestrator = {
+      placeOrder: vi.fn().mockResolvedValue({ ok: false as const, error: 'boom' }),
+    } as never;
+
+    const { result } = await executeOrder(ctx, req, 0);
+
+    expect(result.status).toBe('rejected');
+    expect(result.exchangeId).toBe('binance');
+    expect(result.filled).toBe(0);
+    expect(result.fee).toBe(0);
+    expect(result.price).toBe(60000);
+    expect(result.quantity).toBe(0.1);
+    expect(ctx.emitTelemetry).toHaveBeenCalledWith('error', {
+      error: 'order rejected by orchestrator',
+      context: 'bot.executeOrder',
+    });
+  });
+
+  it('fills rejected fallback with default exchange and price when req omits them', async () => {
+    ctx.deps.exchangeOrchestrator = {
+      placeOrder: vi.fn().mockResolvedValue({ ok: false as const, error: 'boom' }),
+    } as never;
+    delete req.exchange;
+    delete req.price;
+
+    const { result } = await executeOrder(ctx, req, 0);
+
+    expect(result.status).toBe('rejected');
+    expect(result.exchangeId).toBe('paper');
+    expect(result.price).toBe(0);
+    expect(result.quantity).toBe(0.1);
+  });
+
+  it('falls back to deps.exchange when no orchestrator is configured', async () => {
+    ctx.deps.exchangeOrchestrator = undefined;
+    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(makeResult({ id: 'direct' }));
+
+    const { result } = await executeOrder(ctx, req, 0);
+
+    expect(result.id).toBe('direct');
+  });
+
+  it('uses paper as default exchange when orchestrator req has no exchange field', async () => {
+    const orchestrated = { ok: true as const, data: makeResult({ id: 'orch-default' }) };
+    ctx.deps.exchangeOrchestrator = {
+      placeOrder: vi.fn().mockResolvedValue(orchestrated),
+    } as never;
+    delete req.exchange;
+
+    const { result } = await executeOrder(ctx, req, 0);
+
+    expect(ctx.deps.exchangeOrchestrator.placeOrder).toHaveBeenCalledWith('paper', expect.objectContaining({ symbol: 'BTC/USDT' }));
+    expect(result.status).toBe('filled');
+  });
+
   it('does not mutate state or call callbacks when exchange throws', async () => {
     ctx.deps.exchange.placeOrder = vi.fn().mockRejectedValue(
       new Error('Network error'),
