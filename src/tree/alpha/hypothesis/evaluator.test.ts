@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateHypothesis } from './evaluator';
+import { evaluateHypothesis, numericValue } from './evaluator';
 import type { AlphaHypothesis, HypothesisEvaluation } from './types';
 import type { IndicatorCandle } from '../indicator-types';
 import type { BarrierConfig } from '../labeling';
@@ -71,6 +71,19 @@ function lowVolCandles(n: number): IndicatorCandle[] {
     out.push({
       timestamp: 1_000_000 + i * 60_000,
       open: close, high: close + 0.001, low: close - 0.001, close, volume: 1000,
+    });
+  }
+  return out;
+}
+
+/** Alternating wide-swing closes — high realized volatility. */
+function wideSwingCandles(n: number, hi = 400, lo = 100): IndicatorCandle[] {
+  const out: IndicatorCandle[] = [];
+  for (let i = 0; i < n; i += 1) {
+    const close = i % 2 === 0 ? hi : lo;
+    out.push({
+      timestamp: 1_000_000 + i * 60_000,
+      open: close, high: close * 1.02, low: close * 0.98, close, volume: 1000,
     });
   }
   return out;
@@ -278,5 +291,109 @@ describe('evaluateHypothesis', () => {
     const r = evaluateHypothesis(hyp, candles);
     expect(r.passRate).toBe(1);
     expect(r.winRate).toBe(0);
+  });
+
+  // ── numericValue: null fallback for unknown composite shapes ────────────────
+
+  it('returns null for an object value with no recognized numeric keys', () => {
+    // lines 43-44: the `return null` fallback after the recognized-key chain.
+    // Every registered indicator emits rsi/macd/histogram/percentB/middle or a
+    // number, so this path is only reachable via a synthetic unknown shape —
+    // exercised directly to keep the fallback honest.
+    expect(numericValue({ unknown: 42 })).toBeNull();
+    expect(numericValue({ foo: 'bar' })).toBeNull();
+    expect(numericValue({})).toBeNull();
+  });
+
+  it('extracts each recognized numeric key from composite values', () => {
+    expect(numericValue({ rsi: 50 })).toBe(50);
+    expect(numericValue({ macd: -0.5 })).toBe(-0.5);
+    expect(numericValue({ histogram: 0.3 })).toBe(0.3);
+    expect(numericValue({ percentB: 1.2 })).toBe(1.2);
+    expect(numericValue({ middle: 100 })).toBe(100);
+  });
+
+  // ── Branch coverage: remaining direction-rule branches ──────────────────────
+
+  it('classifies an rsi signal as buy when rsi < 30', () => {
+    // rsi rule line 53 buy branch: rsi < 30. Falling candles drive RSI to ~0.
+    const hyp = buildHypothesis({ indicatorSet: [{ indicator: 'rsi', lookback: 14, timeframe: '1h' }] });
+    const r = evaluateHypothesis(hyp, fallingCandles(100, 200, 1, 1));
+    expect(r.totalSignals).toBe(1);
+    expect(Object.keys(r.regimePerformance)[0]).toBe('TREND_DOWN');
+  });
+
+  it('classifies a bollinger signal as buy when percentB < -1', () => {
+    // bollinger rule line 55 buy branch: percentB < -1. A single outlier in
+    // a wide lookback window yields a z-score beyond 6σ, pushing percentB
+    // below -1. (A 14-window caps |z| at ~3.47, so a wider window is needed.)
+    const hyp = buildHypothesis({ indicatorSet: [{ indicator: 'bollinger', lookback: 50, timeframe: '1h' }] });
+    const candles = risingCandles(120, 100, 2, 2);
+    candles[119] = { ...candles[119], close: -10000 }; // runaway downward last close
+    const r = evaluateHypothesis(hyp, candles);
+    expect(r.totalSignals).toBe(1);
+  });
+
+  it('classifies an atr signal as sell when atr > 1', () => {
+    // atr rule line 59 sell branch: atr > 1. High-volatility candles yield
+    // average true range well above 1 on a ~100 price base.
+    const hyp = buildHypothesis({ indicatorSet: [{ indicator: 'atr', lookback: 14, timeframe: '1h' }] });
+    const r = evaluateHypothesis(hyp, highVolCandles(100));
+    expect(r.totalSignals).toBe(1);
+  });
+
+  it('classifies an atr signal as hold when atr is between -1 and 1', () => {
+    // atr rule line 59 false branch: atr <= 1. Near-zero-oscillation candles
+    // keep the average true range well below 1, so the rule falls through to
+    // the hold path rather than the sell branch.
+    const hyp = buildHypothesis({ indicatorSet: [{ indicator: 'atr', lookback: 14, timeframe: '1h' }] });
+    const r = evaluateHypothesis(hyp, lowVolCandles(100));
+    // ATR hold signal → combined direction is hold → empty evaluation.
+    expect(r.totalSignals).toBe(0);
+  });
+
+  it('classifies realized volatility as sell when it exceeds 1', () => {
+    const hyp = buildHypothesis({ indicatorSet: [{ indicator: 'realized_volatility', lookback: 14, timeframe: '1h' }] });
+    const r = evaluateHypothesis(hyp, wideSwingCandles(100));
+    expect(r.totalSignals).toBe(1);
+  });
+
+  it('classifies a volume_zscore signal as sell when z > 1', () => {
+    // volume_zscore rule line 61 sell branch: z > 1. A last volume far above
+    // the lookback mean yields z > 1.
+    const hyp = buildHypothesis({
+      indicatorSet: [{ indicator: 'volume_zscore', lookback: 14, timeframe: '1h' }],
+    });
+    const candles = risingCandles(100);
+    for (let i = 85; i < 100; i += 1) candles[i] = { ...candles[i], volume: 100 };
+    candles[99] = { ...candles[99], volume: 100000 }; // runaway upward last volume
+    const r = evaluateHypothesis(hyp, candles);
+    expect(r.totalSignals).toBe(1);
+  });
+
+  it('classifies a volume_zscore signal as buy when z < -1', () => {
+    // volume_zscore rule line 61 buy branch: z < -1. A last volume far below
+    // the lookback mean yields z < -1.
+    const hyp = buildHypothesis({
+      indicatorSet: [{ indicator: 'volume_zscore', lookback: 14, timeframe: '1h' }],
+    });
+    const candles = risingCandles(100);
+    for (let i = 85; i < 100; i += 1) candles[i] = { ...candles[i], volume: 1000 };
+    candles[99] = { ...candles[99], volume: 1 }; // last volume far below mean
+    const r = evaluateHypothesis(hyp, candles);
+    expect(r.totalSignals).toBe(1);
+  });
+
+  it('uses the default rule for an indicator absent from DIRECTION_RULES', () => {
+    // line 67 fallback: indicator not in DIRECTION_RULES (distance_from_ma)
+    // with a positive value → 'buy' via defaultDirection.
+    const hyp = buildHypothesis({
+      indicatorSet: [
+        { indicator: 'distance_from_ma', lookback: 14, timeframe: '1h' },
+        { indicator: 'rsi', lookback: 14, timeframe: '1h' },
+      ],
+    });
+    const r = evaluateHypothesis(hyp, risingCandles(100));
+    expect(r.totalSignals).toBe(1);
   });
 });

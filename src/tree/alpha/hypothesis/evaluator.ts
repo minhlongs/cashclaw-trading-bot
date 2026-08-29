@@ -30,7 +30,7 @@ function buildAlphaSignal(
 }
 
 /** Extract a single numeric value from an IndicatorValue (handles composite types). */
-function numericValue(val: IndicatorResult['value']): number | null {
+export function numericValue(val: IndicatorResult['value']): number | null {
   if (val === null || val === undefined) return null;
   if (typeof val === 'number') return val;
   if (typeof val === 'object') {
