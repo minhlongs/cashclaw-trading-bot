@@ -14,8 +14,8 @@ let cache: CacheModule;
 // fresh module instance evaluated with the desired env.
 async function importCache(env: { NODE_ENV?: string; VITEST?: string }): Promise<void> {
   vi.resetModules();
-  process.env.NODE_ENV = env.NODE_ENV ?? 'development';
-  process.env.VITEST = env.VITEST ?? '0';
+  vi.stubEnv('NODE_ENV', env.NODE_ENV ?? 'development');
+  vi.stubEnv('VITEST', env.VITEST ?? '0');
   cache = (await import('./cache')) as CacheModule;
 }
 
@@ -34,17 +34,12 @@ function restoreCacheDir(): void {
 }
 
 describe('cache.ts — derivative cache', () => {
-  const originalEnv = process.env.NODE_ENV;
-  const originalVitest = process.env.VITEST;
-
   beforeEach(() => {
     backupCacheDir();
   });
 
   afterEach(() => {
     restoreCacheDir();
-    process.env.NODE_ENV = originalEnv;
-    process.env.VITEST = originalVitest;
     vi.resetModules();
   });
 
