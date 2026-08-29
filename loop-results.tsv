@@ -1,0 +1,8 @@
+iter	timestamp	metric	delta	kept	description
+1	2026-08-29T11:00:00	95.74	+72.34	yes	add cache tests for derivative signal cache
+2	2026-08-29T04:22:26	100.00	+22.66	yes	add funding tests for derivative data fetching + feature computation
+3	2026-08-29T11:35:00	100.00	+33.33	yes	add pairs tests for discovery/signal/missing-candle/low-corr/sort branches
+3b	2026-08-29T11:45:00	100.00	+28.57	yes	add error type tests for RateLimitError branded types + getErrorBrand
+4	2026-08-29T13:04:00	100.00	+11.41	yes	add updateFromHeaders + wedge watchdog coverage for rate-limiter (6 tests, 100% lines)
+5	2026-08-29T13:09:00	100.00	+10.24	yes	add funding test suite (57 tests) + fix basisFields causal-point look-ahead
+5b	2026-08-29T13:10:00	100.00	+5.33	yes	commit leftover pairs/cache test improvements from iteration 3
