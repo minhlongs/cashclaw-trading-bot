@@ -221,4 +221,25 @@ describe('evaluator abs operator', () => {
       expect(r.value[0][t]).toBeCloseTo(Math.abs(-(close[t] as number)), 9);
     }
   });
+
+  it('vwap equals typical price (high+low+close)/3', () => {
+    // Volume cancels in the VWAP numerator/denominator, so vwap == typical
+    // price per bar — verify against the raw panel values directly.
+    const formula = normalized('vwap()');
+    const panel = makePanel(['AAA', 'BBB'], 8, 3);
+    const r = evaluateFormula(formula, panel);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    for (let s = 0; s < panel.symbols.length; s += 1) {
+      const high = panel.fields.high[s];
+      const low = panel.fields.low[s];
+      const close = panel.fields.close[s];
+      for (let t = 0; t < 8; t += 1) {
+        expect(r.value[s][t]).toBeCloseTo(
+          ((high[t] as number) + (low[t] as number) + (close[t] as number)) / 3,
+          9,
+        );
+      }
+    }
+  });
 });
