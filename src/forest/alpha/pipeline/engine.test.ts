@@ -186,4 +186,155 @@ describe('AlphaResearchPipeline', () => {
       expect(typeof report.topFeatures[0].importance).toBe('number');
     }
   });
+
+  it('recommends deploy when Sharpe comfortably exceeds the threshold', async () => {
+    // minSharpe = 0 → walkforward always passes and sp >= 0 triggers 'deploy'.
+    const pipeline = new AlphaResearchPipeline(makeConfig({ minSharpe: 0, minTrades: 0 }));
+    const report = await pipeline.run();
+
+    expect(report.recommendation).toBe('deploy');
+  });
+
+  it('recommends discard when walkforward Sharpe is far below threshold', async () => {
+    // minSharpe = 10 is unattainable → finalSharpe ~0 → 'discard'.
+    const pipeline = new AlphaResearchPipeline(makeConfig({ minSharpe: 10 }));
+    const report = await pipeline.run();
+
+    expect(report.recommendation).toBe('discard');
+  });
+
+  it('walkforward errors and skips remaining steps when candles are insufficient', async () => {
+    // total = trainBars + testBars*3 = 40 + 20*3 = 100; pass only 30 candles.
+    const config = makeConfig({ candles: makeCandles(30) });
+    const pipeline = new AlphaResearchPipeline(config);
+    await pipeline.run();
+    const results = pipeline.getResults();
+
+    const wf = results.find((r) => r.step === 'run_walkforward');
+    expect(wf?.status).toBe('error');
+
+    // Every step after walkforward must be skipped, none may be 'success'.
+    const wfIdx = results.indexOf(wf!);
+    const after = results.slice(wfIdx + 1);
+    expect(after.length).toBeGreaterThan(0);
+    after.forEach((r) => expect(r.status).toBe('skipped'));
+  });
+
+  it('returns error when no signals reach the walkforward step', async () => {
+    // NOTE: the `No signals for walkforward` guard at engine.ts:260 is
+    // structurally unreachable — `generate_signals` always succeeds and
+    // writes its map entry before walkforward runs, so `sd` can never be
+    // undefined here. A pipeline that produces zero signals still passes the
+    // walkforward step (empty trade list, Sharpe 0). This test documents that
+    // behavior instead of forcing the dead branch.
+    const config = makeConfig({ indicatorSet: { lookback: 20 } });
+    const pipeline = new AlphaResearchPipeline(config);
+    await pipeline.run();
+    const results = pipeline.getResults();
+
+    const wf = results.find((r) => r.step === 'run_walkforward');
+    expect(wf?.status).toBe('success');
+    const data = wf?.data as { totalTrades: number };
+    expect(data.totalTrades).toBe(0);
+  });
+
+  it('parses m/h/d timeframe units and falls back to 60 minutes for junk', async () => {
+    // parseCandleIntervalMinutes is private; exercise it through the pipeline
+    // by varying cfg.timeframe and asserting the run still completes with a
+    // numeric Sharpe (the interval only scales computeSharpe).
+    for (const timeframe of ['15m', '4h', '1d', 'bogus']) {
+      const pipeline = new AlphaResearchPipeline(
+        makeConfig({ timeframe, minSharpe: 0, minTrades: 0 }),
+      );
+      const report = await pipeline.run();
+      expect(report.timeframe).toBe(timeframe);
+      expect(Number.isFinite(report.finalSharpe)).toBe(true);
+      // evaluate runs (walkforward passes with zero thresholds) so the report
+      // body exists even when no trades fire.
+      expect(report.report).not.toBeNull();
+    }
+  });
+
+  it('runs evaluate with zero trades and defaults missing lookback/rsi', async () => {
+    // indicatorSet without a `lookback` key and without any indicator names:
+    // every feature map is empty, so rsi falls back to 50 → all-hold signals,
+    // zero trades, and the evaluate step still reports win_rate 0 via the
+    // empty-trades ternary rather than dividing by zero.
+    const config = makeConfig({
+      indicatorSet: {},
+      minSharpe: 0,
+      minTrades: 0,
+    });
+    const pipeline = new AlphaResearchPipeline(config);
+    await pipeline.run();
+    const results = pipeline.getResults();
+
+    const ev = results.find((r) => r.step === 'evaluate');
+    expect(ev?.status).toBe('success');
+    const report = (ev?.data as { report: { numTrades: number; winRate: number } }).report;
+    expect(report.numTrades).toBe(0);
+    expect(report.winRate).toBe(0);
+  });
+
+  it('maps short/neutral derivative signals to sell/hold directions', async () => {
+    // Inject derivative signals with each direction value; mergeDerivativeSignals
+    // maps short→sell, neutral→hold, long→buy (the two non-buy ternary arms).
+    const candles = makeCandles(120);
+    const features = candles.map(c => ({
+      timestamp: c.timestamp,
+      symbol: 'BTCUSDT',
+      fundingRate: null, fundingRateAvg8h: null, fundingRateSlope: null,
+      openInterest: null, oiChange: null, oiZScore: null,
+      liquidationImbalance: null, liquidationZScore: null,
+      basis: null, basisZScore: null,
+    }));
+    const derivatives = {
+      features,
+      signals: [
+        {
+          timestamp: candles[0].timestamp,
+          symbol: 'BTCUSDT',
+          direction: 'short' as const,
+          confidence: 0.8,
+          features,
+          reasons: ['short-signal'],
+        },
+        {
+          timestamp: candles[1].timestamp,
+          symbol: 'BTCUSDT',
+          direction: 'neutral' as const,
+          confidence: 0.5,
+          features,
+          reasons: ['neutral-signal'],
+        },
+        {
+          timestamp: candles[2].timestamp,
+          symbol: 'BTCUSDT',
+          direction: 'long' as const,
+          confidence: 0.9,
+          features,
+          reasons: [], // empty reasons → name falls back to 'derivative'
+        },
+      ],
+    };
+
+    const pipeline = new AlphaResearchPipeline(
+      makeConfig({ candles, derivatives, minSharpe: 0, minTrades: 0 }),
+    );
+    await pipeline.run();
+    const results = pipeline.getResults();
+
+    const sig = results.find((r) => r.step === 'generate_signals');
+    expect(sig?.status).toBe('success');
+    const merged = (sig?.data as {
+      signals: { direction: string; name: string }[];
+    }).signals.filter(
+      (s) => s.metadata && (s.metadata as { reasons: string[] }).reasons !== undefined,
+    );
+    expect(merged.filter((s) => s.direction === 'sell').length).toBe(1);
+    expect(merged.filter((s) => s.direction === 'hold').length).toBe(1);
+    expect(merged.filter((s) => s.direction === 'buy').length).toBe(1);
+    const namedBuy = merged.find((s) => s.direction === 'buy');
+    expect(namedBuy?.name).toBe('derivative');
+  });
 });

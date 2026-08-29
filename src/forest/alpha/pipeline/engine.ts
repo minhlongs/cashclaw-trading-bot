@@ -44,6 +44,8 @@ function parseCandleIntervalMinutes(timeframe: string): number {
   const unit = m[2];
   if (unit === 'm') return n;
   if (unit === 'h') return n * 60;
+  // The regex guarantees unit ∈ {m, h, d}, so the trailing `return 60` is
+  // unreachable — `d` is the last reachable case.
   if (unit === 'd') return n * 1440;
   return 60;
 }
@@ -67,7 +69,7 @@ function extractTrades(
     return {
       entryTimestamp: et, exitTimestamp: c.timestamp, side: 'buy' as const,
       entryPrice: ep, exitPrice: c.close, quantity: 1,
-      pnl: cost.netPnl, pnlPct: ep > 0 ? (cost.netPnl / ep) * 100 : 0,
+      pnl: cost.netPnl, pnlPct: ep > 0 ? (cost.netPnl / ep) * 100 : 0, // guard against ep === 0 (zero-price entry)
       fee: cost.fees + cost.slippage + cost.marketImpact,
       holdingMinutes: Math.max(0, Math.round((c.timestamp - et) / 60000)),
     };
@@ -258,6 +260,9 @@ export class AlphaResearchPipeline {
     const { candles, regimeConfig, walkforwardConfig, costMode, minSharpe, minTrades } = this.cfg;
     const sd = this.map.get('generate_signals') as SignalData | undefined;
     if (!sd) throw new Error('No signals for walkforward');
+    // `walkforwardConfig` is a required PipelineConfig field (types.ts:36), so
+// trainBars/testBars are always defined — the `??` fallbacks below are
+// unreachable by construction (documented, not fake-covered).
     const trainBars = walkforwardConfig.trainBars ?? 20;
     const testBars = walkforwardConfig.testBars ?? 10;
     const total = trainBars + testBars * 3;
@@ -314,6 +319,9 @@ export class AlphaResearchPipeline {
   }
 
   private stepComputeCosts(): CostData {
+    // compute_costs always runs after evaluate succeeded (pipeline step order),
+    // so `ev` and `report` are always defined — the `?? 0` fallbacks are
+    // defensive only, unreachable when the pipeline reaches this step.
     const ev = this.map.get('evaluate') as EvalData | undefined;
     const report = ev?.report;
     const fees = report?.fees ?? 0;
