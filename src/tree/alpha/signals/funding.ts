@@ -154,13 +154,13 @@ export async function fetchPremiumIndex(
 
 // ── Feature computation ──────────────────────────────────────────────────────
 
-function rollingMean(values: number[], window: number): number | null {
+export function rollingMean(values: number[], window: number): number | null {
   if (values.length < window) return null;
   const slice = values.slice(-window);
   return slice.reduce((a, b) => a + b, 0) / slice.length;
 }
 
-function rollingStd(values: number[], window: number): number | null {
+export function rollingStd(values: number[], window: number): number | null {
   if (values.length < window) return null;
   const slice = values.slice(-window);
   const mean = slice.reduce((a, b) => a + b, 0) / slice.length;
@@ -176,7 +176,7 @@ function rollingStd(values: number[], window: number): number | null {
 // source (timestamp <= t) plus the lookback window, and returns the fields for
 // one DerivativeFeatures entry. Splitting out keeps the main loop flat and
 // keeps each branch's complexity under the lint ceiling.
-function fundingFields(
+export function fundingFields(
   funding: FundingRatePoint[],
   t: number,
 ): { fundingRate: number | null; fundingRateAvg8h: number | null; fundingRateSlope: number | null } {
@@ -188,7 +188,7 @@ function fundingFields(
   };
 }
 
-function oiFields(
+export function oiFields(
   oi: OpenInterestPoint[],
   t: number,
   lookbackBars: number,
@@ -208,7 +208,7 @@ function oiFields(
   };
 }
 
-function liquidationFields(
+export function liquidationFields(
   liquidations: LiquidationPoint[],
   t: number,
   lookbackBars: number,
@@ -231,16 +231,18 @@ function liquidationFields(
   };
 }
 
-function basisFields(
+export function basisFields(
   premiumIndex: { timestamp: number; basis: number }[],
   t: number,
   lookbackBars: number,
 ): { basis: number | null; basisZScore: number | null } {
   // Basis = perpetual mark vs spot (premium index), not the funding rate.
   // The funding rate is a cost/decay signal; basis is the futures premium.
-  const basisPoint = premiumIndex.find(p => p.timestamp <= t);
+  // Find the LATEST point with timestamp <= t (causal)
+  const eligible = premiumIndex.filter(p => p.timestamp <= t);
+  const basisPoint = eligible.length > 0 ? eligible[eligible.length - 1] : undefined;
   const basis = basisPoint ? basisPoint.basis : null;
-  const hist = premiumIndex.filter(p => p.timestamp <= t).map(p => p.basis);
+  const hist = eligible.map(p => p.basis);
   return {
     basis,
     basisZScore: basis !== null && hist.length >= lookbackBars
