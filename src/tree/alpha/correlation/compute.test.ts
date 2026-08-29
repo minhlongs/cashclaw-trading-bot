@@ -50,6 +50,12 @@ describe('pearsonCorrelation', () => {
     expect(pearsonCorrelation([], [])).toBe(0);
     expect(pearsonCorrelation([1], [1])).toBe(0);
   });
+
+  it('returns 0 for a constant series (zero variance denominator)', () => {
+    // All x values equal → denX = 0, so the denominator vanishes and the
+    // guard at line 32 returns 0 rather than dividing by zero.
+    expect(pearsonCorrelation([5, 5, 5, 5], [1, 2, 3, 4])).toBe(0);
+  });
 });
 
 // ── computePairCorrelation ────────────────────────────────────────────────────
@@ -98,6 +104,14 @@ describe('computeSpreadStatistics', () => {
     const stats = computeSpreadStatistics(c1, c2, 5);
     expect(stats.spreadStd).toBe(0);
     expect(stats.zScore).toBe(0);
+  });
+
+  it('returns all-zero stats when fewer than 3 lookback bars', () => {
+    // n < 3 short-circuit: spreadMean/std/zScore 0, halfLife Infinity.
+    const c1 = makeCandles([100, 101, 102]);
+    const c2 = makeCandles([200, 202, 204]);
+    const stats = computeSpreadStatistics(c1, c2, 2);
+    expect(stats).toEqual({ spreadMean: 0, spreadStd: 0, zScore: 0, halfLife: Infinity });
   });
 
   it('returns Infinity half-life when spread is flat', () => {

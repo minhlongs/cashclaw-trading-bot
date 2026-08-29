@@ -23,6 +23,8 @@ export function findCointegratedPairs(
     for (let j = i + 1; j < symbols.length; j++) {
       const s1 = symbols[i];
       const s2 = symbols[j];
+      // `s1`/`s2` are drawn from allCandles.keys(), so the lookups below can
+      // never be undefined — the `?? []` fallback is unreachable by construction.
       const c1 = allCandles.get(s1) ?? [];
       const c2 = allCandles.get(s2) ?? [];
 
