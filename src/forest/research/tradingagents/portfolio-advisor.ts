@@ -62,7 +62,7 @@ export function advisePortfolio(
 
   // Step 3: Check for violations (any riskAdjustments line = a constraint bound)
   for (const adj of portfolioResult.riskAdjustments) {
-    if (adj.includes('clamped') || adj.includes('scaled to 0') || adj.includes('de-risked')) {
+    if (adj.includes('clamped') || adj.includes('clipped') || adj.includes('scaled to 0') || adj.includes('de-risked') || adj.includes('drawdown de-risk')) {
       reasons.push(`portfolio: risk overlay violation — ${adj}`);
     }
   }

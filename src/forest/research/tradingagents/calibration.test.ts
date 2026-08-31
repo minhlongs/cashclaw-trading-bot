@@ -82,6 +82,48 @@ describe('rankUsefulness', () => {
     const ranked2 = rankUsefulness(scores);
     expect(ranked1.map((s) => s.agent.agentRole)).toEqual(ranked2.map((s) => s.agent.agentRole));
   });
+
+  it('ranks by directional accuracy when Brier scores are equal', () => {
+    // Same Brier score, different directional accuracy
+    const outcomes1 = [makeOutcome({ predictedConfidence: 0.5, realizedReturn: 0.05 })];
+    const outcomes2 = [makeOutcome({ agentRole: 'bear-researcher', predictedConfidence: 0.5, realizedReturn: -0.05 })];
+    const agg1 = buildCalibrationAggregates(outcomes1);
+    const agg2 = buildCalibrationAggregates(outcomes2);
+    const scores1 = computeAgentCalibrationScores(agg1);
+    const scores2 = computeAgentCalibrationScores(agg2);
+    const ranked = rankUsefulness([...scores1, ...scores2]);
+    // Both have Brier ~0.25, but first has 100% directional accuracy, second has 0%
+    // Second should rank lower (higher directional accuracy = better)
+    expect(ranked[0].agent.agentRole).toBe('bull-researcher');
+    expect(ranked[1].agent.agentRole).toBe('bear-researcher');
+  });
+
+  it('ranks by thesis survival when Brier and directional accuracy are equal', () => {
+    // Same Brier score, same directional accuracy, different thesis survival
+    const outcomes1 = [makeOutcome({ predictedConfidence: 0.7, realizedReturn: 0.03, thesisSurvived: true })];
+    const outcomes2 = [makeOutcome({ agentRole: 'bear-researcher', predictedConfidence: 0.7, realizedReturn: 0.03, thesisSurvived: false })];
+    const agg1 = buildCalibrationAggregates(outcomes1);
+    const agg2 = buildCalibrationAggregates(outcomes2);
+    const scores1 = computeAgentCalibrationScores(agg1);
+    const scores2 = computeAgentCalibrationScores(agg2);
+    const ranked = rankUsefulness([...scores1, ...scores2]);
+    // First has thesisSurvivalRate = 1, second has 0
+    expect(ranked[0].agent.agentRole).toBe('bull-researcher');
+    expect(ranked[1].agent.agentRole).toBe('bear-researcher');
+  });
+
+  it('uses deterministic agent identity tiebreak when all metrics equal', () => {
+    const outcomes1 = [makeOutcome({ agentRole: 'analyst' })];
+    const outcomes2 = [makeOutcome({ agentRole: 'bull-researcher' })];
+    const agg1 = buildCalibrationAggregates(outcomes1);
+    const agg2 = buildCalibrationAggregates(outcomes2);
+    const scores1 = computeAgentCalibrationScores(agg1);
+    const scores2 = computeAgentCalibrationScores(agg2);
+    const ranked = rankUsefulness([...scores1, ...scores2]);
+    // 'analyst' < 'bull-researcher' lexicographically
+    expect(ranked[0].agent.agentRole).toBe('analyst');
+    expect(ranked[1].agent.agentRole).toBe('bull-researcher');
+  });
 });
 
 describe('computeExpectationGap', () => {

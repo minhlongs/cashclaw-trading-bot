@@ -184,7 +184,7 @@ describe('ProviderRegistry.getFallbackForTier', () => {
 describe('FailingProvider', () => {
   it('always throws on call', async () => {
     const provider = new FailingProvider();
-    await expect(provider.call({ prompt: 'p' })).rejects.toThrow('provider intentionally failed');
+    await expect(provider.call()).rejects.toThrow('provider intentionally failed');
   });
 
   it('is configured and offers all three tiers', () => {

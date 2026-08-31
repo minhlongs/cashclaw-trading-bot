@@ -1,6 +1,6 @@
 {
   "honestyLabel": "This demo uses DeterministicFixtureProvider (D11 TEST seam) — not real LLM deliberation quality.",
-  "summary": "DeliberationReport: 7 stages — completed 7, failed 0, skipped 0, rejected 0",
+  "summary": "DeliberationReport: 7 stages — completed 6, failed 0, skipped 0, rejected 1",
   "report": {
     "researchGoalId": "goal-demo",
     "proposalId": "prop-demo",
@@ -454,8 +454,10 @@
         ],
         "drawdownDeRisked": false
       },
-      "rejected": false,
-      "rejectionReasons": []
+      "rejected": true,
+      "rejectionReasons": [
+        "portfolio: risk overlay violation — position cap: clipped 1 position(s), largest alpha-momentum 0.7500 -> 0.3000"
+      ]
     },
     "modelProvenance": [
       {
@@ -625,15 +627,17 @@
       },
       {
         "stage": "human-decision",
-        "outcome": "completed",
-        "reasons": []
+        "outcome": "rejected",
+        "reasons": [
+          "portfolio: risk overlay violation — position cap: clipped 1 position(s), largest alpha-momentum 0.7500 -> 0.3000"
+        ]
       }
     ],
     "totals": {
-      "completed": 7,
+      "completed": 6,
       "failed": 0,
       "skipped": 0,
-      "rejected": 0,
+      "rejected": 1,
       "total": 7
     },
     "createdAt": "2026-08-26T00:00:00.000Z"
@@ -721,9 +725,9 @@
         "timestamp": "2026-08-26T00:00:00.000Z"
       },
       {
-        "hash": "dcda3b2795b3f5e5421c999d6ea41b2b8676f2e0f897b12701db440169444dad",
+        "hash": "803dd236745567ff754a21e1ae067e2a08173c661cdc9c9335a8a0d68032bd69",
         "kind": "portfolio-proposal",
-        "payloadJson": "{\"portfolioResult\":{\"drawdownDeRisked\":false,\"grossExposure\":0.3,\"netExposure\":0.3,\"positions\":[{\"alphaId\":\"alpha-momentum\",\"targetWeight\":0.3,\"turnover\":0.3}],\"riskAdjustments\":[\"vol target: scaled by 2.0833 (port vol 0.0720 -> 0.1500)\",\"position cap: clipped 1 position(s), largest alpha-momentum 0.7500 -> 0.3000\"],\"totalTurnover\":0.3},\"rejected\":false,\"rejectionReasons\":[]}",
+        "payloadJson": "{\"portfolioResult\":{\"drawdownDeRisked\":false,\"grossExposure\":0.3,\"netExposure\":0.3,\"positions\":[{\"alphaId\":\"alpha-momentum\",\"targetWeight\":0.3,\"turnover\":0.3}],\"riskAdjustments\":[\"vol target: scaled by 2.0833 (port vol 0.0720 -> 0.1500)\",\"position cap: clipped 1 position(s), largest alpha-momentum 0.7500 -> 0.3000\"],\"totalTurnover\":0.3},\"rejected\":true,\"rejectionReasons\":[\"portfolio: risk overlay violation — position cap: clipped 1 position(s), largest alpha-momentum 0.7500 -> 0.3000\"]}",
         "prevHash": "b1c2d0d267d9adfc7fc74b13e95806e620fdd0a90de0d430d0712f77e7d0704a",
         "proposalId": "prop-demo",
         "researchGoalId": "goal-demo",
@@ -731,27 +735,27 @@
         "timestamp": "2026-08-26T00:00:00.000Z"
       },
       {
-        "hash": "59c5f1ab6df5dfe67dd64fa25a0924a09f834a26cfc0c3f85dc434755ab7b5f6",
+        "hash": "ba54889d19b49e59d8b03129a6f47c714cad4c4bf2de214ab5f04e21fdc4d227",
         "kind": "cashclaw-validation",
-        "payloadJson": "{\"portfolioRejected\":false}",
-        "prevHash": "dcda3b2795b3f5e5421c999d6ea41b2b8676f2e0f897b12701db440169444dad",
+        "payloadJson": "{\"portfolioRejected\":true}",
+        "prevHash": "803dd236745567ff754a21e1ae067e2a08173c661cdc9c9335a8a0d68032bd69",
         "proposalId": "prop-demo",
         "researchGoalId": "goal-demo",
         "seq": 9,
         "timestamp": "2026-08-26T00:00:00.000Z"
       },
       {
-        "hash": "dfc63956684e5491b514b0f93e5122e986d3b330b2e1984fcb5bc44f85bca3e9",
+        "hash": "bd00824eeccc4f2e2047815eaf7c7e10ad03988c9c7e7a348c9398aefb2115d3",
         "kind": "human-decision",
-        "payloadJson": "{\"final\":\"APPROVE_FOR_SHADOW\"}",
-        "prevHash": "59c5f1ab6df5dfe67dd64fa25a0924a09f834a26cfc0c3f85dc434755ab7b5f6",
+        "payloadJson": "{\"final\":\"REJECT\"}",
+        "prevHash": "ba54889d19b49e59d8b03129a6f47c714cad4c4bf2de214ab5f04e21fdc4d227",
         "proposalId": "prop-demo",
         "researchGoalId": "goal-demo",
         "seq": 10,
         "timestamp": "2026-08-26T00:00:00.000Z"
       }
     ],
-    "tailHash": "dfc63956684e5491b514b0f93e5122e986d3b330b2e1984fcb5bc44f85bca3e9"
+    "tailHash": "bd00824eeccc4f2e2047815eaf7c7e10ad03988c9c7e7a348c9398aefb2115d3"
   },
   "accounting": {
     "callCount": 11,

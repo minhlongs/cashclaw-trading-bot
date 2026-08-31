@@ -7,7 +7,7 @@
 - Research Goal ID: `goal-demo`
 - Proposal ID: `prop-demo`
 - Created At / Tạo lúc: 2026-08-26T00:00:00.000Z
-- DeliberationReport: 7 stages — completed 7, failed 0, skipped 0, rejected 0
+- DeliberationReport: 7 stages — completed 6, failed 0, skipped 0, rejected 1
 
 ## Stage Results / Kết quả từng giai đoạn
 | Stage / Giai đoạn | Outcome / Kết quả | Reasons / Lý do |
@@ -18,9 +18,9 @@
 | risk-proposal | completed | — |
 | portfolio-proposal | completed | — |
 | cashclaw-validation | completed | — |
-| human-decision | completed | — |
+| human-decision | rejected | portfolio: risk overlay violation — position cap: clipped 1 position(s), largest alpha-momentum 0.7500 -> 0.3000 |
 
-**Σ≡N invariant / Bất biến Σ≡N:** completed(7) + failed(0) + skipped(0) + rejected(0) = 7 ≡ total(7)
+**Σ≡N invariant / Bất biến Σ≡N:** completed(6) + failed(0) + skipped(0) + rejected(1) = 7 ≡ total(7)
 
 ## Decision Proposal / Đề xuất quyết định
 - Thesis / Luận điểm: {"thesis":"Momentum persists in trending regime","evidence":["Trend strength above 20-day MA","Volume confirmation"],"mechanism":"Trend-following momentum drives continued returns due to persistent investor flows","expectedDirection":"long","horizon":20,"features":["momentum_20d","volume_ratio"]}

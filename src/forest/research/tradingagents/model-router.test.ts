@@ -5,21 +5,20 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { ModelRouter, createModelRouter, RoutingError } from './model-router';
-import type { ProviderRegistry } from './provider-adapter';
-import { createProviderRegistry } from './provider-adapter';
+import { createProviderRegistry, type ProviderRegistry } from './provider-adapter';
 import {
   DeterministicFixtureProvider,
   makeFixtureProvider,
   makeFailingFixtureProvider,
 } from './test-fixtures';
-import { SUPPORTED_PROVIDERS } from '@/tree/research/tradingagents/model-provenance';
+import type { SupportedProvider } from '@/tree/research/tradingagents';
 
 /**
  * Build a registry from fixture providers keyed by id.
  * `DeterministicFixtureProvider` hardcodes its id to 'Anthropic', so we use
  * the factory functions when more than one distinct provider is needed.
  */
-function registryByIds(ids: readonly (typeof SUPPORTED_PROVIDERS)[]): ProviderRegistry {
+function registryByIds(ids: readonly SupportedProvider[]): ProviderRegistry {
   const providers = ids.map((id) =>
     id === 'Anthropic' ? new DeterministicFixtureProvider() : makeFixtureProvider(id),
   );
@@ -260,8 +259,10 @@ describe('ModelRouter.route — fallback + failure', () => {
         return { text: '{}', usage: { promptTokens: 1, completionTokens: 1 }, latencyMs: 0 };
       },
     };
+    const registryResult = createProviderRegistry([zeroLatency]);
+    if (!registryResult.ok) throw new Error('registry');
     const router = new ModelRouter({
-      registry: createProviderRegistry([zeroLatency]).registry,
+      registry: registryResult.registry,
       defaultTimeoutMs: 5000,
       maxTokensCap: 1000,
     });
