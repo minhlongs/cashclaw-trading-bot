@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateHypothesis, numericValue } from './evaluator';
-import type { AlphaHypothesis, HypothesisEvaluation } from './types';
-import type { IndicatorCandle } from '../indicator-types';
+import type { IndicatorResult, IndicatorCandle } from '../indicator-types';
+import type { AlphaHypothesis } from './types';
 import type { BarrierConfig } from '../labeling';
 
 // ── Hypothesis fixtures ──────────────────────────────────────────────────────
@@ -300,17 +300,19 @@ describe('evaluateHypothesis', () => {
     // Every registered indicator emits rsi/macd/histogram/percentB/middle or a
     // number, so this path is only reachable via a synthetic unknown shape —
     // exercised directly to keep the fallback honest.
-    expect(numericValue({ unknown: 42 })).toBeNull();
-    expect(numericValue({ foo: 'bar' })).toBeNull();
-    expect(numericValue({})).toBeNull();
+    const v = (x: unknown): IndicatorResult['value'] => x as IndicatorResult['value'];
+    expect(numericValue(v({ unknown: 42 }))).toBeNull();
+    expect(numericValue(v({ foo: 'bar' }))).toBeNull();
+    expect(numericValue(v({}))).toBeNull();
   });
 
   it('extracts each recognized numeric key from composite values', () => {
-    expect(numericValue({ rsi: 50 })).toBe(50);
-    expect(numericValue({ macd: -0.5 })).toBe(-0.5);
-    expect(numericValue({ histogram: 0.3 })).toBe(0.3);
-    expect(numericValue({ percentB: 1.2 })).toBe(1.2);
-    expect(numericValue({ middle: 100 })).toBe(100);
+    const v = (x: unknown): IndicatorResult['value'] => x as IndicatorResult['value'];
+    expect(numericValue(v({ rsi: 50 }))).toBe(50);
+    expect(numericValue(v({ macd: -0.5 }))).toBe(-0.5);
+    expect(numericValue(v({ histogram: 0.3 }))).toBe(0.3);
+    expect(numericValue(v({ percentB: 1.2 }))).toBe(1.2);
+    expect(numericValue(v({ middle: 100 }))).toBe(100);
   });
 
   // ── Branch coverage: remaining direction-rule branches ──────────────────────

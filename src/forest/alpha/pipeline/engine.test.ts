@@ -6,6 +6,7 @@ import { AlphaResearchPipeline } from './engine';
 import type { PipelineConfig } from './types';
 import type { Candle } from '@/forest/backtest/ohlcv';
 import { RegimeConfig } from '@/tree/regime/types';
+import type { DerivativeFeatures } from '@/tree/alpha/signals';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -280,14 +281,14 @@ describe('AlphaResearchPipeline', () => {
     // Inject derivative signals with each direction value; mergeDerivativeSignals
     // maps short→sell, neutral→hold, long→buy (the two non-buy ternary arms).
     const candles = makeCandles(120);
-    const features = candles.map(c => ({
+    const mkFeatures = (c: { timestamp: number }): DerivativeFeatures => ({
       timestamp: c.timestamp,
-      symbol: 'BTCUSDT',
       fundingRate: null, fundingRateAvg8h: null, fundingRateSlope: null,
       openInterest: null, oiChange: null, oiZScore: null,
       liquidationImbalance: null, liquidationZScore: null,
       basis: null, basisZScore: null,
-    }));
+    });
+    const features = candles.map(mkFeatures);
     const derivatives = {
       features,
       signals: [
@@ -296,7 +297,7 @@ describe('AlphaResearchPipeline', () => {
           symbol: 'BTCUSDT',
           direction: 'short' as const,
           confidence: 0.8,
-          features,
+          features: mkFeatures(candles[0]),
           reasons: ['short-signal'],
         },
         {
@@ -304,7 +305,7 @@ describe('AlphaResearchPipeline', () => {
           symbol: 'BTCUSDT',
           direction: 'neutral' as const,
           confidence: 0.5,
-          features,
+          features: mkFeatures(candles[1]),
           reasons: ['neutral-signal'],
         },
         {
@@ -312,7 +313,7 @@ describe('AlphaResearchPipeline', () => {
           symbol: 'BTCUSDT',
           direction: 'long' as const,
           confidence: 0.9,
-          features,
+          features: mkFeatures(candles[2]),
           reasons: [], // empty reasons → name falls back to 'derivative'
         },
       ],
@@ -326,10 +327,9 @@ describe('AlphaResearchPipeline', () => {
 
     const sig = results.find((r) => r.step === 'generate_signals');
     expect(sig?.status).toBe('success');
-    const merged = (sig?.data as {
-      signals: { direction: string; name: string }[];
-    }).signals.filter(
-      (s) => s.metadata && (s.metadata as { reasons: string[] }).reasons !== undefined,
+    type MergedSignal = { direction: string; name: string; metadata?: { reasons: string[] } };
+    const merged = (sig?.data as { signals: MergedSignal[] }).signals.filter(
+      (s) => s.metadata !== undefined && s.metadata.reasons !== undefined,
     );
     expect(merged.filter((s) => s.direction === 'sell').length).toBe(1);
     expect(merged.filter((s) => s.direction === 'hold').length).toBe(1);

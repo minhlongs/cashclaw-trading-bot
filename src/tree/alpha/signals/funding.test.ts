@@ -12,12 +12,10 @@ import {
   oiFields,
   liquidationFields,
   basisFields,
-} from './funding';
-import type {
-  FundingRatePoint,
-  OpenInterestPoint,
-  LiquidationPoint,
-  DerivativeFeatures,
+  type FundingRatePoint,
+  type OpenInterestPoint,
+  type LiquidationPoint,
+  type DerivativeFeatures,
 } from './funding';
 
 const originalFetch = global.fetch;

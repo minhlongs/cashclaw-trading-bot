@@ -207,7 +207,7 @@ describe('QueuedExchangeAdapter', () => {
     // but dequeue returns null because isOverBudget is true — triggers the
     // defensive fallback at line 182.
     const { adapter, inner } = makeAdapter(makeMockAdapter(), 10, 0);
-    const req = { symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50000, quantity: 0.1 };
+    const req: OrderRequest = { symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50000, quantity: 0.1 };
     const result = await adapter.placeOrder(req);
     expect(result.id).toBe('order-1');
     expect(inner.placeOrder).toHaveBeenCalledWith(req);

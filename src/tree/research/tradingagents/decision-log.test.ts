@@ -97,12 +97,33 @@ describe('appendDecisionLogEntry — fail-closed', () => {
     expect(result.ok).toBe(false);
   });
 
+  it('rejects empty proposalId', async () => {
+    const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
+      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: '',
+      payload: payload('x'), timestamp: NOW,
+    });
+    expect(result.ok).toBe(false);
+  });
+
   it('rejects invalid timestamp', async () => {
     const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
       kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1',
       payload: payload('x'), timestamp: 'not-a-date',
     });
     expect(result.ok).toBe(false);
+  });
+
+  it('rejects non-serializable payload (throwing getter)', async () => {
+    const badPayload = {
+      get x() { throw new Error('cannot serialize'); }
+    };
+    const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
+      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1',
+      payload: badPayload, timestamp: NOW,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reasons[0]).toContain('payload is not serializable');
   });
 
   it('accepts a Date payload (canonicalize converts to ISO string)', async () => {
