@@ -49,15 +49,16 @@ export async function runDeliberation(config: RunDeliberationConfig): Promise<Ru
   const reasons: string[] = [];
   const stageResults: StageResult[] = [];
 
-  // Initialize decision log (resume if provided)
+  // Initialize decision log (resume if provided). Fail-closed: a corrupt
+  // resume log aborts the run — continuing on a fresh empty log would
+  // silently discard the historical evidence chain.
   let writer = new DecisionLogWriter();
   if (config.initialDecisionLog) {
     const fromJson = await DecisionLogWriter.fromJSON(config.initialDecisionLog);
     if (!fromJson.ok) {
-      reasons.push(...fromJson.reasons.map((r) => `decision-log resume: ${r}`));
-    } else {
-      writer = fromJson.writer;
+      return { ok: false, reasons: fromJson.reasons.map((r) => `decision-log resume: ${r}`) };
     }
+    writer = fromJson.writer;
   }
 
   // Stage 1+2: Debate orchestrator → hypotheses → ExperimentSpecs
