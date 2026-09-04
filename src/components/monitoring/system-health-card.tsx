@@ -17,8 +17,8 @@ export function SystemHealthCard({ health, metrics }: SystemHealthCardProps) {
   return (
     <div className="panel">
       <div className="panel-header">
-        <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Activity size={16} style={{ color: 'var(--color-profit)' }} />
+        <div className="panel-title flex items-center gap-2">
+          <Activity size={16} className="text-profit" />
           {t('title')}
         </div>
         <div className="panel-actions">

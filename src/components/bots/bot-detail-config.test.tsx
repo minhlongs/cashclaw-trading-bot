@@ -73,7 +73,7 @@ describe('BotDetailConfig', () => {
     it('has grid layout with correct max width', () => {
       const { container } = render(<BotDetailConfig config={{ levels: 10 }} />);
       const grid = container.firstElementChild;
-      expect(grid).toHaveStyle({ maxWidth: '600px' });
+      expect(grid).toHaveClass('config-grid');
     });
   });
 });

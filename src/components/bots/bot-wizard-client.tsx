@@ -123,32 +123,23 @@ export function BotWizardClient() {
   }[step];
 
   return (
-    <div style={{ padding: 'var(--space-4)' }}>
-      <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 var(--space-4)' }}>
+    <div className="wizard-container">
+      <div className="wizard-inner">
+        <div className="wizard-header">
           {STEPS.map((s, i) => (
             <div
               key={s}
-              style={{
-                height: 4,
-                flex: 1,
-                borderRadius: 99,
-                background:
-                  i + 1 <= stepNumber
-                    ? 'var(--color-profit)'
-                    : 'var(--border-subtle)',
-                transition: 'all 0.2s',
-              }}
+              className={`progress-bar ${i + 1 <= stepNumber ? 'active' : ''}`}
             />
           ))}
         </div>
-        <div className="card" style={{ minHeight: 360 }}>
-          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--color-profit)' }}>
+        <div className="card wizard-card">
+          <div className="card-body wizard-card-body">
+            <div className="wizard-header">
+              <span className="wizard-step-num">
                 {stepNumber}
               </span>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)' }}>
+              <span className="wizard-step-total">
                 / {STEPS.length}
               </span>
             </div>

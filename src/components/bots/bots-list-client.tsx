@@ -81,12 +81,10 @@ export default function BotsListClient() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700 }}>
-              {t('bots.listTitle')}
-            </h1>
+            <h1 className="page-title">{t('bots.listTitle')}</h1>
           </div>
         </div>
-        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-tertiary)' }}>
+        <div className="empty-state">
           {t('common.loading')}
         </div>
       </div>
@@ -98,16 +96,13 @@ export default function BotsListClient() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700 }}>
-              {t('bots.listTitle')}
-            </h1>
+            <h1 className="page-title">{t('bots.listTitle')}</h1>
           </div>
         </div>
-        <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--error)' }}>
+        <div className="card error-state">
           <p>{error}</p>
           <button
-            className="btn btn-ghost"
-            style={{ marginTop: '16px' }}
+            className="btn btn-ghost mt-4"
             onClick={() => window.location.reload()}
           >
             Thử lại / Try again
@@ -122,10 +117,8 @@ export default function BotsListClient() {
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700 }}>
-            {t('bots.listTitle')}
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginTop: '4px' }}>
+          <h1 className="page-title">{t('bots.listTitle')}</h1>
+          <p className="page-subtitle">
             {bots.length} {t('bots.columns.name').toLowerCase()} &middot; {bots.filter((b) => b.botStatus === 'live_running').length} {t('dashboard.activeBots').toLowerCase()}
           </p>
         </div>
@@ -137,26 +130,18 @@ export default function BotsListClient() {
 
       {/* Filters */}
       <div className="flex items-center gap-3">
-        <div
-          style={{
-            flex: 1,
-            maxWidth: '400px',
-            position: 'relative',
-          }}
-        >
-          <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+        <div className="search-wrap">
+          <Search size={16} className="search-icon" />
           <input
             type="text"
             placeholder={t('common.search')}
-            className="form-input"
-            style={{ paddingLeft: '36px' }}
+            className="form-input search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <select
-          className="form-input"
-          style={{ width: 'auto' }}
+          className="form-input select-auto"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
@@ -166,14 +151,14 @@ export default function BotsListClient() {
           <option value="draft">Bản nháp / Draft</option>
           <option value="error">Lỗi / Error</option>
         </select>
-        <button className="btn btn-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <button className="btn btn-ghost btn-icon">
           <Filter size={14} />
         </button>
       </div>
 
       {/* Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+      <div className="card card-no-pad">
+        <div className="table-container table-container-plain">
           <table>
             <thead>
               <tr>
@@ -185,7 +170,7 @@ export default function BotsListClient() {
                 <th className="text-right">{t('bots.columns.pnl')}</th>
                 <th className="text-right">Win Rate</th>
                 <th className="text-right">Capital</th>
-                <th style={{ textAlign: 'center' }}></th>
+                <th className="table-actions"></th>
               </tr>
             </thead>
             <tbody>
@@ -197,33 +182,32 @@ export default function BotsListClient() {
                     <td>
                       <Link
                         href={`/${locale}/bots/${bot.id}`}
-                        className="font-semibold"
-                        style={{ color: 'var(--color-accent)', textDecoration: 'none' }}
+                        className="font-semibold link-accent"
                       >
                         {bot.name}
                       </Link>
                     </td>
                     <td>{t(`bots.strategy.${bot.strategy}`)}</td>
                     <td className="mono">{bot.pair}</td>
-                    <td className="mono" style={{ textTransform: 'uppercase', fontSize: 'var(--text-xs)' }}>{bot.exchange}</td>
+                    <td className="mono text-xs uppercase">{bot.exchange}</td>
                     <td><StatusBadge status={bot.botStatus} /></td>
                     <td className="text-right"><PnlValue value={bot.totalPnl} /></td>
                     <td className="text-right mono">{wr}%</td>
-                    <td className="text-right mono" style={{ fontSize: 'var(--text-xs)' }}>
+                    <td className="text-right mono text-xs">
                       ${bot.capitalAllocated.toLocaleString()}
                     </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'inline-flex', gap: '4px' }}>
+                    <td className="table-actions">
+                      <div className="table-actions-inner">
                         {bot.botStatus === 'live_running' || bot.botStatus === 'paper_test' ? (
-                          <button className="btn btn-ghost" style={{ padding: '4px 6px', fontSize: 'var(--text-xs)' }} title="Pause">
+                          <button className="btn btn-ghost btn-xs" title="Pause">
                             <Pause size={12} />
                           </button>
                         ) : (
-                          <button className="btn btn-ghost" style={{ padding: '4px 6px', fontSize: 'var(--text-xs)' }} title="Start">
+                          <button className="btn btn-ghost btn-xs" title="Start">
                             <Play size={12} />
                           </button>
                         )}
-                        <Link href={`/${locale}/bots/${bot.id}`} className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: 'var(--text-xs)' }}>
+                        <Link href={`/${locale}/bots/${bot.id}`} className="btn btn-ghost btn-xs-wide">
                           {t('bots.columns.detail')}
                         </Link>
                       </div>
@@ -233,7 +217,7 @@ export default function BotsListClient() {
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
+                  <td colSpan={9} className="empty-state">
                     Không tìm thấy bot / No bots found
                   </td>
                 </tr>

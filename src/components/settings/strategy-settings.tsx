@@ -29,92 +29,55 @@ export function StrategySettings({ risk, onSave }: StrategySettingsProps) {
           <span>Trading Parameters</span>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+      <div className="form-grid">
         <div>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+          <label className="form-label">
             Max Drawdown %
           </label>
           <input
             type="number"
             value={riskConfig.maxDrawdownPct}
             onChange={(e) => setRiskConfig({ ...riskConfig, maxDrawdownPct: parseFloat(e.target.value) || 0 })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-subtle)',
-              background: 'var(--bg-primary)',
-              color: 'var(--text-primary)',
-              fontSize: '13px',
-              boxSizing: 'border-box',
-            }}
+            className="form-input"
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+          <label className="form-label">
             Daily Loss Limit %
           </label>
           <input
             type="number"
             value={riskConfig.dailyLossLimitPct}
             onChange={(e) => setRiskConfig({ ...riskConfig, dailyLossLimitPct: parseFloat(e.target.value) || 0 })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-subtle)',
-              background: 'var(--bg-primary)',
-              color: 'var(--text-primary)',
-              fontSize: '13px',
-              boxSizing: 'border-box',
-            }}
+            className="form-input"
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+          <label className="form-label">
             Cooldown (minutes)
           </label>
           <input
             type="number"
             value={riskConfig.cooldownMinutes}
             onChange={(e) => setRiskConfig({ ...riskConfig, cooldownMinutes: parseFloat(e.target.value) || 0 })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-subtle)',
-              background: 'var(--bg-primary)',
-              color: 'var(--text-primary)',
-              fontSize: '13px',
-              boxSizing: 'border-box',
-            }}
+            className="form-input"
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+          <label className="form-label">
             Max Open Orders
           </label>
           <input
             type="number"
             value={riskConfig.maxOpenOrders}
             onChange={(e) => setRiskConfig({ ...riskConfig, maxOpenOrders: parseInt(e.target.value) || 0 })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-subtle)',
-              background: 'var(--bg-primary)',
-              color: 'var(--text-primary)',
-              fontSize: '13px',
-              boxSizing: 'border-box',
-            }}
+            className="form-input"
           />
         </div>
       </div>
-      <div style={{ marginTop: '12px' }}>
+      <div className="mt-3">
         <button
-          className="btn btn-primary"
-          style={{ padding: '8px 16px' }}
+          className="btn btn-primary btn-sm"
           onClick={handleSave}
           disabled={saving}
         >

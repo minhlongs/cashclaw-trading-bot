@@ -10,36 +10,28 @@ export function StrategyStep({ form, setStrategyDefaults, onNext, onPrev }: Stra
   return (
     <div className="space-y-4">
       <h3 className="card-title">{t('title.strategy')}</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="strategy-option-list">
         {STRATEGIES.map((s) => {
           const keyPrefix = STRATEGY_KEY_MAP[s.value] ?? s.value;
+          const selected = form.strategy === s.value;
           return (
             <button
               key={s.value}
               onClick={() => setStrategyDefaults(s.value)}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '16px',
-                borderRadius: 'var(--radius-md)',
-                border: form.strategy === s.value ? '2px solid var(--color-profit)' : '1px solid var(--border-subtle)',
-                background: form.strategy === s.value ? 'rgba(0, 212, 170, 0.06)' : 'var(--bg-primary)',
-                cursor: 'pointer',
-              }}
+              className={`strategy-option ${selected ? 'selected' : ''}`}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <GitBranch size={16} style={{ color: form.strategy === s.value ? 'var(--color-profit)' : 'var(--text-secondary)' }} />
-                <div style={{ fontWeight: 600 }}>{t(`${keyPrefix}.label`)}</div>
+              <div className="flex items-center gap-2">
+                <GitBranch size={16} className={`strategy-option-icon ${selected ? 'selected' : ''}`} />
+                <div className="strategy-option-title">{t(`${keyPrefix}.label`)}</div>
               </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', marginTop: '4px', paddingLeft: 24 }}>
+              <div className="strategy-option-desc">
                 {t(`${keyPrefix}.desc`)}
               </div>
             </button>
           );
         })}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <div className="flex justify-between">
         <button className="btn btn-ghost" onClick={onPrev}><ChevronLeft size={16} /> {t('back')}</button>
         <button className="btn btn-primary" onClick={onNext} disabled={!form.strategy}>
           {t('next')} <ChevronRight size={16} />

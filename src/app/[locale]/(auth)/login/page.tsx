@@ -15,13 +15,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1
-            className="text-4xl font-bold tracking-tight"
-            style={{ color: 'var(--color-profit)' }}
-          >
+          <h1 className="text-4xl font-bold tracking-tight text-profit">
             CashClaw
           </h1>
-          <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>
+          <p className="mt-2 text-secondary">
             AI Trading Bot Platform
           </p>
         </div>
@@ -35,7 +32,7 @@ export default function LoginPage() {
           <LoginForm />
         </div>
 
-        <p className="text-center mt-6" style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>
+        <p className="text-center mt-6 text-tertiary text-xs">
           CashClaw Algo Trader · Internal Tool
         </p>
       </div>

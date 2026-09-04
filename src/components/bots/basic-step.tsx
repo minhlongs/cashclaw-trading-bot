@@ -53,7 +53,7 @@ export function BasicStep({ form, update, onNext }: BasicStepProps) {
           step={100}
         />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div className="flex justify-end">
         <button
           className="btn btn-primary"
           onClick={onNext}

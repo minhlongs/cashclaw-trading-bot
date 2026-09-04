@@ -2,7 +2,14 @@
 
 import { AlertTriangle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type Alert, timeAgo, levelColors, levelBadges } from './monitoring-types';
+import { type Alert, timeAgo, levelBadges } from './monitoring-types';
+
+const levelTextColors: Record<Alert['level'], string> = {
+  info: 'alert-level-info',
+  warning: 'alert-level-warning',
+  error: 'alert-level-error',
+  critical: 'alert-level-critical',
+};
 
 interface AlertsCardProps {
   alerts: Alert[];
@@ -14,49 +21,37 @@ export function AlertsCard({ alerts }: AlertsCardProps) {
   return (
     <div className="panel">
       <div className="panel-header">
-        <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <AlertTriangle size={16} style={{ color: 'var(--color-warning)' }} />
+        <div className="panel-title flex items-center gap-2">
+          <AlertTriangle size={16} className="text-warning" />
           {t('title')}
         </div>
         <div className="panel-actions">
           <span className="badge badge-neutral">{alerts.length}</span>
         </div>
       </div>
-      <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+      <div className="alert-list">
         {alerts.length === 0 ? (
-          <p style={{ padding: '1rem 0', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)' }}>
+          <p className="empty-list">
             {t('empty')}
           </p>
         ) : (
           alerts.map((alert) => (
             <div
               key={alert.id}
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 8,
-                padding: '8px 0',
-                borderBottom: '1px solid var(--border-subtle)',
-              }}
+              className="alert-item"
             >
               <span
                 className={`badge ${levelBadges[alert.level]}`}
-                style={{ fontSize: 'var(--text-xs)', flexShrink: 0, padding: '2px 6px' }}
               >
                 {alert.level.toUpperCase()}
               </span>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="alert-content">
                 <p
-                  style={{
-                    fontSize: 'var(--text-sm)',
-                    color: levelColors[alert.level],
-                    lineHeight: 1.4,
-                    wordBreak: 'break-word',
-                  }}
+                  className={`alert-message ${levelTextColors[alert.level]}`}
                 >
                   {alert.message}
                 </p>
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
+                <span className="alert-time">
                   {timeAgo(alert.timestamp)}
                 </span>
               </div>

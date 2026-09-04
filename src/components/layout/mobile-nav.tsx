@@ -37,10 +37,7 @@ export default function MobileNav() {
           <Link
             key={item.href}
             href={item.href}
-            className="mobile-nav-item"
-            style={{
-              color: active ? 'var(--color-profit)' : 'var(--text-tertiary)',
-            }}
+            className={`mobile-nav-item ${active ? 'text-profit' : 'text-tertiary'}`}
           >
             <item.icon size={20} />
             <span className="mobile-nav-label">

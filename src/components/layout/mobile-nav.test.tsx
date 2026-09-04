@@ -60,14 +60,14 @@ describe('MobileNav', () => {
     render(<MobileNav />);
     const settings = screen.getByText('nav.settings').closest('a');
     const dashboard = screen.getByText('nav.dashboard').closest('a');
-    expect(settings).toHaveStyle({ color: 'var(--color-profit)' });
-    expect(dashboard).toHaveStyle({ color: 'var(--text-tertiary)' });
+    expect(settings).toHaveClass('text-profit');
+    expect(dashboard).toHaveClass('text-tertiary');
   });
 
   it('highlights the English route when locale is en', () => {
     mockLocale.current = 'en';
     mockPathname.current = '/en/bots';
     render(<MobileNav />);
-    expect(screen.getByText('nav.bots').closest('a')).toHaveStyle({ color: 'var(--color-profit)' });
+    expect(screen.getByText('nav.bots').closest('a')).toHaveClass('text-profit');
   });
 });

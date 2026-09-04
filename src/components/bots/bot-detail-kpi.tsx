@@ -27,8 +27,8 @@ export function BotDetailKpi({ bot }: BotDetailKpiProps) {
       </div>
       <div className="kpi-card">
         <div className="kpi-label">{t('winRate')}</div>
-        <div className="kpi-value mono" style={{ color: 'var(--color-profit)' }}>{winRate}%</div>
-        <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>
+        <div className="kpi-value mono text-profit">{winRate}%</div>
+        <div className="text-tertiary text-xs">
           {bot.winCount}W / {bot.lossCount}L
         </div>
       </div>
@@ -37,14 +37,14 @@ export function BotDetailKpi({ bot }: BotDetailKpiProps) {
         <div className="kpi-value mono">
           ${bot.capitalUsed.toLocaleString()}
         </div>
-        <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>
+        <div className="text-tertiary text-xs">
           / ${bot.capitalAllocated.toLocaleString()} ({((bot.capitalUsed / bot.capitalAllocated) * 100).toFixed(0)}%)
         </div>
       </div>
       <div className="kpi-card">
         <div className="kpi-label">{t('maxDrawdown')}</div>
         <div className="kpi-value mono text-warning">-{bot.maxDrawdownPct}%</div>
-        <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>{t('maxDrawdownLimit')}</div>
+        <div className="text-tertiary text-xs">{t('maxDrawdownLimit')}</div>
       </div>
     </div>
   );

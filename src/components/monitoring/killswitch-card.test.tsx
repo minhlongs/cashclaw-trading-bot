@@ -198,7 +198,7 @@ describe('KillswitchCard metrics', () => {
     const value = Array.from(container.querySelectorAll('.mono')).find(
       (el) => el.textContent === '3',
     ) as HTMLElement;
-    expect(value.style.color).toBe('var(--color-warning)');
+    expect(value).toHaveClass('text-warning');
   });
 
   it('does not highlight consecutive losses below the threshold', () => {
@@ -208,7 +208,7 @@ describe('KillswitchCard metrics', () => {
     const value = Array.from(container.querySelectorAll('.mono')).find(
       (el) => el.textContent === '2',
     ) as HTMLElement;
-    expect(value.style.color).toBe('var(--text-primary)');
+    expect(value).toHaveClass('text-primary');
   });
 
   it('renders drawdown to one decimal place', () => {
@@ -224,7 +224,7 @@ describe('KillswitchCard metrics', () => {
     const value = Array.from(container.querySelectorAll('.mono')).find(
       (el) => el.textContent === '15.3%',
     ) as HTMLElement;
-    expect(value.style.color).toBe('var(--color-loss)');
+    expect(value).toHaveClass('text-loss');
   });
 
   it('does not highlight drawdown at exactly 10 percent', () => {
@@ -234,6 +234,6 @@ describe('KillswitchCard metrics', () => {
     const value = Array.from(container.querySelectorAll('.mono')).find(
       (el) => el.textContent === '10.0%',
     ) as HTMLElement;
-    expect(value.style.color).toBe('var(--text-primary)');
+    expect(value).toHaveClass('text-primary');
   });
 });

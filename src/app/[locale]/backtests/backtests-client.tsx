@@ -106,17 +106,17 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
   }, [selectedBotId, interval, initialBots, t]);
 
   return (
-    <div style={{ padding: 'var(--space-6)', maxWidth: 'var(--content-max)', margin: '0 auto' }}>
-      <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>
+    <div className="page-container">
+      <h1 className="text-2xl font-bold mb-6 text-primary">
         {t('title')}
       </h1>
 
       {/* Bot Selector */}
-      <div className="card" style={{ marginBottom: 'var(--space-4)' }}>
+      <div className="card mb-4">
         <select
           value={selectedBotId}
           onChange={(e) => setSelectedBotId(e.target.value)}
-          style={{ width: '100%', padding: 'var(--space-3)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}
+          className="form-input form-select"
         >
           <option value="">{t('selectBotPlaceholder')}</option>
           {initialBots.map((bot) => (
@@ -126,7 +126,7 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
         <select
           value={interval}
           onChange={(e) => setInterval(e.target.value)}
-          style={{ width: '100%', padding: 'var(--space-3)', marginTop: 'var(--space-3)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}
+          className="form-input form-select mt-3"
         >
           {INTERVALS.map((iv) => (
             <option key={iv} value={iv}>{iv}</option>
@@ -138,13 +138,12 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
       <button
         onClick={runBacktest}
         disabled={isRunning || !selectedBotId}
-        className="btn btn-primary"
-        style={{ marginBottom: 'var(--space-6)', opacity: isRunning || !selectedBotId ? 0.5 : 1 }}
+        className={`btn btn-primary mb-6 ${isRunning || !selectedBotId ? 'opacity-50' : ''}`}
       >
         {isRunning ? t('running') : t('run')}
       </button>
 
-      {error && <p style={{ color: 'var(--color-loss)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>{error}</p>}
+      {error && <p className="text-loss text-sm mb-4">{error}</p>}
 
       {result && <BacktestResults result={result} />}
     </div>
@@ -156,12 +155,12 @@ function BacktestResults({ result }: { result: BacktestResult }) {
   const { total_pnl, win_rate, max_drawdown, sharpe_ratio, total_trades, equity_curve_json, trades_json, win_count, loss_count } = result;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+    <div className="flex-col gap-6">
       <div className="card">
-        <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
+        <h3 className="text-lg font-semibold mb-4 text-primary">
           {t('performanceMetrics')}
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-4)' }}>
+        <div className="grid-auto-fit gap-4">
           <MetricCard label={t('totalPnl')} value={`${total_pnl > 0 ? '+' : ''}$${total_pnl.toFixed(2)}`} positive={total_pnl > 0} />
           <MetricCard label={t('winRate')} value={`${win_rate.toFixed(1)}%`} />
           <MetricCard label={t('maxDrawdown')} value={`-${max_drawdown.toFixed(1)}%`} positive={false} />
@@ -171,7 +170,7 @@ function BacktestResults({ result }: { result: BacktestResult }) {
       </div>
 
       <div className="card">
-        <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
+        <h3 className="text-lg font-semibold mb-4 text-primary">
           {t('equityCurve')}
         </h3>
         <EquityCurveChart data={equity_curve_json} />
@@ -187,42 +186,45 @@ function RecentTradesTable({ trades }: { trades: BacktestResult['trades_json'] }
   const common = useTranslations('common');
   return (
     <div className="card">
-      <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
+      <h3 className="text-lg font-semibold mb-4 text-primary">
         {t('recentTrades')}
       </h3>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+      <div className="overflow-auto">
+        <table className="backtest-table">
           <thead>
-            <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-              <th style={thStyle}>{t('side')}</th>
-              <th style={thStyle}>{t('entryTime')}</th>
-              <th style={thStyle}>{common('entryPrice')}</th>
-              <th style={thStyle}>{t('exitTime')}</th>
-              <th style={thStyle}>{common('exitPrice')}</th>
-              <th style={thStyle}>{common('pnl')}</th>
-              <th style={thStyle}>{t('pnlPct')}</th>
+            <tr className="backtest-tr-header">
+              <th className="backtest-th">{t('side')}</th>
+              <th className="backtest-th">{t('entryTime')}</th>
+              <th className="backtest-th">{common('entryPrice')}</th>
+              <th className="backtest-th">{t('exitTime')}</th>
+              <th className="backtest-th">{common('exitPrice')}</th>
+              <th className="backtest-th">{common('pnl')}</th>
+              <th className="backtest-th">{t('pnlPct')}</th>
             </tr>
           </thead>
           <tbody>
-            {trades.map((trade, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                <td style={tdStyle}>
-                  <span style={{ color: trade.side === 'buy' ? 'var(--color-profit)' : 'var(--color-loss)', fontWeight: 600 }}>
-                    {trade.side.toUpperCase()}
-                  </span>
-                </td>
-                <td style={tdStyle}>{new Date(trade.entryTimestamp).toLocaleString()}</td>
-                <td style={tdStyle}>${trade.entryPrice.toLocaleString()}</td>
-                <td style={tdStyle}>{new Date(trade.exitTimestamp).toLocaleString()}</td>
-                <td style={tdStyle}>${trade.exitPrice.toLocaleString()}</td>
-                <td style={{ ...tdStyle, color: trade.pnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
-                  {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toFixed(2)}
-                </td>
-                <td style={{ ...tdStyle, color: trade.pnlPct >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
-                  {trade.pnlPct >= 0 ? '+' : ''}{trade.pnlPct.toFixed(2)}%
-                </td>
-              </tr>
-            ))}
+            {trades.map((trade, i) => {
+              const sideClass = trade.side === 'buy' ? 'text-profit' : 'text-loss';
+              const pnlColorClass = trade.pnl >= 0 ? 'text-profit' : 'text-loss';
+              const pnlPctColorClass = trade.pnlPct >= 0 ? 'text-profit' : 'text-loss';
+              return (
+                <tr key={i} className="backtest-tr">
+                  <td className={`backtest-td ${sideClass}`}>
+                    <span className="font-semibold">{trade.side.toUpperCase()}</span>
+                  </td>
+                  <td className="backtest-td">{new Date(trade.entryTimestamp).toLocaleString()}</td>
+                  <td className="backtest-td">${trade.entryPrice.toLocaleString()}</td>
+                  <td className="backtest-td">{new Date(trade.exitTimestamp).toLocaleString()}</td>
+                  <td className="backtest-td">${trade.exitPrice.toLocaleString()}</td>
+                  <td className={`backtest-td ${pnlColorClass}`}>
+                    {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toFixed(2)}
+                  </td>
+                  <td className={`backtest-td ${pnlPctColorClass}`}>
+                    {trade.pnlPct >= 0 ? '+' : ''}{trade.pnlPct.toFixed(2)}%
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -231,10 +233,11 @@ function RecentTradesTable({ trades }: { trades: BacktestResult['trades_json'] }
 }
 
 function MetricCard({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
+  const valueColorClass = positive === true ? 'text-profit' : positive === false ? 'text-loss' : 'text-primary';
   return (
-    <div style={{ background: 'var(--bg-elevated)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>{label}</p>
-      <p style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: positive === true ? 'var(--color-profit)' : positive === false ? 'var(--color-loss)' : 'var(--text-primary)' }}>
+    <div className="metric-card">
+      <p className="text-xs text-secondary mb-1">{label}</p>
+      <p className={`text-lg font-bold ${valueColorClass}`}>
         {value}
       </p>
     </div>
@@ -271,7 +274,7 @@ function EquityCurveChart({ data }: { data: { timestamp: number; equity: number;
   const yTicks = [minVal, minVal + range * 0.25, minVal + range * 0.5, minVal + range * 0.75, maxVal];
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto' }}>
+    <svg viewBox={`0 0 ${width} ${height}`} className="chart-svg">
       {/* Grid lines */}
       {yTicks.map((tick, i) => {
         const y = padding.top + chartHeight - ((tick - minVal) / range) * chartHeight;
@@ -301,17 +304,3 @@ function EquityCurveChart({ data }: { data: { timestamp: number; equity: number;
   );
 }
 
-const thStyle: React.CSSProperties = {
-  textAlign: 'left',
-  padding: 'var(--space-3)',
-  color: 'var(--text-secondary)',
-  fontWeight: 600,
-  fontSize: 'var(--text-xs)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: 'var(--space-3)',
-  color: 'var(--text-primary)',
-};

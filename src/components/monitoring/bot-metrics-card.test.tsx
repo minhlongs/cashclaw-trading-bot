@@ -124,7 +124,7 @@ describe('BotMetricsCard', () => {
     const value = Array.from(container.querySelectorAll('.mono')).find(
       (el) => el.textContent === '$75.30',
     ) as HTMLElement;
-    expect(value.style.color).toBe('var(--color-loss)');
+    expect(value).toHaveClass('text-loss');
   });
 
   it('colors PnL with the profit color when zero', () => {
@@ -144,7 +144,7 @@ describe('BotMetricsCard', () => {
     const value = Array.from(container.querySelectorAll('.mono')).find(
       (el) => el.textContent === '+$0.00',
     ) as HTMLElement;
-    expect(value.style.color).toBe('var(--color-profit)');
+    expect(value).toHaveClass('text-profit');
   });
 
   it('renders win rate', () => {

@@ -10,25 +10,25 @@ describe('StatusDot', () => {
   it('renders profit color when ok is true', () => {
     const { container } = render(<StatusDot ok />);
     const dot = container.querySelector('span')!;
-    expect(dot.style.background).toBe('var(--color-profit)');
+    expect(dot).toHaveClass('status-dot ok');
   });
 
   it('renders loss color when ok is false', () => {
     const { container } = render(<StatusDot ok={false} />);
     const dot = container.querySelector('span')!;
-    expect(dot.style.background).toBe('var(--color-loss)');
+    expect(dot).toHaveClass('status-dot off');
   });
 
   it('has a box-shadow when ok', () => {
     const { container } = render(<StatusDot ok />);
     const dot = container.querySelector('span')!;
-    expect(dot.style.boxShadow).toContain('rgba(0,212,170,0.5)');
+    expect(dot).toHaveClass('ok');
   });
 
   it('has a red box-shadow when not ok', () => {
     const { container } = render(<StatusDot ok={false} />);
     const dot = container.querySelector('span')!;
-    expect(dot.style.boxShadow).toContain('rgba(255,71,87,0.5)');
+    expect(dot).toHaveClass('off');
   });
 });
 
@@ -52,7 +52,7 @@ describe('MetricRow', () => {
       <MetricRow icon={Activity} label="Test" value="val" />,
     );
     const valueSpan = container.querySelector('.mono') as HTMLElement;
-    expect(valueSpan.hasAttribute('style')).toBe(true);
+    expect(valueSpan).toHaveClass('text-primary');
   });
 
   it('uses the provided color prop', () => {
@@ -60,6 +60,6 @@ describe('MetricRow', () => {
       <MetricRow icon={Activity} label="Test" value="val" color="#FF0000" />,
     );
     const valueSpan = container.querySelector('.mono') as HTMLElement;
-    expect(valueSpan.hasAttribute('style')).toBe(true);
+    expect(valueSpan.className).toContain('#FF0000');
   });
 });

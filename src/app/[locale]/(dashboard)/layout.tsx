@@ -9,7 +9,7 @@ export default function DashboardGroupLayout({
   return (
     <div className="app-container">
       <Sidebar />
-      <main className="main-content" style={{ flex: 1, padding: '1.5rem' }}>
+      <main className="main-content">
         {children}
       </main>
       <MobileNav />

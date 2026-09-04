@@ -59,27 +59,17 @@ export function MonitoringClient() {
 
   if (loading && !data) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
-        <Loader2 size={32} className="animate-spin" style={{ color: 'var(--color-profit)' }} />
+      <div className="flex-center h-50">
+        <Loader2 size={32} className="animate-spin text-profit" />
       </div>
     );
   }
 
   if (error && !data) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '1rem',
-          padding: '2rem',
-          color: 'var(--color-loss)',
-          textAlign: 'center',
-        }}
-      >
+      <div className="flex-col flex-center gap-4 p-8 text-loss text-center">
         <AlertTriangle size={48} />
-        <p style={{ color: 'var(--color-loss)' }}>{error}</p>
+        <p className="text-loss">{error}</p>
         <button className="btn btn-ghost" onClick={fetchData}>
           {t('refresh')}
         </button>
@@ -90,13 +80,13 @@ export function MonitoringClient() {
   if (!data) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="flex-col gap-6">
+      <div className="flex-between">
         <div>
-          <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+          <h2 className="text-xl font-semibold text-primary mb-0">
             {t('systemHealth.title')}
           </h2>
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)', margin: 0 }}>
+          <p className="text-sm text-tertiary mb-0">
             {lastRefresh.toLocaleTimeString('vi-VN')}
           </p>
         </div>
@@ -106,12 +96,12 @@ export function MonitoringClient() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+      <div className="grid-auto-fit-lg gap-6">
         <SystemHealthCard health={data.health} metrics={data.metrics} />
         <BotMetricsCard metrics={data.metrics} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+      <div className="grid-auto-fit-lg gap-6">
         <KillswitchCard killswitch={data.killswitch} />
         <AlertsCard alerts={data.alerts} />
       </div>

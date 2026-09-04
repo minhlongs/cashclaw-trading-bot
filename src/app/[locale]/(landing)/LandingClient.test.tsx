@@ -15,9 +15,9 @@ vi.mock('next-intl', () => ({
     fn.raw = (key: string) => {
       const arrays: Record<string, any[]> = {
         'features.items': [
-          { icon: '⚡', title: 'Speed', desc: 'Fast execution' },
-          { icon: '🛡️', title: 'Security', desc: 'Your keys stay local' },
-          { icon: '📈', title: 'Alpha Lab', desc: 'Research engine' },
+          { icon: 'zap', title: 'Speed', desc: 'Fast execution' },
+          { icon: 'shield', title: 'Security', desc: 'Your keys stay local' },
+          { icon: 'trending-up', title: 'Alpha Lab', desc: 'Research engine' },
         ],
         'stats.items': [
           { value: '10k', label: 'Users' },
@@ -52,6 +52,8 @@ vi.mock('next/link', () => ({
     </a>
   ),
 }));
+
+/* icon-map mock removed: LandingClient renders static icon strings */
 
 /* ------------------------------------------------------------------ */
 /* Tests                                                              */
@@ -91,8 +93,8 @@ describe('LandingClient', () => {
     render(<LandingClient />);
     // Default mock returns the key itself, so each feature renders its key text
     expect(screen.getByText('features.title')).toBeInTheDocument();
-    // At least one feature card icon is rendered
-    const icons = screen.getAllByText('⚡');
+    // Each feature card renders its icon string inside .feature-icon
+    const icons = document.querySelectorAll('.feature-icon');
     expect(icons.length).toBeGreaterThanOrEqual(1);
   });
 

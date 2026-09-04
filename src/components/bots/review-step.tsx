@@ -23,7 +23,7 @@ export function ReviewStep({ form, submitting, submitError, submitSuccess, onSub
   return (
     <div className="space-y-4">
       <h3 className="card-title">{t('title.review')}</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: 'var(--text-sm)' }}>
+      <div className="form-grid-sm">
         {[
           [t('review.name'), form.name],
           [t('review.pair'), form.pair],
@@ -33,53 +33,28 @@ export function ReviewStep({ form, submitting, submitError, submitSuccess, onSub
           ...configSummary,
         ].map(([label, value]) => (
           <div key={String(label)}>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>{label}</div>
-            <div style={{ fontWeight: 600 }}>{value}</div>
+            <div className="review-label">{label}</div>
+            <div className="review-value">{value}</div>
           </div>
         ))}
       </div>
-      <div style={{
-        padding: '12px',
-        background: 'rgba(0, 212, 170, 0.06)',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border-subtle)',
-        fontSize: 'var(--text-sm)',
-        color: 'var(--text-secondary)'
-      }}>
+      <div className="review-note">
         {t('paperModeNote')}
       </div>
 
       {submitSuccess && (
-        <div style={{
-          padding: '12px',
-          background: 'rgba(0, 212, 170, 0.1)',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--color-profit)',
-          color: 'var(--color-profit)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
+        <div className="review-success">
           <CheckCircle size={16} /> {t('createSuccess')}
         </div>
       )}
 
       {submitError && (
-        <div style={{
-          padding: '12px',
-          background: 'rgba(255, 76, 76, 0.1)',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--color-error)',
-          color: 'var(--color-error)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
+        <div className="review-error">
           <AlertCircle size={16} /> {submitError}
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <div className="flex justify-between">
         <button className="btn btn-ghost" onClick={onPrev} disabled={submitting || submitSuccess}>
           <ChevronLeft size={16} /> {t('back')}
         </button>

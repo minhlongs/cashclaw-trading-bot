@@ -3,19 +3,8 @@
 import type { LucideIcon } from 'lucide-react';
 
 export function StatusDot({ ok }: { ok: boolean }) {
-  return (
-    <span
-      style={{
-        display: 'inline-block',
-        width: 10,
-        height: 10,
-        borderRadius: '50%',
-        background: ok ? 'var(--color-profit)' : 'var(--color-loss)',
-        boxShadow: ok
-          ? '0 0 6px rgba(0,212,170,0.5)'
-          : '0 0 6px rgba(255,71,87,0.5)',
-      }}
-    />
+ return (
+    <span className={`status-dot ${ok ? 'ok' : 'off'}`} />
   );
 }
 
@@ -23,25 +12,24 @@ interface MetricRowProps {
   icon: LucideIcon;
   label: string;
   value: string | number;
-  color?: string;
+  color?: 'profit' | 'loss' | 'warning' | string;
 }
 
+const COLOR_CLASS: Record<string, string> = {
+  profit: 'text-profit',
+  loss: 'text-loss',
+  warning: 'text-warning',
+};
+
 export function MetricRow({ icon: Icon, label, value, color }: MetricRowProps) {
+  const colorClass = color ? (COLOR_CLASS[color] ?? color) : 'text-primary';
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '8px 0',
-        borderBottom: '1px solid var(--border-subtle)',
-      }}
-    >
-      <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
+    <div className="metric-row">
+      <span className="metric-row-label">
         <Icon size={14} />
         {label}
       </span>
-      <span className="mono" style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: color ?? 'var(--text-primary)' }}>
+      <span className={`mono metric-row-value ${colorClass}`}>
         {value}
       </span>
     </div>

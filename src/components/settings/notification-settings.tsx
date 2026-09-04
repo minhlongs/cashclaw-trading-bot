@@ -37,9 +37,9 @@ export function NotificationSettings({ telegram, onSave }: NotificationSettingsP
           <span>Telegram Notifications</span>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="flex flex-col gap-3">
         <div>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+          <label className="form-label">
             Bot Token
           </label>
           <input
@@ -47,20 +47,11 @@ export function NotificationSettings({ telegram, onSave }: NotificationSettingsP
             placeholder="@Sophia_Bbot token"
             value={botToken}
             onChange={(e) => setBotToken(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-subtle)',
-              background: 'var(--bg-primary)',
-              color: 'var(--text-primary)',
-              fontSize: '13px',
-              boxSizing: 'border-box',
-            }}
+            className="form-input"
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+          <label className="form-label">
             Chat ID
           </label>
           <input
@@ -68,21 +59,11 @@ export function NotificationSettings({ telegram, onSave }: NotificationSettingsP
             placeholder="Telegram chat ID"
             value={chatId}
             onChange={(e) => setChatId(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-subtle)',
-              background: 'var(--bg-primary)',
-              color: 'var(--text-primary)',
-              fontSize: '13px',
-              boxSizing: 'border-box',
-            }}
+            className="form-input"
           />
         </div>
         <button
           className="btn btn-primary"
-          style={{ padding: '8px' }}
           onClick={handleSave}
           disabled={saving || !botToken || !chatId}
         >

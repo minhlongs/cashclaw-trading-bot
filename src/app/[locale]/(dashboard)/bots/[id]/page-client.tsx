@@ -118,8 +118,8 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
   if (loading) {
     return (
       <div className="main-content">
-        <div className="card" style={{ textAlign: 'center', padding: '60px' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>{common('loading')}</p>
+        <div className="card empty-state">
+          <p className="text-secondary">{common('loading')}</p>
         </div>
       </div>
     );
@@ -128,9 +128,9 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
   if (!bot) {
     return (
       <div className="main-content">
-        <div className="card" style={{ textAlign: 'center', padding: '60px' }}>
-          <h2 style={{ color: 'var(--text-secondary)' }}>{t('notFound')}</h2>
-          <p style={{ color: 'var(--text-tertiary)', marginTop: '8px' }}>
+        <div className="card empty-state">
+          <h2 className="text-secondary">{t('notFound')}</h2>
+          <p className="text-tertiary mt-2">
             {t('notFoundWithId', { id })}
           </p>
         </div>
@@ -142,33 +142,33 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
     <div className="main-content">
       <BotDetailClient bot={bot} trades={trades} />
       {tradeEvents.length > 0 && (
-        <div className="card" style={{ marginTop: 'var(--space-4)' }}>
-          <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--space-3)' }}>
+        <div className="card mt-4">
+          <h3 className="text-lg font-semibold mb-3">
             {t('tradeEvents')}
           </h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', fontSize: 'var(--text-sm)' }}>
+          <div className="overflow-auto">
+            <table className="detail-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>{common('time')}</th>
-                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>{t('eventType')}</th>
-                  <th style={{ textAlign: 'left', padding: '8px', color: 'var(--text-secondary)' }}>{t('eventDetails')}</th>
+                  <th className="detail-table th">{common('time')}</th>
+                  <th className="detail-table th">{t('eventType')}</th>
+                  <th className="detail-table th">{t('eventDetails')}</th>
                 </tr>
               </thead>
               <tbody>
                 {tradeEvents.slice(0, 50).map((evt) => (
-                  <tr key={evt.id} style={{ borderTop: '1px solid var(--border)' }}>
-                    <td style={{ padding: '8px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
+                  <tr key={evt.id} className="detail-table tr">
+                    <td className="detail-table td time-cell">
                       {new Date(evt.timestamp).toLocaleString()}
                     </td>
-                    <td style={{ padding: '8px' }}>
+                    <td className="detail-table td">
                       <span className={`badge ${
                         evt.eventType === 'fill' ? 'badge-success' :
                         evt.eventType === 'error' ? 'badge-error' :
                         'badge-neutral'
                       }`}>{evt.eventType}</span>
                     </td>
-                    <td style={{ padding: '8px', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: 'var(--text-xs)' }}>
+                    <td className="detail-table td mono-cell">
                       {JSON.stringify(evt.details)}
                     </td>
                   </tr>

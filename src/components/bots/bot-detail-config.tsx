@@ -11,7 +11,7 @@ export function BotDetailConfig({ config }: BotDetailConfigProps) {
   const configEntries = Object.entries(config);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', maxWidth: '600px' }}>
+    <div className="config-grid">
       {configEntries.map(([key, value]) => (
         <div key={key}>
           <label className="form-label">{key}</label>
@@ -23,7 +23,7 @@ export function BotDetailConfig({ config }: BotDetailConfigProps) {
           />
         </div>
       ))}
-      <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+      <div className="config-full">
         <button className="btn btn-primary">{t('saveConfig')}</button>
       </div>
     </div>

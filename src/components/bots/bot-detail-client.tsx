@@ -21,12 +21,11 @@ function ControlButton({ onClick, icon: Icon, label, color }: {
   onClick: () => void;
   icon: typeof Play;
   label: string;
-  color?: string;
+  color?: 'text-primary' | 'text-secondary' | 'text-tertiary';
 }) {
   return (
     <button
-      className="btn btn-ghost"
-      style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', color }}
+      className="btn btn-ghost flex items-center gap-2"
       onClick={onClick}
     >
       <Icon size={16} /> {label}
@@ -52,10 +51,10 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
         >
           <ArrowLeft size={16} /> Back to Bots
         </Link>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-h2" style={{ color: 'var(--text-primary)', margin: 0 }}>{bot.name}</h1>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+            <h1 className="text-h2 text-primary mb-4">{bot.name}</h1>
+            <div className="flex items-center gap-2">
               <span className={`badge ${bot.botStatus === 'live_running' ? 'badge-running' : bot.botStatus === 'paused' ? 'badge-paused' : 'badge-neutral'}`}>
                 {bot.botStatus}
               </span>
@@ -63,11 +62,11 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
               <span className="badge badge-neutral">{bot.strategy}</span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="flex items-center gap-2">
             <ControlButton onClick={() => {}} icon={Play} label="Resume" />
             <ControlButton onClick={() => {}} icon={Pause} label="Pause" />
             <ControlButton onClick={() => {}} icon={RotateCcw} label="Reset" />
-            <ControlButton onClick={() => {}} icon={Settings2} label="Config" color="var(--text-tertiary)" />
+            <ControlButton onClick={() => {}} icon={Settings2} label="Config" color="text-tertiary" />
           </div>
         </div>
       </div>

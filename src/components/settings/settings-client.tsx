@@ -167,33 +167,23 @@ export function SettingsClient() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-        <Loader2 size={32} className="animate-spin" style={{ color: 'var(--color-profit)' }} />
+      <div className="settings-loading">
+        <Loader2 size={32} className="animate-spin text-profit" />
       </div>
     );
   }
 
+  const isErrorMessage =
+    saveMessage &&
+    (saveMessage.includes('failed') || saveMessage.includes('error') || saveMessage.includes('Error'));
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '800px' }}>
+    <div className="settings-container">
       {saveMessage && (
         <div
-          style={{
-            padding: '12px',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(0, 255, 136, 0.1)',
-            border: '1px solid var(--color-profit)',
-            color:
-              saveMessage.includes('failed') || saveMessage.includes('error') || saveMessage.includes('Error')
-                ? 'var(--color-error)'
-                : 'var(--color-profit)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`save-message ${isErrorMessage ? 'error' : ''}`}
         >
-          {saveMessage.includes('failed') || saveMessage.includes('error') ? (
-            <AlertTriangle size={16} />
-          ) : null}
+          {isErrorMessage ? <AlertTriangle size={16} /> : null}
           {saveMessage}
         </div>
       )}
@@ -218,18 +208,17 @@ export function SettingsClient() {
           </span>
         </div>
         <div>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+          <p className="killswitch-desc">
             Emergency stop: immediately halt all trading activity across all bots.
           </p>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="killswitch-actions">
             <button
-              className="btn btn-danger"
-              style={{ padding: '8px 16px' }}
+              className="btn btn-danger btn-sm"
               onClick={handleHalt}
               disabled={ksSaving || !settings.killswitch.enabled}
             >
               {ksSaving ? (
-                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                <Loader2 size={16} className="animate-spin" />
               ) : null}{' '}
               Halt All Trading
             </button>
@@ -239,7 +228,7 @@ export function SettingsClient() {
               onClick={handleResume}
             >
               {ksSaving ? (
-                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                <Loader2 size={16} className="animate-spin" />
               ) : null}{' '}
               Resume Trading
             </button>

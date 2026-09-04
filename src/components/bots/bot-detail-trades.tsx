@@ -65,14 +65,14 @@ function SortableTable<T>({
       <table>
         <thead>
           <tr>
-            <th style={{ width: '60px' }}>ID</th>
+            <th className="th-col-width-60">ID</th>
             {columns.map((col) => (
               <th
                 key={String(col.key)}
-                style={{ width: col.width, cursor: col.sortable !== false ? 'pointer' : 'default' }}
+                className={col.sortable !== false ? 'th-sortable' : ''}
                 onClick={() => col.sortable !== false && handleSort(col.key)}
               >
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <span className="inline-flex items-center gap-1">
                   {col.label}
                   {col.sortable !== false && <SortIcon col={col.key} />}
                 </span>
@@ -83,14 +83,14 @@ function SortableTable<T>({
         <tbody>
           {sorted.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + 1} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
+              <td colSpan={columns.length + 1} className="table-empty">
                 {emptyMsg}
               </td>
             </tr>
           ) : (
             sorted.map((row) => (
               <tr key={getRowId(row)}>
-                <td className="mono" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
+                <td className="mono time-cell">
                   {getRowId(row)}
                 </td>
                 {columns.map((col) => (
@@ -126,7 +126,7 @@ export function BotDetailTrades({ trades, emptyMsg }: BotDetailTradesProps) {
           label: 'Side',
           sortable: true,
           render: (val) => (
-            <span className={val === 'buy' ? 'text-profit' : 'text-loss'} style={{ fontWeight: 600, textTransform: 'uppercase' }}>
+            <span className={`side-badge ${val === 'buy' ? 'text-profit' : 'text-loss'}`}>
               {String(val)}
             </span>
           ),
@@ -149,7 +149,7 @@ export function BotDetailTrades({ trades, emptyMsg }: BotDetailTradesProps) {
           sortable: true,
           render: (val) => {
             const v = val as number | null;
-            if (v === null) return <span style={{ color: 'var(--text-tertiary)' }}>—</span>;
+            if (v === null) return <span className="text-tertiary">—</span>;
             return <span className={v >= 0 ? 'text-profit' : 'text-loss'}>{v >= 0 ? '+' : ''}{v.toFixed(2)}</span>;
           },
         },
@@ -171,7 +171,7 @@ export function BotDetailTrades({ trades, emptyMsg }: BotDetailTradesProps) {
           label: 'Time',
           sortable: true,
           render: (val) => (
-            <span style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>
+            <span className="time-cell">
               {new Date(val as number).toLocaleString('vi-VN')}
             </span>
           ),

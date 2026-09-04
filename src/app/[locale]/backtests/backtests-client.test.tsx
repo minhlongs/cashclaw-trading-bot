@@ -474,7 +474,7 @@ describe('RecentTradesTable — pnl styling', () => {
 
     expect(await screen.findByText('BUY')).toBeTruthy();
     const pnl = screen.getByText('+$100.00');
-    expect(pnl).toHaveStyle({ color: 'var(--color-profit)' });
+    expect(pnl).toHaveClass('text-profit');
   });
 
   it('renders loss trade with minus sign and loss color', async () => {
@@ -487,7 +487,7 @@ describe('RecentTradesTable — pnl styling', () => {
 
     expect(await screen.findByText('SELL')).toBeTruthy();
     const pnl = screen.getByText('$-50.00');
-    expect(pnl).toHaveStyle({ color: 'var(--color-loss)' });
+    expect(pnl).toHaveClass('text-loss');
   });
 
   it('renders profit PnL percentage with plus sign', async () => {
@@ -510,7 +510,7 @@ describe('RecentTradesTable — pnl styling', () => {
     await user.click(screen.getByRole('button'));
 
     const pct = screen.getByText('-1.19%');
-    expect(pct).toHaveStyle({ color: 'var(--color-loss)' });
+    expect(pct).toHaveClass('text-loss');
   });
 });
 
@@ -534,7 +534,7 @@ describe('MetricCard styling', () => {
 
     expect(await screen.findByText('Total PnL')).toBeTruthy();
     const pnlValue = screen.getByText('+$320.75');
-    expect(pnlValue).toHaveStyle({ color: 'var(--color-profit)' });
+    expect(pnlValue).toHaveClass('text-profit');
   });
 
   it('renders negative PnL value with loss color', async () => {
@@ -547,6 +547,6 @@ describe('MetricCard styling', () => {
 
     expect(await screen.findByText('Total PnL')).toBeTruthy();
     const pnlValue = screen.getByText('$-85.20');
-    expect(pnlValue).toHaveStyle({ color: 'var(--color-loss)' });
+    expect(pnlValue).toHaveClass('text-loss');
   });
 });

@@ -5,7 +5,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Plus, Bot } from 'lucide-react';
 import Link from 'next/link';
 
- 
 import type { BotCardData } from '@/forest/dashboard/actions';
 import type { DashboardKpis } from '@/forest/dashboard/bot-kpis';
 
@@ -127,8 +126,8 @@ export default function DashboardClient() {
             <p className="meta">{t('subtitle')}</p>
           </div>
         </header>
-        <div className="panel" style={{ padding: '2rem' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>{t('loading') ?? 'Loading dashboard...'}</p>
+        <div className="panel">
+          <p className="text-secondary">{t('loading') ?? 'Loading dashboard...'}</p>
         </div>
       </section>
     );
@@ -143,11 +142,10 @@ export default function DashboardClient() {
             <p className="meta">{t('subtitle')}</p>
           </div>
         </header>
-        <div className="panel" style={{ padding: '2rem' }}>
-          <p style={{ color: 'var(--color-loss)' }}>{error ?? t('failed') ?? 'Failed to load dashboard data.'}</p>
+        <div className="panel">
+          <p className="text-loss">{error ?? t('failed') ?? 'Failed to load dashboard data.'}</p>
           <button
-            className="btn btn-primary"
-            style={{ marginTop: '1rem' }}
+            className="btn btn-primary mt-4"
             onClick={() => {
               setError(null);
               setLoading(true);
@@ -180,7 +178,7 @@ export default function DashboardClient() {
       <div className="panel-group">
         <div className="panel">
           <h3>Total Balance</h3>
-          <p className="metric" style={{ color: 'var(--color-profit)' }}>
+          <p className="metric text-profit">
             ${kpis.totalBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </p>
           <p className="meta">
@@ -218,11 +216,11 @@ export default function DashboardClient() {
         </div>
       </div>
 
-      <div className="panel" style={{ marginTop: '1.5rem' }}>
+      <div className="panel mt-6">
         <header className="panel-header">
           <h2>Bots</h2>
           <div className="panel-actions">
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+            <span className="text-sm text-secondary">
               {bots.length === 0
                 ? (t('empty') ?? 'No bots found. Create your first bot to get started.')
                 : `${bots.length} ${t('subtitle')}`}
@@ -235,8 +233,8 @@ export default function DashboardClient() {
         </header>
 
         {bots.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <Bot className="btn-icon" style={{ width: '2.5rem', height: '2.5rem', margin: '0 auto 1rem' }} />
+          <div className="empty-state">
+            <Bot size={40} className="mono" />
             <p>{t('empty') ?? 'No bots found. Start by creating a new trading bot.'}</p>
           </div>
         ) : (
@@ -253,8 +251,8 @@ export default function DashboardClient() {
                   <span className={`badge ${statusStyles[bot.botStatus] ?? 'badge-neutral'}`}>
                     {bot.botStatus}
                   </span>
-                  <div style={{ textAlign: 'right' }}>
-                    <div className="mono" style={{ color: 'var(--color-profit)' }}>
+                  <div className="list-value">
+                    <div className={`mono ${bot.totalPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                       ${bot.totalPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                     </div>
                     <div className="meta">
@@ -268,7 +266,7 @@ export default function DashboardClient() {
         )}
       </div>
 
-      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginTop: '1.5rem' }}>
+      <div className="grid-auto-fit mt-6">
         <div className="panel">
           <h3>Win Rate</h3>
           <p className="metric">{winRate.toFixed(1)}%</p>
@@ -283,7 +281,7 @@ export default function DashboardClient() {
         </div>
         <div className="panel">
           <h3>Total PnL</h3>
-          <p className="metric" style={{ color: kpis.todayPnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)' }}>
+          <p className={`metric ${kpis.todayPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
             ${kpis.todayPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </p>
           <p className="meta">Realized across all bots</p>

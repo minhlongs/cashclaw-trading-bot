@@ -33,7 +33,7 @@ export default function CtaClient() {
         <h1 className="hero-title text-accent">{t('hero.title')}</h1>
         <p className="hero-subtitle">{t('hero.subtitle')}</p>
         <p className="hero-note">{t('hero.note')}</p>
-        <button className="btn btn-primary btn-lg" style={{ marginTop: 24 }} onClick={() => router.push(`/${locale}/bots/new`)}>
+        <button className="btn btn-primary btn-lg mt-6" onClick={() => router.push(`/${locale}/bots/new`)}>
           {t('hero.createButton')}
         </button>
       </section>

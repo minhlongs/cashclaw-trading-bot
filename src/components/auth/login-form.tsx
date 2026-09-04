@@ -44,10 +44,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div
-          className="p-3 rounded text-sm"
-          style={{ background: 'var(--color-loss)', color: 'white' }}
-        >
+        <div className="p-3 rounded text-sm bg-loss">
           {error}
         </div>
       )}

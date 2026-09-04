@@ -33,8 +33,8 @@ export function KillswitchCard({ killswitch }: KillswitchCardProps) {
   return (
     <div className="panel">
       <div className="panel-header">
-        <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Shield size={16} style={{ color: killswitch.halted ? 'var(--color-loss)' : 'var(--color-profit)' }} />
+        <div className="panel-title flex items-center gap-2">
+          <Shield size={16} className={killswitch.halted ? 'text-loss' : 'text-profit'} />
           {t('monitoring.killswitch.title')}
         </div>
         <div className="panel-actions">
@@ -48,20 +48,10 @@ export function KillswitchCard({ killswitch }: KillswitchCardProps) {
           icon={Shield}
           label={t('monitoring.killswitch.status')}
           value={getStatusText(killswitch, t)}
-          color={killswitch.halted ? 'var(--color-loss)' : 'var(--color-profit)'}
+          color={killswitch.halted ? 'loss' : 'profit'}
         />
         {killswitch.halted && killswitch.haltReason && (
-          <div
-            style={{
-              padding: '8px 12px',
-              marginTop: 4,
-              background: 'rgba(255,71,87,0.08)',
-              borderLeft: '3px solid var(--color-loss)',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: 'var(--text-sm)',
-              color: 'var(--color-loss)',
-            }}
-          >
+          <div className="halt-reason">
             {t('monitoring.killswitch.reason')}{killswitch.haltReason}
           </div>
         )}
@@ -72,19 +62,19 @@ export function KillswitchCard({ killswitch }: KillswitchCardProps) {
           icon={TrendingDown}
           label={t('monitoring.killswitch.dailyPnl')}
           value={formatPnl(killswitch.dailyPnl)}
-          color={killswitch.dailyPnl >= 0 ? 'var(--color-profit)' : 'var(--color-loss)'}
+          color={killswitch.dailyPnl >= 0 ? 'profit' : 'loss'}
         />
         <MetricRow
           icon={AlertTriangle}
           label={t('monitoring.killswitch.consecutiveLosses')}
           value={killswitch.consecutiveLosses}
-          color={killswitch.consecutiveLosses >= 3 ? 'var(--color-warning)' : undefined}
+          color={killswitch.consecutiveLosses >= 3 ? 'warning' : undefined}
         />
         <MetricRow
           icon={TrendingDown}
           label={t('monitoring.killswitch.drawdown')}
           value={`${killswitch.currentDrawdown.toFixed(1)}%`}
-          color={killswitch.currentDrawdown > 10 ? 'var(--color-loss)' : undefined}
+          color={killswitch.currentDrawdown > 10 ? 'loss' : undefined}
         />
       </div>
     </div>

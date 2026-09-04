@@ -28,7 +28,7 @@ export function ConfigStep({ form, updateConfig, strategy, onNext, onPrev }: Con
           </div>
         );
       })}
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <div className="flex justify-between">
         <button className="btn btn-ghost" onClick={onPrev}><ChevronLeft size={16} /> {t('back')}</button>
         <button className="btn btn-primary" onClick={onNext}>{t('next')} <ChevronRight size={16} /></button>
       </div>

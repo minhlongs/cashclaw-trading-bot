@@ -60,9 +60,9 @@ describe('Sidebar', () => {
     const user = userEvent.setup();
     render(<Sidebar />);
 
-    // Initially expanded: aside width is 240px
+    // Initially expanded: aside carries the base sidebar class
     const aside = document.querySelector('aside');
-    expect(aside?.style.width).toBe('240px');
+    expect(aside).not.toHaveClass('sidebar-collapsed');
 
     expect(screen.getByText('CashClaw')).toBeInTheDocument();
 
@@ -70,29 +70,27 @@ describe('Sidebar', () => {
     const collapseButton = screen.getByRole('button');
     await user.click(collapseButton);
 
-    // After collapse: aside width is 64px and brand name is unmounted
-    expect(aside?.style.width).toBe('64px');
+    // After collapse: aside carries the collapsed class and brand name is unmounted
+    expect(aside).toHaveClass('sidebar-collapsed');
     expect(screen.queryByText('CashClaw')).toBeNull();
 
-    // Toggling back restores the expanded width
+    // Toggling back restores the expanded state
     await user.click(collapseButton);
-    expect(aside?.style.width).toBe('240px');
+    expect(aside).not.toHaveClass('sidebar-collapsed');
     expect(screen.getByText('CashClaw')).toBeInTheDocument();
   });
 
   it('highlights active nav item based on current pathname', () => {
     render(<Sidebar />);
 
-    // Mocked pathname is /vi/dashboard, so only that link carries the active style
+    // Mocked pathname is /vi/dashboard, so only that link carries the active class
     const activeLink = screen.getByText('nav.dashboard').closest('a') as HTMLElement;
-    expect(activeLink.style.background).toBe('rgba(0, 212, 170, 0.08)');
-    expect(activeLink.style.color).toBe('var(--color-profit)');
+    expect(activeLink).toHaveClass('active');
 
     // Every other nav item stays transparent / secondary
     for (const item of navItems.filter((i) => i.href !== '/vi/dashboard')) {
       const link = screen.getByText(item.label).closest('a') as HTMLElement;
-      expect(link.style.background).toBe('transparent');
-      expect(link.style.color).toBe('var(--text-secondary)');
+      expect(link).not.toHaveClass('active');
     }
   });
 
@@ -111,7 +109,7 @@ describe('Sidebar', () => {
 
     // Labels are removed via conditional rendering: {!collapsed && <span>{label}</span>}
     const aside = document.querySelector('aside');
-    expect(aside?.style.width).toBe('64px');
+    expect(aside).toHaveClass('sidebar-collapsed');
 
     for (const item of navItems) {
       expect(screen.queryByText(item.label)).toBeNull();

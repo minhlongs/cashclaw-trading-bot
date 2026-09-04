@@ -15,9 +15,9 @@ vi.mock('next-intl', () => ({
     fn.raw = (key: string) => {
       const arrays: Record<string, any[]> = {
         'whatNext.items': [
-          { icon: '🔑', title: 'API keys', desc: 'Connect your exchange' },
-          { icon: '🤖', title: 'Create bot', desc: 'Pick a strategy' },
-          { icon: '📊', title: 'Monitor', desc: 'Watch performance' },
+          { icon: 'key', title: 'API keys', desc: 'Connect your exchange' },
+          { icon: 'bot', title: 'Create bot', desc: 'Pick a strategy' },
+          { icon: 'chart', title: 'Monitor', desc: 'Watch performance' },
         ],
         'guarantee.items': ['No credit card', 'Cancel anytime', 'Paper mode first'],
       };
@@ -53,7 +53,7 @@ describe('CtaClient', () => {
 
   it('renders hero icon, title, subtitle, and note', () => {
     render(<CtaClient />);
-    expect(screen.getByText('hero.icon')).toBeInTheDocument();
+    expect(document.querySelector('.hero-icon')).toBeInTheDocument();
     expect(screen.getByText('hero.title')).toBeInTheDocument();
     expect(screen.getByText('hero.subtitle')).toBeInTheDocument();
     expect(screen.getByText('hero.note')).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('CtaClient', () => {
 
   it('renders the guarantee section', () => {
     render(<CtaClient />);
-    expect(screen.getByText('guarantee.icon')).toBeInTheDocument();
+    expect(document.querySelector('.guarantee-icon')).toBeInTheDocument();
     expect(screen.getByText('guarantee.title')).toBeInTheDocument();
   });
 

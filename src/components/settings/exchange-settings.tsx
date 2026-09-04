@@ -51,35 +51,25 @@ export function ExchangeSettings({ exchanges, onSave }: ExchangeSettingsProps) {
       </div>
       <div>
         {exchangeEntries.map(([name, config]) => (
-          <div
-            key={name}
-            style={{
-              padding: '12px',
-              marginBottom: '8px',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-subtle)',
-              background: editing === name ? 'var(--bg-secondary)' : 'transparent',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: editing === name ? '12px' : 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Shield size={14} style={{ color: config.apiKey ? 'var(--color-profit)' : 'var(--text-tertiary)' }} />
-                <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{name}</span>
+          <div key={name} className="exchange-card">
+            <div className="exchange-card-header">
+              <div className="exchange-card-title">
+                <Shield size={14} className={config.apiKey ? 'exchange-active' : 'exchange-inactive'} />
+                <span className="font-600 text-cap">{name}</span>
                 {config.apiKey && (
-                  <span className="badge badge-profit" style={{ fontSize: '10px' }}>
+                  <span className="badge badge-profit text-xs-sm">
                     Configured
                   </span>
                 )}
                 {config.testnet && (
-                  <span className="badge badge-neutral" style={{ fontSize: '10px' }}>
+                  <span className="badge badge-neutral text-xs-sm">
                     Testnet
                   </span>
                 )}
               </div>
               {editing !== name && (
                 <button
-                  className="btn btn-ghost"
-                  style={{ padding: '4px 8px', fontSize: '12px' }}
+                  className="btn btn-ghost btn-sm-ghost"
                   onClick={() => handleEdit(name)}
                 >
                   {config.apiKey ? 'Update' : 'Add'}
@@ -88,48 +78,32 @@ export function ExchangeSettings({ exchanges, onSave }: ExchangeSettingsProps) {
             </div>
 
             {editing === name && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="exchange-card-body">
                 <input
                   type="text"
                   placeholder="API Key"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  style={{
-                    padding: '8px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-subtle)',
-                    background: 'var(--bg-primary)',
-                    color: 'var(--text-primary)',
-                    fontSize: '13px',
-                  }}
+                  className="form-input"
                 />
                 <input
                   type="password"
                   placeholder="API Secret"
                   value={apiSecret}
                   onChange={(e) => setApiSecret(e.target.value)}
-                  style={{
-                    padding: '8px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-subtle)',
-                    background: 'var(--bg-primary)',
-                    color: 'var(--text-primary)',
-                    fontSize: '13px',
-                  }}
+                  className="form-input"
                 />
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                <label className="config-field">
                   <input
                     type="checkbox"
                     checked={testnet}
                     onChange={(e) => setTestnet(e.target.checked)}
-                    style={{ width: '14px', height: '14px' }}
                   />
                   Testnet / Sandbox
                 </label>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="flex-gap-2">
                   <button
-                    className="btn btn-primary"
-                    style={{ flex: 1, padding: '8px' }}
+                    className="btn btn-primary flex-1"
                     onClick={handleSave}
                     disabled={saving || !apiKey || !apiSecret}
                   >
@@ -137,7 +111,6 @@ export function ExchangeSettings({ exchanges, onSave }: ExchangeSettingsProps) {
                   </button>
                   <button
                     className="btn btn-ghost"
-                    style={{ padding: '8px 12px' }}
                     onClick={() => setEditing(null)}
                   >
                     Cancel
