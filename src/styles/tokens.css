@@ -11,6 +11,7 @@
   --color-profit: #00D4AA;
   --color-loss: #FF4757;
   --color-warning: #FFB020;
+  --color-error: #FF4757;
   --color-ai: #A78BFA;
   --color-accent: #00D4AA;
 
@@ -42,6 +43,11 @@
   --space-8: 32px;
   --space-12: 48px;
   --space-16: 64px;
+
+  /* Line height */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
 
   /* Radius */
   --radius-sm: 6px;

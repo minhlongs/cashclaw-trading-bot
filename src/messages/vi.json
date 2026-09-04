@@ -184,35 +184,35 @@
       "cta": "Bắt đầu ngay"
     },
     "hero": {
-      "badge": "🤖 Bot giao dịch tự động",
+      "badge": "Bot giao dịch tự động",
       "badgeSub": "cho người bận rộn",
       "title": "Chốt lãi tự động",
       "titleLine2": "không cần canh sàn",
       "subtitle": "CashClaw chạy 24/7 trên Binance, Bybit, OKX. Bạn đặt chiến lược, bot chốt lãi — kết quả gửi về Telegram.",
       "cta": "Bắt đầu miễn phí",
-      "trust": "🔒 An toàn · Không khoá hợp đồng · Thử nghiệm 7 ngày",
+      "trust": "An toàn · Không khoá hợp đồng · Thử nghiệm 7 ngày",
       "link": "Cho nhà phát triển ›"
     },
     "features": {
       "title": "Tại sao chọn CashClaw?",
       "items": [
         {
-          "icon": "🤖",
+          "icon": "bot",
           "title": "Bot AI thông minh",
           "desc": "Chiến lược tự động tối ưu chốt lãi, giảm rủi ro nhờ thuật toán nâng cao."
         },
         {
-          "icon": "📊",
+          "icon": "chart",
           "title": "Hiệu quả minh bạch",
           "desc": "Theo dõi toàn bộ lịch sử giao dịch, tối ưu hiệu suất bot."
         },
         {
-          "icon": "🔒",
+          "icon": "shield",
           "title": "An toàn là ưu tiên",
           "desc": "Không khoá hợp đồng, hủy bất cứ lúc nào. Bạn hoàn toàn làm chủ."
         },
         {
-          "icon": "💼",
+          "icon": "briefcase",
           "title": "Linh hoạt mọi mục tiêu",
           "desc": "Phù hợp đầu tư ngắn, trung và dài hạn. Tùy chỉnh theo chiến lược của bạn."
         }
@@ -309,7 +309,7 @@
       "back": "← Quay lại"
     },
     "hero": {
-      "icon": "🚀",
+      "icon": "rocket",
       "title": "Bắt đầu ngay",
       "subtitle": "Tạo bot đầu tiên trong vài phút. Chúng tôi hướng dẫn từng bước.",
       "note": "Nền tảng vận hành trên Cloudflare — an toàn, nhanh, toàn cầu.",
@@ -319,29 +319,29 @@
       "title": "Điều gì xảy ra tiếp theo?",
       "items": [
         {
-          "icon": "📋",
+          "icon": "clipboard-list",
           "title": "Chọn chiến lược",
           "desc": "Grid hoặc Mean Reversion — bạn chọn phù hợp mục tiêu."
         },
         {
-          "icon": "🔌",
+          "icon": "plug",
           "title": "Kết nối sàn",
           "desc": "Nhập API key Binance/Bybit/OKX — được mã hoá, lưu an toàn."
         },
         {
-          "icon": "▶️",
+          "icon": "play",
           "title": "Chạy paper trading",
           "desc": "Thử nghiệm 7 ngày không tốn tiền thật — xem kết quả trước khi live."
         },
         {
-          "icon": "📈",
+          "icon": "trending-up",
           "title": "Thu lãi",
           "desc": "Bot chạy tự động, bạn nhận báo cáo qua Telegram mỗi ngày."
         }
       ]
     },
     "guarantee": {
-      "icon": "🛡️",
+      "icon": "shield-check",
       "title": "Cam kết của chúng tôi",
       "items": [
         "Không khoá hợp đồng — hủy bất cứ lúc nào",

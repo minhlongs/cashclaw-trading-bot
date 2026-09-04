@@ -184,35 +184,35 @@
       "cta": "Get Started"
     },
     "hero": {
-      "badge": "🤖 Automated Trading Bot",
+      "badge": "Automated Trading Bot",
       "badgeSub": "for busy people",
       "title": "Auto-profit",
       "titleLine2": "without watching charts",
       "subtitle": "CashClaw runs 24/7 on Binance, Bybit, OKX. Set your strategy, the bot books profits — results sent to Telegram.",
       "cta": "Start Free",
-      "trust": "🔒 Safe · No lock-in · 7-day trial",
+      "trust": "Safe · No lock-in · 7-day trial",
       "link": "For developers ›"
     },
     "features": {
       "title": "Why CashClaw?",
       "items": [
         {
-          "icon": "🤖",
+          "icon": "bot",
           "title": "Smart AI Bots",
           "desc": "Auto-optimized strategies to maximize gains and reduce risk."
         },
         {
-          "icon": "📊",
+          "icon": "chart",
           "title": "Transparent Performance",
           "desc": "Full trade history and bot performance at a glance."
         },
         {
-          "icon": "🔒",
+          "icon": "shield",
           "title": "Safety First",
           "desc": "No contracts, cancel anytime. You're always in control."
         },
         {
-          "icon": "💼",
+          "icon": "briefcase",
           "title": "Flexible for Any Goal",
           "desc": "Short, medium, or long-term investing fully customizable."
         }
@@ -309,7 +309,7 @@
       "back": "← Back"
     },
     "hero": {
-      "icon": "🚀",
+      "icon": "rocket",
       "title": "Get Started Now",
       "subtitle": "Create your first bot in minutes. We'll guide you step-by-step.",
       "note": "Powered by Cloudflare — safe, fast, worldwide.",
@@ -319,29 +319,29 @@
       "title": "What happens next?",
       "items": [
         {
-          "icon": "📋",
+          "icon": "clipboard-list",
           "title": "Pick a Strategy",
           "desc": "Grid or Mean Reversion — choose what fits your goals."
         },
         {
-          "icon": "🔌",
+          "icon": "plug",
           "title": "Connect Exchange",
           "desc": "Enter Binance/Bybit/OKX API key — encrypted, safe storage."
         },
         {
-          "icon": "▶️",
+          "icon": "play",
           "title": "Run Paper Trading",
           "desc": "7-day free trial with simulated funds — see results before going live."
         },
         {
-          "icon": "📈",
+          "icon": "trending-up",
           "title": "Earn Profit",
           "desc": "Bot runs 24/7, you get daily reports via Telegram."
         }
       ]
     },
     "guarantee": {
-      "icon": "🛡️",
+      "icon": "shield-check",
       "title": "Our Commitment",
       "items": [
         "No lock-in contract — cancel anytime",
