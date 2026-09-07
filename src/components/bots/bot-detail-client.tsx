@@ -17,11 +17,10 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'config', label: 'Config' },
 ];
 
-function ControlButton({ onClick, icon: Icon, label, color }: {
+function ControlButton({ onClick, icon: Icon, label }: {
   onClick: () => void;
   icon: typeof Play;
   label: string;
-  color?: 'text-primary' | 'text-secondary' | 'text-tertiary';
 }) {
   return (
     <button
@@ -66,7 +65,7 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
             <ControlButton onClick={() => {}} icon={Play} label="Resume" />
             <ControlButton onClick={() => {}} icon={Pause} label="Pause" />
             <ControlButton onClick={() => {}} icon={RotateCcw} label="Reset" />
-            <ControlButton onClick={() => {}} icon={Settings2} label="Config" color="text-tertiary" />
+            <ControlButton onClick={() => {}} icon={Settings2} label="Config" />
           </div>
         </div>
       </div>
