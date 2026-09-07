@@ -7,16 +7,11 @@ vi.mock('@/tree/bot', () => ({
   getBotManager: (...args: unknown[]) => mockGetBotManager(...args),
 }));
 
-vi.mock('@/forest/bot/d1-adapter', () => ({
-  loadAllBotsFromD1: vi.fn().mockResolvedValue(undefined),
-}));
-
 vi.mock('@/lib/db/client', () => ({
   createServerClient: vi.fn().mockReturnValue(null),
 }));
 
 import { botCreateHandler, type CreateBotPayload } from './bot-create';
-import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 
 function paperPayload(overrides: Partial<CreateBotPayload> = {}): CreateBotPayload {
   return {
@@ -35,7 +30,6 @@ describe('botCreateHandler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreateBot.mockResolvedValue({});
-    vi.mocked(loadAllBotsFromD1).mockResolvedValue(undefined);
   });
 
   describe('live mode rejection', () => {
@@ -51,11 +45,6 @@ describe('botCreateHandler', () => {
       const result = await botCreateHandler(paperPayload());
       expect(result.ok).toBe(true);
       expect(result.data).toEqual({ id: 'test-bot' });
-    });
-
-    it('calls loadAllBotsFromD1 before creating', async () => {
-      await botCreateHandler(paperPayload());
-      expect(vi.mocked(loadAllBotsFromD1)).toHaveBeenCalledTimes(1);
     });
 
     it('calls manager.createBot with correct config', async () => {
@@ -124,13 +113,6 @@ describe('botCreateHandler', () => {
       const result = await botCreateHandler(paperPayload());
       expect(result.ok).toBe(false);
       expect(result.error).toBe('Failed to create bot');
-    });
-
-    it('returns error when loadAllBotsFromD1 throws', async () => {
-      vi.mocked(loadAllBotsFromD1).mockRejectedValue(new Error('D1 load failed'));
-      const result = await botCreateHandler(paperPayload());
-      expect(result.ok).toBe(false);
-      expect(result.error).toBe('D1 load failed');
     });
   });
 });

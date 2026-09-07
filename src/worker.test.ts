@@ -12,9 +12,11 @@ const mockManager = {
   drainQueues: vi.fn().mockResolvedValue({}),
 };
 
-const mockLoadAllBotsFromD1 = vi.fn().mockResolvedValue(undefined);
+const mockListBots = vi.fn().mockResolvedValue([]);
 vi.mock('./forest/bot/d1-adapter', () => ({
-  loadAllBotsFromD1: (...args: unknown[]) => mockLoadAllBotsFromD1(...args),
+  BotQueryService: vi.fn().mockImplementation(() => ({
+    listBots: mockListBots,
+  })),
 }));
 vi.mock('./tree/bot', () => ({
   getBotManager: vi.fn(() => mockManager),
@@ -24,6 +26,7 @@ const mockTickReport = { evaluated: 0, errors: 0 };
 vi.mock('./forest/bot/scheduler', () => ({
   BotScheduler: vi.fn().mockImplementation(() => ({
     tick: vi.fn().mockResolvedValue(mockTickReport),
+    hydrateRunningBots: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 
@@ -59,8 +62,9 @@ describe('worker routes', () => {
   // ── /api/health ────────────────────────────────────────────────────────────
   describe('GET /api/health', () => {
     it('returns ok with bot counts', async () => {
-      mockManager.getAllBots.mockReturnValue([{ id: 'b1' }]);
-      mockManager.getRunningBots.mockReturnValue([{ id: 'b1' }]);
+      mockListBots.mockResolvedValue([
+        { id: 'b1', status: 'running', name: 'Bot 1', exchange: 'binance', pair: 'BTC/USDT', strategy: 'grid', config: { capital: 1000 }, metrics: { totalPnl: 0, winCount: 0, lossCount: 0, totalTrades: 0, maxDrawdown: 0 }, updatedAt: Date.now() },
+      ]);
       const res = await app.request('/api/health', {}, mkEnv());
       expect(res.status).toBe(200);
       const body = await res.json() as Record<string, unknown>;
@@ -70,8 +74,7 @@ describe('worker routes', () => {
     });
 
     it('returns ok with zero bots', async () => {
-      mockManager.getAllBots.mockReturnValue([]);
-      mockManager.getRunningBots.mockReturnValue([]);
+      mockListBots.mockResolvedValue([]);
       const res = await app.request('/api/health', {}, mkEnv());
       const body = await res.json() as Record<string, unknown>;
       expect(body.status).toBe('ok');
@@ -157,27 +160,25 @@ describe('worker routes', () => {
     });
   });
 
-  // ── GET /api/health hydration ──────────────────────────────────────────────
-  describe('GET /api/health hydration', () => {
-    it('calls loadAllBotsFromD1 before returning health', async () => {
-      mockLoadAllBotsFromD1.mockClear();
+  // ── GET /api/health uses BotQueryService ─────────────────────────────────
+  describe('GET /api/health uses BotQueryService', () => {
+    it('calls listBots via BotQueryService', async () => {
+      mockListBots.mockClear();
       const res = await app.request('/api/health', {}, mkEnv());
       expect(res.status).toBe(200);
-      expect(mockLoadAllBotsFromD1).toHaveBeenCalledTimes(1);
+      expect(mockListBots).toHaveBeenCalledTimes(1);
     });
   });
 
   // ── scheduled() function ───────────────────────────────────────────────────
   describe('scheduled() function', () => {
-    it('calls loadAllBotsFromD1 before drainQueues', async () => {
+    it('hydrates running bots then drains queues', async () => {
       const drainQueuesResult = { binance: { processed: 0, skipped: 0, pending: 0 } };
       mockManager.drainQueues = vi.fn().mockResolvedValue(drainQueuesResult);
-      mockLoadAllBotsFromD1.mockClear();
 
       const { scheduled } = await import('./worker');
       await scheduled({ scheduledTime: Date.now() }, {} as any, {} as any);
 
-      expect(mockLoadAllBotsFromD1).toHaveBeenCalledTimes(1);
       expect(mockManager.drainQueues).toHaveBeenCalledTimes(1);
     });
   });

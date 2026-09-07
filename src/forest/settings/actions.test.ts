@@ -10,7 +10,6 @@ vi.mock('@/lib/db/repositories', () => ({
   findSettingsByUser: (...a: unknown[]) => mockFindSettings(...a),
   upsertSettings: (...a: unknown[]) => mockUpsertSettings(...a),
 }));
-vi.mock('@/forest/bot/d1-adapter', () => ({ loadAllBotsFromD1: vi.fn(async () => {}) }));
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
 }));

@@ -6,7 +6,6 @@
 
 import { createServerClient } from '@/lib/db/client';
 import { findSettingsByUser, upsertSettings, type SettingsRow } from '@/lib/db/repositories';
-import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { createLogger } from '@/lib/logger';
 import { ok, err, type Result } from '@/lib/result';
 import { encrypt, decrypt } from '@/lib/crypto';
@@ -210,7 +209,7 @@ async function persistSettings(data: SettingsData): Promise<Result<void>> {
 // ── Public server actions ────────────────────────────────────
 
 export async function getSettings(): Promise<SettingsData> {
-  await loadAllBotsFromD1();
+  // Settings reads are independent of bot hydration — no D1 hydration needed
   return loadCurrentSettings();
 }
 

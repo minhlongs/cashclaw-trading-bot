@@ -51,16 +51,13 @@ const mockBot = {
 };
 
 const mockManager = {
-  getBot: vi.fn(() => mockBot),
+  getBot: vi.fn((): typeof mockBot | undefined => mockBot),
+  getOrCreateBot: vi.fn(async (): Promise<typeof mockBot | null> => mockBot),
   resumeBot: vi.fn(),
 };
 
 vi.mock('@/tree/bot', () => ({
   getBotManager: () => mockManager,
-}));
-
-vi.mock('@/forest/bot/d1-adapter', () => ({
-  loadAllBotsFromD1: vi.fn(async () => {}),
 }));
 
 vi.mock('@/forest/dashboard/trade-events', () => ({
@@ -80,6 +77,7 @@ async function control(botId: string, action: string) {
 beforeEach(() => {
   vi.clearAllMocks();
   mockManager.getBot.mockReturnValue(mockBot);
+  mockManager.getOrCreateBot.mockResolvedValue(mockBot);
   mockBot.getConfig.mockReturnValue(mockGridConfig);
   mockBot.getSnapshot.mockReturnValue(mockSnapshot);
 });
@@ -98,7 +96,8 @@ describe('botDetailHandler', () => {
   });
 
   it('returns error when bot not found', async () => {
-    mockManager.getBot.mockReturnValue(undefined as any);
+    mockManager.getBot.mockReturnValue(undefined);
+    mockManager.getOrCreateBot.mockResolvedValue(null);
     const result = await getDetail('missing');
     expect(result.ok).toBe(false);
     expect(result.error).toContain('Bot not found');
@@ -147,7 +146,8 @@ describe('botControlHandler', () => {
   });
 
   it('returns error when bot not found', async () => {
-    mockManager.getBot.mockReturnValue(undefined as any);
+    mockManager.getBot.mockReturnValue(undefined);
+    mockManager.getOrCreateBot.mockResolvedValue(null);
     const result = await control('missing', 'start');
     expect(result.ok).toBe(false);
     expect(result.error).toContain('Bot not found');

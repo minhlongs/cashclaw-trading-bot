@@ -3,10 +3,9 @@
 
 'use server';
 
-import { getBotManager, isGridConfig } from '@/tree/bot';
-import { BotInstance } from '@/tree/bot/bot-instance';
+import { isGridConfig } from '@/tree/bot';
 import { getBotCards, type BotCardData } from './bot-kpis';
-import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
+import { BotQueryService, type BotSummary } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
 import { createLogger } from '@/lib/logger';
 
@@ -40,9 +39,8 @@ export interface TradeRow {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────
-function botToDetail(bot: BotInstance): BotDetailData {
-  const s = bot.getSnapshot();
-  const cfg = bot.getConfig();
+function botToDetail(bot: BotSummary): BotDetailData {
+  const cfg = bot.config;
 
   const baseConfig: Record<string, number> = isGridConfig(cfg)
     ? {
@@ -63,29 +61,28 @@ function botToDetail(bot: BotInstance): BotDetailData {
       };
 
   return {
-    id: s.id,
-    name: cfg.name || s.id,
+    id: bot.id,
+    name: bot.name || bot.id,
     strategy: cfg.strategy,
     pair: cfg.symbol,
     exchange: cfg.exchange ?? 'paper',
-    botStatus: s.status,
-    totalPnl: s.totalPnl,
-    winCount: s.winCount,
-    lossCount: s.lossCount,
+    botStatus: bot.status,
+    totalPnl: bot.metrics.totalPnl,
+    winCount: bot.metrics.winCount,
+    lossCount: bot.metrics.lossCount,
     capitalAllocated: cfg.capital,
     capitalUsed: Math.round(cfg.capital * 0.49),
-    maxDrawdownPct: s.maxDrawdown,
-    startedAt: s.startedAt,
-    updatedAt: s.updatedAt,
+    maxDrawdownPct: bot.metrics.maxDrawdown,
+    startedAt: bot.metrics.startedAt,
+    updatedAt: bot.updatedAt,
     config: baseConfig,
   };
 }
 
 // ── Server Actions ──────────────────────────────────────────────
 export async function getBotDetail(id: string): Promise<BotDetailData | null> {
-  await loadAllBotsFromD1();
-  const manager = getBotManager();
-  const bot = manager.getBot(id);
+  const service = new BotQueryService();
+  const bot = await service.getBot(id);
   if (!bot) return null;
   return botToDetail(bot);
 }

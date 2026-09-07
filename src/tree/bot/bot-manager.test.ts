@@ -12,13 +12,24 @@ vi.mock('@/lib/logger', () => ({
   })),
 }));
 
+const mockFindBotById = vi.fn();
 vi.mock('@/lib/db/client', () => ({
   createServerClient: vi.fn(),
+}));
+vi.mock('@/lib/db/repositories', () => ({
+  findBotById: (...args: unknown[]) => mockFindBotById(...args),
+  findAllBots: vi.fn(async () => []),
+  findBotsByUser: vi.fn(async () => []),
 }));
 
 vi.mock('@/forest/bot/d1-adapter', () => ({
   hydrateFromD1: vi.fn(async () => {}),
   patchBot: vi.fn(async () => {}),
+}));
+
+vi.mock('@/forest/bot/d1-hydration', () => ({
+  restoreBotStateFromRow: vi.fn(),
+  toBotStatus: vi.fn((s: string) => s === 'paper_test' || s === 'live_running' ? 'running' : 'idle'),
 }));
 
 vi.mock('./bot-manager-helpers', () => ({
@@ -530,6 +541,166 @@ describe('BotManager', () => {
       resetBotManager();
       const b = getBotManager();
       expect(b.getAllBots()).toHaveLength(0);
+    });
+  });
+
+  // ── getOrCreateBot (lazy single-bot hydration) ─────────────────────────
+
+  describe('getOrCreateBot', () => {
+    it('returns existing bot from memory without D1 query', async () => {
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('bot-1'));
+
+      // D1 should not be queried
+      const { createServerClient } = await import('@/lib/db/client');
+      const db = createServerClient();
+
+      const result = await mgr.getOrCreateBot('bot-1');
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('bot-1');
+      expect(mockFindBotById).not.toHaveBeenCalled();
+    });
+
+    it('hydrates bot from D1 when not in memory', async () => {
+      const mgr = createManager();
+      const { createServerClient } = await import('@/lib/db/client');
+      const mockDb = {
+        prepare: vi.fn().mockReturnValue({
+          bind: vi.fn().mockReturnValue({
+            first: vi.fn().mockResolvedValue({
+              id: 'bot-d1',
+              user_id: 'user-1',
+              name: 'D1 Bot',
+              strategy: 'grid',
+              pair: 'ETH/USDT',
+              exchange: 'binance',
+              status: 'paper_test',
+              config_json: JSON.stringify({
+                strategy: 'grid',
+                symbol: 'ETH/USDT',
+                exchange: 'binance',
+                capital: 2000,
+                gridSpacingPct: 1,
+                gridLevels: 10,
+                capitalPerLevelPct: 10,
+                takeProfitPct: 2,
+                stopLossPct: 3,
+                rebalanceOnFill: false,
+                maxDrawdownPct: 15,
+                mode: 'paper',
+              }),
+              capital_allocated: 2000,
+              capital_used: 0,
+              total_pnl: 50,
+              win_count: 5,
+              loss_count: 2,
+              max_drawdown: 3,
+              total_trades: 7,
+              started_at: 1000,
+              stopped_at: null,
+              last_error: null,
+              last_tick_at: 2000,
+              last_order_at: 1500,
+              current_drawdown: 1,
+              created_at: 500,
+              updated_at: 2000,
+            }),
+          }),
+        }),
+      };
+      (createServerClient as ReturnType<typeof vi.fn>).mockReturnValue(mockDb);
+
+      const result = await mgr.getOrCreateBot('bot-d1');
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('bot-d1');
+      expect(mockDb.prepare).toHaveBeenCalledWith('SELECT * FROM bots WHERE id = ?');
+    });
+
+    it('returns null when bot not found in D1', async () => {
+      const mgr = createManager();
+      const { createServerClient } = await import('@/lib/db/client');
+      const mockDb = {
+        prepare: vi.fn().mockReturnValue({
+          bind: vi.fn().mockReturnValue({
+            first: vi.fn().mockResolvedValue(null),
+          }),
+        }),
+      };
+      (createServerClient as ReturnType<typeof vi.fn>).mockReturnValue(mockDb);
+
+      const result = await mgr.getOrCreateBot('nonexistent');
+      expect(result).toBeNull();
+    });
+
+    it('returns null when DB is unavailable', async () => {
+      const mgr = createManager();
+      const { createServerClient } = await import('@/lib/db/client');
+      (createServerClient as ReturnType<typeof vi.fn>).mockReturnValue(null);
+
+      const result = await mgr.getOrCreateBot('bot-1');
+      expect(result).toBeNull();
+    });
+
+    it('restores bot state from D1 row after hydration', async () => {
+      const mgr = createManager();
+      const { createServerClient } = await import('@/lib/db/client');
+      const { restoreBotStateFromRow } = await import('@/forest/bot/d1-hydration');
+      const mockDb = {
+        prepare: vi.fn().mockReturnValue({
+          bind: vi.fn().mockReturnValue({
+            first: vi.fn().mockResolvedValue({
+              id: 'bot-restore',
+              user_id: 'user-1',
+              name: 'Restore Bot',
+              strategy: 'grid',
+              pair: 'SOL/USDT',
+              exchange: 'binance',
+              status: 'paper_test',
+              config_json: JSON.stringify({
+                strategy: 'grid',
+                symbol: 'SOL/USDT',
+                exchange: 'binance',
+                capital: 1500,
+                gridSpacingPct: 1,
+                gridLevels: 10,
+                capitalPerLevelPct: 10,
+                takeProfitPct: 2,
+                stopLossPct: 3,
+                rebalanceOnFill: false,
+                maxDrawdownPct: 15,
+                mode: 'paper',
+              }),
+              capital_allocated: 1500,
+              capital_used: 0,
+              total_pnl: 25,
+              win_count: 3,
+              loss_count: 1,
+              max_drawdown: 2,
+              total_trades: 4,
+              started_at: 500,
+              stopped_at: null,
+              last_error: null,
+              last_tick_at: 1000,
+              last_order_at: 800,
+              current_drawdown: 0.5,
+              created_at: 100,
+              updated_at: 1000,
+            }),
+          }),
+        }),
+      };
+      (createServerClient as ReturnType<typeof vi.fn>).mockReturnValue(mockDb);
+
+      const result = await mgr.getOrCreateBot('bot-restore');
+      expect(result).toBeDefined();
+      expect(restoreBotStateFromRow).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'bot-restore' }),
+        expect.objectContaining({
+          status: 'paper_test',
+          total_pnl: 25,
+          total_trades: 7,
+        }),
+      );
     });
   });
 });

@@ -12,10 +12,7 @@ vi.mock('@/lib/logger', () => ({
   createLogger: vi.fn(() => mockLogger),
 }));
 
-const mockLoadAllBotsFromD1 = vi.fn().mockResolvedValue(undefined);
-vi.mock('./d1-adapter', () => ({
-  loadAllBotsFromD1: (...args: unknown[]) => mockLoadAllBotsFromD1(...args),
-}));
+// d1-adapter no longer used by scheduler — replaced by direct findAllBots import
 
 const mockGetBotManager = vi.fn();
 vi.mock('@/tree/bot', () => ({
@@ -96,7 +93,6 @@ describe('BotScheduler', () => {
     tickCount = 0;
 
     // Re-establish mock implementations cleared by clearAllMocks
-    mockLoadAllBotsFromD1.mockResolvedValue(undefined);
     mockGetBotManager.mockReturnValue({
       getRunningBots: vi.fn().mockReturnValue([]),
       getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
@@ -120,12 +116,11 @@ describe('BotScheduler', () => {
   }
 
   describe('tick()', () => {
-    it('hydrates bots from D1 before reading the manager', async () => {
+    it('queries D1 for running bots before reading the manager', async () => {
       const scheduler = await createScheduler();
       await scheduler.tick();
 
-      expect(mockLoadAllBotsFromD1).toHaveBeenCalledTimes(1);
-      expect(mockGetBotManager).toHaveBeenCalledBefore(mockLoadAllBotsFromD1);
+      expect(mockFindAllBots).toHaveBeenCalledTimes(1);
     });
 
     it('returns tickCount incremented and botsEvaluated = 0 when no running bots', async () => {

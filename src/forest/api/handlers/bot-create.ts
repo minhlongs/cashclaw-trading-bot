@@ -1,6 +1,5 @@
 import { getBotManager, type CreateBotRequest } from '@/tree/bot';
 import type { GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
-import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 
 function normalizeWizardConfig(raw?: Record<string, number>): Record<string, number> {
   const aliases: Record<string, string> = {
@@ -83,8 +82,6 @@ export async function botCreateHandler(
         error: 'Live trading not available in v1 — paper mode only',
       };
     }
-
-    await loadAllBotsFromD1();
 
     const cfg = normalizeWizardConfig(payload.config);
     const base = {

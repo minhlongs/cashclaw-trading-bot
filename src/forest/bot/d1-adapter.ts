@@ -19,3 +19,6 @@ export {
   persistSnapshot,
   persistAudit,
 } from './d1-persistence';
+
+// Re-export query service for direct D1 reads
+export { BotQueryService, type BotSummary, type BotMetrics } from './bot-query-service';

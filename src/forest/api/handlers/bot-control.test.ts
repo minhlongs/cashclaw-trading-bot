@@ -9,7 +9,8 @@ const mockBot = {
 };
 
 const mockManager = {
-  getBot: vi.fn(() => mockBot),
+  getBot: vi.fn((): typeof mockBot | undefined => mockBot),
+  getOrCreateBot: vi.fn(async (): Promise<typeof mockBot | null> => mockBot),
   resumeBot: vi.fn(),
   getAllBots: vi.fn(() => []),
   createBot: vi.fn(),
@@ -17,12 +18,12 @@ const mockManager = {
 };
 
 vi.mock('@/tree/bot', () => ({ getBotManager: () => mockManager }));
-vi.mock('@/forest/bot/d1-adapter', () => ({ loadAllBotsFromD1: vi.fn(async () => {}) }));
 vi.mock('@/lib/db/client', () => ({ createServerClient: vi.fn(() => null) }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   mockManager.getBot.mockReturnValue(mockBot);
+  mockManager.getOrCreateBot.mockResolvedValue(mockBot);
 });
 
 async function control(id: string, action: string) {
@@ -56,7 +57,8 @@ describe('botControlHandler', () => {
   });
 
   it('returns error for unknown bot', async () => {
-    mockManager.getBot.mockReturnValue(undefined as any);
+    mockManager.getBot.mockReturnValue(undefined);
+    mockManager.getOrCreateBot.mockResolvedValue(null);
     const result = await control('nonexistent', 'start');
     expect(result.ok).toBe(false);
     expect(result.error).toContain('Bot not found');

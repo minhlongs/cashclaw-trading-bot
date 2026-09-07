@@ -1,11 +1,9 @@
 /**
  * GET /api/bots handler
- * Returns list of all bots from BotManager.
+ * Returns list of all bots — reads directly from D1, no BotManager hydration.
  */
 
-import { getBotManager, type BotConfig } from '@/tree/bot';
-import { BotInstance } from '@/tree/bot/bot-instance';
-import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
+import { BotQueryService } from '@/forest/bot/d1-adapter';
 
 export interface BotListItem {
   id: string;
@@ -28,28 +26,23 @@ export async function botListHandler(): Promise<{
   error?: string;
 }> {
   try {
-    await loadAllBotsFromD1();
-    const manager = getBotManager();
-    const bots: BotInstance[] = manager.getAllBots();
+    const service = new BotQueryService();
+    const bots = await service.listBots();
 
-    const items: BotListItem[] = bots.map((bot) => {
-      const snapshot = bot.getSnapshot();
-      const config = bot.getConfig() as BotConfig;
-      return {
-        id: snapshot.id,
-        name: config.name || snapshot.id,
-        strategy: config.strategy,
-        pair: config.symbol,
-        exchange: config.exchange ?? 'paper',
-        status: snapshot.status,
-        totalPnl: snapshot.totalPnl,
-        winCount: snapshot.winCount,
-        lossCount: snapshot.lossCount,
-        startedAt: snapshot.startedAt,
-        updatedAt: snapshot.updatedAt,
-        capitalAllocated: config.capital,
-      };
-    });
+    const items: BotListItem[] = bots.map((bot) => ({
+      id: bot.id,
+      name: bot.name || bot.id,
+      strategy: bot.strategy as 'grid' | 'mean_reversion',
+      pair: bot.pair,
+      exchange: bot.exchange,
+      status: bot.status,
+      totalPnl: bot.metrics.totalPnl,
+      winCount: bot.metrics.winCount,
+      lossCount: bot.metrics.lossCount,
+      startedAt: bot.metrics.startedAt,
+      updatedAt: bot.updatedAt,
+      capitalAllocated: bot.config.capital,
+    }));
 
     return { ok: true, data: items };
   } catch (e) {

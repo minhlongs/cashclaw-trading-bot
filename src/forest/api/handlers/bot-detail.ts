@@ -5,7 +5,6 @@
 
 import { getBotManager, type BotConfig } from '@/tree/bot';
 import { BotInstance } from '@/tree/bot/bot-instance';
-import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { getRecentEvents } from '@/forest/dashboard/trade-events';
 import type { TradeEvent } from '@/tree/telemetry';
 
@@ -40,9 +39,9 @@ export async function botDetailHandler(id: string): Promise<{
   error?: string;
 }> {
   try {
-    await loadAllBotsFromD1();
     const manager = getBotManager();
-    const bot: BotInstance | undefined = manager.getBot(id);
+    // Lazy single-bot hydration: load only this bot from D1 if not in memory
+    const bot = manager.getBot(id) ?? await manager.getOrCreateBot(id);
     if (!bot) {
       return { ok: false, error: `Bot not found: ${id}` };
     }
@@ -101,9 +100,9 @@ export async function botControlHandler(
   action: BotControlAction,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await loadAllBotsFromD1();
     const manager = getBotManager();
-    const bot = manager.getBot(botId);
+    // Lazy single-bot hydration: load only this bot from D1 if not in memory
+    const bot = manager.getBot(botId) ?? await manager.getOrCreateBot(botId);
     if (!bot) return { ok: false, error: `Bot not found: ${botId}` };
 
     switch (action) {

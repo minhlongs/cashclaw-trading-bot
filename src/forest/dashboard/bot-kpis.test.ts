@@ -1,43 +1,60 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { BotInstance } from '@/tree/bot/bot-instance';
-import type { BotConfig, BotState } from '@/tree/bot/types';
+import type { BotSummary } from '@/forest/bot/d1-adapter';
 import type { TradeEvent } from '@/tree/telemetry';
 
-const mockGetAllBots = vi.fn<() => BotInstance[]>();
+const mockListBots = vi.fn<() => Promise<BotSummary[]>>();
 const mockGetRecentEvents = vi.fn<() => Promise<TradeEvent[]>>();
 
-vi.mock('@/tree/bot', () => ({
-  getBotManager: () => ({ getAllBots: mockGetAllBots }),
+vi.mock('@/forest/bot/d1-adapter', () => ({
+  BotQueryService: vi.fn().mockImplementation(() => ({
+    listBots: mockListBots,
+  })),
 }));
-vi.mock('@/forest/bot/d1-adapter', () => ({ loadAllBotsFromD1: vi.fn() }));
-vi.mock('@/tree/bot/bot-instance', () => ({ BotInstance: class {} }));
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 vi.mock('./trade-events', () => ({ getRecentEvents: mockGetRecentEvents }));
 
-const baseConfig: BotConfig = {
-  strategy: 'grid', symbol: 'BTC/USDT', exchange: 'binance',
-  mode: 'live', capital: 1000, maxDrawdownPct: 10,
-  gridSpacingPct: 1, gridLevels: 10, capitalPerLevelPct: 10,
-  takeProfitPct: 2, stopLossPct: 3, rebalanceOnFill: false,
-} as BotConfig;
-
-function snap(overrides: Partial<BotState> = {}): BotState {
-  const now = Date.now();
+function mockSummary(overrides: Partial<BotSummary> = {}): BotSummary {
   return {
-    id: 'bot-1', config: { ...baseConfig }, status: 'idle', createdAt: now,
-    startedAt: null, error: null, totalPnl: 0, totalTrades: 0,
-    winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0,
-    stoppedAt: null, lastTickAt: null, lastOrderAt: null, updatedAt: now,
+    id: 'bot-1',
+    name: 'bot-1',
+    status: 'idle',
+    pair: 'BTC/USDT',
+    strategy: 'grid',
+    exchange: 'binance',
+    mode: 'live',
+    config: {
+      strategy: 'grid',
+      symbol: 'BTC/USDT',
+      exchange: 'binance',
+      mode: 'live',
+      capital: 1000,
+      maxDrawdownPct: 10,
+      gridSpacingPct: 1,
+      gridLevels: 10,
+      capitalPerLevelPct: 10,
+      takeProfitPct: 2,
+      stopLossPct: 3,
+      rebalanceOnFill: false,
+    },
+    metrics: {
+      totalPnl: 0,
+      winCount: 0,
+      lossCount: 0,
+      maxDrawdown: 0,
+      currentDrawdown: 0,
+      totalTrades: 0,
+      startedAt: null,
+      stoppedAt: null,
+      lastTickAt: null,
+      lastOrderAt: null,
+      lastError: null,
+    },
+    createdAt: 0,
+    updatedAt: 0,
     ...overrides,
-  };
-}
-
-function bot(snapOverrides: Partial<BotState> = {}, cfgOverrides: Partial<BotConfig> = {}): BotInstance {
-  const cfg = { ...baseConfig, ...cfgOverrides } as BotConfig;
-  const s = snap({ config: cfg, ...snapOverrides });
-  return { getSnapshot: () => s, getConfig: () => cfg } as unknown as BotInstance;
+  } as BotSummary;
 }
 
 describe('getKpis', () => {
@@ -49,7 +66,7 @@ describe('getKpis', () => {
   });
 
   it('returns zeros for empty bot list', async () => {
-    mockGetAllBots.mockReturnValue([]);
+    mockListBots.mockResolvedValue([]);
     const r = await getKpis();
     expect(r.totalBalance).toBe(0);
     expect(r.todayPnl).toBe(0);
@@ -59,18 +76,18 @@ describe('getKpis', () => {
   });
 
   it('counts only running bots as active', async () => {
-    mockGetAllBots.mockReturnValue([
-      bot({ status: 'running' }),
-      bot({ id: 'b2', status: 'idle' }),
-      bot({ id: 'b3', status: 'running' }),
+    mockListBots.mockResolvedValue([
+      mockSummary({ status: 'running' }),
+      mockSummary({ id: 'b2', status: 'idle' }),
+      mockSummary({ id: 'b3', status: 'running' }),
     ]);
     expect((await getKpis()).activeBots).toBe(2);
   });
 
   it('calculates totalBalance = capital + totalPnl per bot', async () => {
-    mockGetAllBots.mockReturnValue([
-      bot({ totalPnl: 150 }, { capital: 1000 }),
-      bot({ id: 'b2', totalPnl: -50 }, { capital: 500 }),
+    mockListBots.mockResolvedValue([
+      mockSummary({ metrics: { totalPnl: 150, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0, totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null }, config: { strategy: 'grid', symbol: 'BTC/USDT', exchange: 'binance', mode: 'live', capital: 1000, maxDrawdownPct: 10, gridSpacingPct: 1, gridLevels: 10, capitalPerLevelPct: 10, takeProfitPct: 2, stopLossPct: 3, rebalanceOnFill: false } }),
+      mockSummary({ id: 'b2', metrics: { totalPnl: -50, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0, totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null }, config: { strategy: 'grid', symbol: 'BTC/USDT', exchange: 'binance', mode: 'live', capital: 500, maxDrawdownPct: 10, gridSpacingPct: 1, gridLevels: 10, capitalPerLevelPct: 10, takeProfitPct: 2, stopLossPct: 3, rebalanceOnFill: false } }),
     ]);
     expect((await getKpis()).totalBalance).toBe(1600);
   });
@@ -78,17 +95,17 @@ describe('getKpis', () => {
   it('sums todayPnl only for bots started today', async () => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    mockGetAllBots.mockReturnValue([
-      bot({ startedAt: todayStart.getTime(), totalPnl: 100 }),
-      bot({ id: 'b2', startedAt: null, totalPnl: 50 }),
+    mockListBots.mockResolvedValue([
+      mockSummary({ metrics: { totalPnl: 100, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0, totalTrades: 0, startedAt: todayStart.getTime(), stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null } }),
+      mockSummary({ id: 'b2', metrics: { totalPnl: 50, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0, totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null } }),
     ]);
     expect((await getKpis()).todayPnl).toBe(100);
   });
 
   it('computes winRate from totalTrades and winCount', async () => {
-    mockGetAllBots.mockReturnValue([
-      bot({ totalTrades: 10, winCount: 7 }),
-      bot({ id: 'b2', totalTrades: 5, winCount: 3 }),
+    mockListBots.mockResolvedValue([
+      mockSummary({ metrics: { totalPnl: 0, winCount: 7, lossCount: 3, maxDrawdown: 0, currentDrawdown: 0, totalTrades: 10, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null } }),
+      mockSummary({ id: 'b2', metrics: { totalPnl: 0, winCount: 3, lossCount: 2, maxDrawdown: 0, currentDrawdown: 0, totalTrades: 5, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null } }),
     ]);
     const r = await getKpis();
     expect(r.totalTrades).toBe(15);
@@ -96,17 +113,17 @@ describe('getKpis', () => {
   });
 
   it('winRate is 0 when no trades exist', async () => {
-    mockGetAllBots.mockReturnValue([bot()]);
+    mockListBots.mockResolvedValue([mockSummary()]);
     const r = await getKpis();
     expect(r.winRate).toBe(0);
     expect(r.totalTrades).toBe(0);
   });
 
   it('stopped/error/paused bots count as inactive', async () => {
-    mockGetAllBots.mockReturnValue([
-      bot({ status: 'stopped' }),
-      bot({ id: 'b2', status: 'error' }),
-      bot({ id: 'b3', status: 'paused' }),
+    mockListBots.mockResolvedValue([
+      mockSummary({ status: 'stopped' }),
+      mockSummary({ id: 'b2', status: 'error' }),
+      mockSummary({ id: 'b3', status: 'paused' }),
     ]);
     expect((await getKpis()).activeBots).toBe(0);
   });
@@ -121,7 +138,7 @@ describe('getDashboardData', () => {
   });
 
   it('returns empty dashboard when no bots', async () => {
-    mockGetAllBots.mockReturnValue([]);
+    mockListBots.mockResolvedValue([]);
     const r = await getDashboardData();
     expect(r.kpis.totalBalance).toBe(0);
     expect(r.bots).toEqual([]);
@@ -129,14 +146,18 @@ describe('getDashboardData', () => {
   });
 
   it('returns card data and KPIs for populated bots', async () => {
-    mockGetAllBots.mockReturnValue([
-      bot(
-        { id: 'grid-1', totalPnl: 100, totalTrades: 6, winCount: 5 },
-        { strategy: 'grid', symbol: 'SOL/USDT', exchange: 'okx', capital: 2000 },
-      ),
+    mockListBots.mockResolvedValue([
+      mockSummary({
+        id: 'grid-1',
+        name: 'grid-1',
+        pair: 'SOL/USDT',
+        exchange: 'okx',
+        metrics: { totalPnl: 100, winCount: 5, lossCount: 1, maxDrawdown: 0, currentDrawdown: 0, totalTrades: 6, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null },
+        config: { strategy: 'grid', symbol: 'SOL/USDT', exchange: 'okx', mode: 'live', capital: 2000, maxDrawdownPct: 10, gridSpacingPct: 1, gridLevels: 10, capitalPerLevelPct: 10, takeProfitPct: 2, stopLossPct: 3, rebalanceOnFill: false },
+      }),
     ]);
     mockGetRecentEvents.mockResolvedValue([
-      { id: 'e1', botId: 'grid-1', eventType: 'fill', details: {}, timestamp: Date.now() },
+      { id: 'e1', botId: 'grid-1', eventType: 'fill', details: {}, timestamp: Date.now() } as TradeEvent,
     ]);
     const r = await getDashboardData();
     expect(r.kpis.activeBots).toBe(0);
@@ -149,7 +170,9 @@ describe('getDashboardData', () => {
   });
 
   it('defaults exchange to "paper" when config.exchange is undefined', async () => {
-    mockGetAllBots.mockReturnValue([bot({}, { exchange: undefined })]);
+    mockListBots.mockResolvedValue([
+      mockSummary({ exchange: undefined as unknown as string, config: { strategy: 'grid', symbol: 'BTC/USDT', exchange: undefined as unknown as string, mode: 'live', capital: 1000, maxDrawdownPct: 10, gridSpacingPct: 1, gridLevels: 10, capitalPerLevelPct: 10, takeProfitPct: 2, stopLossPct: 3, rebalanceOnFill: false } }),
+    ]);
     const r = await getDashboardData();
     expect(r.bots[0].exchange).toBe('paper');
   });
@@ -164,17 +187,23 @@ describe('getBotCards', () => {
   });
 
   it('returns empty array when no bots', async () => {
-    mockGetAllBots.mockReturnValue([]);
+    mockListBots.mockResolvedValue([]);
     expect(await getBotCards()).toEqual([]);
   });
 
-  it('maps snapshots to card data correctly', async () => {
-    mockGetAllBots.mockReturnValue([
-      bot(
-        { id: 'mr-1', status: 'running', startedAt: 1000, totalPnl: 50,
-          winCount: 2, lossCount: 1, maxDrawdown: 5, updatedAt: 2000 },
-        { strategy: 'mean_reversion' as const, symbol: 'ETH/USDT', capital: 500 },
-      ),
+  it('maps summaries to card data correctly', async () => {
+    mockListBots.mockResolvedValue([
+      mockSummary({
+        id: 'mr-1',
+        name: 'mr-1',
+        status: 'running',
+        strategy: 'mean_reversion',
+        pair: 'ETH/USDT',
+        exchange: 'binance',
+        metrics: { totalPnl: 50, winCount: 2, lossCount: 1, maxDrawdown: 5, currentDrawdown: 0, totalTrades: 3, startedAt: 1000, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null },
+        config: { strategy: 'mean_reversion', symbol: 'ETH/USDT', exchange: 'binance', mode: 'live', capital: 500, maxDrawdownPct: 10, bbPeriod: 20, bbStdDev: 2, rsiPeriod: 14, rsiBuyThreshold: 30, rsiSellThreshold: 70, volumeMultiplier: 1.5, positionSizePct: 10, cooldownMinutes: 5 },
+        updatedAt: 2000,
+      }),
     ]);
     const cards = await getBotCards();
     expect(cards).toHaveLength(1);

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@/tree/bot', () => ({
-  getBotManager: vi.fn(),
   isGridConfig: vi.fn((cfg: { strategy?: string }) => cfg.strategy === 'grid'),
   isMeanRevConfig: vi.fn((cfg: { strategy?: string }) => cfg.strategy === 'mean_reversion'),
 }));
@@ -21,55 +20,63 @@ function mockD1(rows: Array<{ id: string; detail_json: string; created_at: numbe
   return { prepare, bind, all };
 }
 
-const mockManager = {
-  getBot: vi.fn(),
-};
-
-function mockBotInstance(overrides: Record<string, unknown> = {}) {
+function mockGridSummary(): Record<string, unknown> {
   return {
-    getSnapshot: () => ({
-      id: 'bot-1',
-      status: 'running',
+    id: 'bot-1',
+    name: 'bot-1',
+    status: 'running',
+    pair: 'BTCUSDT',
+    strategy: 'grid',
+    exchange: 'paper',
+    mode: 'paper',
+    config: {
+      strategy: 'grid',
+      symbol: 'BTCUSDT',
+      exchange: 'paper',
+      mode: 'paper',
+      capital: 5000,
+      maxDrawdownPct: 15,
+      gridSpacingPct: 1,
+      gridLevels: 5,
+      capitalPerLevelPct: 20,
+      takeProfitPct: 3,
+      stopLossPct: 5,
+      rebalanceOnFill: true,
+    },
+    metrics: {
       totalPnl: 150.5,
       winCount: 5,
       lossCount: 2,
       maxDrawdown: 12.5,
+      currentDrawdown: 0,
+      totalTrades: 7,
       startedAt: 1000,
-      updatedAt: 2000,
-      error: null,
-      ...overrides,
-    }),
-    getConfig: () => ({
-      strategy: 'grid',
-      symbol: 'BTCUSDT',
-      exchange: 'paper',
-      capital: 5000,
-      gridSpacingPct: 1,
-      gridLevels: 5,
-      capitalPerLevelPct: 20,
-      maxDrawdownPct: 15,
-    }),
+      stoppedAt: null,
+      lastTickAt: 2000,
+      lastOrderAt: null,
+      lastError: null,
+    },
+    createdAt: 500,
+    updatedAt: 2000,
   };
 }
 
-function mockMeanRevBot() {
+function mockMeanRevSummary(): Record<string, unknown> {
   return {
-    getSnapshot: () => ({
-      id: 'mr-bot',
-      status: 'stopped',
-      totalPnl: -50,
-      winCount: 1,
-      lossCount: 3,
-      maxDrawdown: 20,
-      startedAt: null,
-      updatedAt: 3000,
-      error: null,
-    }),
-    getConfig: () => ({
+    id: 'mr-bot',
+    name: 'mr-bot',
+    status: 'stopped',
+    pair: 'ETHUSDT',
+    strategy: 'mean_reversion',
+    exchange: 'binance',
+    mode: 'paper',
+    config: {
       strategy: 'mean_reversion',
       symbol: 'ETHUSDT',
       exchange: 'binance',
+      mode: 'paper',
       capital: 2000,
+      maxDrawdownPct: 25,
       bbPeriod: 20,
       bbStdDev: 2,
       rsiPeriod: 14,
@@ -77,21 +84,42 @@ function mockMeanRevBot() {
       rsiSellThreshold: 70,
       volumeMultiplier: 1.5,
       positionSizePct: 10,
-      maxDrawdownPct: 25,
-    }),
+      cooldownMinutes: 5,
+    },
+    metrics: {
+      totalPnl: -50,
+      winCount: 1,
+      lossCount: 3,
+      maxDrawdown: 20,
+      currentDrawdown: 0,
+      totalTrades: 4,
+      startedAt: null,
+      stoppedAt: null,
+      lastTickAt: 3000,
+      lastOrderAt: null,
+      lastError: null,
+    },
+    createdAt: 500,
+    updatedAt: 3000,
   };
 }
 
-beforeEach(async () => {
+const mockGetBot = vi.fn();
+vi.mock('@/forest/bot/d1-adapter', () => ({
+  BotQueryService: vi.fn().mockImplementation(() => ({
+    getBot: mockGetBot,
+  })),
+}));
+
+beforeEach(() => {
   vi.clearAllMocks();
-  const { getBotManager } = await import('@/tree/bot');
-  vi.mocked(getBotManager).mockReturnValue(mockManager as any);
+  mockGetBot.mockResolvedValue(null);
 });
 
 describe('bot-detail', () => {
   describe('getBotDetail', () => {
     it('returns BotDetailData for grid bot', async () => {
-      mockManager.getBot.mockReturnValue(mockBotInstance());
+      mockGetBot.mockResolvedValue(mockGridSummary());
       const { getBotDetail } = await import('./bot-detail');
       const detail = await getBotDetail('bot-1');
       expect(detail).not.toBeNull();
@@ -109,7 +137,7 @@ describe('bot-detail', () => {
     });
 
     it('returns BotDetailData for mean reversion bot', async () => {
-      mockManager.getBot.mockReturnValue(mockMeanRevBot());
+      mockGetBot.mockResolvedValue(mockMeanRevSummary());
       const { getBotDetail } = await import('./bot-detail');
       const detail = await getBotDetail('mr-bot');
       expect(detail).not.toBeNull();
@@ -128,14 +156,14 @@ describe('bot-detail', () => {
     });
 
     it('returns null when bot not found', async () => {
-      mockManager.getBot.mockReturnValue(undefined);
+      mockGetBot.mockResolvedValue(null);
       const { getBotDetail } = await import('./bot-detail');
       const detail = await getBotDetail('nonexistent');
       expect(detail).toBeNull();
     });
 
     it('sets capitalUsed to capital * 0.49 rounded', async () => {
-      mockManager.getBot.mockReturnValue(mockBotInstance());
+      mockGetBot.mockResolvedValue(mockGridSummary());
       const { getBotDetail } = await import('./bot-detail');
       const detail = await getBotDetail('bot-1');
       expect(detail!.capitalUsed).toBe(2450); // 5000 * 0.49

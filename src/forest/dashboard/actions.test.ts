@@ -1,6 +1,7 @@
 // Tests for forest/dashboard server actions
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { BotSummary } from '@/forest/bot/d1-adapter';
 import {
   getDashboardData,
   getKpis,
@@ -65,18 +66,68 @@ vi.mock('@/tree/bot', () => {
   };
 });
 
+const mockListBots = vi.fn<() => Promise<BotSummary[]>>();
+vi.mock('@/forest/bot/d1-adapter', () => ({
+  BotQueryService: vi.fn().mockImplementation(() => ({
+    listBots: mockListBots,
+  })),
+}));
+
 vi.mock('@/lib/db/client', () => ({
   createServerClient: () => null, // local dev — skip D1
 }));
+
+function mockSummary(overrides: Partial<BotSummary> = {}): BotSummary {
+  return {
+    id: 'bot-1',
+    name: 'bot-1',
+    status: 'running',
+    pair: 'BTC/USDT',
+    strategy: 'grid',
+    exchange: 'binance',
+    mode: 'live',
+    config: {
+      strategy: 'grid',
+      symbol: 'BTC/USDT',
+      exchange: 'binance',
+      mode: 'live',
+      capital: 1000,
+      maxDrawdownPct: 10,
+      gridSpacingPct: 1,
+      gridLevels: 10,
+      capitalPerLevelPct: 10,
+      takeProfitPct: 2,
+      stopLossPct: 3,
+      rebalanceOnFill: false,
+    },
+    metrics: {
+      totalPnl: 100.5,
+      winCount: 7,
+      lossCount: 3,
+      maxDrawdown: 0,
+      currentDrawdown: 0,
+      totalTrades: 10,
+      startedAt: Date.now(),
+      stoppedAt: null,
+      lastTickAt: null,
+      lastOrderAt: null,
+      lastError: null,
+    },
+    createdAt: 0,
+    updatedAt: Date.now(),
+    ...overrides,
+  } as BotSummary;
+}
 
 describe('Dashboard Server Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockBot = makeMockBot(); // re-seed bot reference for each test
+    mockListBots.mockResolvedValue([mockSummary()]);
   });
 
   describe('getDashboardData', () => {
-    it('computes kpis from runtime bot state', async () => {
+    it('computes kpis from D1 bot data', async () => {
       const data = await getDashboardData();
       expect(data.kpis.totalBalance).toBe(1100.5); // 1000 capital + 100.5 pnl
       expect(data.kpis.activeBots).toBe(1);
@@ -103,7 +154,7 @@ describe('Dashboard Server Actions', () => {
   });
 
   describe('getBotCards', () => {
-    it('maps bot snapshots to card shape', async () => {
+    it('maps bot summaries to card shape', async () => {
       const cards = await getBotCards();
       expect(cards).toHaveLength(1);
       expect(cards[0]).toMatchObject({

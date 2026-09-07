@@ -4,7 +4,6 @@
  */
 
 import { getBotManager } from '@/tree/bot';
-import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
 
 async function validateStartCredentials(id: string): Promise<{ ok: boolean; error?: string }> {
@@ -42,9 +41,10 @@ export async function botControlHandler(
   action: 'start' | 'stop' | 'pause' | 'resume',
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await loadAllBotsFromD1();
     const manager = getBotManager();
-    if (!manager.getBot(id)) {
+    // Lazy single-bot hydration: load only this bot from D1 if not in memory
+    const bot = manager.getBot(id) ?? await manager.getOrCreateBot(id);
+    if (!bot) {
       return { ok: false, error: `Bot not found: ${id}` };
     }
 

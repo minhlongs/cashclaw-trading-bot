@@ -14,6 +14,10 @@ import { createD1Callbacks, persistNewBot } from './bot-manager-helpers';
 import { createLogger } from '@/lib/logger';
 import { createPaperAdapter } from './paper-adapter';
 import { RequestQueue, QueuedExchangeAdapter } from '../exchange/queue';
+import { createServerClient } from '@/lib/db/client';
+import { findBotById } from '@/lib/db/repositories';
+import { restoreBotStateFromRow, toBotStatus } from '@/forest/bot/d1-hydration';
+import type { BotConfig } from './types';
 
 const log = createLogger('bot-manager');
 
@@ -79,6 +83,48 @@ export class BotManager {
 
   getRunningBots(): BotInstance[] {
     return this.getAllBots().filter((b) => b.getSnapshot().status === 'running');
+  }
+
+  /**
+   * Get or create a bot instance with lazy single-bot hydration from D1.
+   * Returns existing bot from memory if present, otherwise queries D1 and hydrates.
+   * Returns null if bot not found in D1 or DB unavailable.
+   */
+  async getOrCreateBot(id: string): Promise<BotInstance | null> {
+    // Return existing bot from memory if already loaded
+    const existing = this.bots.get(id);
+    if (existing) return existing;
+
+    // Query D1 for the bot row
+    const db = createServerClient();
+    if (!db) return null;
+
+    const row = await findBotById(db, id);
+    if (!row) return null;
+
+    try {
+      const config = JSON.parse(row.config_json) as BotConfig;
+      const bot = await this.createBot({
+        id: row.id,
+        config,
+        exchangeConfig: {
+          apiKey: '',
+          apiSecret: '',
+          testnet: true,
+          sandbox: true,
+          rateLimitMs: 100,
+        },
+        mode: 'paper',
+      });
+
+      // Restore state from D1 row
+      restoreBotStateFromRow(bot, row);
+      return bot;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      this.deps.onError?.(error, `bot-manager:getOrCreateBot:${id}`);
+      return null;
+    }
   }
 
   async createBot(req: CreateBotRequest): Promise<BotInstance> {

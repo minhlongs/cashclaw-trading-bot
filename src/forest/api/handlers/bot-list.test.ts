@@ -1,24 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@/tree/bot', () => ({
-  getBotManager: vi.fn(),
-}));
-
+const mockListBots = vi.fn().mockResolvedValue([]);
 vi.mock('@/forest/bot/d1-adapter', () => ({
-  loadAllBotsFromD1: vi.fn(),
-}));
-
-vi.mock('@/lib/db/client', () => ({
-  createServerClient: vi.fn().mockReturnValue(null),
+  BotQueryService: vi.fn().mockImplementation(() => ({
+    listBots: mockListBots,
+  })),
 }));
 
 import { botListHandler } from './bot-list';
-import { getBotManager } from '@/tree/bot';
-import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
 import { BotInstance } from '@/tree/bot/bot-instance';
-
-const mockGetBotManager = vi.mocked(getBotManager);
-const mockLoadAllBotsFromD1 = vi.mocked(loadAllBotsFromD1);
 
 function makeBotInstance(overrides: Record<string, unknown> = {}): BotInstance {
   const defaults = {
@@ -60,31 +50,48 @@ function makeBotInstance(overrides: Record<string, unknown> = {}): BotInstance {
 }
 
 describe('botListHandler', () => {
-  const mockManager = {
-    getAllBots: vi.fn().mockReturnValue([]),
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetBotManager.mockReturnValue(mockManager as never);
-    mockManager.getAllBots.mockReturnValue([]);
-    mockLoadAllBotsFromD1.mockResolvedValue(undefined);
+    mockListBots.mockResolvedValue([]);
   });
 
   describe('successful retrieval', () => {
     it('returns empty list when no bots exist', async () => {
-      mockManager.getAllBots.mockReturnValue([]);
+      mockListBots.mockResolvedValue([]);
 
       const result = await botListHandler();
 
       expect(result.ok).toBe(true);
       expect(result.data).toEqual([]);
-      expect(mockLoadAllBotsFromD1).toHaveBeenCalledOnce();
+      expect(mockListBots).toHaveBeenCalledOnce();
     });
 
     it('returns bot list items with correct fields', async () => {
-      const bot = makeBotInstance();
-      mockManager.getAllBots.mockReturnValue([bot]);
+      mockListBots.mockResolvedValue([{
+        id: 'test-bot-1',
+        name: 'Test Bot',
+        strategy: 'grid',
+        pair: 'BTC/USDT',
+        exchange: 'binance',
+        status: 'running',
+        mode: 'paper',
+        config: { capital: 1000 },
+        metrics: {
+          totalPnl: 125.5,
+          winCount: 8,
+          lossCount: 2,
+          maxDrawdown: 5,
+          currentDrawdown: 2,
+          totalTrades: 10,
+          startedAt: Date.now() - 100000,
+          stoppedAt: null,
+          lastTickAt: Date.now(),
+          lastOrderAt: null,
+          lastError: null,
+        },
+        createdAt: Date.now() - 100000,
+        updatedAt: Date.now(),
+      }]);
 
       const result = await botListHandler();
 
@@ -106,9 +113,40 @@ describe('botListHandler', () => {
     });
 
     it('handles multiple bots correctly', async () => {
-      const bot1 = makeBotInstance({ id: 'bot-1', symbol: 'ETH/USDT' });
-      const bot2 = makeBotInstance({ id: 'bot-2', symbol: 'SOL/USDT', strategy: 'mean_reversion' });
-      mockManager.getAllBots.mockReturnValue([bot1, bot2]);
+      mockListBots.mockResolvedValue([
+        {
+          id: 'bot-1',
+          name: 'Bot 1',
+          strategy: 'grid',
+          pair: 'ETH/USDT',
+          exchange: 'binance',
+          status: 'running',
+          mode: 'paper',
+          config: { capital: 1000 },
+          metrics: {
+            totalPnl: 0, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0,
+            totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null,
+          },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+        {
+          id: 'bot-2',
+          name: 'Bot 2',
+          strategy: 'mean_reversion',
+          pair: 'SOL/USDT',
+          exchange: 'bybit',
+          status: 'paused',
+          mode: 'paper',
+          config: { capital: 2000 },
+          metrics: {
+            totalPnl: 0, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0,
+            totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null,
+          },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]);
 
       const result = await botListHandler();
 
@@ -122,18 +160,23 @@ describe('botListHandler', () => {
   });
 
   describe('config mapping', () => {
-    it('defaults exchange to paper when not specified', async () => {
-      const bot = makeBotInstance({ exchange: undefined });
-      mockManager.getAllBots.mockReturnValue([bot]);
-
-      const result = await botListHandler();
-
-      expect(result.data![0].exchange).toBe('paper');
-    });
-
     it('preserves strategy type', async () => {
-      const bot = makeBotInstance({ strategy: 'mean_reversion' });
-      mockManager.getAllBots.mockReturnValue([bot]);
+      mockListBots.mockResolvedValue([{
+        id: 'test-bot-1',
+        name: 'Test Bot',
+        strategy: 'mean_reversion',
+        pair: 'BTC/USDT',
+        exchange: 'binance',
+        status: 'running',
+        mode: 'paper',
+        config: { capital: 1000 },
+        metrics: {
+          totalPnl: 0, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0,
+          totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null,
+        },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }]);
 
       const result = await botListHandler();
 
@@ -142,8 +185,8 @@ describe('botListHandler', () => {
   });
 
   describe('error handling', () => {
-    it('returns error when loadAllBotsFromD1 throws', async () => {
-      mockLoadAllBotsFromD1.mockRejectedValue(new Error('D1 connection failed'));
+    it('returns error when listBots throws', async () => {
+      mockListBots.mockRejectedValue(new Error('D1 connection failed'));
 
       const result = await botListHandler();
 
@@ -151,19 +194,8 @@ describe('botListHandler', () => {
       expect(result.error).toBe('D1 connection failed');
     });
 
-    it('returns error when getAllBots throws', async () => {
-      mockManager.getAllBots.mockImplementation(() => {
-        throw new Error('Bot manager unavailable');
-      });
-
-      const result = await botListHandler();
-
-      expect(result.ok).toBe(false);
-      expect(result.error).toBe('Bot manager unavailable');
-    });
-
     it('returns generic error for non-Error exceptions', async () => {
-      mockManager.getAllBots.mockImplementation(() => {
+      mockListBots.mockImplementation(() => {
         throw 'unexpected';
       });
 
@@ -171,21 +203,6 @@ describe('botListHandler', () => {
 
       expect(result.ok).toBe(false);
       expect(result.error).toBe('Failed to list bots');
-    });
-
-    it('returns error when bot snapshot throws', async () => {
-      const bot = {
-        getSnapshot: () => {
-          throw new Error('Snapshot error');
-        },
-        getConfig: vi.fn(),
-      } as unknown as BotInstance;
-      mockManager.getAllBots.mockReturnValue([bot]);
-
-      const result = await botListHandler();
-
-      expect(result.ok).toBe(false);
-      expect(result.error).toBe('Snapshot error');
     });
   });
 });

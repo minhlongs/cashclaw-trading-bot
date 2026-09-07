@@ -3,7 +3,7 @@
 
 'use server';
 
-import { getBotManager } from '@/tree/bot';
+import { BotQueryService } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
 import type { TradeEvent, TradeEventType } from '@/tree/telemetry';
 import { createLogger } from '@/lib/logger';
@@ -25,7 +25,12 @@ export async function getRecentEvents(botIds?: string[]): Promise<TradeEvent[]> 
   const db = createServerClient();
   if (!db) return [];
 
-  const ids = botIds ?? getBotManager().getAllBots().map((b) => b.getSnapshot().id);
+  let ids = botIds;
+  if (!ids || ids.length === 0) {
+    const service = new BotQueryService();
+    const bots = await service.listBots();
+    ids = bots.map((b) => b.id);
+  }
   if (ids.length === 0) return [];
 
   try {

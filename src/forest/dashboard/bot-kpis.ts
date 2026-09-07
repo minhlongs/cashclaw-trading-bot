@@ -1,11 +1,9 @@
 // Forest layer — Bot KPI calculations & dashboard data
-// Pure computations over bot snapshots; no DB access except for initial hydration.
+// Reads bot data directly from D1 via BotQueryService.
 
 'use server';
 
-import { getBotManager, type BotConfig } from '@/tree/bot';
-import { BotInstance } from '@/tree/bot/bot-instance';
-import { loadAllBotsFromD1 } from '@/forest/bot/d1-adapter';
+import { BotQueryService, type BotSummary } from '@/forest/bot/d1-adapter';
 import type { TradeEvent } from '@/tree/telemetry';
 import { getRecentEvents } from './trade-events';
 
@@ -41,27 +39,25 @@ export interface DashboardData {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────
-function snapshotToCard(bot: BotInstance): BotCardData {
-  const s = bot.getSnapshot();
-  const cfg = bot.getConfig() as BotConfig;
+function botToCard(bot: BotSummary): BotCardData {
   return {
-    id: s.id,
-    name: cfg.name || s.id,
-    strategy: cfg.strategy,
-    pair: cfg.symbol,
-    exchange: cfg.exchange ?? 'paper',
-    botStatus: s.status,
-    totalPnl: s.totalPnl,
-    winCount: s.winCount,
-    lossCount: s.lossCount,
-    startedAt: s.startedAt,
-    updatedAt: s.updatedAt,
-    capitalAllocated: cfg.capital,
-    maxDrawdownPct: s.maxDrawdown,
+    id: bot.id,
+    name: bot.name || bot.id,
+    strategy: bot.strategy as 'grid' | 'mean_reversion',
+    pair: bot.pair,
+    exchange: bot.config.exchange ?? bot.exchange ?? 'paper',
+    botStatus: bot.status,
+    totalPnl: bot.metrics.totalPnl,
+    winCount: bot.metrics.winCount,
+    lossCount: bot.metrics.lossCount,
+    startedAt: bot.metrics.startedAt,
+    updatedAt: bot.updatedAt,
+    capitalAllocated: bot.config.capital,
+    maxDrawdownPct: bot.metrics.maxDrawdown,
   };
 }
 
-function calcKpis(bots: BotInstance[]): DashboardKpis {
+function calcKpis(bots: BotSummary[]): DashboardKpis {
   const now = Date.now();
   const startOfDay = new Date(now);
   startOfDay.setHours(0, 0, 0, 0);
@@ -73,17 +69,15 @@ function calcKpis(bots: BotInstance[]): DashboardKpis {
   let winCountSum = 0;
 
   for (const bot of bots) {
-    const s = bot.getSnapshot();
-    const cfg = bot.getConfig() as BotConfig;
-    totalBalance += cfg.capital + s.totalPnl;
+    totalBalance += bot.config.capital + bot.metrics.totalPnl;
 
-    if (s.startedAt && s.startedAt >= startOfDay.getTime()) {
-      todayPnl += s.totalPnl;
+    if (bot.metrics.startedAt && bot.metrics.startedAt >= startOfDay.getTime()) {
+      todayPnl += bot.metrics.totalPnl;
     }
 
-    if (s.status === 'running') activeBots++;
-    totalTrades += s.totalTrades;
-    winCountSum += s.winCount;
+    if (bot.status === 'running') activeBots++;
+    totalTrades += bot.metrics.totalTrades;
+    winCountSum += bot.metrics.winCount;
   }
 
   return {
@@ -97,23 +91,23 @@ function calcKpis(bots: BotInstance[]): DashboardKpis {
 
 // ── Server Actions ──────────────────────────────────────────────
 export async function getDashboardData(): Promise<DashboardData> {
-  await loadAllBotsFromD1();
-  const manager = getBotManager();
-  const bots = manager.getAllBots();
+  const service = new BotQueryService();
+  const bots = await service.listBots();
   const kpis = calcKpis(bots);
-  const botCards = bots.map(snapshotToCard);
+  const botCards = bots.map(botToCard);
 
-  const recentEvents = await getRecentEvents(bots.map((b) => b.getSnapshot().id));
+  const recentEvents = await getRecentEvents(bots.map((b) => b.id));
   return { kpis, bots: botCards, recentEvents };
 }
 
 export async function getKpis(): Promise<DashboardKpis> {
-  const manager = getBotManager();
-  return calcKpis(manager.getAllBots());
+  const service = new BotQueryService();
+  const bots = await service.listBots();
+  return calcKpis(bots);
 }
 
 export async function getBotCards(): Promise<BotCardData[]> {
-  await loadAllBotsFromD1();
-  const manager = getBotManager();
-  return manager.getAllBots().map(snapshotToCard);
+  const service = new BotQueryService();
+  const bots = await service.listBots();
+  return bots.map(botToCard);
 }

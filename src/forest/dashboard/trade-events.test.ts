@@ -13,6 +13,15 @@ vi.mock('@/tree/bot', () => ({
   getBotManager: vi.fn(),
 }));
 
+vi.mock('@/forest/bot/d1-adapter', () => ({
+  BotQueryService: vi.fn().mockImplementation(() => ({
+    listBots: vi.fn().mockResolvedValue([
+      { id: 'bot-a' },
+      { id: 'bot-b' },
+    ]),
+  })),
+}));
+
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ warn: vi.fn(), error: vi.fn() }),
 }));

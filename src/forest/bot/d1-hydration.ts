@@ -1,12 +1,16 @@
 /**
  * D1 Hydration Helpers
  * Loads persistent bots from D1 into BotManager on startup.
+ *
+ * Exports `toBotStatus` and `restoreBotStateFromRow` as shared utilities
+ * used by both BotQueryService (read path) and BotManager lazy hydration
+ * (write path).
  */
 
 import { createServerClient } from '@/lib/db/client';
 import { findBotsByUser, findAllBots } from '@/lib/db/repositories';
 import { getBotManager } from '@/tree/bot';
- 
+
 import type { BotState, BotConfig, BotStatus } from '@/tree/bot/types';
 
 // Error handler callback type for structured error logging
@@ -25,8 +29,10 @@ export type ErrorHandler = (error: Error, context: string) => void;
  * this mapping every hydrated bot came back as `idle` regardless of its
  * persisted state — a bot that was paused before cold start looked like a
  * fresh draft bot on the next request.
+ *
+ * Exported for reuse by BotQueryService and BotManager lazy hydration.
  */
-function toBotStatus(d1Status: string): BotStatus {
+export function toBotStatus(d1Status: string): BotStatus {
   switch (d1Status) {
     case 'paper_test':
     case 'live_running':
@@ -45,9 +51,11 @@ function toBotStatus(d1Status: string): BotStatus {
 
 /**
  * Restore BotInstance state from a D1 database row.
- * Shared by hydrateFromD1 and loadAllBotsFromD1.
+ * Shared by hydrateFromD1 and BotManager lazy hydration.
+ *
+ * Exported for reuse — accepts any object with getSnapshot/patchState.
  */
-function restoreBotStateFromRow(
+export function restoreBotStateFromRow(
   bot: { getSnapshot: () => BotState; patchState: (patch: Partial<BotState>) => void },
   row: { status: string; total_trades: number; started_at: number | null; stopped_at: number | null; last_error: string | null; last_tick_at: number | null; last_order_at: number | null; current_drawdown: number; total_pnl: number; win_count: number; loss_count: number; max_drawdown: number },
 ): void {
@@ -122,6 +130,10 @@ const hydratedBotIds = new Set<string>();
  * Load ALL bots from D1 (no userId filter — single-user v1).
  * Called by handlers on cold start / SSR mount to populate in-memory state.
  * Safe to call multiple times — already-loaded bots are skipped.
+ *
+ * @deprecated Use BotQueryService for read-only access or BotManager.getOrCreateBot()
+ * for lazy single-bot hydration. This function is retained for backward compatibility
+ * with hydrateFromD1 and will be removed in a future refactor.
  */
 export async function loadAllBotsFromD1(onError?: ErrorHandler): Promise<void> {
   const db = createServerClient();
