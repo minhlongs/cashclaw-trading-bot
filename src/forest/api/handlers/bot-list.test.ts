@@ -8,46 +8,6 @@ vi.mock('@/forest/bot/d1-adapter', () => ({
 }));
 
 import { botListHandler } from './bot-list';
-import { BotInstance } from '@/tree/bot/bot-instance';
-
-function makeBotInstance(overrides: Record<string, unknown> = {}): BotInstance {
-  const defaults = {
-    id: 'test-bot-1',
-    status: 'running' as const,
-    totalPnl: 125.5,
-    winCount: 8,
-    lossCount: 2,
-    startedAt: Date.now() - 100000,
-    updatedAt: Date.now(),
-    strategy: 'grid' as const,
-    symbol: 'BTC/USDT',
-    exchange: 'binance',
-  };
-
-  const merged = { ...defaults, ...overrides };
-
-  const snapshot = {
-    id: merged.id,
-    status: merged.status,
-    totalPnl: merged.totalPnl,
-    winCount: merged.winCount,
-    lossCount: merged.lossCount,
-    startedAt: merged.startedAt,
-    updatedAt: merged.updatedAt,
-  };
-
-  const config = {
-    id: merged.id,
-    strategy: merged.strategy,
-    symbol: merged.symbol,
-    exchange: merged.exchange,
-  };
-
-  return {
-    getSnapshot: vi.fn().mockReturnValue(snapshot),
-    getConfig: vi.fn().mockReturnValue(config),
-  } as unknown as BotInstance;
-}
 
 describe('botListHandler', () => {
   beforeEach(() => {

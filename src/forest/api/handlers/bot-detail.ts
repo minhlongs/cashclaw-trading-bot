@@ -4,7 +4,6 @@
  */
 
 import { getBotManager, type BotConfig } from '@/tree/bot';
-import { BotInstance } from '@/tree/bot/bot-instance';
 import { getRecentEvents } from '@/forest/dashboard/trade-events';
 import type { TradeEvent } from '@/tree/telemetry';
 

@@ -16,7 +16,7 @@ import { createPaperAdapter } from './paper-adapter';
 import { RequestQueue, QueuedExchangeAdapter } from '../exchange/queue';
 import { createServerClient } from '@/lib/db/client';
 import { findBotById } from '@/lib/db/repositories';
-import { restoreBotStateFromRow, toBotStatus } from '@/forest/bot/d1-hydration';
+import { restoreBotStateFromRow } from '@/forest/bot/d1-hydration';
 import type { BotConfig } from './types';
 
 const log = createLogger('bot-manager');
