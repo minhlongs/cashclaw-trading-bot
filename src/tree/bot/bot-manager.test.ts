@@ -1,6 +1,8 @@
 // bot-manager.test.ts — unit tests for BotManager singleton orchestrator
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { BotStatus } from './types';
+import type { Bot } from '@/lib/db/types';
+import type { RequestQueue, QueueItem } from '../exchange/queue';
 
 // ── Hoisted vi.mock() factories ─────────────────────────────────────────────
 
@@ -33,16 +35,20 @@ vi.mock('@/forest/bot/d1-hydration', () => ({
   toBotStatus: vi.fn((s: string) => s === 'paper_test' || s === 'live_running' ? 'running' : 'idle'),
 }));
 
-vi.mock('./bot-manager-helpers', () => ({
-  createD1Callbacks: vi.fn(() => ({
-    onStateChange: vi.fn(),
-    onTrade: vi.fn(),
-    onLog: vi.fn(),
-    onError: vi.fn(),
-  })),
-  persistNewBot: vi.fn(async () => {}),
-  patchBot: vi.fn(async () => {}),
-}));
+vi.mock('./bot-manager-helpers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./bot-manager-helpers')>();
+  return {
+    ...actual,
+    createD1Callbacks: vi.fn(() => ({
+      onStateChange: vi.fn(),
+      onTrade: vi.fn(),
+      onLog: vi.fn(),
+      onError: vi.fn(),
+    })),
+    persistNewBot: vi.fn(async () => {}),
+    patchBot: vi.fn(async () => {}),
+  };
+});
 
 vi.mock('./paper-adapter', () => ({
   createPaperAdapter: vi.fn(() => ({
@@ -117,8 +123,8 @@ describe('BotManager', () => {
   });
 
   // Helper to create a BotManager instance
-  function createManager(userId?: string) {
-    return new BotManager({ userId });
+  function createManager(userId?: string, deps?: Record<string, unknown>) {
+    return new BotManager({ userId, ...deps });
   }
 
   // Helper to create a mock CreateBotRequest
@@ -178,16 +184,16 @@ describe('BotManager', () => {
   // ── getAllBots ───────────────────────────────────────────────────────────
 
   describe('getAllBots', () => {
-    it('returns empty array when no bots exist', () => {
+    it('returns empty array when no bots exist', async () => {
       const mgr = createManager();
-      expect(mgr.getAllBots()).toEqual([]);
+      expect(await mgr.getAllBots()).toEqual([]);
     });
 
     it('returns all created bots', async () => {
       const mgr = createManager();
       await mgr.createBot(mockRequest('bot-1'));
       await mgr.createBot(mockRequest('bot-2'));
-      const all = mgr.getAllBots();
+      const all = await mgr.getAllBots();
       expect(all).toHaveLength(2);
       expect(all.map((b) => b.id)).toEqual(expect.arrayContaining(['bot-1', 'bot-2']));
     });
@@ -196,7 +202,7 @@ describe('BotManager', () => {
       const mgr = createManager();
       await mgr.createBot(mockRequest('bot-1'));
       mgr.removeBot('bot-1');
-      expect(mgr.getAllBots()).toEqual([]);
+      expect(await mgr.getAllBots()).toEqual([]);
     });
   });
 
@@ -440,7 +446,7 @@ describe('BotManager', () => {
       await mgr.createBot(mockRequest('bot-1'));
       await mgr.createBot(mockRequest('bot-2'));
       mgr.destroy();
-      expect(mgr.getAllBots()).toEqual([]);
+      expect(await mgr.getAllBots()).toEqual([]);
     });
 
     it('calls destroy on each bot', async () => {
@@ -466,14 +472,14 @@ describe('BotManager', () => {
         symbol: 'BTC/USDT',
         strategy: 'grid',
       });
-      expect(mgr.getRunningBots()).toHaveLength(1);
-      expect(mgr.getRunningBots()[0].id).toBe('bot-1');
+      expect(await mgr.getRunningBots()).toHaveLength(1);
+      expect((await mgr.getRunningBots())[0].id).toBe('bot-1');
     });
 
     it('returns empty when no bots are running', async () => {
       const mgr = createManager();
       await mgr.createBot(mockRequest('bot-1'));
-      expect(mgr.getRunningBots()).toHaveLength(0);
+      expect(await mgr.getRunningBots()).toHaveLength(0);
     });
   });
 
@@ -538,10 +544,10 @@ describe('BotManager', () => {
     it('resets singleton state cleanly', async () => {
       const a = getBotManager();
       await a.createBot(mockRequest('bot-1'));
-      expect(a.getAllBots()).toHaveLength(1);
+      expect(await a.getAllBots()).toHaveLength(1);
       resetBotManager();
       const b = getBotManager();
-      expect(b.getAllBots()).toHaveLength(0);
+      expect(await b.getAllBots()).toHaveLength(0);
     });
   });
 
@@ -748,6 +754,210 @@ describe('BotManager', () => {
       const results = await mgr.drainQueues();
       expect(results.binance).toBeDefined();
       expect(results.binance.pending).toBe(0);
+    });
+  });
+
+  // ── D1 direct-read paths (coverage for new architecture) ──────────────
+
+  describe('D1 direct-read paths', () => {
+    const mockDb = {
+      prepare: vi.fn().mockReturnValue({
+        bind: vi.fn().mockReturnValue({
+          first: vi.fn(),
+          all: vi.fn(),
+        }),
+      }),
+    };
+
+    function makeBotRow(overrides: Partial<Bot> = {}): Bot {
+      return {
+        id: 'd1-bot-1',
+        user_id: 'user-1',
+        name: 'D1 Bot',
+        strategy: 'grid',
+        pair: 'BTC/USDT',
+        exchange: 'binance',
+        status: 'paper_test',
+        capital_allocated: 1000,
+        capital_used: 0,
+        config_json: JSON.stringify({ strategy: 'grid', symbol: 'BTC/USDT', exchange: 'binance', mode: 'paper', capital: 1000, maxDrawdownPct: 15 }),
+        total_pnl: 0,
+        total_trades: 0,
+        win_count: 0,
+        loss_count: 0,
+        max_drawdown: 0,
+        started_at: null,
+        stopped_at: null,
+        last_error: null,
+        last_tick_at: null,
+        last_order_at: null,
+        current_drawdown: 0,
+        created_at: Date.now(),
+        updated_at: Date.now(),
+        ...overrides,
+      };
+    }
+
+    beforeEach(async () => {
+      vi.clearAllMocks();
+      const { createServerClient } = await import('@/lib/db/client');
+      vi.mocked(createServerClient).mockReturnValue(mockDb as unknown as ReturnType<typeof createServerClient>);
+    });
+
+    it('getAllBots reads D1 directly when DB is available', async () => {
+      const { findAllBots } = await import('@/lib/db/repositories');
+      vi.mocked(findAllBots).mockResolvedValue([makeBotRow()]);
+
+      const mgr = createManager('user-1');
+      const bots = await mgr.getAllBots();
+      expect(bots).toHaveLength(1);
+      expect(bots[0].id).toBe('d1-bot-1');
+    });
+
+    it('getRunningBots filters to running-status rows from D1', async () => {
+      const { findAllBots } = await import('@/lib/db/repositories');
+      vi.mocked(findAllBots).mockResolvedValue([
+        makeBotRow({ id: 'running-1', status: 'paper_test' }),
+        makeBotRow({ id: 'stopped-1', status: 'stopped', pair: 'ETH/USDT' }),
+      ]);
+
+      const mgr = createManager();
+      const running = await mgr.getRunningBots();
+      expect(running).toHaveLength(1);
+      expect(running[0].id).toBe('running-1');
+    });
+
+    it('cache TTL: getBot returns cached instance within TTL without re-hydrating', async () => {
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('cached-bot'));
+
+      // First call — from cache
+      const bot1 = mgr.getBot('cached-bot');
+      expect(bot1).toBeDefined();
+      // Second call — still cached (TTL not expired)
+      const bot2 = mgr.getBot('cached-bot');
+      expect(bot2).toBe(bot1);
+    });
+
+    it('falls back to in-memory cache when D1 read throws', async () => {
+      const { findAllBots } = await import('@/lib/db/repositories');
+      vi.mocked(findAllBots).mockRejectedValue(new Error('D1 unavailable'));
+
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('cached-only'));
+      const bots = await mgr.getAllBots();
+      // Should fall back to the in-memory cache (1 bot just created)
+      expect(bots).toHaveLength(1);
+      expect(bots[0].id).toBe('cached-only');
+    });
+
+    it('getAllBots and getRunningBots fall back to cache when DB client is null', async () => {
+      const { createServerClient } = await import('@/lib/db/client');
+      vi.mocked(createServerClient).mockReturnValue(null);
+
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('db-null-bot'));
+      const allBots = await mgr.getAllBots();
+      expect(allBots).toHaveLength(1);
+      expect(allBots[0].id).toBe('db-null-bot');
+
+      const runningBots = await mgr.getRunningBots();
+      expect(runningBots).toBeDefined();
+    });
+
+    it('getRunningBots falls back to cache when D1 throws', async () => {
+      const { findAllBots } = await import('@/lib/db/repositories');
+      vi.mocked(findAllBots).mockRejectedValue(new Error('D1 error'));
+
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('running-err-bot'));
+      const running = await mgr.getRunningBots();
+      expect(running).toBeDefined();
+    });
+
+    it('hydrateFromRowIfNeeded uses cached bot when fresh on repeated getAllBots', async () => {
+      const { findAllBots } = await import('@/lib/db/repositories');
+      vi.mocked(findAllBots).mockResolvedValue([
+        makeBotRow({ id: 'fresh-row-bot', name: 'Fresh Bot' }),
+      ]);
+
+      const mgr = createManager('user-1');
+      const firstCall = await mgr.getAllBots();
+      expect(firstCall).toHaveLength(1);
+
+      const secondCall = await mgr.getAllBots();
+      expect(secondCall).toHaveLength(1);
+      expect(secondCall[0]).toBe(firstCall[0]);
+    });
+
+    it('hydrateFromRowIfNeeded falls back to defaultConfigFromRow when JSON.parse fails', async () => {
+      const { findAllBots } = await import('@/lib/db/repositories');
+      vi.mocked(findAllBots).mockResolvedValue([
+        makeBotRow({ id: 'corrupt-config-bot', name: 'Corrupt Bot', config_json: 'invalid-json-{{{' }),
+      ]);
+
+      const mgr = createManager('user-1');
+      const bots = await mgr.getAllBots();
+      expect(bots).toHaveLength(1);
+      expect(bots[0].id).toBe('corrupt-config-bot');
+    });
+
+    it('getOrCreateBot catches error and invokes onError if createBot fails', async () => {
+      const onError = vi.fn();
+      const mgr = createManager('user-1', { onError });
+
+      const d1Row = makeBotRow({
+        id: 'fail-bot',
+        name: 'Fail Bot',
+        config_json: JSON.stringify({ strategy: 'grid', symbol: 'BTC/USDT' }),
+      });
+      mockFindBotById.mockResolvedValue(d1Row);
+
+      vi.spyOn(mgr, 'createBot').mockRejectedValueOnce(new Error('Creation exploded'));
+
+      const res = await mgr.getOrCreateBot('fail-bot');
+      expect(res).toBeNull();
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Creation exploded' }),
+        'bot-manager:getOrCreateBot:fail-bot',
+      );
+    });
+
+    it('drainQueues handles item execution rejection', async () => {
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('queue-err-bot'));
+
+      const queueMap = (mgr as unknown as { queues: Map<string, RequestQueue> }).queues;
+      const queue = queueMap.get('binance');
+      expect(queue).toBeDefined();
+
+      if (queue) {
+        vi.spyOn(queue, 'drain').mockImplementationOnce(async (_exchange, processFn) => {
+          const item: QueueItem = {
+            id: 'err-item',
+            priority: 0,
+            exchange: 'binance',
+            cost: 1,
+            enqueuedAt: Date.now(),
+            execute: vi.fn().mockRejectedValue(new Error('Execute fail')),
+          };
+          const ok = await processFn(item);
+          expect(ok).toBe(false);
+          return {
+            processed: 0,
+            skipped: 1,
+            pending: 0,
+            byExchange: {
+              binance: { processed: 0, skipped: 1, pending: 0 },
+              bybit: { processed: 0, skipped: 0, pending: 0 },
+              okx: { processed: 0, skipped: 0, pending: 0 },
+            },
+          };
+        });
+      }
+
+      const results = await mgr.drainQueues();
+      expect(results.binance.skipped).toBe(1);
     });
   });
 });

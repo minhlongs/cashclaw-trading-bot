@@ -4,8 +4,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const { mockLogger, mockManager, mockTickReport } = vi.hoisted(() => ({
   mockLogger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
   mockManager: {
-    getAllBots: vi.fn().mockReturnValue([]),
-    getRunningBots: vi.fn().mockReturnValue([]),
+    getAllBots: vi.fn().mockResolvedValue([]),
+    getRunningBots: vi.fn().mockResolvedValue([]),
   },
   mockTickReport: { evaluated: 1, errors: 0 },
 }));

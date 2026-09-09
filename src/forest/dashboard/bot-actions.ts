@@ -10,7 +10,7 @@ export async function botActionStart(id: string): Promise<{ ok: boolean; error?:
   try {
     const manager = getBotManager();
     const bot = manager.getBot(id);
-    if (!bot) return { ok: false, error: 'Bot not found in memory' };
+    if (!bot) return { ok: false, error: 'Bot not found' };
     await bot.start();
     return { ok: true };
   } catch (e) {
@@ -22,7 +22,7 @@ export async function botActionStop(id: string): Promise<{ ok: boolean; error?: 
   try {
     const manager = getBotManager();
     const bot = manager.getBot(id);
-    if (!bot) return { ok: false, error: 'Bot not found in memory' };
+    if (!bot) return { ok: false, error: 'Bot not found' };
     bot.stop();
     return { ok: true };
   } catch (e) {
@@ -34,7 +34,7 @@ export async function botActionPause(id: string): Promise<{ ok: boolean; error?:
   try {
     const manager = getBotManager();
     const bot = manager.getBot(id);
-    if (!bot) return { ok: false, error: 'Bot not found in memory' };
+    if (!bot) return { ok: false, error: 'Bot not found' };
     bot.pause();
     return { ok: true };
   } catch (e) {
@@ -46,7 +46,7 @@ export async function botActionResume(id: string): Promise<{ ok: boolean; error?
   try {
     const manager = getBotManager();
     const bot = manager.getBot(id);
-    if (!bot) return { ok: false, error: 'Bot not found in memory' };
+    if (!bot) return { ok: false, error: 'Bot not found' };
     manager.resumeBot(id);
     return { ok: true };
   } catch (e) {

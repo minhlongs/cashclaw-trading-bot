@@ -7,8 +7,8 @@ vi.mock('./lib/logger', () => ({
 }));
 
 const mockManager = {
-  getAllBots: vi.fn().mockReturnValue([]),
-  getRunningBots: vi.fn().mockReturnValue([]),
+  getAllBots: vi.fn().mockResolvedValue([]),
+  getRunningBots: vi.fn().mockResolvedValue([]),
   drainQueues: vi.fn().mockResolvedValue({}),
 };
 
@@ -26,7 +26,6 @@ const mockTickReport = { evaluated: 0, errors: 0 };
 vi.mock('./forest/bot/scheduler', () => ({
   BotScheduler: vi.fn().mockImplementation(() => ({
     tick: vi.fn().mockResolvedValue(mockTickReport),
-    hydrateRunningBots: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 

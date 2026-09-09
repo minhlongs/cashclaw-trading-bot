@@ -4,7 +4,6 @@
 
 import { getBotManager } from '@/tree/bot';
 import { createServerClient } from '@/lib/db/client';
-import { findAllBots } from '@/lib/db/repositories';
 import type { BotInstance } from '@/tree/bot/bot-instance';
 
 import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
@@ -41,12 +40,11 @@ export class BotScheduler {
       return { tickCount: this.tickCount, botsEvaluated: 0, halted: true, errors: [], rateLimitUsage: {} };
     }
 
-    // Lazy hydrate running bots from D1. After a Workers cold start the
-    // in-memory registry is empty — query D1 for running bot IDs, then
-    // hydrate each individually via getOrCreateBot (single-bot lazy path).
+    // Read running bots directly from D1 (source of truth). The BotManager
+    // now reads D1 directly with a short-TTL cache, so no separate
+    // hydration phase is needed — cold starts are handled transparently.
     const manager = getBotManager();
-    await this.hydrateRunningBots(manager);
-    const runningBots = manager.getRunningBots();
+    const runningBots = await manager.getRunningBots();
 
     const errors: SchedulerError[] = [];
     const orchestrator = this.deps.getOrchestrator?.();
@@ -113,31 +111,6 @@ export class BotScheduler {
       errors,
       rateLimitUsage: Object.fromEntries(this.rateLimitCounts),
     };
-  }
-
-  /**
-   * Query D1 for running bot IDs and lazy-hydrate each into BotManager.
-   * Only bots with status 'paper_test' or 'live_running' are hydrated.
-   */
-  async hydrateRunningBots(manager: ReturnType<typeof getBotManager>): Promise<void> {
-    const db = createServerClient();
-    if (!db) return;
-
-    try {
-      const rows = await findAllBots(db);
-      const runningRows = rows.filter((r) => r.status === 'paper_test' || r.status === 'live_running');
-      for (const row of runningRows) {
-        // Skip already-hydrated bots
-        if (manager.getBot(row.id)) continue;
-        try {
-          await manager.getOrCreateBot(row.id);
-        } catch (err) {
-          log.warn('Lazy hydrate failed for bot', { action: 'hydrateRunningBots', botId: row.id, error: err instanceof Error ? err : new Error(String(err)) });
-        }
-      }
-    } catch (err) {
-      log.warn('Failed to query D1 for running bots', { action: 'hydrateRunningBots', error: err instanceof Error ? err : new Error(String(err)) });
-    }
   }
 
   getStats() {

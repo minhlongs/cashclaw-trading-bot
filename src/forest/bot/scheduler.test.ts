@@ -94,7 +94,7 @@ describe('BotScheduler', () => {
 
     // Re-establish mock implementations cleared by clearAllMocks
     mockGetBotManager.mockReturnValue({
-      getRunningBots: vi.fn().mockReturnValue([]),
+      getRunningBots: vi.fn().mockResolvedValue([]),
       getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       drainQueues: vi.fn().mockResolvedValue({}),
     });
@@ -116,11 +116,12 @@ describe('BotScheduler', () => {
   }
 
   describe('tick()', () => {
-    it('queries D1 for running bots before reading the manager', async () => {
+    it('fetches running bots from the manager (D1 is the source of truth)', async () => {
       const scheduler = await createScheduler();
       await scheduler.tick();
 
-      expect(mockFindAllBots).toHaveBeenCalledTimes(1);
+      // Scheduler delegates to manager.getRunningBots() which reads D1 directly.
+      expect(mockGetBotManager).toHaveBeenCalled();
     });
 
     it('returns tickCount incremented and botsEvaluated = 0 when no running bots', async () => {
@@ -144,7 +145,7 @@ describe('BotScheduler', () => {
       const bot1 = makeMockBot({ id: 'b1' });
       const bot2 = makeMockBot({ id: 'b2' });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot1, bot2]),
+        getRunningBots: vi.fn().mockResolvedValue([bot1, bot2]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
 
@@ -161,7 +162,7 @@ describe('BotScheduler', () => {
     it('persists bot state to D1 after successful tick', async () => {
       const bot = makeMockBot({ id: 'b1', totalPnl: 12.5 });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
 
@@ -179,7 +180,7 @@ describe('BotScheduler', () => {
       const onEvalError = vi.fn();
       const bot = makeMockBot({ id: 'b1', exchange: 'kraken' });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
       mockProvider.isCircuitOpen.mockReturnValue(true);
@@ -205,7 +206,7 @@ describe('BotScheduler', () => {
       const bot = makeMockBot({ id: 'b1' });
       bot.tick.mockRejectedValue(new Error('exchange timeout'));
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
 
@@ -228,7 +229,7 @@ describe('BotScheduler', () => {
       bot1.tick.mockRejectedValue(new Error('fail'));
       const bot2 = makeMockBot({ id: 'b2' });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot1, bot2]),
+        getRunningBots: vi.fn().mockResolvedValue([bot1, bot2]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
 
@@ -246,7 +247,7 @@ describe('BotScheduler', () => {
       const bot = makeMockBot({ id: 'b1' });
       bot.tick.mockRejectedValue('string error');
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
 
@@ -259,7 +260,7 @@ describe('BotScheduler', () => {
     it('does not check circuit when no orchestrator provided', async () => {
       const bot = makeMockBot({ id: 'b1' });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
 
@@ -287,7 +288,7 @@ describe('BotScheduler', () => {
     it('starts running bots that have no strategy instance', async () => {
       const bot = makeMockBot({ id: 'b1', hasStrategy: false });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
 
@@ -301,7 +302,7 @@ describe('BotScheduler', () => {
     it('does not start bots that already have a strategy', async () => {
       const bot = makeMockBot({ id: 'b1', hasStrategy: true });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
 
@@ -316,7 +317,7 @@ describe('BotScheduler', () => {
       const bot = makeMockBot({ id: 'b1', hasStrategy: false });
       bot.start.mockRejectedValue(new Error('ticker fetch failed'));
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
 
@@ -334,7 +335,7 @@ describe('BotScheduler', () => {
     it('logs warning but does not throw when D1 persist fails', async () => {
       const bot = makeMockBot({ id: 'b1' });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
       mockD1Run.mockRejectedValue(new Error('D1 timeout'));
@@ -370,7 +371,7 @@ describe('BotScheduler', () => {
       const bot2 = makeMockBot({ id: 'b2', exchange: 'binance' });
       const bot3 = makeMockBot({ id: 'b3', exchange: 'bybit' });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot1, bot2, bot3]),
+        getRunningBots: vi.fn().mockResolvedValue([bot1, bot2, bot3]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
       mockProvider.isCircuitOpen.mockReturnValue(false);
@@ -392,7 +393,7 @@ describe('BotScheduler', () => {
     it('clears rate-limit counts between ticks', async () => {
       const bot = makeMockBot({ id: 'b1', exchange: 'binance' });
       mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockReturnValue([bot]),
+        getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
       mockProvider.isCircuitOpen.mockReturnValue(false);

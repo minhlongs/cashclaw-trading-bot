@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createD1Callbacks, persistNewBot, type D1CallbackDeps } from './bot-manager-helpers';
+import { createD1Callbacks, persistNewBot, defaultConfigFromRow, type D1CallbackDeps } from './bot-manager-helpers';
 import type { BotState, BotTrade } from './types';
 
 vi.mock('@/forest/bot/d1-adapter', () => ({
@@ -96,9 +96,10 @@ describe('bot-manager-helpers', () => {
         }));
       });
 
-      it('does not throw on patchBot failure', () => {
-        patchBot.mockRejectedValueOnce(new Error('D1 fail'));
-        expect(() => createD1Callbacks(makeDeps()).onStateChange(makeBotState())).not.toThrow();
+      it('does not throw on patchBot failure and handles non-Error rejection', async () => {
+        patchBot.mockRejectedValueOnce('string failure');
+        createD1Callbacks(makeDeps()).onStateChange(makeBotState());
+        await new Promise((r) => setTimeout(r, 10));
       });
     });
 
@@ -155,6 +156,31 @@ describe('bot-manager-helpers', () => {
       expect(persistBot).toHaveBeenCalledWith('user-123', expect.objectContaining({
         strategy: 'mean_reversion', pair: 'ETH/USDT',
       }));
+    });
+  });
+
+  describe('defaultConfigFromRow', () => {
+    it('returns a valid grid config', () => {
+      const cfg = defaultConfigFromRow({
+        name: 'G', pair: 'BTC/USDT', exchange: 'binance', strategy: 'grid', capital_allocated: 1000,
+      });
+      expect(cfg.strategy).toBe('grid');
+      if (cfg.strategy === 'grid') {
+        expect(cfg.symbol).toBe('BTC/USDT');
+        expect(cfg.capital).toBe(1000);
+        expect(cfg.gridLevels).toBe(5);
+      }
+    });
+
+    it('returns a valid mean_reversion config', () => {
+      const cfg = defaultConfigFromRow({
+        name: 'MR', pair: 'ETH/USDT', exchange: 'binance', strategy: 'mean_reversion', capital_allocated: 500,
+      });
+      expect(cfg.strategy).toBe('mean_reversion');
+      if (cfg.strategy === 'mean_reversion') {
+        expect(cfg.symbol).toBe('ETH/USDT');
+        expect(cfg.bbPeriod).toBe(20);
+      }
     });
   });
 });

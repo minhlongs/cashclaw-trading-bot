@@ -41,7 +41,7 @@ describe('bot-actions', () => {
       const { botActionStart } = await import('./bot-actions');
       const result = await botActionStart('missing');
       expect(result.ok).toBe(false);
-      expect(result.error).toBe('Bot not found in memory');
+      expect(result.error).toBe('Bot not found');
     });
 
     it('returns error on start failure', async () => {

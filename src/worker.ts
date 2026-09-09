@@ -200,9 +200,7 @@ export default app;
 // Drains exchange request queues and logs outcome for observability.
 export async function scheduled(_event: { scheduledTime: number }, env: Env, _ctx: ExecutionContext): Promise<void> {
   const manager = getBotManager();
-  // Lazy hydrate running bots before draining queues
-  const scheduler = new BotScheduler();
-  await scheduler.hydrateRunningBots(manager);
+  // BotManager reads D1 directly — no separate hydration phase needed.
   const report = await manager.drainQueues();
   const entries = Object.values(report);
   const total = entries.reduce((sum, e) => sum + e.processed + e.skipped + e.pending, 0);

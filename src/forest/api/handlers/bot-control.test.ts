@@ -12,7 +12,7 @@ const mockManager = {
   getBot: vi.fn((): typeof mockBot | undefined => mockBot),
   getOrCreateBot: vi.fn(async (): Promise<typeof mockBot | null> => mockBot),
   resumeBot: vi.fn(),
-  getAllBots: vi.fn(() => []),
+  getAllBots: vi.fn(async () => []),
   createBot: vi.fn(),
   removeBot: vi.fn(),
 };

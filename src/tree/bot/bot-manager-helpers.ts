@@ -61,6 +61,45 @@ export function createD1Callbacks(deps: D1CallbackDeps): BotCallbacks {
 }
 
 /**
+ * Builds a minimal valid BotConfig from a D1 row when the stored config_json
+ * is unparseable. Used only as a last-resort fallback so hydration never throws.
+ */
+export function defaultConfigFromRow(row: { name: string; pair: string; exchange: string; strategy: string; capital_allocated: number }): BotConfig {
+  const base = {
+    name: row.name,
+    symbol: row.pair,
+    exchange: row.exchange,
+    mode: 'paper' as const,
+    capital: row.capital_allocated,
+    maxDrawdownPct: 15,
+  };
+  if (row.strategy === 'mean_reversion') {
+    return {
+      ...base,
+      strategy: 'mean_reversion' as const,
+      bbPeriod: 20,
+      bbStdDev: 2,
+      rsiPeriod: 14,
+      rsiBuyThreshold: 30,
+      rsiSellThreshold: 70,
+      volumeMultiplier: 1,
+      positionSizePct: 10,
+      cooldownMinutes: 5,
+    };
+  }
+  return {
+    ...base,
+    strategy: 'grid' as const,
+    gridSpacingPct: 0.5,
+    gridLevels: 5,
+    capitalPerLevelPct: 20,
+    takeProfitPct: 1,
+    stopLossPct: 1,
+    rebalanceOnFill: false,
+  };
+}
+
+/**
  * Persists a newly created bot to D1.
  */
 export async function persistNewBot(deps: D1CallbackDeps): Promise<void> {

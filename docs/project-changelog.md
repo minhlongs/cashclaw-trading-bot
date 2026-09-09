@@ -2,6 +2,14 @@
 
 ## v1 Paper-Trading Platform
 
+### Direct-D1 Read Store with TTL Cache — 2026-09-01
+- **Scope:** migrate `BotManager` read paths (`getAllBots`, `getRunningBots`, `getBot`) to query Cloudflare D1 directly, establishing D1 as the single authoritative source of truth across ephemeral Cloudflare Workers isolate lifecycles.
+- **Hot-Path In-Memory Cache:** introduced `CachedBot` with a 30-second TTL (`BOT_CACHE_TTL_MS = 30_000`) inside `BotManager`. Cache miss or expiration triggers transparent hydration from D1, eliminating state desynchronization without incurring redundant D1 read costs on high-frequency scheduler ticks and dashboard polling.
+- **Scheduler & Worker Simplification:** eliminated manual `hydrateRunningBots` pass in `BotScheduler` and `src/worker.ts`. Cold starts are now handled transparently on demand by D1 reads.
+- **Corrupt Config Resilience:** added `defaultConfigFromRow` helper in `bot-manager-helpers.ts` to synthesize a minimal safe fallback configuration whenever `config_json` parsing fails on corrupt database records.
+- **Test Hardening:** updated `bot-manager.test.ts`, `bot-manager-helpers.test.ts`, `scheduler.test.ts`, `bot-actions.test.ts`, and worker tests to exercise D1 direct-read paths, cache TTL expiration, fallback synthesis, and queue drain failure recovery.
+- **Quality gates:** `npm run build` exit 0, `npm run type-check` 0 errors, `npm run lint` 0 warnings, `npm test` 3729/3729 tests passing, vitest coverage thresholds 90/90/94/90 fully satisfied. Zero `:any` types.
+
 ### UI/UX Token Migration — 2026-08-31
 - **Scope:** replace all inline `style={{...}}` React attributes in `src/app` and `src/components` with semantic CSS classes defined in `src/app/globals.css` and `src/styles/tokens.css`. No Tailwind — every class is hand-written CSS.
 - **Design tokens added** (`globals.css`, `tokens.css`): `--color-profit: #00D4AA`, `--color-loss: #FF4757`, `--color-warning: #FFB020`, `--color-ai: #A78BFA`, `--color-error: #FF4757`, `--color-accent: #00D4AA`, `--text-primary: #E8EAED`, `--text-secondary: #8B95A5`, `--text-tertiary: #5A6577`, `--leading-tight: 1.25`, `--leading-normal: 1.5`, `--leading-relaxed: 1.6`.

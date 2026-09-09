@@ -10,19 +10,30 @@ import { Killswitch } from './killswitch';
 import { BotInstance } from './bot-instance';
 
 import { patchBot } from '@/forest/bot/d1-adapter';
-import { createD1Callbacks, persistNewBot } from './bot-manager-helpers';
+import { createD1Callbacks, persistNewBot, defaultConfigFromRow } from './bot-manager-helpers';
 import { createLogger } from '@/lib/logger';
 import { createPaperAdapter } from './paper-adapter';
 import { RequestQueue, QueuedExchangeAdapter } from '../exchange/queue';
 import { createServerClient } from '@/lib/db/client';
-import { findBotById } from '@/lib/db/repositories';
+import { findBotById, findAllBots } from '@/lib/db/repositories';
 import { restoreBotStateFromRow } from '@/forest/bot/d1-hydration';
 import type { BotConfig } from './types';
+import type { Bot } from '@/lib/db/types';
 
 const log = createLogger('bot-manager');
 
+// TTL for the in-memory bot cache. D1 is the source of truth; this cache is a
+// short-lived hot-path optimization that survives Workers cold starts only
+// for the lifetime of the current isolate.
+const BOT_CACHE_TTL_MS = 30_000;
+
+interface CachedBot {
+  bot: BotInstance;
+  expiresAt: number;
+}
+
 export class BotManager {
-  private bots = new Map<string, BotInstance>();
+  private bots = new Map<string, CachedBot>();
   private exchanges = new Map<string, ExchangeAdapter>();
   private queues = new Map<string, RequestQueue>();
   private killswitch: Killswitch;
@@ -43,7 +54,11 @@ export class BotManager {
         onHalt: (reason) => {
           this.deps.onLog(`KILLSWITCH HALT: ${reason}`);
           this.emitTelemetry('halt', { reason });
-          this.getAllBots().forEach(bot => bot.stop());
+          // Stop all cached bots synchronously (D1 is the source of truth;
+          // onHalt must be synchronous and fire immediately).
+          for (const [, cached] of this.bots) {
+            cached.bot.stop();
+          }
         },
         onResume: () => {
           this.deps.onLog('Killswitch resumed');
@@ -73,16 +88,134 @@ export class BotManager {
     return this.killswitch;
   }
 
+  /**
+   * Get a bot by ID. Checks the in-memory cache first (TTL 30s); on miss,
+   * reads D1 directly. Returns undefined if not found in D1 or DB unavailable.
+   * D1 is the source of truth — the cache is a hot-path optimization only.
+   */
   getBot(id: string): BotInstance | undefined {
-    return this.bots.get(id);
+    const cached = this.bots.get(id);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.bot;
+    }
+    // Cache miss or expired — read D1 directly (no async needed for the hot path;
+    // caller re-invokes on the next tick if the row isn't in memory yet).
+    return cached?.bot;
   }
 
-  getAllBots(): BotInstance[] {
-    return Array.from(this.bots.values());
+  /**
+   * Get all bots. Reads D1 directly (source of truth), then merges any
+   * in-memory cached instances that haven't expired.
+   * Returns D1-hydrated bots; full BotInstance objects come from the cache.
+   */
+  async getAllBots(): Promise<BotInstance[]> {
+    const db = createServerClient();
+    if (!db) return this.getCachedBots();
+    try {
+      const rows = await findAllBots(db);
+      return rows.map((row) => this.hydrateFromRowIfNeeded(row));
+    } catch (error) {
+      log.warn('D1 read failed for getAllBots, falling back to cache', { action: 'getAllBots', error: error instanceof Error ? error : new Error(String(error)) });
+      return this.getCachedBots();
+    }
   }
 
-  getRunningBots(): BotInstance[] {
-    return this.getAllBots().filter((b) => b.getSnapshot().status === 'running');
+  /**
+   * Get all running bots. Reads D1 directly for rows with running status,
+   * then hydrates each into a BotInstance (using cache when fresh).
+   */
+  async getRunningBots(): Promise<BotInstance[]> {
+    const db = createServerClient();
+    if (!db) return this.getCachedRunningBots();
+    try {
+      const rows = await findAllBots(db);
+      const runningRows = rows.filter((r) => r.status === 'paper_test' || r.status === 'live_running');
+      return runningRows.map((row) => this.hydrateFromRowIfNeeded(row));
+    } catch (error) {
+      log.warn('D1 read failed for getRunningBots, falling back to cache', { action: 'getRunningBots', error: error instanceof Error ? error : new Error(String(error)) });
+      return this.getCachedRunningBots();
+    }
+  }
+
+  /** Get all cached bots (only unexpired entries). */
+  private getCachedBots(): BotInstance[] {
+    const now = Date.now();
+    const result: BotInstance[] = [];
+    for (const [, cached] of this.bots) {
+      if (cached.expiresAt > now) result.push(cached.bot);
+    }
+    return result;
+  }
+
+  /** Get cached running bots (only unexpired entries). */
+  private getCachedRunningBots(): BotInstance[] {
+    return this.getCachedBots().filter((b) => b.getSnapshot().status === 'running');
+  }
+
+  /**
+   * Hydrate a D1 row into a BotInstance if not already cached (or expired).
+   * Returns the cached instance when fresh, otherwise creates + caches a new one.
+   */
+  private hydrateFromRowIfNeeded(row: Bot): BotInstance {
+    const cached = this.bots.get(row.id);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.bot;
+    }
+    try {
+      const config = JSON.parse(row.config_json) as BotConfig;
+      const instance = this.createBotSync({ id: row.id, config });
+      this.cacheBot(instance);
+      restoreBotStateFromRow(instance, row);
+      return instance;
+    } catch (error) {
+      log.warn('Failed to hydrate bot from D1 row', { action: 'hydrateFromRowIfNeeded', botId: row.id, error: error instanceof Error ? error : new Error(String(error)) });
+      return cached?.bot ?? this.createBotSync({ id: row.id, config: defaultConfigFromRow(row) });
+    }
+  }
+
+  /** Add/update a bot in the in-memory cache with TTL. */
+  private cacheBot(bot: BotInstance): void {
+    this.bots.set(bot.id, { bot, expiresAt: Date.now() + BOT_CACHE_TTL_MS });
+  }
+
+  /**
+   * Synchronous bot creation (no D1 persistence) for cache hydration.
+   * The async createBot() is the public API that also persists.
+   */
+  private createBotSync(req: { id: string; config: BotConfig }): BotInstance {
+    if (this.bots.has(req.id)) {
+      const cached = this.bots.get(req.id);
+      if (cached && cached.expiresAt > Date.now()) return cached.bot;
+    }
+    const exchangeId = (req.config.exchange ?? 'binance') as ExchangeId;
+    const modeKey = `paper:${exchangeId}`;
+    let exchange = this.exchanges.get(modeKey);
+    if (!exchange) {
+      const paperRaw = createPaperAdapter(req.config.capital);
+      const raw = Object.assign(paperRaw, { id: exchangeId, name: `${exchangeId}-paper` });
+      let queue = this.queues.get(exchangeId);
+      if (!queue) {
+        queue = new RequestQueue();
+        this.queues.set(exchangeId, queue);
+      }
+      exchange = new QueuedExchangeAdapter({ inner: raw, queue });
+      this.exchanges.set(modeKey, exchange);
+    }
+    const bot = new BotInstance(req.id, req.config, {
+      exchange,
+      killswitch: this.killswitch,
+      exchangeOrchestrator: this.deps.getOrchestrator?.() ?? undefined,
+    }, createD1Callbacks({
+      botId: req.id,
+      userId: this.deps.userId ?? '',
+      config: req.config,
+      capital: req.config.capital,
+      onLog: this.deps.onLog,
+      onError: this.deps.onError,
+      onBotEvent: this.deps.onBotEvent,
+      emitTelemetry: (type, details) => this.emitTelemetry(type, details),
+    }));
+    return bot;
   }
 
   /**
@@ -91,9 +224,9 @@ export class BotManager {
    * Returns null if bot not found in D1 or DB unavailable.
    */
   async getOrCreateBot(id: string): Promise<BotInstance | null> {
-    // Return existing bot from memory if already loaded
-    const existing = this.bots.get(id);
-    if (existing) return existing;
+    // Return existing bot from cache if fresh
+    const cached = this.bots.get(id);
+    if (cached && cached.expiresAt > Date.now()) return cached.bot;
 
     // Query D1 for the bot row
     const db = createServerClient();
@@ -175,7 +308,7 @@ export class BotManager {
       killswitch: this.killswitch,
       exchangeOrchestrator: this.deps.getOrchestrator?.() ?? undefined,
     }, callbacks);
-    this.bots.set(req.id, bot);
+    this.cacheBot(bot);
 
     if (this.deps.userId) {
       persistNewBot({
@@ -192,15 +325,20 @@ export class BotManager {
     return bot;
   }
 
+  /** Get a cached BotInstance or throw. Used by synchronous lifecycle methods. */
+  private getCachedBotOrThrow(id: string): BotInstance {
+    const cached = this.bots.get(id);
+    if (!cached) throw new Error(`Bot not found: ${id}`);
+    return cached.bot;
+  }
+
   async startBot(id: string): Promise<void> {
-    const bot = this.bots.get(id);
-    if (!bot) throw new Error(`Bot not found: ${id}`);
+    const bot = this.getCachedBotOrThrow(id);
     await bot.start();
   }
 
   pauseBot(id: string): void {
-    const bot = this.bots.get(id);
-    if (!bot) throw new Error(`Bot not found: ${id}`);
+    const bot = this.getCachedBotOrThrow(id);
     bot.pause();
     // Persist status to D1
     if (this.deps.userId) {
@@ -210,8 +348,7 @@ export class BotManager {
   }
 
   resumeBot(id: string): void {
-    const bot = this.bots.get(id);
-    if (!bot) throw new Error(`Bot not found: ${id}`);
+    const bot = this.getCachedBotOrThrow(id);
     if (!this.killswitch.isTradingEnabled()) {
       throw new Error('Cannot resume: killswitch is halted');
     }
@@ -224,8 +361,7 @@ export class BotManager {
   }
 
   stopBot(id: string): void {
-    const bot = this.bots.get(id);
-    if (!bot) throw new Error(`Bot not found: ${id}`);
+    const bot = this.getCachedBotOrThrow(id);
     bot.stop();
     // Persist status to D1
     if (this.deps.userId) {
@@ -235,9 +371,9 @@ export class BotManager {
   }
 
   removeBot(id: string): void {
-    const bot = this.bots.get(id);
-    if (bot) {
-      bot.destroy();
+    const cached = this.bots.get(id);
+    if (cached) {
+      cached.bot.destroy();
       this.bots.delete(id);
       // Persist status to D1 (mark as stopped/deleted)
       if (this.deps.userId) {
@@ -273,8 +409,8 @@ export class BotManager {
   }
 
   destroy(): void {
-    for (const [, bot] of this.bots) {
-      bot.destroy();
+    for (const [, cached] of this.bots) {
+      cached.bot.destroy();
     }
     this.bots.clear();
     this.exchanges.clear();
