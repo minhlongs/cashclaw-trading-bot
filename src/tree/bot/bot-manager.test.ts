@@ -804,14 +804,38 @@ describe('BotManager', () => {
       vi.mocked(createServerClient).mockReturnValue(mockDb as unknown as ReturnType<typeof createServerClient>);
     });
 
-    it('getAllBots reads D1 directly when DB is available', async () => {
+    it('getAllBots reads D1 directly when DB is available (system context)', async () => {
       const { findAllBots } = await import('@/lib/db/repositories');
       vi.mocked(findAllBots).mockResolvedValue([makeBotRow()]);
+
+      const mgr = createManager();
+      const bots = await mgr.getAllBots();
+      expect(bots).toHaveLength(1);
+      expect(bots[0].id).toBe('d1-bot-1');
+    });
+
+    it('getAllBots scopes to user when userId is provided (anti-IDOR)', async () => {
+      const { findBotsByUser } = await import('@/lib/db/repositories');
+      vi.mocked(findBotsByUser).mockResolvedValue([makeBotRow({ user_id: 'user-1' })]);
 
       const mgr = createManager('user-1');
       const bots = await mgr.getAllBots();
       expect(bots).toHaveLength(1);
-      expect(bots[0].id).toBe('d1-bot-1');
+      expect(findBotsByUser).toHaveBeenCalledWith(expect.anything(), 'user-1');
+    });
+
+    it('getRunningBots scopes to user when userId is provided (anti-IDOR)', async () => {
+      const { findBotsByUser } = await import('@/lib/db/repositories');
+      vi.mocked(findBotsByUser).mockResolvedValue([
+        makeBotRow({ id: 'running-user-1', status: 'paper_test', user_id: 'user-1' }),
+        makeBotRow({ id: 'stopped-user-1', status: 'stopped', user_id: 'user-1' }),
+      ]);
+
+      const mgr = createManager('user-1');
+      const running = await mgr.getRunningBots();
+      expect(running).toHaveLength(1);
+      expect(running[0].id).toBe('running-user-1');
+      expect(findBotsByUser).toHaveBeenCalledWith(expect.anything(), 'user-1');
     });
 
     it('getRunningBots filters to running-status rows from D1', async () => {
@@ -881,7 +905,7 @@ describe('BotManager', () => {
         makeBotRow({ id: 'fresh-row-bot', name: 'Fresh Bot' }),
       ]);
 
-      const mgr = createManager('user-1');
+      const mgr = createManager();
       const firstCall = await mgr.getAllBots();
       expect(firstCall).toHaveLength(1);
 
@@ -896,10 +920,45 @@ describe('BotManager', () => {
         makeBotRow({ id: 'corrupt-config-bot', name: 'Corrupt Bot', config_json: 'invalid-json-{{{' }),
       ]);
 
-      const mgr = createManager('user-1');
+      const mgr = createManager();
       const bots = await mgr.getAllBots();
       expect(bots).toHaveLength(1);
       expect(bots[0].id).toBe('corrupt-config-bot');
+    });
+
+    it('getOrCreateBot rejects access when bot belongs to different user (IDOR prevention)', async () => {
+      const mgr = createManager('user-1');
+      const d1Row = makeBotRow({ id: 'victim-bot', user_id: 'user-victim', name: 'Victim Bot' });
+      mockFindBotById.mockResolvedValue(d1Row);
+
+      const res = await mgr.getOrCreateBot('victim-bot');
+      expect(res).toBeNull();
+    });
+
+    it('getBot rejects cross-user access from cached instance', async () => {
+      const mgr = createManager('user-1');
+      await mgr.createBot(mockRequest('owned-bot'));
+
+      // user-1 can access
+      expect(mgr.getBot('owned-bot')).toBeDefined();
+
+      // user-2 cannot access
+      expect(mgr.getBot('owned-bot', 'user-2')).toBeUndefined();
+    });
+
+    it('lifecycle methods reject cross-user access', async () => {
+      const mgr = createManager('user-1');
+      await mgr.createBot(mockRequest('lifecycle-bot'));
+
+      // Cross-user calls throw or are rejected
+      await expect(mgr.startBot('lifecycle-bot', 'user-2')).rejects.toThrow('Unauthorized access');
+      expect(() => mgr.pauseBot('lifecycle-bot', 'user-2')).toThrow('Unauthorized access');
+      expect(() => mgr.resumeBot('lifecycle-bot', 'user-2')).toThrow('Unauthorized access');
+      expect(() => mgr.stopBot('lifecycle-bot', 'user-2')).toThrow('Unauthorized access');
+      expect(() => mgr.removeBot('lifecycle-bot', 'user-2')).toThrow('Unauthorized access');
+
+      // Bot is still intact for user-1
+      expect(mgr.getBot('lifecycle-bot')).toBeDefined();
     });
 
     it('getOrCreateBot catches error and invokes onError if createBot fails', async () => {
