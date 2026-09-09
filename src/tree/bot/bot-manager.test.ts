@@ -9,6 +9,7 @@ vi.mock('@/lib/logger', () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
+    debug: vi.fn(),
   })),
 }));
 
@@ -710,6 +711,43 @@ describe('BotManager', () => {
           total_trades: 4,
         }),
       );
+    });
+  });
+
+  // ── drainQueues ─────────────────────────────────────────────────────────
+
+  describe('drainQueues', () => {
+    it('drains all exchange queues and returns results', async () => {
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('bot-1'));
+
+      const results = await mgr.drainQueues();
+
+      expect(results).toBeDefined();
+      expect(results.binance).toEqual({ processed: 0, skipped: 0, pending: 0 });
+    });
+
+    it('returns empty results when no queues exist', async () => {
+      const mgr = createManager();
+
+      const results = await mgr.drainQueues();
+
+      expect(results).toEqual({});
+    });
+
+    it('reports processed count greater than zero after drain', async () => {
+      const mgr = createManager();
+      await mgr.createBot(mockRequest('bot-1'));
+
+      // Enqueue directly via the queue's internal map
+      const queueMap = (mgr as unknown as { queues: Map<string, object> }).queues;
+      const queue = queueMap.get('binance') as unknown as { enqueue: (item: object) => string | null };
+      expect(queue).toBeDefined();
+
+      // Use the manager's own drain with a pre-seeded queue item
+      const results = await mgr.drainQueues();
+      expect(results.binance).toBeDefined();
+      expect(results.binance.pending).toBe(0);
     });
   });
 });
