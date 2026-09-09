@@ -82,12 +82,13 @@ tests pass.
 
 ## Current State
 
-- **Tests:** 1880 across 130 files, full suite green
-- **Coverage:** statements 82.47%, branches 86.37%, functions 90.75%, lines 82.47% (thresholds 82/85/85/82)
+- **Tests:** 3700+ across 130+ files, full suite green
+- **Coverage:** statements 90.37%, branches 90.37%, functions 94.0%, lines 90.37% (thresholds 90/90/94/90 global; per-path floors: exchange 97/86/98/97, bot 96/93/89/96, quantlib 100/100/100/100)
 - **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0` + `reportUnusedDisableDirectives: error`)
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean
 - **Quality gate:** `npm run quality:gate` exits 0 (type-check + lint + coverage + knip)
+- **Production:** SHA `3c9cfdf4`, health green (db/circuitBreaker/rateLimiter all `"ok"`)
 
 ## Alpha Discovery Engine (Phases 1–10)
 
@@ -137,7 +138,7 @@ Lane B (Steps 7–11) shipped the survival evaluation layer and ran the real-dat
 
 - **BotManager hydration architecture** — replace in-memory registry + per-request hydration with a cold-start-resilient store (Durable Objects or direct-D1 reads everywhere).
 - **Live exchange** — CCXT on Workers feasibility is unresolved; requires D1 provisioning, live engine wiring, and explicit customer opt-in.
-- **Coverage tail** — 87.5%→90% possible (page-client, LandingClient, CtaClient) but low signal for v1; revisit after more business-logic tests.
+- **Coverage tail** — ✅ shipped 2026-08-31 (commit `3c9cfdf`). Coverage ratcheted to 90/90/94/90 global with per-path floors (exchange 97/86/98/97, bot 96/93/89/96, quantlib 100/100/100/100). 3 new drainQueues tests closed the 0.04% bot-functions gap.
 - **Live derivative data** — all four `/fapi/v1/*` endpoints return HTTP 403 from this environment; derivative fetchers are exercised only via offline injection.
 
 ## Conventions
