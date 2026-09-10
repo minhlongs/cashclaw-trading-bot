@@ -84,13 +84,13 @@ tests pass.
 
 ## Current State
 
-- **Tests:** 3787 across 290 test files, full suite green
+- **Tests:** 3803 across 291 test files, full suite green
 - **Coverage:** statements 90.64%, branches 90.89%, functions 95.06%, lines 90.64% (thresholds 90/90/94/90 global; per-path floors: exchange 97/86/98/97, bot 96/93/89/96, quantlib 100/100/100/100)
 - **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0` + `reportUnusedDisableDirectives: error`)
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean (Next.js 16 + Turbopack + OpenNext Cloudflare)
 - **Quality gate:** `npm run quality:gate` exits 0 (type-check + lint + coverage + knip)
-- **Production:** SHA `25527542` (`2552754231fcb7ac293991da9c856a26fcf922f7`), health green (db/circuitBreaker/rateLimiter all `"ok"`, killswitch active)
+- **Production:** SHA `6839d174` (`6839d17463514b38c0aa57ead57caca09a080d6a`), health green (db/circuitBreaker/rateLimiter all `"ok"`, killswitch active)
 
 ## Alpha Discovery Engine (Phases 1–10)
 
@@ -138,6 +138,7 @@ Lane B (Steps 7–11) shipped the survival evaluation layer and ran the real-dat
 
 ## Known Backlog (v2 and beyond)
 
+- **Multi-pair sweep artifact documentation & pin test** — ✅ shipped 2026-09-10 (commit `de5d809`). 16-test consistency suite (`src/forest/alpha/composition-eval/sweep-artifact.test.ts`) pins schema/invariants/survival gate on the committed artifact. Companion report (`docs/multi-pair-composition-sweep-report.md`) documents sweep methodology, pair correlation diagnostics, walk-forward statistics, and survival gate check detail with external-validity caveat.
 - **Alpha Research OS Backlog Closure** — ✅ shipped 2026-09-10. Completed remaining research backlog: multi-pair universe scan causal wiring (`scanMultiPairUniverse`), rolling correlation diagnostics (`computeRollingCorrelationSeries`), walk-forward composition evaluation (`runCompositionWalkForward`, `toWalkForwardShim`), and automated pipeline survival-gate / promotion-state lifecycle integration (`stepGenerateReport`).
 - **BotManager hydration architecture** — ✅ shipped 2026-09-01 (commits `aff8f46`, `71f9a92`). Replaced in-memory registry + per-request hydration with direct-D1 reads as authoritative source of truth + hot-path in-memory TTL cache (30s) and multi-tenant anti-IDOR user scoping.
 - **Live exchange** — ✅ resolved 2026-09-10 (see `docs/decisions/adr-001-ccxt-workers-feasibility.md`). CCXT on Workers edge runtime determined NO-GO due to socket/TLS unenv incompatibilities and bundle bloat; v1 locked strictly to paper-only. Selected architecture for v2 live trading is native Direct Web-API REST (`fetch` + `crypto.subtle`) or dedicated Node.js execution sidecar service.
