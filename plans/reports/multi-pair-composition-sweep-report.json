@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-09-10T11:37:47.953Z",
+  "universe": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT"
+  ],
+  "scanResult": {
+    "candidatePairsCount": 0,
+    "diversifiedPairsCount": 0,
+    "signalsCount": 0,
+    "diversifiedPairs": []
+  },
+  "pairCorrelations": {
+    "BTCUSDT/ETHUSDT": {
+      "avgCorr": 0.8002,
+      "points": 730
+    },
+    "BTCUSDT/SOLUSDT": {
+      "avgCorr": 0.7701,
+      "points": 730
+    },
+    "ETHUSDT/SOLUSDT": {
+      "avgCorr": 0.7301,
+      "points": 730
+    }
+  },
+  "compositionWalkForward": {
+    "windowsCount": 16,
+    "summaryStats": {
+      "totalWindows": 16,
+      "avgInSampleSharpe": 2.126471858402594,
+      "avgOutSampleSharpe": 2.907401922242345,
+      "degradationRatio": 1.3672421343146228,
+      "positiveOosFraction": 0.3125
+    },
+    "stitchedSharpe": 1.582871121941755,
+    "stitchedMaxDrawdownPct": 0
+  },
+  "pipelineSummary": {
+    "totalSteps": 12,
+    "passedSteps": 12,
+    "finalSharpe": 0,
+    "recommendation": "deploy",
+    "survivalGate": {
+      "status": "KILLED",
+      "reason": "Failed 4/8 checks: min_expectancy, min_profit_factor, min_net_pnl_after_fees, min_net_pnl_adverse",
+      "checks": [
+        {
+          "name": "min_trades",
+          "passed": true,
+          "actual": 1,
+          "threshold": 1,
+          "detail": "1 trades vs. minimum 1"
+        },
+        {
+          "name": "min_expectancy",
+          "passed": false,
+          "actual": -1092.3613889999983,
+          "threshold": 0,
+          "detail": "Expectancy -1092.3614 vs. minimum 0"
+        },
+        {
+          "name": "min_profit_factor",
+          "passed": false,
+          "actual": 0,
+          "threshold": 1.2,
+          "detail": "Profit factor 0.00 vs. minimum 1.2"
+        },
+        {
+          "name": "max_drawdown",
+          "passed": true,
+          "actual": 0.1092361388999998,
+          "threshold": 0.5,
+          "detail": "Max drawdown 0.1092 vs. maximum 0.5"
+        },
+        {
+          "name": "min_sharpe",
+          "passed": true,
+          "actual": 0,
+          "threshold": 0,
+          "detail": "Sharpe 0.00 vs. minimum 0"
+        },
+        {
+          "name": "min_regime_coverage",
+          "passed": true,
+          "actual": 1,
+          "threshold": 0.5,
+          "detail": "1/1 regimes traded vs. minimum 50%"
+        },
+        {
+          "name": "min_net_pnl_after_fees",
+          "passed": false,
+          "actual": -1092.3613889999983,
+          "threshold": 0,
+          "detail": "Net PnL after NORMAL-stress fees -1092.36 vs. minimum 0"
+        },
+        {
+          "name": "min_net_pnl_adverse",
+          "passed": false,
+          "actual": -1092.3613889999983,
+          "threshold": 0,
+          "detail": "Net PnL under ADVERSE slippage -1092.36 vs. minimum 0"
+        }
+      ]
+    },
+    "promotion": {
+      "from": "RESEARCH",
+      "to": "KILLED",
+      "trigger": {
+        "type": "gate_failed"
+      }
+    }
+  }
+}
