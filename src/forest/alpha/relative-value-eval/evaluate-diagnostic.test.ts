@@ -96,6 +96,45 @@ describe('evaluateRelativeValue — realized beta diagnostic', () => {
   });
 });
 
+describe('evaluateRelativeValue — rolling correlation diagnostic', () => {
+  it('present only when correlationWindow supplied; length matches periods', () => {
+    const panel = ouPanel();
+    const withCorr = evaluateRelativeValue(panel, evalConfig({ correlationWindow: 10 }));
+    const series = withCorr.report.rollingCorrelationSeries;
+    expect(series).toBeDefined();
+    expect(series!.length).toBe(withCorr.sim.periods.length);
+    for (const r of series!) expect(Number.isFinite(r)).toBe(true);
+
+    const withoutCorr = evaluateRelativeValue(panel, evalConfig());
+    expect(withoutCorr.report.rollingCorrelationSeries).toBeUndefined();
+  });
+
+  it('diagnostic only: identical sim output with and without correlationWindow', () => {
+    const panel = ouPanel();
+    const plain = evaluateRelativeValue(panel, evalConfig());
+    const withDiag = evaluateRelativeValue(panel, evalConfig({ correlationWindow: 10 }));
+    expect(withDiag.sim).toStrictEqual(plain.sim);
+  });
+
+  it('strictly-before windows: mutating future panel closes changes nothing earlier', () => {
+    const panel = ouPanel();
+    const base = evaluateRelativeValue(panel, evalConfig({ correlationWindow: 10 }));
+
+    // Mutate the last close of legA
+    const mutatedPanel = {
+      ...panel,
+      closesA: [...panel.closesA],
+    };
+    mutatedPanel.closesA[mutatedPanel.closesA.length - 1] = 999999;
+
+    const afterMutation = evaluateRelativeValue(mutatedPanel, evalConfig({ correlationWindow: 10 }));
+    // The earlier periods before the last timestamp must be unaffected
+    const len = base.report.rollingCorrelationSeries!.length;
+    expect(afterMutation.report.rollingCorrelationSeries!.slice(0, len - 1))
+      .toStrictEqual(base.report.rollingCorrelationSeries!.slice(0, len - 1));
+  });
+});
+
 // ── Error propagation ─────────────────────────────────────────────────
 
 describe('evaluateRelativeValue — error propagation', () => {

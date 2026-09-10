@@ -58,6 +58,7 @@ export interface RelativeValueReport {
   readonly costAttribution: CostAttributionBreakdown;
   readonly exposureSeries: ExposureSeries;
   readonly realizedPairBetaSeries?: readonly number[];
+  readonly rollingCorrelationSeries?: readonly number[];
   readonly validationSummary: RelativeValueValidationSummary;
   readonly periodCount: number;
   readonly periodsPerYear: number;
@@ -101,6 +102,8 @@ export interface RelativeValueEvalConfig extends PairSimConfig {
   readonly benchmarkReturns?: AssetReturnSeries;
   readonly betaWindow?: number;
   readonly betaMinObs?: number;
+  /** Optional rolling correlation window (bars) enables rolling correlation diagnostics. */
+  readonly correlationWindow?: number;
 }
 
 /** Evaluation input bundle used by validator tests. */

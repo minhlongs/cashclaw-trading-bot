@@ -14,6 +14,7 @@ export type {
 export { validateEvalInputs } from './evaluate-validate';
 export { buildRelativeValueReport, FUNDING_NOTE } from './report';
 export { computeRealizedPairBetaSeries } from './realized-beta';
+export { computeRealizedPairCorrelationSeries } from './rolling-correlation';
 export { evaluateRelativeValue } from './evaluate';
 export type { PairRoundTrip, RoundTripExtraction } from './round-trips';
 export { extractRoundTrips } from './round-trips';

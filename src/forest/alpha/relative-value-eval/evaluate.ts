@@ -4,6 +4,7 @@
 import { runPairSpreadSim, type PairPanel } from '@/tree/alpha/relative-value';
 import { buildRelativeValueReport } from './report';
 import { computeRealizedPairBetaSeries } from './realized-beta';
+import { computeRealizedPairCorrelationSeries } from './rolling-correlation';
 import type { RelativeValueEvalConfig, RelativeValueResult } from './types';
 import { validateEvalInputs } from './evaluate-validate';
 
@@ -14,10 +15,13 @@ export function evaluateRelativeValue(
   validateEvalInputs(panel, config);
   const sim = runPairSpreadSim(panel, config);
   const realizedPairBetaSeries = computeRealizedPairBetaSeries(panel, sim.periods, config);
+  const rollingCorrelationSeries = computeRealizedPairCorrelationSeries(panel, sim.periods, config);
   const baseReport = buildRelativeValueReport(sim, config);
-  const report =
-    realizedPairBetaSeries === undefined
-      ? { ...baseReport, pairLabel: `${panel.legA}/${panel.legB}` }
-      : { ...baseReport, pairLabel: `${panel.legA}/${panel.legB}`, realizedPairBetaSeries };
+  const report = {
+    ...baseReport,
+    pairLabel: `${panel.legA}/${panel.legB}`,
+    ...(realizedPairBetaSeries !== undefined ? { realizedPairBetaSeries } : {}),
+    ...(rollingCorrelationSeries !== undefined ? { rollingCorrelationSeries } : {}),
+  };
   return { sim, report, validation: sim.validationTrail };
 }

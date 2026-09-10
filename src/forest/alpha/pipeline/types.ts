@@ -10,6 +10,8 @@ import type { AlphaSignal } from '@/tree/alpha/types';
 import type { DerivativeFeatures, DerivativeSignal } from '@/tree/alpha/signals';
 import type { AttributionResult } from '@/forest/alpha/attribution/types';
 import type { BaselineConfig } from '@/forest/alpha/baselines/types';
+import type { SurvivalGateConfig, SurvivalGateResult } from '@/forest/alpha/gate/survival-gate';
+import type { StrategyPhase, TransitionResult } from '@/forest/alpha/gate/promotion-states';
 
 // ── Pipeline Configuration ──────────────────────────────────────────────────
 
@@ -42,6 +44,10 @@ export interface PipelineConfig {
   minTrades: number;
   /** Whether to run baseline strategy comparisons. */
   baselinesEnabled: boolean;
+  /** Optional survival gate configuration for strategy filtering. */
+  survivalGateConfig?: SurvivalGateConfig;
+  /** Optional initial strategy phase (defaults to 'RESEARCH'). */
+  initialStrategyPhase?: StrategyPhase;
 }
 
 // ── Pipeline Steps ──────────────────────────────────────────────────────────
@@ -133,6 +139,12 @@ export interface BaselineData {
   reports: Record<string, EvaluationReport>;
 }
 
+/** Data produced by generate_report step. */
+export interface ReportData {
+  survivalGate: SurvivalGateResult | null;
+  promotion: TransitionResult | null;
+}
+
 // ── Final Report ────────────────────────────────────────────────────────────
 
 /** Regime-level performance breakdown for the final report. */
@@ -161,4 +173,6 @@ export interface AlphaResearchReport {
   topFeatures: TopFeature[];
   recommendation: PipelineRecommendation;
   report: EvaluationReport | null;
+  survivalGate?: SurvivalGateResult | null;
+  promotion?: TransitionResult | null;
 }

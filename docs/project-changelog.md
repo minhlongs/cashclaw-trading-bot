@@ -2,6 +2,14 @@
 
 ## v1 Paper-Trading Platform
 
+### Alpha Research OS Backlog Closure — 2026-09-10
+- **Scope:** implement, integrate, and verify remaining deferred items from the Alpha Research OS backlog: walk-forward composition, survival-gate pipeline consumption, multi-pair scan causal wiring, and rolling correlation diagnostics.
+- **Walk-Forward Composition Evaluation:** implemented `runCompositionWalkForward` in `src/forest/alpha/composition-eval/walk-forward.ts` supporting rolling and expanding window modes via `computeSlices`. Added `toWalkForwardShim` in `walk-forward-shim.ts` converting composed window results into `WalkForwardValidationReport` for compatibility with `assessWalkForwardConsistency`.
+- **Pipeline Survival Gate & Promotion States Integration:** wired `runSurvivalGate` and `transitionStrategy` into step 12 (`generate_report`) of `AlphaResearchPipeline` in `src/forest/alpha/pipeline/engine.ts`. Strategies evaluated by the pipeline undergo 8 survival criteria and state machine progression capped at `SHADOW`, respecting the automated ceiling without advancing to `MANUAL_APPROVAL` or `LIVE`.
+- **Multi-Pair Scan Causal Universe Wiring:** implemented `scanMultiPairUniverse` and causal window slicing in `src/tree/alpha/correlation/pairs.ts`, strictly enforcing `timestamp < asOfTime` and configurable lookback bounds during cointegration discovery and signal generation.
+- **Rolling Correlation Diagnostic:** implemented `computeRollingCorrelationSeries` in `src/forest/alpha/relative-value-eval/rolling-correlation.ts` and integrated it into `evaluateRelativeValue` diagnostic reports to detect pair breakdown and decorrelation risks over time.
+- **Quality Gates:** full repository test suite 3751/3751 passing (290 test files), `npm run type-check` 0 errors, `npm run lint` 0 warnings, `npm run build` exit 0, zero `:any` types.
+
 ### Anti-IDOR Authorization Hardening in BotManager — 2026-09-01
 - **Scope:** remediate security review finding by enforcing strict multi-tenant user scoping across all reads, writes, caches, and bot lifecycle operations in `src/tree/bot/bot-manager.ts`.
 - **User Scoping in Reads & Cache:** `getAllBots` and `getRunningBots` now query `findBotsByUser(db, effectiveUserId)` when user context is present. `getCachedBots` and `getBot` filter by `cached.userId === effectiveUserId`, preventing cached instances from leaking across tenant boundaries.

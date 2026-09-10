@@ -12,7 +12,14 @@ import type {
   AlphaResearchReport, IndicatorData, RegimeData,
   SignalData, EventData, WalkforwardData,
   CostData, EvalData, AttributeData, BaselineData, DerivativeData,
+  ReportData,
 } from './types';
+import { runSurvivalGate } from '@/forest/alpha/gate/survival-gate';
+import {
+  transitionStrategy,
+  gateResultToTrigger,
+  canTransition,
+} from '@/forest/alpha/gate/promotion-states';
 import { createLogger } from '@/lib/logger';
 import { extractRegimeFeatures } from '@/tree/regime/features';
 import {
@@ -139,6 +146,7 @@ export class AlphaResearchPipeline {
       case 'compute_costs': return this.stepComputeCosts();
       case 'attribute': return this.stepAttribute();
       case 'compare_baselines': return this.stepCompareBaselines();
+      case 'generate_report': return this.stepGenerateReport();
       default: return null;
     }
   }
@@ -297,15 +305,33 @@ export class AlphaResearchPipeline {
     const trades = extractTrades(sd?.signals ?? [], candles, off, { ...costCfg, marketImpactPct: 0 });
     const tp = trades.reduce((s, t) => s + t.pnl, 0);
     const wc = trades.filter(t => t.pnl > 0).length;
+    const grossWin = trades.filter(t => t.pnl > 0).reduce((s, t) => s + t.pnl, 0);
+    const grossLoss = Math.abs(trades.filter(t => t.pnl < 0).reduce((s, t) => s + t.pnl, 0));
+    const pf = grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? grossWin : 0;
+    const exp = trades.length > 0 ? tp / trades.length : 0;
+
+    const eq: BacktestEquityPoint[] = [];
+    let equity = 10000, peak = equity;
+    let maxDd = 0;
+    for (const t of trades) {
+      equity += t.pnl;
+      peak = Math.max(peak, equity);
+      const dd = peak > 0 ? ((peak - equity) / peak) * 100 : 0;
+      if (dd > maxDd) maxDd = dd;
+      eq.push({ timestamp: t.exitTimestamp, equity, drawdownPct: dd });
+    }
+    const intervalMin = parseCandleIntervalMinutes(this.cfg.timeframe);
+    const sp = eq.length >= 2 ? computeSharpe(eq, intervalMin) : 0;
+
     const m: ExtendedBacktestMetrics = {
       id: '', bot_id: '', strategy: 'alpha-research', pair: this.cfg.symbol, exchange: '',
       start_date: 0, end_date: Date.now(),
       total_trades: trades.length, win_count: wc, loss_count: trades.length - wc,
-      win_rate: trades.length ? wc / trades.length : 0, total_pnl: tp, max_drawdown: 0,
-      sharpe_ratio: null, params_json: '{}', equity_curve_json: [], trades_json: trades,
-      created_at: Date.now(), profit_factor: 0, expectancy: 0, sortino_ratio: null,
-      max_drawdown_duration: 0, calmar_ratio: 0, avg_trade: 0, median_trade: 0,
-      turnover: 0, recovery_factor: 0, exposure_pct: 0,
+      win_rate: trades.length ? wc / trades.length : 0, total_pnl: tp, max_drawdown: maxDd / 100,
+      sharpe_ratio: sp, params_json: '{}', equity_curve_json: eq, trades_json: trades,
+      created_at: Date.now(), profit_factor: pf, expectancy: exp, sortino_ratio: null,
+      max_drawdown_duration: 0, calmar_ratio: 0, avg_trade: trades.length ? tp / trades.length : 0,
+      median_trade: 0, turnover: 0, recovery_factor: 0, exposure_pct: 0,
     };
     // Compute cost breakdown from trades for the report
     const totalFees = trades.reduce((s, t) => s + t.fee, 0);
@@ -359,21 +385,68 @@ export class AlphaResearchPipeline {
     return { baselines: configs, reports };
   }
 
+  private stepGenerateReport(): ReportData {
+    const ev = this.map.get('evaluate') as EvalData | undefined;
+    const evalReport = ev?.report ?? null;
+    if (!evalReport) {
+      return { survivalGate: null, promotion: null };
+    }
+    const survivalGate = runSurvivalGate(evalReport, this.cfg.survivalGateConfig);
+    const initialPhase = this.cfg.initialStrategyPhase ?? 'RESEARCH';
+    const trigger = gateResultToTrigger(survivalGate.status);
+    const promotion = canTransition(initialPhase, trigger)
+      ? transitionStrategy(initialPhase, trigger)
+      : null;
+    return { survivalGate, promotion };
+  }
+
   private report(): AlphaResearchReport {
     const wf = this.results.find(r => r.step === 'run_walkforward');
     const ev = this.results.find(r => r.step === 'evaluate');
     const at = this.results.find(r => r.step === 'attribute');
     const rg = this.results.find(r => r.step === 'detect_regimes');
-    const sp = wf?.data instanceof Object && wf.data && 'sharpe' in (wf.data as object) ? (wf.data as { sharpe: number }).sharpe : 0;
+    const gr = this.results.find(r => r.step === 'generate_report');
+    const sp = extractSharpe(wf);
     const attributions = at?.status === 'success' ? (at.data as AttributeData).attributions : [];
+
+    const evalReport = extractEvalReport(ev);
+    const repData = gr?.status === 'success' && gr.data ? (gr.data as ReportData) : null;
+
     return {
       symbol: this.cfg.symbol, timeframe: this.cfg.timeframe,
       totalSteps: this.results.length, passedSteps: this.results.filter(r => r.status === 'success').length,
       finalSharpe: sp,
-      regimeBreakdown: rg?.status === 'success' ? (rg.data as RegimeData)['regimes'].reduce((acc: Record<RegimeLabel, { trades: number; winRate: number }>, r) => { acc[r.label] = { trades: 0, winRate: 0 }; return acc; }, {} as Record<RegimeLabel, { trades: number; winRate: number }>) : {} as Record<RegimeLabel, { trades: number; winRate: number }>,
+      regimeBreakdown: extractRegimeBreakdown(rg),
       topFeatures: attributions.slice(0, TOP_N).map(a => ({ name: a.alphaId, importance: a.totalContribution })),
       recommendation: sp >= this.cfg.minSharpe * 1.5 ? 'deploy' : sp >= this.cfg.minSharpe ? 'refine' : 'discard',
-      report: ev?.status === 'success' ? ev.data as AlphaResearchReport['report'] : null,
+      report: evalReport,
+      survivalGate: repData?.survivalGate ?? null,
+      promotion: repData?.promotion ?? null,
     };
   }
 }
+
+function extractEvalReport(ev: PipelineStepResult | undefined): EvaluationReport | null {
+  if (ev?.status !== 'success' || !ev.data) return null;
+  const raw = ev.data;
+  if (typeof raw === 'object' && 'report' in raw) {
+    return (raw as { report: EvaluationReport }).report;
+  }
+  return raw as EvaluationReport;
+}
+
+function extractRegimeBreakdown(rg: PipelineStepResult | undefined): Record<RegimeLabel, { trades: number; winRate: number }> {
+  if (rg?.status !== 'success' || !rg.data) return {} as Record<RegimeLabel, { trades: number; winRate: number }>;
+  return (rg.data as RegimeData).regimes.reduce((acc, r) => {
+    acc[r.label] = { trades: 0, winRate: 0 };
+    return acc;
+  }, {} as Record<RegimeLabel, { trades: number; winRate: number }>);
+}
+
+function extractSharpe(wf: PipelineStepResult | undefined): number {
+  if (wf?.data && typeof wf.data === 'object' && 'sharpe' in wf.data) {
+    return (wf.data as { sharpe: number }).sharpe;
+  }
+  return 0;
+}
+

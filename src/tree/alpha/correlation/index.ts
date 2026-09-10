@@ -1,6 +1,12 @@
 // Barrel export for the correlation & pairs trading module.
 
-export type { PairStats, PairSignal } from './types';
+export type {
+  PairStats,
+  PairSignal,
+  GeneratePairSignalsOptions,
+  MultiPairScanConfig,
+  MultiPairScanResult,
+} from './types';
 
 export {
   pearsonCorrelation,
@@ -15,4 +21,5 @@ export {
   findCointegratedPairs,
   generatePairSignals,
   filterDiversified,
+  scanMultiPairUniverse,
 } from './pairs';

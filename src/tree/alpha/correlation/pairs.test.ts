@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { IndicatorCandle } from '../indicator-types';
 import type { PairStats } from './types';
-import { findCointegratedPairs, generatePairSignals, filterDiversified } from './pairs';
+import {
+  findCointegratedPairs,
+  generatePairSignals,
+  filterDiversified,
+} from './pairs';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
