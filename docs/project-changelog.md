@@ -2,6 +2,13 @@
 
 ## v1 Paper-Trading Platform
 
+### QuantLib Parameter-Aware Strategy Functions & Multi-Pair Composition Sweep — 2026-09-10
+- **Scope:** implement parameter-aware QuantLib strategy implementations for `grid` and `meanReversion`, enforce strict 100% test coverage floor on `src/tree/quantlib/**`, author and verify end-to-end multi-pair composition walk-forward sweep script, commit verified report artifact, and deploy live to production.
+- **Parameter-Aware QuantLib Functions:** implemented dynamic numerical parameter support in `src/tree/quantlib/index.ts` for `grid` (anchor, levels, spacing, tolerance) with dynamic boundary calculation and proximity-based signals, and `meanReversion` (bollinger, rsi, zscore) with deviation-scaled confidence. Preserved backward compatibility for parameterless invocations.
+- **100% Coverage Floor:** added 48 comprehensive unit tests in `src/tree/quantlib/index.test.ts` and `src/tree/quantlib/functions.test.ts` satisfying the strict 100% statements, 100% branches, 100% functions, and 100% lines threshold.
+- **Multi-Pair Composition Walk-Forward Sweep:** authored and executed `scripts/multi-pair-composition-sweep.ts` on cached 3-symbol Binance 1d panels (`BTCUSDT`, `ETHUSDT`, `SOLUSDT`). Evaluated `scanMultiPairUniverse`, rolling correlation diagnostic series (`computeRealizedPairCorrelationSeries`), 16-window rolling composition walk-forward evaluation (`runCompositionWalkForward`), and `AlphaResearchPipeline` with survival gate step 12 (`stepGenerateReport`). Committed verified reproducible artifact `plans/reports/multi-pair-composition-sweep-report.json`.
+- **Production Go-Live:** verified clean pre-deploy checklist (3,781/3,781 tests passing across 290 test files, 0 TS errors, 0 ESLint warnings, 0 Knip issues, clean build), deployed commit `1eefb2f` live to Cloudflare Workers via OpenNext, and verified live production smoke endpoints (`/api/version`, `/api/health`, `/api/killswitch-status`, `/api/metrics`, `/vi`, `/en`).
+
 ### Alpha Research OS Backlog Closure — 2026-09-10
 - **Scope:** implement, integrate, and verify remaining deferred items from the Alpha Research OS backlog: walk-forward composition, survival-gate pipeline consumption, multi-pair scan causal wiring, and rolling correlation diagnostics.
 - **Walk-Forward Composition Evaluation:** implemented `runCompositionWalkForward` in `src/forest/alpha/composition-eval/walk-forward.ts` supporting rolling and expanding window modes via `computeSlices`. Added `toWalkForwardShim` in `walk-forward-shim.ts` converting composed window results into `WalkForwardValidationReport` for compatibility with `assessWalkForwardConsistency`.
