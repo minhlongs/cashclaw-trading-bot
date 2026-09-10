@@ -4,7 +4,7 @@
 // which the adapter itself invokes before returning. Pure module: no I/O.
 
 import type { Universe } from '@/tree/alpha/universe/types';
-import type { StressMode } from '@/forest/backtest/cost-model';
+import type { StressMode } from '@/tree/alpha/cost-stress';
 import type { DataWindow } from '../experiment-spec';
 
 /** Importer identity stamped on hypotheses + provenance records. */

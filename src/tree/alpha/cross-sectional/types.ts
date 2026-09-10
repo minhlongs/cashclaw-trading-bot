@@ -2,7 +2,7 @@
 // Pure types only — no I/O, no network, no Node APIs.
 
 import type { RankedAsset } from '@/tree/alpha/universe/types';
-import type { StressMode } from '@/forest/backtest/cost-model';
+import type { StressMode } from '@/tree/alpha/cost-stress';
 
 /**
  * One asset's return panel. `returns[i]` is the return earned over the

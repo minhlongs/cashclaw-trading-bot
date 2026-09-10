@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { compile, type CompilerContext } from './compiler';
 import { computeFormulaHash, type AlphaProvenance } from './provenance';
 import type { Universe } from '@/tree/alpha/universe/types';
-import type { StressMode } from '@/forest/backtest/cost-model';
+import type { StressMode } from '@/tree/alpha/cost-stress';
 
 // ─── Test Fixtures ──────────────────────────────────────────────────────────────
 

@@ -4,7 +4,7 @@
 
 import type { Universe } from '@/tree/alpha/universe/types';
 import { RegimeLabel } from '@/tree/regime/types';
-import type { StressMode, StressConfig } from '@/forest/backtest/cost-model';
+import type { StressMode, StressConfig } from '@/tree/alpha/cost-stress';
 import type { FeatureDeclaration } from '@/tree/alpha/indicator-types';
 import type { BarrierConfig } from '@/tree/alpha/labeling';
 import type { AlphaProvenance } from './provenance';

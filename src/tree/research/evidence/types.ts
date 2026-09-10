@@ -3,7 +3,7 @@
 // never mutated or deleted; a corrected verdict is a NEW object. All
 // fields are readonly; persistence (Phase 2) must enforce append-only.
 
-import type { StressMode } from '@/forest/backtest/cost-model';
+import type { StressMode } from '@/tree/alpha/cost-stress';
 
 /** What kind of experiment produced this evidence. */
 export const EVIDENCE_KINDS = [

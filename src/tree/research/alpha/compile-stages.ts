@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import type { FeatureDeclaration } from '@/tree/alpha/indicator-types';
-import { resolveStressConfig, type StressMode } from '@/forest/backtest/cost-model';
+import { resolveStressConfig, type StressMode } from '@/tree/alpha/cost-stress';
 import type { ResearchHypothesis } from '../hypothesis/types';
 import {
   MIN_TRAIN_BARS,

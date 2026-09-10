@@ -3,7 +3,7 @@
 
 import { selectLongShort } from '@/tree/alpha/universe/universe';
 import type { RankedAsset } from '@/tree/alpha/universe/types';
-import { resolveStressConfig } from '@/forest/backtest/cost-model';
+import { resolveStressConfig } from '@/tree/alpha/cost-stress';
 
 import type { CrossSectionalSimConfig } from './types';
 

@@ -9,7 +9,7 @@ import { checkMechanism } from '../hypothesis/mechanism-gate';
 import { declareFeature, type FeatureDeclaration } from '@/tree/alpha/indicator-types';
 import type { Universe } from '@/tree/alpha/universe/types';
 import { RegimeLabel } from '@/tree/regime/types';
-import { resolveStressConfig, type StressConfig, type StressMode } from '@/forest/backtest/cost-model';
+import { resolveStressConfig, type StressConfig, type StressMode } from '@/tree/alpha/cost-stress';
 import type { BarrierConfig } from '@/tree/alpha/labeling';
 import {
   deriveBarrierConfig,

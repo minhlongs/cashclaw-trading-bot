@@ -6,7 +6,7 @@
 import { z } from 'zod';
 import type { Universe } from '@/tree/alpha/universe/types';
 import { RegimeLabel } from '@/tree/regime/types';
-import type { StressMode } from '@/forest/backtest/cost-model';
+import type { StressMode } from '@/tree/alpha/cost-stress';
 import { checkMechanism } from './mechanism-gate';
 
 /** Where a research hypothesis originated. */

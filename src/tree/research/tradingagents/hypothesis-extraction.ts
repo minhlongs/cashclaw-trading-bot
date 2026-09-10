@@ -8,7 +8,7 @@
 
 import { canonicalize } from '@/lib/canonical-json';
 import type { Universe } from '@/tree/alpha/universe/types';
-import type { StressMode } from '@/forest/backtest/cost-model';
+import type { StressMode } from '@/tree/alpha/cost-stress';
 import {
   parseResearchHypothesis,
   type ExpectedDirection,
