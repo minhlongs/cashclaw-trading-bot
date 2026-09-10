@@ -18,6 +18,7 @@
 | Killswitch durability | Daily halt state persisted to D1 to survive Workers cold starts | commit `ab7424c` |
 | Credential encryption | Exchange credentials encrypted at rest; secrets masked in API responses | commit `cae6dbd` |
 | Bot detail hydration | Bot detail + control handlers hydrate from D1 before serving | commit `16c6f45` |
+| BotManager cold-start hydration | Scheduler + cron + health rehydrate running bots from D1 on every Workers cold start; auto-restart bots without a strategy instance | commit `3e9a814` |
 | E2E smoke | Customer-journey API smoke tests | commit `bfa4697` |
 | Phase L quality | ESLint 86→0 warnings; coverage 75%→87.5%; 1628 tests; thresholds ratcheted | commit `1a2cd16` |
 | Backtest wiring | Backtest page loads real bots from D1 into selector (was empty) | commit `9f5bd1f` |
@@ -145,4 +146,4 @@ Lane B (Steps 7–11) shipped the survival evaluation layer and ran the real-dat
 ## Conventions
 
 - Every task runs through the orchestration pipeline (plan → gate → execute → verify → SHIP) before committing.
-- Conventional commit messages, no AI references or phase labels in messages.| BotManager cold-start hydration | Scheduler + cron + health rehydrate running bots from D1 on every Workers cold start; auto-restart bots without a strategy instance | commit `3e9a814` |
+- Conventional commit messages, no AI references or phase labels in messages.
