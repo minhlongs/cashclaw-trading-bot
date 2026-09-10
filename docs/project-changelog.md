@@ -2,6 +2,12 @@
 
 ## v1 Paper-Trading Platform
 
+### ADR-001: Resolution of CCXT-on-Workers Feasibility for Live Trading — 2026-09-10
+- **Scope:** conclude live exchange execution feasibility analysis and formally document architectural decision in `docs/decisions/adr-001-ccxt-workers-feasibility.md`.
+- **Architectural Resolution:** determined that bundling CCXT directly into Cloudflare Workers is a firm NO-GO due to incomplete Node.js socket/TLS polyfill support under `unenv`/`nodejs_compat`, diverging WebSocket protocols, and severe bundle size impact.
+- **Enforcement & Safety:** CashClaw v1 is locked strictly to paper-only mode with compile-time (`@ts-expect-error`), runtime, and source-level tripwires preventing live execution.
+- **v2 Path Forward:** selected native Direct Web-API REST (`fetch` + WebCrypto HMAC signing) or a dedicated isolated Node.js sidecar execution proxy for any future live order routing.
+
 ### QuantLib Parameter-Aware Strategy Functions & Multi-Pair Composition Sweep — 2026-09-10
 - **Scope:** implement parameter-aware QuantLib strategy implementations for `grid` and `meanReversion`, enforce strict 100% test coverage floor on `src/tree/quantlib/**`, author and verify end-to-end multi-pair composition walk-forward sweep script, commit verified report artifact, and deploy live to production.
 - **Parameter-Aware QuantLib Functions:** implemented dynamic numerical parameter support in `src/tree/quantlib/index.ts` for `grid` (anchor, levels, spacing, tolerance) with dynamic boundary calculation and proximity-based signals, and `meanReversion` (bollinger, rsi, zscore) with deviation-scaled confidence. Preserved backward compatibility for parameterless invocations.

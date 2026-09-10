@@ -140,9 +140,9 @@ Lane B (Steps 7–11) shipped the survival evaluation layer and ran the real-dat
 
 - **Alpha Research OS Backlog Closure** — ✅ shipped 2026-09-10. Completed remaining research backlog: multi-pair universe scan causal wiring (`scanMultiPairUniverse`), rolling correlation diagnostics (`computeRollingCorrelationSeries`), walk-forward composition evaluation (`runCompositionWalkForward`, `toWalkForwardShim`), and automated pipeline survival-gate / promotion-state lifecycle integration (`stepGenerateReport`).
 - **BotManager hydration architecture** — ✅ shipped 2026-09-01 (commits `aff8f46`, `71f9a92`). Replaced in-memory registry + per-request hydration with direct-D1 reads as authoritative source of truth + hot-path in-memory TTL cache (30s) and multi-tenant anti-IDOR user scoping.
-- **Live exchange** — CCXT on Workers feasibility is unresolved; requires D1 provisioning, live engine wiring, and explicit customer opt-in.
+- **Live exchange** — ✅ resolved 2026-09-10 (see `docs/decisions/adr-001-ccxt-workers-feasibility.md`). CCXT on Workers edge runtime determined NO-GO due to socket/TLS unenv incompatibilities and bundle bloat; v1 locked strictly to paper-only. Selected architecture for v2 live trading is native Direct Web-API REST (`fetch` + `crypto.subtle`) or dedicated Node.js execution sidecar service.
 - **Coverage tail** — ✅ shipped 2026-08-31 (commit `3c9cfdf`). Coverage ratcheted to 90/90/94/90 global with per-path floors (exchange 97/86/98/97, bot 96/93/89/96, quantlib 100/100/100/100). 3 new drainQueues tests closed the 0.04% bot-functions gap.
-- **Live derivative data** — all four `/fapi/v1/*` endpoints return HTTP 403 from this environment; derivative fetchers are exercised only via offline injection.
+- **Live derivative data** — documented status quo: all four `/fapi/v1/*` endpoints return HTTP 403 from this cloud environment; derivative fetchers are exercised with graceful degradation and deterministic offline injection.
 
 ## Conventions
 
