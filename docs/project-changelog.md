@@ -2,6 +2,13 @@
 
 ## v1 Paper-Trading Platform
 
+### QuantLib Branch Coverage Gap Closure & Cloudflare Workers Go-Live — 2026-09-10
+- **Scope:** resolve branch coverage shortfall in `src/tree/quantlib/functions.ts` and `src/tree/quantlib/index.ts`, satisfying the strict 100% threshold floor for `src/tree/quantlib/**`, run the full pre-deploy quality verification, and deploy commit `2552754` live to Cloudflare Workers.
+- **Root Cause & Coverage Resolution:** addressed unexercised reducer branch paths (`best` vs `lv` in `lowerLevels.reduce` and `upperLevels.reduce`) and compound conditional evaluation (`distToLower <= tolerance && distToLower <= distToUpper`) when price is within tolerance of both levels but closer to the upper level. Added 6 targeted unit tests across `functions.test.ts` and `index.test.ts` exercising deeper grid levels (level 2) and overlapping tolerances.
+- **Strict Ratchet Satisfaction:** achieved 100% statements, 100% branches, 100% functions, and 100% lines across all files in `src/tree/quantlib/**`.
+- **Quality Gates:** full repository test suite of 3,787/3,787 tests passing across 290 test files, 0 TypeScript errors (`tsc --noEmit`), 0 ESLint warnings (`max-warnings 0`), 0 Knip issues, and clean Turbopack production build.
+- **Production Verification:** deployed commit `2552754231fcb7ac293991da9c856a26fcf922f7` to Cloudflare Workers (`https://cashclaw-trading-bot.agencyos-openclaw.workers.dev`). Verified live production smoke endpoints (`/api/version` returning full SHA `2552754231fcb7ac293991da9c856a26fcf922f7`, `/api/health` 200 OK with all checks green, `/api/killswitch-status` 200 OK with killswitch active, `/vi` 200 OK, `/en` 200 OK).
+
 ### ADR-001: Resolution of CCXT-on-Workers Feasibility for Live Trading — 2026-09-10
 - **Scope:** conclude live exchange execution feasibility analysis and formally document architectural decision in `docs/decisions/adr-001-ccxt-workers-feasibility.md`.
 - **Architectural Resolution:** determined that bundling CCXT directly into Cloudflare Workers is a firm NO-GO due to incomplete Node.js socket/TLS polyfill support under `unenv`/`nodejs_compat`, diverging WebSocket protocols, and severe bundle size impact.

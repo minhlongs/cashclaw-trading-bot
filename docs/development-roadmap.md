@@ -84,13 +84,13 @@ tests pass.
 
 ## Current State
 
-- **Tests:** 3781 across 290 test files, full suite green
-- **Coverage:** statements 90.37%, branches 90.37%, functions 94.0%, lines 90.37% (thresholds 90/90/94/90 global; per-path floors: exchange 97/86/98/97, bot 96/93/89/96, quantlib 100/100/100/100)
+- **Tests:** 3787 across 290 test files, full suite green
+- **Coverage:** statements 90.64%, branches 90.89%, functions 95.06%, lines 90.64% (thresholds 90/90/94/90 global; per-path floors: exchange 97/86/98/97, bot 96/93/89/96, quantlib 100/100/100/100)
 - **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0` + `reportUnusedDisableDirectives: error`)
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean (Next.js 16 + Turbopack + OpenNext Cloudflare)
 - **Quality gate:** `npm run quality:gate` exits 0 (type-check + lint + coverage + knip)
-- **Production:** SHA `1eefb2ff` (`1eefb2ffa1c0548ddc704b6577ebb52059ff2ea2`), health green (db/circuitBreaker/rateLimiter all `"ok"`, killswitch active)
+- **Production:** SHA `25527542` (`2552754231fcb7ac293991da9c856a26fcf922f7`), health green (db/circuitBreaker/rateLimiter all `"ok"`, killswitch active)
 
 ## Alpha Discovery Engine (Phases 1–10)
 
