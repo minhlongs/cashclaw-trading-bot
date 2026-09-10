@@ -38,6 +38,17 @@ describe('gridFunctions[0]', () => {
     expect(result.confidence).toBeGreaterThan(0.9);
   });
 
+  it('emits buy when near deeper lower grid level (level 2)', () => {
+    // anchor=3000, spacing=0.02, level 2 = 3000 * (1 - 0.04) = 2880
+    const result = gridFunctions[0](
+      { ...ctx, lastPrice: 2880 },
+      { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
+    );
+    expect(result.signal).toBe('buy');
+    expect(result.confidence).toBeGreaterThan(0.9);
+    expect(result.meta.nearestLevel).toBe(2880);
+  });
+
   it('emits sell when near upper grid level', () => {
     // anchor=3000, spacing=0.02 → first upper level = 3060
     const result = gridFunctions[0](
@@ -46,6 +57,28 @@ describe('gridFunctions[0]', () => {
     );
     expect(result.signal).toBe('sell');
     expect(result.confidence).toBeGreaterThan(0.9);
+  });
+
+  it('emits sell when near deeper upper grid level (level 2)', () => {
+    // anchor=3000, spacing=0.02, level 2 = 3000 * (1 + 0.04) = 3120
+    const result = gridFunctions[0](
+      { ...ctx, lastPrice: 3120 },
+      { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
+    );
+    expect(result.signal).toBe('sell');
+    expect(result.confidence).toBeGreaterThan(0.9);
+    expect(result.meta.nearestLevel).toBe(3120);
+  });
+
+  it('emits sell when within tolerance of both levels but closer to upper level', () => {
+    // anchor=3000, spacing=0.02 (lower=2940, upper=3060)
+    // price=3020 -> distToLower = 80/3020 ≈ 0.02649, distToUpper = 40/3020 ≈ 0.01324
+    // tolerance=0.03 -> both are <= tolerance, but distToLower > distToUpper
+    const result = gridFunctions[0](
+      { ...ctx, lastPrice: 3020 },
+      { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.03 },
+    );
+    expect(result.signal).toBe('sell');
   });
 
   it('emits hold when mid-grid', () => {

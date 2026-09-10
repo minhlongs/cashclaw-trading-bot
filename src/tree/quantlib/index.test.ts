@@ -82,6 +82,16 @@ describe('quantFunctions.grid — buy signal', () => {
     expect(result.confidence).toBeGreaterThanOrEqual(0);
     expect(result.confidence).toBeLessThanOrEqual(1);
   });
+
+  it('emits buy when price is near deeper lower grid level (level 2)', () => {
+    // anchor=50000, spacing=0.02, level 2 = 50000 * 0.96 = 48000
+    const result = quantFunctions.grid(
+      { ...ctx, lastPrice: 48000 },
+      { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
+    );
+    expect(result.signal).toBe('buy');
+    expect(result.meta.nearestLevel).toBe(48000);
+  });
 });
 
 describe('quantFunctions.grid — sell signal', () => {
@@ -102,6 +112,27 @@ describe('quantFunctions.grid — sell signal', () => {
     const result = quantFunctions.grid(
       { ...ctx, lastPrice: slightlyBelow },
       { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
+    );
+    expect(result.signal).toBe('sell');
+  });
+
+  it('emits sell when price is near deeper upper grid level (level 2)', () => {
+    // anchor=50000, spacing=0.02, level 2 = 50000 * 1.04 = 52000
+    const result = quantFunctions.grid(
+      { ...ctx, lastPrice: 52000 },
+      { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
+    );
+    expect(result.signal).toBe('sell');
+    expect(result.meta.nearestLevel).toBe(52000);
+  });
+
+  it('emits sell when within tolerance of both levels but closer to upper level', () => {
+    // anchor=50000, spacing=0.02 (lower=49000, upper=51000)
+    // price=50400 -> distToLower = 1400/50400 ≈ 0.0277, distToUpper = 600/50400 ≈ 0.0119
+    // tolerance=0.03 -> both are <= tolerance, but distToLower > distToUpper
+    const result = quantFunctions.grid(
+      { ...ctx, lastPrice: 50400 },
+      { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.03 },
     );
     expect(result.signal).toBe('sell');
   });
