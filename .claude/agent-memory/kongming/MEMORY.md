@@ -2,3 +2,6 @@
 - [Verify full user journey, not just task scope](feedback_verify_full_user_journey.md) — for "go live" questions, curl real URLs + grep TODOs; don't trust a pipeline's own PASS/GO-LIVE label at face value.
 - [Phase 5 relative-value planned](project_phase5_relative_value.md) — 2026-08-24 plan at .orchestrate/latest/plan.md; fail-closed tradability gate, causal β/z strictly-before-t, knip forest-barrel trap.
 - [Phase 6 composition+portfolio+cost planned](project_phase6_plan_written.md) — 2026-08-25 plan: 4 steps (A composition scorer, B portfolio engine, C EXTREME cost, D eval seam), 5 escrows deferred; pairs.ts path corrected.
+- [Vibe integration Phase 1 planned](project_vibe_integration_phase1.md) — 2026-08-26 plan: src/tree/research/ contracts + AlphaCompiler; migration 0012 deferred; Phase 0 docs still untracked.
+- [Vibe Phase 2 zoo adapter planned](project_vibe_phase2_zoo_adapter.md) — 2026-08-26 plan at .orchestrate/latest/plan.md; canonical duplicate key (raw latex unusable), 7-bucket report, no migration, escrow folded.
+- [Vibe Phase 3 evaluator+bridge planned](project_vibe_phase3_evaluator_bridge.md) — 2026-08-26 plan; only 2/4 seeds evaluable (no ts_sum), NOT_EVALUABLE bucket, no migration, forward-return grep gate.

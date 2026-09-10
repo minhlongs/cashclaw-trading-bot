@@ -2,6 +2,14 @@
 
 ## v1 Paper-Trading Platform
 
+### Anti-IDOR Authorization Hardening in BotManager — 2026-09-01
+- **Scope:** remediate security review finding by enforcing strict multi-tenant user scoping across all reads, writes, caches, and bot lifecycle operations in `src/tree/bot/bot-manager.ts`.
+- **User Scoping in Reads & Cache:** `getAllBots` and `getRunningBots` now query `findBotsByUser(db, effectiveUserId)` when user context is present. `getCachedBots` and `getBot` filter by `cached.userId === effectiveUserId`, preventing cached instances from leaking across tenant boundaries.
+- **IDOR Prevention in Single-Bot Retrieval:** `getOrCreateBot` checks `if (effectiveUserId && row.user_id !== effectiveUserId)` and returns `null` with a warning log if an unauthorized tenant attempts to load another user's bot.
+- **Lifecycle Control Guards:** `startBot`, `pauseBot`, `resumeBot`, `stopBot`, and `removeBot` enforce tenant ownership via `getCachedBotOrThrow(id, userId)` and throw `Unauthorized access to bot: <id>` on mismatched tenant credentials.
+- **Test Coverage:** added comprehensive multi-tenant anti-IDOR test suite in `src/tree/bot/bot-manager.test.ts` covering scoped queries, cross-user cache access rejection, and lifecycle invocation rejections.
+- **Quality gates:** 3734/3734 tests passing, `npm run type-check` 0 errors, `npm run lint` 0 warnings, zero `:any` types. Commit `71f9a92`.
+
 ### Direct-D1 Read Store with TTL Cache — 2026-09-01
 - **Scope:** migrate `BotManager` read paths (`getAllBots`, `getRunningBots`, `getBot`) to query Cloudflare D1 directly, establishing D1 as the single authoritative source of truth across ephemeral Cloudflare Workers isolate lifecycles.
 - **Hot-Path In-Memory Cache:** introduced `CachedBot` with a 30-second TTL (`BOT_CACHE_TTL_MS = 30_000`) inside `BotManager`. Cache miss or expiration triggers transparent hydration from D1, eliminating state desynchronization without incurring redundant D1 read costs on high-frequency scheduler ticks and dashboard polling.
