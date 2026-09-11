@@ -11,41 +11,65 @@ import type { Fill } from './paper-exchange';
 // Capital goes up on sell, down on buy — realized PnL = cumulative capital delta from sells minus buys
 // ──────────────────────────────────────────────
 
+interface OpenBuyLot {
+  timestamp: number;
+  price: number;
+  quantity: number;
+  remainingQty: number;
+  feePerUnit: number;
+}
+
 /**
  * Convert raw fills into BacktestTrade records.
- * Uses FIFO: each buy is paired with the next sell on the opposite side.
+ * Uses FIFO multi-fill lot matching: sells are matched against open buy lots in chronological order,
+ * correctly unwinding multi-step DCA accumulation on single aggregate exits.
  */
 export function buildTradesFromFills(fills: Fill[], _feePct: number, _capitalStart: number): BacktestTrade[] {
-  // Track capital after each fill to identify realized P&L from sells
-  // We'll use a "trade pot" approach: track capital committed to open positions,
-  // realized when sold.
   const trades: BacktestTrade[] = [];
-  // Each "round trip" = one buy followed by a sell of the same or smaller qty
-  // Stack pending buys, match sells FIFO
-  const pendingBuys: Fill[] = [];
+  const openBuys: OpenBuyLot[] = [];
 
   for (const f of fills) {
     if (f.side === 'buy') {
-      pendingBuys.push(f);
-    } else if (pendingBuys.length > 0) {
-      const buy = pendingBuys.shift()!;
-      const totalFee = buy.fee + f.fee;
-      const pnl = (f.price - buy.price) * buy.quantity - totalFee;
-      const pnlPct = buy.price > 0 ? ((f.price - buy.price) / buy.price) * 100 : 0;
-      trades.push({
-        entryTimestamp: buy.timestamp,
-        exitTimestamp: f.timestamp,
-        side: 'buy',
-        entryPrice: buy.price,
-        exitPrice: f.price,
-        quantity: buy.quantity,
-        pnl: Number(pnl.toFixed(2)),
-        fee: Number(totalFee.toFixed(2)),
-        pnlPct: Number(pnlPct.toFixed(4)),
-        holdingMinutes: Math.max(0, Math.round((f.timestamp - buy.timestamp) / 60000)),
+      const feePerUnit = f.quantity > 0 ? f.fee / f.quantity : 0;
+      openBuys.push({
+        timestamp: f.timestamp,
+        price: f.price,
+        quantity: f.quantity,
+        remainingQty: f.quantity,
+        feePerUnit,
       });
+    } else if (openBuys.length > 0) {
+      const sellFeePerUnit = f.quantity > 0 ? f.fee / f.quantity : 0;
+      let sellQtyRemaining = f.quantity;
+
+      while (sellQtyRemaining > 1e-8 && openBuys.length > 0) {
+        const buyLot = openBuys[0];
+        const matchedQty = Math.min(buyLot.remainingQty, sellQtyRemaining);
+        const allocatedFees = (buyLot.feePerUnit + sellFeePerUnit) * matchedQty;
+        const pnl = (f.price - buyLot.price) * matchedQty - allocatedFees;
+        const pnlPct = buyLot.price > 0 ? ((f.price - buyLot.price) / buyLot.price) * 100 : 0;
+
+        trades.push({
+          entryTimestamp: buyLot.timestamp,
+          exitTimestamp: f.timestamp,
+          side: 'buy',
+          entryPrice: buyLot.price,
+          exitPrice: f.price,
+          quantity: matchedQty,
+          pnl: Number(pnl.toFixed(2)),
+          fee: Number(allocatedFees.toFixed(2)),
+          pnlPct: Number(pnlPct.toFixed(4)),
+          holdingMinutes: Math.max(0, Math.round((f.timestamp - buyLot.timestamp) / 60000)),
+        });
+
+        buyLot.remainingQty -= matchedQty;
+        sellQtyRemaining -= matchedQty;
+
+        if (buyLot.remainingQty <= 1e-8) {
+          openBuys.shift();
+        }
+      }
     }
-    // Sells with no matching buy are ignored (could be closing pre-existing positions)
   }
 
   return trades;

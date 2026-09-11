@@ -1,11 +1,13 @@
 // Volatility-Adjusted DCA Bot Strategy
 // Wraps the pure QuantLib volatilityDca kernel into a stateful bot strategy.
 
-import type { VolatilityDcaBotConfig } from '../types';
-import type { Ticker } from '../../exchange/types';
+import type { VolatilityDcaBotConfig, BotTrade } from '../types';
+import type { Ticker, OrderRequest, OrderResult } from '../../exchange/types';
 import { volatilityDca } from '../../quantlib/volatility-dca';
 
 export interface VolatilityDcaCallbacks {
+  placeOrder?: (req: OrderRequest) => Promise<OrderResult>;
+  onTrade?: (trade: BotTrade) => void;
   onLog: (msg: string) => void;
 }
 
@@ -27,6 +29,8 @@ export class VolatilityDcaStrategy {
   private running: boolean = false;
   private referencePrice: number = 0;
   private stepIndex: number = 0;
+  private positionQty: number = 0;
+  private positionCost: number = 0;
   private priceWindow: number[] = [];
 
   constructor(config: VolatilityDcaBotConfig, callbacks: VolatilityDcaCallbacks) {
@@ -38,6 +42,8 @@ export class VolatilityDcaStrategy {
     this.running = true;
     this.referencePrice = initialPrice;
     this.stepIndex = 0;
+    this.positionQty = 0;
+    this.positionCost = 0;
     this.priceWindow = [initialPrice];
     this.callbacks.onLog(`VolatilityDCA started: ref=${initialPrice}, window=${this.config.volatilityWindow}`);
   }
@@ -79,16 +85,71 @@ export class VolatilityDcaStrategy {
     );
 
     if (result.signal === 'buy') {
+      const orderCapital = this.config.capital * (this.config.baseOrderSizePct / 100);
+      const quantity = orderCapital / price;
       this.stepIndex += 1;
+      this.positionQty += quantity;
+      this.positionCost += orderCapital;
       this.callbacks.onLog(
         `VolatilityDCA buy step=${this.stepIndex} price=${price} vol=${volatility.toFixed(2)}%`,
       );
+      void this.executeBuy(price, quantity);
     } else if (result.signal === 'sell') {
+      if (this.positionQty > 0) {
+        const sellQty = this.positionQty;
+        this.positionQty = 0;
+        this.positionCost = 0;
+        this.stepIndex = 0;
+        this.referencePrice = price;
+        this.callbacks.onLog(
+          `VolatilityDCA sell: price=${price} ref=${this.referencePrice} resetting`,
+        );
+        void this.executeSell(price, sellQty);
+      } else {
+        this.stepIndex = 0;
+        this.referencePrice = price;
+        this.callbacks.onLog(
+          `VolatilityDCA sell: price=${price} ref=${this.referencePrice} resetting (no position)`,
+        );
+      }
+    }
+  }
+
+  private async executeBuy(price: number, quantity: number): Promise<void> {
+    if (!this.callbacks.placeOrder) return;
+    try {
+      await this.callbacks.placeOrder({
+        symbol: this.config.symbol,
+        exchange: this.config.exchange,
+        side: 'buy',
+        type: 'limit',
+        price,
+        quantity,
+        timeInForce: 'GTC',
+      });
+    } catch (error) {
       this.callbacks.onLog(
-        `VolatilityDCA sell: price=${price} ref=${this.referencePrice} resetting`,
+        `VolatilityDCA buy order failed: ${error instanceof Error ? error.message : 'unknown'}`,
       );
-      this.stepIndex = 0;
-      this.referencePrice = price;
+    }
+  }
+
+  private async executeSell(price: number, quantity: number): Promise<void> {
+    if (!this.callbacks.placeOrder) return;
+    try {
+      await this.callbacks.placeOrder({
+        symbol: this.config.symbol,
+        exchange: this.config.exchange,
+        side: 'sell',
+        type: 'limit',
+        price,
+        quantity,
+        timeInForce: 'GTC',
+      });
+    } catch (error) {
+      this.callbacks.onLog(
+        `VolatilityDCA sell order failed: ${error instanceof Error ? error.message : 'unknown'}`,
+      );
     }
   }
 
@@ -102,5 +163,13 @@ export class VolatilityDcaStrategy {
 
   getReferencePrice(): number {
     return this.referencePrice;
+  }
+
+  getPositionQty(): number {
+    return this.positionQty;
+  }
+
+  getPositionCost(): number {
+    return this.positionCost;
   }
 }

@@ -1,10 +1,11 @@
 // Backtest Engine — deterministic simulation over OHLCV candles
 // Strategy classes emit fills via their callbacks; we record them and compute metrics.
 
-import type { GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
+import type { GridBotConfig, MeanRevBotConfig, VolatilityDcaBotConfig, BotConfig } from '@/tree/bot/types';
 import type { Ticker } from '@/tree/exchange/types';
 import { GridStrategy } from '@/tree/bot/strategies/grid';
 import { MeanRevStrategy } from '@/tree/bot/strategies/mean-reversion';
+import { VolatilityDcaStrategy } from '@/tree/bot/strategies/volatility-dca';
 import type { BacktestResult, RunBacktestOptions } from './types';
 import { PaperExchange } from './paper-exchange';
 import { buildTradesFromFills, buildEquity, computeSharpe } from './metrics';
@@ -30,13 +31,17 @@ export function runBacktest(opts: RunBacktestOptions): BacktestResult {
   const paper = new PaperExchange(capital, feePct, slippagePct);
 
   // Run strategy over each candle
-  let strategy: GridStrategy | MeanRevStrategy;
+  let strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy;
   if (config.strategy === 'grid') {
     strategy = new GridStrategy(config as GridBotConfig, paper);
-    strategy.start(candles[0].close);
-  } else {
+  } else if (config.strategy === 'mean_reversion') {
     strategy = new MeanRevStrategy(config as MeanRevBotConfig, paper);
+  } else if (config.strategy === 'volatility_dca') {
+    strategy = new VolatilityDcaStrategy(config as VolatilityDcaBotConfig, paper);
+  } else {
+    throw new Error(`Unsupported backtest strategy: ${(config as BotConfig).strategy}`);
   }
+  strategy.start(candles[0].close);
 
   for (let i = 0; i < candles.length; i++) {
     paper.setTimestamp(candles[i].timestamp);

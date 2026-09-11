@@ -84,8 +84,8 @@ tests pass.
 
 ## Current State
 
-- **Tests:** 3,881 across 298 test files, full suite green (100% pass rate)
-- **Coverage:** statements 90.64%, branches 90.89%, functions 95.06%, lines 90.64% (thresholds 90/90/94/90 global; per-path floors: exchange 97/86/98/97, bot 96/93/89/96, quantlib 100/100/100/100)
+- **Tests:** 3,907 across 303 test files, full suite green (100% pass rate)
+- **Coverage:** statements 91.63%, branches 90.99%, functions 95.06%, lines 91.63% (thresholds 90/90/94/90 global; per-path floors: exchange 97/86/98/97, bot 96/93/89/96, quantlib 100/100/100/100)
 - **Lint:** 0 ESLint warnings (enforced via `--max-warnings 0` + `reportUnusedDisableDirectives: error`)
 - **TypeScript:** 0 errors on `tsc --noEmit`
 - **Build:** clean (Next.js 16 + Turbopack + OpenNext Cloudflare)
@@ -138,6 +138,7 @@ Lane B (Steps 7–11) shipped the survival evaluation layer and ran the real-dat
 
 ## Known Backlog (v2 and beyond)
 
+- **Backtest Engine & UI Integration for Volatility-DCA (`src/forest/backtest/`, `src/app/[locale]/backtests/`)** — ✅ shipped 2026-09-11. Connected `VolatilityDcaStrategy` with order callbacks (`placeOrder`, `onTrade`) and position inventory tracking; adapted `PaperExchange`; refactored `buildTradesFromFills` with multi-lot FIFO queue unwinding; added uniform strategy `.start(...)` lifecycle; modularized `backtests-client.tsx` (174 LOC) with extracted `metric-card.tsx` (19 LOC), `equity-curve-chart.tsx` (69 LOC), `recent-trades-table.tsx` (67 LOC), all <= 200 LOC; bilingual test coverage with 3,907 passing tests.
 - **Direct Web-API REST Engine (`src/tree/exchange/direct/`)** — ✅ shipped 2026-09-11. Edge-native WebCrypto HMAC-SHA256 signer (`crypto.subtle`), stateless `BinanceRestClient` for public market data and signed requests, RFC 4231 test vectors, SSRF protocol guards, preserving ADR-001 paper-only invariant with 100% test coverage.
 - **QuantLib Strategy Expansion (`src/tree/quantlib/`)** — ✅ shipped 2026-09-11. Added deterministic Volatility-Adjusted DCA (`volatilityDca`) strategy module with dynamic volatility multiplier and fail-closed parameter validation; registered in `quantFunctions` and `quantFunctionsExt`, maintaining 100.00% statement/branch/function/line coverage floor.
 - **UI/UX Strategy Visualizer Dashboard (`src/components/dashboard/`)** — ✅ shipped 2026-09-11. Responsive `StrategyVisualizerCard` component mounted in dashboard client, aggregating capital allocation, PnL, win rates, and active bots with 100% semantic CSS tokens (zero inline styles) and full bilingual localization.

@@ -4,7 +4,7 @@
 
 import { fetchOHLCV } from './data-fetcher';
 import { runBacktest, type BacktestResult } from './engine';
-import type { BotConfig } from '@/tree/bot/types';
+import type { BotConfig, VolatilityDcaBotConfig } from '@/tree/bot/types';
 import { createServerClient } from '@/lib/db/client';
 import type { BacktestResultRow } from '@/lib/db/types';
 import { createLogger } from '@/lib/logger';
@@ -124,6 +124,20 @@ function validateBacktestInput(input: BacktestRunInput, interval: CandleInterval
   if (input.endDate.getTime() <= input.startDate.getTime()) return 'endDate must be after startDate';
   const threeYearsMs = 3 * 365 * 24 * 3600 * 1000;
   if (input.endDate.getTime() - input.startDate.getTime() > threeYearsMs) return 'Date range exceeds 3-year limit';
+
+  const validStrategies = ['grid', 'mean_reversion', 'volatility_dca'];
+  if (!validStrategies.includes(input.config.strategy)) {
+    return `Unsupported strategy: ${input.config.strategy}`;
+  }
+
+  if (input.config.strategy === 'volatility_dca') {
+    const cfg = input.config as VolatilityDcaBotConfig;
+    if (!cfg.priceDropStep || cfg.priceDropStep <= 0) return 'priceDropStep must be positive';
+    if (!cfg.maxSteps || cfg.maxSteps <= 0) return 'maxSteps must be positive';
+    if (!cfg.volBaseline || cfg.volBaseline <= 0) return 'volBaseline must be positive';
+    if (!cfg.baseOrderSizePct || cfg.baseOrderSizePct <= 0) return 'baseOrderSizePct must be positive';
+  }
+
   return null;
 }
 

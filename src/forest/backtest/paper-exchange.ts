@@ -5,6 +5,7 @@ import type { BotTrade } from '@/tree/bot/types';
 import type { OrderRequest, OrderResult } from '@/tree/exchange/types';
 import type { GridStrategyCallbacks } from '@/tree/bot/strategies/grid';
 import type { MeanRevStrategyCallbacks } from '@/tree/bot/strategies/mean-reversion';
+import type { VolatilityDcaCallbacks } from '@/tree/bot/strategies/volatility-dca';
 
 // ──────────────────────────────────────────────
 // Paper Exchange Adapter
@@ -24,10 +25,10 @@ export interface Fill {
 
 /**
  * Minimal exchange adapter that records fills for later metric computation.
- * Implements both strategy callback interfaces so grid and mean-reversion
- * strategies can place orders without any real API calls.
+ * Implements strategy callback interfaces so grid, mean-reversion, and
+ * volatility-dca strategies can place orders without any real API calls.
  */
-export class PaperExchange implements GridStrategyCallbacks, MeanRevStrategyCallbacks {
+export class PaperExchange implements GridStrategyCallbacks, MeanRevStrategyCallbacks, VolatilityDcaCallbacks {
   fills: Fill[] = [];
   private capital: number;
   private feePct: number;

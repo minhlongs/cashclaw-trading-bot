@@ -1,33 +1,17 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { runBacktestAction } from '@/forest/backtest/actions';
+import { MetricCard } from './metric-card';
+import { EquityCurveChart, type EquityCurvePoint } from './equity-curve-chart';
+import { RecentTradesTable, type BacktestTradeItem } from './recent-trades-table';
 
 export interface BotInfo {
   id: string;
   name: string;
   strategy: string;
   configJson: string;
-}
-
-interface BacktestTrade {
-  entryTimestamp: number;
-  exitTimestamp: number;
-  side: 'buy' | 'sell';
-  entryPrice: number;
-  exitPrice: number;
-  quantity: number;
-  pnl: number;
-  fee: number;
-  pnlPct: number;
-  holdingMinutes: number;
-}
-
-interface BacktestEquityPoint {
-  timestamp: number;
-  equity: number;
-  drawdownPct: number;
 }
 
 interface BacktestResult {
@@ -46,15 +30,23 @@ interface BacktestResult {
   max_drawdown: number;
   sharpe_ratio: number | null;
   params_json: string;
-  equity_curve_json: BacktestEquityPoint[];
-  trades_json: BacktestTrade[];
+  equity_curve_json: EquityCurvePoint[];
+  trades_json: BacktestTradeItem[];
   created_at: number;
 }
 
 const INTERVALS = ['1h', '4h', '1d'] as const;
 
+function formatStrategy(strategy: string, locale: string): string {
+  if (strategy === 'volatility_dca') {
+    return locale === 'vi' ? 'DCA Biến Động' : 'Volatility DCA';
+  }
+  return strategy;
+}
+
 export default function BacktestsClient({ initialBots = [] }: { initialBots?: BotInfo[] }) {
   const t = useTranslations('backtests');
+  const locale = useLocale();
   const [selectedBotId, setSelectedBotId] = useState<string>('');
   const [interval, setInterval] = useState<string>('1h');
   const [isRunning, setIsRunning] = useState(false);
@@ -87,7 +79,7 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
         botId: bot.id,
         exchange: config.exchange || 'binance',
         symbol: config.symbol || 'BTC/USDT',
-        strategy: bot.strategy as 'grid' | 'mean_reversion',
+        strategy: bot.strategy as 'grid' | 'mean_reversion' | 'volatility_dca',
         config,
         startDate,
         endDate,
@@ -120,7 +112,7 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
         >
           <option value="">{t('selectBotPlaceholder')}</option>
           {initialBots.map((bot) => (
-            <option key={bot.id} value={bot.id}>{bot.name} ({bot.strategy})</option>
+            <option key={bot.id} value={bot.id}>{bot.name} ({formatStrategy(bot.strategy, locale)})</option>
           ))}
         </select>
         <select
@@ -180,127 +172,3 @@ function BacktestResults({ result }: { result: BacktestResult }) {
     </div>
   );
 }
-
-function RecentTradesTable({ trades }: { trades: BacktestResult['trades_json'] }) {
-  const t = useTranslations('backtests');
-  const common = useTranslations('common');
-  return (
-    <div className="card">
-      <h3 className="text-lg font-semibold mb-4 text-primary">
-        {t('recentTrades')}
-      </h3>
-      <div className="overflow-auto">
-        <table className="backtest-table">
-          <thead>
-            <tr className="backtest-tr-header">
-              <th className="backtest-th">{t('side')}</th>
-              <th className="backtest-th">{t('entryTime')}</th>
-              <th className="backtest-th">{common('entryPrice')}</th>
-              <th className="backtest-th">{t('exitTime')}</th>
-              <th className="backtest-th">{common('exitPrice')}</th>
-              <th className="backtest-th">{common('pnl')}</th>
-              <th className="backtest-th">{t('pnlPct')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {trades.map((trade, i) => {
-              const sideClass = trade.side === 'buy' ? 'text-profit' : 'text-loss';
-              const pnlColorClass = trade.pnl >= 0 ? 'text-profit' : 'text-loss';
-              const pnlPctColorClass = trade.pnlPct >= 0 ? 'text-profit' : 'text-loss';
-              return (
-                <tr key={i} className="backtest-tr">
-                  <td className={`backtest-td ${sideClass}`}>
-                    <span className="font-semibold">{trade.side.toUpperCase()}</span>
-                  </td>
-                  <td className="backtest-td">{new Date(trade.entryTimestamp).toLocaleString()}</td>
-                  <td className="backtest-td">${trade.entryPrice.toLocaleString()}</td>
-                  <td className="backtest-td">{new Date(trade.exitTimestamp).toLocaleString()}</td>
-                  <td className="backtest-td">${trade.exitPrice.toLocaleString()}</td>
-                  <td className={`backtest-td ${pnlColorClass}`}>
-                    {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toFixed(2)}
-                  </td>
-                  <td className={`backtest-td ${pnlPctColorClass}`}>
-                    {trade.pnlPct >= 0 ? '+' : ''}{trade.pnlPct.toFixed(2)}%
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function MetricCard({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
-  const valueColorClass = positive === true ? 'text-profit' : positive === false ? 'text-loss' : 'text-primary';
-  return (
-    <div className="metric-card">
-      <p className="text-xs text-secondary mb-1">{label}</p>
-      <p className={`text-lg font-bold ${valueColorClass}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function EquityCurveChart({ data }: { data: { timestamp: number; equity: number; drawdownPct: number }[] }) {
-  const t = useTranslations('backtests');
-  if (data.length < 2) return null;
-
-  const width = 600;
-  const height = 200;
-  const padding = { top: 20, right: 20, bottom: 30, left: 60 };
-
-  const equities = data.map(d => d.equity);
-  const minVal = Math.min(...equities);
-  const maxVal = Math.max(...equities);
-  const range = maxVal - minVal || 1;
-
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-
-  const points = data.map((d, i) => {
-    const x = padding.left + (i / (data.length - 1)) * chartWidth;
-    const y = padding.top + chartHeight - ((d.equity - minVal) / range) * chartHeight;
-    return `${x},${y}`;
-  }).join(' ');
-
-  const linePath = points;
-  const areaPath = `${padding.left},${padding.top + chartHeight} ${points} ${width - padding.right},${padding.top + chartHeight}`;
-
-  const isProfit = equities[equities.length - 1] >= equities[0];
-
-  const yTicks = [minVal, minVal + range * 0.25, minVal + range * 0.5, minVal + range * 0.75, maxVal];
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="chart-svg">
-      {/* Grid lines */}
-      {yTicks.map((tick, i) => {
-        const y = padding.top + chartHeight - ((tick - minVal) / range) * chartHeight;
-        return (
-          <g key={i}>
-            <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="var(--border-subtle)" strokeWidth="1" strokeDasharray="4,4" />
-            <text x={padding.left - 8} y={y + 4} textAnchor="end" fill="var(--text-secondary)" fontSize="10">
-              ${Math.round(tick).toLocaleString()}
-            </text>
-          </g>
-        );
-      })}
-
-      {/* Area fill */}
-      <polygon points={areaPath} fill={isProfit ? 'rgba(0, 212, 170, 0.1)' : 'rgba(255, 71, 87, 0.1)'} />
-
-      {/* Line */}
-      <polyline points={linePath} fill="none" stroke={isProfit ? 'var(--color-profit)' : 'var(--color-loss)'} strokeWidth="2" strokeLinejoin="round" />
-
-      {/* Start line */}
-      <line x1={padding.left} y1={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} x2={width - padding.right} y2={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} stroke="var(--text-tertiary)" strokeWidth="1" strokeDasharray="2,2" />
-
-      {/* Labels */}
-      <text x={padding.left} y={height - 5} fill="var(--text-secondary)" fontSize="10">{t('chartStart')}</text>
-      <text x={width - padding.right} y={height - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="end">{t('chartEnd')}</text>
-    </svg>
-  );
-}
-

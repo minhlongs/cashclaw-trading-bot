@@ -54,7 +54,7 @@ export function initializeStrategy(params: {
     }
     case 'volatility_dca': {
       const vdConfig = config as VolatilityDcaBotConfig;
-      strategy = new VolatilityDcaStrategy(vdConfig, { onLog: onLogWithId });
+      strategy = new VolatilityDcaStrategy(vdConfig, { placeOrder, onTrade, onLog: onLogWithId });
       strategy.start(price);
       break;
     }

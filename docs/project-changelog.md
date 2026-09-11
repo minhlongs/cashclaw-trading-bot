@@ -2,6 +2,24 @@
 
 ## v1 Paper-Trading Platform
 
+### Backtest Engine & UI Integration for Volatility-DCA Strategy — 2026-09-11
+- **Scope:** Complete historical backtesting subsystem and UI integration for the Volatility-Adjusted DCA strategy (`volatility_dca`), multi-lot FIFO matching in trade metrics, and backtest UI modularization to strictly respect the <= 200 LOC ceiling.
+- **Tree Layer (Order Execution & Position Tracking):**
+  - Extended `VolatilityDcaCallbacks` in `src/tree/bot/strategies/volatility-dca.ts` with `placeOrder` and `onTrade` callbacks.
+  - Implemented stateful order execution (`executeBuy`, `executeSell`), position tracking (`positionQty`, `positionCost`), and getters (`getPositionQty`, `getPositionCost`) inside `VolatilityDcaStrategy` (175 LOC).
+  - Wired callbacks and lifecycle into `src/tree/bot/bot-strategy.ts`.
+  - Added test suite in `src/tree/bot/strategies/volatility-dca-orders.test.ts` (199 LOC) asserting order placement and failure recovery, maintaining 100.00% statement, branch, function, and line coverage floor on `volatility-dca.ts`.
+- **Forest Layer (Backtest Engine & Metrics Integration):**
+  - Updated `PaperExchange` in `src/forest/backtest/paper-exchange.ts` to implement `VolatilityDcaCallbacks`.
+  - Refactored `buildTradesFromFills` in `src/forest/backtest/metrics.ts` with `OpenBuyLot` FIFO matching to support multi-step DCA entries unwinding cleanly against rebound sell exits without orphaning lots.
+  - Updated `runBacktest` in `src/forest/backtest/engine.ts` with explicit `volatility_dca` strategy dispatch and uniform lifecycle `.start(candles[0].close)` initialization across all strategies.
+  - Added comprehensive test suites in `src/forest/backtest/engine.test.ts` (138 LOC) and `src/forest/backtest/metrics.test.ts` (83 LOC).
+- **Client & UI Layer (Modularity & Bilingual Support):**
+  - Added input validation for `volatility_dca` parameters in `src/forest/backtest/actions.ts` (160 LOC) and verified persistence in `actions.test.ts` (128 LOC).
+  - Decomposed oversized `src/app/[locale]/backtests/backtests-client.tsx` (previously 306 LOC) into modular components: `metric-card.tsx` (19 LOC), `equity-curve-chart.tsx` (69 LOC), `recent-trades-table.tsx` (67 LOC), and `backtests-client.tsx` (174 LOC), all strictly <= 200 LOC with zero inline styles.
+  - Added bilingual strategy labels ('Volatility DCA' / 'DCA Biến Động') and end-to-end component tests in `src/app/[locale]/backtests/backtests-volatility-dca.test.tsx` (175 LOC).
+- **Quality Gates:** 3,907/3,907 tests passing across 303 test files (+26 new tests over baseline), 0 TypeScript errors, 0 ESLint warnings, 0 Knip issues, clean Next.js/OpenNext build, 0 `:any` types, all modified files <= 200 LOC.
+
 ### End-to-End Volatility-DCA Bot Integration — 2026-09-11
 - **Scope:** wire the newly implemented QuantLib `volatilityDca` strategy module end-to-end into the CashClaw bot execution engine, Cloudflare D1 database persistence, forest API handler layer, and frontend bot creation wizard under full `/orchestrate` governance.
 - **Tree Layer (Execution Engine):**
