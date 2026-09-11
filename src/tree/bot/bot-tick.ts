@@ -5,8 +5,7 @@ import type {
   OrderRequest,
 } from '../exchange/types';
 import type {
-  GridBotConfig,
-  MeanRevBotConfig,
+  BotConfig,
   BotCallbacks,
   BotDependencies,
   BotState,
@@ -14,6 +13,7 @@ import type {
 import { evaluateChain } from './bot-strategy';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
+import { VolatilityDcaStrategy } from './strategies/volatility-dca';
 import type { StrategyChain } from './strategy-chain';
 import type { TradeEventType } from '../telemetry/types';
 import type { Candle } from '@/forest/backtest/ohlcv';
@@ -21,11 +21,11 @@ import { computeRegimeContext } from '@/tree/regime/bot-context';
 
 export interface TickContext {
   id: string;
-  config: GridBotConfig | MeanRevBotConfig;
+  config: BotConfig;
   deps: BotDependencies;
   callbacks: BotCallbacks;
   state: BotState;
-  strategy: GridStrategy | MeanRevStrategy | null;
+  strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy | null;
   strategyChain: StrategyChain | null;
   lastTickPrice: number | null;
   placeOrder: (req: OrderRequest) => Promise<import('../exchange/types').OrderResult>;

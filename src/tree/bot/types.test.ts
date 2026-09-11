@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { type GridBotConfig, type MeanRevBotConfig, hasStrategyChain, isGridConfig, isMeanRevConfig } from './types';
+import {
+  type GridBotConfig,
+  type MeanRevBotConfig,
+  type VolatilityDcaBotConfig,
+  hasStrategyChain,
+  isGridConfig,
+  isMeanRevConfig,
+  isVolatilityDcaConfig,
+} from './types';
 
 const makeGridConfig = (overrides: Partial<GridBotConfig> = {}): GridBotConfig => ({
   symbol: 'BTC/USDT',
@@ -32,6 +40,23 @@ const makeMeanRevConfig = (overrides: Partial<MeanRevBotConfig> = {}): MeanRevBo
   volumeMultiplier: 1.5,
   positionSizePct: 0.05,
   cooldownMinutes: 5,
+  ...overrides,
+});
+
+const makeVolatilityDcaConfig = (overrides: Partial<VolatilityDcaBotConfig> = {}): VolatilityDcaBotConfig => ({
+  symbol: 'BTC/USDT',
+  exchange: 'binance',
+  mode: 'paper',
+  capital: 1000,
+  maxDrawdownPct: 0.1,
+  strategy: 'volatility_dca',
+  pair: 'BTC/USDT',
+  priceDropStep: 1.5,
+  maxSteps: 6,
+  baseOrderSizePct: 10,
+  volatilityWindow: 20,
+  volBaseline: 50,
+  reboundTarget: 1.0,
   ...overrides,
 });
 
@@ -71,5 +96,19 @@ describe('isMeanRevConfig', () => {
 
   it('returns false for grid config', () => {
     expect(isMeanRevConfig(makeGridConfig())).toBe(false);
+  });
+});
+
+describe('isVolatilityDcaConfig', () => {
+  it('returns true for volatility-dca config', () => {
+    expect(isVolatilityDcaConfig(makeVolatilityDcaConfig())).toBe(true);
+  });
+
+  it('returns false for grid config', () => {
+    expect(isVolatilityDcaConfig(makeGridConfig())).toBe(false);
+  });
+
+  it('returns false for mean-reversion config', () => {
+    expect(isVolatilityDcaConfig(makeMeanRevConfig())).toBe(false);
   });
 });

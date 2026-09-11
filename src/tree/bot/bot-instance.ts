@@ -8,14 +8,14 @@ import type {
 import type {
   BotState,
   BotTrade,
-  GridBotConfig,
-  MeanRevBotConfig,
+  BotConfig,
   BotCallbacks,
   BotDependencies,
 } from './types';
 import type { StrategyChain } from './strategy-chain';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
+import { VolatilityDcaStrategy } from './strategies/volatility-dca';
 import type { TradeEventType } from '../telemetry/types';
 import { createInitialState } from './bot-state';
 import { initializeStrategy } from './bot-strategy';
@@ -26,12 +26,12 @@ export type { BotCallbacks, BotDependencies } from './types';
 
 export class BotInstance {
   readonly id: string;
-  private config: GridBotConfig | MeanRevBotConfig;
+  private config: BotConfig;
   private deps: BotDependencies;
   private callbacks: BotCallbacks;
 
   private state: BotState;
-  private strategy: GridStrategy | MeanRevStrategy | null = null;
+  private strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy | null = null;
   private strategyChain: StrategyChain | null = null;
   private tickInterval: ReturnType<typeof setInterval> | null = null;
   private orderCounter = 0;
@@ -39,7 +39,7 @@ export class BotInstance {
 
   constructor(
     id: string,
-    config: GridBotConfig | MeanRevBotConfig,
+    config: BotConfig,
     deps: BotDependencies,
     callbacks: BotCallbacks,
   ) {
@@ -51,8 +51,6 @@ export class BotInstance {
     deps.killswitch.registerBot(id, config.capital);
   }
 
-  // ── Snapshot / patch ────────────────────────────────────────
-
   getSnapshot(): BotState { return { ...this.state }; }
 
   patchState(patch: Partial<BotState>): void {
@@ -60,7 +58,7 @@ export class BotInstance {
     this.state.updatedAt = Date.now();
   }
 
-  getConfig(): GridBotConfig | MeanRevBotConfig { return { ...this.config }; }
+  getConfig(): BotConfig { return { ...this.config }; }
 
   hasStrategy(): boolean {
     return this.strategy !== null;
@@ -142,12 +140,10 @@ export class BotInstance {
   }
 
   // ── Tick loop ──────────────────────────────────────────────
-
   private startTicking(): void {
     this.stopTicking();
     this.tickInterval = setInterval(() => this.tick(), 1000);
   }
-
   private stopTicking(): void {
     if (this.tickInterval) {
       clearInterval(this.tickInterval);
@@ -172,12 +168,10 @@ export class BotInstance {
   }
 
   // ── Order execution ────────────────────────────────────────
-
   async placeOrder(req: OrderRequest): Promise<OrderResult> {
     if (!this.deps.killswitch.isTradingEnabled()) {
       throw new Error('Trading halted by killswitch');
     }
-
     const ctx: OrderContext = {
       deps: this.deps,
       config: { capital: this.config.capital, symbol: this.config.symbol },
@@ -193,15 +187,12 @@ export class BotInstance {
   }
 
   // ── Event emission ──────────────────────────────────────────
-
   private emitState(): void {
     this.callbacks.onStateChange(this.getSnapshot());
   }
-
   private emitTelemetry(eventType: TradeEventType, details: Record<string, unknown> = {}): void {
     this.deps.telemetry?.emit(this.id, eventType, details);
   }
-
   destroy(): void {
     this.stop();
     this.deps.killswitch.unregisterBot(this.id);

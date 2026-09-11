@@ -1,29 +1,28 @@
-// Bot Strategy — strategy initialization and chain evaluation
-// Standalone functions extracted from BotInstance for size compliance.
-
 import type {
   OrderRequest,
   OrderResult,
 } from '../exchange/types';
- 
+
 import type {
   BotTrade,
   BotConfig,
   StrategyContext,
   GridBotConfig,
   MeanRevBotConfig,
+  VolatilityDcaBotConfig,
 } from './types';
 import { type StrategyChain, buildDefaultChain } from './strategy-chain';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
+import { VolatilityDcaStrategy } from './strategies/volatility-dca';
 
 export interface StrategyBundle {
-  strategy: GridStrategy | MeanRevStrategy;
+  strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy;
   strategyChain: StrategyChain | null;
 }
 
 export function initializeStrategy(params: {
-  config: GridBotConfig | MeanRevBotConfig;
+  config: GridBotConfig | MeanRevBotConfig | VolatilityDcaBotConfig;
   price: number;
   botId: string;
   placeOrder: (req: OrderRequest) => Promise<OrderResult>;
@@ -38,7 +37,7 @@ export function initializeStrategy(params: {
   }
 
   const onLogWithId = (msg: string) => onLog(`[${botId}] ${msg}`);
-  let strategy: GridStrategy | MeanRevStrategy;
+  let strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy;
 
   switch (config.strategy) {
     case 'grid': {
@@ -53,6 +52,12 @@ export function initializeStrategy(params: {
       strategy.start(price);
       break;
     }
+    case 'volatility_dca': {
+      const vdConfig = config as VolatilityDcaBotConfig;
+      strategy = new VolatilityDcaStrategy(vdConfig, { onLog: onLogWithId });
+      strategy.start(price);
+      break;
+    }
     default:
       throw new Error(`Unknown strategy: ${(config as BotConfig).strategy}`);
   }
@@ -61,7 +66,7 @@ export function initializeStrategy(params: {
 }
 
 export function evaluateChain(params: {
-  config: GridBotConfig | MeanRevBotConfig;
+  config: BotConfig;
   strategyChain: StrategyChain | null;
   totalPnl: number;
   totalTrades: number;

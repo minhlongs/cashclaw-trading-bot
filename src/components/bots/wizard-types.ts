@@ -1,7 +1,7 @@
 export type Step = 'basic' | 'strategy' | 'config' | 'review';
 
 export interface StrategyDef {
-  value: 'grid' | 'mean_reversion';
+  value: 'grid' | 'mean_reversion' | 'volatility_dca';
   label: string;
   desc: string;
 }
@@ -14,7 +14,7 @@ export interface FieldDef {
 
 export interface FormState {
   name: string;
-  strategy: '' | 'grid' | 'mean_reversion';
+  strategy: '' | 'grid' | 'mean_reversion' | 'volatility_dca';
   pair: string;
   exchange: string;
   capital: number;
@@ -29,7 +29,7 @@ export interface BasicStepProps {
 
 export interface StrategyStepProps {
   form: FormState;
-  setStrategyDefaults: (strategy: 'grid' | 'mean_reversion') => void;
+  setStrategyDefaults: (strategy: 'grid' | 'mean_reversion' | 'volatility_dca') => void;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -37,7 +37,7 @@ export interface StrategyStepProps {
 export interface ConfigStepProps {
   form: FormState;
   updateConfig: (key: string, value: number) => void;
-  strategy: 'grid' | 'mean_reversion';
+  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
   onNext: () => void;
   onPrev: () => void;
 }
@@ -54,6 +54,7 @@ export interface ReviewStepProps {
 export const STRATEGIES: StrategyDef[] = [
   { value: 'grid', label: 'Grid Trading', desc: 'Multi-level limit orders / Dat lenh nhieu muc gia' },
   { value: 'mean_reversion', label: 'Mean Reversion', desc: 'Bollinger Bands + RSI' },
+  { value: 'volatility_dca', label: 'Volatility-Adjusted DCA', desc: 'DCA Tự Động Theo Biến Động' },
 ];
 
 export const EXCHANGES = [
@@ -82,6 +83,15 @@ export const MEANREV_DEFAULTS: Record<string, number> = {
   max_drawdown_pct: 20,
 };
 
+export const VOLATILITY_DCA_DEFAULTS: Record<string, number> = {
+  priceDropStep: 1.5,
+  maxSteps: 6,
+  baseOrderSizePct: 10,
+  volatilityWindow: 20,
+  volBaseline: 50,
+  reboundTarget: 1.0,
+};
+
 export const GRID_FIELDS: FieldDef[] = [
   { key: 'spacing_pct', label: 'Spacing (%)', step: '0.1' },
   { key: 'levels', label: 'Levels' },
@@ -100,9 +110,19 @@ export const MEANREV_FIELDS: FieldDef[] = [
   { key: 'max_drawdown_pct', label: 'Max Drawdown (%)', step: '1' },
 ];
 
+export const VOLATILITY_DCA_FIELDS: FieldDef[] = [
+  { key: 'priceDropStep', label: 'Price Drop Step (%)', step: '0.1' },
+  { key: 'maxSteps', label: 'Max DCA Steps', step: '1' },
+  { key: 'baseOrderSizePct', label: 'Base Order Size (%)', step: '1' },
+  { key: 'volatilityWindow', label: 'Volatility Window (bars)', step: '1' },
+  { key: 'volBaseline', label: 'Vol Baseline (% annualized)', step: '1' },
+  { key: 'reboundTarget', label: 'Rebound Target (%)', step: '0.1' },
+];
+
 export const STRATEGY_KEY_MAP: Record<string, string> = {
   grid: 'strategies.grid',
   mean_reversion: 'strategies.mean_reversion',
+  volatility_dca: 'strategies.volatility_dca',
 };
 
 export const FIELD_KEY_MAP: Record<string, string> = {
@@ -117,5 +137,10 @@ export const FIELD_KEY_MAP: Record<string, string> = {
   rsi_sell_threshold: 'fields.rsiSell',
   volume_multiplier: 'fields.volumeMultiplier',
   position_size_pct: 'fields.positionSizePct',
+  priceDropStep: 'fields.priceDropStep',
+  maxSteps: 'fields.maxSteps',
+  baseOrderSizePct: 'fields.baseOrderSizePct',
+  volatilityWindow: 'fields.volatilityWindow',
+  volBaseline: 'fields.volBaseline',
+  reboundTarget: 'fields.reboundTarget',
 };
-

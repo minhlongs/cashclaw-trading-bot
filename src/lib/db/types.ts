@@ -54,7 +54,7 @@ export interface Bot {
   id: string;
   user_id: string;
   name: string;
-  strategy: 'grid' | 'mean_reversion';
+  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
   pair: string;
   exchange: 'binance' | 'bybit' | 'okx';
   status: 'draft' | 'paper_test' | 'live_running' | 'paused' | 'error' | 'stopped';

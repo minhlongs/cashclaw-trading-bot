@@ -2,16 +2,25 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type ConfigStepProps, GRID_FIELDS, MEANREV_FIELDS, FIELD_KEY_MAP } from './wizard-types';
+import { type ConfigStepProps, GRID_FIELDS, MEANREV_FIELDS, VOLATILITY_DCA_FIELDS, FIELD_KEY_MAP } from './wizard-types';
 
 export function ConfigStep({ form, updateConfig, strategy, onNext, onPrev }: ConfigStepProps) {
   const t = useTranslations('botWizard');
-  const fields = strategy === 'grid' ? GRID_FIELDS : MEANREV_FIELDS;
+  const fields =
+    strategy === 'grid'
+      ? GRID_FIELDS
+      : strategy === 'mean_reversion'
+      ? MEANREV_FIELDS
+      : VOLATILITY_DCA_FIELDS;
 
   return (
     <div className="space-y-4">
       <h3 className="card-title">
-        {strategy === 'grid' ? t('title.gridConfig') : t('title.meanRevConfig')}
+        {strategy === 'grid'
+          ? t('title.gridConfig')
+          : strategy === 'mean_reversion'
+          ? t('title.meanRevConfig')
+          : t('title.volatilityDcaConfig')}
       </h3>
       {fields.map((field) => {
         const key = FIELD_KEY_MAP[field.key] ?? field.key;

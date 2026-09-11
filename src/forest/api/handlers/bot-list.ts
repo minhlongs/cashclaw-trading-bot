@@ -8,7 +8,7 @@ import { BotQueryService } from '@/forest/bot/d1-adapter';
 export interface BotListItem {
   id: string;
   name: string;
-  strategy: 'grid' | 'mean_reversion';
+  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
   pair: string;
   exchange: string;
   status: string;
@@ -32,7 +32,7 @@ export async function botListHandler(): Promise<{
     const items: BotListItem[] = bots.map((bot) => ({
       id: bot.id,
       name: bot.name || bot.id,
-      strategy: bot.strategy as 'grid' | 'mean_reversion',
+      strategy: bot.strategy as 'grid' | 'mean_reversion' | 'volatility_dca',
       pair: bot.pair,
       exchange: bot.exchange,
       status: bot.status,

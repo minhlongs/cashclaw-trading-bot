@@ -1,5 +1,5 @@
 import { getBotManager, type CreateBotRequest } from '@/tree/bot';
-import type { GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
+import type { GridBotConfig, MeanRevBotConfig, VolatilityDcaBotConfig } from '@/tree/bot/types';
 
 function normalizeWizardConfig(raw?: Record<string, number>): Record<string, number> {
   const aliases: Record<string, string> = {
@@ -35,6 +35,18 @@ function normalizeWizardConfig(raw?: Record<string, number>): Record<string, num
     lookbackPeriod: 'lookbackPeriod',
     zscore_threshold: 'zScoreThreshold',
     zScoreThreshold: 'zScoreThreshold',
+    price_drop_step: 'priceDropStep',
+    priceDropStep: 'priceDropStep',
+    max_steps: 'maxSteps',
+    maxSteps: 'maxSteps',
+    base_order_size_pct: 'baseOrderSizePct',
+    baseOrderSizePct: 'baseOrderSizePct',
+    volatility_window: 'volatilityWindow',
+    volatilityWindow: 'volatilityWindow',
+    vol_baseline: 'volBaseline',
+    volBaseline: 'volBaseline',
+    rebound_target: 'reboundTarget',
+    reboundTarget: 'reboundTarget',
   };
   const out: Record<string, number> = {};
   for (const src in raw ?? {}) {
@@ -64,7 +76,7 @@ function coerceNum({ config, key, defaultValue, min, max }: CoerceArgs): number 
 export interface CreateBotPayload {
   id: string;
   name: string;
-  strategy: 'grid' | 'mean_reversion';
+  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
   pair: string;
   exchange: string;
   capital: number;
@@ -93,7 +105,7 @@ export async function botCreateHandler(
       maxDrawdownPct: coerceNum({ config: cfg, key: 'maxDrawdownPct', defaultValue: 10, min: 1, max: 50 }),
     };
 
-    const strategyConfig =
+    const strategyConfig: GridBotConfig | MeanRevBotConfig | VolatilityDcaBotConfig =
       payload.strategy === 'grid'
         ? ({
             ...base,
@@ -105,7 +117,8 @@ export async function botCreateHandler(
             stopLossPct: coerceNum({ config: cfg, key: 'stopLossPct', defaultValue: 5, min: 0.1, max: 50 }),
             rebalanceOnFill: false,
           } satisfies GridBotConfig)
-        : ({
+        : payload.strategy === 'mean_reversion'
+        ? ({
             ...base,
             strategy: 'mean_reversion' as const,
             bbPeriod: coerceNum({ config: cfg, key: 'bbPeriod', defaultValue: 20, min: 2, max: 200 }),
@@ -116,7 +129,18 @@ export async function botCreateHandler(
             volumeMultiplier: coerceNum({ config: cfg, key: 'volumeMultiplier', defaultValue: 1.5, min: 0.1, max: 10 }),
             positionSizePct: coerceNum({ config: cfg, key: 'positionSizePct', defaultValue: 10, min: 1, max: 100 }),
             cooldownMinutes: coerceNum({ config: cfg, key: 'cooldownMinutes', defaultValue: 5, min: 0, max: 60 }),
-          } satisfies MeanRevBotConfig);
+          } satisfies MeanRevBotConfig)
+        : ({
+            ...base,
+            strategy: 'volatility_dca' as const,
+            pair: payload.pair,
+            priceDropStep: coerceNum({ config: cfg, key: 'priceDropStep', defaultValue: 1.5, min: 0.1, max: 20 }),
+            maxSteps: coerceNum({ config: cfg, key: 'maxSteps', defaultValue: 6, min: 2, max: 20 }),
+            baseOrderSizePct: coerceNum({ config: cfg, key: 'baseOrderSizePct', defaultValue: 10, min: 1, max: 50 }),
+            volatilityWindow: coerceNum({ config: cfg, key: 'volatilityWindow', defaultValue: 20, min: 5, max: 100 }),
+            volBaseline: coerceNum({ config: cfg, key: 'volBaseline', defaultValue: 50, min: 1, max: 200 }),
+            reboundTarget: coerceNum({ config: cfg, key: 'reboundTarget', defaultValue: 1.0, min: 0.1, max: 20 }),
+          } satisfies VolatilityDcaBotConfig);
 
     const botConfig: CreateBotRequest = {
       id: payload.id,

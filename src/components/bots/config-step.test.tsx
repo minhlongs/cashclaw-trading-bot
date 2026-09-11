@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ConfigStep } from './config-step';
 import { type FormState } from './wizard-types';
 
-function makeForm(strategy: 'grid' | 'mean_reversion'): FormState {
+function makeForm(strategy: 'grid' | 'mean_reversion' | 'volatility_dca'): FormState {
   return {
     name: 'Bot',
     strategy,
@@ -13,7 +13,9 @@ function makeForm(strategy: 'grid' | 'mean_reversion'): FormState {
     capital: 5000,
     config: strategy === 'grid'
       ? { levels: 10, capital_per_level_pct: 10, max_drawdown_pct: 5 }
-      : { bb_period: 20, bb_std: 2, rsi_period: 14, rsi_buy: 30, rsi_sell: 70, volume_multiplier: 1.5, position_size_pct: 10, max_drawdown_pct: 5 },
+      : strategy === 'mean_reversion'
+      ? { bb_period: 20, bb_std: 2, rsi_period: 14, rsi_buy: 30, rsi_sell: 70, volume_multiplier: 1.5, position_size_pct: 10, max_drawdown_pct: 5 }
+      : { priceDropStep: 1.5, maxSteps: 6, baseOrderSizePct: 10, volatilityWindow: 20, volBaseline: 50, reboundTarget: 1.0 },
   };
 }
 
@@ -30,6 +32,12 @@ describe('ConfigStep', () => {
     render(<ConfigStep form={makeForm('mean_reversion')} strategy="mean_reversion" {...defaults} />);
     expect(screen.getByText('Mean Reversion Config')).toBeInTheDocument();
     expect(screen.getByText('BB Period')).toBeInTheDocument();
+  });
+
+  it('shows volatility-dca fields when strategy is volatility_dca', () => {
+    render(<ConfigStep form={makeForm('volatility_dca')} strategy="volatility_dca" {...defaults} />);
+    expect(screen.getByText('Volatility DCA Config')).toBeInTheDocument();
+    expect(screen.getByText('Price Drop Step (%)')).toBeInTheDocument();
   });
 
   it('calls onNext when next is clicked', async () => {

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS bots (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   name TEXT NOT NULL,
-  strategy TEXT NOT NULL CHECK (strategy IN ('grid', 'mean_reversion')),
+  strategy TEXT NOT NULL CHECK (strategy IN ('grid', 'mean_reversion', 'volatility_dca')),
   pair TEXT NOT NULL,
   exchange TEXT NOT NULL CHECK (exchange IN ('binance', 'bybit', 'okx')),
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'paper_test', 'live_running', 'paused', 'error', 'stopped')),

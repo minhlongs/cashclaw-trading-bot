@@ -22,7 +22,7 @@ export interface TradeSignal {
 }
 
 export interface ChainLeg {
-  strategy: 'grid' | 'mean_reversion';
+  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
   on: string;
 }
 
@@ -55,7 +55,7 @@ export function hasStrategyChain(
 // ── Existing bot configs ─────────────────────────────────────────────────────
 export type BotStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'error';
 export type BotMode = 'paper' | 'live';
-export type StrategyType = 'grid' | 'mean_reversion';
+export type StrategyType = 'grid' | 'mean_reversion' | 'volatility_dca';
 
 export type BotEvent =
   | { type: 'START' }
@@ -100,7 +100,20 @@ export interface MeanRevBotConfig extends BaseBotConfig {
   cooldownMinutes: number;
 }
 
-export type BotConfig = GridBotConfig | MeanRevBotConfig;
+export interface VolatilityDcaBotConfig extends BaseBotConfig {
+  strategy: 'volatility_dca';
+  pair: string;
+  priceDropStep: number;
+  maxSteps: number;
+  baseOrderSizePct: number;
+  volatilityWindow: number;
+  volBaseline: number;
+  reboundTarget: number;
+}
+export function isVolatilityDcaConfig(config: BotConfig): config is VolatilityDcaBotConfig {
+  return config.strategy === 'volatility_dca';
+}
+export type BotConfig = GridBotConfig | MeanRevBotConfig | VolatilityDcaBotConfig;
 
 export interface BotState {
   id: string;
@@ -171,8 +184,6 @@ export function isGridConfig(config: BotConfig): config is GridBotConfig {
 export function isMeanRevConfig(config: BotConfig): config is MeanRevBotConfig {
   return config.strategy === 'mean_reversion';
 }
-
-// ── Bot instance types (extracted from bot-instance.ts) ─────────────────────
 
 export interface BotCallbacks {
   onStateChange: (state: BotState) => void;

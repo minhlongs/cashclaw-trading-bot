@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { type Step, type FormState, GRID_DEFAULTS, MEANREV_DEFAULTS } from './wizard-types';
+import { type Step, type FormState, GRID_DEFAULTS, MEANREV_DEFAULTS, VOLATILITY_DCA_DEFAULTS } from './wizard-types';
 import { BasicStep } from './basic-step';
 import { StrategyStep } from './strategy-step';
 import { ConfigStep } from './config-step';
@@ -42,8 +42,13 @@ export function BotWizardClient() {
     setForm((prev) => ({ ...prev, config: { ...prev.config, [key]: value } }));
   };
 
-  const setStrategyDefaults = (strategy: 'grid' | 'mean_reversion') => {
-    const defaults = strategy === 'grid' ? GRID_DEFAULTS : MEANREV_DEFAULTS;
+  const setStrategyDefaults = (strategy: 'grid' | 'mean_reversion' | 'volatility_dca') => {
+    const defaults =
+      strategy === 'grid'
+        ? GRID_DEFAULTS
+        : strategy === 'mean_reversion'
+        ? MEANREV_DEFAULTS
+        : VOLATILITY_DCA_DEFAULTS;
     setForm((prev) => ({ ...prev, strategy, config: { ...defaults } }));
   };
 
@@ -105,7 +110,7 @@ export function BotWizardClient() {
       <ConfigStep
         form={form}
         updateConfig={updateConfig}
-        strategy={form.strategy as 'grid' | 'mean_reversion'}
+        strategy={form.strategy as 'grid' | 'mean_reversion' | 'volatility_dca'}
         onNext={goToNext}
         onPrev={goToPrev}
       />

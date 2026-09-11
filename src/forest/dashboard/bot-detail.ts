@@ -3,7 +3,7 @@
 
 'use server';
 
-import { isGridConfig } from '@/tree/bot';
+import { isGridConfig, isMeanRevConfig, isVolatilityDcaConfig } from '@/tree/bot';
 import { getBotCards, type BotCardData } from './bot-kpis';
 import { BotQueryService, type BotSummary } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
@@ -13,7 +13,7 @@ import { createLogger } from '@/lib/logger';
 export interface BotDetailData {
   id: string;
   name: string;
-  strategy: 'grid' | 'mean_reversion';
+  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
   pair: string;
   exchange: string;
   botStatus: string;
@@ -49,7 +49,8 @@ function botToDetail(bot: BotSummary): BotDetailData {
         capitalPerLevelPct: cfg.capitalPerLevelPct,
         maxDrawdownPct: cfg.maxDrawdownPct,
       }
-    : {
+    : isMeanRevConfig(cfg)
+    ? {
         bbPeriod: cfg.bbPeriod,
         bbStdDev: cfg.bbStdDev,
         rsiPeriod: cfg.rsiPeriod,
@@ -58,7 +59,18 @@ function botToDetail(bot: BotSummary): BotDetailData {
         volumeMultiplier: cfg.volumeMultiplier,
         positionSizePct: cfg.positionSizePct,
         maxDrawdownPct: cfg.maxDrawdownPct,
-      };
+      }
+    : isVolatilityDcaConfig(cfg)
+    ? {
+        priceDropStep: cfg.priceDropStep,
+        maxSteps: cfg.maxSteps,
+        baseOrderSizePct: cfg.baseOrderSizePct,
+        volatilityWindow: cfg.volatilityWindow,
+        volBaseline: cfg.volBaseline,
+        reboundTarget: cfg.reboundTarget,
+        maxDrawdownPct: cfg.maxDrawdownPct,
+      }
+    : {};
 
   return {
     id: bot.id,

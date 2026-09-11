@@ -62,7 +62,8 @@
     },
     "strategy": {
       "grid": "Grid",
-      "mean_reversion": "Mean Reversion"
+      "mean_reversion": "Mean Reversion",
+      "volatility_dca": "DCA Biến Động"
     }
   },
   "botWizard": {
@@ -85,6 +86,7 @@
       "strategy": "Chọn chiến lược",
       "gridConfig": "Cấu hình Grid",
       "meanRevConfig": "Cấu hình Mean Reversion",
+      "volatilityDcaConfig": "Cấu hình DCA Biến Động",
       "review": "Xác nhận"
     },
     "botName": "Tên bot",
@@ -105,6 +107,10 @@
       "mean_reversion": {
         "label": "Mean Reversion",
         "desc": "Bollinger Bands + RSI"
+      },
+      "volatility_dca": {
+        "label": "DCA Tự Động Theo Biến Động",
+        "desc": "Tự động điều chỉnh lệnh DCA theo biến động thực tế"
       }
     },
     "fields": {
@@ -118,7 +124,13 @@
       "rsiBuy": "Ngưỡng mua RSI",
       "rsiSell": "Ngưỡng bán RSI",
       "volumeMultiplier": "Hệ số khối lượng",
-      "positionSizePct": "Kích thước vị thế (%)"
+      "positionSizePct": "Kích thước vị thế (%)",
+      "priceDropStep": "Bước Giảm Giá (%)",
+      "maxSteps": "Số Bước DCA Tối Đa",
+      "baseOrderSizePct": "Kích Thước Lệnh Cơ Bản (%)",
+      "volatilityWindow": "Cửa Sổ Biến Động (nến)",
+      "volBaseline": "Biến Động Cơ Sở (% năm)",
+      "reboundTarget": "Mục Tiêu Phục Hồi (%)"
     },
     "review": {
       "name": "Tên",

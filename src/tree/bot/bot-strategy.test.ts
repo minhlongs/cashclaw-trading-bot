@@ -14,6 +14,14 @@ vi.mock('@/tree/bot/strategies/mean-reversion', () => ({
   })),
 }));
 
+vi.mock('@/tree/bot/strategies/volatility-dca', () => ({
+  VolatilityDcaStrategy: vi.fn().mockImplementation(() => ({
+    start: vi.fn(),
+    stop: vi.fn(),
+    onTicker: vi.fn(),
+  })),
+}));
+
 vi.mock('@/tree/bot/strategy-chain', () => ({
   buildDefaultChain: vi.fn().mockReturnValue([
     {
@@ -24,52 +32,29 @@ vi.mock('@/tree/bot/strategy-chain', () => ({
 }));
 
 import { initializeStrategy, evaluateChain } from './bot-strategy';
-import type { GridBotConfig, MeanRevBotConfig, StrategyChain } from './types';
+import type { GridBotConfig, MeanRevBotConfig, VolatilityDcaBotConfig, StrategyChain } from './types';
 
 function makeGridConfig(overrides: Partial<GridBotConfig> = {}): GridBotConfig {
   return {
-    strategy: 'grid',
-    symbol: 'ETH/USDT',
-    exchange: 'binance',
-    mode: 'paper',
-    capital: 1000,
-    gridSpacingPct: 1,
-    gridLevels: 4,
-    capitalPerLevelPct: 25,
-    takeProfitPct: 2,
-    stopLossPct: 3,
-    rebalanceOnFill: false,
-    maxDrawdownPct: 15,
+    strategy: 'grid', symbol: 'ETH/USDT', exchange: 'binance', mode: 'paper',
+    capital: 1000, gridSpacingPct: 1, gridLevels: 4, capitalPerLevelPct: 25,
+    takeProfitPct: 2, stopLossPct: 3, rebalanceOnFill: false, maxDrawdownPct: 15,
     ...overrides,
   };
 }
 
 function makeMeanRevConfig(overrides: Partial<MeanRevBotConfig> = {}): MeanRevBotConfig {
   return {
-    strategy: 'mean_reversion',
-    symbol: 'SOL/USDT',
-    exchange: 'binance',
-    mode: 'paper',
-    capital: 800,
-    bbPeriod: 20,
-    bbStdDev: 2,
-    rsiPeriod: 14,
-    rsiBuyThreshold: 30,
-    rsiSellThreshold: 70,
-    volumeMultiplier: 1.5,
-    positionSizePct: 10,
-    cooldownMinutes: 5,
-    maxDrawdownPct: 5,
-    ...overrides,
+    strategy: 'mean_reversion', symbol: 'SOL/USDT', exchange: 'binance', mode: 'paper',
+    capital: 800, bbPeriod: 20, bbStdDev: 2, rsiPeriod: 14, rsiBuyThreshold: 30,
+    rsiSellThreshold: 70, volumeMultiplier: 1.5, positionSizePct: 10,
+    cooldownMinutes: 5, maxDrawdownPct: 5, ...overrides,
   };
 }
 
 function makeChain(signals: Array<null | { side: 'buy' | 'sell'; qty: number }>): StrategyChain {
   return signals.map((signal, index) => ({
-    strategy: {
-      name: `leg-${index}`,
-      evaluate: vi.fn().mockReturnValue(signal),
-    },
+    strategy: { name: `leg-${index}`, evaluate: vi.fn().mockReturnValue(signal) },
     fallback: null,
   }));
 }
@@ -97,6 +82,25 @@ describe('bot-strategy', () => {
         price: 120,
         botId: 'mr-1',
         placeOrder: vi.fn().mockResolvedValue({ id: 'o2', status: 'filled' }),
+        onTrade: vi.fn(),
+        onLog: vi.fn(),
+      });
+
+      expect(bundle.strategy).toBeDefined();
+      expect(bundle.strategyChain).toBeNull();
+    });
+
+    it('creates volatility dca strategy', () => {
+      const vdConfig: VolatilityDcaBotConfig = {
+        strategy: 'volatility_dca', symbol: 'BTC/USDT', exchange: 'binance', mode: 'paper',
+        capital: 5000, maxDrawdownPct: 15, pair: 'BTC/USDT', priceDropStep: 1.5,
+        maxSteps: 5, baseOrderSizePct: 10, volatilityWindow: 20, volBaseline: 50, reboundTarget: 2.0,
+      };
+      const bundle = initializeStrategy({
+        config: vdConfig,
+        price: 50000,
+        botId: 'vd-1',
+        placeOrder: vi.fn().mockResolvedValue({ id: 'o3', status: 'filled' }),
         onTrade: vi.fn(),
         onLog: vi.fn(),
       });

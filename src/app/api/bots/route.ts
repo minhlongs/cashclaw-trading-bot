@@ -15,12 +15,18 @@ const createBotConfigSchema = z.object({
   takeProfitPct: z.number().positive().max(100).optional(),
   stopLossPct: z.number().positive().max(100).optional(),
   maxDrawdownPct: z.number().positive().max(100).optional(),
+  priceDropStep: z.number().positive().max(100).optional(),
+  maxSteps: z.number().int().min(2).max(100).optional(),
+  baseOrderSizePct: z.number().positive().max(100).optional(),
+  volatilityWindow: z.number().int().min(2).max(500).optional(),
+  volBaseline: z.number().positive().max(500).optional(),
+  reboundTarget: z.number().positive().max(100).optional(),
 });
 
 const CreateBotSchema = z.object({
   id: z.string().min(1).max(64),
   name: z.string().min(1).max(128),
-  strategy: z.enum(['grid', 'mean_reversion']),
+  strategy: z.enum(['grid', 'mean_reversion', 'volatility_dca']),
   pair: z.string().min(1).max(20),
   exchange: z.enum(['binance', 'bybit', 'okx']),
   capital: z.number().positive().max(1_000_000),

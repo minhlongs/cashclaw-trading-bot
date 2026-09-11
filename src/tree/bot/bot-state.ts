@@ -4,17 +4,15 @@
 import type {
   BotState,
   BotConfig,
-  GridBotConfig,
-  MeanRevBotConfig,
 } from './types';
 
 export function createInitialState(
   id: string,
-  config: GridBotConfig | MeanRevBotConfig,
+  config: BotConfig,
 ): BotState {
   return {
     id,
-    config: config as BotConfig,
+    config,
     status: 'idle',
     createdAt: Date.now(),
     updatedAt: Date.now(),

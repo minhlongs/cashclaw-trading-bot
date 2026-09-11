@@ -74,6 +74,30 @@ describe('botCreateHandler', () => {
       expect(req.config.strategy).toBe('mean_reversion');
     });
 
+    it('builds volatility_dca config for volatility_dca strategy', async () => {
+      await botCreateHandler(paperPayload({
+        strategy: 'volatility_dca',
+        config: {
+          priceDropStep: 2.0,
+          maxSteps: 4,
+          baseOrderSizePct: 15,
+          volatilityWindow: 30,
+          volBaseline: 45,
+          reboundTarget: 1.5,
+        },
+      }));
+      const req = mockCreateBot.mock.calls[0][0];
+      expect(req.config.strategy).toBe('volatility_dca');
+      expect(req.config).toMatchObject({
+        priceDropStep: 2.0,
+        maxSteps: 4,
+        baseOrderSizePct: 15,
+        volatilityWindow: 30,
+        volBaseline: 45,
+        reboundTarget: 1.5,
+      });
+    });
+
     it('honors wizard config values instead of hardcoded defaults', async () => {
       await botCreateHandler(paperPayload({
         config: { spacingPct: 0.5, gridLevels: 5, maxDrawdownPct: 5 },

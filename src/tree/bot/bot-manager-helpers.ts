@@ -1,7 +1,7 @@
 // Bot Manager helpers — D1 persistence callbacks
 // Extracted from BotManager.createBot() for size compliance.
 
-import type { BotConfig, BotState, BotTrade } from './types';
+import type { BotConfig, BotState, BotTrade, VolatilityDcaBotConfig } from './types';
 import type { BotCallbacks } from './bot-instance';
 import { persistBot, patchBot } from '@/forest/bot/d1-adapter';
 import type { TradeEventType } from '../telemetry/types';
@@ -86,6 +86,19 @@ export function defaultConfigFromRow(row: { name: string; pair: string; exchange
       positionSizePct: 10,
       cooldownMinutes: 5,
     };
+  }
+  if (row.strategy === 'volatility_dca') {
+    return {
+      ...base,
+      strategy: 'volatility_dca' as const,
+      pair: row.pair,
+      priceDropStep: 1.5,
+      maxSteps: 6,
+      baseOrderSizePct: 10,
+      volatilityWindow: 20,
+      volBaseline: 50,
+      reboundTarget: 1.0,
+    } satisfies VolatilityDcaBotConfig;
   }
   return {
     ...base,

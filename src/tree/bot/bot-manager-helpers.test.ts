@@ -182,5 +182,17 @@ describe('bot-manager-helpers', () => {
         expect(cfg.bbPeriod).toBe(20);
       }
     });
+
+    it('returns a valid volatility_dca config', () => {
+      const cfg = defaultConfigFromRow({
+        name: 'VD', pair: 'SOL/USDT', exchange: 'okx', strategy: 'volatility_dca', capital_allocated: 2000,
+      });
+      expect(cfg.strategy).toBe('volatility_dca');
+      if (cfg.strategy === 'volatility_dca') {
+        expect(cfg.symbol).toBe('SOL/USDT');
+        expect(cfg.priceDropStep).toBe(1.5);
+        expect(cfg.maxSteps).toBe(6);
+      }
+    });
   });
 });
