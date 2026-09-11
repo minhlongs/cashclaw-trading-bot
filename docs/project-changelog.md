@@ -2,6 +2,31 @@
 
 ## v1 Paper-Trading Platform
 
+### OKX & Bybit Direct REST Clients — 2026-09-12
+- **Scope:** Expanded `src/tree/exchange/direct/` with edge-native OKX (v5) and Bybit (V5) stateless REST clients, extending the WebCrypto HMAC-SHA256 signer and preserving ADR-001 paper-only invariant across all new endpoints.
+- **WebCrypto Signer Expansion (`webcrypto-signer.ts`, 136 LOC):**
+  - Added `signHmacSha256Base64` — pure `crypto.subtle` HMAC-SHA256 with standard `btoa` binary string Base64 encoding (zero Node.js imports).
+  - Added `buildOkxSignature` — pre-hash string `timestamp + method + requestPath + queryOrBody` signed as Base64.
+  - Added `buildOkxHeaders` — returns `{ 'OK-ACCESS-KEY', 'OK-ACCESS-SIGN', 'OK-ACCESS-TIMESTAMP', 'OK-ACCESS-PASSPHRASE', 'x-simulated-trading'? }`.
+  - Added `buildBybitSignature` — pre-hash string `timestamp + apiKey + recvWindow + queryStringOrBody` signed as Hex.
+  - Added `buildBybitHeaders` — returns `{ 'X-BAPI-API-KEY', 'X-BAPI-TIMESTAMP', 'X-BAPI-SIGN', 'X-BAPI-RECV-WINDOW' }`.
+  - RFC 4231 Base64 vectors (Cases 1, 2, 7) tested in `webcrypto-signer-base64.test.ts` (58 LOC); OKX & Bybit builders and recvWindow boundaries in `webcrypto-signer-exchanges.test.ts` (103 LOC).
+- **OKX Direct REST Client (`okx-rest-client.ts`, 117 LOC):**
+  - Public endpoints: `ping` (`/api/v5/system/status`), `getServerTime` (`/api/v5/public/time`), `fetchTicker(instId: string)` (`/api/v5/market/ticker?instId=...`).
+  - `createSignedRequest(endpoint, method?, params?, body?)` — GET query params sorted deterministically; POST body as compact JSON; `x-simulated-trading: 1` injected when `simulated: true`.
+  - `handleResponse<T>` — checks HTTP status and OKX business code `code === '0'`; throws structured error with code and message on failure.
+  - SSRF guard: constructor rejects any `baseUrl` not starting with `https://` or `http://`.
+  - Tested in `okx-rest-client.test.ts` (167 LOC, happy paths) and `okx-rest-client-errors.test.ts` (113 LOC, error paths).
+- **Bybit Direct REST Client (`bybit-rest-client.ts`, 129 LOC):**
+  - Public endpoints: `ping` (`/v5/market/time`), `getServerTime` (`/v5/market/time`), `fetchTicker(category, symbol)` (`/v5/market/tickers`).
+  - `fetchTicker` accepts `(category: 'spot' | 'linear' | 'inverse', symbol: string)` per ADR spec; TypeScript overloads also support `(symbol, category?)` for convenience.
+  - `createSignedRequest` — GET query params sorted by key before HMAC signing; POST uses compact JSON body.
+  - `handleResponse<T>` — checks HTTP status and Bybit business code `retCode === 0`; throws structured error with retCode and retMsg.
+  - SSRF guard: constructor rejects non-`https://`/`http://` URLs; validates `recvWindow` in range 1–60000.
+  - Tested in `bybit-rest-client.test.ts` (178 LOC, happy paths) and `bybit-rest-client-errors.test.ts` (124 LOC, error paths).
+- **Barrel Exports:** `index.ts` (7 LOC) re-exports all client classes, types, and signer functions; verified in `index.test.ts` (18 LOC).
+- **Quality Gates:** 3,968/3,968 tests passing across 309 test files (+61 tests), 100.00% statement/branch/function/line coverage on `src/tree/exchange/direct/**`, 0 TypeScript errors, 0 ESLint warnings, 0 Knip issues, clean Next.js/OpenNext build, 0 `:any` types, all 10 new/modified files ≤ 200 LOC.
+
 ### Backtest Engine & UI Integration for Volatility-DCA Strategy — 2026-09-11
 - **Scope:** Complete historical backtesting subsystem and UI integration for the Volatility-Adjusted DCA strategy (`volatility_dca`), multi-lot FIFO matching in trade metrics, and backtest UI modularization to strictly respect the <= 200 LOC ceiling.
 - **Tree Layer (Order Execution & Position Tracking):**

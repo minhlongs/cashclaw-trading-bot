@@ -3,3 +3,5 @@
 export * from './types';
 export * from './webcrypto-signer';
 export * from './binance-rest-client';
+export * from './okx-rest-client';
+export * from './bybit-rest-client';
