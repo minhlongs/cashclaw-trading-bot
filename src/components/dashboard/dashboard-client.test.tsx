@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => (
+  default: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { children?: React.ReactNode; href: string }) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -31,7 +31,7 @@ vi.mock('next/link', () => ({
 interface BotCardDataApi {
   id: string;
   name: string;
-  strategy: 'grid' | 'mean_reversion';
+  strategy: 'grid' | 'mean_reversion' | 'volatility_dca' | string;
   pair: string;
   exchange: string;
   status: string;
@@ -85,7 +85,7 @@ let fetchMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   fetchMock = vi.fn();
-  global.fetch = fetchMock as any;
+  global.fetch = fetchMock as unknown as typeof fetch;
 });
 
 afterEach(() => {
@@ -383,9 +383,9 @@ describe('DashboardClient', () => {
       render(<DashboardClient />);
 
       await waitFor(() => {
-        expect(screen.getByText('$150')).toBeInTheDocument();
+        expect(screen.getAllByText('$150').length).toBeGreaterThanOrEqual(1);
         // Template literal `${totalPnl}` renders "$-20" (dollar sign before negative)
-        expect(screen.getByText('$-20')).toBeInTheDocument();
+        expect(screen.getAllByText('$-20').length).toBeGreaterThanOrEqual(1);
       });
     });
 
@@ -434,7 +434,16 @@ describe('DashboardClient', () => {
       });
     });
 
+    it('renders strategy visualizer card mounting correctly', async () => {
+      fetchMock.mockResolvedValue(jsonResponse(true, twoBots));
 
+      render(<DashboardClient />);
+
+      await waitFor(() => {
+        expect(screen.getByText('grid')).toBeInTheDocument();
+        expect(screen.getByText('meanReversion')).toBeInTheDocument();
+      });
+    });
   });
 
   /* ---------------------------------------------------------------- */
@@ -464,7 +473,7 @@ describe('DashboardClient', () => {
         // Total PnL and bot card both show $75
         expect(screen.getAllByText('$75').length).toBeGreaterThanOrEqual(1);
         // Win rate = 80%
-        expect(screen.getByText('80%')).toBeInTheDocument();
+        expect(screen.getAllByText('80%').length).toBeGreaterThanOrEqual(1);
         // Active = 1/1
         expect(screen.getByText('1 / 1')).toBeInTheDocument();
         // Bot name
@@ -509,7 +518,7 @@ describe('DashboardClient', () => {
       render(<DashboardClient />);
 
       await waitFor(() => {
-        expect(screen.getByText('100%')).toBeInTheDocument();
+        expect(screen.getAllByText('100%').length).toBeGreaterThanOrEqual(1);
       });
     });
 
@@ -523,7 +532,7 @@ describe('DashboardClient', () => {
       render(<DashboardClient />);
 
       await waitFor(() => {
-        expect(screen.getByText('0%')).toBeInTheDocument();
+        expect(screen.getAllByText('0%').length).toBeGreaterThanOrEqual(1);
       });
     });
 
@@ -537,7 +546,7 @@ describe('DashboardClient', () => {
       render(<DashboardClient />);
 
       await waitFor(() => {
-        expect(screen.getByText('0%')).toBeInTheDocument();
+        expect(screen.getAllByText('0%').length).toBeGreaterThanOrEqual(1);
       });
     });
 

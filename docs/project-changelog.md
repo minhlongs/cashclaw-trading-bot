@@ -2,6 +2,24 @@
 
 ## v1 Paper-Trading Platform
 
+### Direct Web-API REST Engine, QuantLib Volatility-DCA, and Strategy Visualizer UI Go-Live — 2026-09-11
+- **Scope:** deliver three strategic capabilities in parallel under full `/orchestrate` governance: Edge-Native WebCrypto REST Engine (`src/tree/exchange/direct/`), QuantLib Volatility-Adjusted DCA Strategy (`src/tree/quantlib/`), and UI/UX Strategy Visualizer Dashboard (`src/components/dashboard/`).
+- **Lane 1: Direct Web-API REST Engine (`src/tree/exchange/direct/`):**
+  - Implemented pure edge-native HMAC-SHA256 signer in `webcrypto-signer.ts` using `crypto.subtle` with zero Node.js dependencies (`node:crypto`, `buffer`, `stream` forbidden).
+  - Built stateless `BinanceRestClient` in `binance-rest-client.ts` with SSRF protocol guard, Binance error code parser, public market data endpoints (`ping`, `getServerTime`, `fetchTicker`), and signed request generator (`createSignedRequest`).
+  - Preserved ADR-001 paper-only invariant (zero live order execution surfaces).
+  - Verified with RFC 4231 test vectors (Cases 1, 2, 7) and Binance documentation official signature test vector. 100% coverage on `src/tree/exchange/direct/**`.
+- **Lane 2: QuantLib Volatility-Adjusted DCA (`src/tree/quantlib/`):**
+  - Implemented deterministic `volatilityDca` strategy in `volatility-dca.ts` with dynamic volatility multiplier `Math.max(0.5, Math.min(2.5, volatility / volBaseline))`, drawdown calculus, step scaling, profit-taking rebound targets, and fail-closed parameter validation.
+  - Exported and wired into `quantFunctions.volatility_dca` in `index.ts` and `quantFunctionsExt.volatility_dca` with `retryWithFallback` in `functions.ts`.
+  - Satisfied strict 100.00% statement, branch, function, and line coverage floor on `src/tree/quantlib/**` (80 tests).
+- **Lane 3: UI/UX Dashboard Visualizer (`src/components/dashboard/`):**
+  - Implemented `StrategyVisualizerCard` in `strategy-visualizer-card.tsx` (147 LOC, 0 inline styles) grouping bots by strategy with capital allocation, PnL indicators (`text-profit`/`text-loss`), win rate, and active bot counts.
+  - Consumed semantic design tokens from `tokens.css` with responsive `.grid-auto-fit` layout and zero inline styles.
+  - Added complete bilingual dictionary entries under `dashboard.strategyVisualizer` in `src/messages/en.json` and `src/messages/vi.json`.
+  - Mounted cleanly in `src/components/dashboard/dashboard-client.tsx` (198 LOC, strictly < 200 LOC).
+- **Quality Gates:** 3,865/3,865 tests passing across 297 test files (+62 new tests over 3,803 baseline), 0 TypeScript errors, 0 ESLint warnings, 0 Knip issues, clean OpenNext Cloudflare Worker build, 0 `:any` types.
+
 ### Multi-Pair Composition Sweep Artifact Documentation & Consistency Pin — 2026-09-10
 - **Scope:** close the two artifact documentation gaps identified in the post-go-live triage: absence of a commit-time consistency pin test and absence of a human-readable companion report for `plans/reports/multi-pair-composition-sweep-report.json`.
 - **Consistency Test (`src/forest/alpha/composition-eval/sweep-artifact.test.ts`):** 16-test suite asserting schema integrity, `universe` array contents, `scanResult` zero-candidate outcome, three-pair correlation ordering (BTC/ETH highest), walk-forward window count (16), OOS positive fraction below 50%, pipeline step count (12/12 passed), survival gate `KILLED` status, exactly 4 failed economic checks (`min_expectancy`, `min_profit_factor`, `min_net_pnl_after_fees`, `min_net_pnl_adverse`) and exactly 4 passed structural checks (`min_trades`, `max_drawdown`, `min_sharpe`, `min_regime_coverage`), all numeric values finite, and promotion path `RESEARCH → KILLED` via `gate_failed` trigger. Byte-identical determinism pin is not wired (sweep script injects `new Date().toISOString()` and requires filesystem OHLCV cache absent in CI); the invariant suite provides equivalent regression coverage.

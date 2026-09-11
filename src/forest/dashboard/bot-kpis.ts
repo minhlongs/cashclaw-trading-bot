@@ -11,7 +11,7 @@ import { getRecentEvents } from './trade-events';
 export interface BotCardData {
   id: string;
   name: string;
-  strategy: 'grid' | 'mean_reversion';
+  strategy: 'grid' | 'mean_reversion' | 'volatility_dca' | string;
   pair: string;
   exchange: string;
   botStatus: string;

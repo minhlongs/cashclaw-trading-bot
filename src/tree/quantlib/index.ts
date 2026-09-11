@@ -1,5 +1,9 @@
 // QuantLib registry entry point — real quantitative signal implementations.
 
+import { volatilityDca } from './volatility-dca';
+
+export { volatilityDca } from './volatility-dca';
+
 export interface QuantLibContext {
   symbol: string;
   balance: number;
@@ -148,4 +152,5 @@ export const quantFunctions: Record<string, QuantFn> = {
   noop: () => ({ signal: 'hold', confidence: 0, meta: {} }),
   grid,
   mean_reversion: meanReversion,
+  volatility_dca: volatilityDca,
 };

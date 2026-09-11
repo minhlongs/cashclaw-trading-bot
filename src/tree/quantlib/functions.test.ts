@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   gridFunctions,
   meanReversionFunctions,
+  volatilityDcaFunctions,
   quantFunctionsExt,
   type QuantLibContext,
   type QuantFn,
@@ -169,6 +170,26 @@ describe('quantFunctionsExt', () => {
     expect(result.signal).toBe('buy');
   });
 
+  it('volatility_dca delegates through retryWithFallback with params', () => {
+    const buyResult = quantFunctionsExt.volatility_dca(
+      { ...ctx, lastPrice: 2900 },
+      { referencePrice: 3000 },
+    );
+    expect(buyResult.signal).toBe('buy');
+
+    const sellResult = quantFunctionsExt.volatility_dca(
+      { ...ctx, lastPrice: 3200 },
+      { referencePrice: 3000 },
+    );
+    expect(sellResult.signal).toBe('sell');
+
+    const holdResult = quantFunctionsExt.volatility_dca(
+      { ...ctx, lastPrice: 3000 },
+      { referencePrice: 3000 },
+    );
+    expect(holdResult.signal).toBe('hold');
+  });
+
   it('fallback returns hold with reason', () => {
     const result = quantFunctionsExt.fallback(ctx);
     expect(result).toEqual({ signal: 'hold', confidence: 0, meta: { reason: 'fallback' } });
@@ -248,3 +269,77 @@ describe('retryWithFallback internal behavior via gridFunctions mutation', () =>
     }
   });
 });
+
+describe('volatilityDcaFunctions[0]', () => {
+  it('returns hold when lastPrice is zero', () => {
+    const result = volatilityDcaFunctions[0]({ ...ctx, lastPrice: 0 }, { referencePrice: 3000 });
+    expect(result.signal).toBe('hold');
+    expect(result.meta.reason).toBe('invalid_price');
+  });
+
+  it('emits buy when drop threshold is met', () => {
+    const result = volatilityDcaFunctions[0](
+      { ...ctx, lastPrice: 2900 },
+      { referencePrice: 3000 },
+    );
+    expect(result.signal).toBe('buy');
+  });
+
+  it('emits sell when rebound target is met', () => {
+    const result = volatilityDcaFunctions[0](
+      { ...ctx, lastPrice: 3200 },
+      { referencePrice: 3000 },
+    );
+    expect(result.signal).toBe('sell');
+  });
+});
+
+describe('retryWithFallback internal behavior via volatilityDcaFunctions mutation', () => {
+  it('catches thrown fn and falls back to next fn', () => {
+    const original = volatilityDcaFunctions[0];
+    const throwingFn: QuantFn = () => {
+      throw new Error('dca failure');
+    };
+    const fallbackFn: QuantFn = () => ({
+      signal: 'buy',
+      confidence: 0.8,
+      meta: { strategy: 'dca_fallback' },
+    });
+
+    volatilityDcaFunctions.length = 0;
+    volatilityDcaFunctions.push(throwingFn, fallbackFn);
+
+    try {
+      const result = quantFunctionsExt.volatility_dca(ctx, { referencePrice: 3000 });
+      expect(result.signal).toBe('buy');
+      expect(result.confidence).toBe(0.8);
+      expect(result.meta).toEqual({ strategy: 'dca_fallback' });
+    } finally {
+      volatilityDcaFunctions.length = 0;
+      volatilityDcaFunctions.push(original);
+    }
+  });
+
+  it('returns error result when all volatilityDcaFunctions throw', () => {
+    const original = volatilityDcaFunctions[0];
+    const failFn: QuantFn = () => {
+      throw new Error('fail');
+    };
+
+    volatilityDcaFunctions.length = 0;
+    volatilityDcaFunctions.push(failFn);
+
+    try {
+      const result = quantFunctionsExt.volatility_dca(ctx, { referencePrice: 3000 });
+      expect(result).toEqual({
+        signal: 'hold',
+        confidence: 0,
+        meta: { error: 'all_fallbacks_failed' },
+      });
+    } finally {
+      volatilityDcaFunctions.length = 0;
+      volatilityDcaFunctions.push(original);
+    }
+  });
+});
+

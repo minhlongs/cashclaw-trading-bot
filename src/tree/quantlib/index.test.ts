@@ -246,9 +246,26 @@ describe('quantFunctions.mean_reversion — hold signal', () => {
   });
 });
 
+describe('quantFunctions.volatility_dca', () => {
+  it('is wired to volatilityDca strategy function', () => {
+    expect(quantFunctions.volatility_dca).toBeDefined();
+    const result = quantFunctions.volatility_dca(ctx, { referencePrice: 50000 });
+    expect(result.signal).toBe('hold');
+    expect(result.meta.strategy).toBe('volatility_dca');
+  });
+
+  it('generates buy and sell signals through registry mapping', () => {
+    const buyRes = quantFunctions.volatility_dca({ ...ctx, lastPrice: 48000 }, { referencePrice: 50000 });
+    expect(buyRes.signal).toBe('buy');
+
+    const sellRes = quantFunctions.volatility_dca({ ...ctx, lastPrice: 53000 }, { referencePrice: 50000 });
+    expect(sellRes.signal).toBe('sell');
+  });
+});
+
 describe('quantFunctions key contract', () => {
-  it('exposes exactly three keys', () => {
-    expect(Object.keys(quantFunctions)).toEqual(['noop', 'grid', 'mean_reversion']);
+  it('exposes exactly four keys', () => {
+    expect(Object.keys(quantFunctions)).toEqual(['noop', 'grid', 'mean_reversion', 'volatility_dca']);
   });
 
   it('all functions satisfy QuantFn return shape', () => {

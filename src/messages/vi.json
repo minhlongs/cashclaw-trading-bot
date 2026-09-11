@@ -24,7 +24,19 @@
     "quickActions": "Thao tác nhanh",
     "newBot": "Tạo bot mới",
     "pauseAll": "Tạm dừng tất cả",
-    "noTrades": "Chưa có giao dịch nào"
+    "noTrades": "Chưa có giao dịch nào",
+    "strategyVisualizer": {
+      "title": "Phân Bổ & Hiệu Suất Chiến Lược",
+      "subtitle": "Phân tích thời gian thực giữa các mô hình định lượng",
+      "noStrategies": "Chưa có chiến lược hoạt động",
+      "grid": "Giao dịch Lưới (Grid)",
+      "meanReversion": "Hồi quy Giá (Mean Reversion)",
+      "volatilityDca": "DCA Theo Biến Động (Volatility DCA)",
+      "allocated": "Vốn phân bổ",
+      "pnl": "P&L Chiến lược",
+      "winRate": "Tỷ lệ thắng",
+      "activeBots": "Bot đang chạy"
+    }
   },
   "bots": {
     "title": "Bot giao dịch",

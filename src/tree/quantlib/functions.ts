@@ -2,8 +2,9 @@
 // Maps high-level strategy names to composable trade-signal functions.
 
 import type { QuantFn, QuantLibContext, QuantResult } from './index';
+import { volatilityDca } from './volatility-dca';
 
-export { quantFunctions } from './index';
+export { quantFunctions, volatilityDca } from './index';
 export type { QuantFn, QuantLibContext, QuantResult } from './index';
 
 function retryWithFallback(fns: QuantFn[], ctx: QuantLibContext, params?: Record<string, number>): QuantResult {
@@ -124,9 +125,12 @@ export const meanReversionFunctions: QuantFn[] = [
   },
 ];
 
+export const volatilityDcaFunctions: QuantFn[] = [volatilityDca];
+
 export const quantFunctionsExt: Record<string, QuantFn> = {
   grid: (ctx, params) => retryWithFallback(gridFunctions, ctx, params),
   mean_reversion: (ctx, params) => retryWithFallback(meanReversionFunctions, ctx, params),
+  volatility_dca: (ctx, params) => retryWithFallback(volatilityDcaFunctions, ctx, params),
   fallback: (_ctx) => ({ signal: 'hold', confidence: 0, meta: { reason: 'fallback' } }),
   regular: (ctx, params) => quantFunctionsExt.grid(ctx, params),
 };

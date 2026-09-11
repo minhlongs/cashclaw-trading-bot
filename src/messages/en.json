@@ -24,7 +24,19 @@
     "quickActions": "Quick Actions",
     "newBot": "New Bot",
     "pauseAll": "Pause All",
-    "noTrades": "No trades yet"
+    "noTrades": "No trades yet",
+    "strategyVisualizer": {
+      "title": "Strategy Allocation & Performance",
+      "subtitle": "Real-time breakdown across active quantitative models",
+      "noStrategies": "No active strategies",
+      "grid": "Grid Trading",
+      "meanReversion": "Mean Reversion",
+      "volatilityDca": "Volatility DCA",
+      "allocated": "Allocated Capital",
+      "pnl": "Strategy P&L",
+      "winRate": "Win Rate",
+      "activeBots": "Active Bots"
+    }
   },
   "bots": {
     "title": "Trading Bots",
