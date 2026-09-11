@@ -2,7 +2,26 @@
 
 ## v1 Paper-Trading Platform
 
-### Direct Web-API REST Engine, QuantLib Volatility-DCA, and Strategy Visualizer UI Go-Live — 2026-09-11
+### End-to-End Volatility-DCA Bot Integration — 2026-09-11
+- **Scope:** wire the newly implemented QuantLib `volatilityDca` strategy module end-to-end into the CashClaw bot execution engine, Cloudflare D1 database persistence, forest API handler layer, and frontend bot creation wizard under full `/orchestrate` governance.
+- **Tree Layer (Execution Engine):**
+  - Added `VolatilityDcaBotConfig` to `src/tree/bot/types.ts` with parameters (`priceDropStep`, `maxSteps`, `baseOrderSizePct`, `volatilityWindow`, `volBaseline`, `reboundTarget`), type guard `isVolatilityDcaConfig`, and expanded `StrategyType` and `BotConfig` unions while strictly maintaining the 200 LOC ceiling.
+  - Implemented stateful `VolatilityDcaStrategy` in `src/tree/bot/strategies/volatility-dca.ts` (106 LOC) wrapping the deterministic QuantLib `volatilityDca` mathematical kernel with rolling price-window volatility estimation.
+  - Wired strategy initialization into `src/tree/bot/bot-strategy.ts`, lifecycle into `bot-instance.ts`, tick evaluation into `bot-tick.ts`, state mapping into `bot-state.ts`, and barrel export in `index.ts`.
+  - Added unit test suite in `src/tree/bot/strategies/volatility-dca.test.ts` achieving 100.00% statement, branch, function, and line coverage.
+- **Land Layer (Cloudflare D1 Database):**
+  - Author and applied D1 migration `migrations/0012_add_volatility_dca_strategy.sql` using SQLite table recreation pattern to expand `CHECK(strategy IN ('grid', 'mean_reversion', 'volatility_dca'))`.
+  - Updated in-memory schema in `src/lib/db/schema.ts` and DB model union in `src/lib/db/types.ts`.
+  - Updated serialization and hydration helpers in `src/tree/bot/bot-manager-helpers.ts` (`defaultConfigFromRow`) and validated persistence in `src/forest/bot/d1-persistence.ts`.
+- **Forest Layer (API & Dashboard):**
+  - Updated `src/forest/api/handlers/bot-create.ts` with Zod parameter validation and config construction for `volatility_dca`.
+  - Updated `src/forest/api/handlers/bot-list.ts`, `src/app/api/bots/route.ts`, `src/forest/dashboard/bot-detail.ts`, and `src/forest/dashboard/bot-kpis.ts` to support the new strategy type.
+- **UI / Bot Wizard Layer:**
+  - Extended `src/components/bots/wizard-types.ts` with strategy option, defaults, and form values.
+  - Updated `src/components/bots/bot-wizard-client.tsx` and `src/components/bots/config-step.tsx` with dedicated inputs for volatility-dca parameters.
+  - Added comprehensive bilingual dictionary entries in `src/messages/en.json` and `src/messages/vi.json`.
+- **Quality Gates:** 3,881/3,881 tests passing across 298 test files (+16 new tests over baseline), 0 TypeScript errors, 0 ESLint warnings, 0 Knip issues, clean Next.js/OpenNext build, 0 `:any` types, all files <= 200 LOC.
+- **Deploy & Live Verification:** Remote D1 migration `0012` applied successfully; deployed to Cloudflare Workers production (`b4cb0706d5f01e21555e41af54d37e5b13faceee`). Live smoke check: `/api/health` 200 OK, `/api/version` 200 OK (SHA match), `/en` 200 OK, `/vi` 200 OK, `/api/killswitch-status` 200 OK.
 - **Scope:** deliver three strategic capabilities in parallel under full `/orchestrate` governance: Edge-Native WebCrypto REST Engine (`src/tree/exchange/direct/`), QuantLib Volatility-Adjusted DCA Strategy (`src/tree/quantlib/`), and UI/UX Strategy Visualizer Dashboard (`src/components/dashboard/`).
 - **Lane 1: Direct Web-API REST Engine (`src/tree/exchange/direct/`):**
   - Implemented pure edge-native HMAC-SHA256 signer in `webcrypto-signer.ts` using `crypto.subtle` with zero Node.js dependencies (`node:crypto`, `buffer`, `stream` forbidden).
