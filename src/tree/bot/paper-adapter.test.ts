@@ -55,12 +55,7 @@ describe('createPaperAdapter', () => {
   describe('placeOrder - market orders', () => {
     it('fills market buy immediately with correct fee', async () => {
       const adapter = createPaperAdapter(10000);
-      const result = await adapter.placeOrder({
-        symbol: 'BTC/USDT',
-        side: 'buy',
-        type: 'market',
-        quantity: 0.5,
-      });
+      const result = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.5 });
       expect(result.status).toBe('filled');
       expect(result.filled).toBe(0.5);
       expect(result.fee).toBeCloseTo(0.0005); // 0.5 * 0.001
@@ -70,12 +65,7 @@ describe('createPaperAdapter', () => {
 
     it('fills market sell immediately', async () => {
       const adapter = createPaperAdapter(10000);
-      const result = await adapter.placeOrder({
-        symbol: 'ETH/USDT',
-        side: 'sell',
-        type: 'market',
-        quantity: 2,
-      });
+      const result = await adapter.placeOrder({ symbol: 'ETH/USDT', side: 'sell', type: 'market', quantity: 2 });
       expect(result.status).toBe('filled');
       expect(result.filled).toBe(2);
     });
@@ -94,13 +84,7 @@ describe('createPaperAdapter', () => {
   describe('placeOrder - limit orders', () => {
     it('places limit buy as open', async () => {
       const adapter = createPaperAdapter(10000);
-      const result = await adapter.placeOrder({
-        symbol: 'BTC/USDT',
-        side: 'buy',
-        type: 'limit',
-        price: 50000,
-        quantity: 0.1,
-      });
+      const result = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50000, quantity: 0.1 });
       expect(result.status).toBe('open');
       expect(result.filled).toBe(0);
       expect(result.price).toBe(50000);
@@ -108,13 +92,7 @@ describe('createPaperAdapter', () => {
 
     it('places limit sell as open', async () => {
       const adapter = createPaperAdapter(10000);
-      const result = await adapter.placeOrder({
-        symbol: 'BTC/USDT',
-        side: 'sell',
-        type: 'limit',
-        price: 60000,
-        quantity: 0.1,
-      });
+      const result = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'sell', type: 'limit', price: 60000, quantity: 0.1 });
       expect(result.status).toBe('open');
       expect(result.filled).toBe(0);
     });
@@ -123,13 +101,7 @@ describe('createPaperAdapter', () => {
   describe('cancelOrder', () => {
     it('cancels an open order', async () => {
       const adapter = createPaperAdapter(10000);
-      const order = await adapter.placeOrder({
-        symbol: 'BTC/USDT',
-        side: 'buy',
-        type: 'limit',
-        price: 50000,
-        quantity: 0.1,
-      });
+      const order = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50000, quantity: 0.1 });
       const cancelled = await adapter.cancelOrder(order.id, 'BTC/USDT');
       expect(cancelled).toBe(true);
       const fetched = await adapter.fetchOrder(order.id, 'BTC/USDT');
@@ -138,12 +110,7 @@ describe('createPaperAdapter', () => {
 
     it('rejects cancelling filled order', async () => {
       const adapter = createPaperAdapter(10000);
-      const order = await adapter.placeOrder({
-        symbol: 'BTC/USDT',
-        side: 'buy',
-        type: 'market',
-        quantity: 0.1,
-      });
+      const order = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
       const cancelled = await adapter.cancelOrder(order.id, 'BTC/USDT');
       expect(cancelled).toBe(false);
     });
@@ -158,12 +125,7 @@ describe('createPaperAdapter', () => {
   describe('fetchOrder', () => {
     it('returns order by ID', async () => {
       const adapter = createPaperAdapter(10000);
-      const order = await adapter.placeOrder({
-        symbol: 'BTC/USDT',
-        side: 'buy',
-        type: 'market',
-        quantity: 0.1,
-      });
+      const order = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
       const fetched = await adapter.fetchOrder(order.id, 'BTC/USDT');
       expect(fetched.id).toBe(order.id);
       expect(fetched.symbol).toBe('BTC/USDT');
@@ -179,13 +141,7 @@ describe('createPaperAdapter', () => {
     it('returns only open orders', async () => {
       const adapter = createPaperAdapter(10000);
       await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
-      const limit = await adapter.placeOrder({
-        symbol: 'ETH/USDT',
-        side: 'sell',
-        type: 'limit',
-        price: 4000,
-        quantity: 1,
-      });
+      const limit = await adapter.placeOrder({ symbol: 'ETH/USDT', side: 'sell', type: 'limit', price: 4000, quantity: 1 });
       const open = await adapter.fetchOpenOrders();
       expect(open).toHaveLength(1);
       expect(open[0].id).toBe(limit.id);
@@ -193,13 +149,7 @@ describe('createPaperAdapter', () => {
 
     it('returns empty when all orders filled or cancelled', async () => {
       const adapter = createPaperAdapter(10000);
-      const order = await adapter.placeOrder({
-        symbol: 'BTC/USDT',
-        side: 'buy',
-        type: 'limit',
-        price: 50000,
-        quantity: 0.1,
-      });
+      const order = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50000, quantity: 0.1 });
       await adapter.cancelOrder(order.id, 'BTC/USDT');
       const open = await adapter.fetchOpenOrders();
       expect(open).toEqual([]);

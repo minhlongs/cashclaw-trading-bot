@@ -1,14 +1,12 @@
 // Land layer — Exchange Orchestration
-// Wraps PaperExchangeProvider (v1) + CCXT providers (v2).
-// Uses Killswitch + rate-limit guards + circuit breaker per provider.
-// v2 wiring path: BotManager passes orchestrator into BotDependencies;
-// BotInstance.placeOrder calls orchestrator.placeOrder() and unwraps Result;
-// killswitch + circuit-breaker checks live ONLY here; ExchangeAdapter unchanged.
+// Wraps PaperExchangeProvider (v1) + CCXT providers (v2) with Killswitch + circuit breakers.
 import type { ExchangeId, Ticker, OrderBook, OrderRequest, OrderResult, Balance } from '@/tree/exchange/types';
 import { PaperExchangeProvider, PaperProviderAdapter, ProviderChain, type ProviderResult } from '@/tree/exchange/provider';
+import type { DirectTickerProvider } from '@/tree/exchange/direct';
 import { Killswitch } from '@/tree/bot/killswitch';
 import { ok, err, type Result } from '@/lib/result';
 import { createLogger } from '@/lib/logger';
+import { createDefaultPaperExchangeProvider } from './provider-factory';
 import { RoutedExecution } from './routed-execution';
 
 const log = createLogger('exchange-orchestration');
@@ -16,6 +14,7 @@ const log = createLogger('exchange-orchestration');
 export interface ExchangeOrchestratorDeps {
   killswitch?: Killswitch;
   onError?: (err: Error, ctx: string) => void;
+  directTickerProviders?: Map<string, DirectTickerProvider> | Record<string, DirectTickerProvider>;
 }
 
 export class ExchangeOrchestrator {
@@ -24,12 +23,19 @@ export class ExchangeOrchestrator {
   private lastProvenance: Map<string, ProviderResult<Ticker | OrderResult>> = new Map();
   private killswitch: Killswitch;
   private onError?: (err: Error, ctx: string) => void;
+  private directTickerProviders?: Map<string, DirectTickerProvider> | Record<string, DirectTickerProvider>;
   private routed: RoutedExecution;
 
   constructor(deps: ExchangeOrchestratorDeps = {}) {
     this.killswitch = deps.killswitch ?? ({} as Killswitch);
     this.onError = deps.onError;
-    this.routed = new RoutedExecution({ providers: this.providers, killswitch: this.killswitch, onProvenance: (exchange, result) => this.lastProvenance.set(exchange, result), reportError: (err, ctx) => this.reportError(err, ctx) });
+    this.directTickerProviders = deps.directTickerProviders;
+    this.routed = new RoutedExecution({
+      providers: this.providers,
+      killswitch: this.killswitch,
+      onProvenance: (exchange, result) => this.lastProvenance.set(exchange, result),
+      reportError: (err, ctx) => this.reportError(err, ctx),
+    });
   }
 
   private reportError(err: Error, ctx: string): void {
@@ -40,30 +46,32 @@ export class ExchangeOrchestrator {
     }
   }
 
+  private async safeExecute<T>(ctx: string, fn: () => Promise<T>): Promise<Result<T>> {
+    try {
+      return ok(await fn());
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.reportError(error instanceof Error ? error : new Error(msg), ctx);
+      return err(msg);
+    }
+  }
+
   /** Register a provider for an exchange id (e.g. 'binance:mainnet') */
   registerProvider(exchangeId: string, provider: PaperExchangeProvider): void {
     this.providers.set(exchangeId, provider);
     this.chains.set(exchangeId, new ProviderChain({ primary: new PaperProviderAdapter(provider, exchangeId as ExchangeId) }));
   }
 
-  /** Get already-registered provider */
-  getProvider(exchangeId: string): PaperExchangeProvider | undefined {
-    return this.providers.get(exchangeId);
-  }
-
-  /** Get the last ProviderChain provenance for an exchange, if any */
-  getLastProvenance(exchangeId: string): ProviderResult<Ticker | OrderResult> | undefined {
-    return this.lastProvenance.get(exchangeId);
-  }
+  getProvider(exchangeId: string): PaperExchangeProvider | undefined { return this.providers.get(exchangeId); }
+  getLastProvenance(exchangeId: string): ProviderResult<Ticker | OrderResult> | undefined { return this.lastProvenance.get(exchangeId); }
 
   private getOrCreateProvider(exchange: string): PaperExchangeProvider {
     let provider = this.providers.get(exchange);
     if (!provider) {
-      provider = new PaperExchangeProvider({
-        type: 'paper',
-        exchangeId: exchange,
-        initialBalances: [{ currency: 'USDT', total: 10000 }],
-      });
+      const dtp = this.directTickerProviders instanceof Map
+        ? this.directTickerProviders.get(exchange)
+        : this.directTickerProviders?.[exchange];
+      provider = createDefaultPaperExchangeProvider(exchange, { directTickerProvider: dtp });
       this.providers.set(exchange, provider);
       this.chains.set(exchange, new ProviderChain({ primary: new PaperProviderAdapter(provider, exchange as ExchangeId) }));
     }
@@ -76,30 +84,21 @@ export class ExchangeOrchestrator {
     return chain;
   }
 
-  async fetchTicker(
-    exchange: string,
-    symbol: string,
-  ): Promise<Result<Ticker>> {
+  async fetchTicker(exchange: string, symbol: string): Promise<Result<Ticker>> {
     this.getOrCreateProvider(exchange);
-    const chain = this.chainFor(exchange);
-    const chainResult = await chain.execute((p) => p.fetchTicker(symbol));
+    const chainResult = await this.chainFor(exchange).execute((p) => p.fetchTicker(symbol));
     this.lastProvenance.set(exchange, chainResult);
     if (!chainResult.ok || chainResult.data === undefined) {
-      this.reportError(new Error(chainResult.ok ? 'Empty ticker data' : chainResult.error), `fetchTicker/${symbol}`);
-      return err(chainResult.ok ? 'Empty ticker data' : chainResult.error ?? 'Unknown error');
+      const msg = chainResult.ok ? 'Empty ticker data' : chainResult.error ?? 'Unknown error';
+      this.reportError(new Error(msg), `fetchTicker/${symbol}`);
+      return err(msg);
     }
     return ok(chainResult.data);
   }
 
   async fetchOrderBook(exchange: string, symbol: string, depth = 20): Promise<Result<OrderBook>> {
     const provider = this.getOrCreateProvider(exchange);
-    try {
-      return ok(await provider.fetchOrderBook(exchange as ExchangeId, symbol, depth));
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      this.reportError(error instanceof Error ? error : new Error(msg), `fetchOrderBook/${symbol}`);
-      return err(msg);
-    }
+    return this.safeExecute(`fetchOrderBook/${symbol}`, () => provider.fetchOrderBook(exchange as ExchangeId, symbol, depth));
   }
 
   async placeOrder(exchange: string, request: OrderRequest): Promise<Result<OrderResult>> {
@@ -114,53 +113,34 @@ export class ExchangeOrchestrator {
       this.reportError(new Error(msg), `placeOrder/${request.symbol}`);
       return err(msg);
     }
-    const chain = this.chainFor(exchange);
-    const chainResult = await chain.execute((p) => p.placeOrder(request));
+    const chainResult = await this.chainFor(exchange).execute((p) => p.placeOrder(request));
     this.lastProvenance.set(exchange, chainResult);
     if (!chainResult.ok || chainResult.data === undefined) {
-      this.reportError(new Error(chainResult.ok ? 'Empty order data' : chainResult.error), `placeOrder/${request.symbol}`);
-      return err(chainResult.ok ? 'Empty order data' : chainResult.error ?? 'Unknown error');
+      const msg = chainResult.ok ? 'Empty order data' : chainResult.error ?? 'Unknown error';
+      this.reportError(new Error(msg), `placeOrder/${request.symbol}`);
+      return err(msg);
     }
     return ok(chainResult.data);
   }
 
   async cancelOrder(exchange: string, orderId: string, symbol: string): Promise<Result<boolean>> {
     const provider = this.getOrCreateProvider(exchange);
-    try {
-      return ok(await provider.cancelOrder(exchange as ExchangeId, orderId, symbol));
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      this.reportError(error instanceof Error ? error : new Error(msg), `cancelOrder/${orderId}`);
-      return err(msg);
-    }
+    return this.safeExecute(`cancelOrder/${orderId}`, () => provider.cancelOrder(exchange as ExchangeId, orderId, symbol));
   }
 
   async fetchOrder(exchange: string, orderId: string, symbol: string): Promise<Result<OrderResult>> {
     const provider = this.getOrCreateProvider(exchange);
-    try {
-      return ok(await provider.fetchOrder(exchange as ExchangeId, orderId, symbol));
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      this.reportError(error instanceof Error ? error : new Error(msg), `fetchOrder/${orderId}`);
-      return err(msg);
-    }
+    return this.safeExecute(`fetchOrder/${orderId}`, () => provider.fetchOrder(exchange as ExchangeId, orderId, symbol));
   }
 
   async fetchBalances(exchange: string): Promise<Result<Balance[]>> {
     const provider = this.getOrCreateProvider(exchange);
-    try {
-      return ok(await provider.fetchBalances(exchange as ExchangeId));
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      this.reportError(error instanceof Error ? error : new Error(msg), `fetchBalances/${exchange}`);
-      return err(msg);
-    }
+    return this.safeExecute(`fetchBalances/${exchange}`, () => provider.fetchBalances(exchange as ExchangeId));
   }
 
   ping(exchange: string): Promise<boolean> {
     const provider = this.providers.get(exchange);
-    if (!provider) return Promise.resolve(true);
-    return Promise.resolve(!provider.isCircuitOpen());
+    return Promise.resolve(!provider || !provider.isCircuitOpen());
   }
 
   destroy(): void {
@@ -171,25 +151,17 @@ export class ExchangeOrchestrator {
 
   /** Configure cross-exchange routing (paper-only, Zod-validated). */
   configureRouting(config: unknown): Result<void> { return this.routed.configureRouting(config); }
-  /** Fetch ticker using configured routing strategy. */
   async routedFetchTicker(symbol: string): Promise<Result<Ticker>> { return this.routed.fetchTicker(symbol); }
-  /** Place order using configured routing strategy; affinity pins cancel/fetch. */
   async routedPlaceOrder(request: OrderRequest): Promise<Result<OrderResult>> { return this.routed.placeOrder(request); }
-  /** Cancel order on the exchange where it was originally placed. */
   async routedCancelOrder(orderId: string, symbol: string): Promise<Result<boolean>> { return this.routed.cancelOrder(orderId, symbol); }
-  /** Fetch order on the exchange where it was originally placed. */
   async routedFetchOrder(orderId: string, symbol: string): Promise<Result<OrderResult>> { return this.routed.fetchOrder(orderId, symbol); }
-  /** Get the exchange affinity for a routed order (for tests/inspection). */
   getOrderAffinity(orderId: string): string | undefined { return this.routed.getOrderAffinity(orderId); }
 }
 
-// Singleton
 let orchestrator: ExchangeOrchestrator | null = null;
 
 export function getExchangeOrchestrator(deps?: ExchangeOrchestratorDeps): ExchangeOrchestrator {
-  if (!orchestrator) {
-    orchestrator = new ExchangeOrchestrator(deps);
-  }
+  if (!orchestrator) orchestrator = new ExchangeOrchestrator(deps);
   return orchestrator;
 }
 

@@ -10,7 +10,11 @@ import type {
   Balance,
 } from '../exchange/types';
 
-export function createPaperAdapter(capital: number): ExchangeAdapter {
+export interface PaperAdapterOptions {
+  tickerFetcher?: (symbol: string) => Promise<Ticker>;
+}
+
+export function createPaperAdapter(capital: number, options?: PaperAdapterOptions): ExchangeAdapter {
   const balances = new Map<string, { free: number; used: number }>();
   const orders = new Map<string, OrderResult>();
   let orderCounter = 0;
@@ -22,6 +26,14 @@ export function createPaperAdapter(capital: number): ExchangeAdapter {
     name: 'Paper Trading',
 
     async fetchTicker(symbol: string): Promise<Ticker> {
+      if (options?.tickerFetcher) {
+        try {
+          const ticker = await options.tickerFetcher(symbol);
+          if (ticker) return ticker;
+        } catch {
+          // Graceful fallback to simulated zero ticker
+        }
+      }
       return { symbol, last: 0, bid: 0, ask: 0, high24h: 0, low24h: 0, volume24h: 0, timestamp: Date.now() };
     },
 

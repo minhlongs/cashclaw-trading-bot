@@ -3,12 +3,7 @@ import { ExchangeOrchestrator } from './index';
 import { Killswitch } from '@/tree/bot/killswitch';
 
 vi.mock('@/lib/logger', () => ({
-  createLogger: vi.fn(() => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  })),
+  createLogger: vi.fn(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() })),
 }));
 
 function makeMockProvider() {

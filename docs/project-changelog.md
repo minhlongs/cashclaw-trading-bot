@@ -2,6 +2,31 @@
 
 ## v1 Paper-Trading Platform
 
+### ExchangeOrchestrator & Bot Paper-Adapter Live Tickers + Market Data API — 2026-09-12
+- **Scope:** Wired `ExchangeOrchestrator` and `createPaperAdapter` to `DirectTickerProvider` for live market data discovery, pruned orchestration code under 200 LOC, and shipped an edge-native `GET /api/tickers` route with strict query validation, rate limiting, and provenance metadata while preserving the ADR-001 paper-only invariant (zero live order surface).
+- **Bot Paper-Adapter Live Ticker Support (`src/tree/bot/paper-adapter.ts`, 96 LOC):**
+  - Added optional `PaperAdapterOptions { tickerFetcher?: (symbol: string) => Promise<Ticker> }`.
+  - In `fetchTicker`, awaits `options.tickerFetcher(symbol)` when provided; gracefully catches errors and falls back to simulated zero ticker.
+  - Tested in `paper-adapter-live.test.ts` (68 LOC) and pruned `paper-adapter.test.ts` (171 LOC).
+- **Exchange Provider Factory & Orchestrator Wiring (`src/land/exchange-orchestration/provider-factory.ts`, 39 LOC):**
+  - Extracted provider instantiation into `provider-factory.ts` with `isSupportedDirectExchange` and `createDefaultPaperExchangeProvider`.
+  - Automatically configures `DirectTickerProvider` for Binance, OKX, and Bybit, falling back cleanly to pure simulated mode on unsupported exchanges or instantiation errors.
+  - Tested in `provider-factory.test.ts` (73 LOC).
+- **ExchangeOrchestrator Refactoring (`src/land/exchange-orchestration/index.ts`, 171 LOC):**
+  - Consolidated duplicate error-handling boilerplate via private `safeExecute<T>` helper.
+  - Reduced LOC from 200 to 171 LOC (< 175 LOC target).
+  - Supported `directTickerProviders` dependency injection and automatic default provider instantiation.
+  - Integration tested in `orchestration-live.test.ts` (162 LOC) and pruned `index.test.ts` (196 LOC).
+- **Edge-Native Multi-Exchange Ticker API (`src/app/api/tickers/route.ts`, 164 LOC):**
+  - Edge runtime route handler (`runtime = 'edge'`) querying live normalized market data.
+  - Zod query parameter validation (`exchange` default `'binance'`, `symbol` default `'BTC/USDT'`).
+  - Strict input hygiene: normalizes delimiters (`BTCUSDT`, `BTC-USDT`) to canonical `BTC/USDT`, rejects invalid exchanges, empty symbols, or malformed structures with HTTP 400.
+  - Sliding-window in-memory rate limiter (60 req/min per client IP) returning HTTP 429 with standard headers.
+  - Returns canonical `Ticker` payload with provenance metadata (`provider`, `exchange`, `circuitState`, `latencyMs`, `timestamp`).
+  - Returns HTTP 503 when circuit breaker is open; HTTP 502 on upstream network error.
+  - Tested in `route.test.ts` (194 LOC) across 10 deterministic scenarios.
+- **Quality Gates:** 4,038/4,038 tests passing across 319 test files (+26 tests), 0 TypeScript errors, 0 ESLint warnings, 0 Knip dead-code issues, Next.js build clean with `ƒ /api/tickers`, 0 `:any` types, all touched files strictly ≤ 200 LOC.
+
 ### Direct Ticker Provider & Paper Exchange Market Data Integration — 2026-09-12
 - **Scope:** Unified the Direct REST engine (Binance, OKX, Bybit) into the CashClaw trading hierarchy via bidirectional symbol normalization, fail-closed ticker payload normalization, a unified `DirectTickerProvider` wrapping REST clients with `CircuitBreaker` FSM, and market data pricing injection into `PaperExchange` while strictly preserving the ADR-001 paper-only invariant (zero live order surface).
 - **Symbol Normalizer (`symbol-normalizer.ts`, 78 LOC):**
