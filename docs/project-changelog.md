@@ -2,6 +2,29 @@
 
 ## v1 Paper-Trading Platform
 
+### Live Multi-Exchange Market Watch & Bot Wizard Ticker Discovery — 2026-09-12
+- **Scope:** Surfaced live multi-exchange market feeds across Binance, OKX, and Bybit into user-facing frontend interfaces via a resilient polling hook, a wizard price discovery badge, and a real-time dashboard Market Watch widget with 100% semantic CSS design tokens, bilingual i18n support, strict <= 200 LOC per file, and ADR-001 paper-only compliance.
+- **Resilient Polling Hook (`src/lib/hooks/use-market-ticker.ts`, 189 LOC):**
+  - Custom React hook managing automated background polling with configurable intervals (default 15s) and manual refetch.
+  - AbortController lifecycle integration: cancels pending fetch requests on unmount or input dependency change.
+  - Edge rate limit (HTTP 429) backoff detection and circuit breaker (HTTP 503) state handling.
+  - Fully typed with zero `:any` types; tested in `src/lib/hooks/use-market-ticker.test.ts` (169 LOC, 10 tests).
+- **Bot Wizard Price Discovery (`src/components/bots/pair-price-badge.tsx`, 93 LOC):**
+  - Instant live mark price and exchange latency badge embedded in `BasicStep` (`src/components/bots/basic-step.tsx`, 69 LOC).
+  - Polling guard: only dispatches requests when both exchange and pair are selected.
+  - Visual warnings for circuit breaker open state and rate limit throttling.
+  - Tested in `src/components/bots/pair-price-badge.test.tsx` (145 LOC, 6 tests).
+- **Dashboard Market Watch Card (`src/components/dashboard/market-watch-card.tsx`, 168 LOC):**
+  - Tabbed interface supporting Binance, OKX, and Bybit exchanges with core crypto pairs (`BTC/USDT`, `ETH/USDT`, `SOL/USDT`).
+  - Displays real-time last price, 24h high/low, bid/ask spread (`ask - bid`), 24h volume, exchange latency, and circuit status badge.
+  - Tested in `src/components/dashboard/market-watch-card.test.tsx` (187 LOC, 8 tests).
+- **Dashboard Client Modularization (`src/components/dashboard/dashboard-client.tsx`, 159 LOC):**
+  - Extracted `<DashboardBotList />` to `src/components/dashboard/dashboard-bot-list.tsx` (75 LOC).
+  - Preserved performance summary KPI cards (`Total Trades`, `Total PnL`), guaranteeing 100% compatibility with all 643 lines of `dashboard-client.test.tsx`.
+- **Localization & Quality Gates:**
+  - Added symmetric bilingual keys across `src/messages/en.json` and `src/messages/vi.json` for `dashboard.marketWatch` and `botWizard.priceDiscovery`.
+  - 4,062/4,062 tests passing across 322 test files (+24 tests), 0 TypeScript errors, 0 ESLint warnings, 0 Knip dead-code issues, deployed live to Cloudflare Workers edge runtime (commit `7230c0bd`).
+
 ### ExchangeOrchestrator & Bot Paper-Adapter Live Tickers + Market Data API — 2026-09-12
 - **Scope:** Wired `ExchangeOrchestrator` and `createPaperAdapter` to `DirectTickerProvider` for live market data discovery, pruned orchestration code under 200 LOC, and shipped an edge-native `GET /api/tickers` route with strict query validation, rate limiting, and provenance metadata while preserving the ADR-001 paper-only invariant (zero live order surface).
 - **Bot Paper-Adapter Live Ticker Support (`src/tree/bot/paper-adapter.ts`, 96 LOC):**
