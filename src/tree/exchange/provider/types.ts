@@ -1,6 +1,9 @@
 // Exchange Provider — abstraction layer for exchange health, budget, and backoff.
 // Paper-only v1; LiveProviderConfig added in v2.
 
+import type { ExchangeId, Ticker } from '../types';
+import type { TickerProvider } from './provider';
+
 export type ProviderState = 'healthy' | 'degraded' | 'circuit_open' | 'cooldown';
 
 export interface ProviderHealth {
@@ -23,6 +26,8 @@ export interface PaperProviderConfig {
     reqPerMin: number;
     reqPerHour: number;
   };
+  tickerFetcher?: (exchangeId: ExchangeId, symbol: string) => Promise<Ticker>;
+  directTickerProvider?: TickerProvider;
 }
 
 // LiveProviderConfig placeholder for v2

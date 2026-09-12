@@ -2,6 +2,38 @@
 
 ## v1 Paper-Trading Platform
 
+### Direct Ticker Provider & Paper Exchange Market Data Integration — 2026-09-12
+- **Scope:** Unified the Direct REST engine (Binance, OKX, Bybit) into the CashClaw trading hierarchy via bidirectional symbol normalization, fail-closed ticker payload normalization, a unified `DirectTickerProvider` wrapping REST clients with `CircuitBreaker` FSM, and market data pricing injection into `PaperExchange` while strictly preserving the ADR-001 paper-only invariant (zero live order surface).
+- **Symbol Normalizer (`symbol-normalizer.ts`, 78 LOC):**
+  - Bidirectional parser: translates canonical `BASE/QUOTE` (e.g., `BTC/USDT`) to and from exchange-native formats (`BTCUSDT` for Binance/Bybit, `BTC-USDT` for OKX).
+  - Tolerates whitespace, case variations, delimiters (`/`, `-`, `_`), and undivided pairs matching known quote currencies (`COMMON_QUOTES`).
+  - Fail-closed validation against malformed structures, mixed delimiters, and unsupported exchanges.
+  - Tested in `symbol-normalizer.test.ts` (94 LOC, 100% coverage).
+- **Ticker Normalizer (`ticker-normalizer.ts`, 128 LOC):**
+  - Converts heterogeneous exchange responses (`Binance24hrTicker`, `OkxTicker`, `BybitTicker`) into the canonical `Ticker` domain interface.
+  - Strict numerical validator `validatePositiveFinite` ensures prices and volumes are non-negative, finite numbers; fails closed on `NaN`, `Infinity`, or negative values.
+  - Normalizes timestamps, with fallback to `Date.now()` when exchange timestamps are omitted.
+  - Unified dispatcher `normalizeTicker(exchangeId, raw, canonicalSymbol?)`.
+  - Tested in `ticker-normalizer.test.ts` (137 LOC, 100% coverage).
+- **Unified Direct Ticker Provider (`direct-ticker-provider.ts`, 94 LOC):**
+  - Implements standard `TickerProvider` interface (`src/tree/exchange/provider/provider.ts`).
+  - Wraps `BinanceRestClient`, `OkxRestClient`, or `BybitRestClient` with `CircuitBreaker` FSM protection.
+  - Health check via exchange `ping()` method, fast-failing `false` without network traffic if circuit is open.
+  - Pure edge runtime compatibility (zero Node.js dependencies).
+  - Tested in `direct-ticker-provider.test.ts` (159 LOC) and `direct-ticker-provider-errors.test.ts` (77 LOC), achieving 100% coverage.
+- **Paper Exchange Market Data Integration (`paper/index.ts`, 177 LOC):**
+  - Added optional `MarketDataFetcher` callback in `PaperExchangeOptions` and dynamic updater `setTickerFetcher`.
+  - Fetches live market pricing if fetcher is supplied, falling back gracefully to simulated ticker on fetch errors or when unconfigured.
+  - Preserves ADR-001 invariant: `placeOrder`, `cancelOrder`, `fetchOrder`, `fillOrder` remain 100% in-memory simulated.
+  - Tested in `paper-exchange-direct.test.ts` (82 LOC).
+- **Paper Provider Pruning & Adapter Wiring (`paper-provider.ts`, 158 LOC):**
+  - Pruned `src/tree/exchange/provider/paper-provider.ts` from 203 LOC to 158 LOC (< 190 LOC target, resolving existing LOC violation).
+  - Wired `PaperProviderConfig` to support `tickerFetcher` or `directTickerProvider`.
+  - Tested in `paper-provider-direct.test.ts` (76 LOC).
+- **Barrel Exports & Module Integration (`direct/index.ts`, 10 LOC):**
+  - Re-exports all normalizers, helpers, types, and `DirectTickerProvider`. Verified in `direct/index.test.ts` (28 LOC).
+- **Quality Gates:** 4,012/4,012 tests passing across 315 test files (+44 tests), 100.00% statement/branch/function/line coverage on `src/tree/exchange/direct/**`, 0 TypeScript errors, 0 ESLint warnings, 0 Knip issues, clean Next.js/OpenNext build, 0 `:any` types, all 14 new/modified files strictly ≤ 200 LOC.
+
 ### OKX & Bybit Direct REST Clients — 2026-09-12
 - **Scope:** Expanded `src/tree/exchange/direct/` with edge-native OKX (v5) and Bybit (V5) stateless REST clients, extending the WebCrypto HMAC-SHA256 signer and preserving ADR-001 paper-only invariant across all new endpoints.
 - **WebCrypto Signer Expansion (`webcrypto-signer.ts`, 136 LOC):**

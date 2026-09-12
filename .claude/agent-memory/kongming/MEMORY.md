@@ -5,3 +5,5 @@
 - [Vibe integration Phase 1 planned](project_vibe_integration_phase1.md) — 2026-08-26 plan: src/tree/research/ contracts + AlphaCompiler; migration 0012 deferred; Phase 0 docs still untracked.
 - [Vibe Phase 2 zoo adapter planned](project_vibe_phase2_zoo_adapter.md) — 2026-08-26 plan at .orchestrate/latest/plan.md; canonical duplicate key (raw latex unusable), 7-bucket report, no migration, escrow folded.
 - [Vibe Phase 3 evaluator+bridge planned](project_vibe_phase3_evaluator_bridge.md) — 2026-08-26 plan; only 2/4 seeds evaluable (no ts_sum), NOT_EVALUABLE bucket, no migration, forward-return grep gate.
+- [Direct REST OKX & Bybit planned](project_direct_rest_okx_bybit_plan.md) — 2026-09-11 plan at .orchestrate/latest/plan.md; Base64/Hex WebCrypto signers, OKX+Bybit v5 REST, ADR-001 paper-only, 100% coverage floor.
+- [DirectTickerProvider & PaperExchange planned](project_direct_ticker_provider_plan.md) — 2026-09-12 plan at .orchestrate/latest/plan.md; symbol/ticker normalizers, DirectTickerProvider, PaperExchange market data wiring.

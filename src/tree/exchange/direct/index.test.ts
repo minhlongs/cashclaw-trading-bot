@@ -14,5 +14,15 @@ describe('direct index barrel export', () => {
     expect(directModule.buildOkxSignature).toBeDefined();
     expect(directModule.buildBybitHeaders).toBeDefined();
     expect(directModule.buildBybitSignature).toBeDefined();
+    expect(directModule.parseSymbol).toBeDefined();
+    expect(directModule.toCanonicalSymbol).toBeDefined();
+    expect(directModule.toExchangeSymbol).toBeDefined();
+    expect(directModule.COMMON_QUOTES).toBeDefined();
+    expect(directModule.validatePositiveFinite).toBeDefined();
+    expect(directModule.normalizeBinanceTicker).toBeDefined();
+    expect(directModule.normalizeOkxTicker).toBeDefined();
+    expect(directModule.normalizeBybitTicker).toBeDefined();
+    expect(directModule.normalizeTicker).toBeDefined();
+    expect(directModule.DirectTickerProvider).toBeDefined();
   });
 });

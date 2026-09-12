@@ -15,6 +15,12 @@ import type {
 } from '../types';
 import { rateLimiter } from '../rate-limiter';
 
+export type MarketDataFetcher = (exchangeId: ExchangeId, symbol: string) => Promise<Ticker>;
+
+export interface PaperExchangeOptions {
+  tickerFetcher?: MarketDataFetcher;
+}
+
 export interface PaperTrade {
   orderId: string;
   exchangeId: ExchangeId;
@@ -36,17 +42,32 @@ export class PaperExchange {
   private balances = new Map<string, { free: number; used: number }>();
   orders = new Map<string, PaperTrade>();
   private orderCounter = 0;
+  private tickerFetcher?: MarketDataFetcher;
 
-  constructor(initialBalances: { currency: string; total: number }[]) {
+  constructor(
+    initialBalances: { currency: string; total: number }[],
+    options?: PaperExchangeOptions
+  ) {
     for (const b of initialBalances) {
       this.balances.set(b.currency, { free: b.total, used: 0 });
     }
+    this.tickerFetcher = options?.tickerFetcher;
   }
 
-  // Simulate market data — in production, proxy to real exchange WS/REST
+  setTickerFetcher(fetcher?: MarketDataFetcher): void {
+    this.tickerFetcher = fetcher;
+  }
+
+  // Simulate market data — if tickerFetcher is supplied, fetch live market pricing
   async fetchTicker(exchangeId: ExchangeId, symbol: string): Promise<Ticker> {
     await rateLimiter.acquire(exchangeId, 'api');
-    // Return simulated ticker — production: proxy to real exchange
+    if (this.tickerFetcher) {
+      try {
+        return await this.tickerFetcher(exchangeId, symbol);
+      } catch {
+        // Fall back gracefully to simulated zero ticker on fetcher failure
+      }
+    }
     return {
       symbol,
       last: 0,
@@ -61,12 +82,7 @@ export class PaperExchange {
 
   async fetchOrderBook(exchangeId: ExchangeId, symbol: string, _depth = 20): Promise<OrderBook> {
     await rateLimiter.acquire(exchangeId, 'api');
-    return {
-      symbol,
-      bids: [],
-      asks: [],
-      timestamp: Date.now(),
-    };
+    return { symbol, bids: [], asks: [], timestamp: Date.now() };
   }
 
   async fetchBalances(exchangeId: ExchangeId): Promise<Balance[]> {
@@ -81,9 +97,7 @@ export class PaperExchange {
 
   async placeOrder(exchangeId: ExchangeId, request: OrderRequest): Promise<OrderResult> {
     await rateLimiter.acquire(exchangeId, 'order');
-
     const orderId = `paper_${++this.orderCounter}_${Date.now()}`;
-
     const trade: PaperTrade = {
       orderId,
       exchangeId,
@@ -97,16 +111,12 @@ export class PaperExchange {
       fee: request.quantity * 0.001, // 0.1% simulated fee
       timestamp: Date.now(),
     };
-
     this.orders.set(orderId, trade);
-
     return this.toOrderResult(trade);
   }
 
   getOrders(): Map<string, PaperTrade> { return this.orders; }
-
   getOrder(orderId: string): PaperTrade | undefined { return this.orders.get(orderId); }
-
   toOrderResultPublic(trade: PaperTrade): OrderResult { return this.toOrderResult(trade); }
 
   async cancelOrder(orderId: string, _symbol: string): Promise<boolean> {
@@ -115,14 +125,12 @@ export class PaperExchange {
     trade.status = 'cancelled';
     this.orders.set(orderId, trade);
 
-    // Release used balance
     const quoteCurrency = trade.symbol.includes('/') ? trade.symbol.split('/')[1] : 'USDT';
     const bal = this.balances.get(quoteCurrency);
     if (bal) {
       bal.used -= trade.quantity;
       bal.free += trade.quantity;
     }
-
     return true;
   }
 
@@ -132,13 +140,8 @@ export class PaperExchange {
     return this.toOrderResult(trade);
   }
 
-  async ping(): Promise<boolean> {
-    return true;
-  }
-
-  async getServerTime(): Promise<number> {
-    return Date.now();
-  }
+  async ping(): Promise<boolean> { return true; }
+  async getServerTime(): Promise<number> { return Date.now(); }
 
   async fetchOpenOrders(_symbol?: string): Promise<OrderResult[]> {
     return Array.from(this.orders.values())
@@ -146,20 +149,12 @@ export class PaperExchange {
       .map((t) => this.toOrderResult(t));
   }
 
-  // Internal: fill a limit order (called by matching engine)
   fillOrder(orderId: string, fillPrice: number, fillQty: number): boolean {
     const trade = this.orders.get(orderId);
     if (!trade || trade.status !== 'open') return false;
-
     trade.filled += fillQty;
     trade.price = fillPrice;
-
-    if (trade.filled >= trade.quantity) {
-      trade.status = 'filled';
-    } else {
-      trade.status = 'partially_filled';
-    }
-
+    trade.status = trade.filled >= trade.quantity ? 'filled' : 'partially_filled';
     this.orders.set(orderId, trade);
     return true;
   }
