@@ -3,6 +3,7 @@
 import { ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type BasicStepProps, PAIRS, EXCHANGES } from './wizard-types';
+import { PairPriceBadge } from './pair-price-badge';
 
 export function BasicStep({ form, update, onNext }: BasicStepProps) {
   const t = useTranslations('botWizard');
@@ -41,6 +42,7 @@ export function BasicStep({ form, update, onNext }: BasicStepProps) {
           <option value="">{t('select')}</option>
           {EXCHANGES.map((ex) => <option key={ex.value} value={ex.value}>{ex.label}</option>)}
         </select>
+        <PairPriceBadge exchange={form.exchange} pair={form.pair} />
       </div>
       <div className="form-group">
         <label className="form-label">{t('capitalUsd')}</label>

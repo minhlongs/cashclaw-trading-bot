@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Plus, Bot } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
 import type { BotCardData } from '@/forest/dashboard/actions';
 import type { DashboardKpis } from '@/forest/dashboard/bot-kpis';
 import { StrategyVisualizerCard } from './strategy-visualizer-card';
+import { MarketWatchCard } from './market-watch-card';
+import { DashboardBotList } from './dashboard-bot-list';
 
 interface BotCardDataApi {
   id: string; name: string; strategy: 'grid' | 'mean_reversion' | 'volatility_dca' | string;
@@ -16,11 +18,6 @@ interface BotCardDataApi {
 }
 
 interface DashboardData { kpis: DashboardKpis; bots: BotCardData[]; }
-
-const statusStyles: Record<string, string> = {
-  running: 'badge-success', active: 'badge-success', paused: 'badge-warning',
-  stopped: 'badge-neutral', error: 'badge-error',
-};
 
 export default function DashboardClient() {
   const t = useTranslations('dashboard');
@@ -132,47 +129,11 @@ export default function DashboardClient() {
         </div>
       </div>
 
+      <MarketWatchCard />
+
       <StrategyVisualizerCard bots={bots} />
 
-      <div className="panel mt-6">
-        <header className="panel-header">
-          <h2>Bots</h2>
-          <div className="panel-actions">
-            <span className="text-sm text-secondary">
-              {bots.length === 0 ? (t('empty') ?? 'No bots found. Create your first bot to get started.') : `${bots.length} ${t('subtitle')}`}
-            </span>
-            <Link className="btn btn-secondary" href={`/${locale}/bots/new`} prefetch={false}>
-              <Bot className="btn-icon" />{t('createBot')}
-            </Link>
-          </div>
-        </header>
-
-        {bots.length === 0 ? (
-          <div className="empty-state">
-            <Bot size={40} className="mono" />
-            <p>{t('empty') ?? 'No bots found. Start by creating a new trading bot.'}</p>
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            {bots.map((bot) => (
-              <div className="list-item" key={bot.id}>
-                <div className="list-meta">
-                  <div className="list-titles"><h4>{bot.name}</h4><span>{bot.pair}</span></div>
-                </div>
-                <div className="flex items-center gap-5">
-                  <span className={`badge ${statusStyles[bot.botStatus] ?? 'badge-neutral'}`}>{bot.botStatus}</span>
-                  <div className="list-value">
-                    <div className={`mono ${bot.totalPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      ${bot.totalPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                    </div>
-                    <div className="meta">{bot.winCount}W / {bot.lossCount}L</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <DashboardBotList bots={bots} />
 
       <div className="grid-auto-fit mt-6">
         <div className="panel">

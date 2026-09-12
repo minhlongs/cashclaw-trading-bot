@@ -36,6 +36,24 @@
       "pnl": "P&L Chiến lược",
       "winRate": "Tỷ lệ thắng",
       "activeBots": "Bot đang chạy"
+    },
+    "marketWatch": {
+      "title": "Theo Dõi Thị Trường Trực Tiếp",
+      "subtitle": "Giá & thanh khoản đa sàn giao dịch thời gian thực",
+      "exchange": "Sàn giao dịch",
+      "pair": "Cặp tiền",
+      "lastPrice": "Giá khớp",
+      "high24h": "Cao nhất 24h",
+      "low24h": "Thấp nhất 24h",
+      "bidAsk": "Mua / Bán",
+      "spread": "Chênh lệch",
+      "volume24h": "Khối lượng 24h",
+      "latency": "Độ trễ",
+      "circuit": "Ngắt mạch",
+      "circuitClosed": "Bình thường",
+      "circuitOpen": "Tạm dừng",
+      "refresh": "Làm mới",
+      "rateLimited": "Đạt giới hạn yêu cầu. Đang tạm dừng cập nhật..."
     }
   },
   "bots": {
@@ -138,6 +156,13 @@
       "exchange": "Sàn",
       "capital": "Vốn",
       "strategy": "Chiến lược"
+    },
+    "priceDiscovery": {
+      "livePrice": "Giá thị trường",
+      "fetchingPrice": "Đang lấy giá...",
+      "unavailable": "Không có dữ liệu giá",
+      "circuitActive": "Ngắt mạch sàn đang kích hoạt",
+      "rateLimited": "Đạt giới hạn yêu cầu"
     }
   },
   "botDetail": {

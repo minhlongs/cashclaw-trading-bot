@@ -36,6 +36,24 @@
       "pnl": "Strategy P&L",
       "winRate": "Win Rate",
       "activeBots": "Active Bots"
+    },
+    "marketWatch": {
+      "title": "Live Market Watch",
+      "subtitle": "Real-time multi-exchange prices & liquidity",
+      "exchange": "Exchange",
+      "pair": "Pair",
+      "lastPrice": "Last Price",
+      "high24h": "24h High",
+      "low24h": "24h Low",
+      "bidAsk": "Bid / Ask",
+      "spread": "Spread",
+      "volume24h": "24h Volume",
+      "latency": "Latency",
+      "circuit": "Circuit",
+      "circuitClosed": "Normal",
+      "circuitOpen": "Halted",
+      "refresh": "Refresh",
+      "rateLimited": "Rate limited. Pausing updates..."
     }
   },
   "bots": {
@@ -138,6 +156,13 @@
       "exchange": "Exchange",
       "capital": "Capital",
       "strategy": "Strategy"
+    },
+    "priceDiscovery": {
+      "livePrice": "Live Price",
+      "fetchingPrice": "Fetching price...",
+      "unavailable": "Price unavailable",
+      "circuitActive": "Exchange circuit open",
+      "rateLimited": "Rate limited"
     }
   },
   "botDetail": {
