@@ -2,6 +2,19 @@
 
 ## v1 Paper-Trading Platform
 
+### Forest Settings Modularization & LOC Compliance — 2026-09-13
+- **Scope:** Decomposed monolithic server action file `src/forest/settings/actions.ts` (333 LOC) into modular single-responsibility units (`types.ts`, `parsers.ts`, `actions.ts`), added isolated unit test suite `parsers.test.ts`, achieved 100% LOC compliance (all 5 files in `src/forest/settings/` strictly <= 200 LOC), preserved 100% backward compatibility via type re-export, preserved WebCrypto AES-256-GCM credential encryption/decryption, and maintained ADR-001 paper-only invariant.
+- **Modular Decomposition & LOC Budget Compliance:**
+  - `src/forest/settings/types.ts` (84 LOC, <= 90 LOC budget): Pure type contracts (`SettingsData`, `ExchangeKey`, `RiskLimitsInput`, `KillswitchDailyInput`), constants (`SETTINGS_ROW_ID`, `DEFAULT_EXCHANGES`, `DEFAULT_RISK`, `DEFAULT_NOTIFICATION`, `DEFAULT_KILLSWITCH_DAILY`), and `createDefaultSettings` factory.
+  - `src/forest/settings/parsers.ts` (110 LOC, <= 120 LOC budget): D1 JSON serialization/deserialization logic (`parseExchanges`, `parseRisk`, `parseNotification`, `parseKillswitchDaily`, `rowToSettingsData`) with fail-safe fallback logging on corrupt data, WebCrypto AES-256-GCM `decrypt` integration, and risk limits validation/override logic (`validateRiskRanges`, `applyRiskOverrides`).
+  - `src/forest/settings/actions.ts` (125 LOC, reduced from 333 LOC, <= 130 LOC budget): Public Next.js Server Actions (`getSettings`, `updateExchangeCredentials`, `updateRiskLimits`, `updateNotificationSettings`, `emergencyHalt`, `resumeFromHalt`, `saveKillswitchDailyState`) with `'use server'`, D1 read/write coordination, WebCrypto AES-256-GCM `encrypt` prior to persistence, and backward-compatible `export type { SettingsData } from './types'`.
+  - `src/forest/settings/parsers.test.ts` (118 LOC, <= 140 LOC budget): Dedicated unit tests covering normal JSON parsing, credential decryption, fallback to default objects on corrupted JSON, D1 row conversion, and boundary checks for risk ranges and overrides.
+  - `src/forest/settings/actions.test.ts` (186 LOC, preserved, <= 200 LOC ceiling): Integration test suite verifying server actions against mock D1 repository.
+- **Quality Gates:**
+  - 5/5 files in `src/forest/settings/` strictly <= 200 LOC (100% compliant).
+  - 0 `:any` types, 0 ESLint warnings, 0 unused knip exports.
+  - 326/326 test suites passed (4,062/4,062 tests green).
+
 ### Settings Component Modularization & Killswitch Panel Extraction — 2026-09-13
 - **Scope:** Modularized the oversized `SettingsClient` container component by extracting the emergency stop panel into a dedicated single-responsibility component `KillswitchSettings`, brought 100% of files in `src/components/settings/` strictly under the 200 LOC ceiling, extracted an isolated unit test suite `killswitch-settings.test.tsx`, streamlined container integration tests in `settings-client.test.tsx`, pruned `exchange-settings.test.tsx`, and synchronized bilingual localization keys (`settings.killswitch.*`) across `en.json` and `vi.json`.
 - **Component Decomposition & LOC Budget Compliance:**

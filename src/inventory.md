@@ -517,13 +517,25 @@ lib  ←── tree  ←── forest  ←── land
 - `getAlerts(limit)`, `getAlertsByLevel(level)`, `clearAlerts()`
 **Deps:** none (in-memory)
 
-### forest/settings/actions.ts (330 LOC)
+### forest/settings/types.ts (84 LOC)
 **Exports:**
-- `SettingsData` interface
+- `SettingsData`, `ExchangeKey`, `RiskLimitsInput`, `KillswitchDailyInput`
+- `SETTINGS_ROW_ID`, `DEFAULT_EXCHANGES`, `DEFAULT_RISK`, `DEFAULT_NOTIFICATION`, `DEFAULT_KILLSWITCH_DAILY`, `createDefaultSettings()`
+**Deps:** none (pure contracts)
+
+### forest/settings/parsers.ts (110 LOC)
+**Exports:**
+- `parseExchanges()`, `parseRisk()`, `parseNotification()`, `parseKillswitchDaily()`, `rowToSettingsData()`
+- `validateRiskRanges()`, `applyRiskOverrides()`
+**Deps:** `lib/crypto`, `lib/logger`, `lib/db/repositories`, `forest/settings/types`
+
+### forest/settings/actions.ts (125 LOC)
+**Exports:**
+- `SettingsData` interface (re-exported)
 - `getSettings()`, `updateExchangeCredentials(...)`, `updateRiskLimits(...)`, `updateNotificationSettings(...)`
 - `emergencyHalt(reason)`, `resumeFromHalt()`
 - `saveKillswitchDailyState(daily)`
-**Deps:** `lib/db/client`, `lib/db/repositories`, `lib/db/types`, `tree/bot/killswitch`, `tree/bot/bot-manager`, `forest/monitoring/alerts`, `lib/result`
+**Deps:** `lib/db/client`, `lib/db/repositories`, `lib/logger`, `lib/result`, `lib/crypto`, `forest/settings/types`, `forest/settings/parsers`
 
 **forest/ total LOC (non-test):** ~2481
 
