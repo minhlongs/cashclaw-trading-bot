@@ -2,6 +2,23 @@
 
 ## v1 Paper-Trading Platform
 
+### Bot Detail Live Control Actions & Real-Time Mark Price Integration — 2026-09-13
+- **Scope:** Wired interactive lifecycle controls (`Resume`, `Pause`, `Reset`/`Stop`, `Config`) in `BotDetailClient` to the edge API mutation endpoint `POST /api/bots/[id]` and integrated live mark price discovery with latency monitoring via `PairPriceBadge` in `BotDetailOverview`. Maintained strict <= 200 LOC per file, 100% semantic CSS tokens, bilingual i18n parity, and ADR-001 paper-only compliance.
+- **Interactive Control Wiring (`src/components/bots/bot-detail-client.tsx`, 174 LOC):**
+  - Connected `Resume` button to dispatch `{ action: 'resume' }` (when paused) or `{ action: 'start' }` to `POST /api/bots/[id]`.
+  - Connected `Pause` button to dispatch `{ action: 'pause' }` and `Reset` button to dispatch `{ action: 'stop' }`.
+  - Connected `Config` button to switch active tab to `'config'` without unnecessary network dispatches.
+  - Added in-flight request lock (`disabled={loadingAction !== null}`) and `Loader2` spinning indicators on active action buttons to prevent race conditions or double clicks.
+  - Implemented local reactive status updates immediately reflecting on header badges upon HTTP 200 responses.
+  - Provided inline dismissible error feedback (`.badge-error`) upon network or backend failures without mutating previous status.
+- **Bot Overview Mark Price Embedding (`src/components/bots/bot-detail-overview.tsx`, 62 LOC):**
+  - Embedded `<PairPriceBadge exchange={bot.exchange} pair={bot.pair} />` in `.detail-grid` with localized label `{t('botDetail.livePrice')}`.
+  - Real-time mark price discovery with polling interval, latency display, circuit breaker open detection, and 429 rate limit backoff.
+- **Localization & Unit Testing:**
+  - Added symmetric bilingual keys under `"botDetail"` across `src/messages/en.json` and `src/messages/vi.json` (`resume`, `reset`, `config`, `livePrice`, `markPrice`, `actionFailed`, `actionSuccess`, `executing`).
+  - Expanded `src/components/bots/bot-detail-client.test.tsx` (153 LOC) and `src/components/bots/bot-detail-overview.test.tsx` (171 LOC) with 38 total passing tests covering button clicks, fetch dispatches, loading state locks, tab switches, error dismissals, and badge rendering.
+  - Verified 322/322 test files passed (4,048 tests green), 0 TypeScript errors, 0 ESLint warnings, deployed live to Cloudflare Workers (commit `335f133`).
+
 ### Live Multi-Exchange Market Watch & Bot Wizard Ticker Discovery — 2026-09-12
 - **Scope:** Surfaced live multi-exchange market feeds across Binance, OKX, and Bybit into user-facing frontend interfaces via a resilient polling hook, a wizard price discovery badge, and a real-time dashboard Market Watch widget with 100% semantic CSS design tokens, bilingual i18n support, strict <= 200 LOC per file, and ADR-001 paper-only compliance.
 - **Resilient Polling Hook (`src/lib/hooks/use-market-ticker.ts`, 189 LOC):**
