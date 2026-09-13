@@ -2,6 +2,22 @@
 
 ## v1 Paper-Trading Platform
 
+### Settings Component Modularization & Killswitch Panel Extraction — 2026-09-13
+- **Scope:** Modularized the oversized `SettingsClient` container component by extracting the emergency stop panel into a dedicated single-responsibility component `KillswitchSettings`, brought 100% of files in `src/components/settings/` strictly under the 200 LOC ceiling, extracted an isolated unit test suite `killswitch-settings.test.tsx`, streamlined container integration tests in `settings-client.test.tsx`, pruned `exchange-settings.test.tsx`, and synchronized bilingual localization keys (`settings.killswitch.*`) across `en.json` and `vi.json`.
+- **Component Decomposition & LOC Budget Compliance:**
+  - `src/components/settings/killswitch-settings.tsx` (55 LOC, <= 100 LOC budget): Dedicated component encapsulating the emergency stop panel, status badge (`badge-neutral` for ACTIVE / `badge-error` for HALTED), spinning `Loader2` indicator during mutations, concurrency button locking (`disabled={isSaving || !enabled}` / `disabled={isSaving || enabled}`), and semantic token styling with 0 inline styles.
+  - `src/components/settings/settings-client.tsx` (129 LOC, reduced from 239 LOC, <= 130 LOC budget): Streamlined container managing tab views (Exchange, Strategy, Notifications, Kill Switch), feedback message dismissals, and delegating emergency halt/resume mutations to `<KillswitchSettings>`.
+  - `src/components/settings/killswitch-settings.test.tsx` (71 LOC, <= 150 LOC budget): Isolated unit tests covering badge styling by status, action click dispatches (`onHalt`, `onResume`), loading spinner states, and button disabled states.
+  - `src/components/settings/settings-client.test.tsx` (181 LOC, reduced from 389 LOC, <= 190 LOC budget): Clean container tests with 0 `:any` types covering tab switching, exchange save alerts, and container-level halt/resume mutation dispatching to `/api/settings`.
+  - `src/components/settings/exchange-settings.test.tsx` (134 LOC, reduced from 217 LOC, <= 190 LOC budget): Compacted test fixtures and consolidated assertions while preserving 100% test coverage.
+- **Bilingual Localization Sync:**
+  - Added `settings.killswitch.*` (`title`, `halted`, `active`, `description`, `haltButton`, `resumeButton`, `haltSuccess`, `resumeSuccess`, `haltFailed`, `resumeFailed`) across `src/messages/en.json` and `src/messages/vi.json` with 100% key and schema parity.
+- **Quality Gates:**
+  - 10/10 files in `src/components/settings/` strictly <= 200 LOC.
+  - 0 `:any` types, 0 ESLint warnings, 0 inline styles (100% semantic CSS tokens).
+  - 325/325 test suites passed (4,053/4,053 tests green).
+
+
 ### Interactive Bot List Lifecycle Control Actions & Modularization — 2026-09-13
 - **Scope:** Modularized the monolithic `BotsListClient` component (bringing all touched files strictly under the 200 LOC ceiling), connected interactive lifecycle control buttons (`Pause`, `Resume`, `Start`) to the backend edge API endpoint `POST /api/bots/[id]`, added in-flight mutation locks and loading spinners, enabled reactive status updates in the list table, added a dismissible action error banner, synchronized bilingual localization keys (`bots.columns.detail`, `bots.actions.*`), and added comprehensive unit and integration tests.
 - **Component Decomposition & LOC Budget Compliance:**

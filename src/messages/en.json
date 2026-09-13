@@ -222,7 +222,19 @@
     "maxPositionSize": "Max Position Size (USDT)",
     "language": "Language",
     "save": "Save",
-    "saveSuccess": "Saved successfully"
+    "saveSuccess": "Saved successfully",
+    "killswitch": {
+      "title": "Kill Switch",
+      "halted": "HALTED",
+      "active": "ACTIVE",
+      "description": "Emergency stop: immediately halt all trading activity across all bots.",
+      "haltButton": "Halt All Trading",
+      "resumeButton": "Resume Trading",
+      "haltSuccess": "Trading halted",
+      "resumeSuccess": "Trading resumed",
+      "haltFailed": "Halt failed",
+      "resumeFailed": "Resume failed"
+    }
   },
   "common": {
     "loading": "Loading...",

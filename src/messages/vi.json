@@ -222,7 +222,19 @@
     "maxPositionSize": "Kích thước vị thế tối đa (USDT)",
     "language": "Ngôn ngữ",
     "save": "Lưu",
-    "saveSuccess": "Đã lưu thành công"
+    "saveSuccess": "Đã lưu thành công",
+    "killswitch": {
+      "title": "Công tắc khẩn cấp (Kill Switch)",
+      "halted": "TẠM DỪNG",
+      "active": "HOẠT ĐỘNG",
+      "description": "Dừng khẩn cấp: lập tức tạm dừng mọi hoạt động giao dịch trên tất cả bot.",
+      "haltButton": "Dừng tất cả giao dịch",
+      "resumeButton": "Tiếp tục giao dịch",
+      "haltSuccess": "Đã tạm dừng giao dịch",
+      "resumeSuccess": "Đã tiếp tục giao dịch",
+      "haltFailed": "Tạm dừng thất bại",
+      "resumeFailed": "Tiếp tục thất bại"
+    }
   },
   "common": {
     "loading": "Đang tải...",
