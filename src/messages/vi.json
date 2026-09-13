@@ -76,7 +76,16 @@
       "pnl": "Lãi/Lỗ",
       "winRate": "Thắng",
       "createdAt": "Ngày tạo",
-      "actions": "Thao tác"
+      "actions": "Thao tác",
+      "detail": "Chi tiết"
+    },
+    "actions": {
+      "start": "Chạy",
+      "pause": "Tạm dừng",
+      "resume": "Tiếp tục",
+      "actionFailed": "Thao tác thất bại: {error}",
+      "actionSuccess": "Thao tác thành công",
+      "noBotsFound": "Không tìm thấy bot"
     },
     "strategy": {
       "grid": "Grid",

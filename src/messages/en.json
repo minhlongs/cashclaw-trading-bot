@@ -76,7 +76,16 @@
       "pnl": "P&L",
       "winRate": "Win Rate",
       "createdAt": "Created",
-      "actions": "Actions"
+      "actions": "Actions",
+      "detail": "Detail"
+    },
+    "actions": {
+      "start": "Start",
+      "pause": "Pause",
+      "resume": "Resume",
+      "actionFailed": "Action failed: {error}",
+      "actionSuccess": "Action succeeded",
+      "noBotsFound": "No bots found"
     },
     "strategy": {
       "grid": "Grid",

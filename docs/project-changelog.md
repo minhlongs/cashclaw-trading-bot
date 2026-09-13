@@ -2,6 +2,19 @@
 
 ## v1 Paper-Trading Platform
 
+### Interactive Bot List Lifecycle Control Actions & Modularization — 2026-09-13
+- **Scope:** Modularized the monolithic `BotsListClient` component (bringing all touched files strictly under the 200 LOC ceiling), connected interactive lifecycle control buttons (`Pause`, `Resume`, `Start`) to the backend edge API endpoint `POST /api/bots/[id]`, added in-flight mutation locks and loading spinners, enabled reactive status updates in the list table, added a dismissible action error banner, synchronized bilingual localization keys (`bots.columns.detail`, `bots.actions.*`), and added comprehensive unit and integration tests.
+- **Component Decomposition & LOC Budget Compliance:**
+  - `src/components/bots/bot-row-actions.tsx` (72 LOC, <= 85 LOC budget): Interactive lifecycle buttons deriving action from `botStatus` (`pause` for running/paper bots, `resume` for paused bots, `start` for draft/stopped/error bots). Handles `POST /api/bots/[id]`, mutation lock (`disabled`), spinning `Loader2` indicator, `onStatusChange` and `onError` callbacks, and localized `Detail` navigation link.
+  - `src/components/bots/bots-table.tsx` (102 LOC, <= 125 LOC budget): Modular table presentation component encapsulating `StatusBadge`, `PnlValue`, win rate formatting, capital allocation, and empty state rendering (`t('bots.actions.noBotsFound')`).
+  - `src/components/bots/bots-list-client.tsx` (123 LOC, reduced from 230 LOC): Focused container managing `/api/bots` data hydration, search and status filters, reactive status state (`handleStatusChange`), and accessible dismissible error banner (`badge badge-error`).
+- **Bilingual Localization Sync:**
+  - Added `bots.columns.detail` (`Detail` / `Chi tiết`) and `bots.actions.*` (`start`, `pause`, `resume`, `actionFailed`, `actionSuccess`, `noBotsFound`) across `src/messages/en.json` and `src/messages/vi.json` with 100% key parity.
+- **Testing & Quality Gates:**
+  - Created `src/components/bots/bot-row-actions.test.tsx` (158 LOC) covering rendering by status, pause/resume network dispatches, in-flight loading locks, status propagation, error handling, and detail navigation links.
+  - Refactored `src/components/bots/bots-list-client.test.tsx` (154 LOC, reduced from 325 LOC) with 0 `:any` types, testing container hydration, search/filter, reload on failure, reactive status changes, and dismissible error banner.
+  - 100% test pass rate (324/324 test suites passed, 4,058/4,058 tests green). Type-check 0 errors, ESLint 0 warnings, 100% semantic CSS tokens (0 inline styles).
+
 ### Interactive Bot Configuration Update Wiring & D1 Persistence — 2026-09-13
 - **Scope:** Converted the static bot configuration panel in `BotDetailConfig` into a fully reactive, controlled form, implemented the Next.js App Router mutation route `PATCH /api/bots/[id]`, built the forest backend handler `botUpdateConfigHandler` with anti-IDOR checks, numeric validation, and strategy bounds coercion, wired persistent storage into Cloudflare D1 via `patchBot`, synchronized runtime memory via `BotInstance.updateConfig`, compacted imports in `bot-instance.ts` to strictly maintain <= 200 LOC, enforced ADR-001 paper-only invariant, and synchronized bilingual i18n keys.
 - **Controlled Configuration UI (`src/components/bots/bot-detail-config.tsx`, 124 LOC):**
