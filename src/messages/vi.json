@@ -186,7 +186,15 @@
     "notFoundWithId": "Không tìm thấy bot với ID: {id}",
     "tradeEvents": "Sự kiện giao dịch",
     "eventType": "Loại",
-    "eventDetails": "Chi tiết"
+    "eventDetails": "Chi tiết",
+    "resume": "Tiếp tục",
+    "reset": "Đặt lại",
+    "config": "Cấu hình",
+    "livePrice": "Giá trực tiếp",
+    "markPrice": "Giá thị trường",
+    "actionFailed": "Thao tác thất bại: {error}",
+    "actionSuccess": "Thao tác thành công",
+    "executing": "Đang thực thi..."
   },
   "settings": {
     "title": "Cài đặt",

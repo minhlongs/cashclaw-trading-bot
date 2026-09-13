@@ -8,7 +8,12 @@ import type { BotDetailData } from '@/forest/dashboard/actions';
 /* ------------------------------------------------------------------ */
 
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => {
+    const map: Record<string, string> = {
+      'botDetail.livePrice': 'Live Price',
+    };
+    return map[key] ?? key;
+  },
   useLocale: () => 'vi',
 }));
 
@@ -16,8 +21,24 @@ vi.mock('lucide-react', () => {
   const Icon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="icon" {...props} />
   );
-  return { ArrowLeft: Icon, Play: Icon, Pause: Icon, RotateCcw: Icon, Settings2: Icon };
+  return {
+    ArrowLeft: Icon,
+    Play: Icon,
+    Pause: Icon,
+    RotateCcw: Icon,
+    Settings2: Icon,
+    Loader2: Icon,
+    AlertTriangle: Icon,
+  };
 });
+
+vi.mock('./pair-price-badge', () => ({
+  PairPriceBadge: ({ exchange, pair }: { exchange: string; pair: string }) => (
+    <div data-testid="pair-price-badge" data-exchange={exchange} data-pair={pair}>
+      {exchange} - {pair}
+    </div>
+  ),
+}));
 
 /* ------------------------------------------------------------------ */
 /* Fixtures                                                           */
@@ -57,7 +78,6 @@ describe('BotDetailOverview', () => {
 
     it('renders total trades count', () => {
       render(<BotDetailOverview bot={makeBot()} />);
-      // winCount(10) + lossCount(3) = 13
       expect(screen.getByText('13')).toBeInTheDocument();
     });
 
@@ -89,55 +109,57 @@ describe('BotDetailOverview', () => {
   describe('status badge', () => {
     it('renders badge-neutral for draft', () => {
       const { container } = render(<BotDetailOverview bot={makeBot({ botStatus: 'draft' })} />);
-      const badge = container.querySelector('.badge-neutral');
-      expect(badge).toBeInTheDocument();
+      expect(container.querySelector('.badge-neutral')).toBeInTheDocument();
     });
 
     it('renders badge-neutral for paper_test', () => {
       const { container } = render(<BotDetailOverview bot={makeBot({ botStatus: 'paper_test' })} />);
-      const badge = container.querySelector('.badge-neutral');
-      expect(badge).toBeInTheDocument();
+      expect(container.querySelector('.badge-neutral')).toBeInTheDocument();
     });
 
     it('renders badge-running for live_running', () => {
       const { container } = render(<BotDetailOverview bot={makeBot({ botStatus: 'live_running' })} />);
-      const badge = container.querySelector('.badge-running');
-      expect(badge).toBeInTheDocument();
+      expect(container.querySelector('.badge-running')).toBeInTheDocument();
     });
 
     it('renders badge-paused for paused', () => {
       const { container } = render(<BotDetailOverview bot={makeBot({ botStatus: 'paused' })} />);
-      const badge = container.querySelector('.badge-paused');
-      expect(badge).toBeInTheDocument();
+      expect(container.querySelector('.badge-paused')).toBeInTheDocument();
     });
 
     it('renders badge-error for error', () => {
       const { container } = render(<BotDetailOverview bot={makeBot({ botStatus: 'error' })} />);
-      const badge = container.querySelector('.badge-error');
-      expect(badge).toBeInTheDocument();
+      expect(container.querySelector('.badge-error')).toBeInTheDocument();
     });
 
     it('renders badge-neutral for unknown status', () => {
       const { container } = render(<BotDetailOverview bot={makeBot({ botStatus: 'unknown' })} />);
-      const badge = container.querySelector('.badge-neutral');
-      expect(badge).toBeInTheDocument();
+      expect(container.querySelector('.badge-neutral')).toBeInTheDocument();
     });
   });
 
-  describe('label sections', () => {
-    it('renders section labels', () => {
+  describe('label sections & price badge', () => {
+    it('renders section labels including Live Price', () => {
       render(<BotDetailOverview bot={makeBot()} />);
       expect(screen.getByText('Strategy')).toBeInTheDocument();
       expect(screen.getByText('Pair')).toBeInTheDocument();
       expect(screen.getByText('Exchange')).toBeInTheDocument();
+      expect(screen.getByText('Live Price')).toBeInTheDocument();
       expect(screen.getByText('Status')).toBeInTheDocument();
       expect(screen.getByText('Total Trades')).toBeInTheDocument();
       expect(screen.getByText('Created')).toBeInTheDocument();
     });
 
+    it('renders PairPriceBadge with exchange and pair', () => {
+      render(<BotDetailOverview bot={makeBot({ exchange: 'binance', pair: 'BTC/USDT' })} />);
+      const badge = screen.getByTestId('pair-price-badge');
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveAttribute('data-exchange', 'binance');
+      expect(badge).toHaveAttribute('data-pair', 'BTC/USDT');
+    });
+
     it('renders strategy translation key as value', () => {
       render(<BotDetailOverview bot={makeBot({ strategy: 'grid' })} />);
-      // useTranslations mock returns key directly
       expect(screen.getByText('bots.strategy.grid')).toBeInTheDocument();
     });
 

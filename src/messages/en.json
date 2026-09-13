@@ -186,7 +186,15 @@
     "notFoundWithId": "No bot found with ID: {id}",
     "tradeEvents": "Trade Events",
     "eventType": "Type",
-    "eventDetails": "Details"
+    "eventDetails": "Details",
+    "resume": "Resume",
+    "reset": "Reset",
+    "config": "Config",
+    "livePrice": "Live Price",
+    "markPrice": "Mark Price",
+    "actionFailed": "Action failed: {error}",
+    "actionSuccess": "Action succeeded",
+    "executing": "Executing..."
   },
   "settings": {
     "title": "Settings",

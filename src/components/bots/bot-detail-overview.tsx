@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import type { BotDetailData } from '@/forest/dashboard/actions';
+import { PairPriceBadge } from './pair-price-badge';
 
 interface BotDetailOverviewProps {
   bot: BotDetailData;
@@ -38,6 +39,10 @@ export function BotDetailOverview({ bot }: BotDetailOverviewProps) {
         <div>
           <div className="detail-label">Exchange</div>
           <div className="detail-value">{bot.exchange}</div>
+        </div>
+        <div>
+          <div className="detail-label">{t('botDetail.livePrice')}</div>
+          <PairPriceBadge exchange={bot.exchange} pair={bot.pair} />
         </div>
         <div>
           <div className="detail-label">Status</div>
