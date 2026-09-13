@@ -20,6 +20,7 @@
 export { botListHandler } from './handlers/bot-list';
 export { botDetailHandler } from './handlers/bot-detail';
 export { botControlHandler } from './handlers/bot-control';
+export { botUpdateConfigHandler } from './handlers/bot-config-update';
 export { botCreateHandler, type CreateBotPayload } from './handlers/bot-create';
 export { killswitchHaltHandler, killswitchResumeHandler } from './handlers/killswitch';
 export { eventsHandler } from './handlers/events';

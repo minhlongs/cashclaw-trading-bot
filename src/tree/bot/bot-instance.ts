@@ -1,17 +1,8 @@
 // Bot Instance — individual bot lifecycle + strategy execution
 // Each bot runs its own state machine, owns its exchange adapter, and emits events.
 
-import type {
-  OrderRequest,
-  OrderResult,
-} from '../exchange/types';
-import type {
-  BotState,
-  BotTrade,
-  BotConfig,
-  BotCallbacks,
-  BotDependencies,
-} from './types';
+import type { OrderRequest, OrderResult } from '../exchange/types';
+import type { BotState, BotTrade, BotConfig, BotCallbacks, BotDependencies } from './types';
 import type { StrategyChain } from './strategy-chain';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
@@ -59,6 +50,12 @@ export class BotInstance {
   }
 
   getConfig(): BotConfig { return { ...this.config }; }
+
+  updateConfig(patch: Partial<BotConfig>): void {
+    this.config = { ...this.config, ...patch } as BotConfig;
+    this.state.config = { ...this.config };
+    this.state.updatedAt = Date.now();
+  }
 
   hasStrategy(): boolean {
     return this.strategy !== null;

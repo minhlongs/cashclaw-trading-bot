@@ -55,7 +55,7 @@ interface BotDetailClientProps {
 export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
   const t = useTranslations('botDetail');
   const [tab, setTab] = useState<Tab>('overview');
-  const [config] = useState(bot.config);
+  const [config, setConfig] = useState(bot.config);
   const [currentStatus, setCurrentStatus] = useState(bot.botStatus);
   const [loadingAction, setLoadingAction] = useState<ControlAction | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -168,7 +168,13 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
 
       {tab === 'overview' && <BotDetailOverview bot={{ ...bot, botStatus: currentStatus }} />}
       {tab === 'trades' && <BotDetailTrades trades={trades} emptyMsg="No trades yet" />}
-      {tab === 'config' && <BotDetailConfig config={config} />}
+      {tab === 'config' && (
+        <BotDetailConfig
+          config={config}
+          botId={bot.id}
+          onConfigSaved={setConfig}
+        />
+      )}
     </div>
   );
 }

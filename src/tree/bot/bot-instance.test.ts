@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BotInstance } from './bot-instance';
-import type { BotConfig } from './types';
+import type { BotConfig, GridBotConfig } from './types';
 import type { ExchangeAdapter, Ticker, OrderResult } from '../exchange/types';
 import { Killswitch } from './killswitch';
 import type { TelemetryWriter } from '../telemetry/writer';
@@ -521,6 +521,27 @@ describe('BotInstance', () => {
       const state = bot.getSnapshot();
       expect(state.status).toBe('running');
       expect(state.error).toBeNull();
+    });
+  });
+
+  describe('updateConfig()', () => {
+    it('updates config, state.config, and touches updatedAt', () => {
+      const config = makeBotConfig();
+      const bot = new BotInstance(
+        BOT_ID,
+        config,
+        { exchange, killswitch, telemetry },
+        callbacks,
+      );
+
+      const beforeUpdatedAt = bot.getSnapshot().updatedAt;
+      bot.updateConfig({ capital: 2000, gridLevels: 15 });
+
+      const updatedConfig = bot.getConfig();
+      expect(updatedConfig.capital).toBe(2000);
+      expect((updatedConfig as GridBotConfig).gridLevels).toBe(15);
+      expect(bot.getSnapshot().config.capital).toBe(2000);
+      expect(bot.getSnapshot().updatedAt).toBeGreaterThanOrEqual(beforeUpdatedAt);
     });
   });
 });

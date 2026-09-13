@@ -2,6 +2,34 @@
 
 ## v1 Paper-Trading Platform
 
+### Interactive Bot Configuration Update Wiring & D1 Persistence — 2026-09-13
+- **Scope:** Converted the static bot configuration panel in `BotDetailConfig` into a fully reactive, controlled form, implemented the Next.js App Router mutation route `PATCH /api/bots/[id]`, built the forest backend handler `botUpdateConfigHandler` with anti-IDOR checks, numeric validation, and strategy bounds coercion, wired persistent storage into Cloudflare D1 via `patchBot`, synchronized runtime memory via `BotInstance.updateConfig`, compacted imports in `bot-instance.ts` to strictly maintain <= 200 LOC, enforced ADR-001 paper-only invariant, and synchronized bilingual i18n keys.
+- **Controlled Configuration UI (`src/components/bots/bot-detail-config.tsx`, 124 LOC):**
+  - Replaced static input fields with controlled form state initialized from `config`.
+  - Implemented numeric input change handlers and real-time state synchronization.
+  - Added save in-flight request lock (`disabled={isSaving}`) and spinning `Loader2` indicator to prevent concurrent submissions.
+  - Renders dismissible, accessible feedback alerts using semantic CSS tokens (`badge badge-success`, `badge badge-error`) with 0 inline styles.
+  - Invokes `onConfigSaved` callback on successful PATCH responses to synchronize parent container state.
+- **Container Synchronization (`src/components/bots/bot-detail-client.tsx`, 180 LOC):**
+  - Passed `botId={bot.id}` and `onConfigSaved={setConfig}` to `<BotDetailConfig>`.
+  - Preserves updated configuration state when operators toggle across overview, performance, trades, and config tabs.
+- **Backend Forest Handler & Validation (`src/forest/api/handlers/bot-config-update.ts`, 98 LOC):**
+  - Built `botUpdateConfigHandler(id, configPatch, userId)` with finite number checks and domain clamping across all strategy parameters (`gridSpacingPct`, `gridLevels`, `capitalPerLevelPct`, `takeProfitPct`, `stopLossPct`, `maxDrawdownPct`, `bbPeriod`, `bbStdDev`, `rsiPeriod`, `rsiBuyThreshold`, `rsiSellThreshold`, `priceDropStep`, `maxSteps`, `baseOrderSizePct`).
+  - Hard-coded ADR-001 paper-only invariant (`mode: 'paper'`).
+  - Anti-IDOR security: verified `ownerId === userId` when user context is provided, returning safe 404 on mismatch.
+  - Persisted serialized configuration JSON to Cloudflare D1 via `patchBot(id, { config_json })`.
+  - Mutated runtime in-memory instance state via `bot.updateConfig(updatedConfig)`.
+  - Re-exported in `src/forest/api/routes.ts`.
+- **Next.js App Router Mutation Endpoint (`src/app/api/bots/[id]/route.ts`, 37 LOC):**
+  - Added `PATCH` method with request payload validation (checks for valid non-array object).
+  - Returns HTTP 400 on malformed input, 404 when bot is not found or IDOR check fails, and 200 on success.
+- **Runtime BotInstance Headroom Compaction (`src/tree/bot/bot-instance.ts`, 197 LOC):**
+  - Compacted multi-line imports to reclaim 8 lines of headroom, bringing the file strictly under the 200 LOC ceiling.
+  - Implemented `updateConfig(patch: Partial<BotConfig>): void` updating in-memory configuration and timestamps.
+- **Bilingual Localization & Test Coverage:**
+  - Added `"saving"`, `"configSaved"`, `"configSaveFailed"`, and `"invalidConfig"` under `"botDetail"` across `src/messages/en.json` and `src/messages/vi.json` with 100% key parity.
+  - Added 8 unit tests in `src/forest/api/handlers/bot-config-update.test.ts`, 6 route tests in `src/app/api/bots/[id]/route.test.ts`, 8 component tests in `src/components/bots/bot-detail-config.test.tsx`, 7 client tests in `src/components/bots/bot-detail-client.test.tsx`, and updated `bot-instance.test.ts` (54/54 targeted tests passing, 4,058/4,058 regression tests passing).
+
 ### Bot Detail Live Control Actions & Real-Time Mark Price Integration — 2026-09-13
 - **Scope:** Wired interactive lifecycle controls (`Resume`, `Pause`, `Reset`/`Stop`, `Config`) in `BotDetailClient` to the edge API mutation endpoint `POST /api/bots/[id]` and integrated live mark price discovery with latency monitoring via `PairPriceBadge` in `BotDetailOverview`. Maintained strict <= 200 LOC per file, 100% semantic CSS tokens, bilingual i18n parity, and ADR-001 paper-only compliance.
 - **Interactive Control Wiring (`src/components/bots/bot-detail-client.tsx`, 174 LOC):**

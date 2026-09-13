@@ -23,6 +23,7 @@ vi.mock('next-intl', () => {
     'botDetail.totalPnl': 'Total P&L', 'botDetail.winRate': 'Win Rate',
     'botDetail.capitalUsed': 'Capital Used', 'botDetail.maxDrawdown': 'Max Drawdown',
     'botDetail.maxDrawdownLimit': '20% limit', 'botDetail.saveConfig': 'Save Config',
+    'botDetail.saving': 'Saving...', 'botDetail.configSaved': 'Configuration updated successfully',
   };
   return {
     useTranslations: (ns?: string) => (k: string) => m[ns ? `${ns}.${k}` : k] ?? (ns ? `${ns}.${k}` : k),
@@ -149,5 +150,24 @@ describe('BotDetailClient', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Killswitch halted');
     await user.click(screen.getByRole('button', { name: /dismiss error/i }));
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('passes botId and updates config state when onConfigSaved is invoked', async () => {
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify({ ok: true, data: { config: { levels: 25 } } })))
+    );
+    render(<BotDetailClient bot={bot} />);
+    const tabs = document.body.querySelector<HTMLElement>('.tabs')!;
+    await user.click(within(tabs).getByRole('button', { name: 'Config' }));
+
+    const input = screen.getAllByRole('spinbutton')[0];
+    await user.clear(input);
+    await user.type(input, '25');
+    await user.click(screen.getByRole('button', { name: /save config/i }));
+
+    expect(fetchSpy).toHaveBeenCalledWith('/api/bots/bot-1', expect.objectContaining({
+      method: 'PATCH',
+    }));
   });
 });

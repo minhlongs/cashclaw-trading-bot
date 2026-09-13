@@ -194,7 +194,11 @@
     "markPrice": "Giá thị trường",
     "actionFailed": "Thao tác thất bại: {error}",
     "actionSuccess": "Thao tác thành công",
-    "executing": "Đang thực thi..."
+    "executing": "Đang thực thi...",
+    "saving": "Đang lưu...",
+    "configSaved": "Cập nhật cấu hình thành công",
+    "configSaveFailed": "Cập nhật cấu hình thất bại: {error}",
+    "invalidConfig": "Giá trị cấu hình không hợp lệ"
   },
   "settings": {
     "title": "Cài đặt",

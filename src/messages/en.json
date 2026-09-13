@@ -194,7 +194,11 @@
     "markPrice": "Mark Price",
     "actionFailed": "Action failed: {error}",
     "actionSuccess": "Action succeeded",
-    "executing": "Executing..."
+    "executing": "Executing...",
+    "saving": "Saving...",
+    "configSaved": "Configuration updated successfully",
+    "configSaveFailed": "Failed to update configuration: {error}",
+    "invalidConfig": "Invalid configuration values"
   },
   "settings": {
     "title": "Settings",

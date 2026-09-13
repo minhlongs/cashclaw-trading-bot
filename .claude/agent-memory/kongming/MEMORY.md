@@ -8,3 +8,4 @@
 - [Direct REST OKX & Bybit planned](project_direct_rest_okx_bybit_plan.md) — 2026-09-11 plan at .orchestrate/latest/plan.md; Base64/Hex WebCrypto signers, OKX+Bybit v5 REST, ADR-001 paper-only, 100% coverage floor.
 - [DirectTickerProvider & PaperExchange planned](project_direct_ticker_provider_plan.md) — 2026-09-12 plan at .orchestrate/latest/plan.md; symbol/ticker normalizers, DirectTickerProvider, PaperExchange market data wiring.
 - [Orchestrator Live Tickers & /api/tickers Shipped](project_orchestrator_and_ticker_api_shipped.md) — 2026-09-12 ExchangeOrchestrator & Bot Paper-Adapter wired to DirectTickerProvider, /api/tickers edge route shipped; 4,038/4,038 tests pass.
+- [Interactive Bot Config Update & D1 Planned](project_interactive_bot_config_plan.md) — 2026-09-13 plan at .orchestrate/latest/plan.md; interactive form, PATCH endpoint, D1 persistence, <= 200 LOC budget.
