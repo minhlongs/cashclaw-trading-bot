@@ -5,6 +5,7 @@ import type { BotConfig, BotStatus } from './types';
 import type { ExchangeConfig } from '../exchange/types';
 import type { TelemetryWriter } from '../telemetry';
 import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
+import type { BotInstance } from './bot-instance';
 export type { ExchangeOrchestrator };
 
 export interface BotManagerDependencies {
@@ -21,6 +22,17 @@ export interface CreateBotRequest {
   config: BotConfig;
   exchangeConfig: ExchangeConfig;
   mode: 'paper' | 'live';
+}
+
+export interface CachedBot {
+  bot: BotInstance;
+  expiresAt: number;
+  userId?: string;
+}
+
+export interface BotFactoryDelegate {
+  createBotSync(req: { id: string; config: BotConfig }, userId?: string): BotInstance;
+  createBot(req: CreateBotRequest, userId?: string): Promise<BotInstance>;
 }
 
 export type D1BotStatus = 'draft' | 'paper_test' | 'live_running' | 'paused' | 'error' | 'stopped';
