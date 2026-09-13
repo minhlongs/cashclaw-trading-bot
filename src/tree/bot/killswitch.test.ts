@@ -37,7 +37,6 @@ describe('enable/disable', () => {
     expect(ks.isHalted()).toBe(false); expect(ks.getState().cooldownUntil).toBeNull();
   });
 });
-
 describe('manualHalt / manualResume', () => {
   it('manualHalt prefixes reason, manualResume clears', () => {
     const cb = makeCallbacks();
@@ -64,7 +63,6 @@ describe('manualHalt / manualResume', () => {
     expect(auto.isManualHalt()).toBe(false);
   });
 });
-
 describe('isTradingEnabled auto-resume', () => {
   it('resumes when cooldown expired', () => {
     const cb = makeCallbacks();
@@ -110,7 +108,6 @@ describe('daily loss limit', () => {
     expect(new Killswitch(makeCallbacks(), cfg({ maxDailyLossPct: 1 })).isHalted()).toBe(false);
   });
 });
-
 describe('consecutive losses', () => {
   it('halts at threshold, resets on profit and zero pnl, treats undefined as 0', () => {
     const ks = new Killswitch(makeCallbacks(), cfg({ maxConsecutiveLosses: 3 }));
@@ -159,8 +156,7 @@ describe('updatePeakCapital', () => {
     ks.updatePeakCapital(1000); expect(ks.getState().peakCapital).toBe(1000);
     ks.updatePeakCapital(1200); expect(ks.getState().peakCapital).toBe(1200);
     ks.updatePeakCapital(800); expect(ks.getState().peakCapital).toBe(1200);
-    ks.updatePeakCapital(900);
-    expect(ks.getState().currentDrawdown).toBeCloseTo(25, 0);
+    ks.updatePeakCapital(900); expect(ks.getState().currentDrawdown).toBeCloseTo(25, 0);
   });
 });
 
@@ -179,7 +175,6 @@ describe('reset + recordError', () => {
     expect(cb.onError).toHaveBeenCalledWith(err, 'ws');
   });
 });
-
 describe('daily reset timer', () => {
   it('resets state at midnight and reschedules', () => {
     const ks = new Killswitch(makeCallbacks(), cfg());

@@ -12,3 +12,4 @@
 - [Bot List Lifecycle Controls & Modularization Planned](project_bot_list_lifecycle_control_plan.md) — 2026-09-13 plan at .orchestrate/latest/plan.md; BotRowActions, BotsTable, reactive controls, <= 200 LOC budget.
 - [Settings Modularization & Killswitch Panel Planned](project_settings_modularization_killswitch_plan.md) — 2026-09-13 plan at .orchestrate/latest/plan.md; KillswitchSettings extraction, bilingual i18n, test decomposition, <= 200 LOC budget.
 - [Forest Settings Modularization & LOC Planned](project_forest_settings_modularization_plan.md) — 2026-09-13 plan at .orchestrate/latest/plan.md; types.ts, parsers.ts, actions.ts, <= 200 LOC budget, backward compatibility.
+- [Tree Bot Killswitch Modularization & LOC Planned](project_tree_bot_killswitch_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; evaluator, audit, killswitch refactor, <= 200 LOC budget.
