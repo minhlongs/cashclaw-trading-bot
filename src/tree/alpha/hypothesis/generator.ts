@@ -1,71 +1,14 @@
 // Hypothesis Engine — Generator
 // Systematically creates and evolves alpha hypotheses.
 
-import type { CombinerMethod } from '../types';
-import type { BarrierConfig } from '../labeling';
 import { RegimeLabel } from '../../regime/types';
-import type { OptimizerMethod } from '../portfolio/types';
-import type {
-  AlphaHypothesis,
-  IndicatorPreset,
-  HypothesisTemplate,
-} from './types';
-
-// ── Constants ──────────────────────────────────────────────────────────────────
-
-const ALL_INDICATORS = [
-  'sma', 'ema', 'rsi', 'atr', 'bollinger', 'macd',
-  'volume_zscore', 'returns', 'log_returns',
-  'momentum', 'realized_volatility', 'distance_from_ma',
-] as const;
-
-const ALL_COMBINERS: CombinerMethod[] = ['weighted_sum', 'voting', 'max_confidence'];
-const ALL_OPTIMIZERS: OptimizerMethod[] = ['equal_weight', 'risk_parity', 'confidence_weighted', 'regime_sized'];
-const ALL_REGIMES: RegimeLabel[] = [RegimeLabel.TREND_UP, RegimeLabel.TREND_DOWN, RegimeLabel.RANGE, RegimeLabel.HIGH_VOLATILITY, RegimeLabel.LOW_VOLATILITY, RegimeLabel.SHOCK];
-
-const LOOKBACK_RANGE: [number, number] = [14, 200];
-const DEFAULT_BARRIER: BarrierConfig = { takeProfitPct: 0.02, stopLossPct: 0.01, maxHoldingMs: 24 * 3600_000 };
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function slug(len = 8): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let s = '';
-  for (let i = 0; i < len; i++) {
-    s += chars[Math.floor(Math.random() * chars.length)]!;
-  }
-  return s;
-}
-
-function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function pick<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)]!;
-}
-
-function pickN<T>(arr: readonly T[], min: number, max: number): T[] {
-  const count = randomInt(min, Math.min(max, arr.length));
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-}
-
-function clamp(v: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, v));
-}
-
-// ── Regime-Specific Presets ────────────────────────────────────────────────────
-
-const REGIME_STRATEGY: Record<RegimeLabel, { indicators: readonly string[]; combiner: CombinerMethod; description: string }> = {
-  TREND_UP: { indicators: ['ema', 'macd', 'momentum', 'rsi'], combiner: 'weighted_sum', description: 'Trend-following with momentum confirmation' },
-  TREND_DOWN: { indicators: ['sma', 'volume_zscore', 'rsi', 'atr'], combiner: 'voting', description: 'Defensive trend-down with volume and volatility checks' },
-  RANGE: { indicators: ['bollinger', 'rsi', 'atr', 'distance_from_ma'], combiner: 'max_confidence', description: 'Mean-reversion with mean-distance confirmation' },
-  HIGH_VOLATILITY: { indicators: ['atr', 'realized_volatility', 'volume_zscore', 'macd'], combiner: 'voting', description: 'Volatility-adjusted with risk-aware sizing' },
-  LOW_VOLATILITY: { indicators: ['sma', 'ema', 'momentum', 'returns'], combiner: 'weighted_sum', description: 'Low-vol momentum with trend strength' },
-  SHOCK: { indicators: ['atr', 'volume_zscore', 'rsi'], combiner: 'max_confidence', description: 'Shock detection with rapid mean-reversion' },
-  UNKNOWN: { indicators: ['sma', 'rsi', 'macd', 'volume_zscore'], combiner: 'weighted_sum', description: 'Default balanced indicator set for unknown regimes' },
-};
+import type { BarrierConfig } from '../labeling';
+import type { AlphaHypothesis, HypothesisTemplate, IndicatorPreset } from './types';
+import {
+  ALL_COMBINERS, ALL_INDICATORS, ALL_OPTIMIZERS, ALL_REGIMES,
+  DEFAULT_BARRIER, LOOKBACK_RANGE, REGIME_STRATEGY,
+  clamp, pick, pickN, randomInt, slug,
+} from './presets';
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
