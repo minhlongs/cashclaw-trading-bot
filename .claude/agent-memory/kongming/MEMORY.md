@@ -15,3 +15,9 @@
 - [Tree Bot Killswitch Modularization & LOC Planned](project_tree_bot_killswitch_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; evaluator, audit, killswitch refactor, <= 200 LOC budget.
 - [Tree Bot Manager Modularization & LOC Planned](project_tree_bot_manager_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; cache, lifecycle, factory, facade refactor, <= 200 LOC budget.
 - [Alpha Pipeline Engine Modularization & LOC Planned](project_alpha_pipeline_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; utils, signals, evaluation, facade refactor, <= 200 LOC budget.
+- [Alpha Derivative Funding Modularization Planned](project_alpha_derivative_funding_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; funding-types, funding-api, funding-features, facade, <= 200 LOC budget.
+- [Rate Limiter Modularization & LOC Planned](project_rate_limiter_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; types, token-bucket, backoff, rate-limiter, facade, <= 200 LOC budget.
+- [Worker Modularization & LOC Planned](project_worker_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; types, middleware, routes, scheduled, facade, <= 200 LOC budget.
+- [Circuit Breaker Modularization & LOC Planned](project_circuit_breaker_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; types, state FSM, test, facade, <= 150 LOC budget.
+- [Request Queue Modularization & LOC Planned](project_request_queue_modularization_plan.md) — 2026-09-15 plan at .orchestrate/latest/plan.md; pool, drain, facade, <= 150 LOC budget.
+
