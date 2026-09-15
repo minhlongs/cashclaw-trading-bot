@@ -9,13 +9,12 @@ import {
   createProviderRegistry,
 } from './provider-adapter';
 import type {
-  ModelProvenance,
-  ModelTier,
   AgentRole,
   DeliberationTask,
+  ModelTier,
   ModelProvenanceRecord,
 } from '@/tree/research/tradingagents';
-import { tierForTask, recordModelProvenance } from '@/tree/research/tradingagents/model-provenance';
+import { executeRouteCall } from './model-router-execute';
 
 /** Router configuration. */
 export interface ModelRouterConfig {
@@ -66,117 +65,19 @@ export class ModelRouter {
     task: DeliberationTask,
     input: LlmProviderInput,
   ): Promise<{ ok: true; value: RoutedCallOutcome } | { ok: false; reasons: readonly string[] }> {
-    // Determine required tier for this task
-    const requiredTier = tierForTask(task);
-
-    // Get primary provider for this tier
-    const primary = this.config.registry.getPrimaryForTier(requiredTier);
-    if (!primary) {
-      return {
-        ok: false,
-        reasons: [`model-router: no configured primary provider for tier '${requiredTier}' (task: ${task}, role: ${agentRole})`],
-      };
-    }
-
-    // Get fallback for this tier
-    const fallback = this.config.registry.getFallbackForTier(requiredTier);
-
-    // Prepare input with caps
     const cappedInput: LlmProviderInput = {
       ...input,
       maxTokens: Math.min(input.maxTokens ?? this.config.maxTokensCap, this.config.maxTokensCap),
       temperature: input.temperature ?? 0.3,
     };
 
-    // Try primary
-    try {
-      const startMs = Date.now();
-      const result = await Promise.race([
-        primary.call(cappedInput),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`timeout after ${this.config.defaultTimeoutMs}ms`)), this.config.defaultTimeoutMs),
-        ),
-      ]);
-      // Prefer provider-reported latency (deterministic for fixtures); fall back to wall-clock.
-      const latencyMs = result.latencyMs > 0 ? result.latencyMs : Date.now() - startMs;
-
-      const provenance: ModelProvenance = {
-        providerId: primary.providerId,
-        modelId: primary.models[requiredTier],
-        tier: requiredTier,
-        promptTokens: result.usage.promptTokens,
-        completionTokens: result.usage.completionTokens,
-        latencyMs,
-      };
-
-      const recordResult = recordModelProvenance(agentRole, task, provenance);
-      if (!recordResult.ok) {
-        return { ok: false, reasons: recordResult.reasons };
-      }
-
-      return {
-        ok: true,
-        value: {
-          text: result.text,
-          provenance: recordResult.record,
-          fallbackUsed: false,
-        },
-      };
-    } catch (primaryError) {
-      const primaryErr = primaryError as Error;
-
-      // No fallback → fail
-      if (!fallback) {
-        return {
-          ok: false,
-          reasons: [`model-router: primary provider '${primary.providerId}' failed and no fallback available: ${primaryErr.message}`],
-        };
-      }
-
-      // Try fallback
-      try {
-        const startMs = Date.now();
-        const result = await Promise.race([
-          fallback.call(cappedInput),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`timeout after ${this.config.defaultTimeoutMs}ms`)), this.config.defaultTimeoutMs),
-          ),
-        ]);
-        // Prefer provider-reported latency (deterministic for fixtures); fall back to wall-clock.
-        const latencyMs = result.latencyMs > 0 ? result.latencyMs : Date.now() - startMs;
-
-        const provenance: ModelProvenance = {
-          providerId: fallback.providerId,
-          modelId: fallback.models[requiredTier],
-          tier: requiredTier,
-          promptTokens: result.usage.promptTokens,
-          completionTokens: result.usage.completionTokens,
-          latencyMs,
-        };
-
-        const recordResult = recordModelProvenance(agentRole, task, provenance);
-        if (!recordResult.ok) {
-          return { ok: false, reasons: recordResult.reasons };
-        }
-
-        return {
-          ok: true,
-          value: {
-            text: result.text,
-            provenance: recordResult.record,
-            fallbackUsed: true,
-          },
-        };
-      } catch (fallbackError) {
-        const fallbackErr = fallbackError as Error;
-        return {
-          ok: false,
-          reasons: [
-            `model-router: primary '${primary.providerId}' failed: ${primaryErr.message}; fallback '${fallback.providerId}' failed: ${fallbackErr.message}`,
-          ],
-        };
-      }
-    }
+    return executeRouteCall(
+      agentRole,
+      task,
+      cappedInput,
+      this.config.registry,
+      this.config.defaultTimeoutMs,
+    );
   }
 
   /** Get the provider that would be selected for a tier (for testing/inspection). */
