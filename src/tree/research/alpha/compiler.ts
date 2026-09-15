@@ -2,21 +2,14 @@
 // Pure logic: no I/O, no network, no eval/exec. Only async is WebCrypto SHA-256 for specId.
 // Each stage fail-closed with reason codes. Compiler NEVER executes experiments.
 
-import { canonicalize } from '@/lib/canonical-json';
 import type { AlphaProvenance } from './provenance';
 import { type ResearchHypothesis, researchHypothesisSchema } from '../hypothesis/types';
 import { checkMechanism } from '../hypothesis/mechanism-gate';
 import { declareFeature, type FeatureDeclaration } from '@/tree/alpha/indicator-types';
-import type { Universe } from '@/tree/alpha/universe/types';
-import { RegimeLabel } from '@/tree/regime/types';
-import { resolveStressConfig, type StressConfig, type StressMode } from '@/tree/alpha/cost-stress';
-import type { BarrierConfig } from '@/tree/alpha/labeling';
+import { resolveStressConfig } from '@/tree/alpha/cost-stress';
 import {
   deriveBarrierConfig,
   derivePeriods,
-  deriveSeedFromSpecId,
-  type ExperimentPeriod,
-  type ExperimentSpec,
   type CompileResult,
   type DataWindow,
 } from './experiment-spec';
@@ -27,6 +20,7 @@ import {
   validateDataAndUniverse,
   validateCost,
 } from './compile-stages';
+import { buildSpec } from './spec-builder';
 
 /** Context supplied to compiler (caller provides data window + optional goal/provenance). */
 export interface CompilerContext {
@@ -122,82 +116,4 @@ export async function compile(
   }
 
   return buildSpec(h, features, ctx, costConfig, barrierConfig, periods);
-}
-
-/** Build the final ExperimentSpec from validated inputs (specId + seed + compiledAt). */
-async function buildSpec(
-  h: ResearchHypothesis,
-  features: readonly FeatureDeclaration[],
-  ctx: CompilerContext,
-  costConfig: StressConfig,
-  barrierConfig: BarrierConfig,
-  periods: { train: ExperimentPeriod; validation: ExperimentPeriod; test: ExperimentPeriod },
-): Promise<CompileResult> {
-  const specBody = buildSpecBody({
-    hypothesisId: h.id, goalId: ctx.goalId ?? null,
-    universe: h.universe, timeframe: h.timeframe, horizonBars: h.horizon,
-    features,
-    transformations: h.transformations, regimeConstraints: h.regimeConstraints,
-    expectedDirection: h.expectedDirection, costMode: h.costAssumption,
-    costConfig, barrierConfig,
-    trainPeriod: periods.train, validationPeriod: periods.validation, testPeriod: periods.test,
-    provenance: ctx.provenance ?? null,
-  });
-
-  // Compute specId from specBody (excl seed + compiledAt), then derive seed from specId
-  const specId = await hashSpecBody(specBody);
-  const seed = deriveSeedFromSpecId(specId);
-
-  // Final spec with specId, seed, and compiledAt
-  const compiledAt = ctx.nowIso ?? new Date().toISOString();
-  const spec: ExperimentSpec = {
-    ...specBody,
-    specId,
-    seed,
-    compiledAt,
-    compilerVersion: 1,
-  };
-
-  return { ok: true, value: spec };
-}
-
-/** Build the spec body (without specId, seed, compiledAt for hashing). */
-function buildSpecBody(params: {
-  hypothesisId: string;
-  goalId: string | null;
-  universe: Universe;
-  timeframe: string;
-  horizonBars: number;
-  features: readonly FeatureDeclaration[];
-  transformations: readonly string[];
-  regimeConstraints: readonly RegimeLabel[];
-  expectedDirection: 'long' | 'short' | 'neutral';
-  costMode: StressMode;
-  costConfig: StressConfig;
-  barrierConfig: BarrierConfig;
-  trainPeriod: ExperimentPeriod;
-  validationPeriod: ExperimentPeriod;
-  testPeriod: ExperimentPeriod;
-  provenance: AlphaProvenance | null;
-}): Omit<ExperimentSpec, 'specId' | 'seed' | 'compiledAt' | 'compilerVersion'> {
-  return {
-    hypothesisId: params.hypothesisId, goalId: params.goalId,
-    universe: params.universe, timeframe: params.timeframe, horizonBars: params.horizonBars,
-    features: params.features,
-    transformations: params.transformations, regimeConstraints: params.regimeConstraints,
-    expectedDirection: params.expectedDirection, costMode: params.costMode,
-    costConfig: params.costConfig, barrierConfig: params.barrierConfig,
-    trainPeriod: params.trainPeriod, validationPeriod: params.validationPeriod, testPeriod: params.testPeriod,
-    provenance: params.provenance,
-  };
-}
-
-/** Hash the spec body using WebCrypto SHA-256. */
-async function hashSpecBody(body: object): Promise<string> {
-  const canonical = canonicalize(body);
-  const bytes = new TextEncoder().encode(canonical);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
 }

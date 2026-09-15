@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Alpha Attribution Analyzer Modularization & LOC Compliance — 2026-09-16
+- **Scope:** Modularized `src/forest/alpha/attribution/analyzer.ts` (207 LOC) into 5 focused single-responsibility submodules (`math.ts`, `regime.ts`, `signal-matching.ts`, `alpha-attribution.ts`, and a slim `analyzer.ts` orchestrator), added dedicated unit test suite `math.test.ts` (4 focused cases), preserved 100% backward compatibility of public `attributePerformance` API, zero `:any` types, zero unused exports, and kept `analyzer.test.ts` (135 LOC) completely untouched.
+- **Decomposition & LOC Compliance:**
+  - `analyzer.ts` (42 LOC, reduced from 207 LOC): Thin facade/orchestrator coordinating attribution pipeline via submodules.
+  - `math.ts` (18 LOC): Verbatim extraction of `pearson(x, y)` math kernel.
+  - `regime.ts` (36 LOC): Verbatim extraction of `emptyRegimeBreakdown`, `buildRegimeLookup`, and `regimeAt`.
+  - `signal-matching.ts` (67 LOC): Verbatim extraction of `findLatestSignal`, `matchTradesToSignals`, `groupByAlpha`, and `accumulateFeatures`.
+  - `alpha-attribution.ts` (60 LOC): Verbatim extraction of `computeAlphaAttribution`.
+  - `math.test.ts` (33 LOC): Unit test suite covering zero variance, perfect positive/negative correlation, and small arrays.
+- **Quality Gates:** 4,126/4,126 tests pass across 332 test files; 0 type errors; 0 lint warnings; 0 knip unused exports; coverage: statements 92.13%, branches 91.82%, functions 95.45%, lines 92.13%.
+
+
+### Alpha Compiler Modularization & LOC Compliance — 2026-09-16
+- **Scope:** Modularized `src/tree/research/alpha/compiler.ts` (203 LOC) into an orchestrator (`compiler.ts`, 119 LOC) focused on the 6-stage compile pipeline and a dedicated spec builder (`spec-builder.ts`, 112 LOC), preserved 100% backward compatibility of public `compile` + `CompilerContext` API, zero `:any` types, zero new eslint-disable suppressions, and kept `compiler.test.ts` (398 LOC) completely untouched.
+- **Decomposition & LOC Compliance:**
+  - `compiler.ts` (119 LOC, reduced from 203 LOC): Orchestrator exposing `compile(h, ctx) → CompileResult` and `CompilerContext` interface; delegates spec construction to `./spec-builder`.
+  - `spec-builder.ts` (112 LOC, new): Verbatim extraction of `buildSpec`, `buildSpecBody`, and `hashSpecBody` helpers plus their supporting types; pure logic, WebCrypto SHA-256 specId derivation preserved.
+- **Quality Gates:** 4,126/4,126 tests pass across 332 test files (compiler.test.ts 25/25 unchanged); 0 type errors; 0 lint warnings; 0 knip unused exports.
+
 ### Forest Settings Modularization & LOC Compliance — 2026-09-13
 - **Scope:** Decomposed monolithic server action file `src/forest/settings/actions.ts` (333 LOC) into modular single-responsibility units (`types.ts`, `parsers.ts`, `actions.ts`), added isolated unit test suite `parsers.test.ts`, achieved 100% LOC compliance (all 5 files in `src/forest/settings/` strictly <= 200 LOC), preserved 100% backward compatibility via type re-export, preserved WebCrypto AES-256-GCM credential encryption/decryption, and maintained ADR-001 paper-only invariant.
 - **Modular Decomposition & LOC Budget Compliance:**
