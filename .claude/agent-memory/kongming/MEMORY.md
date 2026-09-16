@@ -20,4 +20,5 @@
 - [Worker Modularization & LOC Planned](project_worker_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; types, middleware, routes, scheduled, facade, <= 200 LOC budget.
 - [Circuit Breaker Modularization & LOC Planned](project_circuit_breaker_modularization_plan.md) — 2026-09-14 plan at .orchestrate/latest/plan.md; types, state FSM, test, facade, <= 150 LOC budget.
 - [Request Queue Modularization & LOC Planned](project_request_queue_modularization_plan.md) — 2026-09-15 plan at .orchestrate/latest/plan.md; pool, drain, facade, <= 150 LOC budget.
+- [Regime Features Modularization Planned](project_regime_features_modularization_plan.md) — 2026-09-16 plan at .orchestrate/latest/plan.md; feature-helpers, features facade, <= 150 LOC budget.
 

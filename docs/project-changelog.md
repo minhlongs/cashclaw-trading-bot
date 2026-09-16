@@ -2,6 +2,15 @@
 
 ## v1 Paper-Trading Platform
 
+### Alpha Zoo Adapter Modularization & LOC Compliance (Cycle 8) — 2026-09-16
+- **Scope:** Modularized `src/tree/research/alpha/zoo/zoo-adapter.ts` (199 LOC, near the 200 LOC ceiling) into a dedicated pure pipeline module (`zoo-pipeline.ts`, 103 LOC) and a slim orchestrator (`zoo-adapter.ts`, 59 LOC), meeting the ≤ 150 LOC target. Re-exported `RegisteredAlpha` via `import-report.ts` to cleanly resolve circular dependencies while maintaining 100% backward compatibility for all consumers and barrel exports.
+- **Decomposition & LOC Compliance:**
+  - `zoo-adapter.ts` (59 LOC, reduced from 199 LOC): Thin orchestrator retaining `envelopeSchema` Zod validation, `AlphaZooImportReport` interface, `importAlphaZooManifest`, `finishImport`, and `envelopeReason` with Σ≡N invariant verification.
+  - `zoo-pipeline.ts` (103 LOC, new): Pure per-entry D3 precedence classification pipeline (`EnvelopeData`, `PipelineOutput`, `extractRawEntries`, `envelopeFailureResults`, `pseudoId`, `collectSupportReasons`, `processEntry`, `runPipeline`). Zero state, zero I/O, fail-closed design.
+  - `import-report.ts` (144 LOC, modified): Formally defines and exports `RegisteredAlpha` interface in the report domain.
+- **Quality Gates:** 4,126/4,126 tests pass across 332 test files (159/159 zoo tests green, determinism pin byte-identical); 0 type errors; 0 lint warnings; 0 knip unused exports; 0 `:any`; 0 new `eslint-disable`; no test files modified. Deployed live to Cloudflare Workers — Version ID `0402f44f-9d1e-4919-b0e1-f23fc8ad7401`, SHA `2620246a`.
+
+
 ### Regime Features Modularization & LOC Compliance — 2026-09-16
 - **Scope:** Modularized `src/tree/regime/features.ts` (201 LOC, exceeding the 200 LOC hard ceiling) into a dedicated pure helper module (`feature-helpers.ts`, 134 LOC) and a slim orchestrator (`features.ts`, 80 LOC), both meeting the ≤ 150 LOC target.
 - **Decomposition & LOC Compliance:**

@@ -8,6 +8,7 @@
 
 | Phase | What shipped | Evidence |
 |---|---|---|
+| **Alpha Zoo Adapter Modularization & LOC Compliance (Cycle 8)** (2026-09-16) | Modularized `src/tree/research/alpha/zoo/zoo-adapter.ts` (199 LOC) into a thin orchestrator (`zoo-adapter.ts`, 59 LOC) and pure pipeline module (`zoo-pipeline.ts`, 103 LOC), moved `RegisteredAlpha` interface to `import-report.ts` (144 LOC) to avoid circular dependencies, maintained 100% backward compatibility of public exports and barrel `src/tree/research/index.ts`, preserved determinism pin test, zero test file modifications, 0 `:any`, 0 ESLint warnings, knip clean, 4,126/4,126 tests passing, deployed live to Cloudflare Workers edge (SHA `2620246a`). | commit `2620246a` |
 | Core platform | Next.js App Router scaffold, bilingual i18n, D1 schema (users/bots/trades/events/snapshots), paper exchange, grid + mean-reversion strategy chain | `migrations/0001` |
 | Data integrity | Dashboard/bots/bot-detail read real data from D1 (`trade_events`, `capital_snapshots`) — fabricated figures removed | commit `e8228b5` |
 | Auth + trade events | Session-cookie auth, D1 `user_sessions`, trade event telemetry wired | commits `363db6d`, `3afc1e9` |
