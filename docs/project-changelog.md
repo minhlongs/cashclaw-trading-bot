@@ -9,6 +9,13 @@
   - `feature-helpers.ts` (134 LOC, new): Verbatim extraction of 7 pure mathematical/statistical helper functions (`logReturns`, `stdDev`, `mean`, `trueRanges`, `linearSlope`, `zScore`, `adxLike`); all module-internal — not leaked to public barrel.
 - **Quality Gates:** 4,126/4,126 tests pass across 332 test files (60/60 regime tests pass); 0 type errors; 0 lint warnings; 0 knip unused exports; 0 `:any`; 0 new `eslint-disable` (freeze preserved); causal leakage invariant (`leakage.test.ts`) intact.
 
+### Regime Classifier Modularization & LOC Compliance — 2026-09-16
+- **Scope:** Modularized `src/tree/regime/classifier.ts` (199 LOC, exceeding the 200 LOC hard ceiling) into a dedicated pure rules module (`classifier-rules.ts`, 97 LOC) and a slim orchestrator (`classifier.ts`, 119 LOC), both meeting the ≤ 150 LOC target. Public API `RuleBasedRegimeClassifier` preserved byte-identically from `./classifier`; barrel export in `index.ts` unchanged; readiness gate intact.
+- **Decomposition & LOC Compliance:**
+  - `classifier.ts` (119 LOC, reduced from 199 LOC): Thin orchestrator retaining state machine (`classify`, `handleColdStart`, `attemptTransition`, `buildResult`), imports pure rules from `./classifier-rules`.
+  - `classifier-rules.ts` (97 LOC, new): Verbatim extraction of pure thresholds (`Thresholds`, `DEFAULT_THRESHOLDS`), state templates (`EMPTY_FEATURES`), validation helper (`isValidFeatures`), label determination (`determineLabel` — priority-ordered SHOCK > HIGH_VOL > TREND > LOW_VOL > RANGE), and confidence math (`computeConfidence` per-label 0–1 scale). Zero state, zero I/O, zero class definitions.
+- **Quality Gates:** 4,126/4,126 tests pass across 332 test files (regime tests 60/60 green); 0 type errors; 0 lint warnings; 0 knip unused exports; 0 `:any`; 0 new `eslint-disable` (freeze preserved); no test files modified; causal invariant intact (leakage.test.ts). Deployed live to Cloudflare Workers — Version ID `828bb4a0-7475-48f0-a21a-7151d584505f`, SHA `d41b13ac`.
+
 ### Alpha Attribution Analyzer Modularization & LOC Compliance — 2026-09-16
 - **Scope:** Modularized `src/forest/alpha/attribution/analyzer.ts` (207 LOC) into 5 focused single-responsibility submodules (`math.ts`, `regime.ts`, `signal-matching.ts`, `alpha-attribution.ts`, and a slim `analyzer.ts` orchestrator), added dedicated unit test suite `math.test.ts` (4 focused cases), preserved 100% backward compatibility of public `attributePerformance` API, zero `:any` types, zero unused exports, and kept `analyzer.test.ts` (135 LOC) completely untouched.
 - **Decomposition & LOC Compliance:**
