@@ -2,6 +2,13 @@
 
 ## v1 Paper-Trading Platform
 
+### Regime Features Modularization & LOC Compliance — 2026-09-16
+- **Scope:** Modularized `src/tree/regime/features.ts` (201 LOC, exceeding the 200 LOC hard ceiling) into a dedicated pure helper module (`feature-helpers.ts`, 134 LOC) and a slim orchestrator (`features.ts`, 80 LOC), both meeting the ≤ 150 LOC target.
+- **Decomposition & LOC Compliance:**
+  - `features.ts` (80 LOC, reduced from 201 LOC): Retains `extractRegimeFeatures(candles, config, atIndex)` orchestrator with exact causal invariant (`atIndex + 1` window slicing) and 6 composite regime features (realized vol, ATR, trend strength, MA slope, return dispersion, volume abnormality).
+  - `feature-helpers.ts` (134 LOC, new): Verbatim extraction of 7 pure mathematical/statistical helper functions (`logReturns`, `stdDev`, `mean`, `trueRanges`, `linearSlope`, `zScore`, `adxLike`); all module-internal — not leaked to public barrel.
+- **Quality Gates:** 4,126/4,126 tests pass across 332 test files (60/60 regime tests pass); 0 type errors; 0 lint warnings; 0 knip unused exports; 0 `:any`; 0 new `eslint-disable` (freeze preserved); causal leakage invariant (`leakage.test.ts`) intact.
+
 ### Alpha Attribution Analyzer Modularization & LOC Compliance — 2026-09-16
 - **Scope:** Modularized `src/forest/alpha/attribution/analyzer.ts` (207 LOC) into 5 focused single-responsibility submodules (`math.ts`, `regime.ts`, `signal-matching.ts`, `alpha-attribution.ts`, and a slim `analyzer.ts` orchestrator), added dedicated unit test suite `math.test.ts` (4 focused cases), preserved 100% backward compatibility of public `attributePerformance` API, zero `:any` types, zero unused exports, and kept `analyzer.test.ts` (135 LOC) completely untouched.
 - **Decomposition & LOC Compliance:**
@@ -598,3 +605,4 @@
 - **Verdict script** (`scripts/rv-pairs-verdict.ts`, manual-only): runs pre-registered arms M1–M4 through walk-forward + survival gates on real Binance daily data; fails closed (non-zero exit) on thin/missing data; writes artifacts to `plans/reports/`.
 - **Verdict: KILLED.** Primary arm M4 completed **0 trades** out-of-sample (8 symbols, 1000 aligned daily bars, 7 rolling OOS windows): the conjunctive tradability gate never certified a pair-window, so the multiple-testing battery fail-closed at "at least 2 completed trades required". M1 (gate off, comparative only) traded 722 times at expectancy −0.0204 net of both-leg fees+slippage. Ablation confirms all OOS activity sits behind the gate that stays closed.
 - Full report with real numbers: `docs/relative-value-verdict.md`; raw artifacts: `plans/reports/rv-pairs-verdict.json`, `plans/reports/rv-pairs-m4-survival.json`. No fabricated numbers; family does not advance to paper-trading candidacy.
+- **2026-09-15** — Cycle 5: `src/tree/alpha/hypothesis/generator.ts` (203 LOC) decomposed into `generator.ts` (147 LOC orchestrator) + `presets.ts` (107 LOC pure helpers/constants). 4,126/4,126 tests green, deploy `6ae73fc` live CF-direct.
