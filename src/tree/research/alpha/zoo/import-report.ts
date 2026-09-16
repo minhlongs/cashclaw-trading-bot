@@ -6,6 +6,8 @@
 import type { Universe } from '@/tree/alpha/universe/types';
 import type { StressMode } from '@/tree/alpha/cost-stress';
 import type { DataWindow } from '../experiment-spec';
+import type { ResearchHypothesis } from '../../hypothesis/types';
+import type { AlphaProvenance } from '../provenance';
 
 /** Importer identity stamped on hypotheses + provenance records. */
 export const ZOO_IMPORTER_VERSION = 'alphazoo-adapter@1' as const;
@@ -69,6 +71,12 @@ export interface AlphaImportTotals {
 export interface AlphaImportReport {
   readonly totals: AlphaImportTotals;
   readonly results: readonly PerAlphaResult[];
+}
+
+/** One registered candidate: hypothesis + provenance for later persistence. */
+export interface RegisteredAlpha {
+  readonly hypothesis: ResearchHypothesis;
+  readonly provenance: AlphaProvenance;
 }
 
 const TOTAL_KEYS: ReadonlyArray<readonly [AlphaImportOutcome, keyof AlphaImportTotals]> = [
