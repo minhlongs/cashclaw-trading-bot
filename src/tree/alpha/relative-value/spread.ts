@@ -10,12 +10,16 @@
 //   against the trailing zWindow spread values ending at t−1 — every input
 //   carries timestamp < t. Never forward-fill, never carry a stale β.
 
-import {
-  estimateRollingHedgeRatio,
-  type HedgeRatioResult,
-} from './hedge-ratio';
+import type { HedgeRatioResult } from './hedge-ratio';
 import type { PairPanel, PairSimConfig, SpreadStateAtTime } from './types';
 import { assertPositiveCloses } from './pair-period';
+import {
+  estimateBetaSeries,
+  mean,
+  stdDev,
+  degenerate,
+  partial,
+} from './spread-beta';
 
 /** Distinct fail-closed reasons (tested verbatim). */
 export const SPREAD_REASONS = {
@@ -24,98 +28,6 @@ export const SPREAD_REASONS = {
   spreadUnavailable: 'spread value unavailable within z window',
   zeroSpreadStd: 'spread standard deviation is zero in z window',
 } as const;
-
-function mean(values: readonly number[]): number {
-  return values.reduce((s, v) => s + v, 0) / values.length;
-}
-
-function stdDev(values: readonly number[]): number {
-  const m = mean(values);
-  return Math.sqrt(values.reduce((s, v) => s + (v - m) ** 2, 0) / values.length);
-}
-
-function degenerate(
-  timestamp: number,
-  reason: string,
-): SpreadStateAtTime {
-  return { timestamp, hedgeRatio: null, spread: null, zScore: null, reason };
-}
-
-/** State where β (and maybe the latest spread) exist but z does not yet. */
-function partial(
-  timestamp: number,
-  hedgeRatio: number,
-  spread: number | null,
-  reason: string,
-): SpreadStateAtTime {
-  return { timestamp, hedgeRatio, spread, zScore: null, reason };
-}
-
-/** β(k) estimated as-of timestamps[k] using only strictly-prior closes. */
-function estimateBetaSeries(
-  panel: PairPanel,
-  config: PairSimConfig,
-): HedgeRatioResult[] {
-  if (config.hedgeMode === 'frozen') return estimateFrozenBetaSeries(panel, config);
-  const n = panel.timestamps.length;
-  // Index 0 has no strictly-prior data → fail-closed placeholder.
-  const betaAt: HedgeRatioResult[] = [
-    {
-      hedgeRatio: null,
-      reason: 'no strictly-prior data at first timestamp',
-    },
-  ];
-  for (let k = 1; k < n; k++) {
-    betaAt.push(
-      estimateRollingHedgeRatio(
-        panel,
-        config.hedgeWindow,
-        config.minObs,
-        panel.timestamps[k]!,
-      ),
-    );
-  }
-  return betaAt;
-}
-
-/**
- * Frozen-β series (hedgeMode 'frozen'): β is estimated ONCE at the FIRST
- * VALID timestamp (first estimate that succeeds) from strictly-prior closes
- * only, then held constant for every later timestamp. States before that
- * point stay fail-closed with their own reasons. Causality: the single
- * estimate consumes no data at or beyond its estimation point — it is never
- * recomputed or updated afterwards.
- */
-function estimateFrozenBetaSeries(
-  panel: PairPanel,
-  config: PairSimConfig,
-): HedgeRatioResult[] {
-  const n = panel.timestamps.length;
-  if (n < 2) {
-    return [{ hedgeRatio: null, reason: 'no strictly-prior data at first timestamp' }];
-  }
-  const out: HedgeRatioResult[] = [
-    { hedgeRatio: null, reason: 'no strictly-prior data at first timestamp' },
-  ];
-  let anchor: HedgeRatioResult | null = null;
-  for (let k = 1; k < n; k++) {
-    if (anchor === null) {
-      const est = estimateRollingHedgeRatio(
-        panel,
-        config.hedgeWindow,
-        config.minObs,
-        panel.timestamps[k]!,
-      );
-      if (est.hedgeRatio === null) {
-        out.push(est);
-        continue;
-      }
-      anchor = est;
-    }
-    out.push(anchor);
-  }
-  return out;
-}
 
 /**
  * s(j) := closesB[j] − β(timestamps[j+1])·closesA[j]. The β here was made
