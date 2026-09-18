@@ -8,6 +8,19 @@
 // Pure function: no I/O, no randomness, no data fetch. Safe to call from tests.
 
 import type { EvaluationReport } from '../evaluation/report';
+import {
+  checkDrawdown,
+  checkExpectancy,
+  checkNetPnlAdverse,
+  checkNetPnlAfterFees,
+  checkProfitFactor,
+  checkRegimeCoverage,
+  checkSharpe,
+  checkTradeCount,
+  type GateCheck,
+} from './gate-checks';
+
+export type { GateCheck } from './gate-checks';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -30,14 +43,6 @@ export interface SurvivalGateConfig {
   readonly minNetPnlAfterFees?: number;
   /** Tolerance for slippage-stress: net PnL must stay positive under ADVERSE stress. Default 0. */
   readonly minNetPnlAdverse?: number;
-}
-
-export interface GateCheck {
-  readonly name: string;
-  readonly passed: boolean;
-  readonly actual: number;
-  readonly threshold: number;
-  readonly detail: string;
 }
 
 export interface SurvivalGateResult {
@@ -96,101 +101,5 @@ export function runSurvivalGate(
     status: 'KILLED',
     reason: `Failed ${failed.length}/${checks.length} checks: ${failed.map((c) => c.name).join(', ')}`,
     checks,
-  };
-}
-
-// ── Individual checks ──────────────────────────────────────────────────────────
-
-function checkTradeCount(actual: number, threshold: number): GateCheck {
-  return {
-    name: 'min_trades',
-    passed: actual >= threshold,
-    actual,
-    threshold,
-    detail: `${actual} trades vs. minimum ${threshold}`,
-  };
-}
-
-function checkExpectancy(actual: number, threshold: number): GateCheck {
-  return {
-    name: 'min_expectancy',
-    passed: actual >= threshold,
-    actual,
-    threshold,
-    detail: `Expectancy ${actual.toFixed(4)} vs. minimum ${threshold}`,
-  };
-}
-
-function checkProfitFactor(actual: number, threshold: number): GateCheck {
-  return {
-    name: 'min_profit_factor',
-    passed: actual >= threshold,
-    actual,
-    threshold,
-    detail: `Profit factor ${actual.toFixed(2)} vs. minimum ${threshold}`,
-  };
-}
-
-function checkDrawdown(actual: number, threshold: number): GateCheck {
-  return {
-    name: 'max_drawdown',
-    passed: actual <= threshold,
-    actual,
-    threshold,
-    detail: `Max drawdown ${actual.toFixed(4)} vs. maximum ${threshold}`,
-  };
-}
-
-function checkSharpe(actual: number | null, threshold: number): GateCheck {
-  const passed = actual !== null && actual >= threshold;
-  return {
-    name: 'min_sharpe',
-    passed,
-    actual: actual ?? -Infinity,
-    threshold,
-    detail: actual === null
-      ? 'Sharpe is null (insufficient data) — fails'
-      : `Sharpe ${actual.toFixed(2)} vs. minimum ${threshold}`,
-  };
-}
-
-function checkRegimeCoverage(
-  byRegime: Record<string, Partial<EvaluationReport>>,
-  threshold: number,
-): GateCheck {
-  const regimes = Object.keys(byRegime).filter(
-    (key) => byRegime[key] !== undefined && byRegime[key] !== null,
-  );
-  // Coverage is the share of observed regimes that produced at least one trade.
-  const traded = regimes.filter(
-    (key) => (byRegime[key]?.numTrades ?? 0) > 0,
-  );
-  const coverage = regimes.length === 0 ? 0 : traded.length / regimes.length;
-  return {
-    name: 'min_regime_coverage',
-    passed: coverage >= threshold,
-    actual: coverage,
-    threshold,
-    detail: `${traded.length}/${regimes.length} regimes traded vs. minimum ${(threshold * 100).toFixed(0)}%`,
-  };
-}
-
-function checkNetPnlAfterFees(actual: number, threshold: number): GateCheck {
-  return {
-    name: 'min_net_pnl_after_fees',
-    passed: actual >= threshold,
-    actual,
-    threshold,
-    detail: `Net PnL after NORMAL-stress fees ${actual.toFixed(2)} vs. minimum ${threshold}`,
-  };
-}
-
-function checkNetPnlAdverse(actual: number, threshold: number): GateCheck {
-  return {
-    name: 'min_net_pnl_adverse',
-    passed: actual >= threshold,
-    actual,
-    threshold,
-    detail: `Net PnL under ADVERSE slippage ${actual.toFixed(2)} vs. minimum ${threshold}`,
   };
 }
