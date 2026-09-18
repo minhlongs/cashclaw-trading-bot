@@ -4,14 +4,14 @@
 import type { OrderRequest, OrderResult } from '../exchange/types';
 import type { BotState, BotTrade, BotConfig, BotCallbacks, BotDependencies } from './types';
 import type { StrategyChain } from './strategy-chain';
-import { GridStrategy } from './strategies/grid';
-import { MeanRevStrategy } from './strategies/mean-reversion';
-import { VolatilityDcaStrategy } from './strategies/volatility-dca';
+import type { GridStrategy } from './strategies/grid';
+import type { MeanRevStrategy } from './strategies/mean-reversion';
+import type { VolatilityDcaStrategy } from './strategies/volatility-dca';
 import type { TradeEventType } from '../telemetry/types';
 import { createInitialState } from './bot-state';
-import { initializeStrategy } from './bot-strategy';
 import { executeOrder as execOrder, type OrderContext } from './bot-order-executor';
 import { tick as execTick, type TickContext } from './bot-tick';
+import { startBotLifecycle } from './bot-instance-lifecycle';
 
 export type { BotCallbacks, BotDependencies } from './types';
 
@@ -20,7 +20,6 @@ export class BotInstance {
   private config: BotConfig;
   private deps: BotDependencies;
   private callbacks: BotCallbacks;
-
   private state: BotState;
   private strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy | null = null;
   private strategyChain: StrategyChain | null = null;
@@ -28,12 +27,7 @@ export class BotInstance {
   private orderCounter = 0;
   private lastTickPrice: number | null = null;
 
-  constructor(
-    id: string,
-    config: BotConfig,
-    deps: BotDependencies,
-    callbacks: BotCallbacks,
-  ) {
+  constructor(id: string, config: BotConfig, deps: BotDependencies, callbacks: BotCallbacks) {
     this.id = id;
     this.config = config;
     this.deps = deps;
@@ -43,65 +37,28 @@ export class BotInstance {
   }
 
   getSnapshot(): BotState { return { ...this.state }; }
-
-  patchState(patch: Partial<BotState>): void {
-    Object.assign(this.state, patch);
-    this.state.updatedAt = Date.now();
-  }
-
+  patchState(patch: Partial<BotState>): void { Object.assign(this.state, patch); this.state.updatedAt = Date.now(); }
   getConfig(): BotConfig { return { ...this.config }; }
-
   updateConfig(patch: Partial<BotConfig>): void {
     this.config = { ...this.config, ...patch } as BotConfig;
     this.state.config = { ...this.config };
     this.state.updatedAt = Date.now();
   }
-
-  hasStrategy(): boolean {
-    return this.strategy !== null;
-  }
+  hasStrategy(): boolean { return this.strategy !== null; }
 
   // ── Lifecycle ──────────────────────────────────────────────
 
   async start(): Promise<void> {
-    if (this.state.status === 'running') return;
-    try {
-      let ticker;
-      if (this.deps.exchangeOrchestrator) {
-        const r = await this.deps.exchangeOrchestrator.fetchTicker('paper', this.config.symbol);
-        ticker = r.ok ? r.data : undefined;
-      } else {
-        ticker = await this.deps.exchange.fetchTicker(this.config.symbol);
-      }
-      if (!ticker) {
-        throw new Error(`Failed to fetch ticker for ${this.config.symbol}`);
-      }
-      const price = ticker.last;
-      if (price <= 0) {
-        throw new Error(`Invalid price for ${this.config.symbol}: ${price}`);
-      }
-      const bundle = initializeStrategy({
-        config: this.config, price, botId: this.id,
-        placeOrder: (req: OrderRequest) => this.placeOrder(req),
-        onTrade: (trade: BotTrade) => this.callbacks.onTrade(trade),
-        onLog: (msg: string) => this.callbacks.onLog(`[${this.id}] ${msg}`),
-      });
-      this.strategy = bundle.strategy;
-      this.strategyChain = bundle.strategyChain;
-      this.state.status = 'running';
-      this.state.startedAt = this.state.updatedAt = Date.now();
-      this.emitTelemetry('start', { strategy: this.config.strategy, symbol: this.config.symbol, price });
-      this.emitState();
-      this.startTicking();
-      this.callbacks.onLog(`Bot ${this.id} started (${this.config.strategy}) @ ${price.toFixed(2)}`);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : 'unknown';
-      this.state.status = 'error';
-      this.state.error = msg;
-      this.state.updatedAt = Date.now();
-      this.emitTelemetry('error', { error: msg, context: 'bot.start' });
-      this.emitState();
-      this.callbacks.onError(error instanceof Error ? error : new Error(String(error)), 'bot.start');
+    const res = await startBotLifecycle({
+      id: this.id, config: this.config, deps: this.deps, callbacks: this.callbacks,
+      state: this.state, placeOrder: (req: OrderRequest) => this.placeOrder(req),
+      emitTelemetry: (type: TradeEventType, details?: Record<string, unknown>) => this.emitTelemetry(type, details),
+      emitState: () => this.emitState(),
+      startTicking: () => this.startTicking(),
+    });
+    if (res.strategy) {
+      this.strategy = res.strategy;
+      this.strategyChain = res.strategyChain;
     }
   }
 
@@ -156,8 +113,7 @@ export class BotInstance {
       lastTickPrice: this.lastTickPrice,
       placeOrder: (req: OrderRequest) => this.placeOrder(req),
       pause: () => this.pause(),
-      emitTelemetry: (type: TradeEventType, details: Record<string, unknown>) =>
-        this.emitTelemetry(type, details),
+      emitTelemetry: (type: TradeEventType, details: Record<string, unknown>) => this.emitTelemetry(type, details),
       emitState: () => this.emitState(),
     };
     const result = await execTick(ctx);
@@ -170,12 +126,10 @@ export class BotInstance {
       throw new Error('Trading halted by killswitch');
     }
     const ctx: OrderContext = {
-      deps: this.deps,
-      config: { capital: this.config.capital, symbol: this.config.symbol },
+      deps: this.deps, config: { capital: this.config.capital, symbol: this.config.symbol },
       state: this.state, botId: this.id,
       onTrade: (trade: BotTrade) => this.callbacks.onTrade(trade),
-      emitTelemetry: (type: TradeEventType, details: Record<string, unknown>) =>
-        this.emitTelemetry(type, details),
+      emitTelemetry: (type: TradeEventType, details: Record<string, unknown>) => this.emitTelemetry(type, details),
       emitState: () => this.emitState(),
     };
     const { result, orderCounter } = await execOrder(ctx, req, this.orderCounter);
@@ -183,10 +137,8 @@ export class BotInstance {
     return result;
   }
 
-  // ── Event emission ──────────────────────────────────────────
-  private emitState(): void {
-    this.callbacks.onStateChange(this.getSnapshot());
-  }
+  // ── Event emission & cleanup ───────────────────────────────
+  private emitState(): void { this.callbacks.onStateChange(this.getSnapshot()); }
   private emitTelemetry(eventType: TradeEventType, details: Record<string, unknown> = {}): void {
     this.deps.telemetry?.emit(this.id, eventType, details);
   }
