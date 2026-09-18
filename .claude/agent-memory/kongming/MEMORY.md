@@ -24,4 +24,4 @@
 - [Cross-Sectional Simulator Modularization Planned](project_cross_sectional_sim_modularization_plan.md) — 2026-09-16 plan at .orchestrate/latest/plan.md; sim-helpers.ts (~118 LOC) + simulator.ts (~70 LOC), Knip clean, internal-only helpers.
 - [Cross-Sectional Universe Modularization Planned](project_universe_modularization_plan.md) — 2026-09-18 plan at .orchestrate/latest/plan.md; universe-math.ts (~135 LOC) + universe.ts (~60 LOC facade), Knip clean, 4,126+ tests, CF edge deploy.
 - [Bot Instance Modularization Planned](project_bot_instance_modularization_plan.md) — 2026-09-18 plan at .orchestrate/latest/plan.md; bot-instance-lifecycle.ts (~80 LOC) + bot-instance.ts (~125 LOC facade), Knip clean, 4,126+ tests, CF edge deploy.
-
+- [DB Schema Modularization Planned](project_db_schema_modularization_plan.md) — 2026-09-18 plan at .orchestrate/latest/plan.md; schema-tables.ts (~120 LOC) + schema-indexes.ts (~40 LOC) + schema.ts (~45 LOC facade), Knip clean, 4,133+ tests, CF edge deploy.

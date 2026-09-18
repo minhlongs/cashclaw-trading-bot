@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { SQL, MIGRATION } from './schema';
+import { SQL_TABLES } from './schema-tables';
+import { SQL_INDEXES } from './schema-indexes';
 
 describe('SQL object structure', () => {
+  it('aggregates SQL_TABLES and SQL_INDEXES into SQL', () => {
+    expect(Object.keys(SQL_TABLES)).toHaveLength(10);
+    expect(Object.keys(SQL_INDEXES)).toHaveLength(8);
+    expect(SQL).toEqual({ ...SQL_TABLES, ...SQL_INDEXES });
+  });
+
   it('exports all CREATE TABLE statements', () => {
     const tableKeys = Object.keys(SQL).filter((k) => k.startsWith('CREATE_'));
     expect(tableKeys).toContain('CREATE_USERS');
