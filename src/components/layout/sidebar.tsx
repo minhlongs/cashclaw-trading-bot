@@ -83,6 +83,7 @@ export default function Sidebar() {
       <button
         className="sidebar-toggle"
         onClick={() => setCollapsed((c) => !c)}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
         {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
