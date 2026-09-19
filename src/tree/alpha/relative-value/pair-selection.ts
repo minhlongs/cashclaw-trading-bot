@@ -4,108 +4,29 @@
 // Causality contract: selectPairs consumes ONLY rows with timestamp
 // STRICTLY BEFORE `asOfTime` (the current window's trainEnd). Mutating rows
 // at or after that boundary leaves the selection identical (leakage-tested).
-//
-// Pipeline: exhaustive C(n,2) over the universe → |Pearson| floor →
-// (cointegration + half-life gate unless distance-mode) → frozen β estimate
-// → stability rank → topK. Uses only existing primitives.
 
-import { pearsonCorrelation, computeSpreadStatistics } from '../correlation/compute';
-import { testCointegration } from '../correlation/adf';
-import type { IndicatorCandle } from '../indicator-types';
 import { estimateRollingHedgeRatio } from './hedge-ratio';
-import { validatePairTradable, type TradabilityGateConfig } from './validation';
-import { computePairStability, type PairStabilityConfig } from './stability';
-import type { PairPanel } from './types';
+import { validatePairTradable } from './validation';
+import { computePairStability } from './stability';
 import { assertPositiveCloses } from './pair-period';
+import {
+  type UniversePanel,
+  type PairSelectionConfig,
+  type PairSelectionDiagnostics,
+  type SelectedPair,
+} from './pair-selection-types';
+import {
+  assertUniverse,
+  pairPanel,
+  diagnosticsFor,
+} from './pair-selection-helpers';
 
-/** Aligned multi-symbol close panel (shared timestamps across symbols). */
-export interface UniversePanel {
-  readonly symbols: readonly string[];
-  readonly timestamps: readonly number[];
-  /** closes[symbolIndex][barIndex]; every row equal length to timestamps. */
-  readonly closes: readonly (readonly number[])[];
-}
-
-/** Selection config: gate fields + ranking knobs. */
-export interface PairSelectionConfig extends TradabilityGateConfig {
-  /** Hedge-ratio window for the frozen β estimate. */
-  readonly hedgeWindow: number;
-  /** Maximum pairs to return (ranked). */
-  readonly topK: number;
-  /** Distance-mode (M1): corr floor + minObs only; skip cointegration gate. */
-  readonly distanceMode?: boolean;
-  /** Stability config; when set, pairs are ranked by stability score. */
-  readonly stability?: PairStabilityConfig;
-}
-
-/** Selection-time diagnostics for one candidate pair. */
-export interface PairSelectionDiagnostics {
-  readonly correlation: number;
-  readonly cointegrated: boolean;
-  readonly pValue: number;
-  readonly halfLife: number | null;
-  readonly observationCount: number;
-}
-
-/** One selected pair with its frozen β and ranking inputs. */
-export interface SelectedPair {
-  readonly legA: string;
-  readonly legB: string;
-  readonly betaFrozen: number;
-  readonly stability: number;
-  readonly diagnostics: PairSelectionDiagnostics;
-}
-
-function candles(timestamps: readonly number[], closes: readonly number[]): IndicatorCandle[] {
-  return timestamps.map((t, i) => ({
-    timestamp: t, open: closes[i]!, high: closes[i]!, low: closes[i]!, close: closes[i]!, volume: 0,
-  }));
-}
-
-function assertUniverse(universe: UniversePanel): void {
-  if (universe.symbols.length !== universe.closes.length) {
-    throw new Error('selectPairs: symbols.length !== closes.length');
-  }
-  for (let s = 0; s < universe.closes.length; s++) {
-    if (universe.closes[s]!.length !== universe.timestamps.length) {
-      throw new Error(`selectPairs: closes[${s}] length differs from timestamps`);
-    }
-  }
-  for (let i = 1; i < universe.timestamps.length; i++) {
-    if (universe.timestamps[i]! <= universe.timestamps[i - 1]!) {
-      throw new Error('selectPairs: timestamps must be strictly increasing');
-    }
-  }
-}
-
-/** PairPanel view of two universe rows (reuses pair-level primitives). */
-function pairPanel(universe: UniversePanel, i: number, j: number): PairPanel {
-  return {
-    legA: universe.symbols[i]!,
-    legB: universe.symbols[j]!,
-    timestamps: universe.timestamps,
-    closesA: universe.closes[i]!,
-    closesB: universe.closes[j]!,
-  };
-}
-
-function diagnosticsFor(
-  ts: readonly number[],
-  a: readonly number[],
-  b: readonly number[],
-): PairSelectionDiagnostics {
-  const candlesA = candles(ts, a);
-  const candlesB = candles(ts, b);
-  const { cointegrated, pValue } = testCointegration(candlesA, candlesB);
-  const stats = computeSpreadStatistics(candlesA, candlesB, ts.length);
-  return {
-    correlation: pearsonCorrelation([...a], [...b]),
-    cointegrated,
-    pValue,
-    halfLife: Number.isFinite(stats.halfLife) ? stats.halfLife : null,
-    observationCount: ts.length,
-  };
-}
+export {
+  type UniversePanel,
+  type PairSelectionConfig,
+  type PairSelectionDiagnostics,
+  type SelectedPair,
+};
 
 /**
  * Select and rank candidate pairs using ONLY rows with timestamp strictly

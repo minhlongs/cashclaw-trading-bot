@@ -9,31 +9,20 @@ import type {
   Balance,
   OrderRequest,
   OrderResult,
-  OrderStatus,
-  Side,
-  OrderType,
 } from '../types';
 import { rateLimiter } from '../rate-limiter';
+import type {
+  MarketDataFetcher,
+  PaperExchangeOptions,
+  PaperTrade,
+} from './paper-types';
+import {
+  createPaperTrade,
+  mapTradeToOrderResult,
+} from './paper-order-helpers';
 
-export type MarketDataFetcher = (exchangeId: ExchangeId, symbol: string) => Promise<Ticker>;
-
-export interface PaperExchangeOptions {
-  tickerFetcher?: MarketDataFetcher;
-}
-
-export interface PaperTrade {
-  orderId: string;
-  exchangeId: ExchangeId;
-  symbol: string;
-  side: Side;
-  type: OrderType;
-  price: number;
-  quantity: number;
-  filled: number;
-  status: OrderStatus;
-  fee: number;
-  timestamp: number;
-}
+export type { MarketDataFetcher, PaperExchangeOptions, PaperTrade };
+export { createPaperTrade, mapTradeToOrderResult };
 
 export class PaperExchange {
   id: string = 'paper';
@@ -46,7 +35,7 @@ export class PaperExchange {
 
   constructor(
     initialBalances: { currency: string; total: number }[],
-    options?: PaperExchangeOptions
+    options?: PaperExchangeOptions,
   ) {
     for (const b of initialBalances) {
       this.balances.set(b.currency, { free: b.total, used: 0 });
@@ -97,21 +86,8 @@ export class PaperExchange {
 
   async placeOrder(exchangeId: ExchangeId, request: OrderRequest): Promise<OrderResult> {
     await rateLimiter.acquire(exchangeId, 'order');
-    const orderId = `paper_${++this.orderCounter}_${Date.now()}`;
-    const trade: PaperTrade = {
-      orderId,
-      exchangeId,
-      symbol: request.symbol,
-      side: request.side,
-      type: request.type,
-      price: request.price ?? 0,
-      quantity: request.quantity,
-      filled: request.type === 'market' ? request.quantity : 0,
-      status: request.type === 'market' ? 'filled' : 'open',
-      fee: request.quantity * 0.001, // 0.1% simulated fee
-      timestamp: Date.now(),
-    };
-    this.orders.set(orderId, trade);
+    const trade = createPaperTrade(++this.orderCounter, exchangeId, request);
+    this.orders.set(trade.orderId, trade);
     return this.toOrderResult(trade);
   }
 
@@ -160,18 +136,6 @@ export class PaperExchange {
   }
 
   toOrderResult(trade: PaperTrade): OrderResult {
-    return {
-      id: trade.orderId,
-      exchangeId: trade.exchangeId,
-      symbol: trade.symbol,
-      side: trade.side,
-      type: trade.type,
-      price: trade.price,
-      quantity: trade.quantity,
-      filled: trade.filled,
-      status: trade.status,
-      fee: trade.fee,
-      timestamp: trade.timestamp,
-    };
+    return mapTradeToOrderResult(trade);
   }
 }

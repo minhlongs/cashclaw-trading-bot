@@ -1,94 +1,26 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { SupportedExchange } from '@/app/api/tickers/route';
 import type { Ticker } from '@/tree/exchange/types';
+import type {
+  TickerProvenance,
+  UseMarketTickerOptions,
+  UseMarketTickerResult,
+} from './use-market-ticker-types';
+import {
+  DEFAULT_POLL_INTERVAL_MS,
+  VALID_EXCHANGES,
+  requestTickerData,
+} from './use-market-ticker-fetch';
 
-export interface TickerProvenance {
-  exchange: string;
-  provider: string;
-  circuitState: 'closed' | 'open' | 'half-open';
-  latencyMs: number;
-  timestamp: number;
-}
-
-export interface UseMarketTickerOptions {
-  exchange?: SupportedExchange | string;
-  symbol?: string;
-  intervalMs?: number;
-  enabled?: boolean;
-}
-
-export interface UseMarketTickerResult {
-  ticker: Ticker | null;
-  provenance: TickerProvenance | null;
-  loading: boolean;
-  error: string | null;
-  isRateLimited: boolean;
-  isCircuitOpen: boolean;
-  refetch: () => Promise<void>;
-}
-
-interface TickerApiResponse {
-  ok: boolean;
-  ticker?: Ticker;
-  data?: Ticker;
-  provenance?: TickerProvenance;
-  error?: string;
-  message?: string;
-}
-
-interface FetchOutcome {
-  ticker: Ticker | null;
-  provenance: TickerProvenance | null;
-  error: string | null;
-  isRateLimited: boolean;
-  isCircuitOpen: boolean;
-}
-
-const DEFAULT_POLL_INTERVAL_MS = 15_000;
-const VALID_EXCHANGES: ReadonlySet<string> = new Set(['binance', 'okx', 'bybit']);
-
-async function requestTickerData(exchange: string, symbol: string, signal: AbortSignal): Promise<FetchOutcome> {
-  const url = `/api/tickers?exchange=${encodeURIComponent(exchange.toLowerCase())}&symbol=${encodeURIComponent(symbol)}`;
-  const response = await fetch(url, {
-    signal,
-    headers: { Accept: 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (response.status === 429) {
-    return {
-      ticker: null,
-      provenance: null,
-      error: 'Rate limit exceeded. Pausing updates...',
-      isRateLimited: true,
-      isCircuitOpen: false,
-    };
-  }
-
-  const body = (await response.json()) as TickerApiResponse;
-  const isCircuitOpen = response.status === 503 || body.provenance?.circuitState === 'open';
-
-  if (response.ok && body.ok && (body.ticker || body.data)) {
-    return {
-      ticker: body.ticker ?? body.data ?? null,
-      provenance: body.provenance ?? null,
-      error: null,
-      isRateLimited: false,
-      isCircuitOpen,
-    };
-  }
-
-  const errorMsg = body.error ?? body.message ?? `Request failed (${response.status})`;
-  return {
-    ticker: null,
-    provenance: body.provenance ?? null,
-    error: errorMsg,
-    isRateLimited: false,
-    isCircuitOpen,
-  };
-}
+export type {
+  TickerProvenance,
+  UseMarketTickerOptions,
+  UseMarketTickerResult,
+  TickerApiResponse,
+  FetchOutcome,
+} from './use-market-ticker-types';
+export { DEFAULT_POLL_INTERVAL_MS, VALID_EXCHANGES, requestTickerData } from './use-market-ticker-fetch';
 
 export function useMarketTicker({
   exchange,

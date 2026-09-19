@@ -114,6 +114,12 @@
     ],
     "src/forest/research/tradingagents/test-fixtures.ts": [
       "exports"
+    ],
+    "src/tree/alpha/microstructure/feature-computer.ts": [
+      "exports"
+    ],
+    "src/tree/research/alpha/zoo/operator-evaluator.ts": [
+      "exports"
     ]
   }
 }

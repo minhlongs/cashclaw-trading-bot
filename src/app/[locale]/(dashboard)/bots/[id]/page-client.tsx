@@ -3,63 +3,15 @@
 import { use, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { BotDetailClient } from '@/components/bots/bot-detail-client';
+import type { ApiBotDetail, BotDetailData, TradeEventRow, TradeRow } from './page-client-types';
+import { BotDetailEventsTable } from './bot-detail-events-table';
 
-interface BotDetailData {
-  id: string;
-  name: string;
-  strategy: 'grid' | 'mean_reversion';
-  pair: string;
-  exchange: string;
-  botStatus: string;
-  totalPnl: number;
-  winCount: number;
-  lossCount: number;
-  capitalAllocated: number;
-  capitalUsed: number;
-  maxDrawdownPct: number;
-  startedAt: number | null;
-  updatedAt: number;
-  config: Record<string, number>;
-}
-
-interface ApiBotDetail {
-  id: string;
-  name: string;
-  strategy: string;
-  pair: string;
-  exchange: string;
-  status: string;
-  capital: number;
-  totalPnl: number;
-  totalTrades: number;
-  winCount: number;
-  lossCount: number;
-  maxDrawdown: number;
-  currentDrawdown: number;
-  startedAt: number | null;
-  stoppedAt: number | null;
-  lastTickAt: number | null;
-  lastOrderAt: number | null;
-  gridConfig: Record<string, unknown>;
-  recentEvents?: Array<{ id: string; eventType: string; details: Record<string, unknown>; timestamp: number }>;
-}
-
-interface TradeRow {
-  id: string;
-  side: 'buy' | 'sell';
-  price: number;
-  quantity: number;
-  pnl: number | null;
-  status: 'open' | 'filled' | 'cancelled' | 'failed';
-  openedAt: number;
-}
-
-interface TradeEventRow {
-  id: string;
-  eventType: string;
-  details: Record<string, unknown>;
-  timestamp: number;
-}
+export type {
+  BotDetailData,
+  ApiBotDetail,
+  TradeRow,
+  TradeEventRow,
+} from './page-client-types';
 
 export default function BotDetailPageClient({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -81,7 +33,7 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
             setBot({
               id: d.id,
               name: d.name,
-              strategy: d.strategy as 'grid' | 'mean_reversion',
+              strategy: d.strategy as BotDetailData['strategy'],
               pair: d.pair,
               exchange: d.exchange,
               botStatus: d.status,
@@ -141,43 +93,13 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
   return (
     <div className="main-content">
       <BotDetailClient bot={bot} trades={trades} />
-      {tradeEvents.length > 0 && (
-        <div className="card mt-4">
-          <h3 className="text-lg font-semibold mb-3">
-            {t('tradeEvents')}
-          </h3>
-          <div className="overflow-auto">
-            <table className="detail-table">
-              <thead>
-                <tr>
-                  <th className="detail-table th">{common('time')}</th>
-                  <th className="detail-table th">{t('eventType')}</th>
-                  <th className="detail-table th">{t('eventDetails')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tradeEvents.slice(0, 50).map((evt) => (
-                  <tr key={evt.id} className="detail-table tr">
-                    <td className="detail-table td time-cell">
-                      {new Date(evt.timestamp).toLocaleString()}
-                    </td>
-                    <td className="detail-table td">
-                      <span className={`badge ${
-                        evt.eventType === 'fill' ? 'badge-success' :
-                        evt.eventType === 'error' ? 'badge-error' :
-                        'badge-neutral'
-                      }`}>{evt.eventType}</span>
-                    </td>
-                    <td className="detail-table td mono-cell">
-                      {JSON.stringify(evt.details)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <BotDetailEventsTable
+        events={tradeEvents}
+        title={t('tradeEvents')}
+        timeHeader={common('time')}
+        eventTypeHeader={t('eventType')}
+        eventDetailsHeader={t('eventDetails')}
+      />
     </div>
   );
 }

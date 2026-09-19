@@ -2,58 +2,20 @@
 // Runtime: Cloudflare Workers Edge Runtime
 
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
-import { DirectTickerProvider, toCanonicalSymbol } from '@/tree/exchange/direct';
+import { toCanonicalSymbol } from '@/tree/exchange/direct';
+import {
+  TickerQuerySchema,
+  getProvider,
+} from './ticker-provider-registry';
+import { getClientIp, parseQueryParams } from './ticker-request-helpers';
 
-export type SupportedExchange = 'binance' | 'okx' | 'bybit';
-
-export const TickerQuerySchema = z.object({
-  exchange: z.enum(['binance', 'okx', 'bybit']).default('binance'),
-  symbol: z.string().min(3).max(20).default('BTC/USDT'),
-});
-
-const providerMap = new Map<SupportedExchange, DirectTickerProvider>();
-
-export function setDirectTickerProviderForTest(
-  exchange: SupportedExchange,
-  provider: DirectTickerProvider | null,
-): void {
-  if (provider === null) {
-    providerMap.delete(exchange);
-  } else {
-    providerMap.set(exchange, provider);
-  }
-}
-
-export function resetProvidersForTest(): void {
-  providerMap.clear();
-}
-
-function getProvider(exchange: SupportedExchange): DirectTickerProvider {
-  let provider = providerMap.get(exchange);
-  if (!provider) {
-    provider = new DirectTickerProvider({ exchangeId: exchange });
-    providerMap.set(exchange, provider);
-  }
-  return provider;
-}
-
-function getClientIp(req: Request): string {
-  const cfIp = req.headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp;
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return 'anonymous';
-}
-
-function parseQueryParams(req: Request) {
-  const url = new URL(req.url);
-  return {
-    exchange: url.searchParams.get('exchange') ?? undefined,
-    symbol: url.searchParams.has('symbol') ? url.searchParams.get('symbol') ?? undefined : undefined,
-  };
-}
+export {
+  type SupportedExchange,
+  TickerQuerySchema,
+  setDirectTickerProviderForTest,
+  resetProvidersForTest,
+} from './ticker-provider-registry';
 
 export async function GET(req: Request): Promise<NextResponse> {
   const startTime = performance.now();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Play, Pause, RotateCcw, Settings2, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { BotDetailData, TradeRow } from '@/forest/dashboard/actions';
@@ -9,45 +9,16 @@ import { BotDetailKpi } from './bot-detail-kpi';
 import { BotDetailOverview } from './bot-detail-overview';
 import { BotDetailTrades } from './bot-detail-trades';
 import { BotDetailConfig } from './bot-detail-config';
+import {
+  Tab,
+  ControlAction,
+  TABS,
+  BotDetailActionButtons,
+} from './bot-detail-controls';
 
-type Tab = 'trades' | 'overview' | 'config';
-type ControlAction = 'start' | 'stop' | 'pause' | 'resume';
+export { type Tab, type ControlAction } from './bot-detail-controls';
 
-const TABS: { value: Tab; label: string }[] = [
-  { value: 'overview', label: 'Overview' },
-  { value: 'trades', label: 'Trade History' },
-  { value: 'config', label: 'Config' },
-];
-
-interface ControlButtonProps {
-  onClick: () => void;
-  icon: typeof Play;
-  label: string;
-  disabled?: boolean;
-  loading?: boolean;
-}
-
-function ControlButton({
-  onClick,
-  icon: Icon,
-  label,
-  disabled = false,
-  loading = false,
-}: ControlButtonProps) {
-  return (
-    <button
-      type="button"
-      className="btn btn-ghost flex items-center gap-2"
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {loading ? <Loader2 size={16} className="animate-spin" /> : <Icon size={16} />}
-      {label}
-    </button>
-  );
-}
-
-interface BotDetailClientProps {
+export interface BotDetailClientProps {
   bot: BotDetailData;
   trades?: TradeRow[];
 }
@@ -105,35 +76,16 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
               <span className="badge badge-neutral">{bot.strategy}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <ControlButton
-              onClick={() => handleControlAction(resumeAction)}
-              icon={Play}
-              label={t('resume')}
-              disabled={loadingAction !== null}
-              loading={loadingAction === resumeAction}
-            />
-            <ControlButton
-              onClick={() => handleControlAction('pause')}
-              icon={Pause}
-              label={t('pause')}
-              disabled={loadingAction !== null}
-              loading={loadingAction === 'pause'}
-            />
-            <ControlButton
-              onClick={() => handleControlAction('stop')}
-              icon={RotateCcw}
-              label={t('reset')}
-              disabled={loadingAction !== null}
-              loading={loadingAction === 'stop'}
-            />
-            <ControlButton
-              onClick={() => setTab('config')}
-              icon={Settings2}
-              label={t('config')}
-              disabled={loadingAction !== null}
-            />
-          </div>
+          <BotDetailActionButtons
+            resumeAction={resumeAction}
+            loadingAction={loadingAction}
+            onAction={handleControlAction}
+            onOpenConfig={() => setTab('config')}
+            resumeLabel={t('resume')}
+            pauseLabel={t('pause')}
+            resetLabel={t('reset')}
+            configLabel={t('config')}
+          />
         </div>
       </div>
 

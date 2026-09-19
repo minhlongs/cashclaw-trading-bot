@@ -5,6 +5,13 @@ import type { Ticker, OrderBook } from '../types';
 import type { WsEventType, WsSubscription } from './ws-types';
 import { WsConnection } from './ws-connection';
 import { createLogger } from '@/lib/logger';
+import {
+  parseTicker,
+  parseOrderBook,
+  getBinanceStreamName,
+} from './binance-ws-parsers';
+
+export { parseTicker, parseOrderBook, getBinanceStreamName };
 
 const log = createLogger('binance-ws');
 
@@ -47,7 +54,6 @@ export class BinanceWsConnection extends WsConnection {
         };
 
         this.ws.onerror = (_error) => {
-          // Notify all subscribers
           for (const [, sub] of this.subscriptions) {
             sub.callback.onError?.(new Error('WebSocket error'));
           }
@@ -98,25 +104,11 @@ export class BinanceWsConnection extends WsConnection {
   }
 
   private parseTicker(data: Record<string, unknown>): Ticker {
-    return {
-      symbol: data.s as string,
-      last: Number(data.c),
-      bid: Number(data.b),
-      ask: Number(data.a),
-      high24h: Number(data.h),
-      low24h: Number(data.l),
-      volume24h: Number(data.v),
-      timestamp: Number(data.E),
-    };
+    return parseTicker(data);
   }
 
   private parseOrderBook(data: Record<string, unknown>): OrderBook {
-    return {
-      symbol: data.s as string,
-      bids: (data.b as [number, string][])?.map(([p, q]) => ({ price: p, quantity: Number(q) })) ?? [],
-      asks: (data.a as [number, string][])?.map(([p, q]) => ({ price: p, quantity: Number(q) })) ?? [],
-      timestamp: Number(data.E),
-    };
+    return parseOrderBook(data);
   }
 
   subscribe(sub: Omit<WsSubscription, 'id'>): string {
@@ -128,19 +120,7 @@ export class BinanceWsConnection extends WsConnection {
   }
 
   private getBinanceStreamName(type: WsEventType, symbol: string): string {
-    const sym = symbol.toLowerCase().replace('/', '');
-    switch (type) {
-      case 'ticker':
-        return `${sym}@ticker`;
-      case 'orderbook':
-        return `${sym}@depth20@100ms`;
-      case 'trade':
-        return `${sym}@trade`;
-      case 'kline':
-        return `${sym}@kline_1m`;
-      default:
-        return sym;
-    }
+    return getBinanceStreamName(type, symbol);
   }
 
   private async rebuildStreams(): Promise<void> {
@@ -148,7 +128,6 @@ export class BinanceWsConnection extends WsConnection {
       this.ws.close();
     }
     if (this.streams.length > 0) {
-      // Reconnect with new stream list
       this.connect().catch(() => { /* retry handled by scheduler */ });
     }
   }

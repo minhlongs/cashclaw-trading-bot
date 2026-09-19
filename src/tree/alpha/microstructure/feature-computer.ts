@@ -7,113 +7,21 @@
 // snapshot late — at decision time tau a consumer only sees t <= tau - 1.
 // Missing or insufficient input stays null; forward-filling is forbidden.
 
+import { nullFeatureSet } from './feature-math';
+import type { FeatureVector, ValidatedSnapshot } from './types';
 import {
-  LIQUIDITY_SHOCK_WINDOW,
-  PUBLICATION_LAG_SNAPSHOTS,
-  midPrice,
-  nullFeatureSet,
-  sumQuantities,
-  visibleDepth,
-  zScore,
-} from './feature-math';
-import type { DepthPayload } from './snapshot-types';
-import type { AggregatedTrades, FeatureVector, ValidatedSnapshot } from './types';
+  computeOrderbookFeatures,
+  computeTradeFeatures,
+  computeLiquidityShock,
+} from './feature-computer-instant';
+import { computeLaggedFeatures } from './feature-computer-lagged';
 
-/** Features 1-3: instant orderbook features from a single snapshot. */
-function computeOrderbookFeatures(depth: DepthPayload): {
-  spread: number | null;
-  orderBookImbalance: number | null;
-  depthImbalance: number | null;
-} {
-  const bestBid = depth.bids[0];
-  const bestAsk = depth.asks[0];
-
-  // 1. bid_ask_spread = best_ask - best_bid (null if crossed or missing).
-  const spread =
-    bestBid && bestAsk && bestAsk.price > bestBid.price
-      ? bestAsk.price - bestBid.price
-      : null;
-
-  // 2. order_book_imbalance on the best quotes (null if total qty is 0).
-  let orderBookImbalance: number | null = null;
-  if (bestBid && bestAsk) {
-    const total = bestBid.quantity + bestAsk.quantity;
-    if (total > 0) {
-      orderBookImbalance = (bestBid.quantity - bestAsk.quantity) / total;
-    }
-  }
-
-  // 3. depth_imbalance across all stored levels.
-  let depthImbalance: number | null = null;
-  const bidDepth = sumQuantities(depth.bids);
-  const askDepth = sumQuantities(depth.asks);
-  if (bidDepth + askDepth > 0) {
-    depthImbalance = (bidDepth - askDepth) / (bidDepth + askDepth);
-  }
-
-  return { spread, orderBookImbalance, depthImbalance };
-}
-
-/** Features 4-6: trade-window features; null when the batch is incomplete. */
-function computeTradeFeatures(trades: AggregatedTrades | null): {
-  tradeImbalance: number | null;
-  aggressiveVolume: number | null;
-  volumeDelta: number | null;
-} {
-  if (trades === null || !trades.complete) {
-    return { tradeImbalance: null, aggressiveVolume: null, volumeDelta: null };
-  }
-  const totalVol = trades.buyVolume + trades.sellVolume;
-  return {
-    tradeImbalance:
-      totalVol > 0 ? (trades.buyVolume - trades.sellVolume) / totalVol : null,
-    // Aggressive notional flow: buy + sell (convention per contract comment).
-    aggressiveVolume: totalVol,
-    volumeDelta: trades.buyVolume - trades.sellVolume,
-  };
-}
-
-/** Feature 7: z-score of visible depth vs the prior k snapshots. */
-function computeLiquidityShock(
-  series: readonly ValidatedSnapshot[],
-  index: number,
-): number | null {
-  const priorDepths: number[] = [];
-  for (let j = Math.max(0, index - LIQUIDITY_SHOCK_WINDOW); j < index; j++) {
-    priorDepths.push(visibleDepth(series[j].depth));
-  }
-  if (priorDepths.length !== LIQUIDITY_SHOCK_WINDOW) return null; // no fill
-  return zScore(visibleDepth(series[index].depth), priorDepths);
-}
-
-/** Features 8-9: need the next snapshot's mid; published one snapshot late. */
-function computeLaggedFeatures(
-  series: readonly ValidatedSnapshot[],
-  index: number,
-  asOf: number,
-  spread: number | null,
-  volumeDelta: number | null,
-): { realizedSpread: number | null; priceImpact: number | null } {
-  const next = series[index + PUBLICATION_LAG_SNAPSHOTS];
-  if (next === undefined || next.timestamp > asOf) {
-    return { realizedSpread: null, priceImpact: null };
-  }
-  const midBefore = midPrice(series[index].depth);
-  const midAfter = midPrice(next.depth);
-  if (midBefore === null || midAfter === null) {
-    return { realizedSpread: null, priceImpact: null };
-  }
-  // 8. realized_spread = (mid_after - mid_before) - spread.
-  const realizedSpread = spread !== null ? midAfter - midBefore - spread : null;
-  // 9. price_impact = sign(delta) * (mid(t+h) - mid(t)) / mid(t), h = 1;
-  //    null without a validated volume_delta for the aggressor side.
-  let priceImpact: number | null = null;
-  if (midBefore > 0 && volumeDelta !== null) {
-    const sign = volumeDelta >= 0 ? 1 : -1;
-    priceImpact = sign * ((midAfter - midBefore) / midBefore);
-  }
-  return { realizedSpread, priceImpact };
-}
+export {
+  computeOrderbookFeatures,
+  computeTradeFeatures,
+  computeLiquidityShock,
+} from './feature-computer-instant';
+export { computeLaggedFeatures } from './feature-computer-lagged';
 
 /**
  * Compute feature vectors for every snapshot in the series.

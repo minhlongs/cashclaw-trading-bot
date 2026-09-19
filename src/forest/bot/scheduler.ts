@@ -3,20 +3,21 @@
 // In production: triggered by CF Cron (1min interval); here: manual tick() for tests.
 
 import { getBotManager } from '@/tree/bot';
-import { createServerClient } from '@/lib/db/client';
-import type { BotInstance } from '@/tree/bot/bot-instance';
+import type {
+  SchedulerDeps,
+  SchedulerTickReport,
+  SchedulerError,
+} from './scheduler-types';
+import {
+  emitExchangeHealthSnapshots,
+  persistBotState,
+} from './scheduler-helpers';
 
-import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
-import { createLogger } from '@/lib/logger';
-
-const log = createLogger('scheduler');
-
-export interface SchedulerDeps {
-  getNow?: () => number; // override for testing
-  onEvalError?: (botId: string, error: Error) => void;
-  /** Optional: return the ExchangeOrchestrator for circuit-open checks before tick */
-  getOrchestrator?: () => ExchangeOrchestrator;
-}
+export type {
+  SchedulerDeps,
+  SchedulerTickReport,
+  SchedulerError,
+};
 
 export class BotScheduler {
   private deps: SchedulerDeps;
@@ -84,7 +85,7 @@ export class BotScheduler {
 
       try {
         await bot.tick();
-        await this.persistBotState(bot);
+        await persistBotState(bot);
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         errors.push({ botId: bot.id, message: error.message });
@@ -94,7 +95,7 @@ export class BotScheduler {
 
     // Emit exchange health snapshots for observability
     if (orchestrator) {
-      this.emitExchangeHealthSnapshots(orchestrator, now);
+      emitExchangeHealthSnapshots(orchestrator, now, this.rateLimitCounts);
     }
 
     // Drain exchange queues after all bots ticked
@@ -120,56 +121,4 @@ export class BotScheduler {
   getRateLimitUsage(): ReadonlyMap<string, number> {
     return this.rateLimitCounts;
   }
-
-  private emitExchangeHealthSnapshots(orchestrator: ExchangeOrchestrator, _now: number): void {
-    const exchanges = ['binance', 'bybit', 'okx'] as const;
-    for (const exId of exchanges) {
-      const provider = orchestrator.getProvider(exId);
-      if (!provider || typeof provider.getHealth !== 'function') continue;
-      try {
-        const health = provider.getHealth();
-        const budget = provider.getBudget();
-        log.debug('Exchange health', {
-          exchange: exId,
-          score: health.score,
-          latency: health.latencyMs,
-          failures: health.failureCount,
-          rateLimitUsed: this.rateLimitCounts.get(exId) ?? 0,
-          rateLimitTotal: budget.reqPerMin,
-        });
-      } catch {
-        // Provider may be a mock or incomplete — skip silently
-      }
-    }
-  }
-
-  /** Persist bot state snapshot to D1 after each tick */
-  private async persistBotState(bot: BotInstance): Promise<void> {
-    const db = createServerClient();
-    if (!db) return;
-
-    const state = bot.getSnapshot();
-
-    try {
-      await db
-        .prepare(`UPDATE bots SET total_pnl = ?, updated_at = ? WHERE id = ?`)
-        .bind(state.totalPnl, Date.now(), state.id)
-        .run();
-    } catch (error) {
-      log.warn('D1 persist failed (non-fatal)', { action: 'persistBot', error: error instanceof Error ? error : new Error(String(error)) });
-    }
-  }
-}
-
-export interface SchedulerTickReport {
-  tickCount: number;
-  botsEvaluated: number;
-  halted: boolean;
-  errors: SchedulerError[];
-  rateLimitUsage: Record<string, number>;
-}
-
-export interface SchedulerError {
-  botId: string;
-  message: string;
 }
