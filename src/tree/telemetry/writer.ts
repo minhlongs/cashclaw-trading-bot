@@ -4,19 +4,16 @@
 import type { TradeEvent, TradeEventType } from './types';
 import type { Balance } from '../exchange/types';
 import { createLogger } from '@/lib/logger';
-import { serializeDetail } from '@/forest/api/handlers/serialize-detail';
+import type { TelemetryWriterDeps, TelemetryWriterCallbacks, Listener } from './writer-types';
+import {
+  INSERT_TRADE_EVENT_SQL,
+  INSERT_CAPITAL_SNAPSHOT_SQL,
+  buildEventInsertParams,
+  buildSnapshotInsertParams,
+} from './writer-sql';
+import { generateEventId, isRetryableTelemetryError } from './writer-helpers';
 
 const log = createLogger('telemetry-writer');
-
-type Listener = (event: TradeEvent) => void | Promise<void>;
-
-export interface TelemetryWriterDeps {
-  enqueue: (sql: string, bindings: unknown[]) => Promise<unknown>;
-}
-
-export interface TelemetryWriterCallbacks {
-  onFlushError?: (error: Error) => void;
-}
 
 export class TelemetryWriter {
   private deps: TelemetryWriterDeps;
@@ -37,7 +34,7 @@ export class TelemetryWriter {
 
   emit(botId: string, eventType: TradeEventType, details: Record<string, unknown> = {}): void {
     const event: TradeEvent = {
-      id: this.makeId(),
+      id: generateEventId(),
       botId,
       eventType,
       details,
@@ -50,66 +47,18 @@ export class TelemetryWriter {
     this.flushSoon();
   }
 
-  emitTick(botId: string, price: number, pnl?: number): void {
-    this.emit(botId, 'tick', { price, pnl });
-  }
-
-  emitFill(botId: string, orderId: string, side: string, price: number, qty: number, pnl = 0): void {
-    this.emit(botId, 'fill', { orderId, side, price, quantity: qty, pnl });
-  }
-
-  emitSignal(botId: string, signal: string, indicatorValues: Record<string, unknown>): void {
-    this.emit(botId, 'signal', { signal, ...indicatorValues });
-  }
-
-  emitError(botId: string, error: string, context: string): void {
-    this.emit(botId, 'error', { error, context });
-  }
-
-  emitHalt(botId: string, reason: string): void {
-    this.emit(botId, 'halt', { reason });
-  }
-
-  emitResume(botId: string): void {
-    this.emit(botId, 'resume', {});
-  }
-
-  emitStart(botId: string, config: Record<string, unknown>): void {
-    this.emit(botId, 'start', { config });
-  }
-
-  emitStop(botId: string, reason?: string): void {
-    this.emit(botId, 'stop', { reason: reason ?? 'normal' });
-  }
-
-  emitPause(botId: string): void {
-    this.emit(botId, 'pause', {});
-  }
-
-  emitRebalance(botId: string, oldBase: number, newBase: number): void {
-    this.emit(botId, 'rebalance', { oldBase, newBase });
-  }
-
-  emitExchangeHealth(botId: string, health: {
-    exchangeId: string;
-    score: number;
-    state: string;
-    latencyMs: number;
-    failureCount: number;
-    rateLimitUsed: number;
-    rateLimitTotal: number;
-  }): void {
-    this.emit(botId, 'exchange_health', { ...health, timestamp: Date.now() });
-  }
-
-  emitRateLimitUsage(botId: string, exchangeId: string, usage: {
-    endpoint: string;
-    callsInWindow: number;
-    maxPerWindow: number;
-    windowMs: number;
-  }): void {
-    this.emit(botId, 'rate_limit_usage', { exchangeId, ...usage, timestamp: Date.now() });
-  }
+  emitTick(botId: string, price: number, pnl?: number): void { this.emit(botId, 'tick', { price, pnl }); }
+  emitFill(botId: string, orderId: string, side: string, price: number, qty: number, pnl = 0): void { this.emit(botId, 'fill', { orderId, side, price, quantity: qty, pnl }); }
+  emitSignal(botId: string, signal: string, indicatorValues: Record<string, unknown>): void { this.emit(botId, 'signal', { signal, ...indicatorValues }); }
+  emitError(botId: string, error: string, context: string): void { this.emit(botId, 'error', { error, context }); }
+  emitHalt(botId: string, reason: string): void { this.emit(botId, 'halt', { reason }); }
+  emitResume(botId: string): void { this.emit(botId, 'resume', {}); }
+  emitStart(botId: string, config: Record<string, unknown>): void { this.emit(botId, 'start', { config }); }
+  emitStop(botId: string, reason?: string): void { this.emit(botId, 'stop', { reason: reason ?? 'normal' }); }
+  emitPause(botId: string): void { this.emit(botId, 'pause', {}); }
+  emitRebalance(botId: string, oldBase: number, newBase: number): void { this.emit(botId, 'rebalance', { oldBase, newBase }); }
+  emitExchangeHealth(botId: string, health: { exchangeId: string; score: number; state: string; latencyMs: number; failureCount: number; rateLimitUsed: number; rateLimitTotal: number }): void { this.emit(botId, 'exchange_health', { ...health, timestamp: Date.now() }); }
+  emitRateLimitUsage(botId: string, exchangeId: string, usage: { endpoint: string; callsInWindow: number; maxPerWindow: number; windowMs: number }): void { this.emit(botId, 'rate_limit_usage', { exchangeId, ...usage, timestamp: Date.now() }); }
 
   // Persist a daily capital snapshot (call once per bot per day, OR after each fill)
   async snapshot(botId: string, capital: number, pnl: number, balances: Balance[], config: {
@@ -122,12 +71,7 @@ export class TelemetryWriter {
     const id = `snap_${botId}_${Date.now()}`;
     const now = Date.now();
     try {
-      await this.deps.enqueue(
-        `INSERT INTO capital_snapshots (id, bot_id, total_capital, realized_pnl, unrealized_pnl, max_drawdown_pct, win_count, loss_count, total_trades, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO NOTHING`,
-        [id, botId, capital, pnl, 0, maxDD, config.winCount, config.lossCount, config.totalTrades, now]
-      );
+      await this.deps.enqueue(INSERT_CAPITAL_SNAPSHOT_SQL, buildSnapshotInsertParams(id, botId, capital, pnl, maxDD, config, now));
     } catch (e) {
       this.callbacks.onFlushError?.(e instanceof Error ? e : new Error(String(e)));
     }
@@ -159,16 +103,11 @@ export class TelemetryWriter {
       const batch = this.queue.splice(0, 50); // flush 50 at a time
       for (const { event } of batch) {
         try {
-          await this.deps.enqueue(
-            `INSERT INTO trade_events (id, bot_id, event_type, detail_json, created_at)
-             VALUES (?, ?, ?, ?, ?)
-             ON CONFLICT(id) DO NOTHING`,
-            [event.id, event.botId, event.eventType, serializeDetail(event.details), event.timestamp]
-          );
+          await this.deps.enqueue(INSERT_TRADE_EVENT_SQL, buildEventInsertParams(event));
         } catch (e) {
           // Retry transient errors up to N times, then drop (telemetry is lossy-tolerable)
           const item = { event, retries: 1 };
-          if ((e as Error).message?.includes('DESTINATION_ERR') || (e as Error).message?.includes('locked')) {
+          if (isRetryableTelemetryError(e)) {
             if (item.retries < this.MAX_RETRIES) {
               this.queue.unshift(item);
             }
@@ -178,9 +117,5 @@ export class TelemetryWriter {
       }
     }
     this.flushing = false;
-  }
-
-  private makeId(): string {
-    return `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   }
 }
