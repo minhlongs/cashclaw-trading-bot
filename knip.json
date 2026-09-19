@@ -120,6 +120,21 @@
     ],
     "src/tree/research/alpha/zoo/operator-evaluator.ts": [
       "exports"
+    ],
+    "src/forest/alpha/composition-eval/evaluate.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/persistence/queue-d1-store.ts": [
+      "exports"
+    ],
+    "src/forest/bot/bot-query-service.ts": [
+      "exports"
+    ],
+    "src/tree/alpha/correlation/pairs.ts": [
+      "exports"
+    ],
+    "src/tree/alpha/hypothesis/evaluator.ts": [
+      "exports"
     ]
   }
 }
