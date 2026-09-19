@@ -2,36 +2,12 @@
 // Cloudflare D1 implementation of PersistenceAdapter.
 
 import type { AlphaResult } from '@/tree/alpha/types';
-import type { Experiment, ExperimentResult, ExperimentStatus } from '@/forest/alpha/experiments/types';
+import type { ExperimentResult, ExperimentStatus } from '@/forest/alpha/experiments/types';
 import type { D1Database } from '@/lib/db/types';
-import type { PersistenceAdapter } from './types';
-
-const MIGRATE = `
-CREATE TABLE IF NOT EXISTS alpha_results (
-  id TEXT PRIMARY KEY, name TEXT NOT NULL, source TEXT NOT NULL,
-  result_json TEXT NOT NULL, created_at INTEGER NOT NULL
-);
-CREATE TABLE IF NOT EXISTS alpha_experiments (
-  id TEXT PRIMARY KEY, hypothesis TEXT NOT NULL, dataset TEXT NOT NULL,
-  symbol TEXT NOT NULL, timeframe TEXT NOT NULL,
-  feature_set_json TEXT NOT NULL, regime_filter_json TEXT NOT NULL,
-  entry_rule_json TEXT NOT NULL, exit_rule_json TEXT NOT NULL,
-  position_sizing_json TEXT NOT NULL, fee_model_json TEXT NOT NULL,
-  slippage_model_json TEXT NOT NULL, train_period_json TEXT NOT NULL,
-  validation_period_json TEXT NOT NULL, test_period_json TEXT NOT NULL,
-  random_seed INTEGER, git_commit TEXT, config_snapshot_json TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
-);
-CREATE TABLE IF NOT EXISTS alpha_experiment_results (
-  id TEXT PRIMARY KEY, experiment_id TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  result_json TEXT NOT NULL, artifacts_json TEXT NOT NULL DEFAULT '[]',
-  created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_alpha_results_name ON alpha_results(name);
-CREATE INDEX IF NOT EXISTS idx_alpha_exp_experiment ON alpha_experiment_results(experiment_id);
-`;
+import type { PersistenceAdapter, StoredExperiment } from './types';
+import { MIGRATE } from './d1-adapter-schema';
+import { rowToExperiment, type AlphaExperimentListRow } from './d1-adapter-mappers';
+import { INSERT_EXPERIMENT, buildExperimentBindings, type ExperimentWriteParams } from './d1-adapter-queries';
 
 export class D1PersistenceAdapter implements PersistenceAdapter {
   private db: D1Database;
@@ -59,64 +35,13 @@ export class D1PersistenceAdapter implements PersistenceAdapter {
     try { return JSON.parse(row.result_json) as AlphaResult; } catch { return null; }
   }
 
-  async saveExperiment(e: Experiment): Promise<void> {
+  async saveExperiment(e: ExperimentWriteParams): Promise<void> {
     const t = Date.now();
-    await this.db.prepare(
-      `INSERT INTO alpha_experiments
-       (id,hypothesis,dataset,symbol,timeframe,feature_set_json,regime_filter_json,
-        entry_rule_json,exit_rule_json,position_sizing_json,fee_model_json,
-        slippage_model_json,train_period_json,validation_period_json,test_period_json,
-        random_seed,git_commit,config_snapshot_json,status,created_at,updated_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-       ON CONFLICT(id) DO UPDATE SET
-         hypothesis=excluded.hypothesis, dataset=excluded.dataset, symbol=excluded.symbol,
-         timeframe=excluded.timeframe, feature_set_json=excluded.feature_set_json,
-         regime_filter_json=excluded.regime_filter_json, entry_rule_json=excluded.entry_rule_json,
-         exit_rule_json=excluded.exit_rule_json, position_sizing_json=excluded.position_sizing_json,
-         fee_model_json=excluded.fee_model_json, slippage_model_json=excluded.slippage_model_json,
-         train_period_json=excluded.train_period_json, validation_period_json=excluded.validation_period_json,
-         test_period_json=excluded.test_period_json, random_seed=excluded.random_seed,
-         git_commit=excluded.git_commit, config_snapshot_json=excluded.config_snapshot_json,
-         status=excluded.status, updated_at=excluded.updated_at`,
-    ).bind(
-      e.id, e.hypothesis, e.dataset, e.symbol, e.timeframe,
-      JSON.stringify(e.featureSet), JSON.stringify(e.regimeFilter),
-      JSON.stringify(e.entryRule), JSON.stringify(e.exitRule),
-      JSON.stringify(e.positionSizing), JSON.stringify(e.feeModel),
-      JSON.stringify(e.slippageModel),
-      JSON.stringify(e.trainPeriod), JSON.stringify(e.validationPeriod), JSON.stringify(e.testPeriod),
-      e.randomSeed ?? null, e.gitCommit ?? null, JSON.stringify(e.configSnapshot),
-      'pending', t, t,
-    ).run();
+    const bindings = [...buildExperimentBindings(e), 'pending', t, t];
+    await this.db.prepare(INSERT_EXPERIMENT).bind(...bindings).run();
   }
 
-  private rowToExperiment(r: {
-    id:string; hypothesis:string; dataset:string; symbol:string; timeframe:string;
-    feature_set_json:string; regime_filter_json:string; entry_rule_json:string;
-    exit_rule_json:string; position_sizing_json:string; fee_model_json:string;
-    slippage_model_json:string; train_period_json:string; validation_period_json:string;
-    test_period_json:string; random_seed:number|null; git_commit:string|null;
-    config_snapshot_json:string; status:ExperimentStatus;
-  }): Experiment {
-    return {
-      id:r.id, hypothesis:r.hypothesis, dataset:r.dataset, symbol:r.symbol, timeframe:r.timeframe,
-      featureSet:JSON.parse(r.feature_set_json) as Experiment['featureSet'],
-      regimeFilter:JSON.parse(r.regime_filter_json) as Experiment['regimeFilter'],
-      entryRule:JSON.parse(r.entry_rule_json) as Experiment['entryRule'],
-      exitRule:JSON.parse(r.exit_rule_json) as Experiment['exitRule'],
-      positionSizing:JSON.parse(r.position_sizing_json) as Experiment['positionSizing'],
-      feeModel:JSON.parse(r.fee_model_json) as Experiment['feeModel'],
-      slippageModel:JSON.parse(r.slippage_model_json) as Experiment['slippageModel'],
-      trainPeriod:JSON.parse(r.train_period_json) as Experiment['trainPeriod'],
-      validationPeriod:JSON.parse(r.validation_period_json) as Experiment['validationPeriod'],
-      testPeriod:JSON.parse(r.test_period_json) as Experiment['testPeriod'],
-      randomSeed:r.random_seed ?? undefined,
-      gitCommit:r.git_commit ?? undefined,
-      configSnapshot:JSON.parse(r.config_snapshot_json) as Experiment['configSnapshot'],
-    };
-  }
-
-  async loadExperiment(id: string): Promise<Experiment | null> {
+  async loadExperiment(id: string): Promise<ReturnType<typeof rowToExperiment> | null> {
     const r = await this.db.prepare(
       `SELECT id,hypothesis,dataset,symbol,timeframe,feature_set_json,regime_filter_json,
               entry_rule_json,exit_rule_json,position_sizing_json,fee_model_json,
@@ -124,43 +49,47 @@ export class D1PersistenceAdapter implements PersistenceAdapter {
               random_seed,git_commit,config_snapshot_json,status
        FROM alpha_experiments WHERE id=?`,
     ).bind(id).first<{
-      id:string; hypothesis:string; dataset:string; symbol:string; timeframe:string;
-      feature_set_json:string; regime_filter_json:string; entry_rule_json:string;
-      exit_rule_json:string; position_sizing_json:string; fee_model_json:string;
-      slippage_model_json:string; train_period_json:string; validation_period_json:string;
-      test_period_json:string; random_seed:number|null; git_commit:string|null;
-      config_snapshot_json:string; status:ExperimentStatus;
+      id: string; hypothesis: string; dataset: string; symbol: string; timeframe: string;
+      feature_set_json: string; regime_filter_json: string; entry_rule_json: string;
+      exit_rule_json: string; position_sizing_json: string; fee_model_json: string;
+      slippage_model_json: string; train_period_json: string; validation_period_json: string;
+      test_period_json: string; random_seed: number | null; git_commit: string | null;
+      config_snapshot_json: string; status: string;
     }>();
     if (!r) return null;
-    try { return this.rowToExperiment(r); } catch { return null; }
+    try {
+      return rowToExperiment({
+        id: r.id, hypothesis: r.hypothesis, dataset: r.dataset, symbol: r.symbol, timeframe: r.timeframe,
+        feature_set_json: r.feature_set_json, regime_filter_json: r.regime_filter_json,
+        entry_rule_json: r.entry_rule_json, exit_rule_json: r.exit_rule_json,
+        position_sizing_json: r.position_sizing_json, fee_model_json: r.fee_model_json,
+        slippage_model_json: r.slippage_model_json, train_period_json: r.train_period_json,
+        validation_period_json: r.validation_period_json, test_period_json: r.test_period_json,
+        random_seed: r.random_seed, git_commit: r.git_commit, config_snapshot_json: r.config_snapshot_json,
+        status: r.status as ExperimentStatus,
+      });
+    } catch { return null; }
   }
 
-  async listExperiments(): Promise<import('./types').StoredExperiment[]> {
+  async listExperiments(): Promise<StoredExperiment[]> {
     const { results } = await this.db.prepare(
       `SELECT id,hypothesis,dataset,symbol,timeframe,feature_set_json,regime_filter_json,
               entry_rule_json,exit_rule_json,position_sizing_json,fee_model_json,
               slippage_model_json,train_period_json,validation_period_json,test_period_json,
               random_seed,git_commit,config_snapshot_json,status,created_at,updated_at
        FROM alpha_experiments ORDER BY created_at DESC`,
-    ).all<{
-      id:string; hypothesis:string; dataset:string; symbol:string; timeframe:string;
-      feature_set_json:string; regime_filter_json:string; entry_rule_json:string;
-      exit_rule_json:string; position_sizing_json:string; fee_model_json:string;
-      slippage_model_json:string; train_period_json:string; validation_period_json:string;
-      test_period_json:string; random_seed:number|null; git_commit:string|null;
-      config_snapshot_json:string; status:ExperimentStatus; created_at:number; updated_at:number;
-    }>();
+    ).all<AlphaExperimentListRow>();
     return (results ?? []).map(r => ({
-      id:r.id, hypothesis:r.hypothesis, dataset:r.dataset, symbol:r.symbol, timeframe:r.timeframe,
-      featureSetJson:r.feature_set_json, regimeFilterJson:r.regime_filter_json,
-      entryRuleJson:r.entry_rule_json, exitRuleJson:r.exit_rule_json,
-      positionSizingJson:r.position_sizing_json, feeModelJson:r.fee_model_json,
-      slippageModelJson:r.slippage_model_json,
-      trainPeriodJson:r.train_period_json, validationPeriodJson:r.validation_period_json,
-      testPeriodJson:r.test_period_json,
-      randomSeed:r.random_seed, gitCommit:r.git_commit, configSnapshotJson:r.config_snapshot_json,
-      status:r.status,
-      createdAt:r.created_at, updatedAt:r.updated_at,
+      id: r.id, hypothesis: r.hypothesis, dataset: r.dataset, symbol: r.symbol, timeframe: r.timeframe,
+      featureSetJson: r.feature_set_json, regimeFilterJson: r.regime_filter_json,
+      entryRuleJson: r.entry_rule_json, exitRuleJson: r.exit_rule_json,
+      positionSizingJson: r.position_sizing_json, feeModelJson: r.fee_model_json,
+      slippageModelJson: r.slippage_model_json,
+      trainPeriodJson: r.train_period_json, validationPeriodJson: r.validation_period_json,
+      testPeriodJson: r.test_period_json,
+      randomSeed: r.random_seed, gitCommit: r.git_commit, configSnapshotJson: r.config_snapshot_json,
+      status: r.status,
+      createdAt: r.created_at, updatedAt: r.updated_at,
     }));
   }
 
