@@ -82,6 +82,9 @@
     "src/forest/alpha/data-fetcher.ts": [
       "exports"
     ],
+    "src/forest/alpha/pipeline/pipeline-signals.ts": [
+      "exports"
+    ],
     "src/forest/alpha/integration/fixtures.ts": [
       "exports"
     ],
