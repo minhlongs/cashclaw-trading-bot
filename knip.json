@@ -85,6 +85,9 @@
     "src/forest/alpha/pipeline/pipeline-signals.ts": [
       "exports"
     ],
+    "src/forest/alpha/composition-eval/walk-forward.ts": [
+      "exports"
+    ],
     "src/forest/alpha/integration/fixtures.ts": [
       "exports"
     ],
