@@ -3,37 +3,16 @@
 'use server';
 
 import { fetchOHLCV } from './data-fetcher';
-import { runBacktest, type BacktestResult } from './engine';
-import type { BotConfig, VolatilityDcaBotConfig } from '@/tree/bot/types';
+import { runBacktest } from './engine';
 import { createServerClient } from '@/lib/db/client';
 import type { BacktestResultRow } from '@/lib/db/types';
 import { createLogger } from '@/lib/logger';
+import { validateBacktestInput, type CandleInterval } from './actions.validation';
+import type { BacktestRunInput, BacktestRunOutput } from './actions.types';
+
+export type { BacktestRunInput, BacktestRunOutput } from './actions.types';
 
 const log = createLogger('backtest-actions');
-
-const SUPPORTED_INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'] as const;
-type CandleInterval = (typeof SUPPORTED_INTERVALS)[number];
-
-export interface BacktestRunInput {
-  botId: string;
-  exchange: string;
-  symbol: string;
-  strategy: string;
-  config: BotConfig;
-  startDate: Date;
-  endDate: Date;
-  interval?: string;
-  feePct?: number;
-  slippagePct?: number;
-  initialCapital?: number;
-}
-
-export interface BacktestRunOutput {
-  success: boolean;
-  result?: BacktestResult;
-  error?: string;
-  candlesFetched: number;
-}
 
 /**
  * Run a full backtest: fetch OHLCV → simulate strategy → persist result to D1.
@@ -117,28 +96,6 @@ export async function runBacktestAction(input: BacktestRunInput): Promise<Backte
   }
 
   return { success: true, result, candlesFetched: candles.length };
-}
-
-function validateBacktestInput(input: BacktestRunInput, interval: CandleInterval): string | null {
-  if (!SUPPORTED_INTERVALS.includes(interval)) return `Unsupported interval: ${input.interval}`;
-  if (input.endDate.getTime() <= input.startDate.getTime()) return 'endDate must be after startDate';
-  const threeYearsMs = 3 * 365 * 24 * 3600 * 1000;
-  if (input.endDate.getTime() - input.startDate.getTime() > threeYearsMs) return 'Date range exceeds 3-year limit';
-
-  const validStrategies = ['grid', 'mean_reversion', 'volatility_dca'];
-  if (!validStrategies.includes(input.config.strategy)) {
-    return `Unsupported strategy: ${input.config.strategy}`;
-  }
-
-  if (input.config.strategy === 'volatility_dca') {
-    const cfg = input.config as VolatilityDcaBotConfig;
-    if (!cfg.priceDropStep || cfg.priceDropStep <= 0) return 'priceDropStep must be positive';
-    if (!cfg.maxSteps || cfg.maxSteps <= 0) return 'maxSteps must be positive';
-    if (!cfg.volBaseline || cfg.volBaseline <= 0) return 'volBaseline must be positive';
-    if (!cfg.baseOrderSizePct || cfg.baseOrderSizePct <= 0) return 'baseOrderSizePct must be positive';
-  }
-
-  return null;
 }
 
 /**

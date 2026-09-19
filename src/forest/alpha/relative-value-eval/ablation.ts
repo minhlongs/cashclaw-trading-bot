@@ -15,99 +15,19 @@
 // OOS expectancy convention: PER-PERIOD mean of stitched net returns —
 // defined even when a variant completes zero trades.
 
-import type {
-  PairSelectionConfig,
-  PairSimConfig,
-  UniversePanel,
-} from '@/tree/alpha/relative-value';
-import type { WindowConfig, WindowMode } from '@/forest/backtest/walkforward';
-import { runRVWalkForward, type PairConfigFactory } from './walk-forward';
+import { runRVWalkForward } from './walk-forward';
 import { oosExpectancy } from './oos-windows';
+import { variantInputs } from './ablation.variants';
+import {
+  RV_COMPONENTS,
+  type RvAblationInput,
+  type RvAblationResult,
+  type RvAblationVariant,
+  type RvComponent,
+} from './ablation.types';
 
-/** Removable M4 components (toggle OFF one at a time). */
-export type RvComponent =
-  | 'regime_entry_filter'
-  | 'stability_ranked_selection'
-  | 'dynamic_beta'
-  | 'stop_z'
-  | 'in_sim_gate';
-
-export const RV_COMPONENTS: readonly RvComponent[] = [
-  'regime_entry_filter',
-  'stability_ranked_selection',
-  'dynamic_beta',
-  'stop_z',
-  'in_sim_gate',
-];
-
-/** Full-model (M4) definition the ablation strips components from. */
-export interface RvAblationInput {
-  readonly universe: UniversePanel;
-  readonly windowConfig: WindowConfig;
-  readonly mode: WindowMode;
-  readonly selectionConfig: PairSelectionConfig;
-  readonly configFactory: PairConfigFactory;
-}
-
-/** One removed-component variant outcome. */
-export interface RvAblationVariant {
-  readonly removedComponent: RvComponent;
-  /** Stitched OOS expectancy with the component removed. */
-  readonly expectancy: number;
-  /** Full-model expectancy minus variant expectancy. */
-  readonly deltaExpectancy: number;
-  /** True when removal dropped expectancy by more than the threshold. */
-  readonly materialImpact: boolean;
-  /** Stitched OOS period count for the variant. */
-  readonly periods: number;
-}
-
-/** Full ablation result. */
-export interface RvAblationResult {
-  readonly fullExpectancy: number;
-  readonly fullPeriods: number;
-  readonly variants: readonly RvAblationVariant[];
-  /** Components whose removal did NOT materially hurt. */
-  readonly flaggedUnnecessary: readonly RvComponent[];
-}
-
-/** Variant inputs: swap the factory / strip selection ranking per component. */
-function variantInputs(
-  base: RvAblationInput,
-  component: RvComponent,
-): { selection: PairSelectionConfig; factory: PairConfigFactory } {
-  const stripSimField =
-    (field: keyof PairSimConfig) => (pair: Parameters<PairConfigFactory>[0]): PairSimConfig => ({
-      ...base.configFactory(pair),
-      [field]: undefined,
-    });
-  switch (component) {
-    case 'regime_entry_filter':
-      return { selection: base.selectionConfig, factory: stripSimField('entryFilter') };
-    case 'stability_ranked_selection': {
-      const selection: PairSelectionConfig = {
-        ...base.selectionConfig,
-        stability: undefined,
-      };
-      return { selection, factory: base.configFactory };
-    }
-    case 'dynamic_beta':
-      return {
-        selection: base.selectionConfig,
-        factory: (pair) => ({ ...base.configFactory(pair), hedgeMode: 'frozen' }),
-      };
-    case 'stop_z':
-      return { selection: base.selectionConfig, factory: stripSimField('stopZ') };
-    case 'in_sim_gate':
-      return {
-        selection: base.selectionConfig,
-        factory: (pair) => ({
-          ...base.configFactory(pair),
-          inSimTradabilityGate: false,
-        }),
-      };
-  }
-}
+export type { RvComponent, RvAblationInput, RvAblationVariant, RvAblationResult } from './ablation.types';
+export { RV_COMPONENTS } from './ablation.types';
 
 /**
  * Run the FULL model once, then remove each component one at a time and

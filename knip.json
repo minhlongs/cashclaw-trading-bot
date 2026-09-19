@@ -45,6 +45,8 @@
     "src/forest/alpha/reports/index.ts",
     "src/forest/research/tradingagents/index.ts",
     "src/forest/research/tradingagents/checkpoint-adapter.ts",
+    "src/forest/research/tradingagents/checkpoint-adapter.core.ts",
+    "src/forest/research/tradingagents/checkpoint-adapter.types.ts",
     "src/lib/db/schema-backtest.ts"
   ],
   "ignoreExportsUsedInFile": true,
@@ -134,6 +136,45 @@
       "exports"
     ],
     "src/tree/alpha/hypothesis/evaluator.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/cross-sectional-eval/evaluate.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/cross-sectional-eval/report.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/baselines/report-builder.ts": [
+      "exports"
+    ],
+    "src/forest/research/tradingagents/calibration.ts": [
+      "exports"
+    ],
+    "src/forest/research/tradingagents/checkpoint-adapter.ts": [
+      "exports"
+    ],
+    "src/forest/research/tradingagents/run-deliberation.ts": [
+      "exports"
+    ],
+    "src/tree/research/alpha/zoo/operator-parser.ts": [
+      "exports"
+    ],
+    "src/tree/alpha/hypothesis/lineage.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/relative-value-eval/ablation.ts": [
+      "exports"
+    ],
+    "src/land/exchange-orchestration/routed-execution.ts": [
+      "exports"
+    ],
+    "src/components/dashboard/market-watch-card.tsx": [
+      "exports"
+    ],
+    "src/forest/api/handlers/bot-create.ts": [
+      "exports"
+    ],
+    "src/forest/backtest/actions.ts": [
       "exports"
     ]
   }
