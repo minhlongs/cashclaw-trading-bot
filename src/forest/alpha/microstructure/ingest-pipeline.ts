@@ -8,59 +8,16 @@ import {
   parseDepthPayload,
 } from '@/tree/alpha/microstructure/parse';
 import { validateDepth, validateTradeBatch } from '@/tree/alpha/microstructure/quality';
-import type { IngestStatus } from '@/tree/alpha/microstructure/snapshot-types';
-import type { MicrostructureStore } from '../persistence/micro-store-types';
 import { chunkPrints, freshPrints, isWindowComplete } from './ingest-helpers';
 import { persistRaw, computeAndPersistVectors } from './ingest-persist';
+import { fetchPoll, auditAndStop } from './ingest-fetch';
+import type {
+  MicroIngestDeps,
+  SymbolIngestOutcome,
+  IngestReport,
+} from './ingest-types';
 
-/** Poll window for aggTrades: fetch the last 5 minutes of prints. */
-const POLL_WINDOW_MS = 300_000;
-
-export interface MicroIngestDeps {
-  readonly store: MicrostructureStore;
-  /** Fetch the current depth snapshot; resolves with the RAW body + latency. */
-  readonly fetchDepth: (symbol: string) => Promise<{ body: unknown; latencyMs: number }>;
-  /** Fetch aggregated trades in [startMs, endMs]; RAW body + latency. */
-  readonly fetchTrades: (
-    symbol: string,
-    startMs: number,
-    endMs: number,
-  ) => Promise<{ body: unknown; latencyMs: number }>;
-  /** Poll wall clock in ms epoch (injected for determinism). */
-  readonly now: () => number;
-  /** Symbols to poll this tick. */
-  readonly symbols: readonly string[];
-  /** Git SHA persisted with every feature vector (observability). */
-  readonly gitSha?: string;
-}
-
-/** Per-symbol outcome recorded in the audit log and returned to the caller. */
-export interface SymbolIngestOutcome {
-  readonly symbol: string;
-  readonly status: IngestStatus;
-  /** Deterministic failure reason; null when status is OK. */
-  readonly reason: string | null;
-  /** Raw depth rows appended (0 unless OK). */
-  readonly depthRows: number;
-  /** Trade chunks appended (0 unless OK). */
-  readonly tradeChunks: number;
-  /** Feature vectors appended this poll. */
-  readonly vectors: number;
-}
-
-export interface IngestReport {
-  readonly startedAt: number;
-  readonly finishedAt: number;
-  readonly outcomes: readonly SymbolIngestOutcome[];
-}
-
-interface FetchedPoll {
-  readonly receivedAtMs: number;
-  readonly depth: { body: unknown };
-  readonly trades: { body: unknown };
-}
-
-// ── Poll orchestration ────────────────────────────────────────────────────────
+export type { MicroIngestDeps, SymbolIngestOutcome, IngestReport };
 
 /**
  * Run one ingest poll for every symbol. Each symbol is fully independent:
@@ -129,66 +86,4 @@ async function pollSymbol(
     tradeChunks: chunkPrints(fresh).length,
     vectors,
   };
-}
-
-async function fetchPoll(
-  deps: MicroIngestDeps,
-  symbol: string,
-): Promise<{ outcome: SymbolIngestOutcome } | FetchedPoll> {
-  const receivedAtMs = deps.now();
-  type FetchResult = { body: unknown; latencyMs: number };
-  const [depthRes, tradesRes] = await Promise.allSettled<FetchResult>([
-    deps.fetchDepth(symbol),
-    deps.fetchTrades(symbol, Math.max(0, receivedAtMs - POLL_WINDOW_MS), receivedAtMs),
-  ]);
-  if (depthRes.status === 'rejected') {
-    return {
-      outcome: await auditAndStop(
-        deps,
-        symbol,
-        `poll_${symbol}_${receivedAtMs}`,
-        'FETCH_FAILED',
-        `depth fetch failed: ${errText(depthRes.reason)}`,
-        receivedAtMs,
-      ),
-    };
-  }
-  if (tradesRes.status === 'rejected') {
-    return {
-      outcome: await auditAndStop(
-        deps,
-        symbol,
-        `poll_${symbol}_${receivedAtMs}`,
-        'FETCH_FAILED',
-        `trades fetch failed: ${errText(tradesRes.reason)}`,
-        receivedAtMs,
-      ),
-    };
-  }
-  // Both fulfilled — safe to access .value
-  return { receivedAtMs, depth: depthRes.value, trades: tradesRes.value };
-}
-
-function errText(reason: unknown): string {
-  return reason instanceof Error ? reason.message : String(reason);
-}
-
-/** Append one fail-closed audit row and return the zero-progress outcome. */
-async function auditAndStop(
-  deps: MicroIngestDeps,
-  symbol: string,
-  pollId: string,
-  status: Extract<IngestStatus, 'DATA_INVALID' | 'FETCH_FAILED'>,
-  reason: string,
-  at: number,
-): Promise<SymbolIngestOutcome> {
-  await deps.store.appendIngestLog({
-    logId: `log_${symbol}_${at}`,
-    pollId,
-    symbol,
-    status,
-    reason,
-    createdAt: at,
-  });
-  return { symbol, status, reason, depthRows: 0, tradeChunks: 0, vectors: 0 };
 }
