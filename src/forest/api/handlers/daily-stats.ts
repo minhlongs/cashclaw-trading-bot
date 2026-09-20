@@ -8,23 +8,11 @@
 
 import { createServerClient } from '@/lib/db/client';
 import { createLogger } from '@/lib/logger';
+import type { DailyStats, SnapshotRow, EventRow } from './daily-stats-types';
+
+export type { DailyStats, SnapshotRow, EventRow } from './daily-stats-types';
 
 const log = createLogger('api/daily-stats');
-
-export interface DailyStats {
-  ok: boolean;
-  data?: {
-    date: string;
-    activeBots: number;
-    totalTrades: number;
-    totalPnl: number;
-    winCount: number;
-    lossCount: number;
-    winRate: number;
-    byStrategy: Record<string, { trades: number; pnl: number }>;
-  };
-  error?: string;
-}
 
 export async function dailyStatsHandler(): Promise<DailyStats> {
   const db = createServerClient();
@@ -125,19 +113,4 @@ export async function dailyStatsHandler(): Promise<DailyStats> {
     log.error('Failed to compute daily stats', error instanceof Error ? error : new Error(String(error)), { action: 'dailyStatsHandler' });
     return { ok: false, error: 'Failed to compute daily stats' };
   }
-}
-
-interface SnapshotRow {
-  bot_id: string;
-  total_capital: number;
-  realized_pnl: number;
-  max_drawdown_pct: number;
-}
-
-interface EventRow {
-  id: string;
-  bot_id: string;
-  event_type: string;
-  detail_json: string | null;
-  created_at: number;
 }

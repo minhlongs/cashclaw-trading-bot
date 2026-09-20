@@ -2,15 +2,12 @@
 // Systematically creates and evolves alpha hypotheses.
 
 import { RegimeLabel } from '../../regime/types';
-import type { BarrierConfig } from '../labeling';
-import type { AlphaHypothesis, HypothesisTemplate, IndicatorPreset } from './types';
-import {
-  ALL_COMBINERS, ALL_INDICATORS, ALL_OPTIMIZERS, ALL_REGIMES,
+import type { AlphaHypothesis, HypothesisTemplate } from './types';
+import { ALL_COMBINERS, ALL_INDICATORS, ALL_OPTIMIZERS, ALL_REGIMES,
   DEFAULT_BARRIER, LOOKBACK_RANGE, REGIME_STRATEGY,
-  clamp, pick, pickN, randomInt, slug,
-} from './presets';
+  clamp, pick, pickN, randomInt, slug } from './presets';
 
-// ── Public API ─────────────────────────────────────────────────────────────────
+import { REGIME_BARRIERS } from './generator-barriers';
 
 export class HypothesisGenerator {
   private counter = 0;
@@ -18,9 +15,8 @@ export class HypothesisGenerator {
   /** Generate from a named template. */
   generateFromTemplate(template: HypothesisTemplate): AlphaHypothesis {
     this.counter++;
-    const id = `h-${slug()}-${this.counter}`;
     return {
-      id,
+      id: `h-${slug()}-${this.counter}`,
       name: `${template.name} #${this.counter}`,
       description: template.description,
       indicatorSet: [...template.indicatorPreset],
@@ -36,25 +32,17 @@ export class HypothesisGenerator {
   /** Generate a random but valid hypothesis. */
   generateRandomHypothesis(): AlphaHypothesis {
     this.counter++;
-    const id = `h-${slug()}-${this.counter}`;
     const indicators = pickN(ALL_INDICATORS, 2, 5);
-    const indicatorSet: IndicatorPreset[] = indicators.map((name) => ({
-      indicator: name,
-      lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]),
-    }));
     const combineMethod = pick(ALL_COMBINERS);
-    const optimizerMethod = pick(ALL_OPTIMIZERS);
-    const regimeFilter = pickN(ALL_REGIMES, 1, 3);
-
     return {
-      id,
+      id: `h-${slug()}-${this.counter}`,
       name: `Random-${combineMethod}-#${this.counter}`,
       description: `Auto-generated hypothesis: ${indicators.join('+')} with ${combineMethod}`,
-      indicatorSet,
+      indicatorSet: indicators.map((name) => ({ indicator: name, lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) })),
       combineMethod,
-      regimeFilter,
+      regimeFilter: pickN(ALL_REGIMES, 1, 3),
       barrierConfig: { ...DEFAULT_BARRIER },
-      optimizerMethod,
+      optimizerMethod: pick(ALL_OPTIMIZERS),
       confidence: 0.5,
       createdAt: new Date().toISOString(),
     };
@@ -64,29 +52,14 @@ export class HypothesisGenerator {
   generateRegimeSpecificHypothesis(regime: RegimeLabel): AlphaHypothesis {
     this.counter++;
     const preset = REGIME_STRATEGY[regime] ?? REGIME_STRATEGY.UNKNOWN;
-    const id = `h-${slug()}-${this.counter}`;
-    const indicatorSet: IndicatorPreset[] = preset.indicators.map((name) => ({
-      indicator: name,
-      lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]),
-    }));
-
-    const regimeBarriers: Partial<Record<RegimeLabel, BarrierConfig>> = {
-      TREND_UP: { takeProfitPct: 0.03, stopLossPct: 0.015, maxHoldingMs: 48 * 3600_000 },
-      TREND_DOWN: { takeProfitPct: 0.015, stopLossPct: 0.005, maxHoldingMs: 12 * 3600_000 },
-      RANGE: { takeProfitPct: 0.01, stopLossPct: 0.01, maxHoldingMs: 6 * 3600_000 },
-      HIGH_VOLATILITY: { takeProfitPct: 0.04, stopLossPct: 0.02, maxHoldingMs: 24 * 3600_000 },
-      LOW_VOLATILITY: { takeProfitPct: 0.015, stopLossPct: 0.01, maxHoldingMs: 36 * 3600_000 },
-      SHOCK: { takeProfitPct: 0.05, stopLossPct: 0.025, maxHoldingMs: 6 * 3600_000 },
-    };
-
     return {
-      id,
+      id: `h-${slug()}-${this.counter}`,
       name: `${regime}-specialist #${this.counter}`,
       description: preset.description,
-      indicatorSet,
+      indicatorSet: preset.indicators.map((name) => ({ indicator: name, lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) })),
       combineMethod: preset.combiner,
       regimeFilter: [regime],
-      barrierConfig: regimeBarriers[regime] ?? { ...DEFAULT_BARRIER },
+      barrierConfig: REGIME_BARRIERS[regime] ?? { ...DEFAULT_BARRIER },
       optimizerMethod: 'regime_sized',
       confidence: 0.5,
       createdAt: new Date().toISOString(),
@@ -102,22 +75,17 @@ export class HypothesisGenerator {
     // Evolve indicators: add, remove, or replace with probability = rate
     const indicators = [...parent.indicatorSet];
     for (let i = indicators.length - 1; i >= 0; i--) {
-      if (Math.random() < rate) {
-        const action = Math.random();
-        if (action < 0.33 && indicators.length > 1) {
-          // Remove
-          indicators.splice(i, 1);
-        } else if (action < 0.66) {
-          // Replace
-          const candidates = ALL_INDICATORS.filter((n) => !indicators.some((ind) => ind.indicator === n));
-          if (candidates.length > 0) {
-            indicators[i] = { indicator: pick(candidates), lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) };
-          }
-        } else {
-          // Mutate lookback
-          const orig = indicators[i]!;
-          indicators[i] = { ...orig, lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) };
+      if (Math.random() >= rate) continue;
+      const action = Math.random();
+      if (action < 0.33 && indicators.length > 1) {
+        indicators.splice(i, 1);
+      } else if (action < 0.66) {
+        const candidates = ALL_INDICATORS.filter((n) => !indicators.some((ind) => ind.indicator === n));
+        if (candidates.length > 0) {
+          indicators[i] = { indicator: pick(candidates), lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) };
         }
+      } else {
+        indicators[i] = { ...indicators[i]!, lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) };
       }
     }
 

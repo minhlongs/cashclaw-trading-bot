@@ -4,37 +4,13 @@ import type { ComposedAlpha } from '@/tree/alpha/composition';
 import { scoreComposedAlphas } from '@/tree/alpha/composition/scoring';
 import type { RiskInputs } from '@/tree/alpha/portfolio';
 import { buildPortfolio } from '@/tree/alpha/portfolio/engine';
-import {
-  annualizedSharpe,
-  annualizedSortino,
-  maxDrawdownPct,
-} from '@/forest/alpha/cross-sectional-eval/return-metrics';
-import type {
-  CompositionEvalConfig,
-  CompositionPeriodRecord,
-  CompositionEvalResult,
-} from './types';
+import { annualizedSharpe, annualizedSortino, maxDrawdownPct } from '@/forest/alpha/cross-sectional-eval/return-metrics';
+import type { CompositionEvalConfig, CompositionPeriodRecord, CompositionEvalResult } from './types';
 import { resolveCostFraction } from './evaluate-cost';
 import { buildEquityCurve } from './evaluate-equity';
+import { toWeightMap, EMPTY_EVAL_RESULT, createEmptyPeriod } from './evaluate-core-helpers';
 
-export function toWeightMap(
-  positions: readonly { alphaId: string; targetWeight: number }[],
-): Map<string, number> {
-  const m = new Map<string, number>();
-  for (const p of positions) m.set(p.alphaId, p.targetWeight);
-  return m;
-}
-
-const EMPTY_EVAL_RESULT: CompositionEvalResult = {
-  periods: [],
-  equityCurve: [1],
-  totalReturn: 0,
-  annualizedSharpe: null,
-  annualizedSortino: null,
-  maxDrawdownPct: 0,
-  totalTurnover: 0,
-  totalCosts: 0,
-};
+export { toWeightMap, EMPTY_EVAL_RESULT };
 
 /**
  * Evaluate a composition pipeline end to end.
@@ -85,16 +61,7 @@ export function evaluateComposition(
     const { scored } = scoreComposedAlphas(alphas, config.compositionConfig);
 
     if (scored.length === 0) {
-      periods.push({
-        timestamp: t,
-        scoredAlphas: [],
-        positions: [],
-        grossReturn: 0,
-        costPct: 0,
-        netReturn: 0,
-        turnover: 0,
-        riskAdjustments: [],
-      });
+      periods.push(createEmptyPeriod(t));
       netReturns.push(0);
       continue;
     }

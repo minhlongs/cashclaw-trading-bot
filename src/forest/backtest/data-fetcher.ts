@@ -3,53 +3,7 @@
 
 import type { Candle } from './ohlcv';
 import { loadCandles, saveCandles, getCacheKey } from './ohlcv-cache';
-
-const KLINE_LIMIT = 1000;
-
-function parseBinance(raw: unknown): Candle[] {
-  const arr = raw as unknown[];
-  return arr.map((k) => {
-    const row = k as unknown[];
-    return {
-      timestamp: row[0] as number,
-      open: parseFloat(row[1] as string),
-      high: parseFloat(row[2] as string),
-      low: parseFloat(row[3] as string),
-      close: parseFloat(row[4] as string),
-      volume: parseFloat(row[5] as string),
-    };
-  });
-}
-
-function parseBybit(raw: unknown): Candle[] {
-  const items = (raw as { result: { list: [string, string, string, string, string, string][] } }).result.list ?? [];
-  // bybit returns [startTime, open, high, low, close, volume, turnover] — newest first
-  return items
-    .map((k) => ({
-      timestamp: parseInt(k[0], 10),
-      open: parseFloat(k[1]),
-      high: parseFloat(k[2]),
-      low: parseFloat(k[3]),
-      close: parseFloat(k[4]),
-      volume: parseFloat(k[5]),
-    }))
-    .reverse(); // oldest first for backtest iteration
-}
-
-function parseOkx(raw: unknown): Candle[] {
-  const arr = raw as unknown[][];
-  // okx returns [ts, o, h, l, c, vol, volCcy, volCcyQuote, confirm] — newest first
-  return arr
-    .map((k) => ({
-      timestamp: parseInt(k[0] as string, 10),
-      open: parseFloat(k[1] as string),
-      high: parseFloat(k[2] as string),
-      low: parseFloat(k[3] as string),
-      close: parseFloat(k[4] as string),
-      volume: parseFloat(k[5] as string),
-    }))
-    .reverse();
-}
+import { buildRequestCapped } from './data-fetcher-request';
 
 /**
  * Fetch historical candles from a public exchange API.
@@ -121,37 +75,3 @@ export async function fetchOHLCV(
 
   return result;
 }
-
-function buildRequestCapped(
-  exchange: string,
-  symbol: string,
-  interval: string,
-  endMs: number,
-): { url: string; parse: (data: unknown) => Candle[] } {
-  switch (exchange) {
-    case 'binance': {
-      const s = encodeURIComponent(symbol.replace('/', ''));
-      return {
-        url: `https://api.binance.com/api/v3/klines?symbol=${s}&interval=${interval}&endTime=${endMs}&limit=${KLINE_LIMIT}`,
-        parse: parseBinance,
-      };
-    }
-    case 'bybit': {
-      const s = encodeURIComponent(symbol.replace('/', ''));
-      return {
-        url: `https://api.bybit.com/v5/market/kline?category=spot&symbol=${s}&interval=${interval}&end=${endMs}&limit=${KLINE_LIMIT}`,
-        parse: parseBybit,
-      };
-    }
-    case 'okx': {
-      const s = encodeURIComponent(symbol.replace('/', '-'));
-      return {
-        url: `https://www.okx.com/api/v5/market/history-candles?instId=${s}&bar=${interval}&after=${endMs}&limit=${KLINE_LIMIT}`,
-        parse: parseOkx,
-      };
-    }
-    default:
-      throw new Error(`Unsupported exchange: ${exchange}`);
-  }
-}
-

@@ -3,34 +3,14 @@
 import { RegimeLabel } from '@/tree/regime/types';
 import type { AlphaSignal } from '@/tree/alpha/types';
 import type {
-  DashboardState, DashboardPosition,
-  TimeSeriesPoint, AttributionSummary,
-  RegimeInput, PerformanceInput,
+  DashboardState, DashboardPosition, TimeSeriesPoint,
+  AttributionSummary, RegimeInput, PerformanceInput, RegimeTimelineEntry,
 } from './types';
 import {
-  type InternalState,
-  EMPTY_PERFORMANCE,
-  freshState,
-  MAX_RECENT_SIGNALS,
-  MAX_PERFORMANCE_HISTORY,
-  cloneTimeline,
+  type InternalState, freshState,
+  MAX_RECENT_SIGNALS, MAX_PERFORMANCE_HISTORY,
 } from './state-internal';
-
-function buildSnapshot(state: InternalState): DashboardState {
-  const { performanceHistory, regimeTimeline } = state;
-  const latest = performanceHistory.length > 0
-    ? performanceHistory[performanceHistory.length - 1]
-    : EMPTY_PERFORMANCE;
-  return {
-    currentRegime: state.currentRegime,
-    regimeConfidence: state.regimeConfidence,
-    recentSignals: [...state.recentSignals],
-    openPositions: [...state.openPositions],
-    performanceSummary: { ...latest },
-    regimeTimeline: regimeTimeline.map(cloneTimeline),
-    attributionSummary: { ...state.attributionCache },
-  };
-}
+import { buildSnapshot } from './state-tracker-helpers';
 
 /** Pure-logic state manager for real-time dashboard data. No DOM, no fetch. */
 export class DashboardStateTracker {
@@ -42,10 +22,8 @@ export class DashboardStateTracker {
 
   /** Ingest new data and return an immutable DashboardState snapshot. */
   update(
-    regime: RegimeInput,
-    signals: readonly AlphaSignal[],
-    positions: readonly DashboardPosition[],
-    performance: PerformanceInput,
+    regime: RegimeInput, signals: readonly AlphaSignal[],
+    positions: readonly DashboardPosition[], performance: PerformanceInput,
   ): DashboardState {
     this.ingestRegime(regime);
     this.ingestSignals(signals);
@@ -55,7 +33,7 @@ export class DashboardStateTracker {
   }
 
   /** Recorded regime transition history. */
-  getRegimeHistory(): readonly ReturnType<typeof cloneTimeline>[] {
+  getRegimeHistory(): readonly RegimeTimelineEntry[] {
     return [...this.state.regimeTimeline];
   }
 
@@ -75,9 +53,7 @@ export class DashboardStateTracker {
   }
 
   /** Reset tracker to initial state. */
-  reset(): void {
-    this.state = freshState();
-  }
+  reset(): void { this.state = freshState(); }
 
   /** Update attribution data externally. */
   setAttribution(summary: AttributionSummary): void {
@@ -103,9 +79,7 @@ export class DashboardStateTracker {
 
     if (transitioning) {
       const last = regimeTimeline[regimeTimeline.length - 1];
-      if (last && last.endTimestamp === null) {
-        last.endTimestamp = input.timestamp;
-      }
+      if (last && last.endTimestamp === null) last.endTimestamp = input.timestamp;
       regimeTimeline.push({
         regime: input.label, startTimestamp: input.timestamp,
         endTimestamp: null, signalCount: 0, avgConfidence: 0,
@@ -135,9 +109,8 @@ export class DashboardStateTracker {
   }
 
   private ingestPerformance(perf: PerformanceInput): void {
-    this.state.performanceHistory.push(perf);
-    if (this.state.performanceHistory.length > MAX_PERFORMANCE_HISTORY) {
-      this.state.performanceHistory.shift();
-    }
+    const hist = this.state.performanceHistory;
+    hist.push(perf);
+    if (hist.length > MAX_PERFORMANCE_HISTORY) hist.shift();
   }
 }
