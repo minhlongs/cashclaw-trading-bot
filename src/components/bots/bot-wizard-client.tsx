@@ -8,14 +8,10 @@ import { BasicStep } from './basic-step';
 import { StrategyStep } from './strategy-step';
 import { ConfigStep } from './config-step';
 import { ReviewStep } from './review-step';
+import { BotWizardProgressBar, BotWizardStepIndicator } from './bot-wizard-header';
 
 const INITIAL: FormState = {
-  name: '',
-  strategy: '',
-  pair: '',
-  exchange: '',
-  capital: 5000,
-  config: {},
+  name: '', strategy: '', pair: '', exchange: '', capital: 5000, config: {},
 };
 
 const STEPS: Step[] = ['basic', 'strategy', 'config', 'review'];
@@ -30,9 +26,7 @@ export function BotWizardClient() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const mountedRef = useRef(true);
-  useEffect(() => {
-    return () => { mountedRef.current = false; };
-  }, []);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -43,12 +37,7 @@ export function BotWizardClient() {
   };
 
   const setStrategyDefaults = (strategy: 'grid' | 'mean_reversion' | 'volatility_dca') => {
-    const defaults =
-      strategy === 'grid'
-        ? GRID_DEFAULTS
-        : strategy === 'mean_reversion'
-        ? MEANREV_DEFAULTS
-        : VOLATILITY_DCA_DEFAULTS;
+    const defaults = strategy === 'grid' ? GRID_DEFAULTS : strategy === 'mean_reversion' ? MEANREV_DEFAULTS : VOLATILITY_DCA_DEFAULTS;
     setForm((prev) => ({ ...prev, strategy, config: { ...defaults } }));
   };
 
@@ -70,19 +59,12 @@ export function BotWizardClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: crypto.randomUUID(),
-          name: form.name,
-          strategy: form.strategy,
-          pair: form.pair,
-          exchange: form.exchange,
-          capital: form.capital,
-          config: form.config,
+          id: crypto.randomUUID(), name: form.name, strategy: form.strategy,
+          pair: form.pair, exchange: form.exchange, capital: form.capital, config: form.config,
         }),
       });
       const data = (await res.json()) as { ok: boolean; error?: string; data?: { id: string } };
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || t('submitError'));
-      }
+      if (!res.ok || !data.ok) throw new Error(data.error || t('submitError'));
       setSubmitSuccess(true);
       setTimeout(() => {
         if (mountedRef.current) router.push(`/${locale}/bots/${data.data?.id}`);
@@ -98,56 +80,18 @@ export function BotWizardClient() {
 
   const stepContent = {
     basic: <BasicStep form={form} update={update} onNext={goToNext} />,
-    strategy: (
-      <StrategyStep
-        form={form}
-        setStrategyDefaults={setStrategyDefaults}
-        onNext={goToNext}
-        onPrev={goToPrev}
-      />
-    ),
-    config: (
-      <ConfigStep
-        form={form}
-        updateConfig={updateConfig}
-        strategy={form.strategy as 'grid' | 'mean_reversion' | 'volatility_dca'}
-        onNext={goToNext}
-        onPrev={goToPrev}
-      />
-    ),
-    review: (
-      <ReviewStep
-        form={form}
-        submitting={submitting}
-        submitError={submitError}
-        submitSuccess={submitSuccess}
-        onSubmit={handleSubmit}
-        onPrev={goToPrev}
-      />
-    ),
+    strategy: <StrategyStep form={form} setStrategyDefaults={setStrategyDefaults} onNext={goToNext} onPrev={goToPrev} />,
+    config: <ConfigStep form={form} updateConfig={updateConfig} strategy={form.strategy as 'grid' | 'mean_reversion' | 'volatility_dca'} onNext={goToNext} onPrev={goToPrev} />,
+    review: <ReviewStep form={form} submitting={submitting} submitError={submitError} submitSuccess={submitSuccess} onSubmit={handleSubmit} onPrev={goToPrev} />,
   }[step];
 
   return (
     <div className="wizard-container">
       <div className="wizard-inner">
-        <div className="wizard-header">
-          {STEPS.map((s, i) => (
-            <div
-              key={s}
-              className={`progress-bar ${i + 1 <= stepNumber ? 'active' : ''}`}
-            />
-          ))}
-        </div>
         <div className="card wizard-card">
           <div className="card-body wizard-card-body">
-            <div className="wizard-header">
-              <span className="wizard-step-num">
-                {stepNumber}
-              </span>
-              <span className="wizard-step-total">
-                / {STEPS.length}
-              </span>
-            </div>
+            <BotWizardProgressBar steps={STEPS} stepNumber={stepNumber} />
+            <BotWizardStepIndicator totalSteps={STEPS.length} stepNumber={stepNumber} />
             {stepContent}
           </div>
         </div>

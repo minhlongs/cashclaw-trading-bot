@@ -2,16 +2,15 @@
 // Orchestrator types for the end-to-end alpha research pipeline.
 
 import type { Candle } from '@/forest/backtest/ohlcv';
-import type { RegimeConfig, RegimeLabel, RegimeResult } from '@/tree/regime/types';
+import type { RegimeConfig } from '@/tree/regime/types';
 import type { WindowConfig } from '@/forest/backtest/walkforward';
 import type { StressMode } from '@/forest/backtest/cost-model';
-import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
-import type { AlphaSignal } from '@/tree/alpha/types';
-import type { DerivativeFeatures, DerivativeSignal } from '@/tree/alpha/signals';
-import type { AttributionResult } from '@/forest/alpha/attribution/types';
-import type { BaselineConfig } from '@/forest/alpha/baselines/types';
-import type { SurvivalGateConfig, SurvivalGateResult } from '@/forest/alpha/gate/survival-gate';
-import type { StrategyPhase, TransitionResult } from '@/forest/alpha/gate/promotion-states';
+import type { SurvivalGateConfig } from '@/forest/alpha/gate/survival-gate';
+import type { StrategyPhase } from '@/forest/alpha/gate/promotion-states';
+import type { DerivativeData } from './types-steps';
+
+export * from './types-steps';
+export * from './types-report';
 
 // ── Pipeline Configuration ──────────────────────────────────────────────────
 
@@ -48,131 +47,4 @@ export interface PipelineConfig {
   survivalGateConfig?: SurvivalGateConfig;
   /** Optional initial strategy phase (defaults to 'RESEARCH'). */
   initialStrategyPhase?: StrategyPhase;
-}
-
-// ── Pipeline Steps ──────────────────────────────────────────────────────────
-
-export type PipelineStep =
-  | 'fetch_data'
-  | 'fetch_derivatives'
-  | 'compute_indicators'
-  | 'detect_regimes'
-  | 'generate_signals'
-  | 'label_events'
-  | 'run_walkforward'
-  | 'compute_costs'
-  | 'evaluate'
-  | 'attribute'
-  | 'compare_baselines'
-  | 'generate_report';
-
-// ── Pipeline Result ─────────────────────────────────────────────────────────
-
-/** Outcome of a single pipeline step. */
-export interface PipelineStepResult {
-  step: PipelineStep;
-  status: 'success' | 'skipped' | 'error';
-  data: unknown;
-  duration: number;
-  error?: string;
-}
-
-// ── Step Data Contracts ─────────────────────────────────────────────────────
-
-/** Data produced by the compute_indicators step. */
-export interface IndicatorData {
-  features: Record<string, number>[];
-  names: string[];
-}
-
-/** Data produced by the fetch_derivatives step (non-TA market-structure signals). */
-export interface DerivativeData {
-  features: DerivativeFeatures[];
-  signals: DerivativeSignal[];
-}
-
-/** Data produced by the detect_regimes step. */
-export interface RegimeData {
-  regimes: RegimeResult[];
-  history: RegimeResult[];
-}
-
-/** Data produced by the generate_signals step. */
-export interface SignalData {
-  signals: AlphaSignal[];
-}
-
-/** Data produced by the label_events step. */
-export interface EventData {
-  labels: ('buy' | 'sell' | 'hold')[];
-}
-
-/** Data produced by run_walkforward step. */
-export interface WalkforwardData {
-  sharpe: number;
-  totalTrades: number;
-  passed: boolean;
-  result?: unknown;
-}
-
-/** Data produced by compute_costs step. */
-export interface CostData {
-  grossPnl: number;
-  netPnl: number;
-  fees: number;
-  slippage: number;
-}
-
-/** Data produced by evaluate step. */
-export interface EvalData {
-  report: EvaluationReport;
-}
-
-/** Data produced by attribute step. */
-export interface AttributeData {
-  attributions: AttributionResult[];
-}
-
-/** Data produced by compare_baselines step. */
-export interface BaselineData {
-  baselines: BaselineConfig[];
-  reports: Record<string, EvaluationReport>;
-}
-
-/** Data produced by generate_report step. */
-export interface ReportData {
-  survivalGate: SurvivalGateResult | null;
-  promotion: TransitionResult | null;
-}
-
-// ── Final Report ────────────────────────────────────────────────────────────
-
-/** Regime-level performance breakdown for the final report. */
-export interface RegimeBreakdownEntry {
-  trades: number;
-  winRate: number;
-}
-
-/** Top contributing feature. */
-export interface TopFeature {
-  name: string;
-  importance: number;
-}
-
-/** Final pipeline recommendation. */
-export type PipelineRecommendation = 'deploy' | 'refine' | 'discard';
-
-/** Final alpha research report produced by the pipeline. */
-export interface AlphaResearchReport {
-  symbol: string;
-  timeframe: string;
-  totalSteps: number;
-  passedSteps: number;
-  finalSharpe: number;
-  regimeBreakdown: Record<RegimeLabel, RegimeBreakdownEntry>;
-  topFeatures: TopFeature[];
-  recommendation: PipelineRecommendation;
-  report: EvaluationReport | null;
-  survivalGate?: SurvivalGateResult | null;
-  promotion?: TransitionResult | null;
 }

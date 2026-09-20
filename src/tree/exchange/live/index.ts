@@ -4,9 +4,6 @@
 
 import { createCCXTClient } from '../ccxt/client';
 import { rateLimiter } from '../rate-limiter';
-import { createLogger } from '@/lib/logger';
-
-const log = createLogger('exchange-live');
 import type {
   ExchangeId,
   Ticker,
@@ -17,13 +14,11 @@ import type {
   ExchangeAdapter,
   ExchangeConfig,
 } from '../types';
+import type { KillswitchCallbacks, LiveExchangeOptions } from './live-exchange-types';
+import { executeLiveOrder, cancelLiveOrder, checkKillswitchLoss, pingExchange } from './live-exchange-orders';
 
-interface KillswitchCallbacks {
-  isTradingEnabled: () => boolean;
-  onOrderPlaced: (order: OrderResult) => void;
-  onOrderFilled: (order: OrderResult) => void;
-  onError: (error: Error, context: string) => void;
-}
+export type { KillswitchCallbacks, LiveExchangeOptions } from './live-exchange-types';
+export { executeLiveOrder, cancelLiveOrder, checkKillswitchLoss, pingExchange } from './live-exchange-orders';
 
 export class LiveExchange implements ExchangeAdapter {
   id: ExchangeId;
@@ -39,7 +34,7 @@ export class LiveExchange implements ExchangeAdapter {
     exchangeId: ExchangeId,
     config: ExchangeConfig,
     callbacks: KillswitchCallbacks,
-    options: { maxDailyLossPct?: number; maxOrdersPerMinute?: number } = {},
+    options: LiveExchangeOptions = {},
   ) {
     this.id = exchangeId;
     this.name = exchangeId;
@@ -69,39 +64,28 @@ export class LiveExchange implements ExchangeAdapter {
   }
 
   async placeOrder(request: OrderRequest): Promise<OrderResult> {
-    if (!this.killswitch.isTradingEnabled()) {
-      throw new Error('Trading halted by killswitch');
-    }
-
-    if (Math.abs(this.dailyPnl) >= this.maxDailyLoss) {
-      throw new Error(`Daily loss limit reached: ${(this.dailyPnl * 100).toFixed(2)}%`);
-    }
-
-    if (this.orderCount >= this.maxOrdersPerMinute) {
-      throw new Error(`Rate limit: ${this.maxOrdersPerMinute} orders/minute`);
-    }
-
-    await rateLimiter.acquire(this.id, 'order');
-
-    try {
-      const result = await this.client.placeOrder(this.id, request as unknown as OrderResult);
-      this.orderCount++;
-      this.killswitch.onOrderPlaced(result as OrderResult);
-      return result as OrderResult;
-    } catch (error) {
-      this.killswitch.onError(error instanceof Error ? error : new Error(String(error)), 'placeOrder');
-      throw error;
-    }
+    const { result, newOrderCount } = await executeLiveOrder(
+      {
+        id: this.id,
+        client: this.client,
+        killswitch: this.killswitch,
+        dailyPnl: this.dailyPnl,
+        maxDailyLoss: this.maxDailyLoss,
+        orderCount: this.orderCount,
+        maxOrdersPerMinute: this.maxOrdersPerMinute,
+      },
+      request,
+    );
+    this.orderCount = newOrderCount;
+    return result;
   }
 
   async cancelOrder(orderId: string, symbol: string): Promise<boolean> {
-    await rateLimiter.acquire(this.id, 'order');
-    try {
-      return await this.client.cancelOrder(this.id, orderId, symbol);
-    } catch (error) {
-      this.killswitch.onError(error instanceof Error ? error : new Error(String(error)), 'cancelOrder');
-      return false;
-    }
+    return cancelLiveOrder(
+      { id: this.id, client: this.client, killswitch: this.killswitch },
+      orderId,
+      symbol,
+    );
   }
 
   async fetchOrder(orderId: string, symbol: string): Promise<OrderResult> {
@@ -115,14 +99,7 @@ export class LiveExchange implements ExchangeAdapter {
   }
 
   async ping(): Promise<boolean> {
-    try {
-      await rateLimiter.acquire(this.id, 'api');
-      await this.client.fetchTicker(this.id, 'BTC/USDT');
-      return true;
-    } catch (error) {
-      log.warn('Exchange ping failed', { action: 'ping', error: error instanceof Error ? error : new Error(String(error)) });
-      return false;
-    }
+    return pingExchange(this.id, this.client);
   }
 
   async getServerTime(): Promise<number> {
@@ -130,22 +107,11 @@ export class LiveExchange implements ExchangeAdapter {
     return Date.now();
   }
 
-  /**
-   * Track realized P&L for killswitch loss limits.
-   */
   updateDailyPnl(pnl: number): void {
     this.dailyPnl += pnl;
-    if (Math.abs(this.dailyPnl) >= this.maxDailyLoss) {
-      this.killswitch.onError(
-        new Error(`Daily loss limit breached: ${(this.dailyPnl * 100).toFixed(2)}%`),
-        'dailyLossCheck',
-      );
-    }
+    checkKillswitchLoss(this.dailyPnl, this.maxDailyLoss, this.killswitch);
   }
 
-  /**
-   * Reset per-minute order counter (call from cron).
-   */
   tick(): void {
     this.orderCount = 0;
   }

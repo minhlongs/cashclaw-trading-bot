@@ -10,6 +10,7 @@ import type { DashboardKpis } from '@/forest/dashboard/bot-kpis';
 import { StrategyVisualizerCard } from './strategy-visualizer-card';
 import { MarketWatchCard } from './market-watch-card';
 import { DashboardBotList } from './dashboard-bot-list';
+import { DashboardTopKpiCards, DashboardPerformanceGrid } from './dashboard-kpi-cards';
 
 interface BotCardDataApi {
   id: string; name: string; strategy: 'grid' | 'mean_reversion' | 'volatility_dca' | string;
@@ -97,7 +98,6 @@ export default function DashboardClient() {
   }
 
   const { kpis, bots } = data;
-  const winRate = kpis.winRate;
 
   return (
     <section className="dashboard">
@@ -106,54 +106,11 @@ export default function DashboardClient() {
         <Link href={`/${locale}/bots/new`} className="btn btn-primary"><Plus className="btn-icon" />{t('newBot')}</Link>
       </header>
 
-      <div className="panel-group">
-        <div className="panel">
-          <h3>Total Balance</h3>
-          <p className="metric text-profit">${kpis.totalBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-          <p className="meta">CashClaw {t('title').toLowerCase()} {bots.length} · PnL: ${kpis.todayPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-        </div>
-        <div className="panel">
-          <h3>Win Rate</h3>
-          <p className="metric">{winRate.toLocaleString(undefined, { maximumFractionDigits: 2 })}%</p>
-          <p className="meta">{bots.reduce((sum, b) => sum + b.winCount, 0).toLocaleString()}W / {bots.reduce((sum, b) => sum + b.lossCount, 0).toLocaleString()}L</p>
-        </div>
-        <div className="panel">
-          <h3>Active Bots</h3>
-          <p className="metric">{kpis.activeBots.toLocaleString()} / {bots.length.toLocaleString()}</p>
-          <p className="meta">Active rate: {bots.length > 0 ? `${((kpis.activeBots / bots.length) * 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}%` : '—'}</p>
-        </div>
-        <div className="panel">
-          <h3>Total Capital</h3>
-          <p className="metric">${bots.reduce((sum, b) => sum + b.capitalAllocated, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-          <p className="meta">Across {bots.length} bots</p>
-        </div>
-      </div>
-
+      <DashboardTopKpiCards kpis={kpis} bots={bots} />
       <MarketWatchCard />
-
       <StrategyVisualizerCard bots={bots} />
-
       <DashboardBotList bots={bots} />
-
-      <div className="grid-auto-fit mt-6">
-        <div className="panel">
-          <h3>Win Rate</h3>
-          <p className="metric">{winRate.toFixed(1)}%</p>
-          <p className="meta">{bots.reduce((sum, b) => sum + b.winCount, 0).toLocaleString()}W / {bots.reduce((sum, b) => sum + b.lossCount, 0).toLocaleString()}L</p>
-        </div>
-        <div className="panel">
-          <h3>Total Trades</h3>
-          <p className="metric">{kpis.totalTrades.toLocaleString()}</p>
-          <p className="meta">Over {bots.length.toLocaleString()} bots</p>
-        </div>
-        <div className="panel">
-          <h3>Total PnL</h3>
-          <p className={`metric ${kpis.todayPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
-            ${kpis.todayPnl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-          </p>
-          <p className="meta">Realized across all bots</p>
-        </div>
-      </div>
+      <DashboardPerformanceGrid kpis={kpis} bots={bots} />
     </section>
   );
 }
