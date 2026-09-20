@@ -176,6 +176,12 @@
     ],
     "src/forest/backtest/actions.ts": [
       "exports"
+    ],
+    "src/forest/alpha/multiple-testing/overfitting-proxy.ts": [
+      "exports"
+    ],
+    "src/tree/alpha/registry/registry.ts": [
+      "exports"
     ]
   }
 }

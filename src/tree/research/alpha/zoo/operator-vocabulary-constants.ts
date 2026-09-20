@@ -1,0 +1,63 @@
+// Operator vocabulary constants + alias table for zoo formula_latex strings.
+// Pure data — no normalization logic here.
+
+/** The 17 causal-by-construction operators from zoo base.py. */
+export const SUPPORTED_OPERATORS = [
+  'rank',
+  'zscore',
+  'scale',
+  'ts_rank',
+  'ts_corr',
+  'ts_cov',
+  'ts_mean',
+  'ts_std',
+  'ts_max',
+  'ts_min',
+  'ts_argmax',
+  'ts_argmin',
+  'delta',
+  'decay_linear',
+  'signed_power',
+  'safe_div',
+  'vwap',
+] as const;
+export type SupportedOperator = (typeof SUPPORTED_OPERATORS)[number];
+
+/** Uppercase DSL / academic aliases → canonical operator (case-insensitive). */
+export const OPERATOR_ALIASES: Readonly<Record<string, SupportedOperator>> = {
+  RANK: 'rank',
+  ZSCORE: 'zscore',
+  SCALE: 'scale',
+  TS_RANK: 'ts_rank',
+  CORR: 'ts_corr',
+  CORRELATION: 'ts_corr',
+  CORRELATE: 'ts_corr',
+  TS_CORR: 'ts_corr',
+  COV: 'ts_cov',
+  COVARIANCE: 'ts_cov',
+  TS_COV: 'ts_cov',
+  MEAN: 'ts_mean',
+  SMA: 'ts_mean',
+  TS_MEAN: 'ts_mean',
+  STD: 'ts_std',
+  STDDEV: 'ts_std',
+  TS_STD: 'ts_std',
+  MAX: 'ts_max',
+  TSMAX: 'ts_max',
+  TS_MAX: 'ts_max',
+  MIN: 'ts_min',
+  TSMIN: 'ts_min',
+  TS_MIN: 'ts_min',
+  ARGMAX: 'ts_argmax',
+  TS_ARGMAX: 'ts_argmax',
+  ARGMIN: 'ts_argmin',
+  TS_ARGMIN: 'ts_argmin',
+  DELTA: 'delta',
+  DELAY: 'delta',
+  DECAY_LINEAR: 'decay_linear',
+  DECAYLINEAR: 'decay_linear',
+  SIGNED_POWER: 'signed_power',
+  SIGNEDPOWER: 'signed_power',
+  SAFE_DIV: 'safe_div',
+  VWAP: 'vwap',
+};

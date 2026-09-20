@@ -5,27 +5,20 @@ import type { KillswitchCallbacks, KillswitchConfig, KillswitchState } from './k
 import type { OrderResult } from '@/tree/exchange/types';
 import { computeDrawdown, evaluateOrderRisk } from './killswitch-evaluator';
 import { recordKillswitchHaltAudit } from './killswitch-audit';
+import {
+  makeInitialKillswitchState,
+  resetKillswitchDailyState,
+  getMillisUntilMidnight,
+  type BotStateSummary,
+} from './killswitch-reset';
 
 export type { KillswitchCallbacks, KillswitchConfig, KillswitchState };
-
-const makeInitialState = (): KillswitchState => ({
-  enabled: true,
-  halted: false,
-  haltReason: null,
-  haltTimestamp: null,
-  dailyPnl: 0,
-  consecutiveLosses: 0,
-  peakCapital: 0,
-  currentDrawdown: 0,
-  cooldownUntil: null,
-  dailyStartTime: Date.now(),
-});
 
 export class Killswitch {
   private callbacks: KillswitchCallbacks;
   private config: KillswitchConfig;
-  private state: KillswitchState = makeInitialState();
-  private botStates = new Map<string, { dailyPnl: number; consecutiveLosses: number; capital: number }>();
+  private state: KillswitchState = makeInitialKillswitchState();
+  private botStates = new Map<string, BotStateSummary>();
   private resetTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly auditEnabled: boolean;
 
@@ -67,7 +60,6 @@ export class Killswitch {
     if (!this.state.enabled) return;
     this.callbacks.onOrderFilled(order as unknown as OrderResult);
     if (this.state.halted) return;
-
     const res = evaluateOrderRisk(this.state, order.pnl ?? 0, this.config);
     this.state.dailyPnl = res.dailyPnl;
     this.state.consecutiveLosses = res.consecutiveLosses;
@@ -83,12 +75,7 @@ export class Killswitch {
     this.state.currentDrawdown = computeDrawdown(this.state.peakCapital, capital);
   }
 
-  reset(): void {
-    this.state = makeInitialState();
-    this.botStates.clear();
-    this.emitDailyState();
-  }
-
+  reset(): void { this.state = makeInitialKillswitchState(); this.botStates.clear(); this.emitDailyState(); }
   recordError(error: Error, context: string): void { this.callbacks.onError(error, context); }
   get haltReason(): string | null { return this.state.haltReason; }
   isHalted(): boolean { return this.state.halted; }
@@ -99,19 +86,11 @@ export class Killswitch {
   isTradingEnabled(): boolean {
     if (!this.state.enabled) return false;
     if (!this.state.halted) return true;
-    if (this.state.cooldownUntil && Date.now() >= this.state.cooldownUntil) {
-      this.resume();
-      return true;
-    }
+    if (this.state.cooldownUntil && Date.now() >= this.state.cooldownUntil) { this.resume(); return true; }
     return false;
   }
 
-  private resume(): void {
-    this.state.halted = false;
-    this.state.haltReason = null;
-    this.state.cooldownUntil = null;
-    this.callbacks.onResume();
-  }
+  private resume(): void { this.state.halted = false; this.state.haltReason = null; this.state.cooldownUntil = null; this.callbacks.onResume(); }
 
   private halt(reason: string): void {
     if (this.state.halted) return;
@@ -127,33 +106,12 @@ export class Killswitch {
   }
 
   private emitDailyState(): void {
-    this.callbacks.onDailyStateChange?.({
-      dailyPnl: this.state.dailyPnl,
-      consecutiveLosses: this.state.consecutiveLosses,
-      peakCapital: this.state.peakCapital,
-      dailyStartTime: this.state.dailyStartTime,
-    });
+    this.callbacks.onDailyStateChange?.({ dailyPnl: this.state.dailyPnl, consecutiveLosses: this.state.consecutiveLosses, peakCapital: this.state.peakCapital, dailyStartTime: this.state.dailyStartTime });
   }
 
   private scheduleDailyReset(): void {
-    const tomorrow = new Date();
-    tomorrow.setHours(24, 0, 0, 0);
-    this.resetTimer = setTimeout(() => {
-      this.dailyReset();
-      this.scheduleDailyReset();
-    }, tomorrow.getTime() - Date.now());
+    this.resetTimer = setTimeout(() => { this.dailyReset(); this.scheduleDailyReset(); }, getMillisUntilMidnight());
   }
 
-  private dailyReset(): void {
-    this.state.dailyPnl = 0;
-    this.state.consecutiveLosses = 0;
-    this.state.dailyStartTime = Date.now();
-    this.state.peakCapital = 0;
-    this.state.currentDrawdown = 0;
-    for (const bot of this.botStates.values()) {
-      bot.dailyPnl = 0;
-      bot.consecutiveLosses = 0;
-    }
-    this.emitDailyState();
-  }
+  private dailyReset(): void { resetKillswitchDailyState(this.state, this.botStates); this.emitDailyState(); }
 }

@@ -18,6 +18,7 @@ import {
   findTrailingExits,
   computeDeployedCapital,
 } from './grid-levels';
+import { executeFillLevel, formatCloseLevel } from './grid-actions';
 
 export interface GridStrategyCallbacks {
   placeOrder: (req: OrderRequest) => Promise<OrderResult>;
@@ -60,77 +61,33 @@ export class GridStrategy {
 
   onTicker(ticker: Ticker): void {
     if (!this.running) return;
-
     const price = ticker.last;
     if (price <= 0) return;
-
     updateTrailingLevels(this.levels, price, this.config.takeProfitPct, this.config.stopLossPct);
-
-    for (const close of findTrailingExits(this.levels, price)) {
-      this.closeLevel(close.level, close.closePrice, close.reason);
-    }
-
+    for (const close of findTrailingExits(this.levels, price)) this.closeLevel(close.level, close.closePrice, close.reason);
     for (const level of this.levels) {
-      if (level.status === 'pending') {
-        if (level.side === 'buy' && price <= level.triggerPrice) {
-          this.fillLevel(level, price);
-        } else if (level.side === 'sell' && price >= level.triggerPrice) {
-          this.fillLevel(level, price);
-        }
-      }
+      if (level.status !== 'pending') continue;
+      if (level.side === 'buy' && price <= level.triggerPrice) this.fillLevel(level, price);
+      else if (level.side === 'sell' && price >= level.triggerPrice) this.fillLevel(level, price);
     }
-
-    if (price > this.rangeHigh || price < this.rangeLow) {
-      if (this.config.rebalanceOnFill) {
-        this.rebalance(price);
-      }
-    }
+    if ((price > this.rangeHigh || price < this.rangeLow) && this.config.rebalanceOnFill) this.rebalance(price);
   }
 
   onOrderFilled(orderId: string): void {
     for (const level of this.levels) {
-      if (level.orderId === orderId) {
-        level.status = 'filled';
-        break;
-      }
+      if (level.orderId === orderId) { level.status = 'filled'; break; }
     }
   }
 
-  getLevels(): GridLevel[] {
-    return [...this.levels];
-  }
-
-  getConfig(): GridBotConfig {
-    return { ...this.config };
-  }
+  getLevels(): GridLevel[] { return [...this.levels]; }
+  getConfig(): GridBotConfig { return { ...this.config }; }
 
   private async fillLevel(level: GridLevel, fillPrice: number): Promise<void> {
-    level.status = 'filled';
-    level.price = fillPrice;
-    level.filledPrice = fillPrice;
-
-    try {
-      const order = await this.callbacks.placeOrder({
-        symbol: this.config.symbol,
-        exchange: this.config.exchange,
-        side: level.side,
-        type: 'limit',
-        price: fillPrice,
-        quantity: level.quantity,
-        timeInForce: 'GTC',
-      });
-      level.orderId = order.id;
-      this.callbacks.onLog(`Level ${level.level} ${level.side} filled @ ${fillPrice.toFixed(2)}`);
-    } catch (error) {
-      level.status = 'pending';
-      this.callbacks.onLog(`Level ${level.level} ${level.side} failed: ${error instanceof Error ? error.message : 'unknown'}`);
-    }
+    await executeFillLevel({ config: this.config, callbacks: this.callbacks, level, fillPrice });
   }
 
   private closeLevel(level: GridLevel, closePrice: number, reason: 'take-profit' | 'stop-loss'): void {
-    level.status = 'cancelled';
-    level.price = closePrice;
-    this.callbacks.onLog(`Level ${level.level} ${level.side} closed @ ${closePrice.toFixed(2)} (${reason})`);
+    formatCloseLevel({ callbacks: this.callbacks, level, closePrice, reason });
   }
 
   private rebalance(currentPrice: number): void {
@@ -143,11 +100,6 @@ export class GridStrategy {
     this.levels = computeGridLevels(currentPrice, this.config);
   }
 
-  getDeployedCapital(): number {
-    return computeDeployedCapital(this.levels);
-  }
-
-  getReinvestableProfit(): number {
-    return this.totalReinvested;
-  }
+  getDeployedCapital(): number { return computeDeployedCapital(this.levels); }
+  getReinvestableProfit(): number { return this.totalReinvested; }
 }
