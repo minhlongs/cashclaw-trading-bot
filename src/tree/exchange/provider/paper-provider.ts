@@ -1,17 +1,28 @@
 // Paper Exchange Provider — wraps PaperExchange with health tracking and circuit breaker.
 // Paper-mode-only v1; live adapter wrapped in v2.
 
-import type {
-  ExchangeId,
-  Ticker,
-  OrderBook,
-  Balance,
-  OrderRequest,
-  OrderResult,
-} from '../types';
+import type { ExchangeId, Ticker, OrderBook, Balance, OrderRequest, OrderResult } from '../types';
 import { PaperExchange, type MarketDataFetcher } from '../paper';
 import type { ExchangeProvider, PaperProviderConfig, ProviderHealth, ProviderBudget } from './types';
 import { CircuitBreaker } from './circuit-breaker';
+import {
+  createInitialHealth,
+  applyRecordSuccess,
+  applyRecordFailure,
+  isScoreUnhealthy,
+} from './paper-provider-health';
+import { computeNextBackoff, resolveBackoffMs } from './paper-provider-circuit';
+import {
+  fetchTicker as apiFetchTicker,
+  fetchOrderBook as apiFetchOrderBook,
+  fetchBalances as apiFetchBalances,
+  placeOrder as apiPlaceOrder,
+  cancelOrder as apiCancelOrder,
+  fetchOrder as apiFetchOrder,
+} from './paper-provider-api';
+
+export { createInitialHealth, applyRecordSuccess, applyRecordFailure, isScoreUnhealthy } from './paper-provider-health';
+export { computeNextBackoff, resolveBackoffMs } from './paper-provider-circuit';
 
 export class PaperExchangeProvider implements ExchangeProvider {
   readonly id: string;
@@ -36,7 +47,7 @@ export class PaperExchangeProvider implements ExchangeProvider {
     }
 
     this.adapter = new PaperExchange(config.initialBalances, { tickerFetcher });
-    this.health = { score: 100, lastSuccess: Date.now(), failureCount: 0, latencyMs: 0 };
+    this.health = createInitialHealth();
     this.budget = config.tradingLimits ?? { reqPerMin: 100, reqPerHour: 5000 };
     this.breaker = new CircuitBreaker({ cooldownMs: 60_000, halfOpenAfterMs: 30_000 });
   }
@@ -49,108 +60,52 @@ export class PaperExchangeProvider implements ExchangeProvider {
   getBudget(): ProviderBudget { return { ...this.budget }; }
 
   recordSuccess(latencyMs: number): void {
-    this.health.failureCount = 0;
-    this.health.lastSuccess = Date.now();
-    this.health.latencyMs = this.health.latencyMs === 0
-      ? latencyMs
-      : 0.3 * latencyMs + 0.7 * this.health.latencyMs;
-    this.health.score = Math.min(100, this.health.score + 5);
+    this.health = applyRecordSuccess(this.health, latencyMs);
   }
 
   recordFailure(): void {
-    this.health.failureCount += 1;
-    this.health.score = Math.max(0, this.health.score - 15);
-    this.backoffMs = Math.min(60_000, this.backoffMs === 0 ? 1_000 : this.backoffMs * 2);
-    this.backoffExpiresAt = Date.now() + this.backoffMs;
+    this.health = applyRecordFailure(this.health);
+    const backoff = computeNextBackoff(this.backoffMs);
+    this.backoffMs = backoff.backoffMs;
+    this.backoffExpiresAt = backoff.expiresAt;
   }
 
   isUnhealthy(): boolean {
     const state = this.breaker.getState();
-    return state === 'open' || state === 'half_open' || this.health.score < 40;
+    return state === 'open' || state === 'half_open' || isScoreUnhealthy(this.health.score);
   }
 
   getBackoffMs(): number {
-    if (this.backoffExpiresAt > Date.now()) {
-      return Math.max(0, this.backoffExpiresAt - Date.now());
-    }
-    this.backoffMs = 0;
-    return 0;
+    const res = resolveBackoffMs(this.backoffMs, this.backoffExpiresAt);
+    if (res.expired) this.backoffMs = 0;
+    return res.waitMs;
+  }
+
+  private get rec() {
+    return {
+      health: this.health,
+      setHealth: (next: ProviderHealth) => { this.health = next; },
+      recordFailure: () => this.recordFailure(),
+    };
   }
 
   async fetchTicker(exchangeId: ExchangeId, symbol: string): Promise<Ticker> {
-    const start = Date.now();
-    try {
-      const result = await this.breaker.execute(() => this.adapter.fetchTicker(exchangeId, symbol));
-      this.recordSuccess(Date.now() - start);
-      return result;
-    } catch (err) {
-      this.recordFailure();
-      throw err;
-    }
+    return apiFetchTicker(this.adapter, this.breaker, exchangeId, symbol, this.rec);
   }
-
   async fetchOrderBook(exchangeId: ExchangeId, symbol: string, depth = 20): Promise<OrderBook> {
-    const start = Date.now();
-    try {
-      const result = await this.breaker.execute(() => this.adapter.fetchOrderBook(exchangeId, symbol, depth));
-      this.recordSuccess(Date.now() - start);
-      return result;
-    } catch (err) {
-      this.recordFailure();
-      throw err;
-    }
+    return apiFetchOrderBook(this.adapter, this.breaker, exchangeId, symbol, depth, this.rec);
   }
-
   async fetchBalances(exchangeId: ExchangeId): Promise<Balance[]> {
-    const start = Date.now();
-    try {
-      const result = await this.breaker.execute(() => this.adapter.fetchBalances(exchangeId));
-      this.recordSuccess(Date.now() - start);
-      return result;
-    } catch (err) {
-      this.recordFailure();
-      throw err;
-    }
+    return apiFetchBalances(this.adapter, this.breaker, exchangeId, this.rec);
   }
-
   async placeOrder(exchangeId: ExchangeId, req: OrderRequest): Promise<OrderResult> {
-    const start = Date.now();
-    try {
-      const result = await this.breaker.execute(() => this.adapter.placeOrder(exchangeId, req));
-      this.recordSuccess(Date.now() - start);
-      return result;
-    } catch (err) {
-      this.recordFailure();
-      throw err;
-    }
+    return apiPlaceOrder(this.adapter, this.breaker, exchangeId, req, this.rec);
   }
-
   async cancelOrder(exchangeId: ExchangeId, orderId: string, symbol: string): Promise<boolean> {
-    const start = Date.now();
-    try {
-      const result = await this.breaker.execute(() => this.adapter.cancelOrder(orderId, symbol));
-      this.recordSuccess(Date.now() - start);
-      return result;
-    } catch (err) {
-      this.recordFailure();
-      throw err;
-    }
+    return apiCancelOrder(this.adapter, this.breaker, orderId, symbol, this.rec);
   }
-
   async fetchOrder(exchangeId: ExchangeId, orderId: string, _symbol: string): Promise<OrderResult> {
-    const start = Date.now();
-    try {
-      const result = await this.breaker.execute(async () => {
-        const trade = this.adapter.getOrder(orderId);
-        if (!trade) throw new Error(`Order not found: ${orderId}`);
-        return this.adapter.toOrderResultPublic(trade);
-      });
-      this.recordSuccess(Date.now() - start);
-      return result;
-    } catch (err) {
-      this.recordFailure();
-      throw err;
-    }
+    return apiFetchOrder(this.adapter, this.breaker, orderId, this.rec);
   }
 
   isCircuitOpen(): boolean { return this.breaker.getState() === 'open'; }

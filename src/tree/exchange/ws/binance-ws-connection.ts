@@ -4,16 +4,25 @@
 import type { Ticker, OrderBook } from '../types';
 import type { WsEventType, WsSubscription } from './ws-types';
 import { WsConnection } from './ws-connection';
-import { createLogger } from '@/lib/logger';
 import {
   parseTicker,
   parseOrderBook,
   getBinanceStreamName,
 } from './binance-ws-parsers';
+import { buildCombinedStreamUrl, assignWsHandlers } from './binance-ws-connection-handlers';
+import {
+  buildSubscriptionId,
+  streamKeyFor,
+  dispatchEnvelope,
+} from './binance-ws-connection-streams';
 
 export { parseTicker, parseOrderBook, getBinanceStreamName };
-
-const log = createLogger('binance-ws');
+export { buildCombinedStreamUrl, assignWsHandlers } from './binance-ws-connection-handlers';
+export {
+  buildSubscriptionId,
+  streamKeyFor,
+  dispatchEnvelope,
+} from './binance-ws-connection-streams';
 
 export class BinanceWsConnection extends WsConnection {
   private streams: string[] = [];
@@ -30,44 +39,26 @@ export class BinanceWsConnection extends WsConnection {
     if (this.streams.length === 0) {
       throw new Error('No streams subscribed');
     }
-
-    const url = `${this.baseUrl}/stream?streams=${this.streams.join('/')}`;
-
+    const url = buildCombinedStreamUrl(this.baseUrl, this.streams);
     return new Promise((resolve, reject) => {
       try {
         this.ws = new WebSocket(url);
-
-        this.ws.onopen = () => {
-          this.markConnected();
-          resolve();
-        };
-
-        this.ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.stream && data.data) {
-              this.dispatch(data.stream, data.data);
-            }
-          } catch (error) {
-            log.debug('Non-JSON WebSocket message', { action: 'onmessage', error: error instanceof Error ? error.message : String(error) });
-          }
-        };
-
-        this.ws.onerror = (_error) => {
-          for (const [, sub] of this.subscriptions) {
-            sub.callback.onError?.(new Error('WebSocket error'));
-          }
-          this.markDisconnected();
-          this.scheduleReconnect();
-        };
-
-        this.ws.onclose = () => {
-          this.markDisconnected();
-          for (const [, sub] of this.subscriptions) {
-            sub.callback.onClose?.();
-          }
-          this.scheduleReconnect();
-        };
+        assignWsHandlers({
+          ws: this.ws,
+          markConnected: () => this.markConnected(),
+          onErrorNotify: () => {
+            for (const [, s] of this.subscriptions) s.callback.onError?.(new Error('WebSocket error'));
+            this.markDisconnected();
+          },
+          onCloseNotify: () => {
+            this.markDisconnected();
+            for (const [, s] of this.subscriptions) s.callback.onClose?.();
+          },
+          onMessageDispatch: (stream, data) => this.dispatch(stream, data),
+          scheduleReconnect: () => this.scheduleReconnect(),
+          resolveOpen: () => resolve(),
+          rejectOpen: (err) => reject(err),
+        });
       } catch (error) {
         reject(error);
       }
@@ -75,32 +66,7 @@ export class BinanceWsConnection extends WsConnection {
   }
 
   private dispatch(stream: string, data: Record<string, unknown>): void {
-    for (const [, sub] of this.subscriptions) {
-      if (stream.endsWith(sub.symbol.toLowerCase())) {
-        switch (sub.type) {
-          case 'ticker':
-            if (data.e === '24hrTicker') {
-              sub.callback.onTicker?.(this.parseTicker(data));
-            }
-            break;
-          case 'orderbook':
-            if (data.e === 'depthUpdate') {
-              sub.callback.onOrderBook?.(this.parseOrderBook(data));
-            }
-            break;
-          case 'trade':
-            if (data.e === 'trade') {
-              sub.callback.onTrade?.(data);
-            }
-            break;
-          case 'kline':
-            if (data.e === 'kline') {
-              sub.callback.onKline?.(data);
-            }
-            break;
-        }
-      }
-    }
+    dispatchEnvelope(stream, data, this.subscriptions);
   }
 
   private parseTicker(data: Record<string, unknown>): Ticker {
@@ -112,9 +78,9 @@ export class BinanceWsConnection extends WsConnection {
   }
 
   subscribe(sub: Omit<WsSubscription, 'id'>): string {
-    const id = `binance_${sub.symbol}_${sub.type}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const id = buildSubscriptionId(sub.symbol, sub.type);
     this.subscriptions.set(id, { ...sub, id });
-    this.streams.push(`${sub.type}@${this.getBinanceStreamName(sub.type, sub.symbol)}`);
+    this.streams.push(streamKeyFor(sub.type, sub.symbol));
     this.rebuildStreams();
     return id;
   }
@@ -135,11 +101,8 @@ export class BinanceWsConnection extends WsConnection {
   unsubscribe(subId: string): void {
     const sub = this.subscriptions.get(subId);
     if (!sub) return;
-
-    const streamKey = `${sub.type}@${this.getBinanceStreamName(sub.type, sub.symbol)}`;
-    this.streams = this.streams.filter((s) => s !== streamKey);
+    this.streams = this.streams.filter((s) => s !== streamKeyFor(sub.type, sub.symbol));
     this.subscriptions.delete(subId);
-
     if (this.streams.length === 0) {
       this.disconnect();
     } else {

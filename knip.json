@@ -182,6 +182,39 @@
     ],
     "src/tree/alpha/registry/registry.ts": [
       "exports"
+    ],
+    "src/forest/alpha/relative-value-eval/robustness-grid.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/relative-value-eval/robustness-runner.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/relative-value-eval/robustness.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/execution/engine-telemetry.ts": [
+      "exports"
+    ],
+    "src/forest/alpha/pipeline/engine.ts": [
+      "exports"
+    ],
+    "src/forest/research/tradingagents/decision-log.ts": [
+      "exports"
+    ],
+    "src/tree/alpha/queue/queue.ts": [
+      "exports"
+    ],
+    "src/tree/exchange/provider/paper-provider.ts": [
+      "exports"
+    ],
+    "src/tree/exchange/ws/binance-ws-connection-streams.ts": [
+      "exports"
+    ],
+    "src/tree/exchange/ws/binance-ws-connection.ts": [
+      "exports"
+    ],
+    "src/tree/research/tradingagents/debate-state-hash.ts": [
+      "exports"
     ]
   }
 }
