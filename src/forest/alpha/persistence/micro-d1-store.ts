@@ -11,13 +11,11 @@ import type {
   TradeBatchRecord,
 } from './micro-store-types';
 import {
-  type DepthRow,
-  type FeatureVectorRow,
-  type TradeBatchRow,
-  rowToDepth,
-  rowToTradeBatch,
-  rowToVector,
-} from './micro-d1-mappers';
+  queryDepthSeries,
+  queryTradeBatches,
+  queryFeatureVectors,
+  queryLastTradeId,
+} from './micro-d1-queries';
 
 export class D1MicrostructureStore implements MicrostructureStore {
   private readonly db: D1Database;
@@ -95,43 +93,20 @@ export class D1MicrostructureStore implements MicrostructureStore {
     ).run();
   }
 
-  async loadDepthSeries(symbol: string, fromTs: number, toTs: number): Promise<DepthSnapshotRecord[]> {
-    const { results } = await this.db.prepare(
-      `SELECT poll_id, symbol, timestamp, bids_json, asks_json, levels, source, created_at
-       FROM micro_depth_snapshots
-       WHERE symbol = ? AND timestamp >= ? AND timestamp <= ?
-       ORDER BY timestamp ASC`,
-    ).bind(symbol, fromTs, toTs).all<DepthRow>();
-    return (results ?? []).map(rowToDepth);
+  loadDepthSeries(symbol: string, fromTs: number, toTs: number): Promise<DepthSnapshotRecord[]> {
+    return queryDepthSeries(this.db, symbol, fromTs, toTs);
   }
 
-  async loadTradeBatches(symbol: string, fromTs: number, toTs: number): Promise<TradeBatchRecord[]> {
-    const { results } = await this.db.prepare(
-      `SELECT batch_id, poll_id, symbol, chunk_index, first_trade_id,
-              last_trade_id, prints_json, complete, created_at
-       FROM micro_trade_batches
-       WHERE symbol = ? AND created_at >= ? AND created_at <= ?
-       ORDER BY poll_id ASC, chunk_index ASC`,
-    ).bind(symbol, fromTs, toTs).all<TradeBatchRow>();
-    return (results ?? []).map(rowToTradeBatch);
+  loadTradeBatches(symbol: string, fromTs: number, toTs: number): Promise<TradeBatchRecord[]> {
+    return queryTradeBatches(this.db, symbol, fromTs, toTs);
   }
 
-  async loadFeatureVectors(symbol: string, fromTs: number, toTs: number): Promise<FeatureVector[]> {
-    const { results } = await this.db.prepare(
-      `SELECT vector_id, symbol, timestamp, features_json
-       FROM micro_feature_vectors
-       WHERE symbol = ? AND timestamp >= ? AND timestamp <= ?
-       ORDER BY timestamp ASC`,
-    ).bind(symbol, fromTs, toTs).all<FeatureVectorRow>();
-    return (results ?? []).map(rowToVector);
+  loadFeatureVectors(symbol: string, fromTs: number, toTs: number): Promise<FeatureVector[]> {
+    return queryFeatureVectors(this.db, symbol, fromTs, toTs);
   }
 
-  async lastTradeId(symbol: string): Promise<number | null> {
-    const row = await this.db.prepare(
-      `SELECT last_trade_id FROM micro_trade_batches
-       WHERE symbol = ? ORDER BY created_at DESC LIMIT 1`,
-    ).bind(symbol).first<{ last_trade_id: number }>();
-    return row === null ? null : row.last_trade_id;
+  lastTradeId(symbol: string): Promise<number | null> {
+    return queryLastTradeId(this.db, symbol);
   }
 }
 

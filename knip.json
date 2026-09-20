@@ -47,6 +47,7 @@
     "src/forest/research/tradingagents/checkpoint-adapter.ts",
     "src/forest/research/tradingagents/checkpoint-adapter.core.ts",
     "src/forest/research/tradingagents/checkpoint-adapter.types.ts",
+    "src/forest/research/tradingagents/checkpoint-adapter-verify.ts",
     "src/lib/db/schema-backtest.ts"
   ],
   "ignoreExportsUsedInFile": true,
@@ -157,6 +158,9 @@
       "exports"
     ],
     "src/tree/research/alpha/zoo/operator-parser.ts": [
+      "exports"
+    ],
+    "src/tree/research/alpha/zoo/operator-parser.impl.ts": [
       "exports"
     ],
     "src/tree/alpha/hypothesis/lineage.ts": [
