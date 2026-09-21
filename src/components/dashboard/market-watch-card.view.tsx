@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Activity, RotateCcw, AlertTriangle } from 'lucide-react';
 import type { SupportedExchange } from '@/app/api/tickers/route';
 import { useMarketTicker } from '@/lib/hooks/use-market-ticker';
-import { EXCHANGES, MONITORED_PAIRS } from './market-watch-card.constants';
-import { formatCurrency, formatVolume } from './market-watch-card.formatters';
+import { MarketWatchControls } from './market-watch-controls';
+import { MarketWatchGrid } from './market-watch-grid';
 
 export function MarketWatchCard() {
   const t = useTranslations('dashboard.marketWatch');
@@ -61,32 +61,12 @@ export function MarketWatchCard() {
         </div>
       </header>
 
-      <div className="flex flex-wrap justify-between items-center gap-3 mt-4">
-        <div className="flex items-center gap-1" role="tablist" aria-label={t('exchange')}>
-          {EXCHANGES.map((ex) => (
-            <button
-              key={ex.id}
-              type="button"
-              className={`btn btn-xs ${exchange === ex.id ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setExchange(ex.id)}
-            >
-              {ex.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-1" role="group" aria-label={t('pair')}>
-          {MONITORED_PAIRS.map((item) => (
-            <button
-              key={item.pair}
-              type="button"
-              className={`btn btn-xs ${pair === item.pair ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setPair(item.pair)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <MarketWatchControls
+        exchange={exchange}
+        setExchange={setExchange}
+        pair={pair}
+        setPair={setPair}
+      />
 
       {isRateLimited && (
         <div className="badge badge-warning text-xs mt-3 flex items-center gap-1">
@@ -100,38 +80,12 @@ export function MarketWatchCard() {
       )}
 
       {ticker ? (
-        <div className="grid-auto-fit mt-4 gap-3">
-          <div className="card">
-            <span className="text-secondary text-xs">{t('lastPrice')}</span>
-            <p className="mono font-semibold text-profit text-lg">
-              {formatCurrency(ticker.last)}
-            </p>
-            <span className="meta mono text-xs">{exchange.toUpperCase()} · {pair}</span>
-          </div>
-          <div className="card">
-            <span className="text-secondary text-xs">{t('high24h')} / {t('low24h')}</span>
-            <p className="mono text-sm">
-              <span className="text-profit">{formatCurrency(ticker.high24h)}</span>
-              {' / '}
-              <span className="text-loss">{formatCurrency(ticker.low24h)}</span>
-            </p>
-            <span className="meta text-xs">24h Range</span>
-          </div>
-          <div className="card">
-            <span className="text-secondary text-xs">{t('bidAsk')}</span>
-            <p className="mono text-sm">
-              {formatCurrency(ticker.bid)} / {formatCurrency(ticker.ask)}
-            </p>
-            <span className="meta mono text-xs">{t('spread')}: {formatCurrency(spread)}</span>
-          </div>
-          <div className="card">
-            <span className="text-secondary text-xs">{t('volume24h')}</span>
-            <p className="mono font-semibold text-sm">
-              {formatVolume(ticker.volume24h)}
-            </p>
-            <span className="meta text-xs">Base Volume</span>
-          </div>
-        </div>
+        <MarketWatchGrid
+          ticker={ticker}
+          exchange={exchange}
+          pair={pair}
+          spread={spread}
+        />
       ) : (
         loading && (
           <div className="empty-state mt-4">

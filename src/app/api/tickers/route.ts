@@ -9,6 +9,11 @@ import {
   getProvider,
 } from './ticker-provider-registry';
 import { getClientIp, parseQueryParams } from './ticker-request-helpers';
+import {
+  buildCircuitOpenResponse,
+  fetchTickerWithProvenance,
+  buildUnexpectedErrorResponse,
+} from './ticker-response-helpers';
 
 export {
   type SupportedExchange,
@@ -74,68 +79,11 @@ export async function GET(req: Request): Promise<NextResponse> {
     const provider = getProvider(exchange);
 
     if (provider.circuitBreaker.getState() === 'open') {
-      const latencyMs = Math.round(performance.now() - startTime);
-      return NextResponse.json(
-        {
-          ok: false,
-          error: `Circuit breaker is open for exchange: ${exchange}`,
-          provenance: {
-            exchange,
-            provider: 'DirectTickerProvider',
-            circuitState: 'open',
-            latencyMs,
-            timestamp: Date.now(),
-          },
-        },
-        { status: 503 },
-      );
+      return buildCircuitOpenResponse(exchange, startTime);
     }
 
-    try {
-      const ticker = await provider.fetchTicker(canonicalSymbol);
-      const latencyMs = Math.round(performance.now() - startTime);
-
-      return NextResponse.json({
-        ok: true,
-        ticker,
-        data: ticker,
-        provenance: {
-          exchange,
-          provider: 'DirectTickerProvider',
-          circuitState: provider.circuitBreaker.getState(),
-          latencyMs,
-          timestamp: Date.now(),
-        },
-      });
-    } catch (fetchError) {
-      const latencyMs = Math.round(performance.now() - startTime);
-      const circuitState = provider.circuitBreaker.getState();
-      const status = circuitState === 'open' ? 503 : 502;
-
-      return NextResponse.json(
-        {
-          ok: false,
-          error: fetchError instanceof Error ? fetchError.message : String(fetchError),
-          provenance: {
-            exchange,
-            provider: 'DirectTickerProvider',
-            circuitState,
-            latencyMs,
-            timestamp: Date.now(),
-          },
-        },
-        { status },
-      );
-    }
+    return await fetchTickerWithProvenance(provider, exchange, canonicalSymbol, startTime);
   } catch (unexpectedError) {
-    const latencyMs = Math.round(performance.now() - startTime);
-    return NextResponse.json(
-      {
-        ok: false,
-        error: unexpectedError instanceof Error ? unexpectedError.message : String(unexpectedError),
-        latencyMs,
-      },
-      { status: 500 },
-    );
+    return buildUnexpectedErrorResponse(unexpectedError, startTime);
   }
 }

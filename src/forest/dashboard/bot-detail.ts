@@ -3,95 +3,16 @@
 
 'use server';
 
-import { isGridConfig, isMeanRevConfig, isVolatilityDcaConfig } from '@/tree/bot';
 import { getBotCards, type BotCardData } from './bot-kpis';
-import { BotQueryService, type BotSummary } from '@/forest/bot/d1-adapter';
+import { BotQueryService } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
 import { createLogger } from '@/lib/logger';
+import type { BotDetailData, TradeRow } from './bot-detail-types';
+import { botToDetail } from './bot-detail-mapper';
 
-// ── Types ───────────────────────────────────────────────────────
-export interface BotDetailData {
-  id: string;
-  name: string;
-  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
-  pair: string;
-  exchange: string;
-  botStatus: string;
-  totalPnl: number;
-  winCount: number;
-  lossCount: number;
-  capitalAllocated: number;
-  capitalUsed: number;
-  maxDrawdownPct: number;
-  startedAt: number | null;
-  updatedAt: number;
-  config: Record<string, number>;
-}
+export type { BotDetailData, TradeRow };
+export { botToDetail };
 
-export interface TradeRow {
-  id: string;
-  side: 'buy' | 'sell';
-  price: number;
-  quantity: number;
-  pnl: number | null;
-  status: 'open' | 'filled' | 'cancelled' | 'failed';
-  openedAt: number;
-}
-
-// ── Helpers ─────────────────────────────────────────────────────
-function botToDetail(bot: BotSummary): BotDetailData {
-  const cfg = bot.config;
-
-  const baseConfig: Record<string, number> = isGridConfig(cfg)
-    ? {
-        spacingPct: cfg.gridSpacingPct,
-        levels: cfg.gridLevels,
-        capitalPerLevelPct: cfg.capitalPerLevelPct,
-        maxDrawdownPct: cfg.maxDrawdownPct,
-      }
-    : isMeanRevConfig(cfg)
-    ? {
-        bbPeriod: cfg.bbPeriod,
-        bbStdDev: cfg.bbStdDev,
-        rsiPeriod: cfg.rsiPeriod,
-        rsiBuyThreshold: cfg.rsiBuyThreshold,
-        rsiSellThreshold: cfg.rsiSellThreshold,
-        volumeMultiplier: cfg.volumeMultiplier,
-        positionSizePct: cfg.positionSizePct,
-        maxDrawdownPct: cfg.maxDrawdownPct,
-      }
-    : isVolatilityDcaConfig(cfg)
-    ? {
-        priceDropStep: cfg.priceDropStep,
-        maxSteps: cfg.maxSteps,
-        baseOrderSizePct: cfg.baseOrderSizePct,
-        volatilityWindow: cfg.volatilityWindow,
-        volBaseline: cfg.volBaseline,
-        reboundTarget: cfg.reboundTarget,
-        maxDrawdownPct: cfg.maxDrawdownPct,
-      }
-    : {};
-
-  return {
-    id: bot.id,
-    name: bot.name || bot.id,
-    strategy: cfg.strategy,
-    pair: cfg.symbol,
-    exchange: cfg.exchange ?? 'paper',
-    botStatus: bot.status,
-    totalPnl: bot.metrics.totalPnl,
-    winCount: bot.metrics.winCount,
-    lossCount: bot.metrics.lossCount,
-    capitalAllocated: cfg.capital,
-    capitalUsed: Math.round(cfg.capital * 0.49),
-    maxDrawdownPct: bot.metrics.maxDrawdown,
-    startedAt: bot.metrics.startedAt,
-    updatedAt: bot.updatedAt,
-    config: baseConfig,
-  };
-}
-
-// ── Server Actions ──────────────────────────────────────────────
 export async function getBotDetail(id: string): Promise<BotDetailData | null> {
   const service = new BotQueryService();
   const bot = await service.getBot(id);
