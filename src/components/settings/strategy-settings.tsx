@@ -31,10 +31,11 @@ export function StrategySettings({ risk, onSave }: StrategySettingsProps) {
       </div>
       <div className="form-grid">
         <div>
-          <label className="form-label">
+          <label className="form-label" htmlFor="risk-max-drawdown">
             Max Drawdown %
           </label>
           <input
+            id="risk-max-drawdown"
             type="number"
             value={riskConfig.maxDrawdownPct}
             onChange={(e) => setRiskConfig({ ...riskConfig, maxDrawdownPct: parseFloat(e.target.value) || 0 })}
@@ -42,10 +43,11 @@ export function StrategySettings({ risk, onSave }: StrategySettingsProps) {
           />
         </div>
         <div>
-          <label className="form-label">
+          <label className="form-label" htmlFor="risk-daily-loss">
             Daily Loss Limit %
           </label>
           <input
+            id="risk-daily-loss"
             type="number"
             value={riskConfig.dailyLossLimitPct}
             onChange={(e) => setRiskConfig({ ...riskConfig, dailyLossLimitPct: parseFloat(e.target.value) || 0 })}
@@ -53,10 +55,11 @@ export function StrategySettings({ risk, onSave }: StrategySettingsProps) {
           />
         </div>
         <div>
-          <label className="form-label">
+          <label className="form-label" htmlFor="risk-cooldown">
             Cooldown (minutes)
           </label>
           <input
+            id="risk-cooldown"
             type="number"
             value={riskConfig.cooldownMinutes}
             onChange={(e) => setRiskConfig({ ...riskConfig, cooldownMinutes: parseFloat(e.target.value) || 0 })}
@@ -64,10 +67,11 @@ export function StrategySettings({ risk, onSave }: StrategySettingsProps) {
           />
         </div>
         <div>
-          <label className="form-label">
+          <label className="form-label" htmlFor="risk-max-orders">
             Max Open Orders
           </label>
           <input
+            id="risk-max-orders"
             type="number"
             value={riskConfig.maxOpenOrders}
             onChange={(e) => setRiskConfig({ ...riskConfig, maxOpenOrders: parseInt(e.target.value) || 0 })}

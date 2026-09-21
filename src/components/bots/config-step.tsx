@@ -24,15 +24,18 @@ export function ConfigStep({ form, updateConfig, strategy, onNext, onPrev }: Con
       </h3>
       {fields.map((field) => {
         const key = FIELD_KEY_MAP[field.key] ?? field.key;
+        const inputId = `config-${field.key}`;
         return (
           <div className="form-group" key={field.key}>
-            <label className="form-label">{t(key)}</label>
+            <label className="form-label" htmlFor={inputId}>{t(key)}</label>
             <input
+              id={inputId}
               type="number"
               className="form-input"
               value={form.config[field.key] ?? 0}
               onChange={(e) => updateConfig(field.key, Number(e.target.value))}
               step={field.step || '1'}
+              min={0}
             />
           </div>
         );

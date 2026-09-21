@@ -440,6 +440,8 @@
   "backtests": {
     "title": "Backtest",
     "selectBotPlaceholder": "Select a bot...",
+    "selectBotLabel": "Select Bot for Backtest",
+    "selectIntervalLabel": "Select Timeframe Interval",
     "running": "Running...",
     "run": "Run Backtest",
     "performanceMetrics": "Performance Metrics",

@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { useState, useEffect } from 'react';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import type { BotCardData } from '@/forest/dashboard/actions';
 import { BotsTable } from './bots-table';
@@ -56,7 +56,10 @@ export default function BotsListClient() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center"><h1 className="page-title">{t('bots.listTitle')}</h1></div>
-        <div className="empty-state">{t('common.loading')}</div>
+        <div className="card flex items-center justify-center p-8 gap-3" aria-live="polite" aria-busy="true">
+          <Loader2 size={24} className="animate-spin text-profit" />
+          <span className="text-secondary">{t('common.loading')}</span>
+        </div>
       </div>
     );
   }
@@ -65,7 +68,7 @@ export default function BotsListClient() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center"><h1 className="page-title">{t('bots.listTitle')}</h1></div>
-        <div className="card error-state">
+        <div className="card error-state" role="alert">
           <p>{error}</p>
           <button className="btn btn-ghost mt-4" onClick={() => window.location.reload()}>Thử lại / Try again</button>
         </div>
@@ -95,12 +98,18 @@ export default function BotsListClient() {
           <input
             type="text"
             placeholder={t('common.search')}
+            aria-label={t('common.search')}
             className="form-input search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select className="form-input select-auto" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select
+          className="form-input select-auto"
+          aria-label="Filter bots by status"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
           <option value="all">Tất cả / All</option>
           <option value="paper_test">Paper Test</option>
           <option value="paused">Tạm dừng / Paused</option>

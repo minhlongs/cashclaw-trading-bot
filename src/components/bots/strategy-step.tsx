@@ -10,13 +10,16 @@ export function StrategyStep({ form, setStrategyDefaults, onNext, onPrev }: Stra
   return (
     <div className="space-y-4">
       <h3 className="card-title">{t('title.strategy')}</h3>
-      <div className="strategy-option-list">
+      <div className="strategy-option-list" role="radiogroup" aria-label={t('title.strategy')}>
         {STRATEGIES.map((s) => {
           const keyPrefix = STRATEGY_KEY_MAP[s.value] ?? s.value;
           const selected = form.strategy === s.value;
           return (
             <button
               key={s.value}
+              type="button"
+              role="radio"
+              aria-checked={selected}
               onClick={() => setStrategyDefaults(s.value)}
               className={`strategy-option ${selected ? 'selected' : ''}`}
             >

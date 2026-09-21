@@ -79,20 +79,32 @@ export function ExchangeSettings({ exchanges, onSave }: ExchangeSettingsProps) {
 
             {editing === name && (
               <div className="exchange-card-body">
-                <input
-                  type="text"
-                  placeholder="API Key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="form-input"
-                />
-                <input
-                  type="password"
-                  placeholder="API Secret"
-                  value={apiSecret}
-                  onChange={(e) => setApiSecret(e.target.value)}
-                  className="form-input"
-                />
+                <div>
+                  <label className="form-label" htmlFor={`exchange-${name}-key`}>
+                    API Key
+                  </label>
+                  <input
+                    id={`exchange-${name}-key`}
+                    type="text"
+                    placeholder="API Key"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+                <div>
+                  <label className="form-label" htmlFor={`exchange-${name}-secret`}>
+                    API Secret
+                  </label>
+                  <input
+                    id={`exchange-${name}-secret`}
+                    type="password"
+                    placeholder="API Secret"
+                    value={apiSecret}
+                    onChange={(e) => setApiSecret(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
                 <label className="config-field">
                   <input
                     type="checkbox"

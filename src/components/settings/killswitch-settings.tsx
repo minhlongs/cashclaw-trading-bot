@@ -36,6 +36,7 @@ export function KillswitchSettings({
             className="btn btn-danger btn-sm"
             onClick={onHalt}
             disabled={isSaving || !enabled}
+            aria-label={t('killswitch.haltButton')}
           >
             {isSaving ? <Loader2 size={16} className="animate-spin" /> : null}{' '}
             {t('killswitch.haltButton')}
@@ -44,6 +45,7 @@ export function KillswitchSettings({
             className="btn btn-primary"
             disabled={isSaving || enabled}
             onClick={onResume}
+            aria-label={t('killswitch.resumeButton')}
           >
             {isSaving ? <Loader2 size={16} className="animate-spin" /> : null}{' '}
             {t('killswitch.resumeButton')}

@@ -440,6 +440,8 @@
   "backtests": {
     "title": "Backtest",
     "selectBotPlaceholder": "Chọn bot...",
+    "selectBotLabel": "Chọn Bot để Backtest",
+    "selectIntervalLabel": "Chọn Khung Thời gian",
     "running": "Đang chạy...",
     "run": "Chạy Backtest",
     "performanceMetrics": "Chỉ số hiệu suất",

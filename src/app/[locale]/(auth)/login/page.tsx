@@ -15,10 +15,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight text-profit">
+          <h1 className="page-title tracking-tight text-profit">
             CashClaw
           </h1>
-          <p className="mt-2 text-secondary">
+          <p className="mt-2 text-secondary text-sm">
             AI Trading Bot Platform
           </p>
         </div>

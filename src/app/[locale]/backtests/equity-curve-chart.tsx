@@ -38,32 +38,34 @@ export function EquityCurveChart({ data }: { data: EquityCurvePoint[] }) {
   const yTicks = [minVal, minVal + range * 0.25, minVal + range * 0.5, minVal + range * 0.75, maxVal];
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="chart-svg">
-      {/* Grid lines */}
-      {yTicks.map((tick, i) => {
-        const y = padding.top + chartHeight - ((tick - minVal) / range) * chartHeight;
-        return (
-          <g key={i}>
-            <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="var(--border-subtle)" strokeWidth="1" strokeDasharray="4,4" />
-            <text x={padding.left - 8} y={y + 4} textAnchor="end" fill="var(--text-secondary)" fontSize="10">
-              ${Math.round(tick).toLocaleString()}
-            </text>
-          </g>
-        );
-      })}
+    <div className="overflow-auto">
+      <svg viewBox={`0 0 ${width} ${height}`} className="chart-svg">
+        {/* Grid lines */}
+        {yTicks.map((tick, i) => {
+          const y = padding.top + chartHeight - ((tick - minVal) / range) * chartHeight;
+          return (
+            <g key={i}>
+              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="var(--border-subtle)" strokeWidth="1" strokeDasharray="4,4" />
+              <text x={padding.left - 8} y={y + 4} textAnchor="end" fill="var(--text-secondary)" fontSize="10">
+                ${Math.round(tick).toLocaleString()}
+              </text>
+            </g>
+          );
+        })}
 
-      {/* Area fill */}
-      <polygon points={areaPath} fill={isProfit ? 'rgba(0, 212, 170, 0.1)' : 'rgba(255, 71, 87, 0.1)'} />
+        {/* Area fill */}
+        <polygon points={areaPath} fill={isProfit ? 'var(--color-profit-dim)' : 'var(--color-loss-dim)'} />
 
-      {/* Line */}
-      <polyline points={linePath} fill="none" stroke={isProfit ? 'var(--color-profit)' : 'var(--color-loss)'} strokeWidth="2" strokeLinejoin="round" />
+        {/* Line */}
+        <polyline points={linePath} fill="none" stroke={isProfit ? 'var(--color-profit)' : 'var(--color-loss)'} strokeWidth="2" strokeLinejoin="round" />
 
-      {/* Start line */}
-      <line x1={padding.left} y1={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} x2={width - padding.right} y2={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} stroke="var(--text-tertiary)" strokeWidth="1" strokeDasharray="2,2" />
+        {/* Start line */}
+        <line x1={padding.left} y1={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} x2={width - padding.right} y2={padding.top + chartHeight - ((data[0].equity - minVal) / range) * chartHeight} stroke="var(--text-tertiary)" strokeWidth="1" strokeDasharray="2,2" />
 
-      {/* Labels */}
-      <text x={padding.left} y={height - 5} fill="var(--text-secondary)" fontSize="10">{t('chartStart')}</text>
-      <text x={width - padding.right} y={height - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="end">{t('chartEnd')}</text>
-    </svg>
+        {/* Labels */}
+        <text x={padding.left} y={height - 5} fill="var(--text-secondary)" fontSize="10">{t('chartStart')}</text>
+        <text x={width - padding.right} y={height - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="end">{t('chartEnd')}</text>
+      </svg>
+    </div>
   );
 }

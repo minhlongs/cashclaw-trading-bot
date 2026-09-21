@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { Loader2 } from 'lucide-react';
 import { runBacktestAction } from '@/forest/backtest/actions';
 import { BacktestResults, formatStrategy } from './backtests-client-results';
 import { INTERVALS, type BotInfo, type BacktestResult } from './backtests-client-types';
@@ -70,7 +71,9 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
 
       {/* Bot Selector */}
       <div className="card mb-4">
+        <label htmlFor="backtest-bot-select" className="form-label">{t('selectBotLabel')}</label>
         <select
+          id="backtest-bot-select"
           value={selectedBotId}
           onChange={(e) => setSelectedBotId(e.target.value)}
           className="form-input form-select"
@@ -80,10 +83,12 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
             <option key={bot.id} value={bot.id}>{bot.name} ({formatStrategy(bot.strategy, locale)})</option>
           ))}
         </select>
+        <label htmlFor="backtest-interval-select" className="form-label mt-3">{t('selectIntervalLabel')}</label>
         <select
+          id="backtest-interval-select"
           value={interval}
           onChange={(e) => setInterval(e.target.value)}
-          className="form-input form-select mt-3"
+          className="form-input form-select mt-1"
         >
           {INTERVALS.map((iv) => (
             <option key={iv} value={iv}>{iv}</option>
@@ -96,11 +101,12 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
         onClick={runBacktest}
         disabled={isRunning || !selectedBotId}
         className={`btn btn-primary mb-6 ${isRunning || !selectedBotId ? 'opacity-50' : ''}`}
+        aria-live="polite"
       >
-        {isRunning ? t('running') : t('run')}
+        {isRunning ? <><Loader2 size={16} className="animate-spin" /> {t('running')}</> : t('run')}
       </button>
 
-      {error && <p className="text-loss text-sm mb-4">{error}</p>}
+      {error && <p className="text-loss text-sm mb-4" role="alert">{error}</p>}
 
       {result && <BacktestResults result={result} />}
     </div>

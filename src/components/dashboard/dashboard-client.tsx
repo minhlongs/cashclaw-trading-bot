@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 import type { BotCardData } from '@/forest/dashboard/actions';
@@ -78,7 +78,15 @@ export default function DashboardClient() {
     return (
       <section className="dashboard">
         <header className="section-header"><div><h1>{t('title')}</h1><p className="meta">{t('subtitle')}</p></div></header>
-        <div className="panel"><p className="text-secondary">{t('loading') ?? 'Loading dashboard...'}</p></div>
+        <div className="panel flex items-center gap-3" aria-live="polite" aria-busy="true">
+          <Loader2 size={18} className="animate-spin text-profit" />
+          <p className="text-secondary">{t('loading') ?? 'Loading dashboard...'}</p>
+        </div>
+        <div className="kpi-grid mt-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="skeleton-card" />
+          ))}
+        </div>
       </section>
     );
   }
@@ -87,7 +95,7 @@ export default function DashboardClient() {
     return (
       <section className="dashboard">
         <header className="section-header"><div><h1>{t('title')}</h1><p className="meta">{t('subtitle')}</p></div></header>
-        <div className="panel">
+        <div className="panel" role="alert">
           <p className="text-loss">{error ?? t('failed') ?? 'Failed to load dashboard data.'}</p>
           <button className="btn btn-primary mt-4" onClick={() => { setError(null); setLoading(true); setData(null); }}>
             {t('retry') ?? 'Retry'}

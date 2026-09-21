@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslations } from 'next-intl';
 import { MetricCard } from './metric-card';
 import { EquityCurveChart } from './equity-curve-chart';

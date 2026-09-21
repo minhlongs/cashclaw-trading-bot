@@ -52,7 +52,7 @@ export default function LandingClient() {
       {/* Hero */}
       <section className="landing-hero">
         <div className="hero-badge">{t('hero.badge')} <span className="hero-badge-sub">{t('hero.badgeSub')}</span></div>
-        <h1 className="hero-title">
+        <h1 className="hero-title hero-title-responsive">
           {t('hero.title')}
           <br />
           <span className="text-accent">{t('hero.titleLine2')}</span>

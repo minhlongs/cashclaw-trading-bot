@@ -59,6 +59,11 @@ export function SortableTable<T>({
     return sortKey === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />;
   };
 
+  const ariaSortFor = (col: keyof T): 'ascending' | 'descending' | 'none' => {
+    if (sortCol !== col || !sortKey) return 'none';
+    return sortKey === 'asc' ? 'ascending' : 'descending';
+  };
+
   return (
     <div className="table-container">
       <table>
@@ -70,6 +75,15 @@ export function SortableTable<T>({
                 key={String(col.key)}
                 className={col.sortable !== false ? 'th-sortable' : ''}
                 onClick={() => col.sortable !== false && handleSort(col.key)}
+                tabIndex={col.sortable !== false ? 0 : undefined}
+                role={col.sortable !== false ? 'button' : undefined}
+                aria-sort={ariaSortFor(col.key)}
+                onKeyDown={(e) => {
+                  if (col.sortable !== false && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleSort(col.key);
+                  }
+                }}
               >
                 <span className="inline-flex items-center gap-1">
                   {col.label}

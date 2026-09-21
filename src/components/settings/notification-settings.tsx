@@ -39,10 +39,11 @@ export function NotificationSettings({ telegram, onSave }: NotificationSettingsP
       </div>
       <div className="flex flex-col gap-3">
         <div>
-          <label className="form-label">
+          <label className="form-label" htmlFor="notification-bot-token">
             Bot Token
           </label>
           <input
+            id="notification-bot-token"
             type="password"
             placeholder="@Sophia_Bbot token"
             value={botToken}
@@ -51,10 +52,11 @@ export function NotificationSettings({ telegram, onSave }: NotificationSettingsP
           />
         </div>
         <div>
-          <label className="form-label">
+          <label className="form-label" htmlFor="notification-chat-id">
             Chat ID
           </label>
           <input
+            id="notification-chat-id"
             type="text"
             placeholder="Telegram chat ID"
             value={chatId}
