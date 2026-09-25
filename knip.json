@@ -42,7 +42,8 @@
     "src/tree/regime/alpha-router.ts",
     "src/forest/alpha/cross-sectional-eval/index.ts",
     "src/forest/alpha/relative-value-eval/index.ts",
-    "src/forest/alpha/composition-eval/index.ts"
+    "src/forest/alpha/composition-eval/index.ts",
+    "src/forest/alpha/research-agent/index.ts"
   ],
   "ignoreExportsUsedInFile": true,
   "exclude": [

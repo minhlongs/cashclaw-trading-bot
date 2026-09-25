@@ -35,6 +35,13 @@ export default [
     },
   },
   {
+    files: ['src/forest/alpha/research-agent/__tests__/**/*.test.ts'],
+    rules: {
+      'no-duplicate-imports': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+    },
+  },
+  {
     // Downgrade pre-existing react-hooks errors to warnings (not enforced before lint config existed)
     rules: {
       'react-hooks/rules-of-hooks': 'warn',

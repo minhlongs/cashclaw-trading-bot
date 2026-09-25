@@ -8,6 +8,7 @@ import type { QueueJobSpec } from './types';
 /** Outcome of a job-spec validation pass. */
 export interface JobSpecValidation {
   readonly ok: boolean;
+  readonly valid?: boolean;
   readonly reasons: readonly string[];
 }
 
@@ -83,5 +84,6 @@ export function validateJobSpec(
     ...fieldReasons(job),
     ...registryCollisionReasons(job, registryEntries),
   ];
-  return { ok: reasons.length === 0, reasons };
+  const ok = reasons.length === 0;
+  return { ok, valid: ok, reasons };
 }

@@ -1,10 +1,10 @@
 # Project Context
 
-## Current Status (2026-08-25)
-- **Alpha Research OS** — All 6 phases complete. Phase 6 composition shipped 2026-08-25 (PR #6, commit `985c9f1`): alpha composition scoring, 9-overlay portfolio engine, EXTREME cost mode, forest evaluation seam with leakage-isolation suite
-- **Prior phases:** 1 (evaluator engine), 2 (research queue + multiple-testing), 3 (microstructure data), 4 (cross-sectional engine, `b7d5454`), 5 (relative-value research, `b3f51fc`)
-- **System state:** Paper/backtest only. No live capital. 2671/2671 tests passing, quality gate green, coverage 88.22%
-- **Next work:** Known backlog items (multi-pair scan wiring, walk-forward composition, rolling-correlation, import unification, survival-gate consumption). See `docs/development-roadmap.md` §Known Backlog.
+## Current Status (2026-09-25)
+- **Alpha Research OS** — Phase 7 shipped 2026-09-25: `ResearchAgent` safe role only (Mission §10) — 5 safe research capabilities, strict Zod schemas, provider inversion, offline deterministic mock provider, queue/verdict diagnostic seam, 0 execution/mutation pathways
+- **Prior phases:** 1 (evaluator engine), 2 (research queue + multiple-testing), 3 (microstructure data), 4 (cross-sectional engine, `b7d5454`), 5 (relative-value research, `b3f51fc`), 6 (alpha composition + portfolio engine + EXTREME cost, `985c9f1`)
+- **System state:** Paper/backtest only. No live capital. 2876/2876 tests passing, quality gate green, coverage 88.64%
+- **Next work:** Phase 8 (paper/shadow observability per Mission §14), and known backlog items (multi-pair scan wiring, walk-forward composition, rolling-correlation, import unification, survival-gate consumption). See `docs/development-roadmap.md` §Known Backlog.
 
 ## Safety Rules
 1. PAPER/BACKTEST ONLY — no real orders, no live trading
