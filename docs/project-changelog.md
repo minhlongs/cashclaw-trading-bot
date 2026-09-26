@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Alpha Research OS Phase 10: Data Quality Layer — 2026-09-27
+- **Pure OHLCV data quality validators shipped** (`src/tree/alpha/data-quality/`): implemented 9 pure, deterministic validation functions covering all quality dimensions specified in Master Mission §15:
+  1. `validateMonotonicity` (`validate-monotonicity.ts`): enforces strictly increasing candle timestamps ($t_i > t_{i-1}$) across series.
+  2. `validateDuplicates` (`validate-duplicates.ts`): detects and rejects duplicate candle timestamps.
+  3. `validateIntervals` (`validate-intervals.ts`): detects missing candle intervals/gaps against expected cadence with configurable `toleranceRatio` and `maxAllowedGapIntervals`.
+  4. `validateStaleness` (`validate-staleness.ts`): rejects series where latest candle timestamp lags reference `asOf` time beyond `maxStalenessMs` or `maxStaleIntervals`.
+  5. `validateOHLC` (`validate-ohlc.ts`): enforces $High \ge \max(Open, Close)$, $Low \le \min(Open, Close)$, $High \ge Low$, and all prices are positive and finite.
+  6. `validateVolume` (`validate-volume.ts`): enforces non-negative, finite volume, and optionally flags suspicious isolated zero-volume bars.
+  7. `validateAlignment` (`validate-alignment.ts`): verifies timestamp alignment across multi-exchange feeds within configurable `maxOffsetMs` tolerance.
+  8. `validateFutureData` (`validate-future-data.ts`): rejects any candle with a timestamp in the future relative to `asOf` (lookahead leakage guard).
+  9. `validateOutage` (`validate-outage.ts`): detects frozen exchange feeds via consecutive identical OHLCV bars exceeding `maxConsecutiveIdenticalBars`.
+- **Composite master validator & timeframe parser** (`validator.ts`, `timeframe.ts`, `types.ts`, `index.ts`): `validateCandleSeries(candles, config, secondarySeries)` aggregates all 9 checks into a unified `ValidationResult` returning fail-closed `DATA_INVALID` on any violation; `timeframe.ts` provides parsing for standard timeframe notations (`1m`, `5m`, `1h`, `1d`, etc.).
+- **Forest evaluation seam & signal protection** (`src/forest/alpha/data-quality-eval/`):
+  - `evaluateDataQuality` (`evaluate.ts`): composes tree-layer validators into end-to-end data quality assessment workflows, generating structured `DataQualityAssessmentReport` validated against `.strict()` Zod schemas (`schemas.ts`).
+  - `protectSignalGeneration` (`signal-fence.ts`): fail-closed gate short-circuiting downstream signal logic on `DATA_INVALID`, guaranteeing `signal: null` and preventing silent signal production or silent forward-filling.
+  - `formatDataQualityReport` (`reporter.ts`): markdown diagnostic summary generator detailing violation indices, timestamps, and actual values.
+- **Architectural invariants**: pure tree layer contains 0 imports of `forest`; zero network I/O; zero ambient clock calls (all reference timestamps injected as parameters).
+- **Quality gates:** 294 new tests (122 4-tier E2E tests in `test/alpha/data-quality.e2e.test.ts` + AST-based safety scanner + comprehensive unit test suites); 3,765/3,765 repository tests passing without regression; type-check 0 errors; lint 0 warnings; knip clean; new module coverage 97.64% stmts (Tree) and 100% stmts (Forest); overall repository coverage 89.65% $\ge$ thresholds 82/85/85/82.
+
 ### Alpha Research OS Phase 9: Strengthened Promotion Gates (15-Point Checklist) — 2026-09-26
 - **Conjunctive 15-point verification checklist shipped** (`src/forest/alpha/gate/`): implemented `financial-checks.ts`, `stress-checks.ts`, and `robustness-checks.ts` delivering all 15 verification gates required by Master Mission §13:
   1. `minTrades`: Sample size validation ($\ge 30$).
