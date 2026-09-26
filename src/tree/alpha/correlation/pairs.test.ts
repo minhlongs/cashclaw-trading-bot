@@ -40,8 +40,8 @@ describe('findCointegratedPairs', () => {
 
   it('returns empty when no pairs meet threshold', () => {
     const allCandles = new Map<string, IndicatorCandle[]>();
-    allCandles.set('A', makeCandles(Array.from({ length: 30 }, () => Math.random() * 100)));
-    allCandles.set('B', makeCandles(Array.from({ length: 30 }, () => Math.random() * 100)));
+    allCandles.set('A', makeCandles(Array.from({ length: 30 }, (_, i) => 100 + (i % 2 === 0 ? 1 : -1))));
+    allCandles.set('B', makeCandles(Array.from({ length: 30 }, (_, i) => 100 + (Math.floor(i / 2) % 2 === 0 ? 1 : -1))));
     const pairs = findCointegratedPairs(allCandles, 30);
     expect(pairs.length).toBe(0);
   });

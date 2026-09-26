@@ -5,7 +5,8 @@
     "src/app/**/layout.tsx",
     "src/app/api/**/route.ts",
     "src/worker.ts",
-    "src/tree/**/index.ts"
+    "src/tree/**/index.ts",
+    "src/forest/alpha/gate/index.ts"
   ],
   "project": [
     "src/**/*.ts",
@@ -92,6 +93,18 @@
     ],
     "src/forest/backtest/ohlcv-cache.ts": [
       "exports"
+    ],
+    "src/forest/alpha/research-agent/index.ts": [
+      "exports",
+      "duplicates"
+    ],
+    "src/forest/alpha/research-agent/provider.ts": [
+      "exports",
+      "duplicates"
+    ],
+    "src/forest/alpha/research-agent/schemas.ts": [
+      "exports",
+      "duplicates"
     ]
   }
 }

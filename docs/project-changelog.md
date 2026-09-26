@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Alpha Research OS Phase 9: Strengthened Promotion Gates (15-Point Checklist) — 2026-09-26
+- **Conjunctive 15-point verification checklist shipped** (`src/forest/alpha/gate/`): implemented `financial-checks.ts`, `stress-checks.ts`, and `robustness-checks.ts` delivering all 15 verification gates required by Master Mission §13:
+  1. `minTrades`: Sample size validation ($\ge 30$).
+  2. `minNetExpectancy`: Positive net expectancy after conservative costs ($> 0$).
+  3. `minProfitFactor`: Profit factor $\ge 1.2$.
+  4. `maxDrawdown`: Maximum peak-to-trough drawdown $\le 25\%$.
+  5. `minSharpeSortino`: Annualized Sharpe $\ge 1.0$ and Sortino $\ge 1.2$.
+  6. `minRegimeCoverage`: Profitable performance across $\ge 50\%$ of experienced regimes.
+  7. `feeStress`: Positive net PnL under NORMAL and CONSERVATIVE fee stress.
+  8. `slippageStress`: Positive net PnL under ADVERSE and EXTREME (100 bps) slippage stress.
+  9. `parameterRobustness`: Normalized parameter sensitivity spread $\le 0.5$.
+  10. `crossPeriodRobustness`: Walk-forward out-of-sample window consistency $\ge 60\%$.
+  11. `crossAssetRobustness`: Multi-symbol cross-asset consistency where applicable.
+  12. `leakageInvariance`: Shift-future data mutation validation proving zero lookahead leakage.
+  13. `noSingleWindowDependency`: Maximum single-window PnL contribution $\le 50\%$.
+  14. `baselineComparison`: Outperforms Buy & Hold and Random Entry on Sharpe and Net PnL.
+  15. `reproducibleHash`: Verified canonical experiment hash over git commit, seed, and config.
+- **Conjunctive evaluation & discrimination engine** (`promotion-gate.ts`, `schemas.ts`, `types.ts`): all 15 gates must pass to achieve `PASSED`; any single failure yields `KILLED` with explicit diagnostic failure reasons. Supported by strict Zod schema validation.
+- **Fail-closed promotion state machine capping** (`promotion-states.ts`): automated advancement via `gate_passed` is strictly capped at `SHADOW` (`AUTOMATED_CEILING = 'SHADOW'`). Compile-time typing `PhaseAfterGatePassed<'SHADOW'>` resolves to `never`. Transitions to `MANUAL_APPROVAL` or `LIVE` require explicit human promotion triggers; zero automated path to live execution exists.
+- **Quality gates:** 338 new tests (200 E2E tests in `test/alpha/promotion-gates-e2e.test.ts` + comprehensive unit & adversarial test suites); 3,471/3,471 repository tests passing without regression; type-check 0 errors; lint 0 warnings; knip clean; 100% statement coverage across all gate files; overall repository coverage 89.47% $\ge$ thresholds 82/85/85/82.
+
 ### Alpha Research OS Phase 8: Paper / Shadow Observability — 2026-09-25
 - **Telemetry contracts and feature hashing shipped** (`src/tree/alpha/observability/`): implemented `types.ts`, `schemas.ts`, and `snapshot-hasher.ts` providing strongly typed Zod schemas for `AlphaDecisionRecord`, `PortfolioDecisionRecord`, `OperationalTelemetry`, and nominal `FeatureSnapshotHash`. Canonical deterministic SHA-256 snapshot hasher (`snapshot-hasher.ts`) serializes feature vectors via `canonical-json.ts` across Node.js `createHash` and Web Crypto API `crypto.subtle`.
 - **Causal shadow execution simulator shipped** (`order-generator.ts`, `shadow-simulator.ts`): converts target portfolio weight deltas $\Delta w$ into hypothetical orders without forward-looking bias; dynamic fill simulator applies causal latency advancement and 4-tier cost stress models (`NORMAL`, `CONSERVATIVE`, `ADVERSE`, `EXTREME`). Strictly fail-closed: 0 live trading execution capabilities or exchange imports.
