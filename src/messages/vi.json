@@ -54,6 +54,30 @@
       "circuitOpen": "Tạm dừng",
       "refresh": "Làm mới",
       "rateLimited": "Đạt giới hạn yêu cầu. Đang tạm dừng cập nhật..."
+    },
+    "terminal": {
+      "title": "Thanh Điều Khiển Tác Vụ Terminal",
+      "pauseAll": "Tạm Dừng Khẩn Cấp Toàn Bộ",
+      "resumeAll": "Khôi Phục Hoạt Động Toàn Bộ",
+      "pausing": "Đang tạm dừng...",
+      "resuming": "Đang khôi phục...",
+      "activeCount": "{count} bot đang chạy",
+      "pausedCount": "{count} bot tạm dừng",
+      "allHealthy": "Mạch thực thi tối ưu",
+      "actionSuccess": "Thực thi tác vụ hàng loạt thành công",
+      "actionFailed": "Thực thi tác vụ thất bại"
+    },
+    "deliberation": {
+      "title": "Ra-đa Thẩm Định Alpha",
+      "subtitle": "Đồng thuận multi-agent LLM & trạng thái survival gate",
+      "activeDebates": "Phiên thẩm định",
+      "consensusRate": "Tỷ lệ đồng thuận",
+      "paperCandidates": "Đạt chuẩn Paper",
+      "killedCount": "Bị bác bỏ / Killed",
+      "failClosedMode": "Kích hoạt bảo vệ Paper-Only",
+      "lastVerdict": "Phán quyết gần nhất",
+      "promoted": "Thăng cấp lên Paper",
+      "killed": "Bị loại bởi Gate"
     }
   },
   "bots": {

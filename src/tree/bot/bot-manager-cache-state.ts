@@ -3,6 +3,7 @@
 
 import type { BotInstance } from './bot-instance';
 import type { CachedBot, BotFactoryDelegate } from './bot-manager-types';
+import { BotManagerCacheMetrics } from './bot-manager-cache-metrics';
 
 const BOT_CACHE_TTL_MS = 30_000;
 
@@ -11,6 +12,7 @@ export class BotManagerCacheState {
   protected defaultUserId?: string;
   protected factory!: BotFactoryDelegate;
   protected onError?: (error: Error, context: string) => void;
+  public readonly metrics = new BotManagerCacheMetrics();
 
   constructor(defaultUserId?: string, onError?: (error: Error, context: string) => void) {
     this.defaultUserId = defaultUserId;
@@ -31,7 +33,20 @@ export class BotManagerCacheState {
 
   has(id: string): boolean { return this.bots.has(id); }
 
-  get(id: string): CachedBot | undefined { return this.bots.get(id); }
+  get(id: string): CachedBot | undefined {
+    const cached = this.bots.get(id);
+    if (!cached) {
+      this.metrics.recordMiss();
+      return undefined;
+    }
+    if (Date.now() > cached.expiresAt) {
+      this.metrics.recordEviction();
+      this.bots.delete(id);
+      return undefined;
+    }
+    this.metrics.recordHit();
+    return cached;
+  }
 
   delete(id: string): boolean { return this.bots.delete(id); }
 
@@ -41,8 +56,13 @@ export class BotManagerCacheState {
     const now = Date.now();
     const result: BotInstance[] = [];
     for (const [, cached] of this.bots) {
-      if (userId && cached.userId && cached.userId !== userId) continue;
-      if (cached.expiresAt > now) result.push(cached.bot);
+      if (userId && cached.userId && cached.userId !== userId) {
+        this.metrics.recordRejection();
+        continue;
+      }
+      if (cached.expiresAt > now) {
+        result.push(cached.bot);
+      }
     }
     return result;
   }

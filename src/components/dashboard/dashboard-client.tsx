@@ -9,6 +9,8 @@ import type { BotCardData } from '@/forest/dashboard/actions';
 import type { DashboardKpis } from '@/forest/dashboard/bot-kpis';
 import { StrategyVisualizerCard } from './strategy-visualizer-card';
 import { MarketWatchCard } from './market-watch-card';
+import { TerminalQuickActions } from './terminal-quick-actions';
+import { DeliberationSignalCard } from './deliberation-signal-card';
 import { DashboardBotList } from './dashboard-bot-list';
 import { DashboardTopKpiCards, DashboardPerformanceGrid } from './dashboard-kpi-cards';
 
@@ -115,7 +117,9 @@ export default function DashboardClient() {
       </header>
 
       <DashboardTopKpiCards kpis={kpis} bots={bots} />
+      <TerminalQuickActions bots={bots} />
       <MarketWatchCard />
+      <DeliberationSignalCard />
       <StrategyVisualizerCard bots={bots} />
       <DashboardBotList bots={bots} />
       <DashboardPerformanceGrid kpis={kpis} bots={bots} />

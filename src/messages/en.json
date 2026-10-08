@@ -54,6 +54,30 @@
       "circuitOpen": "Halted",
       "refresh": "Refresh",
       "rateLimited": "Rate limited. Pausing updates..."
+    },
+    "terminal": {
+      "title": "Terminal Operations Dock",
+      "pauseAll": "Emergency Pause All",
+      "resumeAll": "Resume All Bots",
+      "pausing": "Pausing...",
+      "resuming": "Resuming...",
+      "activeCount": "{count} active bots",
+      "pausedCount": "{count} paused bots",
+      "allHealthy": "Execution circuits optimal",
+      "actionSuccess": "Batch command executed successfully",
+      "actionFailed": "Failed to execute batch command"
+    },
+    "deliberation": {
+      "title": "Alpha Deliberation Radar",
+      "subtitle": "Multi-agent LLM consensus & survival gate status",
+      "activeDebates": "Active Debates",
+      "consensusRate": "Consensus Rate",
+      "paperCandidates": "Paper Candidates",
+      "killedCount": "Falsified / Killed",
+      "failClosedMode": "Paper-Only Guard Active",
+      "lastVerdict": "Latest Verdict",
+      "promoted": "Promoted to Paper",
+      "killed": "Falsified by Gate"
     }
   },
   "bots": {
