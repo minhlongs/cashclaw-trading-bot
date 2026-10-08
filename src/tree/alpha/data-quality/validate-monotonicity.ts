@@ -25,7 +25,7 @@ export function validateMonotonicity(candles: readonly Candle[]): CheckResult {
 
     if (i > 0) {
       const prev = candles[i - 1];
-      if (current.timestamp <= prev.timestamp) {
+      if (Number.isFinite(prev.timestamp) && current.timestamp <= prev.timestamp) {
         const diff = current.timestamp - prev.timestamp;
         violations.push({
           dimension: DIMENSION,

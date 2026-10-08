@@ -50,6 +50,16 @@ export function protectSignalGeneration<T>(
   generator: SignalGenerator<T>,
   config?: DataQualityEvalConfig,
 ): SignalGenerationResult<T> {
+  if (input.series.length === 0) {
+    const report = evaluateDataQuality(input, config);
+    const invalidResult: SignalGenerationResult<T> = {
+      status: 'DATA_INVALID',
+      signal: null,
+      report,
+    };
+    return SignalGenerationResultSchema.parse(invalidResult) as SignalGenerationResult<T>;
+  }
+
   const report = evaluateDataQuality(input, config);
 
   if (report.status === 'DATA_INVALID') {

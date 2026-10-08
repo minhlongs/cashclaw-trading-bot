@@ -5,7 +5,7 @@ const DIMENSION = 'stale_data';
 const DEFAULT_MAX_STALE_INTERVALS = 2;
 
 function resolveMaxStalenessMs(config?: StalenessConfig): number | undefined {
-  if (config?.maxStalenessMs && config.maxStalenessMs > 0) {
+  if (config?.maxStalenessMs !== undefined && Number.isFinite(config.maxStalenessMs) && config.maxStalenessMs >= 0) {
     return config.maxStalenessMs;
   }
   if (config?.timeframe) {

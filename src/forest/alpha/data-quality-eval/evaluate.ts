@@ -2,6 +2,8 @@ import {
   validateCandleSeries,
   type CheckResult,
   type QualityDimension,
+  type QualityViolation,
+  type ValidationResult,
 } from '@/tree/alpha/data-quality';
 import { DataQualityAssessmentReportSchema } from './schemas';
 import type {
@@ -48,6 +50,46 @@ function buildRecommendations(checkResults: readonly CheckResult[]): readonly st
   return recommendations;
 }
 
+function guardEmptySeries(validationResult: ValidationResult): ValidationResult {
+  const hasStaleViolation = validationResult.violations.some((v) => v.dimension === 'stale_data');
+  if (hasStaleViolation) {
+    return validationResult;
+  }
+
+  const emptyViolation: QualityViolation = {
+    dimension: 'stale_data',
+    message: 'Candle series is empty: cannot generate signals from empty data',
+    details: { candleCount: 0 },
+  };
+
+  const checkResults = validationResult.checkResults.map((cr) => {
+    if (cr.dimension === 'stale_data') {
+      return {
+        dimension: 'stale_data' as const,
+        passed: false,
+        violations: [...cr.violations, emptyViolation],
+      };
+    }
+    return cr;
+  });
+
+  if (!checkResults.some((cr) => cr.dimension === 'stale_data')) {
+    checkResults.push({
+      dimension: 'stale_data',
+      passed: false,
+      violations: [emptyViolation],
+    });
+  }
+
+  return {
+    ...validationResult,
+    valid: false,
+    status: 'DATA_INVALID',
+    checkResults,
+    violations: [...validationResult.violations, emptyViolation],
+  };
+}
+
 /**
  * Orchestrates comprehensive data quality evaluation across all 9 dimensions.
  * Validates output against strict Zod schema before returning.
@@ -66,11 +108,15 @@ export function evaluateDataQuality(
     timeframe: config?.timeframe ?? input.timeframe,
   };
 
-  const validationResult = validateCandleSeries(
+  let validationResult = validateCandleSeries(
     input.series,
     effectiveConfig,
     input.secondarySeries,
   );
+
+  if (input.series.length === 0) {
+    validationResult = guardEmptySeries(validationResult);
+  }
 
   const totalChecks = validationResult.checkResults.length;
   const passedChecks = validationResult.checkResults.filter((result) => result.passed).length;

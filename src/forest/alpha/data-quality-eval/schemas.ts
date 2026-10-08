@@ -27,7 +27,7 @@ export const QualityViolationSchema = z.object({
   dimension: QualityDimensionSchema,
   message: z.string().min(1),
   index: z.number().int().nonnegative().optional(),
-  timestamp: z.number().optional(),
+  timestamp: z.number().or(z.nan()).optional(),
   details: z.record(z.string(), z.unknown()),
 }).strict();
 
@@ -54,7 +54,7 @@ export const MissingIntervalsConfigSchema = z.object({
 
 export const StalenessConfigSchema = z.object({
   asOf: z.number().int().nonnegative(),
-  maxStalenessMs: z.number().int().positive().optional(),
+  maxStalenessMs: z.number().int().nonnegative().optional(),
   timeframe: z.string().min(1).optional(),
   maxStaleIntervals: z.number().int().nonnegative().optional(),
 }).strict();
