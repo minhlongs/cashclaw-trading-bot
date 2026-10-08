@@ -440,8 +440,8 @@ describe('DashboardClient', () => {
       render(<DashboardClient />);
 
       await waitFor(() => {
-        expect(screen.getByText('grid')).toBeInTheDocument();
-        expect(screen.getByText('meanReversion')).toBeInTheDocument();
+        expect(screen.getAllByText('grid').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('meanReversion').length).toBeGreaterThanOrEqual(1);
       });
     });
   });

@@ -78,6 +78,16 @@
       "lastVerdict": "Phán quyết gần nhất",
       "promoted": "Thăng cấp lên Paper",
       "killed": "Bị loại bởi Gate"
+    },
+    "cockpit": {
+      "title": "Buồng Lái L2 Cấp Tổ Chức",
+      "subtitle": "Đo Lường Cấu Trúc Vi Mô & Rủi Ro Hạm Đội Thời Gian Thực",
+      "spread": "Chênh lệch giá Spread",
+      "ofi": "Dòng Tiền OFI",
+      "vpin": "Độ Độc Hại VPIN",
+      "hrp": "Phân Bổ Vốn HRP",
+      "kelly": "Đòn Bẩy Half-Kelly",
+      "circuitBreaker": "Ngắt Mạch Khẩn Cấp"
     }
   },
   "bots": {

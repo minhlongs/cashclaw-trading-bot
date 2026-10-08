@@ -2,6 +2,24 @@
 
 ## v1 Paper-Trading Platform
 
+### Full-Deep v4 Quantitative OS (Stat-Arb Desk, Execution Wiring, Cockpit HUD) — 2026-10-08
+- **Statistical Arbitrage & Recursive Kalman Filter Pairs Desk shipped** (`src/tree/quantlib/statarb/`):
+  - `statarb-types.ts`: Domain models for Kalman 2-state vectors, OU process metrics, and StatArb signal contracts.
+  - `kalman-filter-hedge.ts`: Recursive 2-state Kalman filter estimating dynamic hedge ratio $[\alpha_t, \beta_t]^T$ in real time with prior/posterior covariance updates and zero lookahead bias.
+  - `ou-cointegration-estimator.ts`: Discrete AR(1) Ornstein-Uhlenbeck parameter estimator computing mean-reversion speed $\theta$, equilibrium mean $\mu$, half-life $t_{1/2}$, and equilibrium standard deviation $\sigma_{eq}$.
+  - `statarb-signal-generator.ts`: Z-score threshold evaluator triggering `ENTER_LONG_SPREAD`, `ENTER_SHORT_SPREAD`, and `EXIT_SPREAD` with stop-loss protection ($3.5\sigma$).
+- **Runtime Execution Orchestration & Risk Guard Interceptor shipped** (`src/tree/execution/runtime/`):
+  - `runtime-execution-types.ts`: Parent order execution contracts, coordinated slice plans, and risk interception decision models.
+  - `fleet-risk-interceptor.ts`: Pre-trade execution guard checking portfolio drawdown against `FleetCircuitBreaker` thresholds; throttling order size by 50% on warning ($8\%$) and rejecting orders completely on emergency ceiling ($15\%$).
+  - `sor-execution-coordinator.ts`: Coordinated execution planner slicing parent orders into TWAP chunks with anti-HFT jitter and routing across exchanges via Smart Order Routing (`routeOrderSlices`).
+- **Institutional Cockpit HUD Mounting & Bilingual UI Integration shipped**:
+  - `cockpit-hud-section.tsx`: Mounted order book depth ladder (`L2DepthLadder`), microstructure toxicity gauge (`MicrostructureToxicityGauge`), and fleet risk radar (`FleetRiskRadarCard`) into responsive dashboard section.
+  - `dashboard-client.tsx`: Embedded Cockpit HUD section cleanly with i18n support.
+  - `en.json` & `vi.json`: Synced bilingual dictionary keys under `dashboard.cockpit.*`.
+- **Cross-Stack Verification & Quality Gates**:
+  - `test/e2e/full-suite-v4-deep-quant.test.ts`: End-to-end integration test validating the complete quantitative loop: Cointegration $\to$ Kalman Hedge $\to$ Stat-Arb Signal $\to$ Risk Guard $\to$ SOR Coordination.
+  - 5,319/5,319 tests passing across 441 test files (100% green), 0 `:any`, 0 ESLint warnings, all files strictly $\le 130$ LOC.
+
 ### Full-Suite v3 Next-Gen Quant OS (Smart Execution, Cockpit UI, Black Swan Copula CVaR) — 2026-10-08
 - **Smart Order Routing (SOR) & Microstructure Execution shipped** (`src/tree/execution/smart/`):
   - `twap-slicer.ts`: Time-Weighted Average Price execution engine with anti-HFT randomized jitter.

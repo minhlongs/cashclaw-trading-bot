@@ -78,6 +78,16 @@
       "lastVerdict": "Latest Verdict",
       "promoted": "Promoted to Paper",
       "killed": "Falsified by Gate"
+    },
+    "cockpit": {
+      "title": "Institutional L2 Cockpit",
+      "subtitle": "Live Microstructure & Fleet Risk Telemetry",
+      "spread": "Spread",
+      "ofi": "Order Flow Imbalance",
+      "vpin": "VPIN Toxicity",
+      "hrp": "HRP Capital Allocation",
+      "kelly": "Half-Kelly Leverage",
+      "circuitBreaker": "Circuit Breaker"
     }
   },
   "bots": {
