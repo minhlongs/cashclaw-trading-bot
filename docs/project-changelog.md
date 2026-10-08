@@ -2,6 +2,16 @@
 
 ## v1 Paper-Trading Platform
 
+### v7 Quantitative Architecture Suite (CEX/DEX, SABR, Avellaneda-Stoikov) — 2026-10-08
+- **Pillar 1: Avellaneda-Stoikov Dynamic Inventory Engine**:
+  - Implemented dynamic inventory-based spread dimensioning and reservation price adjustment.
+  - Integrated with v6 Hawkes process to dynamically protect against toxic order flow and adversarial sweeps.
+- **Pillar 2: CEX/DEX Cross-Domain Basis Arbitrage**:
+  - Yield realization engine capturing basis disjoints across Centralized (CEX) and Decentralized (DEX) liquidity pools.
+- **Pillar 3: SABR Volatility Surface Arbitrage & Black-76 Pricer**:
+  - Stochastic Alpha, Beta, Rho (SABR) model integration for volatility smile calibration.
+  - Extended synthetic Greeks and Black-76 derivatives pricing for execution targeting.
+
 ### Full Institutional Apex v6 (Smart Limit Router, Flow Toxicity, HRP Copula) — 2026-10-08
 - **Pillar 1: Smart Limit Router (SLR Desk) shipped** (`src/tree/execution/slr/`):
   - `micro-price-estimator.ts`: Order Book Imbalance (OBI) driven micro-price estimator with deterministic drift bps.

@@ -12,7 +12,7 @@ function computeClusterVariance(
   if (items.length === 0) return 0;
   
   // Weights are inversely proportional to diagonal variance for the naive cluster vol
-  const invVars = items.map(idx => 1.0 / covMatrix[idx][idx]);
+  const invVars = items.map(idx => 1.0 / Math.max(1e-12, covMatrix[idx][idx]));
   const sumInvVars = invVars.reduce((a, b) => a + b, 0);
   const weights = invVars.map(iv => iv / sumInvVars);
 
