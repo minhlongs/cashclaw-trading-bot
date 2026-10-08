@@ -2,6 +2,60 @@
 
 ## v1 Paper-Trading Platform
 
+### Alpha Research OS Phase 10: Data Quality Layer — 2026-09-27
+- **Pure OHLCV data quality validators shipped** (`src/tree/alpha/data-quality/`): implemented 9 pure, deterministic validation functions covering all quality dimensions specified in Master Mission §15:
+  1. `validateMonotonicity` (`validate-monotonicity.ts`): enforces strictly increasing candle timestamps ($t_i > t_{i-1}$) across series.
+  2. `validateDuplicates` (`validate-duplicates.ts`): detects and rejects duplicate candle timestamps.
+  3. `validateIntervals` (`validate-intervals.ts`): detects missing candle intervals/gaps against expected cadence with configurable `toleranceRatio` and `maxAllowedGapIntervals`.
+  4. `validateStaleness` (`validate-staleness.ts`): rejects series where latest candle timestamp lags reference `asOf` time beyond `maxStalenessMs` or `maxStaleIntervals`.
+  5. `validateOHLC` (`validate-ohlc.ts`): enforces $High \ge \max(Open, Close)$, $Low \le \min(Open, Close)$, $High \ge Low$, and all prices are positive and finite.
+  6. `validateVolume` (`validate-volume.ts`): enforces non-negative, finite volume, and optionally flags suspicious isolated zero-volume bars.
+  7. `validateAlignment` (`validate-alignment.ts`): verifies timestamp alignment across multi-exchange feeds within configurable `maxOffsetMs` tolerance.
+  8. `validateFutureData` (`validate-future-data.ts`): rejects any candle with a timestamp in the future relative to `asOf` (lookahead leakage guard).
+  9. `validateOutage` (`validate-outage.ts`): detects frozen exchange feeds via consecutive identical OHLCV bars exceeding `maxConsecutiveIdenticalBars`.
+- **Composite master validator & timeframe parser** (`validator.ts`, `timeframe.ts`, `types.ts`, `index.ts`): `validateCandleSeries(candles, config, secondarySeries)` aggregates all 9 checks into a unified `ValidationResult` returning fail-closed `DATA_INVALID` on any violation; `timeframe.ts` provides parsing for standard timeframe notations (`1m`, `5m`, `1h`, `1d`, etc.).
+- **Forest evaluation seam & signal protection** (`src/forest/alpha/data-quality-eval/`):
+  - `evaluateDataQuality` (`evaluate.ts`): composes tree-layer validators into end-to-end data quality assessment workflows, generating structured `DataQualityAssessmentReport` validated against `.strict()` Zod schemas (`schemas.ts`).
+  - `protectSignalGeneration` (`signal-fence.ts`): fail-closed gate short-circuiting downstream signal logic on `DATA_INVALID`, guaranteeing `signal: null` and preventing silent signal production or silent forward-filling.
+  - `formatDataQualityReport` (`reporter.ts`): markdown diagnostic summary generator detailing violation indices, timestamps, and actual values.
+- **Architectural invariants**: pure tree layer contains 0 imports of `forest`; zero network I/O; zero ambient clock calls (all reference timestamps injected as parameters).
+- **Quality gates:** 294 new tests (122 4-tier E2E tests in `test/alpha/data-quality.e2e.test.ts` + AST-based safety scanner + comprehensive unit test suites); 3,765/3,765 repository tests passing without regression; type-check 0 errors; lint 0 warnings; knip clean; new module coverage 97.64% stmts (Tree) and 100% stmts (Forest); overall repository coverage 89.65% $\ge$ thresholds 82/85/85/82.
+
+### Alpha Research OS Phase 9: Strengthened Promotion Gates (15-Point Checklist) — 2026-09-26
+- **Conjunctive 15-point verification checklist shipped** (`src/forest/alpha/gate/`): implemented `financial-checks.ts`, `stress-checks.ts`, and `robustness-checks.ts` delivering all 15 verification gates required by Master Mission §13:
+  1. `minTrades`: Sample size validation ($\ge 30$).
+  2. `minNetExpectancy`: Positive net expectancy after conservative costs ($> 0$).
+  3. `minProfitFactor`: Profit factor $\ge 1.2$.
+  4. `maxDrawdown`: Maximum peak-to-trough drawdown $\le 25\%$.
+  5. `minSharpeSortino`: Annualized Sharpe $\ge 1.0$ and Sortino $\ge 1.2$.
+  6. `minRegimeCoverage`: Profitable performance across $\ge 50\%$ of experienced regimes.
+  7. `feeStress`: Positive net PnL under NORMAL and CONSERVATIVE fee stress.
+  8. `slippageStress`: Positive net PnL under ADVERSE and EXTREME (100 bps) slippage stress.
+  9. `parameterRobustness`: Normalized parameter sensitivity spread $\le 0.5$.
+  10. `crossPeriodRobustness`: Walk-forward out-of-sample window consistency $\ge 60\%$.
+  11. `crossAssetRobustness`: Multi-symbol cross-asset consistency where applicable.
+  12. `leakageInvariance`: Shift-future data mutation validation proving zero lookahead leakage.
+  13. `noSingleWindowDependency`: Maximum single-window PnL contribution $\le 50\%$.
+  14. `baselineComparison`: Outperforms Buy & Hold and Random Entry on Sharpe and Net PnL.
+  15. `reproducibleHash`: Verified canonical experiment hash over git commit, seed, and config.
+- **Conjunctive evaluation & discrimination engine** (`promotion-gate.ts`, `schemas.ts`, `types.ts`): all 15 gates must pass to achieve `PASSED`; any single failure yields `KILLED` with explicit diagnostic failure reasons. Supported by strict Zod schema validation.
+- **Fail-closed promotion state machine capping** (`promotion-states.ts`): automated advancement via `gate_passed` is strictly capped at `SHADOW` (`AUTOMATED_CEILING = 'SHADOW'`). Compile-time typing `PhaseAfterGatePassed<'SHADOW'>` resolves to `never`. Transitions to `MANUAL_APPROVAL` or `LIVE` require explicit human promotion triggers; zero automated path to live execution exists.
+- **Quality gates:** 338 new tests (200 E2E tests in `test/alpha/promotion-gates-e2e.test.ts` + comprehensive unit & adversarial test suites); 3,471/3,471 repository tests passing without regression; type-check 0 errors; lint 0 warnings; knip clean; 100% statement coverage across all gate files; overall repository coverage 89.47% $\ge$ thresholds 82/85/85/82.
+
+### Alpha Research OS Phase 8: Paper / Shadow Observability — 2026-09-25
+- **Telemetry contracts and feature hashing shipped** (`src/tree/alpha/observability/`): implemented `types.ts`, `schemas.ts`, and `snapshot-hasher.ts` providing strongly typed Zod schemas for `AlphaDecisionRecord`, `PortfolioDecisionRecord`, `OperationalTelemetry`, and nominal `FeatureSnapshotHash`. Canonical deterministic SHA-256 snapshot hasher (`snapshot-hasher.ts`) serializes feature vectors via `canonical-json.ts` across Node.js `createHash` and Web Crypto API `crypto.subtle`.
+- **Causal shadow execution simulator shipped** (`order-generator.ts`, `shadow-simulator.ts`): converts target portfolio weight deltas $\Delta w$ into hypothetical orders without forward-looking bias; dynamic fill simulator applies causal latency advancement and 4-tier cost stress models (`NORMAL`, `CONSERVATIVE`, `ADVERSE`, `EXTREME`). Strictly fail-closed: 0 live trading execution capabilities or exchange imports.
+- **Attribution analytics shipped** (`attribution.ts`): mathematical attribution engine calculating $\Delta\text{Edge} = \text{Realized Net Return} - \text{Expected Net Return}$ and $\Delta\text{Slippage} = \text{Realized Slippage Bps} - \text{Expected Slippage Bps}$ with multi-dimensional aggregations and operational alarms (`STALE_DATA`, `HIGH_LATENCY`, `PROVIDER_FALLBACK`).
+- **Forest evaluation seam shipped** (`src/forest/alpha/observability-eval/`): pure synchronous evaluation seam (`evaluate.ts`, `edge-diagnostics.ts`, `slippage-diagnostics.ts`, `telemetry-diagnostics.ts`) joining telemetry streams into validated `ObservabilityReport`s with 3-tier health state machine (`HEALTHY`, `DEGRADED`, `CRITICAL`). Tree layer purity strictly preserved (0 forest imports in tree).
+- **Quality gates:** 257 new tests (61 E2E tests + 28 new unit/adversarial test files); 3,133/3,133 repository tests passing without regression; type-check 0 errors; lint 0 warnings; knip clean; new module coverage 100% stmts / 100% branches (Tree) and 100% stmts / 99% branches (Forest); overall repository coverage 89.20% ≥ thresholds 82/85/85/82.
+
+### Alpha Research OS Phase 7: ResearchAgent (Safe Role Only) — 2026-09-25
+- **Safe ResearchAgent abstraction shipped** (`src/forest/alpha/research-agent/`): implemented `ResearchAgent` (`agent.ts`) adhering to Master Mission §10 supporting 5 core safe capabilities — hypothesis generation with active rejection across all 30 falsified classes from `seed-falsified.ts`, causal feature proposals strictly bounded by `declareFeature()` registered contracts, structured failure explanations analyzing falsified `SurvivalVerdict` objects, hypothesis clustering for semantic deduplication, and follow-up experiment recommendations with parent hypothesis lineage.
+- **Fail-closed safety fences**: exactly 0 imports, dependencies, or capability for order placement (`OrderProvider`), execution orchestration (`ExchangeOrchestrator`), strategy promotion (`transitionStrategy`), or survival threshold modification (`SurvivalGateConfig`). Automated static AST and import boundary isolation tests verify zero leaks. Universal `.strict()` Zod validation schemas (`schemas.ts`) reject all unexpected keys or malicious execution injection attempts. Pure math in `src/tree/**` preserves 0 imports of `src/forest/**`.
+- **Deterministic provider inversion**: `ResearchLLMProvider` interface (`provider.ts`) and offline `DeterministicMockLLMProvider` (`mock-provider.ts`) support reproducible, zero-network testing and offline CI execution with timeout simulation and fail-closed error handling.
+- **Diagnostic queue seam shipped** (`seam.ts`): provides integration seam connecting `ResearchAgent` with completed `ResearchQueueJob` and `SurvivalVerdict` artifacts, rejecting incomplete jobs (`PROPOSED`, `VALIDATING`, `RUNNING`) and producing actionable next-experiment specifications.
+- **Quality gates:** 139 new tests across 6 test suites (`agent.test.ts`, `schemas.test.ts`, `seam.test.ts`, `isolation.test.ts`, `adversarial.test.ts`, `e2e-research-agent.test.ts`); 2876/2876 repository tests passing without regression; type-check 0 errors; lint 0 warnings; knip clean; new module coverage 99.68% stmts / 98.63% branches / 100.00% funcs / 99.68% lines; overall repository coverage 88.64% ≥ thresholds 82/85/85/82.
+
 ### Alpha Zoo Adapter Modularization & LOC Compliance (Cycle 8) — 2026-09-16
 - **Scope:** Modularized `src/tree/research/alpha/zoo/zoo-adapter.ts` (199 LOC, near the 200 LOC ceiling) into a dedicated pure pipeline module (`zoo-pipeline.ts`, 103 LOC) and a slim orchestrator (`zoo-adapter.ts`, 59 LOC), meeting the ≤ 150 LOC target. Re-exported `RegisteredAlpha` via `import-report.ts` to cleanly resolve circular dependencies while maintaining 100% backward compatibility for all consumers and barrel exports.
 - **Decomposition & LOC Compliance:**

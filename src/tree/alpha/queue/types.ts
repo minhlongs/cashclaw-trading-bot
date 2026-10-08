@@ -57,7 +57,7 @@ export interface ResearchQueueJob {
   /** Dataset identifier the job consumes. */
   readonly dataset: string;
   /** Regime scope for the experiment. */
-  readonly regime: RegimeLabel;
+  readonly regime: RegimeLabel | string;
   /** Cross-sectional universe the job trades over. */
   readonly universe: Universe;
   /** Cost model applied to every backtest. */

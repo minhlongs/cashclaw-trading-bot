@@ -2,6 +2,7 @@ node_modules/
 .next/
 .wrangler/
 .orchestrate/
+.agents/
 tsconfig.tsbuildinfo
 .dev.vars
 .env

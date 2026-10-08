@@ -9,6 +9,11 @@ export type {
   Demote,
   TransitionTrigger,
   TransitionResult,
+  GateResultInput,
+  AutomatedProgressionPhase,
+  AutomatedTransitionTarget,
+  PhaseAfterGatePassed,
+  AutomatedCeiling,
 } from './promotion-states-types';
 export { AUTOMATED_CEILING } from './promotion-states-types';
 export {

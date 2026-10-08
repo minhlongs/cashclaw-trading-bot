@@ -4,6 +4,7 @@ import type {
   StrategyPhase,
   TransitionTrigger,
   TransitionResult,
+  GateResultInput,
 } from './promotion-states-types';
 
 // ── Transition table ───────────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ export function getTransition(
     return trigger.approved ? 'MANUAL_APPROVAL' : 'KILLED';
   }
 
-  return TRANSITIONS[phase][trigger.type] ?? null;
+  return TRANSITIONS[phase]?.[trigger.type] ?? null;
 }
 
 /**
@@ -82,15 +83,24 @@ export function transitionStrategy(
 }
 
 /**
- * Map a survival-gate result onto a transition trigger.
- *
- * `PAPER_CANDIDATE` advances the lifecycle one step; `KILLED` terminates it.
- * This is the only integration point between the gate and the state machine.
+ * Map a promotion or survival gate result onto a transition trigger.
+ * `PASSED` / `PAPER_CANDIDATE` advances the lifecycle one step (up to SHADOW);
+ * `KILLED` terminates it.
  */
 export function gateResultToTrigger(
-  gateStatus: 'PAPER_CANDIDATE' | 'KILLED',
+  result: GateResultInput,
 ): TransitionTrigger {
-  return gateStatus === 'PAPER_CANDIDATE'
+  if (typeof result === 'string') {
+    return result === 'PASSED' || result === 'PAPER_CANDIDATE'
+      ? { type: 'gate_passed' }
+      : { type: 'gate_failed' };
+  }
+  if ('verdict' in result) {
+    return result.verdict === 'PASSED'
+      ? { type: 'gate_passed' }
+      : { type: 'gate_failed' };
+  }
+  return result.status === 'PASSED' || result.status === 'PAPER_CANDIDATE'
     ? { type: 'gate_passed' }
     : { type: 'gate_failed' };
 }

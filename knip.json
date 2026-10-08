@@ -5,7 +5,8 @@
     "src/app/**/layout.tsx",
     "src/app/api/**/route.ts",
     "src/worker.ts",
-    "src/tree/**/index.ts"
+    "src/tree/**/index.ts",
+    "src/forest/alpha/gate/index.ts"
   ],
   "project": [
     "src/**/*.ts",
@@ -48,7 +49,11 @@
     "src/forest/research/tradingagents/checkpoint-adapter.core.ts",
     "src/forest/research/tradingagents/checkpoint-adapter.types.ts",
     "src/forest/research/tradingagents/checkpoint-adapter-verify.ts",
-    "src/lib/db/schema-backtest.ts"
+    "src/lib/db/schema-backtest.ts",
+    "src/tree/regime/alpha-router.ts",
+    "src/forest/alpha/research-agent/index.ts",
+    "src/forest/alpha/observability-eval/index.ts",
+    "src/forest/alpha/data-quality-eval/index.ts"
   ],
   "ignoreExportsUsedInFile": true,
   "exclude": [
@@ -178,9 +183,6 @@
     "src/forest/api/handlers/bot-create.ts": [
       "exports"
     ],
-    "src/forest/backtest/actions.ts": [
-      "exports"
-    ],
     "src/forest/alpha/multiple-testing/overfitting-proxy.ts": [
       "exports"
     ],
@@ -219,6 +221,18 @@
     ],
     "src/tree/research/tradingagents/debate-state-hash.ts": [
       "exports"
+    ],
+    "src/forest/alpha/research-agent/index.ts": [
+      "exports",
+      "duplicates"
+    ],
+    "src/forest/alpha/research-agent/provider.ts": [
+      "exports",
+      "duplicates"
+    ],
+    "src/forest/alpha/research-agent/schemas.ts": [
+      "exports",
+      "duplicates"
     ]
   }
 }
