@@ -2,6 +2,22 @@
 
 ## v1 Paper-Trading Platform
 
+### Full Institutional Apex v6 (Smart Limit Router, Flow Toxicity, HRP Copula) — 2026-10-08
+- **Pillar 1: Smart Limit Router (SLR Desk) shipped** (`src/tree/execution/slr/`):
+  - `micro-price-estimator.ts`: Order Book Imbalance (OBI) driven micro-price estimator with deterministic drift bps.
+  - `queue-priority-tracker.ts`: Poisson arrival modeled queue position tracker and fill probability estimator.
+  - `passive-execution-router.ts`: Cancel-on-toxicity passive limit order router defending against adverse selection.
+- **Pillar 2: Flow Toxicity & Hawkes Desk shipped** (`src/tree/quantlib/toxicity/`):
+  - `continuous-vpin-streamer.ts`: Continuous sliding window Volume-Synchronized Probability of Informed Trading (VPIN) anomaly detector.
+  - `hawkes-process-detector.ts`: Self-exciting univariate point process kernel identifying whale sweeps and order bursts.
+- **Pillar 3: Hierarchical Risk Parity (HRP) & Copula Risk Desk shipped** (`src/forest/allocation/hrp/`):
+  - `dendrogram-clusterer.ts`: Correlation-to-distance matrix conversion and Single-linkage quasi-diagonalization.
+  - `hrp-capital-allocator.ts`: Inverse-variance recursive bisection capital allocation maintaining stability on singular matrices.
+  - `copula-tail-risk-guard.ts`: Clayton Copula asymmetric lower-tail dependence and liquidity-adjusted CVaR.
+- **Pillar 4: E2E Cross-Stack Verification**:
+  - `test/e2e/full-suite-v6-institutional-apex.test.ts`: Complete pipeline validation from LOB toxicity protection to HRP tail-risk reallocation.
+  - 5,344/5,344 tests passing across 449 test files (100% green), 0 `:any`, 0 ESLint warnings, files strictly $\le 130$ LOC.
+
 ### Full Tri-Horizon Synthesis v5 (Triangular Arb, Adaptive MAB, Greeks Hedging Desk) — 2026-10-08
 - **Pillar 1: Graph-Theoretic Triangular Arbitrage Engine shipped** (`src/tree/quantlib/arbitrage/`):
   - `triangular-types.ts`: Domain models for `RateGraphEdge` and `TriangularArbitrageOpportunity` with strict readonly immutability.
