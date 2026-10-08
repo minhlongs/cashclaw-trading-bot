@@ -2,6 +2,23 @@
 
 ## v1 Paper-Trading Platform
 
+### Full Tri-Horizon Synthesis v5 (Triangular Arb, Adaptive MAB, Greeks Hedging Desk) — 2026-10-08
+- **Pillar 1: Graph-Theoretic Triangular Arbitrage Engine shipped** (`src/tree/quantlib/arbitrage/`):
+  - `triangular-types.ts`: Domain models for `RateGraphEdge` and `TriangularArbitrageOpportunity` with strict readonly immutability.
+  - `triangular-rate-graph.ts`: Directed log-rate graph builder converting ticker bid/ask quotes and taker fees into $-\ln(R \cdot (1 - \text{fee}))$ weights.
+  - `bellman-ford-detector.ts`: High-speed 3-hop negative cycle detector calculating net profit in bps and bottleneck liquidity depth across multi-hop routes.
+- **Pillar 2: Adaptive Regime & Bayesian MAB Strategy Allocator shipped** (`src/forest/allocation/bandit/`):
+  - `bandit-types.ts`: Type definitions for `VolatilityRegime`, `BanditArmState`, and `StrategyWeightAllocation`.
+  - `volatility-regime-detector.ts`: Real-time market classification engine (`LOW_VOL_CHOP`, `TRENDING_MOMENTUM`, `HIGH_VOL_CRISIS`) leveraging realized volatility and VPIN order flow toxicity.
+  - `thompson-sampling-bandit.ts`: Thompson Sampling Beta posterior updater and capital weight distributor with regime affinity bias and mandatory exploration floor ($\ge 5.0\%$).
+- **Pillar 3: Synthetic Greeks Analytics & Delta-Neutral Hedging Desk shipped** (`src/tree/quantlib/greeks/`):
+  - `greeks-types.ts`: Closed-form Greeks metrics and synthetic portfolio position definitions.
+  - `synthetic-greeks-engine.ts`: High-precision Black-76 closed-form engine computing $\Delta, \Gamma, \Theta, \mathcal{V}$ with polynomial standard normal CDF/PDF approximations.
+  - `delta-neutral-hedger.ts`: Multi-asset portfolio net Greeks aggregator with automatic Delta Drift Guard and counter-hedge order sizing.
+- **Pillar 4: Cross-Stack E2E Verification & Quality Gates**:
+  - `test/e2e/full-suite-v5-tri-horizon.test.ts`: End-to-end integration test validating the tri-horizon pipeline: Rate Graph Triangular Arb $\to$ Adaptive Regime MAB $\to$ Greeks Delta-Neutral Hedging.
+  - 5,329/5,329 tests passing across 445 test files (100% green), 0 `:any`, 0 ESLint warnings, all files strictly $\le 123$ LOC.
+
 ### Full-Deep v4 Quantitative OS (Stat-Arb Desk, Execution Wiring, Cockpit HUD) — 2026-10-08
 - **Statistical Arbitrage & Recursive Kalman Filter Pairs Desk shipped** (`src/tree/quantlib/statarb/`):
   - `statarb-types.ts`: Domain models for Kalman 2-state vectors, OU process metrics, and StatArb signal contracts.
