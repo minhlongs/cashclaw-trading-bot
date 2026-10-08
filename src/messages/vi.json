@@ -88,6 +88,9 @@
       "hrp": "Phân Bổ Vốn HRP",
       "kelly": "Đòn Bẩy Half-Kelly",
       "circuitBreaker": "Ngắt Mạch Khẩn Cấp"
+    },
+    "v7Metrics": {
+      "title": "Bảng Giám Sát Định Lượng v7 Đa Trụ Cột"
     }
   },
   "bots": {

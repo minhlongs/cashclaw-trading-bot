@@ -88,6 +88,9 @@
       "hrp": "HRP Capital Allocation",
       "kelly": "Half-Kelly Leverage",
       "circuitBreaker": "Circuit Breaker"
+    },
+    "v7Metrics": {
+      "title": "V7 Multi-Pillar Quantitative HUD"
     }
   },
   "bots": {

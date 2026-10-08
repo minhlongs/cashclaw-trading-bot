@@ -12,6 +12,7 @@ import { MarketWatchCard } from './market-watch-card';
 import { TerminalQuickActions } from './terminal-quick-actions';
 import { DeliberationSignalCard } from './deliberation-signal-card';
 import { CockpitHudSection } from './cockpit-hud-section';
+import { V7MetricsCard } from './v7-metrics-card';
 import { DashboardBotList } from './dashboard-bot-list';
 import { DashboardTopKpiCards, DashboardPerformanceGrid } from './dashboard-kpi-cards';
 
@@ -121,6 +122,7 @@ export default function DashboardClient() {
       <TerminalQuickActions bots={bots} />
       <MarketWatchCard />
       <CockpitHudSection />
+      <V7MetricsCard />
       <DeliberationSignalCard />
       <StrategyVisualizerCard bots={bots} />
       <DashboardBotList bots={bots} />
