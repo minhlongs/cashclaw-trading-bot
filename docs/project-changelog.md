@@ -2,6 +2,19 @@
 
 ## v1 Paper-Trading Platform
 
+### Tri-Pillar Synergy (Multi-Venue Arbitrage, L2 Execution Simulator, Autonomous Alpha Swarm) — 2026-10-08
+- **Multi-Venue Basis & Funding Rate Arbitrage Engine shipped** (`src/tree/exchange/arbitrage/`):
+  - Standardized cross-exchange funding rates (`funding-types.ts`, `funding-monitor.ts`) across Binance, OKX, and Bybit.
+  - Pure basis calculator (`basis-calculator.ts`) computing spot-perp basis spreads and net yields after round-trip fee drag (`feeDragPct`).
+  - Viability filter flagging arbitrage opportunities exceeding minimum net annual yield floor (5%).
+- **L2 Microstructure Realistic Paper Execution Simulator shipped** (`src/tree/exchange/simulator/`):
+  - Queue priority tracker (`queue-tracker.ts`, `l2-types.ts`) simulating order book level queue positions drained by real `aggTrades` volume.
+  - Order book depth walking and market impact slippage model (`slippage-model.ts`) with adverse penalty for orders exceeding depth.
+- **Autonomous Alpha Lab Swarm & DSR Overfitting Defense shipped** (`src/forest/research/swarm/`):
+  - Academic Deflated Sharpe Ratio (`deflated-sharpe.ts`) implementing Bailey & López de Prado multiple-testing penalization across cumulative trials ($N$).
+  - Autonomous swarm orchestrator (`autonomous-swarm.ts`, `swarm-types.ts`) linking market anomalies to rigorous gating and capping at `AUTOMATED_CEILING = 'SHADOW'`.
+- **Quality gates:** 100% test pass rate across all new suites (22 tests in unit & `test/e2e/tri-pillar-integration.test.ts`), all files strictly $\le 78$ LOC, 0 `:any` types, 0 ESLint warnings, Next.js 16 build clean.
+
 ### Alpha Research OS Phase 10: Data Quality Layer — 2026-09-27
 - **Pure OHLCV data quality validators shipped** (`src/tree/alpha/data-quality/`): implemented 9 pure, deterministic validation functions covering all quality dimensions specified in Master Mission §15:
   1. `validateMonotonicity` (`validate-monotonicity.ts`): enforces strictly increasing candle timestamps ($t_i > t_{i-1}$) across series.
