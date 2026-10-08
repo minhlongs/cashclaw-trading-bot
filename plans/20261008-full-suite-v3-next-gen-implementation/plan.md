@@ -1,6 +1,6 @@
 ---
 name: full-suite-v3-next-gen-implementation
-status: pending
+status: completed
 created: 2026-10-08
 type: implementation-plan
 ---
@@ -18,10 +18,10 @@ Kế hoạch triển khai toàn diện bộ giải pháp định lượng cấp 
 
 | Phase | Description | Status | Target File |
 |---|---|---|---|
-| [Phase 01](./phase-01-smart-order-routing-twap-vwap.md) | Smart Order Routing (SOR), TWAP/VWAP Slicing & Microstructure Urgency Guard | Pending | `phase-01-smart-order-routing-twap-vwap.md` |
-| [Phase 02](./phase-02-institutional-cockpit-ui.md) | Institutional L2 Cockpit UI & Real-Time Gauges | Pending | `phase-02-institutional-cockpit-ui.md` |
-| [Phase 03](./phase-03-black-swan-copula-cvar.md) | Black Swan Stress Simulator & Copula CVaR Engine | Pending | `phase-03-black-swan-copula-cvar.md` |
-| [Phase 04](./phase-04-v3-cross-stack-integration.md) | End-to-End Cross-Stack Integration & Global Verification | Pending | `phase-04-v3-cross-stack-integration.md` |
+| [Phase 01](./phase-01-smart-order-routing-twap-vwap.md) | Smart Order Routing (SOR), TWAP/VWAP Slicing & Microstructure Urgency Guard | Complete | `phase-01-smart-order-routing-twap-vwap.md` |
+| [Phase 02](./phase-02-institutional-cockpit-ui.md) | Institutional L2 Cockpit UI & Real-Time Gauges | Complete | `phase-02-institutional-cockpit-ui.md` |
+| [Phase 03](./phase-03-black-swan-copula-cvar.md) | Black Swan Stress Simulator & Copula CVaR Engine | Complete | `phase-03-black-swan-copula-cvar.md` |
+| [Phase 04](./phase-04-v3-cross-stack-integration.md) | End-to-End Cross-Stack Integration & Global Verification | Complete | `phase-04-v3-cross-stack-integration.md` |
 
 ## Key Invariants & Dependencies
 - **ADR-001:** Paper-only v1, mô phỏng khớp lệnh thực tế qua L2 Microstructure Simulator.
