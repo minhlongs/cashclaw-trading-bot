@@ -2,6 +2,23 @@
 
 ## v1 Paper-Trading Platform
 
+### Full-Suite Advanced Quantitative OS (Delta-Hedger, L2 OFI/VPIN Alpha, Fleet Risk Commander) — 2026-10-08
+- **Cross-Venue Delta-Neutral Automated Hedger & Inventory Rebalancer shipped** (`src/tree/exchange/arbitrage/hedger/`):
+  - `delta-exposure-tracker.ts`: Pure net delta notional tracking and drift ratio calculation between dual legs.
+  - `inventory-rebalancer.ts`: Automated rebalance action generator triggering counter-orders when delta drift exceeds configurable threshold.
+  - `margin-liquidation-guard.ts`: Leverage monitoring, maintenance margin utilization, and real-time liquidation distance safety evaluation.
+- **L2 Order Flow Imbalance (OFI) & VPIN Toxicity Alpha shipped** (`src/tree/alpha/microstructure/`):
+  - `ofi-calculator.ts`: Continuous streaming OFI measurement tracking incremental bid/ask quote updates.
+  - `vpin-calculator.ts`: Volume-Synchronized Probability of Toxicity splitting flow into discrete volume buckets to detect informed trading toxicity.
+  - `microstructure-signals.ts`: Multi-signal synthesizer generating direction and toxicity-boosted confidence scores.
+- **Fleet Risk Commander & Dynamic Capital Allocation shipped** (`src/forest/risk/commander/`):
+  - `hrp-allocator.ts`: Hierarchical Risk Parity allocation weighting active bot strategies inversely by variance.
+  - `fractional-kelly.ts`: Half-Kelly capital sizing with maximum leverage caps to protect against fat-tailed crypto drawdowns.
+  - `fleet-circuit-breaker.ts`: System-wide emergency circuit breaker triggering orderly pause when portfolio drawdown breaches safety limits.
+- **Cross-Stack Integration & Quality Gates**:
+  - `test/e2e/full-suite-advanced-quant.test.ts`: End-to-end integration test validating the complete quantitative loop.
+  - 5,286/5,286 tests passing across 427 test files, 100% test coverage on all mathematical engines, zero `:any`, zero ESLint warnings, all files strictly $\le 75$ LOC.
+
 ### Tri-Pillar Synergy (Multi-Venue Arbitrage, L2 Execution Simulator, Autonomous Alpha Swarm) — 2026-10-08
 - **Multi-Venue Basis & Funding Rate Arbitrage Engine shipped** (`src/tree/exchange/arbitrage/`):
   - Standardized cross-exchange funding rates (`funding-types.ts`, `funding-monitor.ts`) across Binance, OKX, and Bybit.

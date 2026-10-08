@@ -1,7 +1,7 @@
 // Deliberation Pipeline Bridge — safely executes evaluation pipeline over debate hypotheses
 import type { DebateToHypothesisResult } from './debate-to-hypothesis-types';
 import { runSurvivalGate, type SurvivalGateConfig, type SurvivalGateResult } from '@/forest/alpha/gate/survival-gate';
-import { applyDeliberationFeedback, type DeliberationFeedbackOutcome } from '@/tree/research/tradingagents/deliberation-feedback';
+import { applyDeliberationFeedback, type DeliberationFeedbackOutcome } from './deliberation-feedback';
 import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
 
 export interface DeliberationBridgeResult {

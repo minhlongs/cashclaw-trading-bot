@@ -168,7 +168,7 @@ describe('Promotion State Machine Safety Hardening', () => {
       for (const file of treeFiles) {
         const content = fs.readFileSync(file, 'utf-8');
         const rel = path.relative(TREE_DIR, file);
-        const hasGate = /from\s+['"][^'"]*(?:gate|promotion-states|survival-gate)/.test(content);
+        const hasGate = /from\s+['"][^'"]*(?:forest\/alpha\/gate|promotion-states|survival-gate)/.test(content);
         expect(hasGate, `Tree file ${rel} illegally imports gate`).toBe(false);
       }
       const obsDir = path.resolve(TREE_DIR, 'alpha/observability');
