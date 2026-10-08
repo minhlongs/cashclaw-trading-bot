@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { applyDeliberationFeedback } from './deliberation-feedback';
 import type { SurvivalGateResult } from '@/forest/alpha/gate/survival-gate';
-import type { DebateState } from './debate-state';
+import type { DebateState } from '@/tree/research/tradingagents/debate-state';
 
 describe('deliberation-feedback', () => {
   const dummyDebateState: DebateState = {
