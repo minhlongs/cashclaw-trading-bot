@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v28 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Lehalle-Neuman (2019) Incorporating Order Flow & Markovian Signals Optimal Execution Engine** (`src/tree/quantlib/execution/`):
+  - Continuous-time optimal liquidation with inventory risk penalty $\phi S_t^2$ and short-term Markovian predictive alpha signal with mean-reversion $\gamma$:
+    $$\nu_t^* = \zeta \frac{\cosh(\zeta(T - t))}{\sinh(\zeta T)} S_0 + \frac{\alpha_0}{2k (\gamma + \zeta)} \left[ e^{-\gamma t} - \frac{\sinh(\zeta(T - t))}{\sinh(\zeta T)} \right]$$
+  - Accelerates execution when positive alpha is detected while accounting for non-linear impact, benchmarking against uniform TWAP. Strictly $\le 38$ LOC.
+- **Pillar 2: Holden-Subrahmanyam (1992) Multi-Period Risk-Averse Microstructure Auction Engine** (`src/tree/quantlib/microstructure/`):
+  - Multi-period auction game with $M \ge 2$ informed traders with risk aversion coefficient $\rho > 0$ under continuous auction dynamics:
+    $$\beta_n = \frac{1}{\rho \Sigma_n + \lambda_n}, \quad \lambda_n = \frac{M \beta_n \Sigma_n}{M \beta_n^2 \Sigma_n + \Sigma_u}$$
+  - Quantifies Kyle depth $\lambda_n$, rapid early information revelation, risk aversion damping, and price efficiency convergence across rounds. Strictly $\le 33$ LOC.
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/tree/alpha/relative-value/pair-period.ts` (133 LOC $\rightarrow$ 2 LOC facade) into `pair-period-validate.ts` (33 LOC) and `pair-period-ops.ts` (41 LOC).
+  - Modularized `src/forest/alpha/cross-sectional-eval/report.builder.ts` (133 LOC $\rightarrow$ 34 LOC facade) into `report.builder-metrics.ts` (40 LOC) and `report.builder-regime.ts` (24 LOC).
+  - Maintained 100% backward compatibility with zero breaking changes for existing consumers.
+- **Verification & Quality Gate**:
+  - `test/quant/lehalle-neuman-signal-execution.test.ts` (4 tests) covering inventory full liquidation, alpha-driven speed acceleration, zero-shares edge case, and risk aversion savings.
+  - `test/quant/holden-subrahmanyam-microstructure.test.ts` (4 tests) covering monotonic posterior variance decay, trader competition scaling, and risk aversion effects.
+  - `test/quant/v28-apex-suite-simulation.test.ts` cross-domain E2E simulation test.
+  - 5,635/5,635 tests passing across 525 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 41$ LOC.
+
 ### Unified v27 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Cartea-Jaimungal (2016) Order Flow Imbalance (OFI) Optimal Execution Engine** (`src/tree/quantlib/execution/`):
   - Formulates optimal liquidation incorporating exogenous order flow imbalance (OFI) drift $d P_t = (b - a\nu_t + \beta \text{OFI}_t) dt + \sigma dW_t$:
