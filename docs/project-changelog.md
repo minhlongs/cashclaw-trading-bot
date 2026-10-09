@@ -2,6 +2,23 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v17 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Kyle-Obizhaeva (2016) Market Microstructure Invariance Engine** (`src/tree/quantlib/microstructure/`):
+  - Implements Kyle-Obizhaeva (2016) market microstructure invariance pricing model:
+    $$W = V \times \sigma, \quad \tilde{Q} = c_Q \left(\frac{V}{\sigma^2}\right)^{1/3}, \quad \Lambda = c_\Lambda \left(\frac{\sigma}{V}\right)^{1/3}$$
+  - Computes business-time trading velocity $W$, invariant bet scale $\tilde{Q}$, normalized order size $\tilde{X} = X / \tilde{Q}$, square-root price impact $I(X) = \Lambda \cdot \tilde{X}^{1/2}$, and automated capacity constraint detection (`isCapacityConstrained`).
+- **Pillar 2: Barndorff-Nielsen & Shephard (2004, 2006) Bipower Variation Jump Detector** (`src/tree/quantlib/volatility/`):
+  - Decomposes high-frequency realized variance $RV = \sum r_i^2$ into continuous integrated variance via bipower variation $BV = \frac{\pi}{2} \sum |r_{i-1}||r_i|$ and jump variation $JV = \max(0, RV - BV)$.
+  - Calculates tripower quarticity ($TQ$) and asymptotic finite-sample Z-score to gate alpha execution during adverse liquidity and price discontinuities (`hasSignificantJump`).
+- **Pillar 3: Structural Fat-File Modularization & Decoupling** (`src/forest/alpha/observability-eval/`, `src/forest/alpha/data-quality-eval/`):
+  - Modularized `schemas.ts` (158 LOC $\rightarrow$ 98 LOC) into `schemas-alarms-telemetry.ts` (56 LOC) and `schemas-attributions.ts` (31 LOC).
+  - Modularized `edge-diagnostics.ts` (147 LOC $\rightarrow$ 76 LOC) into `edge-diagnostics-aggregators.ts` (80 LOC).
+  - Modularized `evaluate.ts` (147 LOC $\rightarrow$ 71 LOC) into `evaluate-guards.ts` (83 LOC).
+  - All refactored modules strictly $\le 98$ LOC with 100% backward-compatible public exports and zero test regressions.
+- **Verification & Quality Gate**:
+  - `test/quant/v17-apex-suite-simulation.test.ts` validating jump-gated invariance order execution and modular evaluation reports.
+  - 5,518/5,518 tests passing across 492 test files (100% green), 0 `:any`, 0 ESLint warnings, `npx tsc --noEmit` clean, Next.js production build clean.
+
 ### Unified v16 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Amihud (2002) Illiquidity Ratio Engine** (`src/tree/quantlib/liquidity/`):
   - Implements Amihud (2002) illiquidity ratio ($\text{ILLIQ}$) measuring absolute return per dollar trading volume:
