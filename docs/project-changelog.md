@@ -2,6 +2,23 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v16 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Amihud (2002) Illiquidity Ratio Engine** (`src/tree/quantlib/liquidity/`):
+  - Implements Amihud (2002) illiquidity ratio ($\text{ILLIQ}$) measuring absolute return per dollar trading volume:
+    $$\text{ILLIQ}_t = \frac{1}{N} \sum_{i=1}^N \frac{|r_i|}{\text{Vol}_i} \times 10^6$$
+  - Provides volume floor guards, robust mean and median illiquidity calculation, and automated classification of illiquid market regimes (`isIlliquidRegime`) to dynamically widen market maker spreads or throttle execution speed.
+- **Pillar 2: Cont-de Larrard (2013) Markovian Queue First-Passage Engine** (`src/tree/quantlib/microstructure/`):
+  - Models the execution fill probability of a resting limit order at queue position $x$ in a book of depth $L$ before queue cancellation or price transition:
+    $$P(\text{Fill} \mid x, L) = \frac{\sinh(\gamma (L - x))}{\sinh(\gamma L)}, \quad \gamma = \sqrt{\frac{\delta}{D}}$$
+  - Features hyperbolic decay modeling under active cancellation intensity ($\delta$) and arrival flow diffusivity ($D$), handling the zero cancellation limit ($1 - x/L$) and high execution probability classification.
+- **Pillar 3: Structural Fat-File Modularization & Decoupling** (`src/forest/alpha/research-agent/`):
+  - Modularized `schemas.ts` (162 LOC $\rightarrow$ 96 LOC) by extracting `schemas-json-parser.ts` (20 LOC) and `schemas-cluster-experiment.ts` (61 LOC).
+  - Modularized `seam.ts` (155 LOC $\rightarrow$ 89 LOC) by extracting `seam-job-extractors.ts` (77 LOC).
+  - All refactored modules strictly $\le 96$ LOC with 100% backward-compatible public exports and zero test regressions.
+- **Verification & Quality Gate**:
+  - `test/quant/v16-apex-suite-simulation.test.ts` validating complete cross-domain execution across all 3 pillars.
+  - 5,509/5,509 tests passing across 489 test files (100% green), 0 `:any`, 0 ESLint warnings, `npx tsc --noEmit` clean, Next.js production build clean.
+
 ### Unified v15 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Kyle (1985) Microstructure Adverse Selection Price Impact Engine** (`src/tree/quantlib/microstructure/`):
   - Implements Kyle (1985) continuous-auction adverse selection price impact model:
