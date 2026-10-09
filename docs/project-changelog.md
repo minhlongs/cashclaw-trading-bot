@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v35 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Kratz-Schöneborn (2014) Optimal Liquidation with Dark Pools & Alternative Venues Engine** (`src/tree/quantlib/execution/`):
+  - Formulates optimal liquidation across a primary lit venue with permanent/temporary price impact and an uncrossing dark pool with stochastic Poisson fills ($\lambda_{\text{dark}}$) and fill probability ($p_{\text{dark}}$):
+    $$x_k^* = \min\left(q_k - \Delta q_{\text{dark}}, \frac{q_k - \Delta q_{\text{dark}}}{N - k}\right), \quad \Delta q_{\text{dark}} = \min(q_k, q_k (1 - e^{-\lambda_{\text{dark}} \Delta t}) p_{\text{dark}})$$
+  - Evaluates discrete inventory trajectories, dark pool execution capture ratio, VWAP execution price, and basis-point cost savings relative to pure lit liquidation. Implemented in `src/tree/quantlib/execution/kratz-schoneborn-types.ts` (31 LOC) and `src/tree/quantlib/execution/kratz-schoneborn-engine.ts` (32 LOC).
+- **Pillar 2: Biais-Hillion-Spatt (1995) Order Flow Dynamics & State-Dependent Liquidity Engine** (`src/tree/quantlib/microstructure/`):
+  - Models empirical order book transition dynamics where limit and market order submissions depend endogenously on current spread and queue depth:
+    $$P_{\text{limit}} \propto 1 + \alpha_S (S - 1), \quad P_{\text{market}} \propto \frac{1}{1 + 0.5 (S - 1)} + \beta_D \ln(1 + D), \quad P_{\text{cancel}} \propto 0.5 + \frac{1}{1 + \beta_D D}$$
+  - Computes liquidity replenishment rate ($\lambda_0 P_{\text{limit}}$), spread widening risk, and resiliency half-life ($\ln 2 / \text{replenishmentRate}$). Implemented in `src/tree/quantlib/microstructure/biais-hillion-spatt-types.ts` (17 LOC) and `src/tree/quantlib/microstructure/biais-hillion-spatt-engine.ts` (24 LOC).
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/tree/exchange/direct/bybit-rest-client.ts` (129 LOC $\rightarrow$ 46 LOC facade) into `bybit-rest-request.ts` (35 LOC) for signing and parameter serialization and `bybit-rest-response.ts` (34 LOC) for response validation and server time parsing.
+  - Modularized `src/tree/exchange/direct/ticker-normalizer.ts` (128 LOC $\rightarrow$ 19 LOC facade) into `ticker-normalizer-binance.ts` (36 LOC) and `ticker-normalizer-exchanges.ts` (41 LOC) with strict non-negative finite numeric validation.
+  - Preserved 100% backward compatibility and exact contract parity.
+- **Verification & Quality Gate**:
+  - `test/quant/kratz-schoneborn-execution.test.ts` (3 tests) covering dark pool volume capture, reversion to pure lit liquidation at $p_{\text{dark}} = 0$, and zero inventory boundary.
+  - `test/quant/biais-hillion-spatt-microstructure.test.ts` (3 tests) covering wide vs tight spread limit order preference, probability normalization ($\sum P = 1.0$), and low-depth boundary.
+  - `test/quant/v35-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying dark pool liquidation, state-dependent order flow, and modularized Bybit/normalizer exchange adapters.
+  - 5,694/5,694 tests passing across 546 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 46$ LOC.
+
 ### Unified v34 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Kyle-Roşu (2019) High-Frequency Informed Trading & Liquidity Execution Engine** (`src/tree/quantlib/execution/`):
   - Continuous-time dynamic informed trading where an informed investor continuously exploits private information about an asset's fundamental value $v$ against noise trader variance $\sigma_u^2$:
