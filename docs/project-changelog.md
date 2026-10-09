@@ -2,6 +2,26 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v36 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Gatheral-Schied-Slynko (2012) Transient Market Impact & Resilient Execution Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Jim Gatheral, Alexander Schied, and Alla Slynko (2012) *"Transient Market Impact and Convexity/No-Arbitrage"* & *"Exponential and Power-Law Decay Functions"*.
+  - Models optimal execution under transient impact with completely monotonic Fredholm integral decay kernels $G(\tau) = e^{-\rho \tau}$ and power-law memory $G(\tau) = (1 + \rho \tau)^{-\alpha}$, strictly guaranteeing non-negative execution costs ($C \ge 0$) on all round trips and ruling out price manipulation.
+  - Computes discrete liquidation trajectory, decaying accumulated transient impact, VWAP execution price, terminal shortfall, and post-trade price reversion path. Implemented in `src/tree/quantlib/execution/gatheral-schied-types.ts` (31 LOC) and `src/tree/quantlib/execution/gatheral-schied-engine.ts` (36 LOC).
+- **Pillar 2: Roşu (2009) Dynamic Limit Order Book Choice & Endogenous Liquidity Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Ioanid Roşu (2009) *"A Dynamic Model of the Limit Order Book"* (Review of Financial Studies).
+  - Formulates the endogenous equilibrium trade-off between market orders (immediacy) and limit orders (spread-earning) under impatient liquidity consumers and providers arriving according to Poisson processes with intensity $\lambda$ and impatience discount rate $r$:
+    $$S^* = \max\left(\Delta, \frac{2r}{\lambda} + \Delta + \sigma \sqrt{\frac{2}{\lambda}}\right), \quad P_{\text{fill}} = \frac{\lambda}{\lambda + r}, \quad E[W] = \frac{1}{\lambda P_{\text{fill}}}$$
+  - Computes endogenous equilibrium bid-ask spread, limit order fill probability before cancellation, expected queue waiting time, immediacy price premium, and geometric depth profile across ticks. Implemented in `src/tree/quantlib/microstructure/rosu-orderbook-types.ts` (16 LOC) and `src/tree/quantlib/microstructure/rosu-orderbook-engine.ts` (23 LOC).
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/tree/bot/bot-manager-helpers.ts` (128 LOC $\rightarrow$ 38 LOC facade) by extracting `toD1Status`, `D1CallbackDeps`, and `persistNewBot` into `bot-manager-d1-status.ts` (38 LOC) and row hydration fallback `defaultConfigFromRow` into `bot-manager-default-config.ts` (22 LOC).
+  - Modularized `src/tree/alpha/cross-sectional/beta-estimation.ts` (128 LOC $\rightarrow$ 46 LOC facade) by extracting validation predicates, alignment iterators, and variance helpers into `beta-estimation-pairs.ts` (39 LOC).
+  - Preserved 100% backward compatibility and exact contract parity.
+- **Verification & Quality Gate**:
+  - `test/quant/gatheral-schied-execution.test.ts` (4 tests) covering no-arbitrage guarantee under monotonic decay, transient impact decay trajectory, power-law memory decay, and zero-inventory boundary.
+  - `test/quant/rosu-orderbook-choice.test.ts` (4 tests) covering endogenous equilibrium spread, impatience discount rate sensitivity, arrival intensity scaling, and depth profile geometry.
+  - `test/quant/v36-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Gatheral-Schied execution, Roşu orderbook dynamics, beta estimation, and bot D1 persistence status mapping.
+  - 5,703/5,703 tests passing across 549 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 46$ LOC.
+
 ### Unified v35 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Kratz-Schöneborn (2014) Optimal Liquidation with Dark Pools & Alternative Venues Engine** (`src/tree/quantlib/execution/`):
   - Formulates optimal liquidation across a primary lit venue with permanent/temporary price impact and an uncrossing dark pool with stochastic Poisson fills ($\lambda_{\text{dark}}$) and fill probability ($p_{\text{dark}}$):
