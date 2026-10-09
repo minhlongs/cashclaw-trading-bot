@@ -1,121 +1,38 @@
-// Telemetry Writer — non-blocking async queue that persists trade events + snapshots to D1
-// Wires into BotInstance / Killswitch callbacks. Drop-in: just call writer.emit().
-
 import type { TradeEvent, TradeEventType } from './types';
 import type { Balance } from '../exchange/types';
 import { createLogger } from '@/lib/logger';
 import type { TelemetryWriterDeps, TelemetryWriterCallbacks, Listener } from './writer-types';
-import {
-  INSERT_TRADE_EVENT_SQL,
-  INSERT_CAPITAL_SNAPSHOT_SQL,
-  buildEventInsertParams,
-  buildSnapshotInsertParams,
-} from './writer-sql';
-import { generateEventId, isRetryableTelemetryError } from './writer-helpers';
+import { generateEventId } from './writer-helpers';
+import { TelemetryEmitters } from './writer-emitters';
+import { flushTelemetryBatch, type QueueItem } from './writer-flush';
+import { persistSnapshot, type SnapshotConfig } from './writer-snapshot';
 
 const log = createLogger('telemetry-writer');
 
 export class TelemetryWriter {
-  private deps: TelemetryWriterDeps;
-  private callbacks: TelemetryWriterCallbacks;
+  private queue: QueueItem[] = [];
   private listeners = new Set<Listener>();
-  private queue: Array<{ event: TradeEvent; retries: number }> = [];
   private flushing = false;
-  private readonly MAX_RETRIES = 3;
 
-  constructor(deps: TelemetryWriterDeps, callbacks: TelemetryWriterCallbacks = {}) {
-    this.deps = deps;
-    this.callbacks = callbacks;
-  }
-
-  // ------------------------------------------------------------------
-  // Public API — call these from strategy / bot / killswitch
-  // ------------------------------------------------------------------
+  constructor(private deps: TelemetryWriterDeps, private callbacks: TelemetryWriterCallbacks = {}) {}
 
   emit(botId: string, eventType: TradeEventType, details: Record<string, unknown> = {}): void {
-    const event: TradeEvent = {
-      id: generateEventId(),
-      botId,
-      eventType,
-      details,
-      timestamp: Date.now(),
-    };
+    const event: TradeEvent = { id: generateEventId(), botId, eventType, details, timestamp: Date.now() };
     this.queue.push({ event, retries: 0 });
-    this.listeners.forEach((fn) => {
-      try { fn(event); } catch (error) { log.warn('Listener error', { error: error instanceof Error ? error : new Error(String(error)) }); }
-    });
-    this.flushSoon();
+    this.listeners.forEach(fn => { try { fn(event); } catch (e) { log.warn('Listener error', { error: e instanceof Error ? e : new Error(String(e)) }); } });
+    if (!this.flushing) { this.flushing = true; queueMicrotask(async () => { while (this.queue.length > 0) await flushTelemetryBatch(this.queue, this.deps, this.callbacks); this.flushing = false; }); }
   }
 
-  emitTick(botId: string, price: number, pnl?: number): void { this.emit(botId, 'tick', { price, pnl }); }
-  emitFill(botId: string, orderId: string, side: string, price: number, qty: number, pnl = 0): void { this.emit(botId, 'fill', { orderId, side, price, quantity: qty, pnl }); }
-  emitSignal(botId: string, signal: string, indicatorValues: Record<string, unknown>): void { this.emit(botId, 'signal', { signal, ...indicatorValues }); }
-  emitError(botId: string, error: string, context: string): void { this.emit(botId, 'error', { error, context }); }
-  emitHalt(botId: string, reason: string): void { this.emit(botId, 'halt', { reason }); }
-  emitResume(botId: string): void { this.emit(botId, 'resume', {}); }
-  emitStart(botId: string, config: Record<string, unknown>): void { this.emit(botId, 'start', { config }); }
-  emitStop(botId: string, reason?: string): void { this.emit(botId, 'stop', { reason: reason ?? 'normal' }); }
-  emitPause(botId: string): void { this.emit(botId, 'pause', {}); }
-  emitRebalance(botId: string, oldBase: number, newBase: number): void { this.emit(botId, 'rebalance', { oldBase, newBase }); }
-  emitExchangeHealth(botId: string, health: { exchangeId: string; score: number; state: string; latencyMs: number; failureCount: number; rateLimitUsed: number; rateLimitTotal: number }): void { this.emit(botId, 'exchange_health', { ...health, timestamp: Date.now() }); }
-  emitRateLimitUsage(botId: string, exchangeId: string, usage: { endpoint: string; callsInWindow: number; maxPerWindow: number; windowMs: number }): void { this.emit(botId, 'rate_limit_usage', { exchangeId, ...usage, timestamp: Date.now() }); }
-
-  // Persist a daily capital snapshot (call once per bot per day, OR after each fill)
-  async snapshot(botId: string, capital: number, pnl: number, balances: Balance[], config: {
-    maxDrawdownPct: number;
-    winCount: number;
-    lossCount: number;
-    totalTrades: number;
-  }): Promise<void> {
-    const maxDD = config.maxDrawdownPct;
-    const id = `snap_${botId}_${Date.now()}`;
-    const now = Date.now();
-    try {
-      await this.deps.enqueue(INSERT_CAPITAL_SNAPSHOT_SQL, buildSnapshotInsertParams(id, botId, capital, pnl, maxDD, config, now));
-    } catch (e) {
-      this.callbacks.onFlushError?.(e instanceof Error ? e : new Error(String(e)));
-    }
-    // Don't block on snapshot emit — also log as event
-    this.emit(botId, 'metric_snapshot', {
-      capital, pnl, maxDrawdownPct: maxDD,
-      winCount: config.winCount, lossCount: config.lossCount, totalTrades: config.totalTrades,
-    });
-  }
-
-  // ------------------------------------------------------------------
-  // Internal — queue + flush
-  // ------------------------------------------------------------------
-
-  subscribe(fn: Listener): () => void {
-    this.listeners.add(fn);
-    return () => { this.listeners.delete(fn); };
-  }
-
-  private flushSoon(): void {
-    if (!this.flushing) {
-      this.flushing = true;
-      queueMicrotask(() => this.flush());
-    }
-  }
-
-  private async flush(): Promise<void> {
-    while (this.queue.length > 0) {
-      const batch = this.queue.splice(0, 50); // flush 50 at a time
-      for (const { event } of batch) {
-        try {
-          await this.deps.enqueue(INSERT_TRADE_EVENT_SQL, buildEventInsertParams(event));
-        } catch (e) {
-          // Retry transient errors up to N times, then drop (telemetry is lossy-tolerable)
-          const item = { event, retries: 1 };
-          if (isRetryableTelemetryError(e)) {
-            if (item.retries < this.MAX_RETRIES) {
-              this.queue.unshift(item);
-            }
-          }
-          this.callbacks.onFlushError?.(e instanceof Error ? e : new Error(String(e)));
-        }
-      }
-    }
-    this.flushing = false;
-  }
+  subscribe(fn: Listener): () => void { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; }
+  async snapshot(b: string, cap: number, p: number, bal: Balance[], cfg: SnapshotConfig): Promise<void> { return persistSnapshot(this, this.deps, this.callbacks, b, cap, p, bal, cfg); }
+  emitTick(b: string, p: number, pnl?: number): void { TelemetryEmitters.emitTick(this, b, p, pnl); }
+  emitFill(b: string, o: string, s: string, p: number, q: number, pnl = 0): void { TelemetryEmitters.emitFill(this, b, o, s, p, q, pnl); }
+  emitSignal(b: string, s: string, ind: Record<string, unknown>): void { TelemetryEmitters.emitSignal(this, b, s, ind); }
+  emitError(b: string, e: string, ctx: string): void { TelemetryEmitters.emitError(this, b, e, ctx); }
+  emitHalt(b: string, r: string): void { TelemetryEmitters.emitHalt(this, b, r); } emitResume(b: string): void { TelemetryEmitters.emitResume(this, b); }
+  emitStart(b: string, c: Record<string, unknown>): void { TelemetryEmitters.emitStart(this, b, c); }
+  emitStop(b: string, r?: string): void { TelemetryEmitters.emitStop(this, b, r); } emitPause(b: string): void { TelemetryEmitters.emitPause(this, b); }
+  emitRebalance(b: string, o: number, n: number): void { TelemetryEmitters.emitRebalance(this, b, o, n); }
+  emitExchangeHealth(b: string, h: Parameters<typeof TelemetryEmitters.emitExchangeHealth>[2]): void { TelemetryEmitters.emitExchangeHealth(this, b, h); }
+  emitRateLimitUsage(b: string, ex: string, u: Parameters<typeof TelemetryEmitters.emitRateLimitUsage>[3]): void { TelemetryEmitters.emitRateLimitUsage(this, b, ex, u); }
 }

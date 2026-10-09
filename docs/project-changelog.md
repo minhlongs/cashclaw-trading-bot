@@ -2,6 +2,26 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v44 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
+- **Pillar 1: Almgren (2012) Optimal Execution with Mean-Reverting Price Drift Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Robert Almgren (2012) *"Optimal Trading with Stochastic Liquidity and Volatility / Price Drift"*.
+  - Models optimal liquidation trajectory when the underlying asset experiences Ornstein-Uhlenbeck (OU) mean-reverting alpha/drift:
+    $$dS_t = (\alpha_t - \gamma v_t) dt + \sigma dW_t, \quad d\alpha_t = -\kappa \alpha_t dt + \sigma_\alpha dZ_t$$
+  - Dynamically calculates drift trajectory $\alpha(t) = \alpha_0 e^{-\kappa t}$, base urgency $\zeta = \sqrt{\frac{\lambda \sigma^2}{\eta}}$, opportunistic selling speed adjustment, step execution impact, and VWAP pricing. Implemented in `src/tree/quantlib/execution/almgren-drift-types.ts` (29 LOC) and `src/tree/quantlib/execution/almgren-drift-engine.ts` (31 LOC).
+- **Pillar 2: Huang-Stoll (1994) Tick-by-Tick Order Flow Imbalance & Trade Spread Component Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Roger D. Huang and Hans R. Stoll (1994) *"Major World Equity Markets: Expectations and the Spread"*.
+  - Decomposes effective spread into adverse selection ($\alpha$), inventory holding risk ($\beta$), and order processing costs ($\gamma = 1 - \alpha - \beta$) from tick-by-tick serial price revisions and trade direction autocorrelation $\rho = \text{Corr}(q_t, q_{t-1})$.
+  - Implemented in `src/tree/quantlib/microstructure/huang-stoll-orderflow-types.ts` (14 LOC) and `src/tree/quantlib/microstructure/huang-stoll-orderflow-engine.ts` (30 LOC).
+- **Pillar 3: Structural Deep Modularization (< 40 LOC per file)**:
+  - Modularized `src/tree/telemetry/writer.ts` (121 LOC $\rightarrow$ 38 LOC facade) via `writer-flush.ts` (20 LOC), `writer-emitters.ts` (18 LOC), and `writer-snapshot.ts` (19 LOC).
+  - Modularized `src/forest/alpha/multiple-testing/counters.ts` (122 LOC $\rightarrow$ 30 LOC facade) via `counters-helpers.ts` (31 LOC) and `counters-increment.ts` (13 LOC).
+  - Maintained 100% backward compatibility and exact public interfaces for all callers, telemetry listeners, and research tests.
+- **Verification & Quality Gate**:
+  - `test/quant/almgren-drift-execution.test.ts` (2 tests) verifying negative drift liquidation acceleration, zero inventory handling, and terminal execution constraints.
+  - `test/quant/huang-stoll-orderflow.test.ts` (2 tests) verifying tick-by-tick 3-way spread decomposition, component ratio normalization, and small sample edge cases.
+  - `test/quant/v44-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Almgren drift execution, Huang-Stoll spread decomposition, modular multiple testing counters, and telemetry writer dispatch.
+  - 5,753/5,753 tests passing across 572 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 38$ LOC.
+
 ### Unified v43 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
 - **Pillar 1: Gatheral-Schied (2013) Resilient Power-Law Optimal Execution Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Jim Gatheral and Alexander Schied (2013) *"Dynamical Models of Market Impact and Efficient Order Execution"*.
