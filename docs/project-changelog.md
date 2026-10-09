@@ -2,6 +2,24 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v14 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Gatheral-Schied Transient Market Impact & Alfonsi LOB Depth Resilience** (`src/tree/quantlib/microstructure/`):
+  - Implements Gatheral-Schied non-linear transient impact decay:
+    $$I(t) = \eta \cdot v(t)^\alpha \cdot e^{-\gamma \tau}$$
+    calculating instantaneous, permanent, and decayed temporary price impact across scheduled child order execution slices.
+  - Implements Alfonsi LOB depth shape resilience model: $\frac{d D(t)}{dt} = -\kappa (D(t) - D_\infty)$, computing book recovery deficits and optimal resting time between child orders to prevent adverse slippage.
+- **Pillar 2: Hawkes Self-Exciting Jump Toxicity & Ledoit-Wolf Shrinkage Covariance** (`src/tree/quantlib/microstructure/`, `src/tree/quantlib/portfolio/`):
+  - High-frequency Hawkes bivariate self-exciting jump process engine ($\lambda(t) = \mu + \sum \alpha e^{-\beta(t - t_i)}$) with volume-weighted clustering metrics and branching ratio monitoring ($\eta = \alpha / \beta$) to flag flash cascading liquidity toxicity.
+  - Ledoit-Wolf optimal shrinkage covariance matrix regularizer ($\Sigma^* = (1 - \delta^*) S + \delta^* F$), ensuring strictly positive-definite and well-conditioned covariance estimation for multi-asset risk parity and portfolio models.
+- **Pillar 3: Structural Fat-File Modularization & Decoupling** (`src/forest/alpha/gate/`, `src/forest/alpha/research-agent/`, `src/forest/alpha/observability-eval/`):
+  - Modularized `robustness-checks.ts` (185 LOC $\rightarrow$ 71 LOC) by extracting `robustness-checks-invariance.ts` (122 LOC) for checks 12-15.
+  - Modularized `agent.ts` (181 LOC $\rightarrow$ 139 LOC) by extracting `agent-validation-matcher.ts` (55 LOC) for token matching and falsification filters.
+  - Modularized `telemetry-diagnostics.ts` (175 LOC $\rightarrow$ 144 LOC) by extracting `telemetry-diagnostics-metrics.ts` (44 LOC) for percentile math and alarm builders.
+  - All refactored modules strictly $\le 144$ LOC with 100% backward-compatible public exports and zero test regressions.
+- **Verification & Quality Gate**:
+  - `test/quant/v14-apex-suite-simulation.test.ts` validating complete cross-domain execution across all 3 pillars.
+  - 5,484/5,484 tests passing across 483 test files (100% green), 0 `:any`, 0 ESLint warnings, `npx tsc --noEmit` clean, Next.js production build clean.
+
 ### Unified v13 Quantitative Architecture Triad & Fat-File Modularization — 2026-10-09
 - **Pillar 1: Cont-Stoikov LOB Queue Dynamics & Micro-Price Markovian Engine** (`src/tree/quantlib/microstructure/`):
   - Implements Rama Cont & Sasha Stoikov (2010) continuous-time Markovian queue depletion model:
