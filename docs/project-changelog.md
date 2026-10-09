@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v34 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Kyle-Roşu (2019) High-Frequency Informed Trading & Liquidity Execution Engine** (`src/tree/quantlib/execution/`):
+  - Continuous-time dynamic informed trading where an informed investor continuously exploits private information about an asset's fundamental value $v$ against noise trader variance $\sigma_u^2$:
+    $$P_t = P_0 + \lambda \sum \Delta x_i, \quad \lambda = \frac{\sigma_v}{\sigma_u}$$
+  - Trading rate scales with price discrepancy $\beta (v - P_t)$, progressively revealing private information to the market, computing terminal inventory, VWAP, step impact costs, and price discovery efficiency. Implemented in `src/tree/quantlib/execution/kyle-rosu-types.ts` (31 LOC) and `src/tree/quantlib/execution/kyle-rosu-engine.ts` (26 LOC).
+- **Pillar 2: Foucault-Roşu (2019) Fast-Trader Liquidity & High-Frequency Adverse Selection Microstructure Engine** (`src/tree/quantlib/microstructure/`):
+  - Formulates limit order market equilibrium populated by fast and slow traders, where fast traders pick off stale quotes at arrival rate $\lambda_{\text{fast}}$ before slow market makers cancel at rate $\mu_{\text{cancel}}$:
+    $$P_{\text{sniped}} = \frac{\lambda_{\text{fast}}}{\lambda_{\text{fast}} + \mu_{\text{cancel}}}$$
+  - Computes equilibrium bid-ask spread with adverse selection markup, fast trader economic rent (bps), and effective order book depth compression. Implemented in `src/tree/quantlib/microstructure/foucault-rosu-types.ts` (16 LOC) and `src/tree/quantlib/microstructure/foucault-rosu-engine.ts` (17 LOC).
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/tree/exchange/queue/queued-adapter.ts` (130 LOC $\rightarrow$ 41 LOC facade) by extracting market data calls and cost measurement to `queued-adapter-market.ts` (22 LOC).
+  - Modularized `src/tree/exchange/provider/circuit-breaker-state.ts` (130 LOC $\rightarrow$ 41 LOC class) by extracting state transitions (`applyTrip`, `applySuccess`, `applyFailure`, `applyUpdate`) into pure transition module `circuit-breaker-transitions.ts` (46 LOC).
+  - Preserved 100% backward compatibility and exact contract parity.
+- **Verification & Quality Gate**:
+  - `test/quant/kyle-rosu-execution.test.ts` (3 tests) covering inventory liquidation, fundamental drift, and zero-inventory boundary.
+  - `test/quant/foucault-rosu-microstructure.test.ts` (3 tests) covering fast arrival rate spread elevation, tick size lower bound, and adverse selection share.
+  - `test/quant/v34-apex-suite-simulation.test.ts` cross-domain E2E integration test combining Kyle-Roşu, Foucault-Roşu, queued adapter, and circuit breaker.
+  - 5,687/5,687 tests passing across 543 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 46$ LOC.
+
 ### Unified v33 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Almgren-Lorenz (2007) Adaptive Arrival Price Execution Engine** (`src/tree/quantlib/execution/`):
   - State-dependent adaptive optimal execution where trading speed reacts dynamically to observed price drift and volatility shocks:

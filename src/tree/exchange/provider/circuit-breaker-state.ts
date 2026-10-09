@@ -1,129 +1,41 @@
 import type { FailureKind } from './circuit-breaker-kinds';
-import {
-  createEmptyKindCounters,
-  type CircuitState,
-  type KindCounters,
-  type StateTransitionResult,
-} from './circuit-breaker-types';
+import { createEmptyKindCounters, type CircuitState, type KindCounters, type StateTransitionResult } from './circuit-breaker-types';
+import { applyTrip, applySuccess, applyFailure, applyUpdate, type CircuitStateMutable } from './circuit-breaker-transitions';
 
 export class CircuitStateMachine {
-  private state: CircuitState = 'closed';
-  private failureCount = 0;
-  private currentKind: FailureKind = 'unknown';
-  private kindCounters: KindCounters = createEmptyKindCounters();
-  private degradedKind: FailureKind | null = null;
-  private trippedAt: number | null = null;
-  private halfOpenAt: number | null = null;
+  private readonly ctx: CircuitStateMutable;
 
-  constructor(
-    private readonly cooldownMs: number,
-    private readonly halfOpenAfterMs: number,
-  ) {}
-
-  getState(): CircuitState { return this.state; }
-  getFailureCount(): number { return this.failureCount; }
-  getTrippedAt(): number | null { return this.trippedAt; }
-  getHalfOpenAt(): number | null { return this.halfOpenAt; }
-  getCurrentKind(): FailureKind { return this.currentKind; }
-  getDegradedKind(): FailureKind | null { return this.degradedKind; }
-  getKindCounters(): Readonly<KindCounters> { return { ...this.kindCounters }; }
-
-  getRemainingCooldownMs(now = Date.now()): number {
-    if (!this.halfOpenAt) return 0;
-    return Math.max(0, this.halfOpenAt - now);
+  constructor(cooldownMs: number, halfOpenAfterMs: number) {
+    this.ctx = {
+      state: 'closed', failureCount: 0, currentKind: 'unknown',
+      kindCounters: createEmptyKindCounters(), degradedKind: null,
+      trippedAt: null, halfOpenAt: null, cooldownMs, halfOpenAfterMs,
+    };
   }
 
+  getState(): CircuitState { return this.ctx.state; }
+  getFailureCount(): number { return this.ctx.failureCount; }
+  getTrippedAt(): number | null { return this.ctx.trippedAt; }
+  getHalfOpenAt(): number | null { return this.ctx.halfOpenAt; }
+  getCurrentKind(): FailureKind { return this.ctx.currentKind; }
+  getDegradedKind(): FailureKind | null { return this.ctx.degradedKind; }
+  getKindCounters(): Readonly<KindCounters> { return { ...this.ctx.kindCounters }; }
+  getRemainingCooldownMs(now = Date.now()): number { return this.ctx.halfOpenAt ? Math.max(0, this.ctx.halfOpenAt - now) : 0; }
+
   reset(): void {
-    this.failureCount = 0;
-    this.trippedAt = null;
-    this.halfOpenAt = null;
-    this.currentKind = 'unknown';
-    this.kindCounters = createEmptyKindCounters();
-    this.degradedKind = null;
-    this.state = 'closed';
+    this.ctx.failureCount = 0; this.ctx.trippedAt = null; this.ctx.halfOpenAt = null;
+    this.ctx.currentKind = 'unknown'; this.ctx.kindCounters = createEmptyKindCounters();
+    this.ctx.degradedKind = null; this.ctx.state = 'closed';
   }
 
   hydrate(rowState: CircuitState, failureCount: number, cooldownUntil: number | null, now = Date.now()): void {
-    this.state = rowState;
-    this.failureCount = failureCount;
-    this.halfOpenAt = cooldownUntil;
-    if (cooldownUntil && cooldownUntil <= now) {
-      this.state = 'half_open';
-      this.halfOpenAt = null;
-    }
+    this.ctx.state = rowState; this.ctx.failureCount = failureCount; this.ctx.halfOpenAt = cooldownUntil;
+    if (cooldownUntil && cooldownUntil <= now) { this.ctx.state = 'half_open'; this.ctx.halfOpenAt = null; }
     this.update(now);
   }
 
-  trip(kind?: FailureKind, now = Date.now()): StateTransitionResult | null {
-    const prev = this.state;
-    this.trippedAt = now;
-    this.halfOpenAt = now + this.cooldownMs + this.halfOpenAfterMs;
-    this.state = 'open';
-    this.kindCounters = createEmptyKindCounters();
-    this.degradedKind = null;
-    if (prev !== 'open') {
-      return { from: prev, to: 'open', timestamp: now, kind };
-    }
-    return null;
-  }
-
-  recordSuccess(now = Date.now()): StateTransitionResult | null {
-    this.failureCount = 0;
-    this.trippedAt = null;
-    this.halfOpenAt = null;
-    this.currentKind = 'unknown';
-    this.kindCounters = createEmptyKindCounters();
-    this.degradedKind = null;
-
-    if (this.state === 'half_open' || this.state === 'degraded') {
-      const prev = this.state;
-      this.state = 'closed';
-      return { from: prev, to: 'closed', timestamp: now, kind: undefined };
-    }
-    return null;
-  }
-
-  recordFailure(kind: FailureKind, threshold: number, now = Date.now()): StateTransitionResult | null {
-    this.kindCounters[kind] += 1;
-    this.failureCount += 1;
-    this.currentKind = kind;
-
-    if (this.state === 'half_open') {
-      return this.trip(kind, now);
-    }
-
-    if (this.state === 'degraded') {
-      if (kind === this.degradedKind) {
-        return this.trip(kind, now);
-      }
-      this.degradedKind = kind;
-      return null;
-    }
-
-    if (this.kindCounters[kind] >= threshold) {
-      const prev = this.state;
-      this.state = 'degraded';
-      this.kindCounters = createEmptyKindCounters();
-      this.degradedKind = kind;
-      return { from: prev, to: 'degraded', timestamp: now, kind };
-    }
-
-    return null;
-  }
-
-  update(now = Date.now()): StateTransitionResult | null {
-    if (this.state !== 'open' || !this.halfOpenAt) return null;
-
-    const until = this.halfOpenAt - now;
-    if (until <= 0) {
-      this.halfOpenAt = null;
-      this.currentKind = 'unknown';
-      this.kindCounters = createEmptyKindCounters();
-      this.degradedKind = null;
-      const prev = this.state;
-      this.state = 'half_open';
-      return { from: prev, to: 'half_open', timestamp: now, kind: undefined };
-    }
-    return null;
-  }
+  trip(kind?: FailureKind, now = Date.now()): StateTransitionResult | null { return applyTrip(this.ctx, kind, now); }
+  recordSuccess(now = Date.now()): StateTransitionResult | null { return applySuccess(this.ctx, now); }
+  recordFailure(kind: FailureKind, threshold: number, now = Date.now()): StateTransitionResult | null { return applyFailure(this.ctx, kind, threshold, now); }
+  update(now = Date.now()): StateTransitionResult | null { return applyUpdate(this.ctx, now); }
 }
