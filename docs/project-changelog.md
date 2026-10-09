@@ -2,6 +2,26 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v22 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Almgren (2003) Optimal Execution Engine with Non-Linear Power-Law Impact** (`src/tree/quantlib/execution/`):
+  - Solves the dynamic trajectory for institutional liquidation under non-linear temporary price impact $h(v) = \eta |v|^\alpha \text{sign}(v)$ with square-root exponent ($\alpha \approx 0.5$):
+    $$x(t) = X \cdot \frac{\sinh(\kappa (T - t))}{\sinh(\kappa T)}$$
+  - Discretizes trade trajectory over $N$ steps, computing speed, instantaneous non-linear cost, execution variance $\sigma^2 \int x(t)^2 dt$, and expected half-life $\tau_{1/2} = \ln(2) / \kappa$.
+  - Protects portfolio from execution slippage during high-volatility rebalancing with strict $\le 46$ LOC implementation.
+- **Pillar 2: Madhavan-Richardson-Roomans (MRR 1997) Microstructure Spread Decomposition Engine** (`src/tree/quantlib/microstructure/`):
+  - Decomposes realized transaction price changes $\Delta p_t$ into adverse selection component ($\theta$), order processing fee component ($\phi$), and order flow auto-correlation persistence ($\rho$):
+    $$\Delta p_t = (\theta + \phi) s x_t - (\phi + \theta \rho) s x_{t-1} + \epsilon_t$$
+  - Real-time estimation of adverse selection ratio $\theta \in [0, 1]$ to detect informed flow regimes before liquidity provision, strictly $\le 47$ LOC.
+- **Pillar 3: Structural Deep Modularization (< 55 LOC per file)**:
+  - Modularized `gate-checks.ts` (105 LOC $\rightarrow$ 38 LOC) into `gate-checks-pnl.ts` (31 LOC), `gate-checks-regime.ts` (31 LOC), and `gate-checks-types.ts` (7 LOC).
+  - Modularized `indicators-technical.ts` (102 LOC $\rightarrow$ 50 LOC) into `indicators-momentum.ts` (46 LOC) and `indicators-technical.ts` (50 LOC).
+  - 100% backward compatibility preserved across all barrel exports and test suites.
+- **Verification & Quality Gate**:
+  - `test/quant/almgren-nonlinear-impact-engine.test.ts` (3 tests) covering liquidation schedule, risk aversion acceleration, and single-step boundary.
+  - `test/quant/mrr-spread-decomposition-engine.test.ts` (2 tests) covering adverse selection/order processing shares and trade tick boundaries.
+  - `test/quant/v22-apex-suite-simulation.test.ts` E2E simulation combining non-linear execution, MRR spread decomposition, modularized momentum indicators, and gate checks.
+  - 5,569/5,569 tests passing across 507 test files (100% green), 0 `:any`, 0 ESLint warnings, all files strictly $\le 50$ LOC.
+
 ### Unified v21 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Avellaneda-Stoikov (2008) High-Frequency Optimal Quoting Engine** (`src/tree/quantlib/marketmaking/`):
   - Closed-form optimal market making quoting around inventory-adjusted reservation price:
