@@ -2,6 +2,28 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v24 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Bertsimas-Lo (1998) Dynamic Optimal Execution Engine** (`src/tree/quantlib/execution/`):
+  - Formulates optimal liquidation under linear temporary price impact ($\eta$) and permanent price impact ($\gamma$) minimizing total expected execution cost plus risk penalty:
+    $$S_{k+1}^* = S \cdot \frac{\sinh(\kappa (T - (k + 1)))}{\sinh(\kappa T)}$$
+    where $\kappa = \sqrt{\frac{\lambda \sigma^2}{\eta}}$, with uniform TWAP liquidation fallback as $\kappa \to 0$.
+  - Computes dynamic trajectory $\theta_k^* = S_k^* - S_{k+1}^*$, step execution cost, expected cost, immediate liquidation benchmark, TWAP benchmark, impact savings, and inventory variance. Strictly $\le 35$ LOC.
+- **Pillar 2: Huang-Stoll (1997) 3-Way Spread Econometric Decomposition Engine** (`src/tree/quantlib/microstructure/`):
+  - Econometric structural decomposition of effective bid-ask spread $S = 2s$ into three non-negative shares summing to 1.0:
+    - Order processing cost share $\alpha$
+    - Inventory holding cost share $\beta$
+    - Adverse selection / private information cost share $\gamma = 1 - \alpha - \beta$
+  - Modeled via trade continuation probability $\pi = P(Q_t = Q_{t-1})$, serial correlation $\rho = 2\pi - 1$, and quote midpoint revision dynamics $\Delta M_t = (\gamma + \beta) s Q_{t-1} - \beta s (2\pi - 1) Q_{t-2} + \epsilon_t$. Strictly $\le 35$ LOC.
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/tree/quantlib/strategies.ts` (134 LOC $\rightarrow$ 3 LOC facade) into `strategies-grid.ts` (32 LOC) and `strategies-mean-reversion.ts` (32 LOC).
+  - Modularized `src/forest/alpha/pipeline/pipeline-utils.ts` (130 LOC $\rightarrow$ 11 LOC facade) into `pipeline-utils-reporting.ts` (31 LOC), `pipeline-utils-trades.ts` (44 LOC), and `pipeline-utils-equity.ts` (21 LOC).
+  - Preserved 100% backward compatibility across all consumers with zero breaking changes.
+- **Verification & Quality Gate**:
+  - `test/quant/bertsimas-lo-execution-engine.test.ts` (4 tests) covering share conservation invariant, impact savings, risk aversion trajectory shifts, and boundary conditions.
+  - `test/quant/huang-stoll-spread-engine.test.ts` (4 tests) covering short tick safeguards, strict $\alpha + \beta + \gamma = 1.0$ share summation invariant, adverse selection recovery, and spread overrides.
+  - `test/quant/v24-apex-suite-simulation.test.ts` cross-domain E2E simulation test.
+  - 5,584/5,584 tests passing across 513 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 50$ LOC.
+
 ### Unified v23 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Bouchaud-Mézard-Potters (2004) Propagator Non-Parametric Transient Price Impact Engine** (`src/tree/quantlib/impact/`):
   - Models price impact as a superposition of historical order flow using bare propagator kernel:
