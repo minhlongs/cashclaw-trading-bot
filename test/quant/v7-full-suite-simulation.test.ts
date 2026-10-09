@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { AvellanedaStoikovEngine } from '@/quant/avellaneda-stoikov';
 import { BasisCalculator } from '@/arbitrage/basis-calculator';
 import { CrossDomainExecutor } from '@/execution/cross-domain-executor';
@@ -48,6 +48,14 @@ describe('V7 Multi-Pillar Quantitative Simulation Suite', () => {
     expect(opp?.netProfit).toBeGreaterThan(0);
 
     const executor = new CrossDomainExecutor();
+    type TestableExecutor = {
+      mockCexExecution: (opp: unknown) => Promise<{ success: boolean; orderId?: string }>;
+      mockDexExecution: (opp: unknown) => Promise<{ success: boolean; txHash?: string }>;
+    };
+    const testable = executor as unknown as TestableExecutor;
+    vi.spyOn(testable, 'mockCexExecution').mockResolvedValue({ success: true, orderId: 'mock-cex-id' });
+    vi.spyOn(testable, 'mockDexExecution').mockResolvedValue({ success: true, txHash: '0xmockhash' });
+
     const result = await executor.execute(opp!);
     expect(result.success).toBe(true);
     expect(result.reason).toBeUndefined();
