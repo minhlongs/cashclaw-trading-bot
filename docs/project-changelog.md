@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v37 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Alfonsi-Fruth-Schied (2010) Optimal Execution with Non-Linear Resilient Limit Order Book Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Aurélien Alfonsi, Antje Fruth, and Alexander Schied (2010) *"Optimal Execution Strategies in the Presence of a Limit Order Book"* (Mathematical Finance).
+  - Formulates optimal liquidation strategies in a resilient LOB where book depth shape is non-linear ($I_{\text{inst}} = \eta x^\alpha$) and accumulated impact relaxes exponentially with resilience speed $\kappa$:
+    $$I_{k} = I_{k-1} e^{-\kappa \Delta t} + \eta x_k^\alpha, \quad P_k = P_0 - I_k$$
+  - Computes execution trajectories, resilience-adjusted impact recovery in basis points, VWAP execution price, and terminal inventory shortfall. Implemented in `src/tree/quantlib/execution/alfonsi-fruth-types.ts` (29 LOC) and `src/tree/quantlib/execution/alfonsi-fruth-engine.ts` (30 LOC).
+- **Pillar 2: Parlour (1998) Dynamic Limit Order Book Equilibrium & Queue Priority Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Christine A. Parlour (1998) *"Dynamic Limit Order Markets"* (Review of Financial Studies).
+  - Models the strategic trade-off between limit and market orders taking into account discrete queue priority depth $Q$, cancellation probability, arrival intensity $\lambda$, and execution delay:
+    $$E[W] = \frac{Q + 1}{\lambda + \delta}, \quad P_{\text{fill}} = \left(1 - e^{-(\lambda + \delta) T}\right) \frac{\lambda}{\lambda + \delta}$$
+  - Computes queue fill probability, expected queue waiting time, cancellation risk, market order incentive premium in bps, and optimal order type selection ('LIMIT' vs 'MARKET'). Implemented in `src/tree/quantlib/microstructure/parlour-orderbook-types.ts` (16 LOC) and `src/tree/quantlib/microstructure/parlour-orderbook-engine.ts` (17 LOC).
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/forest/alpha/persistence/json-adapter.ts` (128 LOC $\rightarrow$ 46 LOC facade) by extracting file-system primitives into `json-adapter-fs.ts` (19 LOC) and experiment serialization/listing into `json-adapter-experiments.ts` (32 LOC).
+  - Modularized `src/forest/alpha/cross-sectional-eval/attribution.ts` (128 LOC $\rightarrow$ 4 LOC facade) by extracting precise and proportional long/short attribution into `attribution-long-short.ts` (41 LOC) and cost decomposition into `attribution-costs.ts` (26 LOC).
+  - Preserved 100% backward compatibility and exact contract parity.
+- **Verification & Quality Gate**:
+  - `test/quant/alfonsi-fruth-execution.test.ts` (4 tests) covering full inventory liquidation, resilience recovery speed scaling, non-linear shape exponent sensitivity, and zero-inventory boundary.
+  - `test/quant/parlour-orderbook-equilibrium.test.ts` (4 tests) covering queue fill probability and wait times, market order routing under deep queues, limit order routing under high arrival intensity, and spread sensitivity.
+  - `test/quant/v37-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Alfonsi-Fruth execution, Parlour order routing, attribution decomposition, and JSON persistence adapter.
+  - 5,712/5,712 tests passing across 552 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 46$ LOC.
+
 ### Unified v36 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Gatheral-Schied-Slynko (2012) Transient Market Impact & Resilient Execution Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Jim Gatheral, Alexander Schied, and Alla Slynko (2012) *"Transient Market Impact and Convexity/No-Arbitrage"* & *"Exponential and Power-Law Decay Functions"*.
