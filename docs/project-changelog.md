@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v21 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Avellaneda-Stoikov (2008) High-Frequency Optimal Quoting Engine** (`src/tree/quantlib/marketmaking/`):
+  - Closed-form optimal market making quoting around inventory-adjusted reservation price:
+    $$r(s, q, t) = s - q \gamma \sigma^2 (T - t)$$
+  - Calculates non-linear order arrival Poisson intensity half-spread $\delta = \frac{1}{\gamma} \ln(1 + \frac{\gamma}{\kappa})$ with zero-risk aversion Taylor expansion fallback.
+  - Dynamically skews quotes to shed inventory when long ($q > 0$) and acquire inventory when short ($q < 0$).
+- **Pillar 2: Easley-Kiefer-O'Hara-Paperman (EKOP 1996) Probability of Informed Trading (PIN) Engine** (`src/tree/quantlib/microstructure/`):
+  - Microstructure information asymmetry gate estimating arrival rates of informed traders ($\mu$) and uninformed noise traders ($\epsilon$).
+  - Probability of Informed Trading (PIN):
+    $$\text{PIN} = \frac{\alpha \mu}{\alpha \mu + 2 \epsilon} \in [0, 1]$$
+  - Computes trade bucket order flow imbalance ratio to flag adverse selection regimes before market making execution.
+- **Pillar 3: Structural Deep Modularization (< 65 LOC per file)**:
+  - Modularized `labeling.ts` (129 LOC $\rightarrow$ 17 LOC) into `labeling-types.ts` (17 LOC) and `labeling-barrier-evaluator.ts` (55 LOC).
+  - Modularized `financial-checks.ts` (136 LOC $\rightarrow$ 58 LOC) into `financial-checks-core.ts` (61 LOC).
+  - 100% backward compatibility preserved across all barrel exports and test suites.
+- **Verification & Quality Gate**:
+  - `test/quant/avellaneda-stoikov-engine.test.ts` (5 tests) covering symmetric quoting, inventory skew, spread variation, and edge boundaries.
+  - `test/quant/ekop-pin-engine.test.ts` (4 tests) covering trade bucket toxicity, balanced flow, informed flow spikes, and input validation.
+  - `test/quant/v21-apex-suite-simulation.test.ts` E2E simulation combining EKOP PIN toxicity filtering, Avellaneda-Stoikov quoting, modularized triple barrier labeling, and financial gate checks.
+  - 5,563/5,563 tests passing across 504 test files (100% green), 0 `:any`, 0 ESLint warnings, all new files strictly $\le 61$ LOC.
+
 ### Unified v20 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Garman-Klass (1980) & Parkinson (1980) Extreme-Value Volatility Engine** (`src/tree/quantlib/volatility/`):
   - Implemented Parkinson (1980) high-low range variance estimator exploiting continuous diffusion extrema with $\sim 5\times$ variance efficiency:
