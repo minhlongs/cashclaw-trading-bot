@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v30 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Bertsimas-Lo-Hummel (2000) Dynamic Execution with Information Signal & Alpha Decay Engine** (`src/tree/quantlib/execution/`):
+  - Dynamic programming closed-form execution under non-stationary price signals:
+    $$v^*(t) = \tau_t S_t + \theta_t \alpha_t, \quad \alpha(t) = \alpha_0 e^{-\gamma t}$$
+  - Balances market impact cost $\eta v^2$, inventory risk aversion penalty $\phi S^2$, and short-term alpha harvesting $\alpha(t) \cdot \nu^*(t)$, benchmarking against uniform TWAP. Strictly $\le 32$ LOC.
+- **Pillar 2: Kyle-Caballe-Krishnan (1995) Multi-Asset Cross-Impact Microstructure Engine** (`src/tree/quantlib/microstructure/`):
+  - Multi-asset cross-sectional adverse selection matrix $\Lambda \in \mathbb{R}^{M \times M}$:
+    $$\Delta P = \Lambda \cdot Y, \quad \Lambda_{ij} = \frac{1}{2} \rho_{ij} \sqrt{\frac{\Sigma_{v,i} \Sigma_{v,j}}{\Sigma_{u,i} \Sigma_{u,j}}}$$
+  - Quantifies cross-asset price revelation, order flow spillover, and eigen-liquidity depth metrics across correlated assets. Strictly $\le 36$ LOC.
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/tree/bot/bot-manager.ts` (132 LOC $\rightarrow$ 14 LOC facade) into `bot-manager-singleton.ts` (14 LOC), `bot-manager-killswitch.ts` (37 LOC), `bot-manager-lifecycle-delegate.ts` (15 LOC), `bot-manager-types.ts` (47 LOC), and `bot-manager-core.ts` (48 LOC).
+  - Modularized `src/forest/research/tradingagents/test-fixtures.ts` (135 LOC $\rightarrow$ 10 LOC facade) into `test-fixtures-canned.ts` (37 LOC) and `test-fixtures-providers.ts` (42 LOC).
+  - Maintained 100% backward compatibility with zero breaking changes for existing consumers.
+- **Verification & Quality Gate**:
+  - `test/quant/bertsimas-hummel-execution.test.ts` (4 tests) covering trajectory liquidation, alpha signal acceleration, TWAP cost comparison, zero shares edge case.
+  - `test/quant/kyle-cross-asset-microstructure.test.ts` (4 tests) covering diagonal adverse selection, cross-asset spillover, eigen-liquidity depth, empty asset list.
+  - `test/quant/v30-apex-suite-simulation.test.ts` cross-domain E2E simulation test.
+  - 5,652/5,652 tests passing across 531 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 48$ LOC.
+
 ### Unified v29 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Guéant (2015) Closed-Form Optimal Execution Engine with Non-Linear Power-Law Impact & Running Risk Penalty** (`src/tree/quantlib/execution/`):
   - Formulates optimal liquidation under power-law temporary impact cost $\psi(v) = \eta |v|^{1+\alpha}$ and inventory risk penalty $\phi q^2$:

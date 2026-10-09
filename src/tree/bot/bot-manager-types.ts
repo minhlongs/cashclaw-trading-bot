@@ -1,12 +1,11 @@
-// Bot Manager — types and interfaces
-// Extracted from bot-manager.ts for size compliance.
-
 import type { BotConfig, BotStatus } from './types';
 import type { ExchangeConfig } from '../exchange/types';
-import type { TelemetryWriter } from '../telemetry';
+import type { TelemetryWriter, TradeEventType } from '../telemetry';
 import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import type { BotInstance } from './bot-instance';
 export type { ExchangeOrchestrator };
+
+export type BotEmitTelemetryFn = (type: TradeEventType, details: Record<string, unknown>) => void;
 
 export interface BotManagerDependencies {
   onLog?: (msg: string) => void;
