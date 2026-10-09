@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v45 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
+- **Pillar 1: Almgren, Thum, Hauptmann & Li (2005) Non-Linear Market Impact Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Robert Almgren, Chee Thum, Emmanuel Hauptmann, and Hong Li (2005) *"Equity Market Impact"*, *The Journal of Portfolio Management*.
+  - Characterizes institutional trade impact by separating permanent linear impact and non-linear power-law temporary impact ($\beta \approx 0.60$):
+    $$I_{\text{perm}} = \gamma \cdot \sigma \cdot \left(\frac{X}{V}\right) \cdot P_0, \quad h(\nu_k) = \eta \cdot \sigma \cdot (\nu_k)^\beta \cdot P_0$$
+  - Solves for optimal discrete execution trajectory, cumulative execution shortfall, step cost, and volume-weighted average price (VWAP). Implemented in `src/tree/quantlib/execution/almgren-thum-types.ts` (29 LOC) and `src/tree/quantlib/execution/almgren-thum-engine.ts` (28 LOC).
+- **Pillar 2: Madhavan, Richardson & Roomans (1997) MRR Spread Decomposition Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Ananth Madhavan, Matthew Richardson, and Mark Roomans (1997) *"Why Do Security Prices Change? A Transaction-Level Analysis of NYSE Stocks"*, *Review of Financial Studies*.
+  - Decomposes the effective bid-ask spread into order-processing friction ($\phi$) and asymmetric information / adverse selection ($\theta$) under autocorrelated trade flow $\rho$:
+    $$\Delta P_t = (\theta + \phi) q_t - (\phi + \rho \theta) q_{t-1} + u_t, \quad S = 2(\theta + \phi)$$
+  - Implemented in `src/tree/quantlib/microstructure/mrr-spread-types.ts` (12 LOC) and `src/tree/quantlib/microstructure/mrr-spread-engine.ts` (25 LOC).
+- **Pillar 3: Structural Deep Modularization (< 38 LOC per file)**:
+  - Modularized `src/tree/alpha/relative-value/hedge-ratio.ts` (118 LOC $\rightarrow$ 33 LOC facade) via `hedge-ratio-types.ts` (22 LOC) and `hedge-ratio-helpers.ts` (22 LOC).
+  - Modularized `src/forest/alpha/gate/promotion-gate.ts` (118 LOC $\rightarrow$ 16 LOC facade) via `promotion-gate-checks.ts` (24 LOC).
+  - Preserved 100% backward compatibility, exact public interfaces, zero `:any` types, and identical validation rules.
+- **Verification & Quality Gate**:
+  - `test/quant/almgren-thum-execution.test.ts` (2 tests) verifying sublinear temporary and linear permanent execution impact, shortfall, and inventory edge cases.
+  - `test/quant/mrr-spread.test.ts` (3 tests) verifying bid-ask spread decomposition into adverse selection and order processing, tick inference, and edge cases.
+  - `test/quant/v45-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Almgren-Thum execution, MRR spread decomposition, modular hedge ratio, and promotion gate.
+  - 5,759/5,759 tests passing across 575 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 38$ LOC.
+
 ### Unified v44 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
 - **Pillar 1: Almgren (2012) Optimal Execution with Mean-Reverting Price Drift Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Robert Almgren (2012) *"Optimal Trading with Stochastic Liquidity and Volatility / Price Drift"*.
