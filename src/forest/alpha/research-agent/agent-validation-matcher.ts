@@ -8,9 +8,9 @@ export class AgentValidationError extends Error {
   }
 }
 
-const FALSIFIED_ENTRIES = SEED_FALSIFIED.map((entry) => ({
-  id: entry.id.toLowerCase(),
-  features: entry.featureSet.map((f) => f.toLowerCase()),
+const FALSIFIED = SEED_FALSIFIED.map((e) => ({
+  id: e.id.toLowerCase(),
+  features: e.featureSet.map((f) => f.toLowerCase()),
 }));
 
 export function extractItems(parsed: unknown, key: string): unknown {
@@ -30,26 +30,20 @@ export function matchesTokens(id: string, text: string): boolean {
 export function matchFalsified(proposal: HypothesisProposal, extraExcluded: Set<string>): string | null {
   const idLower = proposal.id.toLowerCase();
   if (extraExcluded.has(idLower)) return idLower;
-
-  const textToScan = `${proposal.id} ${proposal.title} ${proposal.rationale}`.toLowerCase();
-
-  for (const entry of FALSIFIED_ENTRIES) {
+  const text = `${proposal.id} ${proposal.title} ${proposal.rationale}`.toLowerCase();
+  for (const entry of FALSIFIED) {
     if (idLower === entry.id) return entry.id;
-
     if (proposal.proposedFeatures && proposal.proposedFeatures.length > 0) {
-      const features = proposal.proposedFeatures.map((f) => f.toLowerCase().replace(/[-_]/g, ''));
-      const entryFeatures = entry.features.map((f) => f.replace(/[-_]/g, ''));
-      const isExact = entryFeatures.length === features.length && entryFeatures.every((f) => features.includes(f));
-      const isMultiSubset = entryFeatures.length >= 2 && entryFeatures.every((f) => features.includes(f));
-      if (isExact || isMultiSubset) return entry.id;
+      const feats = proposal.proposedFeatures.map((f) => f.toLowerCase().replace(/[-_]/g, ''));
+      const eFeats = entry.features.map((f) => f.replace(/[-_]/g, ''));
+      const exact = eFeats.length === feats.length && eFeats.every((f) => feats.includes(f));
+      const sub = eFeats.length >= 2 && eFeats.every((f) => feats.includes(f));
+      if (exact || sub) return entry.id;
     }
-
-    if (matchesTokens(entry.id, textToScan)) return entry.id;
+    if (matchesTokens(entry.id, text)) return entry.id;
   }
-
   for (const excluded of extraExcluded) {
-    if (matchesTokens(excluded, textToScan)) return excluded;
+    if (matchesTokens(excluded, text)) return excluded;
   }
-
   return null;
 }
