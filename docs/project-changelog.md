@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v43 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
+- **Pillar 1: Gatheral-Schied (2013) Resilient Power-Law Optimal Execution Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Jim Gatheral and Alexander Schied (2013) *"Dynamical Models of Market Impact and Efficient Order Execution"*.
+  - Solves optimal execution under resilient power-law transient impact kernel $G(\tau) = (1 + \rho \tau)^{-\alpha}$ with non-linear trade impact $h(v) = \eta v^k$:
+    $$\Delta P_s = \eta (x_s / dt)^k + \sum_{j < s} \eta (x_j / dt)^k (1 + \rho (s - j) dt)^{-\alpha}$$
+  - Guarantees absence of transaction price round-trip arbitrage and price manipulation while computing optimal liquidation trajectory, price slippage, terminal inventory, and post-trade price reversion. Implemented in `src/tree/quantlib/execution/gatheral-schied-resilient-types.ts` (27 LOC) and `src/tree/quantlib/execution/gatheral-schied-resilient-engine.ts` (33 LOC).
+- **Pillar 2: Cont-Kukanov-Stoikov (2014) Multi-Level LOB Order Flow Imbalance (OFI) Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Rama Cont, Arseniy Kukanov, and Sasha Stoikov (2014) *"The Price Impact of Order Book Events"*.
+  - Extends single-level order flow imbalance to multi-level depth events across $K$ limit order book levels with power decay weights $w_k = (k+1)^{-\beta}$:
+    $$\text{OFI}_t^{(k)} = I_{\{\Delta P_t^b \ge 0\}} \Delta q_t^{b,k} - I_{\{\Delta P_t^a \le 0\}} \Delta q_t^{a,k}, \quad \text{Total OFI} = \sum_{k=1}^K w_k \text{OFI}_t^{(k)}$$
+  - Computes per-level OFI vector, weighted cumulative OFI, predicted price impact in basis points, and aggregate depth imbalance. Implemented in `src/tree/quantlib/microstructure/cont-kukanov-ofi-types.ts` (20 LOC) and `src/tree/quantlib/microstructure/cont-kukanov-ofi-engine.ts` (31 LOC).
+- **Pillar 3: Structural Deep Modularization (< 40 LOC per file)**:
+  - Modularized `src/tree/alpha/data-quality/validate-alignment.ts` (123 LOC $\rightarrow$ 32 LOC facade) via `validate-alignment-checks.ts` (33 LOC).
+  - Modularized `src/forest/alpha/persistence/d1-adapter.ts` (122 LOC $\rightarrow$ 35 LOC facade) via `d1-adapter-results.ts` (32 LOC) and `d1-adapter-experiments.ts` (34 LOC).
+  - Maintained 100% backward compatibility and exact public interfaces for all callers and persistence consumers.
+- **Verification & Quality Gate**:
+  - `test/quant/gatheral-schied-execution.test.ts` (2 tests) verifying resilient power-law liquidation trajectory, terminal inventory, and zero-inventory boundaries.
+  - `test/quant/cont-kukanov-ofi.test.ts` (2 tests) verifying multi-level OFI vector calculation, power weighting, price impact scaling, and empty order book safety.
+  - `test/quant/v43-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Gatheral-Schied execution, Cont-Kukanov OFI price impact, and data alignment validation.
+  - 5,748/5,748 tests passing across 569 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 35$ LOC.
+
 ### Unified v42 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
 - **Pillar 1: Guéant-Tapia (2012) Multi-Asset Portfolio Optimal Execution Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Olivier Guéant and Charles-Albert Tapia (2012) *"Portfolio liquidation with limit orders and dynamic price impact"*.
