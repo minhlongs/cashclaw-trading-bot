@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v42 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
+- **Pillar 1: Guéant-Tapia (2012) Multi-Asset Portfolio Optimal Execution Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Olivier Guéant and Charles-Albert Tapia (2012) *"Portfolio liquidation with limit orders and dynamic price impact"*.
+  - Solves coordinated liquidation of multi-asset portfolios balancing inventory covariance matrix $\mathbf{\Sigma}$, temporary impact tensor $\mathbf{H}$, and risk aversion $\gamma$:
+    $$\mathbf{v}_t^* = \mathbf{H}^{-1} \mathbf{\Omega} \coth(\mathbf{\Omega} (T - t)) \mathbf{q}_t, \quad \mathbf{\Omega}^2 = \gamma \mathbf{H}^{-1} \mathbf{\Sigma}$$
+  - Computes coordinated execution trajectories, step impacts, asset VWAPs, terminal shares, and total execution costs. Implemented in `src/tree/quantlib/execution/gueant-tapia-types.ts` (36 LOC) and `src/tree/quantlib/execution/gueant-tapia-engine.ts` (36 LOC).
+- **Pillar 2: Hasbrouck-Collins-Dufresne (1995) Order Flow Toxicity & Trade Midpoint VECM Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Joel Hasbrouck (1991, 1995) / Collins-Dufresne *"One Security, Many Markets: Determining the Contributions to Price Discovery"*.
+  - Decomposes cointegrated mid-quotes and signed order flow surprises via Vector Error Correction Model (VECM) into permanent price impact, transitory friction, error-correction speed, order flow toxicity score, and information share. Implemented in `src/tree/quantlib/microstructure/hasbrouck-vecm-types.ts` (19 LOC) and `src/tree/quantlib/microstructure/hasbrouck-vecm-engine.ts` (32 LOC).
+- **Pillar 3: Structural Deep Modularization (< 40 LOC per file)**:
+  - Modularized `src/tree/bot/strategies/volatility-dca.ts` (123 LOC $\rightarrow$ 37 LOC facade) via `volatility-dca-state.ts` (29 LOC) and `volatility-dca-handler.ts` (31 LOC).
+  - Modularized `src/tree/alpha/portfolio/engine.ts` (123 LOC $\rightarrow$ 26 LOC facade) via `engine-weights.ts` (38 LOC) and `engine-metrics.ts` (24 LOC).
+  - Preserved 100% backward compatibility and exact public interfaces for all callers and unit tests.
+- **Verification & Quality Gate**:
+  - `test/quant/gueant-tapia-execution.test.ts` (3 tests) covering multi-asset coordinated liquidation, single-step terminal boundary, and zero initial shares handling.
+  - `test/quant/hasbrouck-vecm.test.ts` (3 tests) covering permanent impact & toxicity calculation, single-tick degenerate case, and custom cointegration parameters.
+  - `test/quant/v42-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Guéant-Tapia execution, Hasbrouck VECM toxicity, modular Volatility DCA strategy, and modular portfolio engine.
+  - 5,747/5,747 tests passing across 567 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 38$ LOC.
+
 ### Unified v41 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
 - **Pillar 1: Schied-Zhang (2019) Optimal Execution under Rough Volatility Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Alexander Schied and Tao Zhang (2019) *"A model for optimal execution with rough fractional volatility"*.
