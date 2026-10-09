@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v46 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
+- **Pillar 1: Kissell & Malamut (2006) Institutional Market Impact Engine (I-Star Model)** (`src/tree/quantlib/execution/`):
+  - Academic & Institutional foundation: Robert Kissell and Roberto Malamut (2006) *"Algorithmic Decision Making Framework"*, in *Algorithmic Trading & DMA*, and Kissell (2013) *The Science of Algorithmic Trading and Portfolio Management*.
+  - Characterizes institutional market impact via the I-Star ($I^*$) non-linear formulation calibrated across global equity exchanges:
+    $$I^* = a_1 \cdot \left(\frac{Q}{\text{ADV}}\right)^{a_2} \cdot \sigma^{a_3} \cdot P_0, \quad I_{\text{step}, k} = b_1 \cdot (P_{\text{rate}, k})^{b_2} \cdot \sigma \cdot P_0$$
+  - Solves for discrete execution trajectory, cumulative execution shortfall, step cost, instantaneous rate impact, and volume-weighted average price (VWAP). Implemented in `src/tree/quantlib/execution/kissell-istar-types.ts` (32 LOC) and `src/tree/quantlib/execution/kissell-istar-engine.ts` (31 LOC).
+- **Pillar 2: Lin, Sanger & Booth (1995) LSB Spread Decomposition Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Ji-Chai Lin, Gary C. Sanger, and G. Geoffrey Booth (1995) *"Trade Size and Components of the Bid-Ask Spread"*, *Journal of Financial Studies*.
+  - Regresses quote midpoint revisions $\Delta Q_{t+1} = Q_{t+1} - Q_t$ on signed effective half-spread $z_t = P_t - Q_t$:
+    $$Q_{t+1} - Q_t = \lambda z_t + e_{t+1}$$
+  - Solves for adverse selection ratio $\lambda \in [0, 1]$ (private information share) and order processing friction $(1 - \lambda)$, decomposing effective spread $S = 2 |z_t|$ into adverse selection spread and order processing spread. Implemented in `src/tree/quantlib/microstructure/lsb-spread-types.ts` (14 LOC) and `src/tree/quantlib/microstructure/lsb-spread-engine.ts` (30 LOC).
+- **Pillar 3: Structural Deep Modularization (< 38 LOC per file)**:
+  - Modularized `src/tree/alpha/factors/ic-analysis.ts` (121 LOC $\rightarrow$ 19 LOC facade) via `ic-analysis-types.ts` (26 LOC) and `ic-analysis-calc.ts` (37 LOC).
+  - Modularized `src/forest/research/tradingagents/risk-advisor.ts` (121 LOC $\rightarrow$ 15 LOC facade) via `risk-advisor-types.ts` (22 LOC) and `risk-advisor-mapping.ts` (19 LOC).
+  - Preserved 100% backward compatibility, exact public interfaces, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/kissell-istar-execution.test.ts` (2 tests) verifying non-linear impact scaling, execution trajectory, and zero inventory handling.
+  - `test/quant/lsb-spread.test.ts` (3 tests) verifying quote midpoint revision regression, spread component additivity, and tick inference.
+  - `test/quant/v46-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Kissell I-Star execution, LSB spread decomposition, modular factor IC analysis, and risk advisor.
+  - 5,765/5,765 tests passing across 578 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 38$ LOC.
+
 ### Unified v45 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
 - **Pillar 1: Almgren, Thum, Hauptmann & Li (2005) Non-Linear Market Impact Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Robert Almgren, Chee Thum, Emmanuel Hauptmann, and Hong Li (2005) *"Equity Market Impact"*, *The Journal of Portfolio Management*.
