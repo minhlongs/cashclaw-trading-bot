@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v47 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
+- **Pillar 1: Kyle, Obizhaeva & Wang (2020) Smooth Market Impact Execution Engine** (`src/tree/quantlib/execution/`):
+  - Academic & Institutional foundation: Albert S. Kyle, Anna A. Obizhaeva, and Yajun Wang (2020) *"Smooth Market Impact and Optimal Trading Strategies"*.
+  - Solves for continuous smooth market impact accumulation replacing instantaneous point shocks with exponential dissipation $G(t-s) = e^{-\beta (t-s)}$:
+    $$I_k = I_{k-1} e^{-\beta \Delta t} + \lambda v_k \frac{1 - e^{-\beta \Delta t}}{\beta}, \quad P_k = \max(10^{-4}, P_0 - I_k)$$
+  - Computes discrete liquidation trajectory, step shortfall cost, VWAP execution price, and terminal inventory/impact. Implemented in `src/tree/quantlib/execution/kyle-smooth-impact-types.ts` (26 LOC) and `src/tree/quantlib/execution/kyle-smooth-impact-engine.ts` (28 LOC).
+- **Pillar 2: Hasbrouck & Foster (1995) Order Flow Asymmetry & Spread Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Joel Hasbrouck and F. Douglas Foster (1995) *"Order Flow Asymmetry and Bid-Ask Spread Dynamics"*.
+  - Models asymmetric directional price impact between buyer-initiated flow ($q^+$) and seller-initiated flow ($q^-$) on quote revisions:
+    $$\Delta M_{t+1} = \lambda_{\text{buy}} q_t^+ - \lambda_{\text{sell}} q_t^- + \phi (P_t - M_t) + \epsilon_{t+1}$$
+  - Solves for directional adverse selection rates ($\lambda_{\text{buy}}, \lambda_{\text{sell}}$), asymmetry index $\in [0, 1]$, order processing friction $(1 - \phi)$, and effective spread $S = 2 \cdot \text{avg}(|z_t|)$. Implemented in `src/tree/quantlib/microstructure/hasbrouck-foster-spread-types.ts` (14 LOC) and `src/tree/quantlib/microstructure/hasbrouck-foster-spread-engine.ts` (24 LOC).
+- **Pillar 3: Structural Deep Modularization (< 38 LOC per file)**:
+  - Modularized `src/tree/research/alpha/compile-stages.ts` (121 LOC $\rightarrow$ 2 LOC facade) via `compile-stages-sources.ts` (30 LOC) and `compile-stages-validators.ts` (32 LOC).
+  - Modularized `src/forest/alpha/execution/engine-positions.ts` (120 LOC $\rightarrow$ 3 LOC facade) via `engine-positions-lifecycle.ts` (31 LOC), `engine-positions-exposure.ts` (29 LOC) and `engine-positions-rejection.ts` (33 LOC).
+  - Preserved 100% backward compatibility, exact public interfaces, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/kyle-smooth-impact.test.ts` (2 tests) verifying continuous impact liquidation, zero inventory handling, and price trajectory.
+  - `test/quant/hasbrouck-foster-spread.test.ts` (3 tests) verifying asymmetric adverse selection regression, inferred tick midpoints, and sample sizing.
+  - `test/quant/v47-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Kyle smooth impact execution, Hasbrouck-Foster spread, compiler stages, and position lifecycle.
+  - 5,771/5,771 tests passing across 581 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 33$ LOC.
+
 ### Unified v46 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
 - **Pillar 1: Kissell & Malamut (2006) Institutional Market Impact Engine (I-Star Model)** (`src/tree/quantlib/execution/`):
   - Academic & Institutional foundation: Robert Kissell and Roberto Malamut (2006) *"Algorithmic Decision Making Framework"*, in *Algorithmic Trading & DMA*, and Kissell (2013) *The Science of Algorithmic Trading and Portfolio Management*.
