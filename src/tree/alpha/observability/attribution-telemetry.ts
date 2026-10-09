@@ -24,6 +24,62 @@ export function computeDistributionStats(vals: readonly number[]) {
   };
 }
 
+interface ProviderAccumulator {
+  attempts: number;
+  successCount: number;
+  sumLatency: number;
+  latCount: number;
+}
+
+function processTelemetryRecord(
+  t: OperationalTelemetry,
+  stalenessThreshold: number,
+  latencyThreshold: number,
+  alarms: OperationalAlarm[],
+  alarmTypesSet: Set<OperationalAlarmType>,
+  byProvider: Record<string, ProviderAccumulator>
+): boolean {
+  if (t.dataFreshnessMs > stalenessThreshold) {
+    alarms.push({
+      type: 'STALE_DATA',
+      message: `Freshness drift ${t.dataFreshnessMs}ms > ${stalenessThreshold}ms`,
+      timestamp: t.timestamp,
+      metricValue: t.dataFreshnessMs,
+      thresholdValue: stalenessThreshold,
+    });
+    alarmTypesSet.add('STALE_DATA');
+  }
+  if (t.decisionLatencyMs > latencyThreshold) {
+    alarms.push({
+      type: 'HIGH_LATENCY',
+      message: `Decision latency ${t.decisionLatencyMs}ms > ${latencyThreshold}ms`,
+      timestamp: t.timestamp,
+      metricValue: t.decisionLatencyMs,
+      thresholdValue: latencyThreshold,
+    });
+    alarmTypesSet.add('HIGH_LATENCY');
+  }
+  const prov = t.providerProvenance;
+  const isFallback = prov.usedFallback || prov.fallbackAttempts > 0;
+  if (isFallback) {
+    alarms.push({
+      type: 'PROVIDER_FALLBACK',
+      message: `Fallback used (attempts: ${prov.fallbackAttempts}, active: ${prov.activeProvider})`,
+      timestamp: t.timestamp,
+      metricValue: prov.fallbackAttempts,
+    });
+    alarmTypesSet.add('PROVIDER_FALLBACK');
+  }
+  const entry = byProvider[prov.activeProvider] ??= { attempts: 0, successCount: 0, sumLatency: 0, latCount: 0 };
+  entry.attempts += prov.fallbackAttempts > 0 ? prov.fallbackAttempts : 1;
+  entry.successCount++;
+  if (prov.providerLatencyMs !== undefined) {
+    entry.sumLatency += prov.providerLatencyMs;
+    entry.latCount++;
+  }
+  return isFallback;
+}
+
 export function evaluateOperationalTelemetryBatch(
   telemetry: readonly OperationalTelemetry[],
   config?: OperationalTelemetryConfig
@@ -35,52 +91,15 @@ export function evaluateOperationalTelemetryBatch(
   const freshStats = computeDistributionStats(telemetry.map((t) => t.dataFreshnessMs));
   const alarms: OperationalAlarm[] = [];
   const alarmTypesSet = new Set<OperationalAlarmType>();
-  let primarySuccessCount = 0;
   let fallbackCount = 0;
-  const byProvider: Record<string, { attempts: number; successCount: number; sumLatency: number; latCount: number }> = {};
+  const byProvider: Record<string, ProviderAccumulator> = {};
 
   for (const t of telemetry) {
-    if (t.dataFreshnessMs > stalenessThreshold) {
-      alarms.push({
-        type: 'STALE_DATA',
-        message: `Freshness drift ${t.dataFreshnessMs}ms > ${stalenessThreshold}ms`,
-        timestamp: t.timestamp,
-        metricValue: t.dataFreshnessMs,
-        thresholdValue: stalenessThreshold,
-      });
-      alarmTypesSet.add('STALE_DATA');
-    }
-    if (t.decisionLatencyMs > latencyThreshold) {
-      alarms.push({
-        type: 'HIGH_LATENCY',
-        message: `Decision latency ${t.decisionLatencyMs}ms > ${latencyThreshold}ms`,
-        timestamp: t.timestamp,
-        metricValue: t.decisionLatencyMs,
-        thresholdValue: latencyThreshold,
-      });
-      alarmTypesSet.add('HIGH_LATENCY');
-    }
-    const prov = t.providerProvenance;
-    if (prov.usedFallback || prov.fallbackAttempts > 0) {
-      alarms.push({
-        type: 'PROVIDER_FALLBACK',
-        message: `Fallback used (attempts: ${prov.fallbackAttempts}, active: ${prov.activeProvider})`,
-        timestamp: t.timestamp,
-        metricValue: prov.fallbackAttempts,
-      });
-      alarmTypesSet.add('PROVIDER_FALLBACK');
+    if (processTelemetryRecord(t, stalenessThreshold, latencyThreshold, alarms, alarmTypesSet, byProvider)) {
       fallbackCount++;
-    } else {
-      primarySuccessCount++;
-    }
-    const entry = byProvider[prov.activeProvider] ??= { attempts: 0, successCount: 0, sumLatency: 0, latCount: 0 };
-    entry.attempts += prov.fallbackAttempts > 0 ? prov.fallbackAttempts : 1;
-    entry.successCount++;
-    if (prov.providerLatencyMs !== undefined) {
-      entry.sumLatency += prov.providerLatencyMs;
-      entry.latCount++;
     }
   }
+  const primarySuccessCount = count - fallbackCount;
 
   return {
     count,

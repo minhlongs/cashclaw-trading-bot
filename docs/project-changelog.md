@@ -2,6 +2,26 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v18 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Cont-Kukanov (2014) Optimal Order Placement Microstructure Engine** (`src/tree/quantlib/microstructure/`):
+  - Solves the optimal order placement problem by splitting total size $Q$ into limit slice $q_L$ and market slice $q_M = Q - q_L$.
+  - Models fill probability exponential decay $P_{\text{fill}}(q_L) = \exp(-\lambda q_L)$ against order queue depth and cancellation activity.
+  - Balances half-spread savings ($S/2 - c_L$), fill probability, adverse selection drift ($\theta$), taker crossing fees ($c_M$), and non-execution penalty ($\rho$) over a discrete search grid.
+  - Computes net maker savings in basis points, expected cost, and optimal allocation ratios.
+- **Pillar 2: Hayashi-Yoshida (2005) & Huang-Rosenbaum (2017) Asynchronous Lead-Lag Engine** (`src/tree/quantlib/leadlag/`):
+  - Continuous-time non-synchronous covariation estimator:
+    $$\gamma_{XY}(\tau) = \sum_i \sum_j \Delta X_i \Delta Y_j \cdot \mathbb{I}_{\{\max(t_i, s_j + \tau) < \min(t_{i+1}, s_{j+1} + \tau)\}}$$
+  - Completely eliminates interpolation bias and artificial Epps effects across fragmented crypto tick arrivals.
+  - Normalized by realized quadratic variations $RV_X$ and $RV_Y$ across discrete time lag displacement grids $\tau \in [-\tau_{\max}, \tau_{\max}]$ to identify lead-lag relationships, peak correlation, and leader asset attribution.
+- **Pillar 3: Structural Deep Modularization (< 85 LOC per file)**:
+  - Modularized `telemetry-diagnostics.ts` (144 LOC $\rightarrow$ 66 LOC) by extracting `telemetry-health-evaluator.ts` (80 LOC).
+  - Modularized `slippage-diagnostics.ts` (135 LOC $\rightarrow$ 70 LOC) by extracting `slippage-diagnostics-attributions.ts` (74 LOC).
+  - Modularized `vectorized-factor-engine.ts` (140 LOC $\rightarrow$ 77 LOC) by extracting `vectorized-correlation-kernels.ts` (74 LOC).
+  - Fixed linting complexities across `attribution-telemetry.ts` and `ledoit-wolf-shrinkage.ts`.
+- **Verification & Quality Gate**:
+  - `test/quant/v18-apex-suite-simulation.test.ts` validating Hayashi-Yoshida lead-lag discovery feeding Cont-Kukanov order placement and modular observability attribution.
+  - 5,525/5,525 tests passing across 495 test files (100% green), 0 `:any`, 0 ESLint warnings, all files strictly $\le 82$ LOC, Next.js production build clean.
+
 ### Unified v17 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Kyle-Obizhaeva (2016) Market Microstructure Invariance Engine** (`src/tree/quantlib/microstructure/`):
   - Implements Kyle-Obizhaeva (2016) market microstructure invariance pricing model:

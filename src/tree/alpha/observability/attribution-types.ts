@@ -1,5 +1,5 @@
 import type { RegimeLabel } from '../../regime/types';
-import type { AlphaDecisionRecord, CostStressTier, ShadowFill, ShadowOrderSide } from './types';
+import type { AlphaDecisionRecord, CostStressTier, ShadowOrderSide } from './types';
 
 export interface EdgeAttributionParams {
   readonly record?: AlphaDecisionRecord; readonly alphaId?: string; readonly regime?: RegimeLabel;

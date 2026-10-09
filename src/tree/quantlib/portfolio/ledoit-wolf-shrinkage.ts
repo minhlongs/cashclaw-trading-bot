@@ -1,10 +1,38 @@
 import type { LedoitWolfShrinkageResult } from '../microstructure/hawkes-jump-types';
 
+function computeConstantCorrelationTarget(S: number[][], p: number, variances: number[]): number[][] {
+  let avgCorr = 0;
+  let corrCount = 0;
+  for (let j = 0; j < p; j++) {
+    for (let k = j + 1; k < p; k++) {
+      const stdJ = Math.sqrt(Math.max(1e-12, variances[j]!));
+      const stdK = Math.sqrt(Math.max(1e-12, variances[k]!));
+      avgCorr += S[j]![k]! / (stdJ * stdK);
+      corrCount++;
+    }
+  }
+  const rBar = corrCount > 0 ? avgCorr / corrCount : 0;
+
+  const F: number[][] = Array.from({ length: p }, () => Array(p).fill(0));
+  for (let j = 0; j < p; j++) {
+    for (let k = 0; k < p; k++) {
+      if (j === k) {
+        F[j]![k] = variances[j]!;
+      } else {
+        const stdJ = Math.sqrt(Math.max(1e-12, variances[j]!));
+        const stdK = Math.sqrt(Math.max(1e-12, variances[k]!));
+        F[j]![k] = rBar * stdJ * stdK;
+      }
+    }
+  }
+  return F;
+}
+
 export class LedoitWolfShrinkageEngine {
   computeShrinkageCovariance(returnsMatrix: readonly (readonly number[])[]): LedoitWolfShrinkageResult {
-    const n = returnsMatrix.length; // number of observations
+    const n = returnsMatrix.length;
     if (n < 4) throw new Error('Ledoit-Wolf shrinkage requires at least 4 return observations.');
-    const p = returnsMatrix[0]?.length ?? 0; // number of assets
+    const p = returnsMatrix[0]?.length ?? 0;
     if (p < 2) throw new Error('Ledoit-Wolf shrinkage requires at least 2 assets.');
 
     // 1. Calculate sample means
@@ -29,30 +57,7 @@ export class LedoitWolfShrinkageEngine {
 
     // 3. Constant correlation target F
     const variances = S.map((row, idx) => row[idx]!);
-    let avgCorr = 0;
-    let corrCount = 0;
-    for (let j = 0; j < p; j++) {
-      for (let k = j + 1; k < p; k++) {
-        const stdJ = Math.sqrt(Math.max(1e-12, variances[j]!));
-        const stdK = Math.sqrt(Math.max(1e-12, variances[k]!));
-        avgCorr += S[j]![k]! / (stdJ * stdK);
-        corrCount++;
-      }
-    }
-    const rBar = corrCount > 0 ? avgCorr / corrCount : 0;
-
-    const F: number[][] = Array.from({ length: p }, () => Array(p).fill(0));
-    for (let j = 0; j < p; j++) {
-      for (let k = 0; k < p; k++) {
-        if (j === k) {
-          F[j]![k] = variances[j]!;
-        } else {
-          const stdJ = Math.sqrt(Math.max(1e-12, variances[j]!));
-          const stdK = Math.sqrt(Math.max(1e-12, variances[k]!));
-          F[j]![k] = rBar * stdJ * stdK;
-        }
-      }
-    }
+    const F = computeConstantCorrelationTarget(S, p, variances);
 
     // 4. Optimal Shrinkage Intensity delta* (Ledoit-Wolf 2004 estimator proxy)
     const deltaStar = Math.max(0.05, Math.min(0.95, 1 / (1 + n / p)));
