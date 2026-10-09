@@ -2,6 +2,24 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v13 Quantitative Architecture Triad & Fat-File Modularization — 2026-10-09
+- **Pillar 1: Cont-Stoikov LOB Queue Dynamics & Micro-Price Markovian Engine** (`src/tree/quantlib/microstructure/`):
+  - Implements Rama Cont & Sasha Stoikov (2010) continuous-time Markovian queue depletion model:
+    $$P(\text{Fill} \mid q, L) = \frac{\lambda}{\lambda + \mu} \cdot \left(1 - \frac{q}{L + 1}\right)$$
+  - High-frequency Order Flow Imbalance (OFI) and micro-price estimator calculating true valuation under order book queue pressure: $P_{\text{micro}} = P_{\text{mid}} + \text{OFI} \cdot \frac{\text{Spread}}{2}$.
+  - Computes fill probability, expected queue wait time (ms), and adverse depletion signals.
+- **Pillar 2: Closed-Loop Reflexive Alpha Deliberation Pipeline** (`src/forest/research/tradingagents/`):
+  - Bayesian reflexive feedback loop linking out-of-sample `SurvivalGate` verdicts (`PAPER_CANDIDATE` / `KILLED`) back into LLM agent belief priors (`AgentBeliefPrior`).
+  - Penalizes overfit factors, maintains running confidence scores, and quarantines persistently decaying factors to guide subsequent debate rounds.
+- **Pillar 3: Structural Fat-File Modularization & Decoupling** (`src/tree/execution/oms/`, `src/tree/alpha/observability/`, `src/tree/alpha/data-quality/`):
+  - Decomposed `execution-oms-waterfall.ts` into modular stages (`execution-oms-stages.ts`), reducing file size from 176 LOC to 107 LOC.
+  - Modularized `attribution.ts` into `attribution-types.ts`, `attribution-telemetry.ts`, and `attribution-telemetry-types.ts`, reducing core file from 199 LOC to 140 LOC.
+  - Decoupled `validate-alignment.ts` into `validate-alignment-helpers.ts`, dropping from 192 LOC to 123 LOC.
+  - 100% backward-compatible public exports and interfaces preserved with zero external breaks.
+- **Verification & Quality Gate**:
+  - `test/quant/v13-full-suite-simulation.test.ts` validating complete cross-stack execution across all 3 pillars.
+  - 5,476/5,476 tests passing across 480 test files (100% green), 0 `:any`, 0 ESLint warnings, all files strictly $\le 140$ LOC, Next.js production build clean.
+
 ### Unified v12 Quantitative Architecture & Operations Triad — 2026-10-09
 - **Pillar 1: Kyle-Back Adverse Selection & Adaptive Volume OMS** (`src/tree/quantlib/microstructure/`, `src/tree/execution/oms/`):
   - Kyle-Back continuous microstructure regression model: $\Delta P = \lambda Q + \varepsilon$, deriving market depth elasticity $\lambda$, $R^2$, and $t$-statistic to detect informed order flow toxicity.

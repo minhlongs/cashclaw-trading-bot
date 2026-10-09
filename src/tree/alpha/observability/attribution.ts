@@ -1,44 +1,44 @@
-import type { RegimeLabel } from '../../regime/types';
 import { resolveStressConfig, type StressMode } from '../cost-stress';
-import type { AlphaDecisionRecord, CostStressTier, OperationalTelemetry, ShadowFill, ShadowOrderSide } from './types';
+import type { CostStressTier, OperationalTelemetry, ShadowFill, ShadowOrderSide } from './types';
+import {
+  evaluateOperationalTelemetryBatch,
+  type OperationalTelemetryConfig,
+  type OperationalTelemetrySummary,
+  type OperationalAlarmType,
+  type OperationalAlarm,
+  type LatencyStats,
+  type FreshnessStats,
+  type ProviderStats,
+  type ProviderProvenanceSummary,
+} from './attribution-telemetry';
+import type {
+  EdgeAttributionParams,
+  EdgeAttributionResult,
+  EdgeAggregationSummary,
+  BatchEdgeAttributionResult,
+  SlippageAttributionResult,
+  SlippageAggregationSummary,
+  BatchSlippageAttributionResult,
+} from './attribution-types';
 
-export interface EdgeAttributionParams {
-  readonly record?: AlphaDecisionRecord; readonly alphaId?: string; readonly regime?: RegimeLabel; readonly expectedReturn?: number; readonly expectedCost?: number; readonly realizedNetReturn?: number; readonly entryPrice?: number; readonly exitPrice?: number; readonly side?: ShadowOrderSide | 'hold'; readonly feeAmount?: number; readonly fillNotional?: number; readonly feePct?: number;
-}
-export interface EdgeAttributionResult {
-  readonly alphaId?: string; readonly regime?: RegimeLabel; readonly expectedReturn: number; readonly expectedCost: number; readonly expectedNetReturn: number; readonly realizedNetReturn: number; readonly deltaEdge: number;
-}
-export interface EdgeAggregationSummary {
-  readonly count: number; readonly meanExpectedNetReturn: number; readonly meanRealizedNetReturn: number; readonly meanDeltaEdge: number;
-}
-export interface BatchEdgeAttributionResult {
-  readonly count: number; readonly meanExpectedNetReturn: number; readonly meanRealizedNetReturn: number; readonly meanDeltaEdge: number; readonly byAlphaId: Readonly<Record<string, EdgeAggregationSummary>>; readonly byRegime: Readonly<Record<string, EdgeAggregationSummary>>; readonly records: readonly EdgeAttributionResult[];
-}
-export interface SlippageAttributionResult {
-  readonly fillId: string; readonly symbol: string; readonly side: ShadowOrderSide; readonly stressTier: CostStressTier; readonly realizedSlippageBps: number; readonly expectedSlippageBps: number; readonly deltaSlippageBps: number;
-}
-export interface SlippageAggregationSummary {
-  readonly count: number; readonly meanRealizedSlippageBps: number; readonly meanExpectedSlippageBps: number; readonly meanDeltaSlippageBps: number;
-}
-export interface BatchSlippageAttributionResult {
-  readonly count: number; readonly meanRealizedSlippageBps: number; readonly meanExpectedSlippageBps: number; readonly meanDeltaSlippageBps: number; readonly byStressTier: Readonly<Record<CostStressTier, SlippageAggregationSummary>>; readonly bySide: Readonly<Record<ShadowOrderSide, SlippageAggregationSummary>>; readonly records: readonly SlippageAttributionResult[];
-}
-export interface OperationalTelemetryConfig { readonly stalenessThresholdMs?: number; readonly latencyThresholdMs?: number; }
-export type OperationalAlarmType = 'STALE_DATA' | 'HIGH_LATENCY' | 'PROVIDER_FALLBACK';
-export interface OperationalAlarm { readonly type: OperationalAlarmType; readonly message: string; readonly timestamp?: number; readonly metricValue?: number; readonly thresholdValue?: number; }
-export interface LatencyStats {
-  readonly count: number; readonly mean: number; readonly meanMs: number; readonly median: number; readonly medianMs: number; readonly p95: number; readonly p95Ms: number; readonly max: number; readonly maxMs: number;
-}
-export interface FreshnessStats {
-  readonly count: number; readonly mean: number; readonly meanDriftMs: number; readonly median: number; readonly medianDriftMs: number; readonly p95: number; readonly p95DriftMs: number; readonly max: number; readonly maxDriftMs: number; readonly staleCount: number;
-}
-export interface ProviderStats { readonly attempts: number; readonly successCount: number; readonly avgLatencyMs?: number; }
-export interface ProviderProvenanceSummary {
-  readonly totalAttempts: number; readonly primarySuccessCount: number; readonly primarySuccessRate: number; readonly fallbackCount: number; readonly fallbackRate: number; readonly byProvider: Readonly<Record<string, ProviderStats>>;
-}
-export interface OperationalTelemetrySummary {
-  readonly count: number; readonly latency: LatencyStats; readonly freshness: FreshnessStats; readonly alarms: readonly OperationalAlarm[]; readonly alarmTypes: readonly OperationalAlarmType[]; readonly provenance: ProviderProvenanceSummary;
-}
+export type {
+  OperationalTelemetryConfig,
+  OperationalTelemetrySummary,
+  OperationalAlarmType,
+  OperationalAlarm,
+  LatencyStats,
+  FreshnessStats,
+  ProviderStats,
+  ProviderProvenanceSummary,
+  EdgeAttributionParams,
+  EdgeAttributionResult,
+  EdgeAggregationSummary,
+  BatchEdgeAttributionResult,
+  SlippageAttributionResult,
+  SlippageAggregationSummary,
+  BatchSlippageAttributionResult,
+};
+export { evaluateOperationalTelemetryBatch };
 
 const round8 = (v: number): number => Number(v.toFixed(8));
 
@@ -133,64 +133,6 @@ export function computeSlippageAttribution(f: ShadowFill, o?: number): SlippageA
 export function computeSlippageAttribution(f: readonly ShadowFill[], o?: number): BatchSlippageAttributionResult;
 export function computeSlippageAttribution(f: ShadowFill | readonly ShadowFill[], o?: number): SlippageAttributionResult | BatchSlippageAttributionResult {
   return Array.isArray(f) ? computeBatchSlippageAttribution(f, o) : computeSingleSlippage(f as ShadowFill, o);
-}
-
-function computeDistributionStats(vals: readonly number[]) {
-  const count = vals.length;
-  if (count === 0) return { count: 0, mean: 0, median: 0, p95: 0, max: 0 };
-  const sorted = [...vals].sort((a, b) => a - b);
-  const mid = Math.floor(count / 2);
-  const median = count % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-  const p95 = sorted[Math.max(0, Math.min(count - 1, Math.ceil(0.95 * count) - 1))];
-  return { count, mean: Number((sorted.reduce((a, b) => a + b, 0) / count).toFixed(4)), median, p95, max: sorted[count - 1] };
-}
-
-export function evaluateOperationalTelemetryBatch(
-  telemetry: readonly OperationalTelemetry[], config?: OperationalTelemetryConfig,
-): OperationalTelemetrySummary {
-  const count = telemetry.length;
-  const stalenessThreshold = config?.stalenessThresholdMs ?? 5000;
-  const latencyThreshold = config?.latencyThresholdMs ?? 100;
-  const latStats = computeDistributionStats(telemetry.map((t) => t.decisionLatencyMs));
-  const freshStats = computeDistributionStats(telemetry.map((t) => t.dataFreshnessMs));
-  const alarms: OperationalAlarm[] = [];
-  const alarmTypesSet = new Set<OperationalAlarmType>();
-  let primarySuccessCount = 0; let fallbackCount = 0;
-  const byProvider: Record<string, { attempts: number; successCount: number; sumLatency: number; latCount: number }> = {};
-  for (const t of telemetry) {
-    if (t.dataFreshnessMs > stalenessThreshold) {
-      alarms.push({ type: 'STALE_DATA', message: `Freshness drift ${t.dataFreshnessMs}ms > ${stalenessThreshold}ms`, timestamp: t.timestamp, metricValue: t.dataFreshnessMs, thresholdValue: stalenessThreshold });
-      alarmTypesSet.add('STALE_DATA');
-    }
-    if (t.decisionLatencyMs > latencyThreshold) {
-      alarms.push({ type: 'HIGH_LATENCY', message: `Decision latency ${t.decisionLatencyMs}ms > ${latencyThreshold}ms`, timestamp: t.timestamp, metricValue: t.decisionLatencyMs, thresholdValue: latencyThreshold });
-      alarmTypesSet.add('HIGH_LATENCY');
-    }
-    const prov = t.providerProvenance;
-    if (prov.usedFallback || prov.fallbackAttempts > 0) {
-      alarms.push({ type: 'PROVIDER_FALLBACK', message: `Fallback used (attempts: ${prov.fallbackAttempts}, active: ${prov.activeProvider})`, timestamp: t.timestamp, metricValue: prov.fallbackAttempts });
-      alarmTypesSet.add('PROVIDER_FALLBACK');
-      fallbackCount++;
-    } else { primarySuccessCount++; }
-    const entry = byProvider[prov.activeProvider] ??= { attempts: 0, successCount: 0, sumLatency: 0, latCount: 0 };
-    entry.attempts += (prov.fallbackAttempts > 0 ? prov.fallbackAttempts : 1);
-    entry.successCount++;
-    if (prov.providerLatencyMs !== undefined) { entry.sumLatency += prov.providerLatencyMs; entry.latCount++; }
-  }
-  return {
-    count,
-    latency: { ...latStats, meanMs: latStats.mean, medianMs: latStats.median, p95Ms: latStats.p95, maxMs: latStats.max },
-    freshness: { ...freshStats, meanDriftMs: freshStats.mean, medianDriftMs: freshStats.median, p95DriftMs: freshStats.p95, maxDriftMs: freshStats.max, staleCount: telemetry.filter((t) => t.dataFreshnessMs > stalenessThreshold).length },
-    alarms, alarmTypes: Array.from(alarmTypesSet),
-    provenance: {
-      totalAttempts: count, primarySuccessCount,
-      primarySuccessRate: count > 0 ? Number((primarySuccessCount / count).toFixed(4)) : 1,
-      fallbackCount, fallbackRate: count > 0 ? Number((fallbackCount / count).toFixed(4)) : 0,
-      byProvider: Object.fromEntries(Object.entries(byProvider).map(([k, v]) => [k, {
-        attempts: v.attempts, successCount: v.successCount, ...(v.latCount > 0 ? { avgLatencyMs: Number((v.sumLatency / v.latCount).toFixed(2)) } : {}),
-      }])),
-    },
-  };
 }
 
 export function evaluateOperationalTelemetry(telemetry: OperationalTelemetry, config?: OperationalTelemetryConfig): OperationalTelemetrySummary {

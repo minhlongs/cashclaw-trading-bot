@@ -1,81 +1,12 @@
 import type { AlignmentConfig, Candle, CheckResult, QualityViolation } from './types';
+import {
+  ALIGNMENT_DIMENSION,
+  findClosestCandidate,
+  validateConfig,
+  checkEmptySeries,
+} from './validate-alignment-helpers';
 
-const DIMENSION = 'cross_source_alignment';
 const DEFAULT_TOLERANCE_MS = 0;
-
-function findClosestCandidate(target: number, secondary: readonly Candle[]): { closest: Candle; diff: number } {
-  let low = 0;
-  let high = secondary.length - 1;
-
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    if (secondary[mid].timestamp === target) return { closest: secondary[mid], diff: 0 };
-    if (secondary[mid].timestamp < target) low = mid + 1;
-    else high = mid - 1;
-  }
-
-  const candidates: Candle[] = [];
-  if (high >= 0) candidates.push(secondary[high]);
-  if (low < secondary.length) candidates.push(secondary[low]);
-
-  let bestCandle = candidates[0];
-  let minDiff = Math.abs(target - bestCandle.timestamp);
-
-  for (let i = 1; i < candidates.length; i++) {
-    const diff = Math.abs(target - candidates[i].timestamp);
-    if (diff < minDiff) {
-      minDiff = diff;
-      bestCandle = candidates[i];
-    }
-  }
-
-  return { closest: bestCandle, diff: minDiff };
-}
-
-function validateConfig(config?: AlignmentConfig): QualityViolation | undefined {
-  const rawTolerance = config?.toleranceMs;
-  if (rawTolerance !== undefined && (!Number.isFinite(rawTolerance) || rawTolerance < 0)) {
-    return {
-      dimension: DIMENSION,
-      message: `Invalid toleranceMs: ${rawTolerance}. Must be a non-negative finite number.`,
-      details: { config },
-    };
-  }
-
-  const rawMaxUnmatched = config?.maxUnmatchedCandles;
-  if (rawMaxUnmatched !== undefined && (!Number.isFinite(rawMaxUnmatched) || rawMaxUnmatched < 0)) {
-    return {
-      dimension: DIMENSION,
-      message: `Invalid maxUnmatchedCandles: ${rawMaxUnmatched}. Must be a non-negative finite number.`,
-      details: { config },
-    };
-  }
-
-  return undefined;
-}
-
-function checkEmptySeries(primary: readonly Candle[], secondary: readonly Candle[]): CheckResult | undefined {
-  if (primary.length === 0 && secondary.length === 0) {
-    return { dimension: DIMENSION, passed: true, violations: [] };
-  }
-  if (secondary.length === 0 && primary.length > 0) {
-    const msg = 'Secondary series is empty while primary series contains candles';
-    return {
-      dimension: DIMENSION,
-      passed: false,
-      violations: [{ dimension: DIMENSION, message: msg, details: { primaryCount: primary.length, secondaryCount: 0 } }],
-    };
-  }
-  if (primary.length === 0 && secondary.length > 0) {
-    const msg = 'Primary series is empty while secondary series contains candles';
-    return {
-      dimension: DIMENSION,
-      passed: false,
-      violations: [{ dimension: DIMENSION, message: msg, details: { primaryCount: 0, secondaryCount: secondary.length } }],
-    };
-  }
-  return undefined;
-}
 
 function checkCandleAlignment(
   pCandle: Candle,
@@ -85,7 +16,7 @@ function checkCandleAlignment(
 ): QualityViolation | undefined {
   if (!Number.isFinite(pCandle.timestamp)) {
     return {
-      dimension: DIMENSION,
+      dimension: ALIGNMENT_DIMENSION,
       message: `Primary series contains non-finite timestamp at index ${i}: ${pCandle.timestamp}`,
       index: i,
       timestamp: Number.isFinite(pCandle.timestamp) ? pCandle.timestamp : undefined,
@@ -95,7 +26,7 @@ function checkCandleAlignment(
   const { closest, diff } = findClosestCandidate(pCandle.timestamp, secondary);
   if (!Number.isFinite(diff) || diff > toleranceMs) {
     return {
-      dimension: DIMENSION,
+      dimension: ALIGNMENT_DIMENSION,
       message: `Alignment mismatch at index ${i}: primary timestamp ${pCandle.timestamp} deviates from nearest secondary ${closest.timestamp} by ${diff}ms (tolerance: ${toleranceMs}ms)`,
       index: i,
       timestamp: pCandle.timestamp,
@@ -117,7 +48,7 @@ function checkSecondaryTimestamps(secondary: readonly Candle[]): QualityViolatio
     const sCandle = secondary[j];
     if (!Number.isFinite(sCandle.timestamp)) {
       violations.push({
-        dimension: DIMENSION,
+        dimension: ALIGNMENT_DIMENSION,
         message: `Secondary series contains non-finite timestamp at index ${j}: ${sCandle.timestamp}`,
         index: j,
         timestamp: Number.isFinite(sCandle.timestamp) ? sCandle.timestamp : undefined,
@@ -151,12 +82,12 @@ export function validateAlignment(
   config?: AlignmentConfig,
 ): CheckResult {
   if (secondary === undefined) {
-    return { dimension: DIMENSION, passed: true, violations: [] };
+    return { dimension: ALIGNMENT_DIMENSION, passed: true, violations: [] };
   }
 
   const configViolation = validateConfig(config);
   if (configViolation) {
-    return { dimension: DIMENSION, passed: false, violations: [configViolation] };
+    return { dimension: ALIGNMENT_DIMENSION, passed: false, violations: [configViolation] };
   }
 
   const emptySeriesResult = checkEmptySeries(primary, secondary);
@@ -177,7 +108,7 @@ export function validateAlignment(
   const lengthViolation = lengthDiff > maxUnmatched;
   if (lengthViolation) {
     recordedViolations.push({
-      dimension: DIMENSION,
+      dimension: ALIGNMENT_DIMENSION,
       message: `Series length discrepancy: primary (${primary.length}) vs secondary (${secondary.length}) exceeds tolerance`,
       details: { primaryLength: primary.length, secondaryLength: secondary.length, maxUnmatched },
     });
@@ -185,7 +116,7 @@ export function validateAlignment(
 
   const passed = !lengthViolation && secondaryViolations.length === 0 && recordedViolations.length <= maxUnmatched;
   return {
-    dimension: DIMENSION,
+    dimension: ALIGNMENT_DIMENSION,
     passed,
     violations: passed ? [] : recordedViolations,
   };
