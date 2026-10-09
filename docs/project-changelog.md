@@ -2,6 +2,26 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v32 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Huberman-Stanzl (2004) Price Manipulation & Quasi-Arbitrage Free Execution Engine** (`src/tree/quantlib/execution/`):
+  - Formulates optimal liquidation under no-manipulation constraints (quasi-arbitrage absence requires linear permanent price impact $I_{\text{perm}}(\Delta x) = \gamma \Delta x$):
+    $$P_t = P_0 + \gamma \sum_{s=1}^t v_s \Delta t + \eta v_t$$
+  - Evaluates VWAP execution price, non-arbitrage condition verification (`isManipulationFree`), round-trip quasi-arbitrage penalty score, and optimal risk-dampened trajectory. Implemented in `src/tree/quantlib/execution/huberman-stanzl-types.ts` (29 LOC) and `src/tree/quantlib/execution/huberman-stanzl-engine.ts` (31 LOC).
+- **Pillar 2: Tóth-Chakraborti-Farmer (2011) Universal Square-Root Law & Power-Law Impact Engine** (`src/tree/quantlib/microstructure/`):
+  - Universal square-root meta-order impact scaling across asset classes:
+    $$I(Q) = Y \cdot \sigma \cdot \sqrt{\frac{Q}{V}}$$
+    with universal pre-factor $Y \approx 0.7$, and transient memory power-law decay propagator $G(\tau) = (1 + \tau/\tau_0)^{-\alpha}$ ($\alpha \approx 0.5$).
+  - Evaluates instantaneous price impact, peak impact, permanent residual impact, participation rate, and multi-step relaxation trajectory. Implemented in `src/tree/quantlib/microstructure/toth-farmer-impact-types.ts` (24 LOC) and `src/tree/quantlib/microstructure/toth-farmer-impact-engine.ts` (26 LOC).
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/tree/alpha/hypothesis/lineage.core.ts` (130 LOC $\rightarrow$ 8 LOC facade) into `lineage-node.ts` (33 LOC) and `lineage-queries.ts` (39 LOC).
+  - Modularized `src/forest/research/tradingagents/calibration.core.ts` (130 LOC $\rightarrow$ 10 LOC facade) into `calibration-aggregates.ts` (42 LOC) and `calibration-gaps.ts` (44 LOC).
+  - Maintained 100% backward compatibility with zero regressions across all consumers.
+- **Verification & Quality Gate**:
+  - `test/quant/huberman-stanzl-execution.test.ts` (4 tests) covering complete block liquidation, quasi-arbitrage violation detection, monotonic inventory decline, zero-share boundary.
+  - `test/quant/toth-farmer-impact.test.ts` (3 tests) covering square-root scaling, power-law relaxation, concave meta-order response, zero-volume handling.
+  - `test/quant/v32-apex-suite-simulation.test.ts` cross-domain E2E simulation test.
+  - 5,669/5,669 tests passing across 537 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 44$ LOC.
+
 ### Unified v31 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Kyle-Dutta-Madhavan (1995) Continuous Dynamic Multi-Dealer Execution Engine** (`src/tree/quantlib/execution/`):
   - Dynamic dealer competition pricing and block order liquidation balancing inventory risk with adverse selection compression:
