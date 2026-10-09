@@ -2,6 +2,21 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v11 Quantitative Architecture & Operations Triad — 2026-10-09
+- **Pillar 1: Unified Execution OMS Waterfall Pipeline** (`src/tree/execution/oms/`):
+  - 4-stage execution hierarchy: (1) Internal Dark Mesh Crossing at mid-price saving 100% external fees, (2) Microstructure Urgency Guard gating adverse toxicity via VPIN and OFI, (3) Institutional TWAP Slicing schedule for block orders, and (4) Smart Order Routing (SOR) allocating across Binance, Bybit, and OKX depth.
+  - State machine: `ExecutionOrderState` (`SUBMITTED` → `CROSSING` → `SLICING` → `ROUTING` → `FILLED` / `REJECTED`).
+- **Pillar 2: Vectorized Factor Research Engine** (`src/tree/research/vectorized/`):
+  - Fast causal factor IC/IR evaluation over contiguous `Float64Array` buffers.
+  - Computes Pearson correlation, Spearman rank correlation, t-statistic derivation with asymptotic p-value estimation, and monotonic quantile spread statistics.
+- **Pillar 3: v11 Quantitative Desk Expansion** (`src/tree/quantlib/`):
+  - *Kalman Cointegration Desk* (`src/tree/quantlib/kalman/`): State-space recursive regression estimating dynamic hedge ratio $\beta_t$, intercept $\alpha_t$, and Ornstein-Uhlenbeck mean-reversion half-life $t_{1/2}$.
+  - *Transient Market Impact Engine* (`src/tree/quantlib/impact/`): Bouchaud power-law kernel $G(\tau) = \gamma (\tau + \epsilon)^{-\alpha}$ modeling transient price impact and multi-slice slippage cost.
+  - *Greeks Dynamic Hedging Desk* (`src/tree/quantlib/hedging/`): Real-time Delta, Gamma, and Vega risk envelope tracking producing linear perp and option straddle rebalancing orders.
+- **Verification & Quality Gate**:
+  - `test/quant/v11-full-suite-simulation.test.ts` validating complete cross-stack execution across all 3 pillars.
+  - 5,455/5,455 tests passing across 473 test files (100% green), 0 `:any`, 0 ESLint warnings, all files strictly $\le 160$ LOC, Next.js production build clean.
+
 ### Unified v10 Quantitative Architecture & Operations Triad — 2026-10-08
 - **Pillar 1: Cartea-Jaimungal (2014) Alpha-Informed Market Making Desk** (`src/tree/quantlib/marketmaking/`):
   - Solves the Hamilton-Jacobi-Bellman (HJB) value function incorporating instantaneous price drift $\alpha(t)$ into quote spread depths: $\delta^{b*}(q, \alpha) = C_0 + \frac{2q+1}{2} C_1 - \frac{\alpha}{\kappa}$ and $\delta^{a*}(q, \alpha) = C_0 - \frac{2q-1}{2} C_1 + \frac{\alpha}{\kappa}$.
