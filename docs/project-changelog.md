@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v38 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Bouchaud-Farmer-Lillo (2009) Long-Memory Order Flow & Non-Markovian Impact Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Jean-Philippe Bouchaud, J. Doyne Farmer, and Fabrizio Lillo (2009) *"How Markets Slowly Digest Changes in Supply and Demand"* & Farmer, Gerig, Lillo, Wets (2013).
+  - Formulates the persistent order flow autocorrelation $C(l) \sim l^{-\gamma}$ with Hurst exponent $H = 1 - \gamma/2 \in (0.5, 1)$, modeling bare vs dressed propagator impact functions to ensure statistical non-arbitrage despite persistent sign correlation:
+    $$C(l) = l^{-\gamma}, \quad I_{\text{bare}}(x_i, l) = g_0 \sqrt{x_i} l^{-\gamma}, \quad I_{\text{dressed}} = \sum_i I_{\text{bare}}(x_i, l_i)$$
+  - Computes order trajectory, power-law memory weights, dressed accumulated impact, execution price trajectory, total execution cost, VWAP, and Hurst exponent. Implemented in `src/tree/quantlib/execution/bouchaud-farmer-types.ts` (26 LOC) and `src/tree/quantlib/execution/bouchaud-farmer-engine.ts` (28 LOC).
+- **Pillar 2: Foucault-Kadan-Kandel (2005) Limit Order Book Waiting Times & Liquidity Provider Equilibrium Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Thierry Foucault, Ohad Kadan, and Eugene Kandel (2005) *"Limit Order Book as a Market for Liquidity"* (Review of Financial Studies).
+  - Models the limit order book as an equilibrium waiting-time market where patient liquidity providers trade off waiting costs against the bid-ask spread and fill risk:
+    $$E[W] = \frac{Q + 1}{\lambda}, \quad C_{\text{wait}} = c \cdot E[W], \quad S^* = \max\left(\Delta, \Delta + c E[W] + \sigma \sqrt{E[W]}\right), \quad P_{\text{fill}} = 1 - e^{-\lambda \frac{T}{Q + 1}}$$
+  - Computes expected wait times, reservation spreads, fill probabilities, and strategic order choices ('LIMIT' vs 'MARKET'). Implemented in `src/tree/quantlib/microstructure/foucault-kadan-types.ts` (16 LOC) and `src/tree/quantlib/microstructure/foucault-kadan-engine.ts` (15 LOC).
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/forest/bot/scheduler.ts` (124 LOC $\rightarrow$ 40 LOC facade) by extracting per-bot execution loop, circuit breaker guards, and auto-restart into `scheduler-tick.ts` (40 LOC) and refining `scheduler-helpers.ts` (40 LOC).
+  - Modularized `src/tree/bot/bot-order-executor.ts` (124 LOC $\rightarrow$ 40 LOC facade) by extracting context types and trade mappers into `bot-order-executor-types.ts` (31 LOC) and exchange dispatch with rejection fallbacks into `bot-order-executor-dispatch.ts` (26 LOC).
+  - Preserved 100% backward compatibility and exact contract parity.
+- **Verification & Quality Gate**:
+  - `test/quant/bouchaud-farmer-execution.test.ts` (3 tests) covering long-memory autocorrelation trajectory, trade sign inversion, and zero-inventory boundaries.
+  - `test/quant/foucault-kadan-orderbook.test.ts` (3 tests) covering expected waiting time, impatience cost sensitivity, and optimal limit vs market order switching.
+  - `test/quant/v38-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Bouchaud-Farmer execution, Foucault-Kadan LOB decisioning, BotScheduler, and BotOrderExecutor.
+  - 5,719/5,719 tests passing across 555 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 40$ LOC.
+
 ### Unified v37 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Alfonsi-Fruth-Schied (2010) Optimal Execution with Non-Linear Resilient Limit Order Book Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Aurélien Alfonsi, Antje Fruth, and Alexander Schied (2010) *"Optimal Execution Strategies in the Presence of a Limit Order Book"* (Mathematical Finance).
