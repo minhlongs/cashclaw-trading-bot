@@ -2,89 +2,11 @@ import type {
   Candle,
   CheckResult,
   DataQualityConfig,
-  QualityDimension,
   ValidationResult,
 } from './types';
-import { validateAlignment } from './validate-alignment';
-import { validateDuplicates } from './validate-duplicates';
-import { validateFutureData } from './validate-future-data';
-import { validateIntervals } from './validate-intervals';
-import { validateMonotonicity } from './validate-monotonicity';
-import { validateOHLC } from './validate-ohlc';
-import { validateOutage } from './validate-outage';
-import { validateStaleness } from './validate-staleness';
-import { validateVolume } from './validate-volume';
+import { RUNNERS } from './validator-runners';
 
-interface Runner {
-  readonly dimension: QualityDimension;
-  readonly run: (
-    candles: readonly Candle[],
-    config?: DataQualityConfig,
-    secondary?: readonly Candle[],
-  ) => CheckResult;
-}
-
-const RUNNERS: readonly Runner[] = [
-  {
-    dimension: 'timestamp_monotonicity',
-    run: (candles) => validateMonotonicity(candles),
-  },
-  {
-    dimension: 'duplicate_candles',
-    run: (candles) => validateDuplicates(candles),
-  },
-  {
-    dimension: 'missing_intervals',
-    run: (candles, cfg) =>
-      validateIntervals(candles, {
-        expectedIntervalMs: cfg?.expectedIntervalMs ?? cfg?.missingIntervals?.expectedIntervalMs,
-        timeframe: cfg?.timeframe ?? cfg?.missingIntervals?.timeframe,
-        maxAllowedGapIntervals: cfg?.missingIntervals?.maxAllowedGapIntervals,
-        toleranceRatio: cfg?.missingIntervals?.toleranceRatio,
-      }),
-  },
-  {
-    dimension: 'stale_data',
-    run: (candles, cfg) => {
-      const asOf = cfg?.asOf ?? cfg?.staleness?.asOf;
-      if (asOf === undefined) {
-        return { dimension: 'stale_data', passed: true, violations: [] };
-      }
-      return validateStaleness(candles, {
-        asOf,
-        timeframe: cfg?.timeframe ?? cfg?.staleness?.timeframe,
-        maxStalenessMs: cfg?.staleness?.maxStalenessMs,
-        maxStaleIntervals: cfg?.staleness?.maxStaleIntervals,
-      });
-    },
-  },
-  {
-    dimension: 'impossible_ohlc',
-    run: (candles) => validateOHLC(candles),
-  },
-  {
-    dimension: 'volume_anomalies',
-    run: (candles, cfg) => validateVolume(candles, cfg?.volume),
-  },
-  {
-    dimension: 'cross_source_alignment',
-    run: (candles, cfg, secondary) => validateAlignment(candles, secondary, cfg?.alignment),
-  },
-  {
-    dimension: 'future_data',
-    run: (candles, cfg) => {
-      const asOf = cfg?.asOf ?? cfg?.futureData?.asOf;
-      if (asOf === undefined) {
-        return { dimension: 'future_data', passed: true, violations: [] };
-      }
-      return validateFutureData(candles, { asOf });
-    },
-  },
-  {
-    dimension: 'exchange_outage',
-    run: (candles, cfg) => validateOutage(candles, cfg?.outage),
-  },
-];
+export * from './validator-runners';
 
 /**
  * Composite validator executing all 9 data quality dimensions.

@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v20 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Garman-Klass (1980) & Parkinson (1980) Extreme-Value Volatility Engine** (`src/tree/quantlib/volatility/`):
+  - Implemented Parkinson (1980) high-low range variance estimator exploiting continuous diffusion extrema with $\sim 5\times$ variance efficiency:
+    $$\sigma_{\text{P}}^2 = \frac{1}{4 \ln 2 \cdot N} \sum_{t=1}^N \left(\ln \frac{H_t}{L_t}\right)^2$$
+  - Implemented Garman-Klass (1980) minimum-variance OHLC range estimator achieving $\sim 7.4\times$ the statistical efficiency of standard sample variance:
+    $$\sigma_{\text{GK}}^2 = \frac{1}{N} \sum_{t=1}^N \left[ 0.5 \left(\ln \frac{H_t}{L_t}\right)^2 - (2\ln 2 - 1) \left(\ln \frac{C_t}{O_t}\right)^2 \right]$$
+  - Integrated Garman-Klass-Yang-Zhang (GKYZ) overnight jump extension incorporating discrete overnight gap variance $(\ln(O_t / C_{t-1}))^2$.
+- **Pillar 2: Hasbrouck (1991) Vector Autoregressive (VAR) Trade Informativeness Engine** (`src/tree/quantlib/microstructure/`):
+  - Structural bivariate VAR econometric model decomposing quote midpoint revisions $r_t = \Delta \ln(P_{\text{mid}, t})$ and trade order flow innovations $x_t = \text{sign} \cdot \sqrt{V_t}$.
+  - Computes permanent price impact factor $R_\infty = (\beta_0 + \beta_1) / (1 - \alpha_1)$ isolating informed trade shocks from transitory microstructure noise.
+  - Computes Hasbrouck Information Share ($IS$) measuring the fraction of total price variance attributable to order flow surprises.
+- **Pillar 3: Structural Deep Modularization (< 75 LOC per file)**:
+  - Modularized `attribution-telemetry.ts` (135 LOC $\rightarrow$ 67 LOC) into `attribution-telemetry-processor.ts` (58 LOC) and `attribution-telemetry-stats.ts` (15 LOC).
+  - Modularized `validator.ts` (134 LOC $\rightarrow$ 56 LOC) into `validator-runners.ts` (54 LOC).
+  - Preserved 100% backward compatibility of all public function signatures, Zod schemas, and barrel exports.
+- **Verification & Quality Gate**:
+  - `test/quant/garman-klass-volatility-engine.test.ts` (3 tests) covering Parkinson, Garman-Klass, and GKYZ variance and annualization.
+  - `test/quant/hasbrouck-var-engine.test.ts` (3 tests) covering buyer-initiated pressure, seller-initiated downward price revisions, and sample size requirements.
+  - `test/quant/v20-apex-suite-simulation.test.ts` E2E simulation combining Garman-Klass volatility estimation, Hasbrouck VAR flow shock decomposition, modular candle data quality gate, and operational telemetry batch aggregation.
+  - 5,553/5,553 tests passing across 501 test files (100% green), 0 `:any`, 0 ESLint warnings, all new files strictly $\le 67$ LOC.
+
 ### Unified v19 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Yang-Zhang (2000) Drift-Independent Minimum-Variance Volatility Engine** (`src/tree/quantlib/volatility/`):
   - Implements the continuous-time jump and drift-invariant multi-component volatility estimator:

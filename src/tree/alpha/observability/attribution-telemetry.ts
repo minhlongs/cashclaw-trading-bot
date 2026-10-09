@@ -5,80 +5,12 @@ import type {
   OperationalAlarm,
   OperationalTelemetrySummary,
 } from './attribution-telemetry-types';
+import { computeDistributionStats } from './attribution-telemetry-stats';
+import { processTelemetryRecord, type ProviderAccumulator } from './attribution-telemetry-processor';
 
 export * from './attribution-telemetry-types';
-
-export function computeDistributionStats(vals: readonly number[]) {
-  const count = vals.length;
-  if (count === 0) return { count: 0, mean: 0, median: 0, p95: 0, max: 0 };
-  const sorted = [...vals].sort((a, b) => a - b);
-  const mid = Math.floor(count / 2);
-  const median = count % 2 !== 0 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
-  const p95 = sorted[Math.max(0, Math.min(count - 1, Math.ceil(0.95 * count) - 1))]!;
-  return {
-    count,
-    mean: Number((sorted.reduce((a, b) => a + b, 0) / count).toFixed(4)),
-    median,
-    p95,
-    max: sorted[count - 1]!,
-  };
-}
-
-interface ProviderAccumulator {
-  attempts: number;
-  successCount: number;
-  sumLatency: number;
-  latCount: number;
-}
-
-function processTelemetryRecord(
-  t: OperationalTelemetry,
-  stalenessThreshold: number,
-  latencyThreshold: number,
-  alarms: OperationalAlarm[],
-  alarmTypesSet: Set<OperationalAlarmType>,
-  byProvider: Record<string, ProviderAccumulator>
-): boolean {
-  if (t.dataFreshnessMs > stalenessThreshold) {
-    alarms.push({
-      type: 'STALE_DATA',
-      message: `Freshness drift ${t.dataFreshnessMs}ms > ${stalenessThreshold}ms`,
-      timestamp: t.timestamp,
-      metricValue: t.dataFreshnessMs,
-      thresholdValue: stalenessThreshold,
-    });
-    alarmTypesSet.add('STALE_DATA');
-  }
-  if (t.decisionLatencyMs > latencyThreshold) {
-    alarms.push({
-      type: 'HIGH_LATENCY',
-      message: `Decision latency ${t.decisionLatencyMs}ms > ${latencyThreshold}ms`,
-      timestamp: t.timestamp,
-      metricValue: t.decisionLatencyMs,
-      thresholdValue: latencyThreshold,
-    });
-    alarmTypesSet.add('HIGH_LATENCY');
-  }
-  const prov = t.providerProvenance;
-  const isFallback = prov.usedFallback || prov.fallbackAttempts > 0;
-  if (isFallback) {
-    alarms.push({
-      type: 'PROVIDER_FALLBACK',
-      message: `Fallback used (attempts: ${prov.fallbackAttempts}, active: ${prov.activeProvider})`,
-      timestamp: t.timestamp,
-      metricValue: prov.fallbackAttempts,
-    });
-    alarmTypesSet.add('PROVIDER_FALLBACK');
-  }
-  const entry = byProvider[prov.activeProvider] ??= { attempts: 0, successCount: 0, sumLatency: 0, latCount: 0 };
-  entry.attempts += prov.fallbackAttempts > 0 ? prov.fallbackAttempts : 1;
-  entry.successCount++;
-  if (prov.providerLatencyMs !== undefined) {
-    entry.sumLatency += prov.providerLatencyMs;
-    entry.latCount++;
-  }
-  return isFallback;
-}
+export * from './attribution-telemetry-stats';
+export * from './attribution-telemetry-processor';
 
 export function evaluateOperationalTelemetryBatch(
   telemetry: readonly OperationalTelemetry[],
