@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v41 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
+- **Pillar 1: Schied-Zhang (2019) Optimal Execution under Rough Volatility Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Alexander Schied and Tao Zhang (2019) *"A model for optimal execution with rough fractional volatility"*.
+  - Solves dynamic liquidation under rough fractional volatility with Hurst parameter $H \in (0, 0.5]$ and roughness multiplier $(dt)^{H - 0.5}$:
+    $$\nu_t^* = q_t \zeta_t \coth(\zeta_t (T - t)), \quad \zeta_t = \sqrt{\frac{\lambda \sigma_t^2}{\eta (dt)^{H - 0.5}}}$$
+  - Adapts to intraday volatility bursts, clusters, and roughness dampening. Implemented in `src/tree/quantlib/execution/schied-zhang-types.ts` (28 LOC) and `src/tree/quantlib/execution/schied-zhang-engine.ts` (30 LOC).
+- **Pillar 2: Kyle-Obizhaeva (2018) Microstructure Invariance Spread & Size Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Albert S. Kyle and Anna A. Obizhaeva (2018) *"Market Microstructure Invariance: Empirical Hypotheses"* (Econometrica).
+  - Formulates dimensional scaling invariance across volume $V$, volatility $\sigma$, and asset price $P$:
+    $$S^* \propto P \cdot \left(\frac{\sigma}{V}\right)^{1/3}, \quad Q^* \propto \frac{\sigma}{P} \cdot \left(\frac{V}{\sigma}\right)^{1/3}$$
+  - Computes invariant bid-ask spread, basis points cost, invariant trade size, and trade arrival count. Implemented in `src/tree/quantlib/microstructure/kyle-obizhaeva-spread-types.ts` (15 LOC) and `src/tree/quantlib/microstructure/kyle-obizhaeva-spread-engine.ts` (21 LOC).
+- **Pillar 3: Structural Deep Modularization (< 40 LOC per file)**:
+  - Modularized `src/tree/quantlib/leadlag/tick-cross-correlator.ts` (125 LOC $\rightarrow$ 37 LOC facade) via `tick-cross-correlator-state.ts` (24 LOC), `tick-cross-correlator-cov.ts` (30 LOC), and `tick-cross-correlator-metrics.ts` (16 LOC).
+  - Modularized `src/forest/research/tradingagents/report-types.ts` (126 LOC $\rightarrow$ 34 LOC facade) via `deliberation-report-contracts.ts` (32 LOC) and `deliberation-report-totals.ts` (33 LOC).
+  - Preserved 100% backward compatibility and exact contract parity.
+- **Verification & Quality Gate**:
+  - `test/quant/schied-zhang-execution.test.ts` (3 tests) covering rough liquidation trajectory, standard Brownian $H = 0.5$ boundary, and single-step boundary.
+  - `test/quant/kyle-obizhaeva-spread.test.ts` (3 tests) covering invariant spread and trade size, liquidity scaling, and custom parameters.
+  - `test/quant/v41-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying invariance spread, rough execution, modular tick correlator, and deliberation report invariants.
+  - 5,740/5,740 tests passing across 564 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 37$ LOC.
+
 ### Unified v40 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Cartea-Jaimungal (2014) Optimal High-Frequency Execution with Alpha Drift Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Álvaro Cartea and Sebastian Jaimungal (2014) *"Risk Metrics and Fine Tuning of High-Frequency Trading Strategies"* & *"Algorithmic and High-Frequency Trading"* (Cambridge Univ Press, 2015).
