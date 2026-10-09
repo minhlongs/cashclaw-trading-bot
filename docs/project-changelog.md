@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v27 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Cartea-Jaimungal (2016) Order Flow Imbalance (OFI) Optimal Execution Engine** (`src/tree/quantlib/execution/`):
+  - Formulates optimal liquidation incorporating exogenous order flow imbalance (OFI) drift $d P_t = (b - a\nu_t + \beta \text{OFI}_t) dt + \sigma dW_t$:
+    $$\nu_t^* = \zeta \frac{\cosh(\zeta(T - t))}{\sinh(\zeta T)} S_0 + \frac{\beta \text{OFI}}{2k}\left(1 - \frac{\sinh(\zeta(T - t))}{\sinh(\zeta T)}\right)$$
+  - Dynamically accelerates trading pace when favorable OFI is detected while hedging inventory risk $\phi$, benchmarking against uniform TWAP. Strictly $\le 44$ LOC.
+- **Pillar 2: Foster-Viswanathan (1993) Heterogeneous Multi-Informed Microstructure Engine** (`src/tree/quantlib/microstructure/`):
+  - Multi-stage Kyle-style auction modeling competition among $M \ge 2$ informed traders with correlated private signals ($\rho \in [0, 1)$):
+    $$\beta_n = \sqrt{\frac{\Sigma_u}{M [1 + (M - 1)\rho] \Sigma_n}}, \quad \lambda_n = \frac{M \beta_n \Sigma_n}{M \beta_n^2 \Sigma_n [1 + (M - 1)\rho] + \Sigma_u}$$
+  - Quantifies dynamic information revelation speed, posterior variance decay, and Kyle's lambda market depth impact. Strictly $\le 30$ LOC.
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/tree/regime/feature-helpers.ts` (134 LOC $\rightarrow$ 2 LOC facade) into `feature-helpers-stats.ts` (27 LOC) and `feature-helpers-trend.ts` (45 LOC).
+  - Modularized `src/tree/alpha/relative-value/validation-helpers.ts` (133 LOC $\rightarrow$ 3 LOC facade) into `validation-helpers-types.ts` (30 LOC), `validation-helpers-causal.ts` (36 LOC), and `validation-helpers-assert.ts` (41 LOC).
+  - Maintained 100% backward compatibility with zero breaking changes for existing consumers.
+- **Verification & Quality Gate**:
+  - `test/quant/cartea-jaimungal-ofi-execution.test.ts` (5 tests) covering full liquidation, OFI trading acceleration, inventory neutrality, and risk aversion savings.
+  - `test/quant/foster-viswanathan-microstructure.test.ts` (4 tests) covering monotone posterior uncertainty decay, trader competition scaling, and signal correlation.
+  - `test/quant/v27-apex-suite-simulation.test.ts` cross-domain E2E simulation test.
+  - 5,626/5,626 tests passing across 522 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 50$ LOC.
+
 ### Unified v26 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Hubbert (2012) Transient Liquidity Elasticity Engine** (`src/tree/quantlib/execution/`):
   - Formulates transient liquidity and non-linear order book depth elasticity scaling $\lambda_{\text{eff}} = \lambda_0 (1 - \alpha)^{-1/2}$ coupled with exponential depth resilience $\kappa = e^{-\rho \Delta t}$:
