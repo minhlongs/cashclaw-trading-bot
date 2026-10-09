@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v23 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Bouchaud-Mézard-Potters (2004) Propagator Non-Parametric Transient Price Impact Engine** (`src/tree/quantlib/impact/`):
+  - Models price impact as a superposition of historical order flow using bare propagator kernel:
+    $$G(\tau) = \frac{\Gamma_0}{(1 + \tau / \tau_0)^\beta}$$
+  - Computes dynamic price impact trajectory $I(t) = \sum_{s=0}^{t-1} G(t - s) \epsilon_s$, peak impact, permanent plateau impact, and transient relaxation ratio. Strictly $\le 49$ LOC.
+- **Pillar 2: Glosten-Harris (1988) Spread & Adverse Selection Econometric Decomposition Engine** (`src/tree/quantlib/microstructure/`):
+  - Solves the 2-variable OLS regression decomposing transaction price changes:
+    $$\Delta p_t = c \Delta Q_t + z Q_t + \epsilon_t$$
+  - Separates transitory order processing half-spread cost ($c$) and permanent private information adverse selection cost ($z$), computing implied effective spread $S = 2(c + z)$ and $R^2$ goodness-of-fit. Strictly $\le 48$ LOC.
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `indicators-statistical.ts` (80 LOC $\rightarrow$ 14 LOC facade) into `indicators-statistical-returns.ts` (31 LOC) and `indicators-statistical-volatility.ts` (39 LOC).
+  - Modularized `robustness-checks-invariance.ts` (122 LOC $\rightarrow$ 9 LOC facade) into `robustness-checks-invariance-window.ts` (45 LOC) and `robustness-checks-invariance-baseline.ts` (47 LOC).
+  - 100% backward-compatible public exports with zero breaking changes.
+- **Verification & Quality Gate**:
+  - `test/quant/bouchaud-propagator-engine.test.ts` (3 tests) covering bare kernel impact, order sequence, and relaxation ratio.
+  - `test/quant/glosten-harris-spread-engine.test.ts` (2 tests) covering adverse selection / order processing share decomposition and boundary handling.
+  - `test/quant/v23-apex-suite-simulation.test.ts` cross-domain E2E simulation test.
+  - 5,575/5,575 tests passing across 510 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 50$ LOC.
+
 ### Unified v22 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Almgren (2003) Optimal Execution Engine with Non-Linear Power-Law Impact** (`src/tree/quantlib/execution/`):
   - Solves the dynamic trajectory for institutional liquidation under non-linear temporary price impact $h(v) = \eta |v|^\alpha \text{sign}(v)$ with square-root exponent ($\alpha \approx 0.5$):
