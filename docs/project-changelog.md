@@ -2,6 +2,29 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v31 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Kyle-Dutta-Madhavan (1995) Continuous Dynamic Multi-Dealer Execution Engine** (`src/tree/quantlib/execution/`):
+  - Dynamic dealer competition pricing and block order liquidation balancing inventory risk with adverse selection compression:
+    $$P_t = \mu_t + \lambda_t Q_t - \gamma_t I_t, \quad \lambda_{\text{eff}} = \frac{\lambda_0}{M}$$
+  - Dynamic liquidation schedule:
+    $$v^*(t) = \frac{S_t}{(N - i) \Delta t} \cdot \left(1 + \frac{\gamma M}{2 \eta + \lambda_{\text{eff}}}\right)^{-1}$$
+  - Benchmarking against uniform TWAP to compute dealer inventory absorption savings. Strictly $\le 32$ LOC.
+- **Pillar 2: Boehmer-Grammig-Theissen (2007) Asymmetric Limit Order Book Microstructure Engine** (`src/tree/quantlib/microstructure/`):
+  - Econometric asymmetric quote revision and queue depletion dynamics:
+    $$\Delta P_t = \lambda_{\text{imb}} \frac{Q_{\text{bid}} - Q_{\text{ask}}}{Q_{\text{bid}} + Q_{\text{ask}}} + \kappa_{\text{depth}} \ln\left(\frac{Q_{\text{bid}}}{Q_{\text{ask}}}\right) + \beta_{\text{OFI}} \text{OFI}_t$$
+  - Probability of informed trading from order book imbalance:
+    $$P(\text{Informed}) = \frac{1}{1 + e^{-(\theta_0 + \theta_1 |\text{Imbalance}|)}}$$
+  - Evaluates queue imbalance, log-depth ratio, expected price revision, and book regime (`BUY_PRESSURE`, `SELL_PRESSURE`, `BALANCED`). Strictly $\le 20$ LOC.
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/forest/research/tradingagents/run-deliberation.core.ts` (132 LOC $\rightarrow$ 25 LOC facade) into `run-deliberation-stages.ts` (41 LOC) and `run-deliberation-portfolio.ts` (31 LOC).
+  - Modularized `src/tree/research/alpha/zoo/operator-parser-core.ts` (130 LOC $\rightarrow$ 42 LOC facade) into `operator-parser-base.ts` (40 LOC) and `operator-parser-call.ts` (25 LOC).
+  - Maintained 100% backward compatibility and verified with green test suites across all components.
+- **Verification & Quality Gate**:
+  - `test/quant/kyle-dutta-madhavan-execution.test.ts` (4 tests) covering terminal liquidation, multi-dealer lambda compression, TWAP cost savings, and zero-share edge cases.
+  - `test/quant/bgt-asymmetric-book.test.ts` (4 tests) covering buy/sell book regimes, log depth ratio, informed trading probability, and empty book safety.
+  - `test/quant/v31-apex-suite-simulation.test.ts` cross-domain E2E simulation test.
+  - 5,661/5,661 tests passing across 534 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 42$ LOC.
+
 ### Unified v30 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Bertsimas-Lo-Hummel (2000) Dynamic Execution with Information Signal & Alpha Decay Engine** (`src/tree/quantlib/execution/`):
   - Dynamic programming closed-form execution under non-stationary price signals:
