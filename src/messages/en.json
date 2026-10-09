@@ -91,6 +91,17 @@
     },
     "v7Metrics": {
       "title": "V7 Multi-Pillar Quantitative HUD"
+    },
+    "waterfallHud": {
+      "title": "Execution Waterfall HUD & Greeks",
+      "subtitle": "4-Stage OMS Waterfall with Real-Time Risk Meters",
+      "darkMeshCrossing": "Dark Mesh Crossing",
+      "urgencyGuard": "Urgency Guard",
+      "twapSlices": "TWAP Slices",
+      "sorRouting": "SOR Routed",
+      "deltaRisk": "Delta Risk",
+      "gammaRisk": "Gamma Risk",
+      "vegaRisk": "Vega Risk"
     }
   },
   "bots": {

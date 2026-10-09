@@ -2,6 +2,20 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v12 Quantitative Architecture & Operations Triad — 2026-10-09
+- **Pillar 1: Kyle-Back Adverse Selection & Adaptive Volume OMS** (`src/tree/quantlib/microstructure/`, `src/tree/execution/oms/`):
+  - Kyle-Back continuous microstructure regression model: $\Delta P = \lambda Q + \varepsilon$, deriving market depth elasticity $\lambda$, $R^2$, and $t$-statistic to detect informed order flow toxicity.
+  - Adaptive U-curve volume slicer (`calculateAdaptiveVolumeSlices`) distributing execution blocks following intraday volume dynamics instead of flat TWAP.
+- **Pillar 2: Bayesian Black-Litterman Portfolio & Factor Orthogonalization** (`src/tree/quantlib/portfolio/`, `src/tree/research/vectorized/`):
+  - Gram-Schmidt vector orthogonalizer (`VectorizedOrthogonalizer`) eliminating cross-sectional factor collinearity on contiguous `Float64Array` buffers.
+  - Black-Litterman Bayesian engine (`BlackLittermanEngine`) blending market equilibrium priors $\Pi$ with qualitative multi-agent AI views $(P, Q, \Omega)$ to derive posterior returns and optimal risk-aversion portfolio weights.
+- **Pillar 3: Terminal Waterfall HUD & Post-Trade Slippage Attribution** (`src/components/dashboard/`, `src/tree/execution/attribution/`):
+  - `TerminalWaterfallHud` component surfacing real-time 4-stage execution state, Dark Mesh netting ratios, and Greeks risk gauges ($\Delta, \Gamma, \nu$).
+  - Post-Trade Slippage Attribution Ledger (`SlippageAttributionLedger`) decomposing total execution slippage into Half-Spread, Transient Impact, and Permanent Market Drift components.
+- **Verification & Quality Gate**:
+  - `test/quant/v12-full-suite-simulation.test.ts` validating complete cross-stack execution across all 3 pillars.
+  - 5,464/5,464 tests passing across 477 test files (100% green), 0 `:any`, 0 ESLint warnings, all files strictly $\le 160$ LOC, Next.js production build clean.
+
 ### Unified v11 Quantitative Architecture & Operations Triad — 2026-10-09
 - **Pillar 1: Unified Execution OMS Waterfall Pipeline** (`src/tree/execution/oms/`):
   - 4-stage execution hierarchy: (1) Internal Dark Mesh Crossing at mid-price saving 100% external fees, (2) Microstructure Urgency Guard gating adverse toxicity via VPIN and OFI, (3) Institutional TWAP Slicing schedule for block orders, and (4) Smart Order Routing (SOR) allocating across Binance, Bybit, and OKX depth.
