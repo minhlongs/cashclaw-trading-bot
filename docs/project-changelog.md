@@ -2,6 +2,25 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v33 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Almgren-Lorenz (2007) Adaptive Arrival Price Execution Engine** (`src/tree/quantlib/execution/`):
+  - State-dependent adaptive optimal execution where trading speed reacts dynamically to observed price drift and volatility shocks:
+    $$v_t^* = \kappa S_t \cdot \left(1 + \beta \frac{P_t - P_0}{\sigma \sqrt{t}}\right)$$
+  - Dynamically accelerates trading when market moves favorably and dampens speed under adverse trends to minimize total execution cost and maximize opportunistic capture against benchmark static execution. Implemented in `src/tree/quantlib/execution/almgren-lorenz-types.ts` (30 LOC) and `src/tree/quantlib/execution/almgren-lorenz-engine.ts` (30 LOC).
+- **Pillar 2: Easley-O'Hara (1987) Trade-Size Information Asymmetry Engine** (`src/tree/quantlib/microstructure/`):
+  - Formulates size-dependent adverse selection where informed traders monetize private signals using larger blocks:
+    $$P(\text{Informed} \mid \text{Large}) = \frac{\mu \alpha \theta}{\mu \alpha \theta + 2 \epsilon_L}, \quad P(\text{Informed} \mid \text{Small}) = \frac{\mu \alpha (1 - \theta)}{\mu \alpha (1 - \theta) + 2 \epsilon_S}$$
+  - Evaluates size-stratified adverse selection spread markups ($S_{\text{large}} > S_{\text{small}}$), size asymmetry ratios, and informed order concentration. Implemented in `src/tree/quantlib/microstructure/easley-ohara-types.ts` (18 LOC) and `src/tree/quantlib/microstructure/easley-ohara-engine.ts` (19 LOC).
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/forest/research/tradingagents/model-router-execute.ts` (130 LOC $\rightarrow$ 28 LOC facade) into `model-router-attempt.ts` (22 LOC) and `model-router-fallback.ts` (23 LOC).
+  - Modularized `src/forest/alpha/research-agent/mock-provider.ts` (130 LOC $\rightarrow$ 39 LOC facade) into `mock-provider-types.ts` (19 LOC) and `mock-provider-dispatch.ts` (38 LOC).
+  - Maintained 100% backward compatibility with zero regressions across all consumers.
+- **Verification & Quality Gate**:
+  - `test/quant/almgren-lorenz-execution.test.ts` (3 tests) covering complete block liquidation, speed acceleration on favorable price drift, zero-share boundary.
+  - `test/quant/easley-ohara-trade-size.test.ts` (3 tests) covering size-stratified PIN spread markups, symmetric allocation baseline, zero-informed arrival rate.
+  - `test/quant/v33-apex-suite-simulation.test.ts` cross-domain E2E simulation test.
+  - 5,680/5,680 tests passing across 540 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 39$ LOC.
+
 ### Unified v32 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Huberman-Stanzl (2004) Price Manipulation & Quasi-Arbitrage Free Execution Engine** (`src/tree/quantlib/execution/`):
   - Formulates optimal liquidation under no-manipulation constraints (quasi-arbitrage absence requires linear permanent price impact $I_{\text{perm}}(\Delta x) = \gamma \Delta x$):
