@@ -1,67 +1,13 @@
 import type { CostStressTier, ShadowFill, ShadowOrder } from './types';
-import { CostStressTierSchema, ShadowFillSchema, ShadowOrderSchema } from './schemas';
+import { ShadowFillSchema, ShadowOrderSchema } from './schemas';
 import { resolveStressConfig } from '../cost-stress';
+import {
+  isSingleParams,
+  validateSimulateParams,
+  type SimulateShadowFillParams,
+} from './shadow-simulator-validation';
 
-/**
- * Parameters for simulating hypothetical shadow execution fill.
- */
-export interface SimulateShadowFillParams {
-  readonly arrivalPrice: number;
-  readonly latencyMs: number;
-  readonly stressTier: CostStressTier;
-  readonly fillTimestampOverride?: number;
-}
-
-/**
- * Validates simulation parameters and resolves the canonical CostStressTier.
- */
-function validateSimulateParams(params: SimulateShadowFillParams): CostStressTier {
-  if (!params || typeof params !== 'object') {
-    throw new TypeError('simulateShadowFill: params must be an object');
-  }
-  if (!Number.isFinite(params.arrivalPrice) || params.arrivalPrice <= 0) {
-    throw new RangeError(
-      `simulateShadowFill: arrivalPrice must be a positive finite number, got: ${params.arrivalPrice}`,
-    );
-  }
-  if (!Number.isFinite(params.latencyMs) || params.latencyMs < 0) {
-    throw new RangeError(
-      `simulateShadowFill: latencyMs must be a non-negative finite number, got: ${params.latencyMs}`,
-    );
-  }
-
-  const rawTier = typeof params.stressTier === 'string' ? params.stressTier.toLowerCase() : params.stressTier;
-  const validatedTier = CostStressTierSchema.parse(rawTier);
-
-  if (params.fillTimestampOverride !== undefined) {
-    if (
-      !Number.isFinite(params.fillTimestampOverride) ||
-      !Number.isInteger(params.fillTimestampOverride) ||
-      params.fillTimestampOverride <= 0
-    ) {
-      throw new RangeError(
-        `simulateShadowFill: fillTimestampOverride must be a positive integer, got: ${params.fillTimestampOverride}`,
-      );
-    }
-  }
-
-  return validatedTier;
-}
-
-/**
- * Determines whether the given parameter is a single SimulateShadowFillParams object.
- */
-function isSingleParams(
-  p: Readonly<Record<string, SimulateShadowFillParams>> | SimulateShadowFillParams,
-): p is SimulateShadowFillParams {
-  return (
-    typeof p === 'object' &&
-    p !== null &&
-    'arrivalPrice' in p &&
-    typeof (p as SimulateShadowFillParams).arrivalPrice === 'number' &&
-    'stressTier' in p
-  );
-}
+export type { SimulateShadowFillParams };
 
 /**
  * Simulates a single hypothetical shadow fill with causal latency penalties and
@@ -74,7 +20,7 @@ export function simulateShadowFill(
   params: SimulateShadowFillParams,
 ): ShadowFill {
   const validatedOrder = ShadowOrderSchema.parse(order);
-  const validatedTier = validateSimulateParams(params);
+  const validatedTier: CostStressTier = validateSimulateParams(params);
   const stressConfig = resolveStressConfig(validatedTier);
 
   const fillTimestamp =

@@ -2,6 +2,24 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v15 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Kyle (1985) Microstructure Adverse Selection Price Impact Engine** (`src/tree/quantlib/microstructure/`):
+  - Implements Kyle (1985) continuous-auction adverse selection price impact model:
+    $$\Delta P_t = \lambda \cdot Q_t + \varepsilon_t, \quad \lambda = \frac{\text{Cov}(\Delta P, Q)}{\text{Var}(Q)}$$
+    deriving empirical adverse selection parameter $\lambda$, coefficient of determination $R^2$, and automated detection of informed flow dominance (`isInformedFlowDominant`).
+  - Flags toxic order flow regimes to proactively widen market-making spreads and shield passive book liquidity.
+- **Pillar 2: Gatheral (2018) Rough Volatility Hurst Exponent ($H$) Estimator** (`src/tree/quantlib/volatility/`):
+  - High-frequency realized volatility rough regime estimator based on Jim Gatheral (2018) fractional Brownian motion structure functions:
+    $$\mathbb{E}\left[|\log \sigma_{t+\Delta} - \log \sigma_t|^2\right] \propto \Delta^{2H} \implies \log m(2, \Delta) = 2H \log \Delta + C$$
+  - Multi-lag log-moment OLS regression estimating Hurst parameter $H$, structure function fit quality ($R^2$), and regime classification (`isRoughRegime`, $H < 0.45$).
+- **Pillar 3: Structural Fat-File Modularization & Decoupling** (`src/forest/alpha/research-agent/`, `src/tree/alpha/observability/`):
+  - Modularized `mock-provider.ts` (167 LOC $\rightarrow$ 130 LOC) by extracting `mock-provider-fixtures.ts` (51 LOC) for schema fixtures.
+  - Modularized `shadow-simulator.ts` (149 LOC $\rightarrow$ 95 LOC) by extracting `shadow-simulator-validation.ts` (54 LOC) for parameter validators and type guards.
+  - All refactored modules strictly $\le 130$ LOC with 100% backward-compatible public exports and zero test regressions.
+- **Verification & Quality Gate**:
+  - `test/quant/v15-apex-suite-simulation.test.ts` validating complete cross-domain execution across all 3 pillars.
+  - 5,495/5,495 tests passing across 486 test files (100% green), 0 `:any`, 0 ESLint warnings, `npx tsc --noEmit` clean, Next.js production build clean.
+
 ### Unified v14 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Gatheral-Schied Transient Market Impact & Alfonsi LOB Depth Resilience** (`src/tree/quantlib/microstructure/`):
   - Implements Gatheral-Schied non-linear transient impact decay:
