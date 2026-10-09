@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v39 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
+- **Pillar 1: Lorenz-Almgren (2011) Mean-Variance Optimal Adaptive Execution Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Christopher Lorenz and Robert Almgren (2011) *"Mean-Variance Optimal Adaptive Execution"* (Applied Mathematical Finance).
+  - Solves the dynamic mean-variance optimal liquidation problem where execution rate adapts to price moves:
+    $$v_t^* = \kappa_t q_t \cdot \left[1 + \beta \frac{P_t - P_0}{\sigma P_0}\right]$$
+  - Models dynamic variance risk aversion $\lambda$, speed dampening, price drift sensitivity, temporary impact $\eta$, execution price trajectory, VWAP price, and mean-variance utility. Implemented in `src/tree/quantlib/execution/lorenz-almgren-types.ts` (28 LOC) and `src/tree/quantlib/execution/lorenz-almgren-engine.ts` (31 LOC).
+- **Pillar 2: Copeland-Galai (1983) Options Model of Bid-Ask Spread Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Thomas E. Copeland and Dan Galai (1983) *"Information Effects on the Bid-Ask Spread"* (Journal of Finance).
+  - Formulates the bid-ask spread as the dealer writing two options (a put option to sellers at the bid and a call option to buyers at the ask) facing informed and uninformed traders:
+    $$S^* = 2 \cdot \frac{\alpha \cdot (C + P) + c_{\text{order}}}{1 - \alpha}$$
+  - Computes dealer straddle option liability under Black-Scholes / Bachelier approximation, uninformed revenue ratio, half-spread, and equilibrium bid and ask quotes. Implemented in `src/tree/quantlib/microstructure/copeland-galai-types.ts` (18 LOC) and `src/tree/quantlib/microstructure/copeland-galai-engine.ts` (24 LOC).
+- **Pillar 3: Structural Deep Modularization (< 50 LOC per file)**:
+  - Modularized `src/forest/settings/actions.ts` (125 LOC $\rightarrow$ 39 LOC facade) by extracting D1 loading/persisting with WebCrypto encryption into `actions-d1.ts` (32 LOC) and operational setting mutations into `actions-ops.ts` (39 LOC).
+  - Modularized `src/forest/api/handlers/bot-detail.ts` (125 LOC $\rightarrow$ 37 LOC facade) by extracting type definitions and grid configuration parsing into `bot-detail-types.ts` (25 LOC) and bot lifecycle control operations into `bot-detail-control.ts` (22 LOC).
+  - Preserved 100% backward compatibility and exact contract parity.
+- **Verification & Quality Gate**:
+  - `test/quant/lorenz-almgren-execution.test.ts` (3 tests) covering adaptive liquidation trajectory, drift sensitivity, and boundary conditions.
+  - `test/quant/copeland-galai-spread.test.ts` (3 tests) covering option liability, informed trader fraction monotonicity, and volatility scaling.
+  - `test/quant/v39-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Copeland-Galai quoting, Lorenz-Almgren execution, and modular bot detail extraction.
+  - 5,726/5,726 tests passing across 558 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 39$ LOC.
+
 ### Unified v38 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-09
 - **Pillar 1: Bouchaud-Farmer-Lillo (2009) Long-Memory Order Flow & Non-Markovian Impact Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Jean-Philippe Bouchaud, J. Doyne Farmer, and Fabrizio Lillo (2009) *"How Markets Slowly Digest Changes in Supply and Demand"* & Farmer, Gerig, Lillo, Wets (2013).
