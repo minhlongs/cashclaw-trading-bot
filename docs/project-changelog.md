@@ -2,6 +2,37 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v57 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
+- **Pillar 1: Garman (1976) Dealer Inventory Marketmaking & Bankruptcy Risk Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Mark B. Garman (1976), *"Market Microstructure"*, Journal of Financial Economics, 3(3), 257–275.
+  - Implements Poisson arrival order flow marketmaking, dealer inventory drift $\mu_I = \lambda_s - \lambda_b$, inventory variance $\sigma_I^2 = \lambda_s + \lambda_b$, reservation price skew, and finite-horizon inventory exhaustion probability:
+    $$P_a = P_0 + \frac{S}{2} - \gamma I_0, \quad P_b = P_0 - \frac{S}{2} - \gamma I_0$$
+    $$P_{\text{exhaustion}} = \exp\left( \frac{2 \mu_I I_0}{\sigma_I^2} \right)$$
+  - Implemented in `src/tree/quantlib/microstructure/garman-dealer-inventory-types.ts` (17 LOC) and `src/tree/quantlib/microstructure/garman-dealer-inventory-engine.ts` (20 LOC).
+- **Pillar 2: Pagano (1989) Endogenous Market Thinness & Multi-Market Concentration Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Marco Pagano (1989), *"Trading Volume and Asset Liquidity"*, Quarterly Journal of Economics, 104(2), 255–274.
+  - Formulates endogenous liquidity externalities across competing trading venues, where transaction cost decreases with market thickness $C_i(N_i) = \frac{\gamma \sigma^2}{N_i} + c_0$, evaluates Herfindahl-Hirschman Liquidity Concentration Index ($HHI = \sum s_i^2$), and detects tipping points where flow cascades to the dominant venue.
+  - Implemented in `src/tree/quantlib/microstructure/pagano-market-thinness-types.ts` (18 LOC) and `src/tree/quantlib/microstructure/pagano-market-thinness-engine.ts` (17 LOC).
+- **Pillar 3: Hasbrouck (1991) Vector Autoregressive (VAR) Trade Impact & Information Variance Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Joel Hasbrouck (1991), *"Measuring the Information Content of Stock Trades"*, Journal of Finance, 46(1), 179–207.
+  - Measures permanent trade price impact $\Psi$, trade innovation variance, and information share as the proportion of return variance explained by unexpected trade order flow ($\frac{\beta^2 \sigma_x^2}{\sigma_r^2}$).
+  - Implemented in `src/tree/quantlib/microstructure/hasbrouck-trade-impact-types.ts` (13 LOC) and `src/tree/quantlib/microstructure/hasbrouck-trade-impact-engine.ts` (17 LOC).
+- **Pillar 4: Almgren & Chriss (2000) Nonlinear Risk Penalty & Mean-Variance Liquidation Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Robert Almgren and Neil Chriss (2000), *"Optimal Execution of Portfolio Transactions"*, Journal of Risk, 3(2), 5–39.
+  - Formulates optimal liquidation trajectories under mean-variance utility with nonlinear risk penalties $U(x) = E[x] - \lambda V[x]^p$, hyperbolic execution trajectory $x_j = X \frac{\sinh(\kappa (T - t_j))}{\sinh(\kappa T)}$, urgency parameter $\kappa = \sqrt{\frac{\lambda \sigma^2}{\eta}}$, expected impact cost, and variance penalty.
+  - Implemented in `src/tree/quantlib/execution/almgren-risk-penalty-types.ts` (16 LOC) and `src/tree/quantlib/execution/almgren-risk-penalty-engine.ts` (22 LOC).
+- **Pillar 5: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/land/exchange-orchestration/routed-execution.core.ts` (118 LOC $\rightarrow$ 35 LOC facade) via `routed-config-handler.ts` (8 LOC), `routed-ticker-handler.ts` (20 LOC), `routed-order-handler.ts` (31 LOC), and `routed-order-lookup.ts` (25 LOC).
+  - Modularized `src/tree/exchange/direct/binance-rest-client.ts` (117 LOC $\rightarrow$ 33 LOC facade) via `binance-response-parser.ts` (22 LOC) and `binance-market-endpoints.ts` (27 LOC).
+  - Preserved 100% backward compatibility, exact public method signatures, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/garman-dealer-inventory.test.ts` (3 tests) verifying quote skewing, inventory drift, and exhaustion probability.
+  - `test/quant/pagano-market-thinness.test.ts` (3 tests) verifying market thickness cost scaling, HHI concentration, and tipping dynamics.
+  - `test/quant/hasbrouck-trade-impact.test.ts` (3 tests) verifying VAR permanent impact, trade innovation variance, and information share.
+  - `test/quant/almgren-risk-penalty.test.ts` (3 tests) verifying hyperbolic trajectory, urgency parameter, and nonlinear risk penalty.
+  - `test/quant/v57-apex-suite-simulation.test.ts` cross-domain E2E simulation unifying dealer inventory quoting, multi-venue thinness concentration, VAR permanent impact, and nonlinear risk liquidation.
+  - 5,840/5,840 tests passing across 617 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 36$ LOC.
+
 ### Unified v56 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
 - **Pillar 1: Huberman & Stanzl (2004) Price Manipulation & Non-Arbitrage Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Gur Huberman and Werner Stanzl (2004), *"Price Manipulation and Quasi-Arbitrage: Long-Horizon Trading in Options and Stocks"*, Mathematical Finance, 14(3), 369–392.
