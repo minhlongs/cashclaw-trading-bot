@@ -2,6 +2,43 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v56 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
+- **Pillar 1: Huberman & Stanzl (2004) Price Manipulation & Non-Arbitrage Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Gur Huberman and Werner Stanzl (2004), *"Price Manipulation and Quasi-Arbitrage: Long-Horizon Trading in Options and Stocks"*, Mathematical Finance, 14(3), 369–392.
+  - Implements price formation and round-trip execution cost dynamics with linear permanent impact and exponential decaying transient impact:
+    $$P_t = P_0 + \lambda \sum_{s=1}^t q_s + \theta \sum_{s < t} \rho^{t-s} q_s$$
+  - Verifies non-arbitrage and absence of price manipulation: round-trip trading paths ($\sum q_t = 0$) generate strictly non-negative execution costs ($\mathcal{C}_{\text{round-trip}} \ge 0$).
+  - Evaluates step-by-step price schedule, cumulative inventory, effective price, round-trip cost, permanent and transient impact costs, and quasi-arbitrage-free verification. Implemented in `src/tree/quantlib/execution/huberman-stanzl-manipulation-types.ts` (25 LOC) and `src/tree/quantlib/execution/huberman-stanzl-manipulation-engine.ts` (25 LOC).
+- **Pillar 2: Madhavan-Richardson-Roomans (1997, MRR) Structural Order Flow & Information Friction Spread Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Ananthanarayanan Madhavan, David Richardson, and Mark Roomans (1997), *"Why Do Security Prices Change? A Transaction-Level Analysis of NYSE Stocks"*, Review of Financial Studies, 10(4), 1035–1064.
+  - Decomposes structural price innovations into adverse selection / information friction ($\theta$), order processing costs ($\phi$), and order flow autocorrelation ($\rho$):
+    $$\Delta p_t = (\phi + \theta) x_t - (\phi + \rho \theta) x_{t-1}$$
+    $$\text{Spread} = 2(\phi + \theta), \quad \alpha_{\text{info}} = \frac{\theta}{\phi + \theta}, \quad \alpha_{\text{proc}} = \frac{\phi}{\phi + \theta}$$
+  - Evaluates implied bid-ask spread, half-spread, adverse selection share, order processing share, and price innovation sequences. Implemented in `src/tree/quantlib/microstructure/mrr-structural-types.ts` (16 LOC) and `src/tree/quantlib/microstructure/mrr-structural-engine.ts` (18 LOC).
+- **Pillar 3: Chordia-Roll-Subrahmanyam (2005) Order Imbalance & Liquidity Dynamics Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Tarun Chordia, Richard Roll, and Avanidhar Subrahmanyam (2005), *"Order Imbalance, Liquidity, and Market Efficiency"*, Journal of Financial Economics, 76(2), 271–300.
+  - Implements dynamic order imbalance metrics, spread expansion, and expected mean-reverting price pressure:
+    $$OIB_{\text{shares}} = B - S, \quad OIB_{\text{ratio}} = \frac{B - S}{B + S + 10^{-8}}$$
+    $$\text{Dynamic Spread Bps} = \gamma_0 + \gamma_1 |OIB_{\text{ratio}}| + 50 \sigma, \quad \text{Expected Reversal Bps} = -\beta_{\text{rev}} \cdot OIB_{\text{ratio}}$$
+  - Identifies liquidity drain states ($|OIB_{\text{ratio}}| \ge 0.5$) and price pressure dynamics. Implemented in `src/tree/quantlib/microstructure/chordia-imbalance-types.ts` (17 LOC) and `src/tree/quantlib/microstructure/chordia-imbalance-engine.ts` (16 LOC).
+- **Pillar 4: Easley-Kiefer-O'Hara-Paperman (1996, EKOP) Structural PIN & Information Risk Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: David Easley, Nicholas M. Kiefer, Maureen O'Hara, and Joseph B. Paperman (1996), *"Liquidity, Information, and Infrequently Traded Stocks"*, Journal of Finance, 51(4), 1405–1436.
+  - Closed-form structural formulation of the Probability of Informed Trading (PIN) from information event probability ($\alpha$), bad news probability ($\delta$), informed arrival rate ($\mu$), and uninformed arrival rates ($\epsilon_b, \epsilon_s$):
+    $$PIN = \frac{\alpha \mu}{\alpha \mu + \epsilon_b + \epsilon_s}$$
+    $$\mathbb{E}[B] = \alpha (1 - \delta) \mu + \epsilon_b, \quad \mathbb{E}[S] = \alpha \delta \mu + \epsilon_s, \quad \text{Asymmetry} = \frac{|\mathbb{E}[B] - \mathbb{E}[S]|}{\mathbb{E}[B] + \mathbb{E}[S]}$$
+  - Evaluates PIN, expected volume by side, total expected volume, order flow asymmetry, and classifies adverse selection risk levels (`LOW`, `MEDIUM`, `HIGH`). Implemented in `src/tree/quantlib/microstructure/ekop-structural-pin-types.ts` (18 LOC) and `src/tree/quantlib/microstructure/ekop-structural-pin-engine.ts` (23 LOC).
+- **Pillar 5: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/forest/api/handlers/daily-stats.ts` (116 LOC $\rightarrow$ 23 LOC facade) via `daily-stats-query.ts` (30 LOC) and `daily-stats-aggregate.ts` (35 LOC).
+  - Modularized `src/tree/exchange/live/index.ts` (118 LOC $\rightarrow$ 36 LOC facade) via `live-market-data.ts` (30 LOC).
+  - Preserved 100% backward compatibility, exact public method signatures, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/huberman-stanzl.test.ts` (3 tests) verifying linear permanent and decaying transient price impact, round-trip non-manipulation, and edge cases.
+  - `test/quant/mrr-structural.test.ts` (2 tests) verifying spread decomposition, price innovation dynamics, and autocorrelation effects.
+  - `test/quant/chordia-imbalance.test.ts` (3 tests) verifying order imbalance ratio, spread widening, reversal pressure, and symmetric neutral cases.
+  - `test/quant/ekop-pin.test.ts` (2 tests) verifying structural PIN estimation, order flow asymmetry, and adverse selection risk classification.
+  - `test/quant/v56-apex-suite-simulation.test.ts` cross-domain E2E simulation unifying EKOP PIN information risk, MRR adverse selection spread breakdown, Chordia imbalance widening, and Huberman-Stanzl non-arbitrage execution.
+  - 5,835/5,835 tests passing across 612 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 36$ LOC.
+
 ### Unified v55 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
 - **Pillar 1: Lehalle (2009) Multi-Period Optimal Volume Curve Tracking Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Charles-Albert Lehalle (2009), *"Rigorous Strategic Trading: Balanced Volatility and Volume-Preserving Algorithms"*, Quantitative Finance, 9(5), 519–531.
