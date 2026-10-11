@@ -2,6 +2,42 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v55 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
+- **Pillar 1: Lehalle (2009) Multi-Period Optimal Volume Curve Tracking Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Charles-Albert Lehalle (2009), *"Rigorous Strategic Trading: Balanced Volatility and Volume-Preserving Algorithms"*, Quantitative Finance, 9(5), 519–531.
+  - Implements institutional execution trajectory optimization balancing temporary market impact against tracking error variance relative to an empirical volume curve:
+    $$\min_{\{q_t\}} \sum_{t=1}^T \left[ \eta q_t^2 + \lambda \left( q_t - Q_0 \frac{V_t}{V_{\text{total}}} \right)^2 \right], \quad \sum_{t=1}^T q_t = Q_0$$
+    $$q_t = \left( \frac{\lambda}{\eta + \lambda} w_t + \frac{\eta}{\eta + \lambda} \frac{1}{T} \right) Q_0$$
+  - Evaluates step-by-step target fractions, allocated shares, remaining shares, execution price, tracking error bps, and total execution cost. Implemented in `src/tree/quantlib/execution/lehalle-volume-curve-types.ts` (26 LOC) and `src/tree/quantlib/execution/lehalle-volume-curve-engine.ts` (24 LOC).
+- **Pillar 2: Kyle (1989) Cournot Informed Trading Equilibrium Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Albert S. Kyle (1989), *"Informed Speculation with Imperfect Competition"*, The Review of Economic Studies, 56(3), 317–355.
+  - Closed-form Cournot-Nash equilibrium for $N$ informed traders competing against noise traders:
+    $$\beta_N = \frac{\sigma_u}{\sqrt{N \Sigma_0}}, \quad \lambda_N = \frac{\sqrt{N \Sigma_0}}{(N + 1)\sigma_u}, \quad \text{Market Depth} = \frac{1}{\lambda_N}$$
+    $$\Pi_i = \frac{\sqrt{\Sigma_0 / N} \sigma_u}{(N + 1)^2}, \quad \text{Residual Uncertainty } \Sigma_1 = \frac{\Sigma_0}{N + 1}, \quad \text{Price Efficiency Ratio} = \frac{N}{N + 1}$$
+  - Evaluates trader aggressiveness $\beta_N$, price impact $\lambda_N$, market depth, clearing price, aggregate informed order flow, expected profits, and price efficiency. Implemented in `src/tree/quantlib/microstructure/kyle-cournot-types.ts` (18 LOC) and `src/tree/quantlib/microstructure/kyle-cournot-engine.ts` (25 LOC).
+- **Pillar 3: Foucault (1999) Winner's Curse Limit Order Equilibrium Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Thierry Foucault (1999), *"Order Flow, Market Depth, and Trading Halts: The Limit Order Book Model"*, The Journal of Finance, 54(1), 99–134.
+  - Models endogenous choice between market and limit orders under adverse selection and the winner's curse:
+    $$s^* = \frac{\alpha_I \sigma_v + c}{1 - \alpha_I(1 - \theta)}, \quad p_{\text{fill}} = \frac{1 - \alpha_I}{1 + \theta (1 - \alpha_I)}$$
+    $$\text{Bid} = P_0 - s^*, \quad \text{Ask} = P_0 + s^*, \quad \text{Spread} = 2 s^*$$
+  - Evaluates equilibrium half-spread, bid/ask quotes, execution fill probability, winner's curse adverse selection bps, and market order proportion. Implemented in `src/tree/quantlib/microstructure/foucault-equilibrium-types.ts` (17 LOC) and `src/tree/quantlib/microstructure/foucault-equilibrium-engine.ts` (22 LOC).
+- **Pillar 4: Amihud & Mendelson (1986) Clientele Spread & Liquidity Premium Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Yakov Amihud and Haim Mendelson (1986), *"Asset Pricing and the Bid-Ask Spread"*, Journal of Financial Economics, 17(2), 223–249.
+  - Models cross-clientele asset pricing and concave liquidity premium curve:
+    $$R(h_i) = r_0 + \frac{S}{\mu h_i}, \quad R_{\text{eq}}(S) = r_0 + 0.5 S + 0.1 \ln(1 + 100 S)$$
+  - Evaluates clientele required return schedule across investor holding horizons, concave equilibrium returns, liquidity premium in bps, optimal clientele holding horizon, and marginal spread elasticity. Implemented in `src/tree/quantlib/microstructure/amihud-mendelson-types.ts` (20 LOC) and `src/tree/quantlib/microstructure/amihud-mendelson-engine.ts` (25 LOC).
+- **Pillar 5: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/tree/exchange/paper/paper-exchange.ts` (118 LOC $\rightarrow$ 35 LOC facade) via `paper-market-data.ts` (21 LOC).
+  - Modularized `src/forest/backtest/actions.ts` (117 LOC $\rightarrow$ 22 LOC facade) via `actions-persist.ts` (34 LOC) and `actions-execute.ts` (33 LOC).
+  - Preserved 100% backward compatibility, exact public method signatures, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/lehalle-volume-curve.test.ts` (3 tests) verifying schedule volume preservation, edge cases, and tracking aversion sensitivity.
+  - `test/quant/kyle-cournot.test.ts` (2 tests) verifying oligopoly market depth scaling, negative shocks, and price efficiency ratio.
+  - `test/quant/foucault-equilibrium.test.ts` (2 tests) verifying equilibrium spread, adverse selection, and fill probability dynamics.
+  - `test/quant/amihud-mendelson.test.ts` (2 tests) verifying clientele horizon sorting, liquidity premium bps, and edge cases.
+  - `test/quant/v55-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Kyle Cournot oligopoly depth, Foucault limit order equilibrium quotes, Amihud-Mendelson clientele required returns, and Lehalle volume curve scheduling.
+  - 5,825/5,825 tests passing across 607 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 36$ LOC.
+
 ### Unified v54 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
 - **Pillar 1: Kissell & Glantz (2003) Market Impact & Optimal Trading Frontier Engine** (`src/tree/quantlib/execution/`):
   - Academic & Institutional foundation: Robert Kissell and Morton Glantz (2003), *"High Performance Trading: Modeling Transaction Costs and Designing Optimal Execution Strategies"*, McGraw-Hill.
