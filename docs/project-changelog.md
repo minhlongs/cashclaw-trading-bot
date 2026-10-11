@@ -2,6 +2,29 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v53 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
+- **Pillar 1: Engle & Ferstenberg (2007) Execution Risk & Optimal Portfolio Trade Scheduling Engine** (`src/tree/quantlib/execution/`):
+  - Academic & Institutional foundation: Robert Engle and Robert Ferstenberg (2007), *"Execution Risk and Optimal Portfolio Trades"*, Journal of Portfolio Management, 33(2), 34–45.
+  - Implements institutional execution risk trade scheduling balancing market impact against volatility variance risk using hyperbolic schedule dynamics:
+    $$\kappa = \sqrt{\frac{\lambda \sigma^2}{\eta}}, \quad w_k = 2 \sinh\left(\frac{\kappa}{2}\right) \frac{\cosh(\kappa(n - k - 0.5))}{\sinh(\kappa n)}, \quad q_k = Q_0 \cdot \frac{w_k}{\sum_j w_j}$$
+    $$I_k = P_0 \left(\gamma \frac{\sum_{j=1}^k q_j}{V_{\text{total}}} + \eta \frac{q_k}{V_{\text{total}}/n}\right), \quad \text{IS}_{\text{bps}} = \frac{P_0 - P_{\text{eff}}}{P_0} \times 10^4$$
+  - Evaluates bucketed trade slices, execution prices, step impact, cumulative risk variance, and basis point implementation shortfall. Implemented in `src/tree/quantlib/execution/engle-ferstenberg-types.ts` (28 LOC) and `src/tree/quantlib/execution/engle-ferstenberg-engine.ts` (25 LOC).
+- **Pillar 2: Ho & Stoll (1981) Optimal Dealer Pricing & Inventory Risk Microstructure Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Thomas S. Y. Ho and Hans R. Stoll (1981), *"Optimal Dealer Pricing Under Transactions and Return Uncertainty"*, Journal of Financial Economics, 9(1), 47–73.
+  - Models dealer reservation pricing and optimal bid/ask quotes as a function of inventory holding $q$, risk aversion $\gamma$, return volatility $\sigma$, and arrival intensity $\kappa$:
+    $$\text{Base Half Spread} = \frac{1}{\kappa} + \frac{1}{2} \gamma \sigma^2 t, \quad \text{Reservation Price}(q) = M_0 - q \cdot (\gamma \sigma^2 t M_0)$$
+    $$\text{Bid}(q) = \text{Reservation Price}(q) - \text{Base Half Spread} \cdot M_0, \quad \text{Ask}(q) = \text{Reservation Price}(q) + \text{Base Half Spread} \cdot M_0$$
+  - Evaluates symmetric flat quotes, inventory skews for short/long dealers, average bid-ask spreads, and reservation price shifts per unit. Implemented in `src/tree/quantlib/microstructure/ho-stoll-types.ts` (25 LOC) and `src/tree/quantlib/microstructure/ho-stoll-engine.ts` (23 LOC).
+- **Pillar 3: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/tree/bot/killswitch.ts` (117 LOC $\rightarrow$ 36 LOC facade) via `killswitch-actions.ts` (32 LOC) and `killswitch-orders.ts` (29 LOC).
+  - Modularized `src/forest/alpha/observability-eval/evaluate.ts` (117 LOC $\rightarrow$ 20 LOC facade) via `evaluate-time.ts` (14 LOC) and `evaluate-portfolio.ts` (28 LOC).
+  - Preserved 100% backward compatibility, exact public APIs, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/engle-ferstenberg.test.ts` (3 tests) verifying monotonic decrease in remaining shares, zero-share safety, and risk aversion front-loading sensitivity.
+  - `test/quant/ho-stoll.test.ts` (3 tests) verifying symmetric dealer quotes, inventory skews for short/long dealers, and spread widening under higher risk aversion.
+  - `test/quant/v53-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Ho-Stoll dealer quotes, Engle-Ferstenberg execution schedules, Killswitch circuit breaker daily drawdown halt, and Observability evaluation reporting.
+  - 5,808/5,808 tests passing across 599 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 36$ LOC.
+
 ### Unified v52 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
 - **Pillar 1: Biais, Bisière & Bouvard (2014) Optimal High-Frequency Trade Scheduling & Adverse Selection Engine** (`src/tree/quantlib/execution/`):
   - Academic & Institutional foundation: Bruno Biais, Nathalie Bisière, and Matthieu Bouvard (2014), *"Optimal High-Frequency Trade Execution and Adverse Selection"*, Review of Financial Studies.
