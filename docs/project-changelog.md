@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v50 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
+- **Pillar 1: Bialkowski, Darolles & Le Fol (2008) Intraday Volume Seasonality & Optimal VWAP Execution Engine** (`src/tree/quantlib/execution/`):
+  - Academic & Institutional foundation: Jedrzej Bialkowski, Serge Darolles, and Gaëlle Le Fol (2008), *"Improving VWAP Strategies: A Dynamic Volume Approach"*, Journal of Banking & Finance, 32(9), 1709–1722.
+  - Implements dynamic volume slicing based on intraday volume profiles, modeling relative trading intensity and non-linear market impact:
+    $$q_k = Q_0 \cdot w_k, \quad \rho_k = \frac{q_k / (Q_0 / N)}{w_k + 10^{-6}}, \quad I_k = P_0 \left(\gamma \frac{\sum_{j=1}^k q_j}{Q_0} + \eta \sqrt{\rho_k}\right), \quad P_k = \max(10^{-4}, P_0 - I_k)$$
+  - Evaluates step shortfall costs, cumulative execution costs, achieved VWAP, and tracking error in basis points against unimpacted benchmark. Implemented in `src/tree/quantlib/execution/bialkowski-vwap-types.ts` (23 LOC) and `src/tree/quantlib/execution/bialkowski-vwap-engine.ts` (33 LOC).
+- **Pillar 2: Easley, López de Prado & O'Hara (2012) Volume-Synchronized Probability of Toxicity (VPIN) Microstructure Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: David Easley, Marcos M. López de Prado, and Maureen O'Hara (2012), *"Flow Toxicity and Liquidity in a High-Frequency World"*, Review of Financial Studies, 25(5), 1457–1493.
+  - Implements a volume-clock framework segmenting high-frequency trade flow into constant volume buckets $V$ and tracking buy/sell order flow imbalance:
+    $$\text{VPIN} = \frac{\sum_{\tau=1}^N |V_\tau^B - V_\tau^S|}{N \cdot V}$$
+  - Classifies toxicity regimes (`low`, `moderate`, `high`, `extreme`) and calculates average imbalance per bucket. Implemented in `src/tree/quantlib/microstructure/easley-vpin-types.ts` (28 LOC) and `src/tree/quantlib/microstructure/easley-vpin-engine.ts` (29 LOC).
+- **Pillar 3: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/tree/exchange/ws/binance-ws-connection.ts` (120 LOC $\rightarrow$ 30 LOC facade) via `binance-ws-lifecycle.ts` (27 LOC) and `binance-ws-subscription.ts` (31 LOC).
+  - Modularized `src/tree/bot/bot-instance.ts` (120 LOC $\rightarrow$ 35 LOC facade) via `bot-instance-control.ts` (29 LOC), `bot-instance-config.ts` (17 LOC), `bot-instance-handlers.ts` (26 LOC), `bot-instance-methods.ts` (24 LOC), and `bot-instance-ops.ts` (36 LOC).
+  - Preserved 100% backward compatibility, exact public APIs, white-box reflection properties (`bot['deps']`, `ws['ws']`), zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/bialkowski-vwap.test.ts` (2 tests) verifying volume bucket slicing, trading intensity, tracking error, and empty inventory handling.
+  - `test/quant/easley-vpin.test.ts` (3 tests) verifying volume bucket accumulation, toxicity classification, and edge-case handling.
+  - `test/quant/v50-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying dynamic VWAP execution, VPIN toxicity monitoring, modular bot instance, and WebSocket connection lifecycle.
+  - 5,787/5,787 tests passing across 590 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 36$ LOC.
+
 ### Unified v49 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
 - **Pillar 1: Gatheral & Biarez (2011) Convex Market Impact & Optimal Execution Engine** (`src/tree/quantlib/execution/`):
   - Academic & Institutional foundation: Jim Gatheral and Antoine Biarez (2011), *"Convex Market Impact and Optimal Execution"*, Mathematical Finance.
