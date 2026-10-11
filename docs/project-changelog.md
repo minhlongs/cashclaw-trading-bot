@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v51 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
+- **Pillar 1: Konishi & Browne (2000) Optimal Dynamic VWAP Execution & Tracking Error Minimization Engine** (`src/tree/quantlib/execution/`):
+  - Academic & Institutional foundation: Atsuo Konishi and Christopher Browne (2000), *"Optimal Execution of a Portfolio of Stocks"*, Journal of Financial and Quantitative Analysis, 35(2), 261–279.
+  - Implements dynamic volume slicing that minimizes execution shortfall variance and VWAP tracking error under market volume profile $w_k$, volatility $\sigma$, and risk aversion $\lambda$:
+    $$q_k = Q_0 \cdot \frac{w_k \cdot (1 + \lambda \sigma^2 \tau_k)^{-1}}{\sum_{j=1}^N w_j \cdot (1 + \lambda \sigma^2 \tau_j)^{-1}}, \quad \tau_k = \frac{N - k}{N}$$
+  - Evaluates cumulative execution cost, realized VWAP, and basis point tracking error against the benchmark VWAP. Implemented in `src/tree/quantlib/execution/konishi-browne-types.ts` (26 LOC) and `src/tree/quantlib/execution/konishi-browne-engine.ts` (26 LOC).
+- **Pillar 2: Stoll (1989) Three-Component Covariance Spread Decomposition Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Hans R. Stoll (1989), *"Inferring the Components of the Bid-Ask Spread: Theory and Empirical Tests"*, The Journal of Finance, 44(1), 115–134.
+  - Uses serial covariances of price changes $\Delta P_t$ and midpoint changes $\Delta M_t$ along with cross-covariance $\text{Cov}(\Delta M_t, \Delta P_{t-1})$ to decompose the bid-ask spread into order processing ($\pi$), adverse selection ($\alpha$), and inventory holding ($\gamma$) fractions:
+    $$\alpha = \frac{\max(0, \text{Cov}(\Delta M_t, \Delta P_{t-1}))}{(S/2)^2}, \quad \gamma = \frac{\max(0, -\text{Cov}(\Delta M_t, \Delta M_{t-1}))}{(S/2)^2}, \quad \pi = 1 - \alpha - \gamma$$
+  - Evaluates implied Roll spread, effective spread, and empirical covariances. Implemented in `src/tree/quantlib/microstructure/stoll-spread-types.ts` (19 LOC) and `src/tree/quantlib/microstructure/stoll-spread-engine.ts` (24 LOC).
+- **Pillar 3: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/tree/research/alpha/compiler.ts` (119 LOC $\rightarrow$ 25 LOC facade) via `compiler-types.ts` (10 LOC), `compiler-causal.ts` (24 LOC), and `compiler-runner.ts` (15 LOC).
+  - Modularized `src/tree/regime/classifier.ts` (119 LOC $\rightarrow$ 23 LOC facade) via `classifier-state.ts` (18 LOC) and `classifier-transition.ts` (21 LOC).
+  - Preserved 100% backward compatibility, exact public APIs, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/konishi-browne.test.ts` (2 tests) verifying dynamic volume decay, execution scheduling, and tracking error metrics.
+  - `test/quant/stoll-spread.test.ts` (2 tests) verifying three-component spread decomposition, unit sum constraint, and roll spread fallback.
+  - `test/quant/v51-apex-suite-simulation.test.ts` cross-domain E2E simulation test integrating Konishi-Browne execution, Stoll spread decomposition, modular AlphaCompiler, and modular RuleBasedRegimeClassifier.
+  - 5,792/5,792 tests passing across 593 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 26$ LOC.
+
 ### Unified v50 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
 - **Pillar 1: Bialkowski, Darolles & Le Fol (2008) Intraday Volume Seasonality & Optimal VWAP Execution Engine** (`src/tree/quantlib/execution/`):
   - Academic & Institutional foundation: Jedrzej Bialkowski, Serge Darolles, and Gaëlle Le Fol (2008), *"Improving VWAP Strategies: A Dynamic Volume Approach"*, Journal of Banking & Finance, 32(9), 1709–1722.
