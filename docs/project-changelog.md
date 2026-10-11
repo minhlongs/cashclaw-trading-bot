@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v52 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
+- **Pillar 1: Biais, Bisière & Bouvard (2014) Optimal High-Frequency Trade Scheduling & Adverse Selection Engine** (`src/tree/quantlib/execution/`):
+  - Academic & Institutional foundation: Bruno Biais, Nathalie Bisière, and Matthieu Bouvard (2014), *"Optimal High-Frequency Trade Execution and Adverse Selection"*, Review of Financial Studies.
+  - Implements high-frequency trade scheduling across $N$ arrival buckets taking into account probability of informed arrival $\alpha$, adverse selection intensity $\theta$, and latency cost rate $\mu$:
+    $$\text{Target Slice}_k = Q_0 \cdot \frac{e^{-\alpha \cdot (k/N)}}{\sum_{j=1}^N e^{-\alpha \cdot (j/N)}}, \quad I_k = P_0 \left(\gamma \frac{q_k}{Q_0} + \theta \alpha \frac{\sum_{j=1}^k q_j}{Q_0}\right) + \mu k P_0$$
+  - Evaluates cumulative adverse impact, latency penalties, execution prices, total shortfall, and basis points implementation shortfall against arrival price. Implemented in `src/tree/quantlib/execution/biais-scheduling-types.ts` (26 LOC) and `src/tree/quantlib/execution/biais-scheduling-engine.ts` (25 LOC).
+- **Pillar 2: Glosten (1994) Electronic Specialist Spread & Limit Order Book Equilibrium Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Lawrence R. Glosten (1994), *"Electronic Exchanges, Competition, and the Limit Order Book"*, The Journal of Finance, 49(4), 1127–1161.
+  - Formulates equilibrium electronic quote schedules across varying order sizes $q$, balancing base order-processing costs, non-linear adverse selection costs ($2 \lambda_{\text{info}} q^\beta$), and specialist inventory carrying penalties:
+    $$S(q) = S_0 + 2 \lambda_{\text{info}} q^\beta + \zeta_{\text{inv}} \cdot \text{inventory}, \quad \text{Bid}(q) = M_0 - \frac{S(q)}{2}, \quad \text{Ask}(q) = M_0 + \frac{S(q)}{2}$$
+  - Evaluates quote depth score, average effective spread, bid/ask quote schedules, and adverse selection components. Implemented in `src/tree/quantlib/microstructure/glosten-spread-types.ts` (24 LOC) and `src/tree/quantlib/microstructure/glosten-spread-engine.ts` (23 LOC).
+- **Pillar 3: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/tree/execution/crossing/internal-crossing-network.ts` (119 LOC $\rightarrow$ 29 LOC facade) via `crossing-filter.ts` (20 LOC) and `crossing-matcher.ts` (27 LOC).
+  - Modularized `src/tree/alpha/signals/funding-features.ts` (119 LOC $\rightarrow$ 27 LOC facade) via `funding-stats.ts` (13 LOC), `funding-fields.ts` (22 LOC), and `liquidation-fields.ts` (29 LOC).
+  - Preserved 100% backward compatibility, exact public APIs, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/biais-scheduling.test.ts` (3 tests) verifying scheduling, zero-share handling, and adverse impact under informed flow.
+  - `test/quant/glosten-spread.test.ts` (3 tests) verifying Glosten spread curvature, inventory penalties, and depth score metrics.
+  - `test/quant/v52-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Biais scheduling, Glosten equilibrium quotes, internal crossing batch matching, and causal derivative feature extraction.
+  - 5,801/5,801 tests passing across 596 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 29$ LOC.
+
 ### Unified v51 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
 - **Pillar 1: Konishi & Browne (2000) Optimal Dynamic VWAP Execution & Tracking Error Minimization Engine** (`src/tree/quantlib/execution/`):
   - Academic & Institutional foundation: Atsuo Konishi and Christopher Browne (2000), *"Optimal Execution of a Portfolio of Stocks"*, Journal of Financial and Quantitative Analysis, 35(2), 261–279.
