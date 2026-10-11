@@ -2,6 +2,29 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v54 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
+- **Pillar 1: Kissell & Glantz (2003) Market Impact & Optimal Trading Frontier Engine** (`src/tree/quantlib/execution/`):
+  - Academic & Institutional foundation: Robert Kissell and Morton Glantz (2003), *"High Performance Trading: Modeling Transaction Costs and Designing Optimal Execution Strategies"*, McGraw-Hill.
+  - Implements institutional pre-trade market impact and optimal execution frontier scheduling balancing instantaneous impact against timing variance risk:
+    $$w_k = \frac{e^{-\lambda (k/N)}}{\sum_{j=1}^N e^{-\lambda (j/N)}}, \quad v_k = \frac{q_k}{\text{ADV}/N}, \quad I_k = P_0 \left(a_1 \cdot v_k^{a_2} \cdot \sigma^{a_3} + \gamma \frac{\sum_{j=1}^k q_j}{Q_0}\right)$$
+    $$P_k = \max(10^{-4}, P_0 - I_k), \quad \text{Utility} = \text{TotalCost} + \lambda \sum_k \sigma^2 \text{rem}_k^2 \tau$$
+  - Evaluates non-linear market impact parameters, variance risk, implementation shortfall bps, and trade trajectory schedule. Implemented in `src/tree/quantlib/execution/kissell-glantz-types.ts` (31 LOC) and `src/tree/quantlib/execution/kissell-glantz-engine.ts` (25 LOC).
+- **Pillar 2: Glosten & Milgrom (1985) Bid-Ask Spread Under Asymmetric Information Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Lawrence R. Glosten and Paul R. Milgrom (1985), *"Bid, Ask and Transaction Prices in a Specialist Market with Heterogeneously Informed Traders"*, Journal of Financial Economics, 14(1), 71–100.
+  - Models sequential Bayesian pricing and dynamic adverse selection spreads:
+    $$\text{Ask}_t = E[V \mid \text{Trade}_t = \text{Buy}] = \pi_t^+ V_H + (1 - \pi_t^+) V_L, \quad \text{Bid}_t = E[V \mid \text{Trade}_t = \text{Sell}] = \pi_t^- V_H + (1 - \pi_t^-) V_L$$
+    $$\pi_t^+ = \frac{\pi_t (\mu + (1-\mu)\gamma_B)}{\mu \pi_t + (1-\mu)\gamma_B}, \quad \pi_t^- = \frac{\pi_t (1-\mu)\gamma_S}{\mu (1-\pi_t) + (1-\mu)\gamma_S}$$
+  - Evaluates belief revisions across buy/sell orders, Bayesian bid/ask quotes, average spread, and adverse selection bps. Implemented in `src/tree/quantlib/microstructure/glosten-milgrom-types.ts` (26 LOC) and `src/tree/quantlib/microstructure/glosten-milgrom-engine.ts` (27 LOC).
+- **Pillar 3: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/forest/alpha/dashboard/state-tracker.ts` (116 LOC $\rightarrow$ 24 LOC facade) via `state-tracker-ingest.ts` (36 LOC).
+  - Modularized `src/tree/bot/strategies/grid-levels-trailing.ts` (115 LOC $\rightarrow$ 16 LOC facade) via `grid-levels-trailing-ratchet.ts` (33 LOC) and `grid-levels-trailing-exits.ts` (18 LOC).
+  - Preserved 100% backward compatibility, exact public method signatures, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/kissell-glantz.test.ts` (3 tests) verifying monotonic decrease in remaining shares, non-zero execution cost, and risk aversion front-loading sensitivity.
+  - `test/quant/glosten-milgrom.test.ts` (3 tests) verifying Bayesian belief updates for buy/sell sequences and spread widening under higher informed trader proportions.
+  - `test/quant/v54-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying Kissell-Glantz frontier scheduling, Glosten-Milgrom Bayesian quotes, grid trailing exit ratcheting, and dashboard state tracking.
+  - 5,815/5,815 tests passing across 602 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 36$ LOC.
+
 ### Unified v53 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
 - **Pillar 1: Engle & Ferstenberg (2007) Execution Risk & Optimal Portfolio Trade Scheduling Engine** (`src/tree/quantlib/execution/`):
   - Academic & Institutional foundation: Robert Engle and Robert Ferstenberg (2007), *"Execution Risk and Optimal Portfolio Trades"*, Journal of Portfolio Management, 33(2), 34–45.
