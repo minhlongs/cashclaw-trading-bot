@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v49 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
+- **Pillar 1: Gatheral & Biarez (2011) Convex Market Impact & Optimal Execution Engine** (`src/tree/quantlib/execution/`):
+  - Academic & Institutional foundation: Jim Gatheral and Antoine Biarez (2011), *"Convex Market Impact and Optimal Execution"*, Mathematical Finance.
+  - Implements discrete execution trajectory under convex temporary market impact exponent $\alpha \ge 1.0$ (super-linear execution costs) and cumulative permanent impact:
+    $$I_{\text{step}, k} = P_0 \gamma \frac{\sum_{j=1}^k n_j}{Q_0} + P_0 \eta \left(\frac{v_k}{Q_0 / T}\right)^\alpha, \quad P_k = \max(10^{-4}, P_0 - I_{\text{step}, k})$$
+  - Solves for discrete execution prices, shortfall costs, VWAP execution price, and terminal impact. Implemented in `src/tree/quantlib/execution/gatheral-biarez-convex-types.ts` (27 LOC) and `src/tree/quantlib/execution/gatheral-biarez-convex-engine.ts` (33 LOC).
+- **Pillar 2: Barclay & Warner (1995) Stealth Trading & Cumulative Price Change Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Michael J. Barclay and Jerold B. Warner (1995), *"Stealth Trading and Volatility: Which Trades Move Prices?"*, Journal of Financial Economics, 39(2), 281–314.
+  - Partitions transactions into Small ($Q < \text{cutoff}_s$), Medium ($\text{cutoff}_s \le Q \le \text{cutoff}_l$), and Large ($Q > \text{cutoff}_l$) buckets:
+    $$CPC_b = \frac{\sum_{t \in b} \Delta P_t}{\sum |\Delta P_t| + 10^{-6}}, \quad VP_b = \frac{V_b}{V_{\text{total}} + 10^{-6}}, \quad S_b = \frac{|CPC_b|}{VP_b + 10^{-6}}$$
+  - Identifies the dominant informed stealth trading cluster based on the stealthiness ratio $S_b$. Implemented in `src/tree/quantlib/microstructure/barclay-warner-stealth-types.ts` (27 LOC) and `src/tree/quantlib/microstructure/barclay-warner-stealth-engine.ts` (30 LOC).
+- **Pillar 3: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/forest/alpha/integration/fixtures.ts` (122 LOC $\rightarrow$ 4 LOC facade) via `fixtures-types.ts` (8 LOC), `fixtures-synthetic.ts` (29 LOC), `fixtures-regimes.ts` (25 LOC), and `fixtures-patterns.ts` (25 LOC).
+  - Modularized `src/tree/exchange/provider/paper-provider-api.ts` (121 LOC $\rightarrow$ 3 LOC facade) via `paper-provider-runner.ts` (26 LOC), `paper-provider-market.ts` (33 LOC), and `paper-provider-orders.ts` (28 LOC).
+  - Preserved 100% backward compatibility, exact public interfaces, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/gatheral-biarez-convex.test.ts` (2 tests) verifying convex impact exponent, liquidation trajectory, positive execution costs, and zero inventory handling.
+  - `test/quant/barclay-warner-stealth.test.ts` (2 tests) verifying size bucket partitioning, cumulative price change decomposition, and dominant bucket identification.
+  - `test/quant/v49-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying synthetic fixture generation, stealth trade decomposition, and convex execution.
+  - 5,782/5,782 tests passing across 587 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 33$ LOC.
+
 ### Unified v48 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
 - **Pillar 1: Gatheral, Jaisson & Rosenbaum (2018) Volatility is Rough & Fractional Execution Engine** (`src/tree/quantlib/execution/`):
   - Academic & Institutional foundation: Jim Gatheral, Thibault Jaisson, and Mathieu Rosenbaum (2018) *"Volatility is Rough"*, Quantitative Finance, 18(6), 933–949.
