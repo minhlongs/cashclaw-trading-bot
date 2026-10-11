@@ -2,6 +2,27 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v48 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-11
+- **Pillar 1: Gatheral, Jaisson & Rosenbaum (2018) Volatility is Rough & Fractional Execution Engine** (`src/tree/quantlib/execution/`):
+  - Academic & Institutional foundation: Jim Gatheral, Thibault Jaisson, and Mathieu Rosenbaum (2018) *"Volatility is Rough"*, Quantitative Finance, 18(6), 933–949.
+  - Implements fractional power-law kernel memory accumulation across sub-diffusive rough volatility regimes ($H \approx 0.14$, $\alpha = H + 0.5$):
+    $$I_k = \sum_{j=1}^k \lambda v_j \left( (k - j + 1)^\alpha - (k - j)^\alpha \right) \Delta t^\alpha, \quad P_k = \max(10^{-4}, P_0 - I_k)$$
+  - Solves for discrete execution price, step shortfall costs, VWAP execution price, and terminal memory impact. Implemented in `src/tree/quantlib/execution/gatheral-rough-execution-types.ts` (26 LOC) and `src/tree/quantlib/execution/gatheral-rough-execution-engine.ts` (34 LOC).
+- **Pillar 2: Chordia, Roll & Subrahmanyam (2000) Commonality in Liquidity Microstructure Spread Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Tarun Chordia, Richard Roll, and Avanidhar Subrahmanyam (2000) *"Commonality in Liquidity"*, Journal of Financial Economics, 56(1), 3–28.
+  - Models systematic co-movement of asset bid-ask spreads with market-wide liquidity shocks:
+    $$\Delta S_{i,t} = \alpha_i + \beta_i \Delta S_{M,t} + \epsilon_{i,t}$$
+  - Evaluates systematic liquidity beta $\beta_i$, commonality $R^2$ ratio, and asymmetric down/up market liquidity betas ($\beta^-, \beta^+$). Implemented in `src/tree/quantlib/microstructure/chordia-subrahmanyam-liquidity-types.ts` (13 LOC) and `src/tree/quantlib/microstructure/chordia-subrahmanyam-liquidity-engine.ts` (29 LOC).
+- **Pillar 3: Structural Deep Modularization (< 38 LOC per file)**:
+  - Modularized `src/tree/alpha/indicator-types.ts` (127 LOC $\rightarrow$ 3 LOC facade) via `indicator-candle-types.ts` (31 LOC), `indicator-value-types.ts` (28 LOC), and `indicator-declaration.ts` (32 LOC).
+  - Modularized `src/forest/alpha/gate/types.ts` (123 LOC $\rightarrow$ 4 LOC facade) via `types-checks.ts` (24 LOC), `types-config.ts` (27 LOC), `types-metrics.ts` (36 LOC), and `types-evaluation.ts` (31 LOC).
+  - Preserved 100% backward compatibility, exact public interfaces, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/gatheral-rough-execution.test.ts` (2 tests) verifying fractional memory power-law kernel impact, step trajectory, and zero inventory handling.
+  - `test/quant/chordia-subrahmanyam-liquidity.test.ts` (3 tests) verifying systematic liquidity beta, $R^2$ co-movement, and asymmetric down/up betas.
+  - `test/quant/v48-apex-suite-simulation.test.ts` cross-domain E2E simulation test unifying rough execution, liquidity commonality, modular indicator contracts, and promotion gate types.
+  - 5,777/5,777 tests passing across 584 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 36$ LOC.
+
 ### Unified v47 Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-10
 - **Pillar 1: Kyle, Obizhaeva & Wang (2020) Smooth Market Impact Execution Engine** (`src/tree/quantlib/execution/`):
   - Academic & Institutional foundation: Albert S. Kyle, Anna A. Obizhaeva, and Yajun Wang (2020) *"Smooth Market Impact and Optimal Trading Strategies"*.
