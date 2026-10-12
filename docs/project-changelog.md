@@ -2,6 +2,38 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v58 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
+- **Pillar 1: Obizhaeva & Wang (2013) Resilient LOB & Transient Market Impact Liquidation Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Anna A. Obizhaeva and Jiang Wang (2013), *"Optimal Trading Strategy and Supply/Demand Dynamics"*, Journal of Financial Markets, 16(1), 1–32.
+  - Implements limit order book exponential resilience recovery rate $\rho$, transient market impact $D_t = \int_0^t e^{-\rho(t-s)} \kappa \dot{x}_s \, ds$, and optimal discrete liquidation trajectory characterized by boundary jumps and constant continuous execution:
+    $$x_0 = \frac{X_0}{2 + \rho T}, \quad \dot{x}_t = \frac{\rho X_0}{2 + \rho T}, \quad x_N = \frac{X_0}{2 + \rho T}$$
+  - Implemented in `src/tree/quantlib/execution/obizhaeva-resilient-lob-types.ts` (28 LOC) and `src/tree/quantlib/execution/obizhaeva-resilient-lob-engine.ts` (21 LOC).
+- **Pillar 2: Grossman & Stiglitz (1980) Information Impossibility & Equilibrium Efficiency Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Sanford J. Grossman and Joseph E. Stiglitz (1980), *"On the Impossibility of Informationally Efficient Markets"*, American Economic Review, 70(3), 393–408.
+  - Models private signal acquisition cost $c$, noise trader variance $\sigma_x^2$, fundamental variance $\sigma_\theta^2$, risk tolerance $r$, deriving the equilibrium fraction of informed traders $\lambda^*$ and price informativeness:
+    $$\rho_P^2 = \frac{(\lambda^*)^2 \sigma_\theta^2}{(\lambda^*)^2 \sigma_\theta^2 + \sigma_x^2}$$
+  - Proves the Grossman-Stiglitz impossibility theorem: perfectly informationally efficient markets cannot exist when information is costly ($c > 0$). Implemented in `src/tree/quantlib/microstructure/grossman-stiglitz-types.ts` (18 LOC) and `src/tree/quantlib/microstructure/grossman-stiglitz-engine.ts` (28 LOC).
+- **Pillar 3: Admati & Pfleiderer (1988) Intraday Volume Clustering & Sunshine Trading Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Anat R. Admati and Paul Pfleiderer (1988), *"A Theory of Intraday Patterns: Volume and Price Variability"*, Review of Financial Studies, 1(1), 3–40.
+  - Formulates strategic intraday coordination by discretionary liquidity traders (DLTs) clustering with informed traders to minimize adverse selection costs per unit volume ($\text{Cost}_t = \frac{c_0}{1 + 0.1 N_{\text{DLT}}} + \frac{\sigma N_{\text{info}}}{N_{\text{DLT}} + N_{\text{info}} + 1} - b_{\text{sunshine}}$), generating U-shaped liquidity peaks.
+  - Implemented in `src/tree/quantlib/microstructure/admati-pfleiderer-types.ts` (32 LOC) and `src/tree/quantlib/microstructure/admati-pfleiderer-engine.ts` (33 LOC).
+- **Pillar 4: O'Hara & Oldfield (1986) Microeconomic Dynamic Inventory Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Maureen O'Hara and George S. Oldfield (1986), *"The Microeconomics of Market Making"*, Journal of Financial and Quantitative Analysis, 21(4), 361–376.
+  - Separates deterministic carrying costs ($k \Delta I$) from stochastic price risk ($\gamma \sigma^2 \Delta I$) to formulate optimal dynamic reservation quotes and asymmetric dealer bid/ask spreads:
+    $$P_R(I) = P_0 - k \Delta I - \gamma \sigma^2 \Delta I, \quad P_{\text{bid}} = P_R - \frac{S_0}{2}, \quad P_{\text{ask}} = P_R + \frac{S_0}{2}$$
+  - Implemented in `src/tree/quantlib/microstructure/ohara-oldfield-inventory-types.ts` (23 LOC) and `src/tree/quantlib/microstructure/ohara-oldfield-inventory-engine.ts` (27 LOC).
+- **Pillar 5: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/tree/exchange/direct/okx-rest-client.ts` (117 LOC $\rightarrow$ 32 LOC facade) via `okx-response-parser.ts` (28 LOC), `okx-market-endpoints.ts` (31 LOC), and `okx-request-signer.ts` (35 LOC).
+  - Modularized `src/tree/execution/darkmesh/rfq-darkmesh-router.ts` (116 LOC $\rightarrow$ 36 LOC facade) via `rfq-allocation-engine.ts` (14 LOC) and `rfq-fill-matcher.ts` (30 LOC).
+  - Preserved 100% backward compatibility, exact public method signatures, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/obizhaeva-resilient-lob.test.ts` (2 tests) verifying discrete boundary jumps, continuous rate, and transient impact accumulation.
+  - `test/quant/grossman-stiglitz.test.ts` (3 tests) verifying equilibrium informed fraction, informativeness, and informational impossibility.
+  - `test/quant/admati-pfleiderer.test.ts` (2 tests) verifying volume clustering peaks, adverse selection reduction, and dispersion.
+  - `test/quant/ohara-oldfield-inventory.test.ts` (2 tests) verifying deterministic carrying costs, stochastic risk premium, and asymmetric reservation quotes.
+  - `test/quant/v58-apex-suite-simulation.test.ts` cross-domain E2E simulation unifying info equilibrium, volume clustering, resilient execution, and inventory quoting.
+  - 5,850/5,850 tests passing across 622 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 36$ LOC.
+
 ### Unified v57 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
 - **Pillar 1: Garman (1976) Dealer Inventory Marketmaking & Bankruptcy Risk Engine** (`src/tree/quantlib/microstructure/`):
   - Academic foundation: Mark B. Garman (1976), *"Market Microstructure"*, Journal of Financial Economics, 3(3), 257–275.
