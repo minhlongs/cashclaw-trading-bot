@@ -2,6 +2,36 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v59 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
+- **Pillar 1: Gatheral (2010) No-Dynamic-Arbitrage Principle & Transient Impact Decay Engine** (`src/tree/quantlib/execution/`):
+  - Academic foundation: Jim Gatheral (2010), *"No-Dynamic-Arbitrage and Market Impact"*, Quantitative Finance, 10(7), 749–759.
+  - Formulates transient market impact decay kernels $\gamma(t)$ under power-law decay $\frac{\gamma_0}{(1 + t/\tau)^\alpha}$ and exponential decay $\gamma_0 e^{-t/\tau}$.
+  - Establishes mathematical conditions for no-dynamic-arbitrage ($\alpha \ge 1.0$), ensuring non-negative round-trip execution costs and eliminating price manipulation pumps.
+  - Implemented in `src/tree/quantlib/execution/gatheral-arbitrage-types.ts` (14 LOC) and `src/tree/quantlib/execution/gatheral-arbitrage-engine.ts` (15 LOC).
+- **Pillar 2: Roll (1984) Implicit Bid-Ask Spread Serial Covariance Estimator** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Richard Roll (1984), *"A Simple Implicit Measure of the Effective Bid-Ask Spread in an Efficient Market"*, The Journal of Finance, 39(4), 1127–1139.
+  - Derives effective bid-ask spread $S_{\text{Roll}} = 2 \sqrt{\max(0, -\mathrm{Cov}(\Delta P_t, \Delta P_{t-1}))}$ from price series autocovariance without requiring quote book access.
+  - Implemented in `src/tree/quantlib/microstructure/roll-implicit-spread-types.ts` (11 LOC) and `src/tree/quantlib/microstructure/roll-implicit-spread-engine.ts` (19 LOC).
+- **Pillar 3: Kyle & Obizhaeva (2016) Market Microstructure Invariance Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Albert S. Kyle and Anna A. Obizhaeva (2016), *"Market Microstructure Invariance: Empirical Hypotheses"*, Econometrica, 84(4), 1345–1404.
+  - Models invariant trading velocity $W \propto (V \sigma)^{2/3}$ and invariant benchmark order size $Q \propto (V / \sigma^2)^{1/3}$ across dollar volume $V$ and annualized volatility $\sigma$.
+  - Refactored and extended via `src/tree/quantlib/microstructure/kyle-obizhaeva-invariance-types.ts` (31 LOC), `kyle-obizhaeva-impact-calculator.ts` (25 LOC), and `kyle-obizhaeva-invariance-engine.ts` (17 LOC).
+- **Pillar 4: Biais, Hillion & Spatt (1995) Empirical LOB Dynamics Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Bruno Biais, Pierre Hillion, and Chester Spatt (1995), *"An Empirical Analysis of the Limit Order Book and the Order Flow in the Paris Bourse"*, The Journal of Finance, 50(5), 1655–1689.
+  - Formulates empirical Markov transition matrices between 4 order book event types (`market-order`, `limit-in-spread`, `limit-at-best`, `cancellation`), measuring diagonal persistence and order flow clustering.
+  - Implemented in `src/tree/quantlib/microstructure/biais-lob-dynamics-types.ts` (12 LOC) and `src/tree/quantlib/microstructure/biais-lob-dynamics-engine.ts` (24 LOC).
+- **Pillar 5: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/tree/exchange/rate-limiter/rate-limiter.ts` (116 LOC $\rightarrow$ 35 LOC facade) via `rate-limiter-acquire-ops.ts` (35 LOC) and `rate-limiter-sync-ops.ts` (28 LOC).
+  - Modularized `src/forest/research/tradingagents/portfolio-advisor.ts` (116 LOC $\rightarrow$ 27 LOC facade) via `portfolio-advisor-types.ts` (24 LOC) and `portfolio-advisor-check.ts` (27 LOC).
+  - Preserved 100% backward compatibility, exact public method signatures, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/gatheral-arbitrage.test.ts` (4 tests) verifying power-law and exponential kernel arbitrage-free conditions.
+  - `test/quant/roll-implicit-spread.test.ts` (3 tests) verifying negative autocovariance spread extraction and zero boundary handling.
+  - `test/quant/kyle-obizhaeva-invariance.test.ts` (3 tests) verifying invariant bet sizing, trading velocity, and square-root price impact.
+  - `test/quant/biais-lob-dynamics.test.ts` (3 tests) verifying Markov transition matrices, diagonal persistence, and event sequence clustering.
+  - `test/quant/v59-apex-suite-simulation.test.ts` cross-domain E2E simulation unifying Gatheral decay, Roll spread, Kyle-Obizhaeva invariance, Biais LOB transitions, rate limiting, and portfolio advising.
+  - 5,864/5,864 tests passing across 627 test files (100% green), 0 `:any`, 0 ESLint warnings, all source files strictly $\le 36$ LOC.
+
 ### Unified v58 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
 - **Pillar 1: Obizhaeva & Wang (2013) Resilient LOB & Transient Market Impact Liquidation Engine** (`src/tree/quantlib/execution/`):
   - Academic foundation: Anna A. Obizhaeva and Jiang Wang (2013), *"Optimal Trading Strategy and Supply/Demand Dynamics"*, Journal of Financial Markets, 16(1), 1–32.

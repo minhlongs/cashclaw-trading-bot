@@ -14,3 +14,18 @@ export interface KyleObizhaevaImpactResult {
   readonly priceImpactBps: number;
   readonly isCapacityConstrained: boolean;
 }
+
+export interface KyleObizhaevaInvarianceConfig {
+  price: number;
+  averageDailyVolume: number;
+  annualizedVolatility: number;
+  scalingConstant?: number;
+}
+
+export interface KyleObizhaevaInvarianceResult {
+  dollarVolume: number;
+  tradingVelocity: number;
+  invariantOrderSize: number;
+  invariantPriceImpact: number;
+  expectedDailyBets: number;
+}
