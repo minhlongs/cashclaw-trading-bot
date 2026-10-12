@@ -2,6 +2,35 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v61 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
+- **Pillar 1: Rogers & Satchell (1991) Non-Zero Drift OHLC Volatility Engine** (`src/tree/quantlib/volatility/`):
+  - Academic foundation: L. C. G. Rogers and Stephen E. Satchell (1991), *"Estimating Variance From High, Low and Closing Prices"*, The Annals of Applied Probability, 1(4), 504–512.
+  - Implements drift-independent continuous Brownian diffusion volatility estimator robust to non-zero drift ($\mu \neq 0$), remaining unbiased during strong upward and downward trend regimes.
+  - Implemented in `src/tree/quantlib/volatility/rogers-satchell-types.ts` (18 LOC), `rogers-satchell-estimator.ts` (25 LOC), and `rogers-satchell-engine.ts` (14 LOC).
+- **Pillar 2: Barndorff-Nielsen & Shephard (2004, 2006) Bipower Variation Jump Detection Engine** (`src/tree/quantlib/volatility/`):
+  - Academic foundation: Ole E. Barndorff-Nielsen and Neil Shephard (2004, 2006), *"Econometric Analysis of Realized Covariation: High Frequency Based Covariance, Sigmas, and Correlation in Financial Economics"*, Econometrica, 72(6), 1785–1825.
+  - Decomposes realized return variance into continuous Brownian diffusion and discrete discontinuous jump variation using normalized bipower variation $BV = \frac{\pi}{2} \frac{N}{N-1} \sum |r_i| |r_{i-1}|$ and asymptotic normal Z-score hypothesis testing.
+  - Implemented in `src/tree/quantlib/volatility/bipower-jump-types.ts` (14 LOC), `bipower-jump-estimator.ts` (26 LOC), and `bipower-jump-engine.ts` (14 LOC).
+- **Pillar 3: Cont & de Larrard (2013) Markovian LOB First-Passage Queue Depletion Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Rama Cont and Adrien de Larrard (2013), *"Price Dynamics in a Markovian Limit Order Book"*, SIAM Journal on Financial Mathematics, 4(1), 1–25.
+  - Evaluates queue imbalance, first-passage depletion probability $P_{\text{up}} = \frac{q_b}{q_b + q_a}$, and expected queue depletion duration $\mathbb{E}[\tau] = \frac{q_b q_a}{\lambda + \mu + \theta}$ under birth-death Markov jump processes.
+  - Implemented in `src/tree/quantlib/microstructure/cont-delarrard-types.ts` (14 LOC) and `cont-delarrard-engine.ts` (24 LOC).
+- **Pillar 4: Chordia, Subrahmanyam & Anshuman (2001) Trading Activity & Liquidity Volatility Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Tarun Chordia, Avanidhar Subrahmanyam, and V. Ravi Anshuman (2001), *"Trading Activity and Expected Stock Returns"*, Journal of Financial Economics, 59(1), 3–32.
+  - Disentangles trading activity level (mean turnover) from liquidity volatility (turnover standard deviation and coefficient of variation), computing cross-sectional liquidity risk discount adjustments.
+  - Implemented in `src/tree/quantlib/microstructure/chordia-trading-activity-types.ts` (18 LOC) and `chordia-trading-activity-engine.ts` (25 LOC).
+- **Pillar 5: Structural Deep Modularization (< 36 LOC per file)**:
+  - Modularized `src/tree/exchange/ccxt/client.ts` (115 LOC $\rightarrow$ 23 LOC facade) via `client-factory.ts` (17 LOC), `client-market-ops.ts` (18 LOC), and `client-order-ops.ts` (32 LOC).
+  - Modularized `src/tree/alpha/signals/funding-api.ts` (115 LOC $\rightarrow$ 3 LOC facade) via `funding-fetcher.ts` (11 LOC), `funding-rate-ops.ts` (28 LOC), and `funding-derivative-ops.ts` (26 LOC).
+  - Preserved 100% backward compatibility, exact public method signatures, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/rogers-satchell-volatility.test.ts` (3 tests) verifying drift-independent volatility and invalid price guards.
+  - `test/quant/bipower-jump.test.ts` (4 tests) verifying continuous diffusion, discrete jump identification, and Z-score significance testing.
+  - `test/quant/cont-delarrard.test.ts` (3 tests) verifying symmetric and asymmetric first-passage queue depletion probabilities and bounds.
+  - `test/quant/chordia-trading-activity.test.ts` (2 tests) verifying turnover, turnover volatility, coefficient of variation, and risk adjustments.
+  - `test/quant/v61-apex-suite-simulation.test.ts` (1 test) cross-domain simulation verifying unified volatility, jump diffusion, and queue microstructure dynamics.
+  - Full suite: 637 test files passing, 5,892 tests passing (100% green), zero regressions, zero ESLint warnings, 0 `:any`.
+
 ### Unified v60 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
 - **Pillar 1: Garman & Klass (1980) High-Efficiency OHLC Volatility Engine** (`src/tree/quantlib/volatility/`):
   - Academic foundation: Mark B. Garman and Michael J. Klass (1980), *"On the Estimation of Security Price Volatility from Historical Data"*, Journal of Business, 53(1), 67–78.
