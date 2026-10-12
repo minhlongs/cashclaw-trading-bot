@@ -1,11 +1,8 @@
-export interface OhlcBar {
-  readonly open: number;
-  readonly high: number;
-  readonly low: number;
-  readonly close: number;
-}
+import type { OhlcBar } from './garman-klass-volatility-types';
+export type { OhlcBar };
 
 export interface YangZhangConfig {
+  readonly bars?: readonly OhlcBar[];
   readonly annualizationFactor?: number;
 }
 
@@ -16,4 +13,7 @@ export interface YangZhangResult {
   readonly compositeVariance: number;
   readonly annualizedVolatility: number;
   readonly optimalK: number;
+  readonly rawVariance: number;
+  readonly kFactor: number;
+  readonly barCount: number;
 }

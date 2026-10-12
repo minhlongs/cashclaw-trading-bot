@@ -6,6 +6,7 @@ export interface OhlcBar {
 }
 
 export interface GarmanKlassConfig {
+  readonly bars?: readonly OhlcBar[];
   readonly annualizationFactor?: number;
 }
 
@@ -16,4 +17,8 @@ export interface GarmanKlassResult {
   readonly garmanKlassVolatility: number;
   readonly gkyzVariance: number;
   readonly gkyzVolatility: number;
+  readonly rawVariance: number;
+  readonly annualizedVolatility: number;
+  readonly barCount: number;
+  readonly efficiencyGain: number;
 }
