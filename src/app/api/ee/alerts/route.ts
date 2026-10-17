@@ -23,7 +23,6 @@ const CloudAlertEventSchema = z.object({
   cooldownMs: z.number().int().positive().optional(),
   signingSecret: z.string().min(8).optional(),
   tier: z.string().optional(),
-  enforceTierGate: z.boolean().optional(),
 });
 
 export const defaultAlertDeduplicator = new CloudAlertDeduplicator();
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
     }
 
     const entitlements = getEntitlementsForTier(tierContext.tier);
-    if (parsed.data.enforceTierGate && !entitlements.customWebhookAlertsAllowed) {
+    if (parsed.data.channel === 'WEBHOOK' && !entitlements.customWebhookAlertsAllowed) {
       return NextResponse.json(
         {
           ok: false,

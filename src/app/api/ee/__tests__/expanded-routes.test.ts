@@ -59,7 +59,7 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(dataPost.account.consumedCredits).toBe(8);
   });
 
-  it('POST /api/ee/alerts handles alert signing, deduplication, and tier gating', async () => {
+  it('POST /api/ee/alerts handles alert signing, deduplication, and unconditional WEBHOOK tier gating', async () => {
     const payload = {
       eventId: 'evt_001',
       workspaceId: 'ws_abc',
@@ -68,6 +68,7 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
       message: 'Grid rebalance complete',
       signingSecret: 'ultra-secure-hmac-secret-12345',
       timestampMs: 1700000000000,
+      tier: 'PREMIUM',
     };
 
     const res1 = await alertsPost(postJson('http://localhost/api/ee/alerts', payload));
@@ -87,21 +88,20 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
         eventId: 'evt_gated_01',
         workspaceId: 'ws_basic_alerts',
         tier: 'BASIC',
-        enforceTierGate: true,
       }),
     );
     expect(resBlocked.status).toBe(402);
 
-    const resPremium = await alertsPost(
+    const resTelegramBasic = await alertsPost(
       postJson('http://localhost/api/ee/alerts', {
         ...payload,
-        eventId: 'evt_gated_02',
-        workspaceId: 'ws_prem_alerts',
-        tier: 'PREMIUM',
-        enforceTierGate: true,
+        eventId: 'evt_telegram_basic',
+        workspaceId: 'ws_basic_alerts',
+        channel: 'TELEGRAM',
+        tier: 'BASIC',
       }),
     );
-    expect(resPremium.status).toBe(200);
+    expect(resTelegramBasic.status).toBe(200);
   });
 
   it('GET and POST /api/ee/scheduler unifies cronSchedulerCoordinator and manages heartbeat leases', async () => {

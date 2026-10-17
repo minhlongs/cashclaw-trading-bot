@@ -185,6 +185,7 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
       channel: 'WEBHOOK',
       message: 'Paper Drawdown Threshold Warning',
       timestampMs: 1_760_000_000_000,
+      tier: 'PREMIUM',
     };
     const firstAlert = await postCloudAlert(
       new Request('http://localhost/api/ee/alerts', { method: 'POST', body: JSON.stringify(alertPayload) }),
