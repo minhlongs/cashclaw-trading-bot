@@ -2,8 +2,14 @@
 // Persists saas_workspace_entitlements and saas_nowpayments_ipn_events (Migration 0013).
 
 import type { D1Database } from '@/lib/db/types';
-import { SaasTierSchema, type SaasTier } from '../tenancy/tenant-policy';
+import type { SaasTier } from '../tenancy/tenant-policy';
 import { getEntitlementsForTier } from './tier-entitlements';
+import {
+  fetchD1WorkspaceEntitlement,
+  hasD1ProcessedPayment,
+  insertD1IpnEvent,
+  upsertD1WorkspaceEntitlement,
+} from './saas-entitlement-d1';
 
 export interface IpnActivationRecord {
   readonly paymentId: string;
@@ -42,15 +48,9 @@ export class SaasEntitlementStore {
 
   public async hasProcessedPayment(paymentId: string): Promise<boolean> {
     if (this.processedPayments.has(paymentId)) return true;
-    if (this.db) {
-      const row = await this.db
-        .prepare("SELECT payment_id FROM saas_nowpayments_ipn_events WHERE payment_id = ? AND payment_status IN ('finished', 'confirmed')")
-        .bind(paymentId)
-        .first<{ payment_id: string }>();
-      if (row?.payment_id) {
-        this.processedPayments.add(paymentId);
-        return true;
-      }
+    if (this.db && (await hasD1ProcessedPayment(this.db, paymentId))) {
+      this.processedPayments.add(paymentId);
+      return true;
     }
     return false;
   }
@@ -61,17 +61,7 @@ export class SaasEntitlementStore {
     if (isActivated) this.processedPayments.add(record.paymentId);
 
     if (this.db) {
-      await this.db
-        .prepare(
-          `INSERT OR REPLACE INTO saas_nowpayments_ipn_events
-           (payment_id, workspace_id, target_tier, payment_status, pay_amount, pay_currency, signature_verified, processed_at_ms)
-           VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
-        )
-        .bind(
-          record.paymentId, record.workspaceId, record.targetTier, record.paymentStatus,
-          record.payAmount, record.payCurrency, nowMs,
-        )
-        .run();
+      await insertD1IpnEvent(this.db, record, nowMs);
     }
     if (!isActivated) return this.getWorkspaceEntitlement(record.workspaceId);
 
@@ -88,32 +78,8 @@ export class SaasEntitlementStore {
     };
 
     this.workspaceEntitlements.set(record.workspaceId, updatedRow);
-
     if (this.db) {
-      await this.db
-        .prepare(
-          `INSERT INTO saas_workspace_entitlements
-           (workspace_id, owner_user_id, tier, max_running_bots, max_walk_forward_windows, monthly_llm_credits, managed_llm_pool_enabled, updated_at_ms)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-           ON CONFLICT(workspace_id) DO UPDATE SET
-             tier = excluded.tier,
-             max_running_bots = excluded.max_running_bots,
-             max_walk_forward_windows = excluded.max_walk_forward_windows,
-             monthly_llm_credits = excluded.monthly_llm_credits,
-             managed_llm_pool_enabled = excluded.managed_llm_pool_enabled,
-             updated_at_ms = excluded.updated_at_ms`,
-        )
-        .bind(
-          updatedRow.workspaceId,
-          updatedRow.ownerUserId,
-          updatedRow.tier,
-          updatedRow.maxRunningBots,
-          updatedRow.maxWalkForwardWindows,
-          updatedRow.monthlyLlmCredits,
-          updatedRow.managedLlmPoolEnabled ? 1 : 0,
-          updatedRow.updatedAtMs,
-        )
-        .run();
+      await upsertD1WorkspaceEntitlement(this.db, updatedRow);
     }
 
     return updatedRow;
@@ -121,44 +87,15 @@ export class SaasEntitlementStore {
 
   public async getWorkspaceEntitlement(workspaceId: string): Promise<WorkspaceEntitlementRow> {
     if (this.db) {
-      const dbRow = await this.db
-        .prepare(
-          'SELECT workspace_id, owner_user_id, tier, max_running_bots, max_walk_forward_windows, monthly_llm_credits, managed_llm_pool_enabled, updated_at_ms FROM saas_workspace_entitlements WHERE workspace_id = ?',
-        )
-        .bind(workspaceId)
-        .first<{
-          workspace_id: string;
-          owner_user_id: string;
-          tier: string;
-          max_running_bots: number;
-          max_walk_forward_windows: number;
-          monthly_llm_credits: number;
-          managed_llm_pool_enabled: number;
-          updated_at_ms: number;
-        }>();
-
+      const dbRow = await fetchD1WorkspaceEntitlement(this.db, workspaceId);
       if (dbRow) {
-        const parsedTier = SaasTierSchema.safeParse(dbRow.tier);
-        const tier: SaasTier = parsedTier.success ? parsedTier.data : 'BASIC';
-        const mapped: WorkspaceEntitlementRow = {
-          workspaceId: dbRow.workspace_id,
-          ownerUserId: dbRow.owner_user_id,
-          tier,
-          maxRunningBots: dbRow.max_running_bots,
-          maxWalkForwardWindows: dbRow.max_walk_forward_windows,
-          monthlyLlmCredits: dbRow.monthly_llm_credits,
-          managedLlmPoolEnabled: Boolean(dbRow.managed_llm_pool_enabled),
-          updatedAtMs: dbRow.updated_at_ms,
-        };
-        this.workspaceEntitlements.set(workspaceId, mapped);
-        return mapped;
+        this.workspaceEntitlements.set(workspaceId, dbRow);
+        return dbRow;
       }
     }
 
     const cached = this.workspaceEntitlements.get(workspaceId);
-    if (cached) {
-      return cached;
-    }
+    if (cached) return cached;
 
     const basicSpec = getEntitlementsForTier('BASIC');
     return {

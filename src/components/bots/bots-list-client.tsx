@@ -87,29 +87,15 @@ export default function BotsListClient() {
             {bots.length} {t('bots.columns.name').toLowerCase()} &middot; {activeCount} {t('dashboard.activeBots').toLowerCase()}
           </p>
         </div>
-        <Link href={`/${locale}/bots/new`} className="btn btn-primary">
-          <Plus size={16} />{t('bots.createNew')}
-        </Link>
+        <Link href={`/${locale}/bots/new`} className="btn btn-primary"><Plus size={16} />{t('bots.createNew')}</Link>
       </div>
 
       <div className="flex items-center gap-3">
         <div className="search-wrap">
           <Search size={16} className="search-icon" />
-          <input
-            type="text"
-            placeholder={t('common.search')}
-            aria-label={t('common.search')}
-            className="form-input search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <input type="text" placeholder={t('common.search')} aria-label={t('common.search')} className="form-input search-input" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
-        <select
-          className="form-input select-auto"
-          aria-label="Filter bots by status"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
+        <select className="form-input select-auto" aria-label="Filter bots by status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">Tất cả / All</option>
           <option value="paper_test">Paper Test</option>
           <option value="paused">Tạm dừng / Paused</option>

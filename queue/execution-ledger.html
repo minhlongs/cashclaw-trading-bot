@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashClaw OS — Real-Time Paper Execution Ledger & Slippage Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E11;
+      --bg-surface: #141820;
+      --bg-elevated: #1A2030;
+      --bg-hover: #1E2838;
+      --color-accent: #00D4AA;
+      --color-loss: #FF4757;
+      --color-warning: #FFB020;
+      --color-ai: #A78BFA;
+      --text-primary: #E8EAED;
+      --text-secondary: #8B95A5;
+      --border-subtle: #1E2530;
+      --border-default: #2A3340;
+    }
+    body { background-color: var(--bg-primary); color: var(--text-primary); font-family: 'Geist', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased">
+  <!-- Left Sidebar (240px) -->
+  <aside class="w-60 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 flex-shrink-0">
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center font-bold text-black text-sm">CC</div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-wide">CashClaw OS</span>
+          <span class="text-[10px] text-[var(--color-warning)] font-mono font-semibold">PAPER_ONLY • ADR-001</span>
+        </div>
+      </div>
+                        <nav class="flex flex-col gap-1.5 text-xs font-medium">
+        <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Cockpit Overview
+        </a>
+        <a href="alpha-zoo.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Alpha Zoo Evaluator
+        </a>
+        <a href="deliberation-theater.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+          Deliberation Theater
+        </a>
+        <a href="strategies/volatility-dca.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Volatility-DCA Bots
+        </a>
+        <a href="correlation-matrix.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Correlation Matrix
+        </a>
+        <a href="execution-ledger.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Execution Ledger
+        </a>
+        <a href="data-quality-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Data Quality Gate
+        </a>
+        <a href="microstructure-liquidity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Microstructure Liquidity
+        </a>
+        <a href="survival-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Survival Gate
+        </a>
+        <a href="sovereign-enclave.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Sovereign Enclave
+        </a>
+        <a href="relative-value-basis.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Relative-Value Basis
+        </a>
+        <a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          SaaS Billing & Quota
+        </a>
+        <a href="regime-attribution.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Regime Attribution
+        </a>
+        <a href="fdr-multiple-testing-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          FDR Multiple-Testing Gate
+        </a>
+        <a href="style-guide.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Style Guide & Tokens
+        </a>
+        <a href="portfolio-cvar-stress.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          CVaR Tail-Risk Stress
+        </a>
+      </nav>
+    </div>
+    <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs flex flex-col gap-1">
+      <span class="text-[var(--text-secondary)] text-[10px]">Execution Mode</span>
+      <span class="font-mono text-[var(--text-primary)] font-semibold truncate">PaperExchangeProvider</span>
+      <span class="text-[10px] text-[var(--color-accent)] font-semibold">10 bps Fee • 5-25 bps Slippage</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Header Bar -->
+    <header class="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-primary)]">
+      <div class="flex items-center gap-3">
+        <h1 class="font-bold text-base">Real-Time Paper Execution Ledger</h1>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)] border border-[rgba(0,212,170,0.25)]">
+          Paper Exchange Provider • 10 bps Fee • 5-25 bps Slippage Stress
+        </span>
+      </div>
+      <button class="h-9 px-4 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-xs text-[var(--text-secondary)] hover:text-white transition-all">
+        Export Hash Chain (.json)
+      </button>
+    </header>
+
+    <div class="p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+      <!-- 3 Execution Telemetry KPI Cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <span class="text-xs text-[var(--text-secondary)]">Total Simulated Fills</span>
+          <span class="text-2xl font-bold font-mono text-[var(--text-primary)]">148 Fills</span>
+          <span class="text-xs font-mono text-[var(--color-accent)]">100% Causal Walk-Forward</span>
+        </div>
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <span class="text-xs text-[var(--text-secondary)]">Realized Fee & Slippage Drag</span>
+          <span class="text-2xl font-bold font-mono text-[var(--color-loss)]">-$412.80</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Mean Slippage: 6.2 bps</span>
+        </div>
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <span class="text-xs text-[var(--text-secondary)]">WebCrypto Order Audit Hash</span>
+          <span class="text-2xl font-bold font-mono text-[var(--color-ai)]">100% Verified</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)] truncate">HMAC-SHA256 Chained</span>
+        </div>
+      </section>
+
+      <!-- Simulated Order Fill Ledger Table -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-semibold">Simulated Order Fill Receipts (Recent Fills)</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Exchange: PaperExchangeProvider</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead>
+              <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)]">
+                <th class="pb-2.5">Timestamp</th>
+                <th class="pb-2.5">Order ID</th>
+                <th class="pb-2.5">Bot Strategy</th>
+                <th class="pb-2.5">Pair</th>
+                <th class="pb-2.5">Side</th>
+                <th class="pb-2.5 text-right">Fill Price</th>
+                <th class="pb-2.5 text-right">Fee / Slip</th>
+                <th class="pb-2.5 text-right">SHA-256 Receipt</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border-subtle)]">
+              <tr>
+                <td class="py-3 text-[var(--text-secondary)]">14:02:18</td>
+                <td class="py-3 text-[var(--text-primary)] font-semibold">ord_98b5a1</td>
+                <td class="py-3">volatility-dca-01</td>
+                <td class="py-3 font-semibold text-[var(--text-primary)]">BTC/USDT</td>
+                <td class="py-3"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">BUY</span></td>
+                <td class="py-3 text-right font-semibold">$67,420.50</td>
+                <td class="py-3 text-right text-[var(--text-secondary)]">10 bps / 5.2 bps</td>
+                <td class="py-3 text-right text-[var(--color-ai)] truncate max-w-[120px]">0x7f4a...29d1</td>
+              </tr>
+              <tr>
+                <td class="py-3 text-[var(--text-secondary)]">13:45:10</td>
+                <td class="py-3 text-[var(--text-primary)] font-semibold">ord_81c4e2</td>
+                <td class="py-3">mean-reversion-02</td>
+                <td class="py-3 font-semibold text-[var(--text-primary)]">ETH/USDT</td>
+                <td class="py-3"><span class="px-2 py-0.5 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-bold">SELL</span></td>
+                <td class="py-3 text-right font-semibold">$2,642.10</td>
+                <td class="py-3 text-right text-[var(--text-secondary)]">10 bps / 6.0 bps</td>
+                <td class="py-3 text-right text-[var(--color-ai)] truncate max-w-[120px]">0x3e1b...91c0</td>
+              </tr>
+              <tr>
+                <td class="py-3 text-[var(--text-secondary)]">12:30:04</td>
+                <td class="py-3 text-[var(--text-primary)] font-semibold">ord_45d9f0</td>
+                <td class="py-3">volatility-dca-02</td>
+                <td class="py-3 font-semibold text-[var(--text-primary)]">SOL/USDT</td>
+                <td class="py-3"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">BUY</span></td>
+                <td class="py-3 text-right font-semibold">$154.20</td>
+                <td class="py-3 text-right text-[var(--text-secondary)]">10 bps / 7.4 bps</td>
+                <td class="py-3 text-right text-[var(--color-ai)] truncate max-w-[120px]">0x8b04...55a2</td>
+              </tr>
+              <tr>
+                <td class="py-3 text-[var(--text-secondary)]">11:15:22</td>
+                <td class="py-3 text-[var(--text-primary)] font-semibold">ord_12a78b</td>
+                <td class="py-3">grid-bot-01</td>
+                <td class="py-3 font-semibold text-[var(--text-primary)]">BTC/USDT</td>
+                <td class="py-3"><span class="px-2 py-0.5 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-bold">SELL</span></td>
+                <td class="py-3 text-right font-semibold">$67,890.00</td>
+                <td class="py-3 text-right text-[var(--text-secondary)]">10 bps / 5.1 bps</td>
+                <td class="py-3 text-right text-[var(--color-ai)] truncate max-w-[120px]">0x1a8f...34e8</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Bottom Slippage Stress Regime Comparison Strip -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <span class="text-sm font-semibold">Slippage & Latency Stress Test Bounds</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+          <div class="p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-1">
+            <span class="text-[var(--color-accent)] font-bold">BASELINE REGIME</span>
+            <span class="text-[var(--text-primary)] text-sm font-semibold">5 bps Slippage • 25ms Latency</span>
+            <span class="text-[var(--text-secondary)]">Sharpe: 2.14 • Max DD: -4.2%</span>
+          </div>
+          <div class="p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-1">
+            <span class="text-[var(--color-warning)] font-bold">ELEVATED REGIME</span>
+            <span class="text-[var(--text-primary)] text-sm font-semibold">15 bps Slippage • 120ms Latency</span>
+            <span class="text-[var(--text-secondary)]">Sharpe: 1.68 • Max DD: -7.8%</span>
+          </div>
+          <div class="p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-1">
+            <span class="text-[var(--color-loss)] font-bold">EXTREME STRESS REGIME</span>
+            <span class="text-[var(--text-primary)] text-sm font-semibold">25 bps Slippage • 350ms Latency</span>
+            <span class="text-[var(--text-secondary)]">Sharpe: 1.12 • Max DD: -12.4%</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

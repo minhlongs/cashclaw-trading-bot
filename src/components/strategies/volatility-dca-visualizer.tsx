@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Activity, ShieldCheck, Play, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { volatilityDca } from '@/tree/quantlib/volatility-dca';
-import { MOCK_WALK_FORWARD_WINDOWS, type WalkForwardWindow } from './volatility-dca-data';
+import { VolatilityDcaWalkForwardTable } from './volatility-dca-walk-forward-table';
 
 export interface VolatilityDcaVisualizerProps {
   initialPrice?: number;
@@ -13,32 +13,22 @@ export interface VolatilityDcaVisualizerProps {
 export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<VolatilityDcaVisualizerProps>) {
   const t = useTranslations('strategies.volatilityDca');
   const [symbol, setSymbol] = useState('BTC/USDT');
-  const [referencePrice, setReferencePrice] = useState(initialPrice);
+  const referencePrice = initialPrice;
   const [currentPrice, setCurrentPrice] = useState(initialPrice * 0.965);
   const [volatility, setVolatility] = useState(0.038);
-  const [baseDropStep, setBaseDropStep] = useState(0.025);
-  const [maxSteps, setMaxSteps] = useState(5);
 
-  const signalResult = useMemo(() => {
-    return volatilityDca(
-      { symbol, balance: 10000, lastPrice: currentPrice },
-      {
-        referencePrice,
-        volatility,
-        volBaseline: 0.02,
-        priceDropStep: baseDropStep,
-        stepIndex: 0,
-        maxSteps,
-        reboundTarget: 0.04,
-      }
-    );
-  }, [symbol, currentPrice, referencePrice, volatility, baseDropStep, maxSteps]);
-
+  const signalResult = useMemo(
+    () =>
+      volatilityDca(
+        { symbol, balance: 10000, lastPrice: currentPrice },
+        { referencePrice, volatility, volBaseline: 0.02, priceDropStep: 0.025, stepIndex: 0, maxSteps: 5, reboundTarget: 0.04 },
+      ),
+    [symbol, currentPrice, referencePrice, volatility],
+  );
   const drawdownPct = ((referencePrice - currentPrice) / referencePrice) * 100;
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      {/* Top Breadcrumb & Status Pill */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
         <div className="flex items-center gap-3">
           <span className="text-[var(--text-secondary)] text-sm">{t('breadcrumb')}</span>
@@ -51,9 +41,7 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
         </div>
       </div>
 
-      {/* Main Grid: Left Controls (4-col) + Right Analytics (8-col) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left 4-column Parameter Panel */}
         <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
           <h2 className="text-base font-semibold text-[var(--text-primary)] flex items-center gap-2">
             <Activity size={18} className="text-[var(--color-accent)]" />
@@ -82,12 +70,8 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
               <span className="font-mono text-[var(--text-primary)]">${currentPrice.toLocaleString()}</span>
             </div>
             <input
-              type="range"
-              min={referencePrice * 0.85}
-              max={referencePrice * 1.1}
-              step={50}
-              value={currentPrice}
-              onChange={(e) => setCurrentPrice(Number(e.target.value))}
+              type="range" min={referencePrice * 0.85} max={referencePrice * 1.1} step={50}
+              value={currentPrice} onChange={(e) => setCurrentPrice(Number(e.target.value))}
               className="accent-[var(--color-accent)] cursor-pointer"
             />
           </div>
@@ -98,12 +82,8 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
               <span className="font-mono text-[var(--text-primary)]">{(volatility * 100).toFixed(1)}%</span>
             </div>
             <input
-              type="range"
-              min={0.01}
-              max={0.1}
-              step={0.002}
-              value={volatility}
-              onChange={(e) => setVolatility(Number(e.target.value))}
+              type="range" min={0.01} max={0.1} step={0.002}
+              value={volatility} onChange={(e) => setVolatility(Number(e.target.value))}
               className="accent-[var(--color-accent)] cursor-pointer"
             />
           </div>
@@ -117,9 +97,7 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
           </button>
         </div>
 
-        {/* Right 8-column Analytics & Diagnostics */}
         <div className="lg:col-span-8 flex flex-col gap-6">
-          {/* Top 3 KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1">
               <span className="text-xs text-[var(--text-secondary)]">{t('signalVerdictLabel')}</span>
@@ -145,38 +123,7 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
             </div>
           </div>
 
-          {/* Diagnostic Walk-Forward Table */}
-          <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t('walkForwardTitle')}</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs font-mono">
-                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] text-[var(--text-secondary)]">
-                    <th className="pb-2 font-medium">{t('colWindow')}</th>
-                    <th className="pb-2 font-medium">{t('colIc')}</th>
-                    <th className="pb-2 font-medium">{t('colSharpe')}</th>
-                    <th className="pb-2 font-medium">{t('colDrawdown')}</th>
-                    <th className="pb-2 font-medium text-right">{t('colGate')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {MOCK_WALK_FORWARD_WINDOWS.map((w: WalkForwardWindow) => (
-                    <tr key={w.windowIndex} className="hover:bg-[var(--bg-hover)] transition-colors">
-                      <td className="py-2.5 text-[var(--text-primary)]">{w.label}</td>
-                      <td className="py-2.5 text-[var(--color-ai)]">+{w.inSampleIc.toFixed(3)}</td>
-                      <td className="py-2.5 text-[var(--text-primary)]">{w.outOfSampleSharpe.toFixed(2)}</td>
-                      <td className="py-2.5 text-[var(--color-loss)]">{(w.maxDrawdown * 100).toFixed(1)}%</td>
-                      <td className="py-2.5 text-right">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)]">
-                          {w.survivalGate}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <VolatilityDcaWalkForwardTable />
         </div>
       </div>
     </div>

@@ -5,7 +5,20 @@
     "backtests": "Backtests",
     "settings": "Settings",
     "logout": "Logout",
-    "monitoring": "Monitoring"
+    "monitoring": "Monitoring",
+    "regime-attribution": "Regime Attribution",
+    "fdr-gate": "FDR Gate",
+    "alpha-zoo": "Alpha Zoo",
+    "deliberation": "Deliberation",
+    "survival-gate": "Survival Gate",
+    "microstructure": "Microstructure",
+    "correlation-matrix": "Correlation Matrix",
+    "execution-ledger": "Execution Ledger",
+    "data-quality-gate": "Data Quality Gate",
+    "sovereign-enclave": "Sovereign Enclave",
+    "relative-value-basis": "Relative Value Basis",
+    "portfolio-cvar-stress": "Portfolio CVaR Stress",
+    "style-guide": "Style Guide"
   },
   "dashboard": {
     "title": "Dashboard",

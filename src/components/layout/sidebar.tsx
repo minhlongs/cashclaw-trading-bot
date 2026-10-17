@@ -12,6 +12,18 @@ import {
   ChevronRight,
   Activity,
   Zap,
+  Filter,
+  Cpu,
+  MessageSquare,
+  GitBranch,
+  BarChart3,
+  Grid,
+  Layers,
+  Database,
+  KeyRound,
+  Scale,
+  Flame,
+  Palette,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -20,6 +32,19 @@ const NAV_ROUTES = [
   { path: 'bots', icon: Bot },
   { path: 'backtests', icon: BookOpen },
   { path: 'monitoring', icon: Activity },
+  { path: 'regime-attribution', icon: Activity },
+  { path: 'fdr-gate', icon: Filter },
+  { path: 'alpha-zoo', icon: Cpu },
+  { path: 'deliberation', icon: MessageSquare },
+  { path: 'survival-gate', icon: GitBranch },
+  { path: 'microstructure', icon: BarChart3 },
+  { path: 'correlation-matrix', icon: Grid },
+  { path: 'execution-ledger', icon: Layers },
+  { path: 'data-quality-gate', icon: Database },
+  { path: 'sovereign-enclave', icon: KeyRound },
+  { path: 'relative-value-basis', icon: Scale },
+  { path: 'portfolio-cvar-stress', icon: Flame },
+  { path: 'style-guide', icon: Palette },
   { path: 'settings', icon: Settings },
 ];
 

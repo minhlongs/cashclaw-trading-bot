@@ -6,7 +6,7 @@ import { SaasEntitlementStore, defaultSaasEntitlementStore } from '../billing/sa
 import { canonicalizeNowPaymentsJson, computeNowPaymentsHmacSha512 } from '../billing/nowpayments-ipn';
 import { createLocalToCloudSyncBundle } from '../sync/local-to-cloud-sync';
 import { GET as getIpnEntitlement, POST as postNowPaymentsIpn } from '@/app/api/ee/billing/nowpayments-ipn/route';
-import { GET as getCredits } from '@/app/api/ee/credits/route';
+import { GET as getCredits, POST as postCredits } from '@/app/api/ee/credits/route';
 import { GET as getAlphaFeed } from '@/app/api/ee/alpha-feed/route';
 import { POST as postCloudAlert } from '@/app/api/ee/alerts/route';
 import { POST as postCloudSync } from '@/app/api/ee/sync/route';
@@ -115,6 +115,24 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     const creditsBody = (await creditsRes.json()) as { account: { tier: string; balanceCredits: number } };
     expect(creditsBody.account.tier).toBe('ENTERPRISE');
     expect(creditsBody.account.balanceCredits).toBe(50_000);
+
+    // POST /api/ee/credits without explicit tier should inherit ENTERPRISE from IPN store
+    const debitRes = await postCredits(
+      new Request('http://localhost/api/ee/credits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspaceId: 'ws_live_tenant',
+          modelTier: 'REASONING',
+          promptTokens: 500,
+          completionTokens: 500,
+        }),
+      }),
+    );
+    expect(debitRes.status).toBe(200);
+    const debitBody = (await debitRes.json()) as { account: { tier: string; balanceCredits: number } };
+    expect(debitBody.account.tier).toBe('ENTERPRISE');
+    expect(debitBody.account.balanceCredits).toBeLessThan(50_000);
   });
 
   it('Seam G3: enforces workspace quota on POST /api/ee/sync before importing CLI bundles', async () => {

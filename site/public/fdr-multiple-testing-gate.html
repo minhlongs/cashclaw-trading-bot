@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<!-- Stitch Project: projects/6665149401860401191 | Screen: projects/6665149401860401191/screens/9c29f01089bf437299bdbd007ece5cd5 | Design System: assets/be7563bf9e4c400f85f92f80d27a5de5 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashClaw OS — Multiple-Testing False Discovery Rate (BH-FDR &amp; Deflated Sharpe) Gate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E11;
+      --bg-surface: #141820;
+      --bg-elevated: #1A2030;
+      --bg-hover: #1E2838;
+      --color-accent: #00D4AA;
+      --color-profit: #00D4AA;
+      --color-loss: #FF4757;
+      --color-error: #FF4757;
+      --color-warning: #FFB020;
+      --color-ai: #A78BFA;
+      --text-primary: #E8EAED;
+      --text-secondary: #8B95A5;
+      --text-tertiary: #5A6577;
+      --border-subtle: #1E2530;
+      --border-default: #2A3340;
+    }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased">
+  <!-- Left Sidebar (240px) -->
+  <aside class="w-60 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 flex-shrink-0">
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center font-bold text-black text-sm">CC</div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-wide">CashClaw OS</span>
+          <span class="text-[10px] text-[var(--color-warning)] font-mono font-semibold">PAPER_ONLY • ADR-001</span>
+        </div>
+      </div>
+
+                  <nav class="flex flex-col gap-1.5 text-xs font-medium">
+        <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Cockpit Overview
+        </a>
+        <a href="alpha-zoo.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Alpha Zoo Evaluator
+        </a>
+        <a href="deliberation-theater.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+          Deliberation Theater
+        </a>
+        <a href="strategies/volatility-dca.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Volatility-DCA Bots
+        </a>
+        <a href="correlation-matrix.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Correlation Matrix
+        </a>
+        <a href="execution-ledger.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Execution Ledger
+        </a>
+        <a href="data-quality-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Data Quality Gate
+        </a>
+        <a href="microstructure-liquidity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Microstructure Liquidity
+        </a>
+        <a href="survival-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Survival Gate
+        </a>
+        <a href="sovereign-enclave.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Sovereign Enclave
+        </a>
+        <a href="relative-value-basis.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Relative-Value Basis
+        </a>
+        <a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          SaaS Billing & Quota
+        </a>
+        <a href="regime-attribution.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Regime Attribution
+        </a>
+        <a href="fdr-multiple-testing-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          FDR Multiple-Testing Gate
+        </a>
+        <a href="style-guide.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Style Guide & Tokens
+        </a>
+        <a href="portfolio-cvar-stress.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          CVaR Tail-Risk Stress
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs flex flex-col gap-1">
+      <span class="text-[var(--text-secondary)] text-[10px]">Multiple-Testing Gate</span>
+      <span class="font-mono text-[var(--text-primary)] font-semibold truncate">BH-FDR • Holm • DSR</span>
+      <span class="text-[10px] text-[var(--color-ai)] font-semibold">TRIAL INFLATION AUDITOR</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Header Bar -->
+    <header class="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-primary)]">
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="font-bold text-base">Multiple-Testing False Discovery Rate (BH-FDR &amp; Deflated Sharpe) Gate</h1>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(167,139,250,0.14)] text-[var(--color-ai)] border border-[rgba(167,139,250,0.3)]">
+          Benjamini-Hochberg Step-Up (q = 0.05) • Holm-Bonferroni FWER • Bailey &amp; López de Prado Deflated Sharpe Ratio (DSR)
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="alpha-zoo.html" class="h-9 px-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-primary)] font-semibold text-xs flex items-center gap-1.5 hover:bg-[var(--bg-hover)] transition-colors">
+          <span>Alpha Zoo Matrix</span>
+        </a>
+        <button id="runFdrAuditBtn" onclick="document.getElementById('fdrStatusBadge').textContent = 'AUDIT VERIFIED • N=148 TRIALS'" class="h-9 px-4 rounded-lg bg-[var(--color-accent)] text-black font-semibold text-xs flex items-center gap-1.5 hover:brightness-110 transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Run Multi-Trial Audit</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+      <!-- 3 Telemetry KPI Cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Total Backtest Trials Audited (N)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(167,139,250,0.15)] text-[var(--color-ai)] font-mono font-semibold">M_EFF = 42.6</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-ai)]">148 Trials (12–500 Grid)</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">12 Canonical Alpha Seeds &times; Lookback Perturbations</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Expected Max Sharpe Under Null E[max(SR&#8320;)]</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] font-mono font-semibold">HURDLE PENALTY</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-warning)]">1.94 annualized SR</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Euler-Mascheroni &gamma; = 0.5772 • Non-Normal Skew/Kurtosis Adjusted</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">BH-FDR &amp; DSR Gate Survivors (q &le; 0.05)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-mono font-semibold">PROMOTE_TO_PAPER</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-accent)]">2 / 12 SEEDS PASS</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">10 Rejected for Selection Bias (REJECT_TRIAL_INFLATION)</span>
+        </div>
+      </section>
+
+      <!-- Step-Up p-Value Threshold & Deflated Sharpe Ratio (DSR) Falsification Matrix -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex flex-col gap-0.5">
+            <h2 class="text-sm font-semibold">Holm-Bonferroni (FWER) &amp; Benjamini-Hochberg (BH-FDR) Step-Up Gate Matrix</h2>
+            <span class="text-xs text-[var(--text-secondary)]">Ordered rank k p-value thresholds p(k) &le; (k/M)&middot;q vs Holm &alpha;/(M-k+1) and Deflated Sharpe Ratio DSR &ge; 0.95</span>
+          </div>
+          <span id="fdrStatusBadge" class="text-xs font-mono text-[var(--color-accent)]">FWER &alpha; = 0.05 • BH-FDR q = 0.05</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead>
+              <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)]">
+                <th class="pb-2.5">Rank (k)</th>
+                <th class="pb-2.5">Candidate Factor Seed</th>
+                <th class="pb-2.5">Observed SR</th>
+                <th class="pb-2.5">Raw p-value</th>
+                <th class="pb-2.5">Holm-Bonferroni Hurdle</th>
+                <th class="pb-2.5">BH-FDR Step-Up (k/M&middot;q)</th>
+                <th class="pb-2.5">Skew / Kurt (&gamma;&#8323;, &gamma;&#8324;)</th>
+                <th class="pb-2.5">Deflated Sharpe (DSR)</th>
+                <th class="pb-2.5 text-right">Multiple-Testing Verdict</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border-subtle)]">
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-bold text-[var(--color-accent)]">k = 1</td>
+                <td class="py-3 font-semibold text-[var(--text-primary)]">alpha_003 (Perp-Spot Basis Carry)</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">+2.48</td>
+                <td class="py-3 text-[var(--color-accent)]">0.0008</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0042 (&alpha;/12)</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0042 (1/12&middot;q)</td>
+                <td class="py-3 text-[var(--text-secondary)]">-0.32 / 4.18</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">0.984 (PASS)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">PROMOTE_TO_PAPER</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-bold text-[var(--color-accent)]">k = 2</td>
+                <td class="py-3 font-semibold text-[var(--text-primary)]">volatilityDca (ATR Regime DCA v2)</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">+2.29</td>
+                <td class="py-3 text-[var(--color-accent)]">0.0039</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0045 (&alpha;/11)</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0083 (2/12&middot;q)</td>
+                <td class="py-3 text-[var(--text-secondary)]">+0.14 / 3.62</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">0.961 (PASS)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">PROMOTE_TO_PAPER</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors bg-[rgba(255,71,87,0.04)]">
+                <td class="py-3 font-bold text-[var(--color-warning)]">k = 3</td>
+                <td class="py-3 font-semibold text-[var(--text-primary)]">alpha_001 (Cross-Sectional Mom 21d)</td>
+                <td class="py-3 text-[var(--color-warning)] font-semibold">+1.84</td>
+                <td class="py-3 text-[var(--color-warning)]">0.0148</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0050 (&alpha;/10)</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0125 (3/12&middot;q)</td>
+                <td class="py-3 text-[var(--color-loss)]">-1.12 / 7.84</td>
+                <td class="py-3 text-[var(--color-loss)] font-bold">0.682 (FAIL)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-bold">REJECT_TRIAL_INFLATION</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-bold text-[var(--text-secondary)]">k = 4</td>
+                <td class="py-3 font-semibold text-[var(--text-primary)]">alpha_007 (Amihud Liquidity Premia)</td>
+                <td class="py-3 text-[var(--text-secondary)]">+1.61</td>
+                <td class="py-3 text-[var(--color-loss)]">0.0264</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0056 (&alpha;/9)</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0167 (4/12&middot;q)</td>
+                <td class="py-3 text-[var(--color-loss)]">-0.88 / 6.45</td>
+                <td class="py-3 text-[var(--color-loss)] font-bold">0.491 (FAIL)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-bold">REJECT_TRIAL_INFLATION</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-bold text-[var(--text-secondary)]">k = 5</td>
+                <td class="py-3 font-semibold text-[var(--text-primary)]">alpha_009 (ETH/BTC OU Spread StatArb)</td>
+                <td class="py-3 text-[var(--text-secondary)]">+1.42</td>
+                <td class="py-3 text-[var(--color-loss)]">0.0412</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0063 (&alpha;/8)</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.0208 (5/12&middot;q)</td>
+                <td class="py-3 text-[var(--color-loss)]">-1.45 / 8.92</td>
+                <td class="py-3 text-[var(--color-loss)] font-bold">0.318 (FAIL)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-bold">REJECT_TRIAL_INFLATION</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-bold text-[var(--text-secondary)]">k = 6..12</td>
+                <td class="py-3 font-semibold text-[var(--text-secondary)]">7 Remaining Alpha Zoo Seeds (alpha_002..012)</td>
+                <td class="py-3 text-[var(--text-secondary)]">&le; +1.15</td>
+                <td class="py-3 text-[var(--color-loss)]">&ge; 0.0890</td>
+                <td class="py-3 text-[var(--text-secondary)]">&le; 0.0071</td>
+                <td class="py-3 text-[var(--text-secondary)]">&le; 0.0500</td>
+                <td class="py-3 text-[var(--text-secondary)]">Fat-Tailed</td>
+                <td class="py-3 text-[var(--color-loss)] font-bold">&lt; 0.150 (FAIL)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-bold">REJECT_TRIAL_INFLATION</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Interactive DSR Trial Inflation Penalty Auditor & Step-Up Curve -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left 5 Cols: Interactive Trial Count & Skew/Kurtosis Auditor -->
+        <div class="lg:col-span-5 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold">Deflated Sharpe Ratio (DSR) Trial Inflation Auditor</h3>
+            <span class="text-[10px] font-mono text-[var(--color-ai)]">12–500 TRIALS</span>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-[var(--text-secondary)]">Backtest Trials Executed (N)</span>
+              <span id="trialCountVal" class="font-mono text-[var(--color-ai)] font-bold">148 Trials (E[max SR&#8320;] = 1.94)</span>
+            </div>
+            <input id="trialCountSlider" type="range" class="accent-[var(--color-accent)]" min="12" max="500" value="148" oninput="
+              const n = Number(this.value);
+              const sr0 = (Math.sqrt(2 * Math.log(n)) * 0.62).toFixed(2);
+              document.getElementById('trialCountVal').textContent = n + ' Trials (E[max SR₀] = ' + sr0 + ')';
+            ">
+            <div class="flex justify-between text-[10px] font-mono text-[var(--text-secondary)]">
+              <span>12 Canonical Seeds</span>
+              <span>148 Sweeps</span>
+              <span>500 Data-Mined Grid</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-[var(--text-secondary)]">BH-FDR False Discovery Target (q)</span>
+              <span id="fdrQVal" class="font-mono text-[var(--color-accent)]">q = 0.05 (5% False Discovery Ceiling)</span>
+            </div>
+            <input id="fdrQSlider" type="range" class="accent-[var(--color-accent)]" min="1" max="15" value="5" oninput="document.getElementById('fdrQVal').textContent = 'q = ' + (this.value/100).toFixed(2) + ' (' + this.value + '% False Discovery Ceiling)'">
+          </div>
+
+          <div class="p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-2 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Naive t-Stat Hurdle (Single Test):</span>
+              <span class="text-[var(--text-secondary)]">t &ge; 1.96 (p &le; 0.0500)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Holm-Bonferroni Hurdle (k=1, M=12):</span>
+              <span class="text-[var(--color-warning)]">t &ge; 2.86 (p &le; 0.0042)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Harvey-Liu-Zhu Haircut Hurdle (N=148):</span>
+              <span class="text-[var(--color-ai)] font-bold">t &ge; 3.18 (DSR &ge; 0.95)</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <a href="survival-gate.html" class="text-xs font-mono text-[var(--color-accent)] hover:underline">Proceed to 16-Window Survival Gate &rarr;</a>
+            <a href="regime-attribution.html" class="text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Regime Attribution &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Right 7 Cols: Step-Up Threshold Curve SVG & Trial Inflation Breakdown -->
+        <div class="lg:col-span-7 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-0.5">
+              <h3 class="text-sm font-semibold">Benjamini-Hochberg Step-Up vs Holm-Bonferroni p-Value Boundary Curve</h3>
+              <span class="text-xs text-[var(--text-secondary)]">Ordered factor p-values p(1)..p(12) plotted against step-up rejection boundaries</span>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-semibold">CROSSING @ k = 2</span>
+          </div>
+
+          <div class="h-52 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] p-4 flex flex-col justify-between relative">
+            <svg class="w-full h-36 overflow-visible" viewBox="0 0 600 130">
+              <!-- Grid lines -->
+              <line x1="40" y1="20" x2="580" y2="20" stroke="#1E2530" stroke-dasharray="3 3" />
+              <line x1="40" y1="65" x2="580" y2="65" stroke="#1E2530" stroke-dasharray="3 3" />
+              <line x1="40" y1="110" x2="580" y2="110" stroke="#2A3340" />
+              <!-- BH-FDR Linear Step-Up Threshold (k/M * q) -->
+              <polyline fill="none" stroke="#00D4AA" stroke-width="2" stroke-dasharray="5 3" points="50,104 95,97 140,90 185,83 230,76 275,69 320,62 365,55 410,48 455,41 500,34 545,27" />
+              <!-- Holm-Bonferroni Curve -->
+              <polyline fill="none" stroke="#FFB020" stroke-width="1.5" points="50,104 95,103 140,102 185,101 230,100 275,98 320,96 365,93 410,88 455,80 500,65 545,27" />
+              <!-- Empirical Ordered Factor p-values p(k) -->
+              <polyline fill="none" stroke="#A78BFA" stroke-width="2.5" points="50,108 95,103 140,82 185,68 230,52 275,35 320,24 365,18 410,14 455,11 500,9 545,7" />
+              <!-- Surviving Points k=1, k=2 -->
+              <circle cx="50" cy="108" r="4.5" fill="#00D4AA" />
+              <circle cx="95" cy="103" r="4.5" fill="#00D4AA" />
+              <!-- Rejected Points k>=3 -->
+              <circle cx="140" cy="82" r="4.5" fill="#FF4757" />
+              <circle cx="185" cy="68" r="4" fill="#FF4757" />
+              <circle cx="230" cy="52" r="4" fill="#FF4757" />
+              <text x="55" y="124" fill="#00D4AA" font-size="9" font-family="JetBrains Mono">k=1,2 PASS</text>
+              <text x="150" y="76" fill="#FF4757" font-size="9" font-family="JetBrains Mono">k=3 REJECT (p=0.0148 &gt; 0.0125)</text>
+            </svg>
+            <div class="flex items-center justify-between text-[11px] font-mono text-[var(--text-secondary)] border-t border-[var(--border-subtle)] pt-2">
+              <span class="text-[var(--color-ai)]">&mdash; Empirical p(k)</span>
+              <span class="text-[var(--color-accent)]">--- BH-FDR Step-Up (k/M&middot;q)</span>
+              <span class="text-[var(--color-warning)]">&mdash; Holm-Bonferroni FWER</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 text-xs font-mono">
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Trial Inflation Haircut</span>
+              <span class="text-sm font-bold text-[var(--color-loss)]">-38.4% Sharpe Decay</span>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Min Track Record Length</span>
+              <span class="text-sm font-bold text-[var(--color-accent)]">MinTRL = 1.84 Years</span>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Gate Output Contract</span>
+              <span class="text-sm font-bold text-[var(--color-warning)]">FAIL-CLOSED FENCE</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

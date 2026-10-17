@@ -1,0 +1,34 @@
+/* CashClaw Quant OS — Tailwind Theme Mapping (stitch-design-system)
+ * Maps DESIGN.md CSS custom properties into Tailwind theme tokens & utility classes.
+ */
+
+@import './design-tokens.css';
+
+@theme {
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-hover: var(--bg-hover);
+
+  --color-quant-accent: var(--color-accent);
+  --color-quant-profit: var(--color-profit);
+  --color-quant-loss: var(--color-loss);
+  --color-quant-error: var(--color-error);
+  --color-quant-warning: var(--color-warning);
+  --color-quant-ai: var(--color-ai);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-focus: var(--border-focus);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-card: var(--radius-lg);
+  --radius-control: var(--radius-md);
+  --radius-modal: var(--radius-xl);
+}

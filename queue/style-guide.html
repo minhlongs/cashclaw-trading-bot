@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<!-- Stitch Project: projects/6665149401860401191 | Screen: projects/6665149401860401191/screens/e66e2bcc9f70496495802789c24a5b36 | Design System: assets/be7563bf9e4c400f85f92f80d27a5de5 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashClaw OS — Component Style Guide &amp; Quantitative Design Tokens (DESIGN.md)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E11;
+      --bg-surface: #141820;
+      --bg-elevated: #1A2030;
+      --bg-hover: #1E2838;
+      --color-accent: #00D4AA;
+      --color-profit: #00D4AA;
+      --color-loss: #FF4757;
+      --color-error: #FF4757;
+      --color-warning: #FFB020;
+      --color-ai: #A78BFA;
+      --text-primary: #E8EAED;
+      --text-secondary: #8B95A5;
+      --text-tertiary: #5A6577;
+      --border-subtle: #1E2530;
+      --border-default: #2A3340;
+    }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased">
+  <!-- Left Sidebar (240px) -->
+  <aside class="w-60 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 flex-shrink-0">
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center font-bold text-black text-sm">CC</div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-wide">CashClaw OS</span>
+          <span class="text-[10px] text-[var(--color-warning)] font-mono font-semibold">PAPER_ONLY • ADR-001</span>
+        </div>
+      </div>
+
+                  <nav class="flex flex-col gap-1.5 text-xs font-medium">
+        <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Cockpit Overview
+        </a>
+        <a href="alpha-zoo.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Alpha Zoo Evaluator
+        </a>
+        <a href="deliberation-theater.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+          Deliberation Theater
+        </a>
+        <a href="strategies/volatility-dca.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Volatility-DCA Bots
+        </a>
+        <a href="correlation-matrix.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Correlation Matrix
+        </a>
+        <a href="execution-ledger.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Execution Ledger
+        </a>
+        <a href="data-quality-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Data Quality Gate
+        </a>
+        <a href="microstructure-liquidity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Microstructure Liquidity
+        </a>
+        <a href="survival-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Survival Gate
+        </a>
+        <a href="sovereign-enclave.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Sovereign Enclave
+        </a>
+        <a href="relative-value-basis.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Relative-Value Basis
+        </a>
+        <a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          SaaS Billing & Quota
+        </a>
+        <a href="regime-attribution.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Regime Attribution
+        </a>
+        <a href="fdr-multiple-testing-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          FDR Multiple-Testing Gate
+        </a>
+        <a href="style-guide.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Style Guide & Tokens
+        </a>
+        <a href="portfolio-cvar-stress.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          CVaR Tail-Risk Stress
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs flex flex-col gap-1">
+      <span class="text-[var(--text-secondary)] text-[10px]">Design System Contract</span>
+      <span class="font-mono text-[var(--text-primary)] font-semibold truncate">cashclaw-quant-os</span>
+      <span class="text-[10px] text-[var(--color-accent)] font-semibold">DESIGN.MD SYNCED</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Header Bar -->
+    <header class="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-primary)]">
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="font-bold text-base">CashClaw OS Component Style Guide &amp; Quantitative Design Tokens</h1>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)] border border-[rgba(0,212,170,0.25)]">
+          DESIGN.md Visual Contract • Stitch Asset be7563bf9e4c400f85f92f80d27a5de5 • Dark Mode First
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="h-9 px-4 rounded-lg bg-[var(--color-accent)] text-black font-semibold text-xs flex items-center gap-1.5 hover:brightness-110 transition-all">
+          <span>Return to Cockpit</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+      <!-- Section 1: Semantic Color Palette & Swatches (DESIGN.md Section 2) -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <div class="flex flex-col gap-0.5">
+            <h2 class="text-sm font-semibold">1. Semantic Color Palette &amp; Surface Hierarchy (DESIGN.md Section 2)</h2>
+            <span class="text-xs text-[var(--text-secondary)]">High-density obsidian terminal surfaces paired with semantic quantitative signal accents</span>
+          </div>
+          <span class="text-xs font-mono text-[var(--color-accent)]">13 CANONICAL TOKENS</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
+          <div class="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-default)] flex flex-col gap-2">
+            <div class="h-12 rounded-lg bg-[#0B0E11] border border-[#2A3340] flex items-center justify-between px-3">
+              <span class="text-[#E8EAED] font-bold">#0B0E11</span>
+              <span class="text-[10px] text-[#8B95A5]">AAA 17.4:1</span>
+            </div>
+            <span class="font-bold text-[var(--text-primary)]">--bg-primary</span>
+            <span class="text-[11px] font-sans text-[var(--text-secondary)]">Deep Obsidian Abyss — root page canvas &amp; terminal backdrop</span>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-default)] flex flex-col gap-2">
+            <div class="h-12 rounded-lg bg-[#141820] border border-[#2A3340] flex items-center justify-between px-3">
+              <span class="text-[#E8EAED] font-bold">#141820</span>
+              <span class="text-[10px] text-[#8B95A5]">AAA 15.2:1</span>
+            </div>
+            <span class="font-bold text-[var(--text-primary)]">--bg-surface</span>
+            <span class="text-[11px] font-sans text-[var(--text-secondary)]">Slate Carbon Panel — cards, 240px sidebar navigation, KPI tables</span>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-default)] flex flex-col gap-2">
+            <div class="h-12 rounded-lg bg-[#1A2030] border border-[#2A3340] flex items-center justify-between px-3">
+              <span class="text-[#E8EAED] font-bold">#1A2030</span>
+              <span class="text-[10px] text-[#8B95A5]">AAA 13.6:1</span>
+            </div>
+            <span class="font-bold text-[var(--text-primary)]">--bg-elevated</span>
+            <span class="text-[11px] font-sans text-[var(--text-secondary)]">Elevated Midnight Surface — active nav states, modals, drawers</span>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-default)] flex flex-col gap-2">
+            <div class="h-12 rounded-lg bg-[#1E2838] border border-[#2A3340] flex items-center justify-between px-3">
+              <span class="text-[#E8EAED] font-bold">#1E2838</span>
+              <span class="text-[10px] text-[#8B95A5]">Hover State</span>
+            </div>
+            <span class="font-bold text-[var(--text-primary)]">--bg-hover</span>
+            <span class="text-[11px] font-sans text-[var(--text-secondary)]">Interactive Slate Hover — matrix row hover &amp; secondary controls</span>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-default)] flex flex-col gap-2">
+            <div class="h-12 rounded-lg bg-[#00D4AA] flex items-center justify-between px-3 text-[#0B0E11]">
+              <span class="font-bold">#00D4AA</span>
+              <span class="text-[10px] font-bold">AA 10.8:1</span>
+            </div>
+            <span class="font-bold text-[var(--color-accent)]">--color-accent / --color-profit</span>
+            <span class="text-[11px] font-sans text-[var(--text-secondary)]">Quant Emerald Teal — primary CTAs, positive PnL, survival pass</span>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-default)] flex flex-col gap-2">
+            <div class="h-12 rounded-lg bg-[#FF4757] flex items-center justify-between px-3 text-[#0B0E11]">
+              <span class="font-bold">#FF4757</span>
+              <span class="text-[10px] font-bold">SIGNAL ALERT</span>
+            </div>
+            <span class="font-bold text-[var(--color-loss)]">--color-loss / --color-error</span>
+            <span class="text-[11px] font-sans text-[var(--text-secondary)]">Crimson Signal Alert — drawdown breach, falsified factor, flat fence</span>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-default)] flex flex-col gap-2">
+            <div class="h-12 rounded-lg bg-[#FFB020] flex items-center justify-between px-3 text-[#0B0E11]">
+              <span class="font-bold">#FFB020</span>
+              <span class="text-[10px] font-bold">PAPER_ONLY</span>
+            </div>
+            <span class="font-bold text-[var(--color-warning)]">--color-warning</span>
+            <span class="text-[11px] font-sans text-[var(--text-secondary)]">Amber Regime Caution — PAPER_ONLY safety locks &amp; volatility alerts</span>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-default)] flex flex-col gap-2">
+            <div class="h-12 rounded-lg bg-[#A78BFA] flex items-center justify-between px-3 text-[#0B0E11]">
+              <span class="font-bold">#A78BFA</span>
+              <span class="text-[10px] font-bold">LLM / IC-IR</span>
+            </div>
+            <span class="font-bold text-[var(--color-ai)]">--color-ai</span>
+            <span class="text-[11px] font-sans text-[var(--text-secondary)]">Deliberation Violet — multi-agent debate &amp; BH-FDR research telemetry</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 text-xs font-mono">
+          <div class="p-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)] flex items-center justify-between">
+            <span class="text-[#E8EAED]">--text-primary</span>
+            <span class="text-[var(--text-secondary)]">#E8EAED</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)] flex items-center justify-between">
+            <span class="text-[#8B95A5]">--text-secondary</span>
+            <span class="text-[var(--text-secondary)]">#8B95A5</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)] flex items-center justify-between">
+            <span class="text-[#5A6577]">--text-tertiary</span>
+            <span class="text-[var(--text-secondary)]">#5A6577</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-[var(--bg-primary)] border border-[#1E2530] flex items-center justify-between">
+            <span class="text-[var(--text-secondary)]">--border-subtle</span>
+            <span class="text-[var(--text-primary)]">#1E2530</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-[var(--bg-primary)] border border-[#2A3340] flex items-center justify-between">
+            <span class="text-[var(--text-secondary)]">--border-default</span>
+            <span class="text-[var(--text-primary)]">#2A3340</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Typography Scale & Quantitative Telemetry Rules (DESIGN.md Section 3) -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold">2. Typography Scale (Geist Sans + JetBrains Mono)</h2>
+            <span class="text-xs font-mono text-[var(--color-ai)]">TABULAR NUMS</span>
+          </div>
+
+          <div class="flex flex-col divide-y divide-[var(--border-subtle)] text-xs">
+            <div class="py-3 flex items-baseline justify-between gap-4">
+              <span class="font-mono text-[var(--text-secondary)] w-40 flex-shrink-0">--text-hero (56px/900)</span>
+              <span class="text-4xl font-black tracking-tight text-[var(--text-primary)]">CashClaw Quant OS</span>
+            </div>
+            <div class="py-3 flex items-baseline justify-between gap-4">
+              <span class="font-mono text-[var(--text-secondary)] w-40 flex-shrink-0">--text-2xl (28px/700)</span>
+              <span class="text-2xl font-bold font-mono text-[var(--color-accent)]">$124,850.40 (+11.42% APR)</span>
+            </div>
+            <div class="py-3 flex items-baseline justify-between gap-4">
+              <span class="font-mono text-[var(--text-secondary)] w-40 flex-shrink-0">--text-xl (20px/600)</span>
+              <span class="text-xl font-semibold text-[var(--text-primary)]">Walk-Forward 16-Window Survival Gate</span>
+            </div>
+            <div class="py-3 flex items-baseline justify-between gap-4">
+              <span class="font-mono text-[var(--text-secondary)] w-40 flex-shrink-0">--text-base (14px/400)</span>
+              <span class="text-sm text-[var(--text-primary)]">Causal OHLCV signal fence with zero-lookahead rolling rank IC evaluation.</span>
+            </div>
+            <div class="py-3 flex items-baseline justify-between gap-4">
+              <span class="font-mono text-[var(--text-secondary)] w-40 flex-shrink-0">--text-xs (11px/600)</span>
+              <span class="text-[11px] font-mono font-semibold uppercase tracking-wider text-[var(--color-warning)]">PAPER_ONLY • ADR-001 • SHA-256: 0x9f4c82a1e0b548b2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Interactive Component Geometry & States (DESIGN.md Section 4) -->
+        <div class="lg:col-span-5 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold">3. Component Geometry &amp; Safety Badges</h2>
+            <span class="text-xs font-mono text-[var(--color-accent)]">44PX TOUCH TARGET</span>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-wrap gap-2.5">
+              <button onclick="this.textContent='Signal Fence Verified ✓'" class="min-h-[44px] px-4 rounded-lg bg-[var(--color-accent)] text-[#0B0E11] font-semibold text-xs hover:brightness-110 transition-all">
+                Primary Quant CTA (44px)
+              </button>
+              <button onclick="this.textContent='Stress Mode Active'" class="min-h-[44px] px-4 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-primary)] font-semibold text-xs hover:bg-[var(--bg-hover)] transition-colors">
+                Secondary Midnight Control
+              </button>
+            </div>
+
+            <div class="flex flex-wrap gap-2 pt-1 font-mono text-[11px]">
+              <span class="px-2.5 py-1 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">PROMOTE_TO_PAPER</span>
+              <span class="px-2.5 py-1 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-bold">REJECT_TRIAL_INFLATION</span>
+              <span class="px-2.5 py-1 rounded bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] font-bold">PAPER_ONLY • ADR-001</span>
+              <span class="px-2.5 py-1 rounded bg-[rgba(167,139,250,0.15)] text-[var(--color-ai)] font-bold">DELIBERATION_AI</span>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)] flex flex-col gap-1.5 text-xs">
+              <span class="font-semibold text-[var(--text-primary)]">Elevated Drawer / Modal Token Surface (#1A2030)</span>
+              <span class="text-[var(--text-secondary)]">12px card border-radius, 1px solid #1E2530 structural divider, emerald focus-visible ring.</span>
+              <div class="flex items-center gap-3 pt-1 font-mono text-[11px]">
+                <a href="regime-attribution.html" class="text-[var(--color-accent)] hover:underline">Regime Attribution &rarr;</a>
+                <a href="fdr-multiple-testing-gate.html" class="text-[var(--color-ai)] hover:underline">FDR Gate &rarr;</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

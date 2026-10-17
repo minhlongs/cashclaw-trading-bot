@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CashClaw OS // Component Style Guide &amp; Quantitative Design Tokens</title>
+<!-- Google Fonts: Geist & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-container": "#ffa858",
+            "surface-container-lowest": "#08100d",
+            "on-primary-fixed-variant": "#00513f",
+            "inverse-primary": "#006b55",
+            "background": "#0d1512",
+            "secondary": "#cebdff",
+            "on-secondary-fixed": "#21005e",
+            "primary-fixed-dim": "#28dfb5",
+            "inverse-on-surface": "#2a322f",
+            "color-loss": "#FF4757",
+            "on-tertiary-fixed-variant": "#6c3a00",
+            "surface-tint": "#28dfb5",
+            "on-secondary-fixed-variant": "#4f319c",
+            "on-error-container": "#ffdad6",
+            "on-surface": "#dce4df",
+            "on-background": "#dce4df",
+            "on-primary-container": "#005643",
+            "color-warning": "#FFB020",
+            "tertiary-fixed": "#ffdcc1",
+            "text-secondary": "#8B95A5",
+            "primary-container": "#00d4aa",
+            "tertiary": "#ffcea6",
+            "tertiary-fixed-dim": "#ffb77a",
+            "bg-primary": "#0B0E11",
+            "secondary-fixed": "#e8ddff",
+            "outline-variant": "#3b4a44",
+            "surface-container-high": "#242c28",
+            "primary-fixed": "#55fcd0",
+            "secondary-container": "#4f319c",
+            "on-surface-variant": "#bacac2",
+            "inverse-surface": "#dce4df",
+            "bg-surface": "#141820",
+            "on-error": "#690005",
+            "text-primary": "#E8EAED",
+            "surface-dim": "#0d1512",
+            "error": "#ffb4ab",
+            "surface-container-highest": "#2f3633",
+            "bg-elevated": "#1A2030",
+            "surface-container-low": "#161d1a",
+            "primary": "#46f1c5",
+            "on-tertiary-container": "#733e00",
+            "on-tertiary-fixed": "#2e1500",
+            "border-default": "#2A3340",
+            "error-container": "#93000a",
+            "surface-variant": "#2f3633",
+            "on-secondary": "#381385",
+            "surface-bright": "#333b37",
+            "text-tertiary": "#5A6577",
+            "on-secondary-container": "#bea8ff",
+            "surface-container": "#19211e",
+            "secondary-fixed-dim": "#cebdff",
+            "bg-hover": "#1E2838",
+            "on-tertiary": "#4c2700",
+            "surface": "#0d1512",
+            "on-primary": "#00382b",
+            "border-subtle": "#1E2530",
+            "on-primary-fixed": "#002118",
+            "outline": "#85948d"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "space-sm": "8px",
+            "space-xl": "24px",
+            "space-lg": "16px",
+            "space-xs": "4px",
+            "space-md": "12px",
+            "space-2xl": "32px",
+            "space-4xl": "64px",
+            "space-3xl": "48px",
+            "gutter": "16px",
+            "margin": "24px"
+          },
+          "fontFamily": {
+            "headline-md": ["Geist", "sans-serif"],
+            "hero": ["Geist", "sans-serif"],
+            "headline-sm": ["Geist", "sans-serif"],
+            "body-sm": ["Geist", "sans-serif"],
+            "body-base": ["Geist", "sans-serif"],
+            "title-lg": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist", "sans-serif"],
+            "caption": ["JetBrains Mono", "monospace"]
+          },
+          "fontSize": {
+            "headline-md": ["28px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "hero": ["56px", { "lineHeight": "1.25", "fontWeight": "900" }],
+            "headline-sm": ["20px", { "lineHeight": "1.25", "fontWeight": "600" }],
+            "body-sm": ["13px", { "lineHeight": "1.5", "fontWeight": "500" }],
+            "body-base": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+            "title-lg": ["16px", { "lineHeight": "1.5", "fontWeight": "600" }],
+            "headline-lg": ["40px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "caption": ["11px", { "lineHeight": "1.4", "letterSpacing": "0.04em", "fontWeight": "600" }]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0B0E11;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1E2530;
+      border-radius: 2px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #2A3340;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .halo-emerald {
+      box-shadow: 0 0 20px rgba(0, 212, 170, 0.08);
+    }
+  </style>
+</head>
+<body class="bg-bg-primary text-text-primary antialiased min-h-screen flex selection:bg-primary-container selection:text-bg-primary overflow-x-hidden font-body-base text-body-base">
+<!-- ========================================================================= -->
+<!-- 1. APPLICATION SHELL: SIDEBAR NAVIGATION (240px FIXED)                   -->
+<!-- ========================================================================= -->
+<aside class="fixed top-0 left-0 h-screen w-60 z-40 bg-bg-primary border-r border-border-subtle flex flex-col justify-between p-space-sm custom-scrollbar select-none">
+<!-- Top Identity & Invariant State -->
+<div class="flex flex-col space-y-space-md">
+<!-- Brand Anchor -->
+<div class="px-space-sm pt-space-xs pb-space-sm border-b border-border-subtle">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<div class="w-6 h-6 rounded-lg bg-bg-elevated border border-border-default flex items-center justify-center text-primary halo-emerald">
+<span class="material-symbols-outlined text-[15px]" data-icon="terminal">terminal</span>
+</div>
+<span class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight">CashClaw OS</span>
+</div>
+<span class="font-caption text-caption px-1.5 py-0.5 rounded bg-bg-surface text-primary border border-border-subtle">v4.19</span>
+</div>
+<p class="font-caption text-caption text-text-tertiary mt-1">Terminal v4.19 Institutional</p>
+<!-- Node & Invariant Indicators -->
+<div class="mt-space-md flex flex-col space-y-1.5">
+<div class="flex items-center justify-between px-2 py-1 bg-bg-surface rounded border border-border-subtle text-[10px] font-caption">
+<span class="text-text-secondary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+              NODE #QNT-8812
+            </span>
+<span class="text-primary font-bold">SYNC 100%</span>
+</div>
+<div class="flex items-center justify-between px-2 py-1 bg-surface-container-lowest rounded border border-color-warning/30 text-[10px] font-caption">
+<span class="text-color-warning flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="shield">shield</span>
+              ADR-001 INVARIANT
+            </span>
+<span class="text-color-warning font-bold tracking-wider">PAPER_ONLY</span>
+</div>
+</div>
+</div>
+<!-- Navigation Item List -->
+<div class="flex-1 overflow-y-auto custom-scrollbar pr-1 max-h-[calc(100vh-270px)] space-y-0.5">
+<!-- Standard items from JSON Blueprint -->
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#cockpit">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="dashboard">dashboard</span>
+<span class="truncate">Cockpit Overview</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#regime">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="monitoring">monitoring</span>
+<span class="truncate">Regime Attribution</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#alpha">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="matrix">unfold_more_double</span>
+<span class="truncate">Alpha Decomposition</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#strategy">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="alt_route">alt_route</span>
+<span class="truncate">Strategy Orchestration</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#execution">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="swap_horiz">swap_horiz</span>
+<span class="truncate">Execution Routing</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#risk">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="shield">shield</span>
+<span class="truncate">Risk &amp; Invariants</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#orderbook">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="stacked_bar_chart">stacked_bar_chart</span>
+<span class="truncate">Order Book L3</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#volatility">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="multiline_chart">multiline_chart</span>
+<span class="truncate">Volatility Surface</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#llm">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="smart_toy">smart_toy</span>
+<span class="truncate">LLM Multi-Agent</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#factor">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="pie_chart">pie_chart</span>
+<span class="truncate">Portfolio Factor Risk</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#tcm">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="calculate">calculate</span>
+<span class="truncate">Transaction Cost Model</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#audit">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="verified_user">verified_user</span>
+<span class="truncate">Zero-Lookahead Audit</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#logs">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="terminal">terminal</span>
+<span class="truncate">Telemetry Logs</span>
+</a>
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#backtest">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="history">history</span>
+<span class="truncate">Backtest Engine</span>
+</a>
+<!-- ACTIVE DESTINATION: Style Guide & Tokens / System Settings -->
+<a class="flex items-center space-x-2.5 px-space-sm py-2 rounded font-caption text-caption text-primary bg-bg-elevated border-l-2 border-primary font-semibold transition-colors duration-150" href="#tokens">
+<span class="material-symbols-outlined text-primary" data-icon="settings">settings</span>
+<span class="truncate">System Settings</span>
+<span class="ml-auto text-[9px] px-1 py-0.2 rounded bg-primary-container/20 text-primary">ACTIVE</span>
+</a>
+</div>
+</div>
+<!-- Sidebar Bottom Terminal Section -->
+<div class="pt-space-sm border-t border-border-subtle flex flex-col space-y-2">
+<!-- Deploy Agent CTA -->
+<button class="w-full h-10 px-3 rounded-lg bg-bg-surface hover:bg-bg-hover text-text-primary border border-border-default font-caption text-caption flex items-center justify-between transition-colors">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[16px]" data-icon="smart_toy">smart_toy</span>
+          Deploy Agent
+        </span>
+<span class="font-mono text-[10px] text-text-tertiary">⌘D</span>
+</button>
+<!-- System status tabs -->
+<div class="px-space-sm py-1 flex items-center justify-between text-[11px] font-caption text-text-secondary">
+<span class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]" data-icon="gpp_good">gpp_good</span>
+          Audit Live: OK
+        </span>
+<span class="flex items-center gap-1 text-text-tertiary">
+<span class="material-symbols-outlined text-[14px]" data-icon="sensors">sensors</span>
+          System Status
+        </span>
+</div>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE (PL-60 TO CLEAR FIXED SIDEBAR)                             -->
+<!-- ========================================================================= -->
+<div class="flex-1 pl-60 flex flex-col min-h-screen bg-bg-primary">
+<!-- Top Telemetry Header Dock -->
+<header class="sticky top-0 z-30 h-14 w-full bg-bg-surface border-b border-border-subtle flex items-center justify-between px-space-lg select-none">
+<div class="flex items-center space-x-space-md">
+<!-- Breadcrumb / System Identifier -->
+<div class="flex items-center space-x-2">
+<span class="font-title-lg text-title-lg font-bold text-text-primary uppercase tracking-wider">CashClaw</span>
+<span class="text-text-tertiary font-mono">/</span>
+<span class="font-caption text-caption text-primary tracking-wider uppercase font-semibold">DESIGN TOKEN REGISTRY &amp; COMPONENT STYLE GUIDE</span>
+</div>
+<!-- Telemetry Badges (DESIGN.md Contracts) -->
+<div class="hidden xl:flex items-center space-x-1.5 pl-space-md border-l border-border-subtle">
+<span class="font-caption text-caption px-2 py-0.5 rounded bg-bg-elevated border border-border-default text-text-secondary font-mono">
+            DESIGN.md Contract v1.0.4
+          </span>
+<span class="font-caption text-caption px-2 py-0.5 rounded bg-primary-container/10 border border-primary/30 text-primary font-mono flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            ADR-001 STRICT
+          </span>
+<span class="font-caption text-caption px-2 py-0.5 rounded bg-bg-elevated border border-border-default text-text-secondary font-mono">
+            WCAG AAA CONTRAST
+          </span>
+</div>
+</div>
+<!-- Trailing Action Buttons & Quick Controls -->
+<div class="flex items-center space-x-2">
+<button class="h-8 px-2.5 rounded bg-bg-elevated hover:bg-bg-hover text-text-secondary hover:text-text-primary border border-border-default font-caption text-caption flex items-center gap-1.5 transition-colors" onclick="navigator.clipboard.writeText(':root { --bg-primary: #0B0E11; --primary: #00D4AA; }'); alert('Variables copied to clipboard');">
+<span class="material-symbols-outlined text-[15px]" data-icon="calculate">calculate</span>
+<span>Copy System Variables</span>
+</button>
+<button class="h-8 px-3 rounded bg-bg-elevated hover:bg-bg-hover text-text-primary border border-border-default font-caption text-caption flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[15px]" data-icon="swap_horiz">swap_horiz</span>
+<span>Export Tokens (.css/.json)</span>
+</button>
+<button class="h-8 px-3 rounded bg-color-loss/10 hover:bg-color-loss/20 text-color-loss border border-color-loss/30 font-caption text-caption font-bold flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[15px]" data-icon="shield">shield</span>
+<span>Audit Invariants</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Workspace Canvas -->
+<main class="flex-1 p-space-xl max-w-[1440px] w-full mx-auto space-y-space-2xl">
+<!-- ===================================================================== -->
+<!-- SECTION 1: ARCHITECTURAL BANNER / COCKPIT METRIC HEADLINE              -->
+<!-- ===================================================================== -->
+<section class="bg-bg-surface border border-border-subtle rounded-xl p-space-xl halo-emerald relative overflow-hidden">
+<div class="absolute -right-12 -top-12 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg relative z-10">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="font-caption text-caption px-2 py-0.5 rounded bg-primary-container/20 border border-primary/40 text-primary uppercase font-bold tracking-wider">
+                STYLE-GUIDE.HTML // SPECIFICATION CANON
+              </span>
+<span class="font-caption text-caption text-text-tertiary font-mono">HASH: 0x7b92fae49811d044bb71239c8942ef3a61d8c119e7a2b904c</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-text-primary tracking-tight font-bold">
+              Quantitative Terminal Design System &amp; Invariant Registry
+            </h1>
+<p class="font-body-base text-body-base text-text-secondary mt-1 max-w-3xl">
+              High-contrast, zero-lookahead operational surface. Governed by ADR-001 paper trading fail-closed safety guarantees, strict 4px grid telemetry, and institutional execution tokens.
+            </p>
+</div>
+<!-- Quick Metrics Bar -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-bg-primary p-2 rounded-lg border border-border-subtle">
+<div class="px-3 py-1.5 border-r border-border-subtle">
+<div class="font-caption text-caption text-text-tertiary">CONTRAST MAX</div>
+<div class="font-caption text-caption text-primary font-bold">18.42:1 (AAA)</div>
+</div>
+<div class="px-3 py-1.5 border-r border-border-subtle">
+<div class="font-caption text-caption text-text-tertiary">BASE GRID</div>
+<div class="font-caption text-caption text-text-primary font-bold">4px STRICT</div>
+</div>
+<div class="px-3 py-1.5 border-r border-border-subtle">
+<div class="font-caption text-caption text-text-tertiary">TOUCH TARGET</div>
+<div class="font-caption text-caption text-text-primary font-bold">≥ 44px COMPLIANT</div>
+</div>
+<div class="px-3 py-1.5">
+<div class="font-caption text-caption text-text-tertiary">FAIL-CLOSED</div>
+<div class="font-caption text-caption text-color-loss font-bold">ACTIVE</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- SECTION 2: SEMANTIC COLOR SWATCH GRID (DESIGN.md Tokens)             -->
+<!-- ===================================================================== -->
+<section class="space-y-space-md">
+<div class="flex items-center justify-between border-b border-border-subtle pb-space-xs">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-primary"></span>
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold">2. Semantic Color Tokens &amp; Contrast Matrix</h2>
+</div>
+<span class="font-caption text-caption text-text-tertiary font-mono">SECTION 2: TOKENS // ALL CHANNELS PASS WCAG AAA</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Swatch: --bg-primary -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#0B0E11] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-text-tertiary font-mono">OBSIDIAN ABYSS</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-surface text-text-secondary border border-border-subtle">ROOT</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--bg-primary</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Deep Obsidian Abyss Canvas</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary font-mono">#0B0E11</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">21.0:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --bg-surface -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#141820] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-text-tertiary font-mono">SLATE CARBON</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-elevated text-text-secondary border border-border-subtle">PANEL</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--bg-surface</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Slate Carbon Analytical Panel</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary font-mono">#141820</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">16.4:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --bg-elevated -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#1A2030] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-text-tertiary font-mono">ELEVATED MIDNIGHT</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-surface text-text-secondary border border-border-subtle">OVERLAY</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--bg-elevated</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Elevated Midnight Surface / Popover</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary font-mono">#1A2030</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">14.2:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --bg-hover -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#1E2838] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-text-tertiary font-mono">INTERACTIVE HOVER</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-surface text-text-secondary border border-border-subtle">HOVER</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--bg-hover</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Interactive Slate Row/Item Hover</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary font-mono">#1E2838</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">12.5:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --color-accent / Profit -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#00D4AA] flex items-end p-2 justify-between shadow-[0_0_15px_rgba(0,212,170,0.25)]">
+<span class="font-caption text-[10px] text-bg-primary font-bold font-mono">QUANT EMERALD</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-primary text-primary font-bold">PRIMARY</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--color-accent / profit</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Precision Alpha &amp; Execution Yield</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-primary font-mono">#00D4AA</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">9.6:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --color-loss / error -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#FF4757] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-bg-primary font-bold font-mono">CRIMSON HALT</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-primary text-color-loss font-bold">ALERT</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--color-loss / error</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Emergency Halt &amp; Invariant Breaches</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-color-loss font-mono">#FF4757</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">7.2:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --color-warning -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#FFB020] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-bg-primary font-bold font-mono">AMBER REGIME</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-primary text-color-warning font-bold">CAUTION</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--color-warning</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">ADR-001 Paper Invariant &amp; Vol Shift</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-color-warning font-mono">#FFB020</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">11.8:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --color-ai (Deliberation Violet) -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#A78BFA] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-bg-primary font-bold font-mono">DELIBERATION VIOLET</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-primary text-secondary font-bold">MULTI-AGENT</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--color-ai / deliberation</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">LLM Consensus &amp; Agent Voting</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-secondary font-mono">#A78BFA</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">8.4:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --text-primary -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#E8EAED] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-bg-primary font-bold font-mono">CRISP ALABASTER</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-primary text-text-primary font-mono">100% OPACITY</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--text-primary</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Headings &amp; Core Numerical Readings</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary font-mono">#E8EAED</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">17.1:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --text-secondary -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#8B95A5] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-bg-primary font-bold font-mono">MUTED STEEL</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-primary text-text-secondary font-mono">BODY</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--text-secondary</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Secondary Labels &amp; Inactive Nav Items</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary font-mono">#8B95A5</span>
+<span class="text-primary font-mono text-[10px] bg-primary/10 px-1 rounded">8.2:1 AAA</span>
+</div>
+</div>
+<!-- Swatch: --border-subtle -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#1E2530] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-text-tertiary font-mono">HAIRLINE STRUCTURAL</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-surface text-text-secondary font-mono">1PX SOLID</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--border-subtle</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Section Separators &amp; Structural Hairlines</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary font-mono">#1E2530</span>
+<span class="text-text-tertiary font-mono text-[10px]">HAIRLINE</span>
+</div>
+</div>
+<!-- Swatch: --border-default -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between group hover:border-border-default transition-colors">
+<div>
+<div class="h-20 w-full rounded border border-border-subtle bg-[#2A3340] flex items-end p-2 justify-between">
+<span class="font-caption text-[10px] text-text-tertiary font-mono">CONTROL BORDER</span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-bg-surface text-text-secondary font-mono">FORM/BTN</span>
+</div>
+<div class="mt-3">
+<div class="font-caption text-caption text-text-primary font-bold font-mono">--border-default</div>
+<div class="font-caption text-[10px] text-text-tertiary mt-0.5">Interactive Controls &amp; Input Frames</div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary font-mono">#2A3340</span>
+<span class="text-text-tertiary font-mono text-[10px]">CONTROL</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- SECTION 3: TYPOGRAPHY SCALE & TELEMETRY INSPECTOR                     -->
+<!-- ===================================================================== -->
+<section class="space-y-space-md">
+<div class="flex items-center justify-between border-b border-border-subtle pb-space-xs">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-primary"></span>
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold">3. Typography Scale &amp; Telemetry Precision</h2>
+</div>
+<span class="font-caption text-caption text-text-tertiary font-mono">GEIST SANS + JETBRAINS MONO // TABULAR ALIGNED</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Sans Hierarchy (Geist) - 7 cols -->
+<div class="lg:col-span-7 bg-bg-surface border border-border-subtle rounded-lg p-space-lg space-y-space-lg">
+<div class="flex items-center justify-between border-b border-border-subtle pb-2">
+<span class="font-title-lg text-title-lg text-text-primary font-semibold">Geist Sans Hierarchy</span>
+<span class="font-caption text-caption text-primary">UI CHANNELS</span>
+</div>
+<div class="space-y-space-md">
+<!-- Hero 56px -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle">
+<div class="flex items-center justify-between text-text-tertiary font-caption text-[10px] mb-1">
+<span>TOKEN: hero (56px / 900)</span>
+<span>font-hero text-hero</span>
+</div>
+<div class="font-hero text-hero text-text-primary tracking-tight leading-none truncate">
+                  $84,291.50
+                </div>
+</div>
+<!-- Headline MD / Display 28px -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle">
+<div class="flex items-center justify-between text-text-tertiary font-caption text-[10px] mb-1">
+<span>TOKEN: headline-md (28px / 700)</span>
+<span>font-headline-md text-headline-md</span>
+</div>
+<div class="font-headline-md text-headline-md text-text-primary tracking-tight">
+                  Cross-Regime Arbitrage Engine
+                </div>
+</div>
+<!-- Headline SM 20px -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle">
+<div class="flex items-center justify-between text-text-tertiary font-caption text-[10px] mb-1">
+<span>TOKEN: headline-sm (20px / 600)</span>
+<span>font-headline-sm text-headline-sm</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-text-primary">
+                  Order Book L3 Depth Decomposition
+                </div>
+</div>
+<!-- Title LG 16px -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle">
+<div class="flex items-center justify-between text-text-tertiary font-caption text-[10px] mb-1">
+<span>TOKEN: title-lg (16px / 600)</span>
+<span>font-title-lg text-title-lg</span>
+</div>
+<div class="font-title-lg text-title-lg text-text-primary font-semibold">
+                  Zero-Lookahead Factor Verification Pass
+                </div>
+</div>
+<!-- Body Base 14px & Body SM 13px -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+<div class="p-3 bg-bg-primary rounded border border-border-subtle">
+<div class="text-text-tertiary font-caption text-[10px] mb-1">body-base (14px / 400)</div>
+<p class="font-body-base text-body-base text-text-secondary leading-relaxed">
+                    Strategy invariants are enforced at the network transport boundary prior to routing.
+                  </p>
+</div>
+<div class="p-3 bg-bg-primary rounded border border-border-subtle">
+<div class="text-text-tertiary font-caption text-[10px] mb-1">body-sm (13px / 500)</div>
+<p class="font-body-sm text-body-sm text-text-secondary leading-relaxed">
+                    Statistical arbitrage alpha residual must exceed 2.4 sigma after fee deduction.
+                  </p>
+</div>
+</div>
+<!-- Caption 11px uppercase -->
+<div class="p-2.5 bg-bg-primary rounded border border-border-subtle flex items-center justify-between">
+<div>
+<div class="text-text-tertiary font-caption text-[10px]">caption (11px / 600 / tracking 0.04em)</div>
+<div class="font-caption text-caption text-primary uppercase mt-0.5">
+                    WCAG AAA // HIGH CONTRAST STATUS LABEL // TELEMETRY
+                  </div>
+</div>
+<span class="font-caption text-[10px] text-text-tertiary font-mono">TRACKING: 0.04em</span>
+</div>
+</div>
+</div>
+<!-- Mono Telemetry Stress Test (JetBrains Mono) - 5 cols -->
+<div class="lg:col-span-5 bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between border-b border-border-subtle pb-2 mb-3">
+<span class="font-title-lg text-title-lg text-text-primary font-semibold">Mono Telemetry Stress Test</span>
+<span class="font-caption text-caption text-color-warning">TABULAR NUMERALS</span>
+</div>
+<p class="font-caption text-[11px] text-text-secondary mb-3">
+                Strict monospace tabular numerals prevent layout jitter during real-time 100Hz orderbook updates.
+              </p>
+<!-- Live Telemetry Matrix -->
+<div class="bg-bg-primary rounded border border-border-subtle p-3 space-y-2.5 font-caption text-caption">
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary">ACCOUNT EQUITY</span>
+<span class="text-primary font-bold text-sm tabular-nums">+1,248,590.42 USD</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary">ANNUALIZED SHARPE</span>
+<span class="text-text-primary font-bold tabular-nums">3.1415</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary">INFORMATION COEFF (IC)</span>
+<span class="text-primary font-bold tabular-nums">+0.0581</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary">INFORMATION RATIO (IR)</span>
+<span class="text-text-primary font-bold tabular-nums">+1.84</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary">INTERNAL LATENCY</span>
+<span class="text-primary font-bold tabular-nums">42μs</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary">EXECUTION SLIPPAGE</span>
+<span class="text-text-secondary font-bold tabular-nums">1.2 BPS</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-text-secondary">EXCHANGE MAKER FEE</span>
+<span class="text-text-tertiary font-bold tabular-nums">35 BPS</span>
+</div>
+</div>
+<!-- Cryptographic Hash Presentation -->
+<div class="mt-4 bg-bg-primary rounded border border-border-subtle p-2.5">
+<div class="font-caption text-[10px] text-text-tertiary uppercase flex items-center justify-between mb-1">
+<span>SHA-256 Audit Verification Stamp</span>
+<span class="text-primary">PASS</span>
+</div>
+<div class="font-caption text-[11px] text-text-primary break-all bg-bg-surface p-2 rounded border border-border-subtle select-all font-mono">
+                  0x7b92fae49811d044bb71239c8942ef3a61d8c119e7a2b904c
+                </div>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between text-[10px] font-caption text-text-tertiary">
+<span>IEEE-754 FLOATING PRECISION</span>
+<span>WCAG 2.1 CONTRAST VERIFIED</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- SECTION 4: INTERACTIVE COMPONENT MATRIX & CONTROLS                    -->
+<!-- ===================================================================== -->
+<section class="space-y-space-md">
+<div class="flex items-center justify-between border-b border-border-subtle pb-space-xs">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-primary"></span>
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold">4. Component Matrix &amp; Operational Controls</h2>
+</div>
+<span class="font-caption text-caption text-text-tertiary font-mono">TOUCH TARGET ≥ 44PX // FAIL-CLOSED PATTERNS</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+<!-- Column 1: Buttons & Interactive Action Triggers -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between space-y-space-md">
+<div>
+<div class="font-title-lg text-title-lg text-text-primary font-semibold border-b border-border-subtle pb-2 mb-3">
+                Buttons &amp; Target Compliance
+              </div>
+<p class="font-body-sm text-body-sm text-text-secondary mb-4">
+                Every action trigger guarantees a 44px min target size, 600 weight, and distinct physical state boundaries.
+              </p>
+<div class="space-y-3">
+<!-- Primary Action -->
+<div>
+<div class="font-caption text-[10px] text-text-tertiary mb-1">PRIMARY ACTION (SOLID QUANT EMERALD)</div>
+<button class="w-full h-11 px-4 rounded-lg bg-primary-container hover:bg-primary text-bg-primary font-headline-sm text-body-base font-semibold flex items-center justify-center gap-2 transition-all shadow-[0_0_12px_rgba(0,212,170,0.15)] active:scale-[0.99]">
+<span class="material-symbols-outlined text-[18px]" data-icon="swap_horiz">swap_horiz</span>
+<span>Commit Strategy Route</span>
+</button>
+</div>
+<!-- Secondary Action -->
+<div>
+<div class="font-caption text-[10px] text-text-tertiary mb-1">SECONDARY CONTROL (SLATE SURFACE / BORDER)</div>
+<button class="w-full h-11 px-4 rounded-lg bg-bg-surface hover:bg-bg-hover text-text-primary border border-border-default font-body-base font-semibold flex items-center justify-center gap-2 transition-colors active:scale-[0.99]">
+<span class="material-symbols-outlined text-[18px]" data-icon="tune">tune</span>
+<span>Adjust Invariant Parameter</span>
+</button>
+</div>
+<!-- Emergency Halt Danger Button -->
+<div>
+<div class="font-caption text-[10px] text-text-tertiary mb-1">FAIL-CLOSED SAFETY (CRIMSON EMERGENCY)</div>
+<button class="w-full h-11 px-4 rounded-lg bg-color-loss hover:bg-[#ff3042] text-white font-body-base font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_16px_rgba(255,71,87,0.3)] active:scale-[0.99]">
+<span class="material-symbols-outlined text-[18px]" data-icon="shield">shield</span>
+<span>Emergency System Halt</span>
+</button>
+</div>
+<!-- Ghost Outline Button Group -->
+<div>
+<div class="font-caption text-[10px] text-text-tertiary mb-1">TOOLBAR ICON TRIGGERS (≥ 44PX)</div>
+<div class="flex items-center gap-2">
+<button class="h-11 w-11 rounded-lg bg-bg-primary hover:bg-bg-hover border border-border-default flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="terminal">terminal</span>
+</button>
+<button class="h-11 w-11 rounded-lg bg-bg-primary hover:bg-bg-hover border border-border-default flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications_active">notifications_active</span>
+</button>
+<button class="h-11 w-11 rounded-lg bg-bg-primary hover:bg-bg-hover border border-border-default flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="help_outline">help_outline</span>
+</button>
+<button class="flex-1 h-11 px-3 rounded-lg bg-bg-primary hover:bg-bg-hover border border-border-default text-text-secondary hover:text-text-primary font-caption text-caption flex items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="history">history</span>
+<span>Audit Logs</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="text-[10px] font-caption text-text-tertiary pt-2 border-t border-border-subtle">
+              PHYSICAL HEIGHT: 44.0PX STRICT
+            </div>
+</div>
+<!-- Column 2: Status Badges, Chips & Deliberation Tokens -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between space-y-space-md">
+<div>
+<div class="font-title-lg text-title-lg text-text-primary font-semibold border-b border-border-subtle pb-2 mb-3">
+                Quantitative State Badges
+              </div>
+<p class="font-body-sm text-body-sm text-text-secondary mb-4">
+                Uppercase monospace tokens communicate live execution safety and LLM agent consensus states.
+              </p>
+<div class="space-y-3 font-caption text-caption">
+<!-- PAPER_ONLY Badge -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-color-warning"></span>
+<span class="text-text-secondary font-mono">PAPER ONLY INVARIANT</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-color-warning/10 text-color-warning border border-color-warning/40 font-bold uppercase tracking-wider">
+                    PAPER_ONLY
+                  </span>
+</div>
+<!-- INVARIANT VERIFIED Badge -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-text-secondary font-mono">ZERO LOOKAHEAD</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-primary-container/10 text-primary border border-primary/30 font-bold uppercase tracking-wider">
+                    INVARIANT VERIFIED
+                  </span>
+</div>
+<!-- BREACH / HALT Badge -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-color-loss"></span>
+<span class="text-text-secondary font-mono">RISK ENVELOPE</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-color-loss/10 text-color-loss border border-color-loss/40 font-bold uppercase tracking-wider">
+                    BREACH / HALT
+                  </span>
+</div>
+<!-- LLM DELIBERATION CHIP -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-text-secondary font-mono">MULTI-AGENT DEBATE</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-container/30 text-secondary border border-secondary/40 font-bold uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="smart_toy">smart_toy</span>
+                    DELIBERATION (3/3)
+                  </span>
+</div>
+<!-- Interactive Toggles & Checkbox -->
+<div class="pt-2 border-t border-border-subtle flex items-center justify-between">
+<label class="flex items-center gap-2 text-text-secondary text-body-sm cursor-pointer select-none">
+<input checked="" class="w-4 h-4 rounded bg-bg-primary border-border-default text-primary focus:ring-primary focus:ring-offset-bg-primary cursor-pointer" type="checkbox"/>
+<span>Enforce Invariant ADR-001</span>
+</label>
+<span class="font-caption text-[10px] text-primary">STRICT LOCK</span>
+</div>
+</div>
+</div>
+<div class="text-[10px] font-caption text-text-tertiary pt-2 border-t border-border-subtle">
+              TOKEN ROLE: MONOSPACE STATUS DESCRIPTOR
+            </div>
+</div>
+<!-- Column 3: Live Fail-Closed Signal Fence Card -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between space-y-space-md">
+<div>
+<div class="flex items-center justify-between border-b border-border-subtle pb-2 mb-3">
+<div class="font-title-lg text-title-lg text-text-primary font-semibold">
+                  Signal Fence Micro-Widget
+                </div>
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mb-3">
+                Production-grade telemetry card demonstrating 12px rounded borders, 1px solid hairline separation, and high-density telemetry rows.
+              </p>
+<!-- Nested Card Component -->
+<div class="bg-bg-primary border border-border-default rounded-xl p-space-md space-y-space-sm halo-emerald">
+<div class="flex items-center justify-between border-b border-border-subtle pb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="verified_user">verified_user</span>
+<span class="font-caption text-caption text-text-primary font-bold">FENCE: BTC-PERP-DYDX</span>
+</div>
+<span class="font-caption text-[10px] px-1.5 py-0.2 rounded bg-bg-surface text-primary border border-primary/20">LIVE</span>
+</div>
+<!-- Metric Grid Inside Card -->
+<div class="grid grid-cols-2 gap-2 text-caption font-caption pt-1">
+<div>
+<span class="text-text-tertiary block">VOLATILITY (GK)</span>
+<span class="text-text-primary font-bold tabular-nums">18.42 (NORM)</span>
+</div>
+<div>
+<span class="text-text-tertiary block">MAX DRAWDOWN</span>
+<span class="text-primary font-bold tabular-nums">0.34%</span>
+</div>
+<div>
+<span class="text-text-tertiary block">DELTA EXPOSURE</span>
+<span class="text-text-secondary font-bold tabular-nums">+0.012 BTC</span>
+</div>
+<div>
+<span class="text-text-tertiary block">EXECUTION HEALTH</span>
+<span class="text-primary font-bold">OPTIMAL</span>
+</div>
+</div>
+<!-- Fail-Closed Guard Banner -->
+<div class="mt-2 p-2 rounded bg-surface-container-lowest border border-primary/20 flex items-center justify-between">
+<span class="font-caption text-[10px] text-text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary" data-icon="shield">shield</span>
+                    Invariants Intact
+                  </span>
+<span class="font-caption text-[10px] text-primary font-mono">0 ERRORS</span>
+</div>
+</div>
+<!-- Form Input Component Preview -->
+<div class="mt-4">
+<div class="font-caption text-[10px] text-text-tertiary mb-1">INPUT / SELECT FIELD (44PX TARGET)</div>
+<div class="relative">
+<input class="w-full h-11 px-3 bg-bg-primary border border-border-default rounded-lg font-caption text-caption text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" readonly="" type="text" value="0.0050 // MAX_SLIPPAGE_TOLERANCE"/>
+<span class="absolute right-3 top-3 text-[11px] font-caption text-text-tertiary font-mono">BPS</span>
+</div>
+</div>
+</div>
+<div class="text-[10px] font-caption text-text-tertiary pt-2 border-t border-border-subtle flex justify-between">
+<span>PATTERN: ISOLATED WORKSPACE WIDGET</span>
+<span>12PX RADIUS</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- SECTION 5: QUANTITATIVE DATA TABLE TELEMETRY PATTERN                  -->
+<!-- ===================================================================== -->
+<section class="space-y-space-md">
+<div class="flex items-center justify-between border-b border-border-subtle pb-space-xs">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-primary"></span>
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold">5. High-Density Telemetry Table Standard</h2>
+</div>
+<span class="font-caption text-caption text-text-tertiary font-mono">PINNED HEADERS // NUMERIC RIGHT-ALIGN // HOVER STATES</span>
+</div>
+<div class="bg-bg-surface border border-border-subtle rounded-lg overflow-hidden">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse font-caption text-caption">
+<thead>
+<tr class="bg-bg-primary border-b border-border-subtle text-text-tertiary uppercase text-[10px] tracking-wider select-none">
+<th class="py-3 px-4 font-semibold">Strategy Symbol</th>
+<th class="py-3 px-4 font-semibold">Regime Type</th>
+<th class="py-3 px-4 font-semibold text-right">Alpha Residual</th>
+<th class="py-3 px-4 font-semibold text-right">Sharpe Ratio</th>
+<th class="py-3 px-4 font-semibold text-right">Information Coeff</th>
+<th class="py-3 px-4 font-semibold text-right">Observed Latency</th>
+<th class="py-3 px-4 font-semibold text-center">Safety Invariant</th>
+<th class="py-3 px-4 font-semibold text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle/40">
+<!-- Row 1 -->
+<tr class="hover:bg-bg-hover/80 transition-colors duration-150">
+<td class="py-3 px-4 font-mono font-bold text-text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                    BTC_USDT_MOMENTUM_V4
+                  </td>
+<td class="py-3 px-4 text-text-secondary">High Vol Trend-Following</td>
+<td class="py-3 px-4 text-right font-mono text-primary font-bold tabular-nums">+4.12σ</td>
+<td class="py-3 px-4 text-right font-mono text-text-primary tabular-nums">3.42</td>
+<td class="py-3 px-4 text-right font-mono text-primary tabular-nums">+0.0620</td>
+<td class="py-3 px-4 text-right font-mono text-text-secondary tabular-nums">38μs</td>
+<td class="py-3 px-4 text-center">
+<span class="px-2 py-0.5 rounded bg-primary-container/10 text-primary border border-primary/20 text-[10px] uppercase font-bold">
+                      VERIFIED
+                    </span>
+</td>
+<td class="py-3 px-4 text-right">
+<button class="h-7 px-2.5 rounded bg-bg-primary hover:bg-bg-elevated border border-border-default text-text-primary text-[10px] transition-colors">
+                      Inspect
+                    </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-bg-hover/80 transition-colors duration-150">
+<td class="py-3 px-4 font-mono font-bold text-text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    ETH_SOL_STATARB_RESIDUAL
+                  </td>
+<td class="py-3 px-4 text-text-secondary">Mean Reversion Cointegration</td>
+<td class="py-3 px-4 text-right font-mono text-primary font-bold tabular-nums">+2.88σ</td>
+<td class="py-3 px-4 text-right font-mono text-text-primary tabular-nums">2.91</td>
+<td class="py-3 px-4 text-right font-mono text-primary tabular-nums">+0.0494</td>
+<td class="py-3 px-4 text-right font-mono text-text-secondary tabular-nums">44μs</td>
+<td class="py-3 px-4 text-center">
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary border border-secondary/30 text-[10px] uppercase font-bold">
+                      DELIBERATING
+                    </span>
+</td>
+<td class="py-3 px-4 text-right">
+<button class="h-7 px-2.5 rounded bg-bg-primary hover:bg-bg-elevated border border-border-default text-text-primary text-[10px] transition-colors">
+                      Inspect
+                    </button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-bg-hover/80 transition-colors duration-150">
+<td class="py-3 px-4 font-mono font-bold text-text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-color-warning"></span>
+                    AVAX_DYDX_ORDERBOOK_IMB
+                  </td>
+<td class="py-3 px-4 text-text-secondary">L3 Microstructure Skew</td>
+<td class="py-3 px-4 text-right font-mono text-color-warning font-bold tabular-nums">+1.15σ</td>
+<td class="py-3 px-4 text-right font-mono text-text-primary tabular-nums">1.82</td>
+<td class="py-3 px-4 text-right font-mono text-color-warning tabular-nums">+0.0210</td>
+<td class="py-3 px-4 text-right font-mono text-text-secondary tabular-nums">29μs</td>
+<td class="py-3 px-4 text-center">
+<span class="px-2 py-0.5 rounded bg-color-warning/10 text-color-warning border border-color-warning/30 text-[10px] uppercase font-bold">
+                      PAPER_ONLY
+                    </span>
+</td>
+<td class="py-3 px-4 text-right">
+<button class="h-7 px-2.5 rounded bg-bg-primary hover:bg-bg-elevated border border-border-default text-text-primary text-[10px] transition-colors">
+                      Inspect
+                    </button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-bg-hover/80 transition-colors duration-150">
+<td class="py-3 px-4 font-mono font-bold text-text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-color-loss"></span>
+                    DEGEN_PERP_FUNDING_ARB
+                  </td>
+<td class="py-3 px-4 text-text-secondary">Cross-Venue Basis Carry</td>
+<td class="py-3 px-4 text-right font-mono text-color-loss font-bold tabular-nums">-0.45σ</td>
+<td class="py-3 px-4 text-right font-mono text-text-primary tabular-nums">0.64</td>
+<td class="py-3 px-4 text-right font-mono text-color-loss tabular-nums">-0.0091</td>
+<td class="py-3 px-4 text-right font-mono text-text-secondary tabular-nums">98μs</td>
+<td class="py-3 px-4 text-center">
+<span class="px-2 py-0.5 rounded bg-color-loss/10 text-color-loss border border-color-loss/30 text-[10px] uppercase font-bold">
+                      BREACH / HALTED
+                    </span>
+</td>
+<td class="py-3 px-4 text-right">
+<button class="h-7 px-2.5 rounded bg-bg-primary hover:bg-bg-elevated border border-border-default text-text-primary text-[10px] transition-colors">
+                      Inspect
+                    </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Telemetry Footer -->
+<div class="px-4 py-2.5 bg-bg-primary border-t border-border-subtle flex flex-col sm:flex-row items-center justify-between text-text-tertiary font-caption text-caption gap-2">
+<div class="flex items-center gap-3">
+<span>RECORD COUNT: 4 NODES ACTIVE</span>
+<span>•</span>
+<span>SAMPLING FREQUENCY: 100HZ TABULAR</span>
+</div>
+<div class="flex items-center gap-2 font-mono text-[10px]">
+<span class="text-primary font-bold">ALL INVARIANTS SATISFIED (ADR-001)</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- SECTION 6: TOKENS CONTRACT AUDIT & FOOTER                             -->
+<!-- ===================================================================== -->
+<footer class="pt-space-lg pb-space-2xl border-t border-border-subtle flex flex-col md:flex-row items-center justify-between text-text-tertiary font-caption text-caption gap-4 select-none">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>CashClaw OS Institutional Quantum Node #QNT-8812</span>
+<span>•</span>
+<span>Terminal v4.19 Institutional</span>
+</div>
+<div class="flex items-center space-x-4">
+<span class="text-text-secondary">DESIGN.md Visual Contract Validated</span>
+<span class="text-text-tertiary">|</span>
+<span class="font-mono text-primary">STATUS: ZERO LOOKAHEAD CONFIRMED</span>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

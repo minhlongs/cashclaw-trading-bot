@@ -3,48 +3,36 @@
 
 import { NextResponse } from 'next/server';
 import { getCloudAlphaFeedForTier } from '@/ee/alpha-cloud/alpha-feed-service';
-import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
-import { SaasTierSchema, type SaasTier } from '@/ee/tenancy/tenant-policy';
+import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
+import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const queryTier = url.searchParams.get('tier')?.toUpperCase();
-    const headerTier = req.headers.get('x-cashclaw-tier')?.toUpperCase();
-    const workspaceId =
-      url.searchParams.get('workspaceId') ?? req.headers.get('x-cashclaw-workspace');
+    const { workspaceId, tier, invalidExplicitTier } = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: url.searchParams.get('workspaceId'),
+      explicitTier: url.searchParams.get('tier'),
+    });
 
-    const rawTier = queryTier ?? headerTier;
-    if (rawTier) {
-      const parsed = SaasTierSchema.safeParse(rawTier);
-      if (!parsed.success) {
-        return NextResponse.json(
-          { ok: false, error: `Invalid SaaS tier: ${rawTier}` },
-          { status: 400 },
-        );
-      }
-      const items = getCloudAlphaFeedForTier(parsed.data);
-      return NextResponse.json({
-        ok: true,
-        tier: parsed.data,
-        safetyMode: 'PAPER_ADVISORY_ONLY',
-        count: items.length,
-        items,
-      });
+    if (invalidExplicitTier) {
+      return NextResponse.json(
+        { ok: false, error: `Invalid SaaS tier: ${invalidExplicitTier}` },
+        { status: 400 },
+      );
     }
 
-    const resolvedTier: SaasTier = workspaceId
-      ? await defaultSaasEntitlementStore.getWorkspaceTier(workspaceId)
-      : 'BASIC';
-    const items = getCloudAlphaFeedForTier(resolvedTier);
-
+    const entitlements = getEntitlementsForTier(tier);
+    const items = getCloudAlphaFeedForTier(tier);
     return NextResponse.json({
       ok: true,
-      tier: resolvedTier,
+      tier,
       workspaceId: workspaceId ?? 'default',
       safetyMode: 'PAPER_ADVISORY_ONLY',
+      fullFeedAccess: entitlements.cloudAlphaFeedAccess,
       count: items.length,
+      itemCount: items.length,
       items,
+      feed: items,
     });
   } catch {
     return NextResponse.json(

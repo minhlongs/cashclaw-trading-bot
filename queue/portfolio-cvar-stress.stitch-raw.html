@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CashClaw OS // Cross-Margin CVaR Tail-Risk &amp; Liquidation Cascade Simulator</title>
+<!-- Google Fonts: Geist Sans & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-fixed": "#2e1500",
+            "inverse-on-surface": "#2a322f",
+            "inverse-primary": "#006b55",
+            "background": "#0d1512",
+            "color-warning": "#FFB020",
+            "bg-surface": "#141820",
+            "bg-elevated": "#1A2030",
+            "primary": "#46f1c5",
+            "secondary-fixed-dim": "#cebdff",
+            "color-loss": "#FF4757",
+            "secondary-fixed": "#e8ddff",
+            "surface-container-high": "#242c28",
+            "on-tertiary": "#4c2700",
+            "outline": "#85948d",
+            "text-tertiary": "#5A6577",
+            "secondary": "#cebdff",
+            "on-secondary-container": "#bea8ff",
+            "surface-dim": "#0d1512",
+            "on-error": "#690005",
+            "on-error-container": "#ffdad6",
+            "surface-container": "#19211e",
+            "border-subtle": "#1E2530",
+            "bg-hover": "#1E2838",
+            "tertiary": "#ffcea6",
+            "on-primary": "#00382b",
+            "on-surface": "#dce4df",
+            "on-tertiary-container": "#733e00",
+            "on-surface-variant": "#bacac2",
+            "on-primary-fixed-variant": "#00513f",
+            "primary-container": "#00d4aa",
+            "surface": "#0d1512",
+            "on-primary-container": "#005643",
+            "error-container": "#93000a",
+            "bg-primary": "#0B0E11",
+            "text-secondary": "#8B95A5",
+            "on-tertiary-fixed-variant": "#6c3a00",
+            "tertiary-container": "#ffa858",
+            "tertiary-fixed": "#ffdcc1",
+            "on-primary-fixed": "#002118",
+            "primary-fixed": "#55fcd0",
+            "inverse-surface": "#dce4df",
+            "surface-tint": "#28dfb5",
+            "text-primary": "#E8EAED",
+            "tertiary-fixed-dim": "#ffb77a",
+            "surface-container-highest": "#2f3633",
+            "on-secondary-fixed-variant": "#4f319c",
+            "on-background": "#dce4df",
+            "surface-bright": "#333b37",
+            "outline-variant": "#3b4a44",
+            "border-default": "#2A3340",
+            "surface-container-lowest": "#08100d",
+            "secondary-container": "#4f319c",
+            "primary-fixed-dim": "#28dfb5",
+            "on-secondary": "#381385",
+            "surface-variant": "#2f3633",
+            "error": "#ffb4ab",
+            "on-secondary-fixed": "#21005e",
+            "surface-container-low": "#161d1a"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "space-3xl": "48px",
+            "space-sm": "8px",
+            "space-md": "12px",
+            "space-xs": "4px",
+            "margin": "24px",
+            "space-xl": "24px",
+            "space-lg": "16px",
+            "space-2xl": "32px",
+            "gutter": "16px",
+            "space-4xl": "64px"
+          },
+          "fontFamily": {
+            "hero": ["Geist", "sans-serif"],
+            "body-sm": ["Geist", "sans-serif"],
+            "title-lg": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist", "sans-serif"],
+            "body-base": ["Geist", "sans-serif"],
+            "headline-sm": ["Geist", "sans-serif"],
+            "headline-md": ["Geist", "sans-serif"],
+            "caption": ["JetBrains Mono", "monospace"]
+          },
+          "fontSize": {
+            "hero": ["56px", { "lineHeight": "1.25", "fontWeight": "900" }],
+            "body-sm": ["13px", { "lineHeight": "1.5", "fontWeight": "500" }],
+            "title-lg": ["16px", { "lineHeight": "1.5", "fontWeight": "600" }],
+            "headline-lg": ["40px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "body-base": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+            "headline-sm": ["20px", { "lineHeight": "1.25", "fontWeight": "600" }],
+            "headline-md": ["28px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "caption": ["11px", { "lineHeight": "1.4", "letterSpacing": "0.04em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Institutional Terminal Scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B0E11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E2530;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2A3340;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      vertical-align: middle;
+      font-size: 18px;
+    }
+    .material-symbols-fill {
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+    }
+    .glow-emerald {
+      box-shadow: 0 0 16px rgba(0, 212, 170, 0.15);
+    }
+    .glow-emerald-sm {
+      box-shadow: 0 0 8px rgba(70, 241, 197, 0.25);
+    }
+    .glow-crimson {
+      box-shadow: 0 0 12px rgba(255, 71, 87, 0.2);
+    }
+  </style>
+</head>
+<body class="bg-bg-primary text-text-primary antialiased selection:bg-primary-container selection:text-on-primary font-body-base overflow-x-hidden min-h-screen">
+<!-- ========================================================================= -->
+<!-- 1. FIXED LEFT SIDEBAR (Shared Component: SideNavBar)                      -->
+<!-- ========================================================================= -->
+<aside class="fixed top-0 left-0 h-screen w-60 z-40 bg-bg-primary border-r border-border-subtle flex flex-col justify-between p-space-sm select-none">
+<!-- Sidebar Top: Branding & Safety Lock -->
+<div class="flex flex-col gap-space-sm">
+<div class="px-space-sm pt-space-xs pb-space-sm border-b border-border-subtle">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">terminal</span>
+<span class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight">CashClaw OS</span>
+</div>
+<span class="font-caption text-caption px-1.5 py-0.5 rounded bg-bg-elevated text-text-secondary border border-border-subtle">v4.19</span>
+</div>
+<div class="mt-2 flex items-center justify-between text-text-tertiary">
+<span class="font-caption text-caption flex items-center gap-1 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            NODE #QNT-8812 SYNC 100%
+          </span>
+</div>
+<div class="mt-2 px-2 py-1 rounded bg-bg-elevated border border-color-warning/30 flex items-center gap-1.5 text-color-warning">
+<span class="material-symbols-outlined text-[14px]">shield</span>
+<span class="font-caption text-[10px] tracking-wide font-semibold">ADR-001: PAPER_ONLY</span>
+</div>
+</div>
+<!-- Navigation Links (Total 16 items matching quant architecture & CVaR tail active) -->
+<nav class="flex flex-col gap-0.5 overflow-y-auto max-h-[calc(100vh-270px)] pr-1">
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="index.html">
+<span class="material-symbols-outlined text-[17px]">dashboard</span>
+<span class="font-caption text-caption">Cockpit Overview</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="regime-attribution.html">
+<span class="material-symbols-outlined text-[17px]">monitoring</span>
+<span class="font-caption text-caption">Regime Attribution</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="alpha-zoo.html">
+<span class="material-symbols-outlined text-[17px]">unfold_more_double</span>
+<span class="font-caption text-caption">Alpha Zoo Decomposition</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="deliberation-theater.html">
+<span class="material-symbols-outlined text-[17px]">smart_toy</span>
+<span class="font-caption text-caption">Multi-Agent Deliberation</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="strategies/volatility-dca.html">
+<span class="material-symbols-outlined text-[17px]">alt_route</span>
+<span class="font-caption text-caption">Volatility DCA</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="correlation-matrix.html">
+<span class="material-symbols-outlined text-[17px]">pie_chart</span>
+<span class="font-caption text-caption">Correlation &amp; Factor Risk</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="execution-ledger.html">
+<span class="material-symbols-outlined text-[17px]">swap_horiz</span>
+<span class="font-caption text-caption">Execution Ledger</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="data-quality-gate.html">
+<span class="material-symbols-outlined text-[17px]">verified_user</span>
+<span class="font-caption text-caption">Data Quality &amp; Lookahead Gate</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="microstructure-liquidity.html">
+<span class="material-symbols-outlined text-[17px]">stacked_bar_chart</span>
+<span class="font-caption text-caption">Microstructure &amp; Order Book</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="survival-gate.html">
+<span class="material-symbols-outlined text-[17px]">shield</span>
+<span class="font-caption text-caption">Survival Gate &amp; Ruin Prob</span>
+</a>
+<!-- ACTIVE DESTINATION: CVaR Tail-Risk Stress -->
+<a class="flex items-center justify-between px-space-sm py-1.5 rounded-lg text-primary bg-bg-elevated border-l-2 border-primary font-semibold transition-colors duration-150 glow-emerald-sm" href="portfolio-cvar-stress.html">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[17px]" style="font-variation-settings: 'FILL' 1;">calculate</span>
+<span class="font-caption text-caption">CVaR Tail-Risk Stress</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="sovereign-enclave.html">
+<span class="material-symbols-outlined text-[17px]">lock</span>
+<span class="font-caption text-caption">Sovereign Enclave Security</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="relative-value-basis.html">
+<span class="material-symbols-outlined text-[17px]">multiline_chart</span>
+<span class="font-caption text-caption">Relative Value Basis</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="fdr-multiple-testing-gate.html">
+<span class="material-symbols-outlined text-[17px]">filter_alt</span>
+<span class="font-caption text-caption">FDR Multiple-Testing Gate</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="billing.html">
+<span class="material-symbols-outlined text-[17px]">credit_card</span>
+<span class="font-caption text-caption">Billing &amp; Quota</span>
+</a>
+<a class="flex items-center gap-2.5 px-space-sm py-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="style-guide.html">
+<span class="material-symbols-outlined text-[17px]">palette</span>
+<span class="font-caption text-caption">Design System Tokens</span>
+</a>
+</nav>
+</div>
+<!-- Sidebar Bottom: Cryptographic Audit Status & Deploy Agent CTA -->
+<div class="pt-space-sm border-t border-border-subtle flex flex-col gap-2">
+<div class="px-2 py-1.5 rounded bg-bg-surface border border-border-subtle flex flex-col gap-0.5">
+<div class="flex items-center justify-between text-primary font-caption text-[10px]">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">gpp_good</span>
+            Audit Live: OK 200.0%
+          </span>
+<span class="text-text-tertiary">SHA-256</span>
+</div>
+<p class="font-caption text-[9px] text-text-tertiary truncate font-mono">0x9f32b84e11a0c4...c289</p>
+</div>
+<button class="w-full h-11 px-3 rounded-lg bg-primary-container text-on-primary font-title-lg text-title-lg font-semibold flex items-center justify-between hover:bg-primary transition-all duration-150 active:scale-[0.98]">
+<span class="flex items-center gap-2 font-body-sm text-body-sm font-semibold">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+          Deploy Paper Agent
+        </span>
+<span class="font-caption text-[10px] px-1.5 py-0.5 rounded bg-on-primary/10 text-on-primary border border-on-primary/20">⌘D</span>
+</button>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- 2. STICKY TOP NAVIGATION BAR (Shared Component: TopNavBar)                -->
+<!-- ========================================================================= -->
+<header class="fixed top-0 right-0 left-60 h-14 z-30 bg-bg-surface/95 backdrop-blur-md border-b border-border-subtle flex items-center justify-between px-space-lg select-none">
+<!-- Left: Breadcrumb / Path Trace -->
+<div class="flex items-center gap-2 min-w-0">
+<span class="font-caption text-[11px] font-bold text-primary tracking-wider uppercase">CashClaw</span>
+<span class="text-text-tertiary font-caption text-caption">//</span>
+<span class="font-caption text-caption text-text-secondary uppercase">RISK &amp; INVARIANTS</span>
+<span class="text-text-tertiary font-caption text-caption">//</span>
+<span class="font-caption text-caption text-text-primary font-semibold truncate hidden xl:inline">CROSS-MARGIN CVaR TAIL-RISK ENGINE (src/forest/risk/)</span>
+</div>
+<!-- Center/Right: Telemetry Metrics Strip -->
+<div class="hidden lg:flex items-center gap-3 font-caption text-[11px]">
+<div class="px-2 py-1 rounded bg-bg-elevated border border-border-subtle flex items-center gap-1.5">
+<span class="text-text-secondary">CROSS-MARGIN:</span>
+<span class="text-primary font-bold">3.42x</span>
+</div>
+<div class="px-2 py-1 rounded bg-bg-elevated border border-color-loss/30 flex items-center gap-1.5">
+<span class="text-text-secondary">PORTFOLIO CVaR 99%:</span>
+<span class="text-color-loss font-bold">-8.94%</span>
+</div>
+<div class="px-2 py-1 rounded bg-bg-elevated border border-border-subtle flex items-center gap-1.5">
+<span class="text-text-secondary">KURTOSIS κ:</span>
+<span class="text-color-warning font-bold">9.42 (FAT-TAIL)</span>
+</div>
+<div class="px-2 py-1 rounded bg-bg-elevated border border-border-subtle flex items-center gap-1.5">
+<span class="text-text-secondary">ZERO-LOOKAHEAD:</span>
+<span class="text-primary font-semibold">PASS</span>
+</div>
+<div class="px-2 py-1 rounded bg-color-warning/10 border border-color-warning/40 text-color-warning font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-color-warning"></span>
+        ADR-001 [PAPER_ONLY]
+      </div>
+</div>
+<!-- Trailing Action Buttons -->
+<div class="flex items-center gap-2">
+<button class="h-8 px-2.5 rounded bg-bg-elevated text-text-secondary hover:text-text-primary border border-border-subtle hover:border-border-default font-caption text-caption flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[15px]">file_download</span>
+        Export Risk Ledger
+      </button>
+<button class="h-8 px-2.5 rounded bg-bg-elevated text-text-secondary hover:text-text-primary border border-border-subtle hover:border-border-default font-caption text-caption flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[15px]">lock</span>
+        Lock Invariant
+      </button>
+<button class="h-8 px-3 rounded bg-primary-container text-on-primary font-caption text-caption font-bold flex items-center gap-1.5 hover:bg-primary transition-all duration-150 glow-emerald-sm active:scale-95" id="simulateBtn">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+        Simulate Flash-Crash Shock
+      </button>
+<!-- Emergency Flat Fence Kill-Switch -->
+<button class="h-8 px-3 rounded bg-color-loss/20 text-color-loss border border-color-loss/40 hover:bg-color-loss hover:text-white font-caption text-caption font-bold flex items-center gap-1 transition-all duration-150">
+<span class="material-symbols-outlined text-[16px]">dangerous</span>
+        Emergency Flat Fence
+      </button>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE CANVAS (1440px Fluid Grid, Placed 240px to right)           -->
+<!-- ========================================================================= -->
+<main class="ml-60 pt-14 p-space-lg min-h-screen max-w-[1580px] flex flex-col gap-space-lg">
+<!-- ======================================================================= -->
+<!-- 3. SECTION HEADER & FORMAL MATHEMATICAL INVARIANT BADGES                 -->
+<!-- ======================================================================= -->
+<section class="flex flex-col md:flex-row md:items-center justify-between gap-space-md p-space-md bg-bg-surface border border-border-subtle rounded-lg shadow-sm">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<h1 class="font-title-lg text-headline-sm font-bold text-text-primary tracking-tight">
+            Cross-Margin CVaR 99% Tail-Risk &amp; Liquidation Cascade Simulator
+          </h1>
+<span class="px-2 py-0.5 rounded text-[10px] font-caption bg-primary/10 text-primary border border-primary/30">
+            ENGINE v4.19
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary flex items-center gap-2 flex-wrap">
+<span>Cornish-Fisher Fourth-Moment Adjustment</span>
+<span class="text-border-default">•</span>
+<span class="text-primary font-mono">P(Margin Breach | Shock) &lt; 10⁻⁵</span>
+<span class="text-border-default">•</span>
+<span class="text-color-warning font-mono">PAPER_ONLY SAFETY LOCK</span>
+</p>
+</div>
+<!-- Seed Entropy & Cryptographic Verification Strip -->
+<div class="flex flex-col items-start md:items-end gap-1 font-caption text-caption">
+<div class="flex items-center gap-2 text-text-secondary">
+<span>Seed Entropy: <code class="text-text-primary bg-bg-elevated px-1 py-0.5 rounded border border-border-subtle font-mono">0xDEADBEEF42</code></span>
+<span class="text-border-default">•</span>
+<span class="text-primary font-bold">ADR-001 PASS [SHUFFLE_SAFE]</span>
+</div>
+<div class="flex items-center gap-1.5 text-text-tertiary">
+<span class="material-symbols-outlined text-[13px] text-text-secondary">fingerprint</span>
+<span class="font-mono text-[10px]">SHA-256: 0x7b92fae49811d044bb71239c8942ef3a61d8c119e7a2b904c</span>
+</div>
+</div>
+</section>
+<!-- ======================================================================= -->
+<!-- 4. TELEMETRY KPI SUMMARY CARDS (3 Column Grid)                           -->
+<!-- ======================================================================= -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<!-- KPI Card 1: Parametric vs Cornish-Fisher CVaR -->
+<div class="p-space-lg bg-bg-surface border border-border-subtle rounded-lg flex flex-col justify-between hover:border-border-default transition-colors">
+<div class="flex items-start justify-between">
+<span class="font-caption text-caption text-text-secondary uppercase">Parametric vs Cornish-Fisher CVaR (99%, 1d)</span>
+<span class="px-2 py-0.5 rounded font-caption text-[10px] bg-color-loss/10 text-color-loss border border-color-loss/30 font-bold glow-crimson">
+            FAT-TAIL DIVERGENCE
+          </span>
+</div>
+<div class="my-3">
+<div class="font-headline-md text-headline-md font-bold font-caption tracking-tight text-color-loss flex items-baseline gap-2">
+<span>-4.82%</span>
+<span class="text-text-tertiary font-normal text-headline-sm">/</span>
+<span class="text-color-loss font-extrabold">-8.94%</span>
+</div>
+<div class="w-full bg-bg-primary h-1.5 rounded-full overflow-hidden mt-2 flex">
+<div class="bg-text-secondary h-full" style="width: 53.9%"></div>
+<div class="bg-color-loss h-full animate-pulse" style="width: 46.1%"></div>
+</div>
+</div>
+<p class="font-caption text-[11px] text-text-secondary leading-relaxed">
+          Fat-Tail Excess Kurtosis <span class="text-text-primary font-bold">κ = 9.42</span> • Skewness <span class="text-text-primary font-bold">S = -1.18</span>. Underestimates tail loss by <span class="text-color-loss font-semibold">85.5%</span> without 4th-moment expansion.
+        </p>
+</div>
+<!-- KPI Card 2: Cross-Exchange Liquidation Cascade Buffer -->
+<div class="p-space-lg bg-bg-surface border border-border-subtle rounded-lg flex flex-col justify-between hover:border-border-default transition-colors">
+<div class="flex items-start justify-between">
+<span class="font-caption text-caption text-text-secondary uppercase">Cross-Exchange Cascade Buffer</span>
+<span class="px-2 py-0.5 rounded font-caption text-[10px] bg-primary/10 text-primary border border-primary/30 font-bold">
+            OPTIMAL BUFFER (PAPER)
+          </span>
+</div>
+<div class="my-3">
+<div class="font-headline-md text-headline-md font-bold font-caption tracking-tight text-primary flex items-baseline gap-2">
+<span>3.42x</span>
+<span class="text-body-sm font-body-sm text-text-secondary font-medium">Margin Coverage</span>
+</div>
+<div class="w-full bg-bg-primary h-1.5 rounded-full overflow-hidden mt-2">
+<div class="bg-primary h-full glow-emerald" style="width: 71.2%"></div>
+</div>
+</div>
+<p class="font-caption text-[11px] text-text-secondary leading-relaxed">
+          Zero Forced Deleveraging under <span class="text-text-primary font-bold">-35% BTC flash shock</span>. Aggregate Maint Margin: <span class="text-text-primary font-mono font-semibold">$418,200</span> vs Equity: <span class="text-primary font-mono font-bold">$1,430,244</span>.
+        </p>
+</div>
+<!-- KPI Card 3: Tail-Risk Kill-Switch Fence Status -->
+<div class="p-space-lg bg-bg-surface border border-border-subtle rounded-lg flex flex-col justify-between hover:border-border-default transition-colors">
+<div class="flex items-start justify-between">
+<span class="font-caption text-caption text-text-secondary uppercase">Tail-Risk Kill-Switch Fence Status</span>
+<span class="px-2 py-0.5 rounded font-caption text-[10px] bg-color-warning/10 text-color-warning border border-color-warning/30 font-bold">
+            HARDWARE-ENFORCED
+          </span>
+</div>
+<div class="my-3">
+<div class="font-headline-md text-headline-md font-bold font-caption tracking-tight text-color-warning flex items-center gap-2">
+<span class="material-symbols-outlined text-headline-sm" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span>ARMED (-10% DD)</span>
+</div>
+<div class="w-full bg-bg-primary h-1.5 rounded-full overflow-hidden mt-2">
+<div class="bg-color-warning h-full" style="width: 32%"></div>
+</div>
+</div>
+<p class="font-caption text-[11px] text-text-secondary leading-relaxed">
+          Causal Intraday Drawdown Circuit Breaker Verified. Auto-routes liquidation fences to passive post-only resting book limits.
+        </p>
+</div>
+</section>
+<!-- ======================================================================= -->
+<!-- 5. MAIN TABLE: MULTI-ASSET TAIL-RISK & EXPECTED SHORTFALL MATRIX         -->
+<!-- ======================================================================= -->
+<section class="bg-bg-surface border border-border-subtle rounded-lg overflow-hidden flex flex-col">
+<div class="p-space-md border-b border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-bg-elevated/40">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+<h2 class="font-title-lg text-title-lg font-bold text-text-primary">Multi-Asset Tail-Risk &amp; Expected Shortfall Matrix</h2>
+<span class="font-caption text-[10px] text-text-tertiary px-1.5 py-0.5 rounded bg-bg-surface border border-border-subtle">
+            CONFIDENCE INTERVAL: 99.0% (1-DAY HORIZON)
+          </span>
+</div>
+<div class="flex items-center gap-2 font-caption text-caption text-text-secondary">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+            Cross-Margin Pooled
+          </span>
+<span class="text-border-default">|</span>
+<span class="text-text-tertiary">Method: Cornish-Fisher 4-Moment Expansion</span>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-border-subtle bg-bg-surface text-text-secondary font-caption text-[11px]">
+<th class="py-3 px-4 font-semibold">Asset Pair &amp; Weight</th>
+<th class="py-3 px-4 font-semibold text-right">Position Notional</th>
+<th class="py-3 px-4 font-semibold text-right">Gaussian VaR (95%)</th>
+<th class="py-3 px-4 font-semibold text-right">Historical CVaR (99%)</th>
+<th class="py-3 px-4 font-semibold text-right">Cornish-Fisher Mod ES (99%)</th>
+<th class="py-3 px-4 font-semibold text-right">Stress Corr (ρ → 0.96)</th>
+<th class="py-3 px-4 font-semibold text-right">Distance to Liq</th>
+<th class="py-3 px-4 font-semibold text-center">Deleveraging Invariant Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle font-caption text-caption text-text-primary">
+<!-- Row 1: BTC-USDT -->
+<tr class="hover:bg-bg-hover/80 transition-colors duration-150">
+<td class="py-3.5 px-4 font-medium flex items-center gap-2.5">
+<div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+<div>
+<span class="font-bold text-text-primary">BTC-USDT</span>
+<span class="ml-1.5 px-1.5 py-0.2 rounded text-[10px] bg-bg-elevated text-text-secondary border border-border-subtle">42.5%</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-text-primary">$607,850.00</td>
+<td class="py-3.5 px-4 text-right font-mono text-text-secondary">-3.12%</td>
+<td class="py-3.5 px-4 text-right font-mono text-color-loss">-6.40%</td>
+<td class="py-3.5 px-4 text-right font-mono font-bold text-color-loss">-8.15%</td>
+<td class="py-3.5 px-4 text-right font-mono text-color-warning">0.98</td>
+<td class="py-3.5 px-4 text-right font-mono font-bold text-primary">+44.2%</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded font-caption text-[10px] font-bold bg-primary/10 text-primary border border-primary/30">
+<span class="material-symbols-outlined text-[12px]">check_circle</span>
+                  ALLOW_PAPER_ALLOCATION
+                </span>
+</td>
+</tr>
+<!-- Row 2: ETH-USDT -->
+<tr class="hover:bg-bg-hover/80 transition-colors duration-150">
+<td class="py-3.5 px-4 font-medium flex items-center gap-2.5">
+<div class="w-2.5 h-2.5 rounded-full bg-secondary"></div>
+<div>
+<span class="font-bold text-text-primary">ETH-USDT</span>
+<span class="ml-1.5 px-1.5 py-0.2 rounded text-[10px] bg-bg-elevated text-text-secondary border border-border-subtle">28.0%</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-text-primary">$400,460.00</td>
+<td class="py-3.5 px-4 text-right font-mono text-text-secondary">-4.05%</td>
+<td class="py-3.5 px-4 text-right font-mono text-color-loss">-8.12%</td>
+<td class="py-3.5 px-4 text-right font-mono font-bold text-color-loss">-10.84%</td>
+<td class="py-3.5 px-4 text-right font-mono text-color-warning">0.96</td>
+<td class="py-3.5 px-4 text-right font-mono font-bold text-primary">+38.5%</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded font-caption text-[10px] font-bold bg-secondary-container/40 text-secondary border border-secondary/30">
+<span class="material-symbols-outlined text-[12px]">sync_alt</span>
+                  DYNAMIC_HEDGE_DELTA
+                </span>
+</td>
+</tr>
+<!-- Row 3: SOL-USDT -->
+<tr class="hover:bg-bg-hover/80 transition-colors duration-150">
+<td class="py-3.5 px-4 font-medium flex items-center gap-2.5">
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary"></div>
+<div>
+<span class="font-bold text-text-primary">SOL-USDT</span>
+<span class="ml-1.5 px-1.5 py-0.2 rounded text-[10px] bg-bg-elevated text-text-secondary border border-border-subtle">18.5%</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-text-primary">$264,600.00</td>
+<td class="py-3.5 px-4 text-right font-mono text-text-secondary">-5.80%</td>
+<td class="py-3.5 px-4 text-right font-mono text-color-loss">-11.90%</td>
+<td class="py-3.5 px-4 text-right font-mono font-bold text-color-loss">-16.42%</td>
+<td class="py-3.5 px-4 text-right font-mono text-color-warning">0.94</td>
+<td class="py-3.5 px-4 text-right font-mono font-bold text-color-warning">+29.1%</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded font-caption text-[10px] font-bold bg-color-warning/10 text-color-warning border border-color-warning/30">
+<span class="material-symbols-outlined text-[12px]">speed</span>
+                  CAP_LEVERAGE_2.0X
+                </span>
+</td>
+</tr>
+<!-- Row 4: BNB-USDT -->
+<tr class="hover:bg-bg-hover/80 transition-colors duration-150">
+<td class="py-3.5 px-4 font-medium flex items-center gap-2.5">
+<div class="w-2.5 h-2.5 rounded-full bg-primary-fixed"></div>
+<div>
+<span class="font-bold text-text-primary">BNB-USDT</span>
+<span class="ml-1.5 px-1.5 py-0.2 rounded text-[10px] bg-bg-elevated text-text-secondary border border-border-subtle">11.0%</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-text-primary">$157,334.00</td>
+<td class="py-3.5 px-4 text-right font-mono text-text-secondary">-3.88%</td>
+<td class="py-3.5 px-4 text-right font-mono text-color-loss">-7.25%</td>
+<td class="py-3.5 px-4 text-right font-mono font-bold text-color-loss">-9.50%</td>
+<td class="py-3.5 px-4 text-right font-mono text-color-warning">0.91</td>
+<td class="py-3.5 px-4 text-right font-mono font-bold text-primary">+41.8%</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded font-caption text-[10px] font-bold bg-primary/10 text-primary border border-primary/30">
+<span class="material-symbols-outlined text-[12px]">check_circle</span>
+                  ALLOW_PAPER_ALLOCATION
+                </span>
+</td>
+</tr>
+</tbody>
+<tfoot class="border-t border-border-subtle bg-bg-elevated/20 font-caption text-[11px] text-text-secondary">
+<tr>
+<td class="py-2.5 px-4 font-bold text-text-primary">AGGREGATE PORTFOLIO</td>
+<td class="py-2.5 px-4 text-right font-mono font-bold text-primary">$1,430,244.00</td>
+<td class="py-2.5 px-4 text-right font-mono text-text-secondary">-3.74%</td>
+<td class="py-2.5 px-4 text-right font-mono text-color-loss">-7.41%</td>
+<td class="py-2.5 px-4 text-right font-mono font-bold text-color-loss">-8.94%</td>
+<td class="py-2.5 px-4 text-right font-mono text-color-warning font-semibold">0.95 (JOINT)</td>
+<td class="py-2.5 px-4 text-right font-mono font-bold text-primary">+38.8%</td>
+<td class="py-2.5 px-4 text-center text-primary font-semibold">ALL INVARIANTS SATISFIED</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</section>
+<!-- ======================================================================= -->
+<!-- 6. HISTORICAL CRISIS REPLAY & LIQUIDATION CASCADE STRESS SIMULATOR       -->
+<!-- ======================================================================= -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Left Column: Scenario Selector & Synthetic Friction Knobs (7 cols) -->
+<div class="lg:col-span-7 bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm border-b border-border-subtle">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history_toggle_off</span>
+<h3 class="font-title-lg text-title-lg font-bold text-text-primary">Historical Crisis Replay &amp; Friction Knobs</h3>
+</div>
+<span class="font-caption text-[10px] text-text-tertiary">ENGINE: MONTE CARLO + EXTREME VALUE THEORY</span>
+</div>
+<!-- Crisis Scenario Selectors -->
+<div class="mt-space-md">
+<label class="block font-caption text-caption text-text-secondary uppercase mb-2">Select Historical Calamity Anchor</label>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+<button class="p-2.5 rounded bg-bg-elevated hover:bg-bg-hover border border-border-subtle text-left flex flex-col justify-between transition-colors">
+<span class="font-caption text-[10px] text-text-secondary">Mar 2020</span>
+<span class="font-body-sm text-[12px] font-bold text-text-primary mt-1">COVID Crash</span>
+<span class="font-caption text-[10px] font-mono text-color-loss mt-0.5">-48.2% (24h)</span>
+</button>
+<button class="p-2.5 rounded bg-bg-elevated hover:bg-bg-hover border border-border-subtle text-left flex flex-col justify-between transition-colors">
+<span class="font-caption text-[10px] text-text-secondary">May 2021</span>
+<span class="font-body-sm text-[12px] font-bold text-text-primary mt-1">Deleveraging</span>
+<span class="font-caption text-[10px] font-mono text-color-loss mt-0.5">-39.4% (12h)</span>
+</button>
+<button class="p-2.5 rounded bg-bg-elevated hover:bg-bg-hover border border-border-subtle text-left flex flex-col justify-between transition-colors">
+<span class="font-caption text-[10px] text-text-secondary">Nov 2022</span>
+<span class="font-body-sm text-[12px] font-bold text-text-primary mt-1">FTX Contagion</span>
+<span class="font-caption text-[10px] font-mono text-color-loss mt-0.5">-26.8% (48h)</span>
+</button>
+<button class="p-2.5 rounded bg-bg-elevated border-2 border-primary text-left flex flex-col justify-between glow-emerald-sm bg-primary/5">
+<div class="flex items-center justify-between">
+<span class="font-caption text-[10px] text-primary font-bold">Aug 2024</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</div>
+<span class="font-body-sm text-[12px] font-bold text-text-primary mt-1">Yen Unwind</span>
+<span class="font-caption text-[10px] font-mono text-color-loss mt-0.5">-18.2% (4h)</span>
+</button>
+</div>
+</div>
+<!-- Synthetic Shock Knobs -->
+<div class="mt-space-lg flex flex-col gap-space-md">
+<!-- Shock Depth Slider -->
+<div class="bg-bg-elevated/40 p-3 rounded border border-border-subtle">
+<div class="flex items-center justify-between font-caption text-caption mb-1">
+<span class="text-text-secondary">SYNTHETIC FLASH-CRASH DEPTH</span>
+<span class="font-mono text-color-loss font-bold text-body-sm" id="depthVal">-35.0%</span>
+</div>
+<input class="w-full h-1.5 bg-bg-primary rounded-lg appearance-none cursor-pointer accent-primary" id="depthSlider" max="50" min="10" step="1" type="range" value="35"/>
+<div class="flex justify-between font-caption text-[10px] text-text-tertiary mt-1">
+<span>-10% (Tame)</span>
+<span>-35% (Base Shock)</span>
+<span>-50% (Black Swan Extreme)</span>
+</div>
+</div>
+<!-- L3 Liquidity Gap Slider -->
+<div class="bg-bg-elevated/40 p-3 rounded border border-border-subtle">
+<div class="flex items-center justify-between font-caption text-caption mb-1">
+<span class="text-text-secondary">L3 BID-ASK LIQUIDITY HOLE DEPTH</span>
+<span class="font-mono text-color-warning font-bold text-body-sm" id="gapVal">+180 bps</span>
+</div>
+<input class="w-full h-1.5 bg-bg-primary rounded-lg appearance-none cursor-pointer accent-color-warning" id="gapSlider" max="400" min="50" step="10" type="range" value="180"/>
+<div class="flex justify-between font-caption text-[10px] text-text-tertiary mt-1">
+<span>+50 bps</span>
+<span>+180 bps (Cascade Vacuum)</span>
+<span>+400 bps</span>
+</div>
+</div>
+<!-- Correlation & Horizon Toggles -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<div class="flex items-center justify-between p-3 rounded bg-bg-elevated/40 border border-border-subtle">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-primary font-semibold">Correlation Asymptote</span>
+<span class="font-caption text-[10px] text-text-tertiary">Force ρ → 1.0 in tails</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-bg-primary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-3 rounded bg-bg-elevated/40 border border-border-subtle">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-primary font-semibold">Stress Horizon Window</span>
+<span class="font-caption text-[10px] text-text-tertiary">Intraday Liquidation Decay</span>
+</div>
+<span class="font-mono text-caption text-primary font-bold px-2 py-1 rounded bg-bg-primary border border-border-subtle">
+                  4-Hour Window
+                </span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-border-subtle flex items-center justify-between font-caption text-[10px] text-text-tertiary">
+<span>Stochastic Engine: Merton Jump-Diffusion + t-Copula tail dependency</span>
+<span class="text-primary flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[13px]">verified</span>
+            ZERO-LEAKAGE INVARIANT PASS
+          </span>
+</div>
+</div>
+<!-- Right Column: Dynamic Telemetry & Multi-Agent Deliberation (5 cols) -->
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Peak Margin Stress Gauge Card -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-text-secondary uppercase">Peak Margin Utilization Trajectory</span>
+<span class="font-caption text-[10px] text-primary font-bold">PASS &lt; 85% THRESHOLD</span>
+</div>
+<div class="my-3">
+<div class="flex items-baseline justify-between mb-1">
+<span class="font-headline-md text-headline-md font-bold font-caption text-text-primary" id="stressPctDisplay">68.4%</span>
+<span class="font-caption text-caption text-text-tertiary">Max Bound: 85.0%</span>
+</div>
+<!-- Progress Bar Gauge -->
+<div class="w-full bg-bg-primary h-2.5 rounded-full overflow-hidden p-0.5 border border-border-subtle">
+<div class="bg-primary h-full rounded-full transition-all duration-300 glow-emerald" id="stressGaugeBar" style="width: 68.4%"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-2 border-t border-border-subtle font-caption text-[11px]">
+<div>
+<span class="text-text-tertiary">Base Slippage:</span>
+<span class="text-text-primary font-mono font-semibold ml-1">1.8 bps</span>
+</div>
+<div class="text-right">
+<span class="text-text-tertiary">Convexity Cost:</span>
+<span class="text-color-loss font-mono font-bold ml-1">24.6 bps</span>
+</div>
+</div>
+</div>
+<!-- LLM Multi-Agent Risk Consensus Deliberation Card -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-2 border-b border-border-subtle">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<span class="font-caption text-caption font-bold text-text-primary uppercase tracking-wider">Multi-Agent Deliberation</span>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-caption bg-secondary/10 text-secondary border border-secondary/30 font-semibold">
+                CONSENSUS 2/2
+              </span>
+</div>
+<!-- Deliberation Agent Dialogue Snippet -->
+<div class="mt-3 flex flex-col gap-2 font-caption text-[11px] leading-relaxed">
+<div class="p-2.5 rounded bg-bg-elevated border border-border-subtle">
+<div class="flex items-center justify-between text-text-tertiary mb-1">
+<span class="text-secondary font-bold font-mono">AGENT: RISK_ORCHESTRATOR</span>
+<span class="text-[9px]">T+0.04s</span>
+</div>
+<p class="text-text-secondary">
+                  "Evaluating Cornish-Fisher expansion vs extreme leptokurtic distribution. Joint tail covariance preserves a <span class="text-primary font-semibold">$512k surplus</span> above liquidation threshold."
+                </p>
+</div>
+<div class="p-2.5 rounded bg-bg-elevated border border-border-subtle">
+<div class="flex items-center justify-between text-text-tertiary mb-1">
+<span class="text-primary font-bold font-mono">AGENT: CVAR_SENTINEL</span>
+<span class="text-[9px]">T+0.08s</span>
+</div>
+<p class="text-text-secondary">
+                  "Zero liquidation cascades breached under <span class="text-text-primary font-semibold">Aug 2024 + 35% depth shock</span>. ADR-001 paper invariants satisfied. Rebalance flag: <span class="text-primary font-mono">RETAIN_BUFFER</span>."
+                </p>
+</div>
+</div>
+</div>
+<!-- Bottom Action Inside Consensus Card -->
+<button class="mt-4 w-full h-10 px-3 rounded-lg bg-bg-elevated text-primary hover:bg-bg-hover border border-primary/40 font-caption text-caption font-bold flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[16px]">lock_clock</span>
+            Lock Invariant &amp; Commit Paper Boundary
+          </button>
+</div>
+</div>
+</section>
+<!-- ======================================================================= -->
+<!-- 7. SYSTEM FOOTER & TELEMETRY STRIP                                       -->
+<!-- ======================================================================= -->
+<footer class="mt-space-sm p-space-md rounded-lg bg-bg-surface border border-border-subtle flex flex-col sm:flex-row items-center justify-between gap-space-sm text-text-secondary font-caption text-[11px]">
+<div class="flex items-center gap-3 flex-wrap">
+<span class="flex items-center gap-1.5 text-primary">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          Node #QNT-8812 ONLINE
+        </span>
+<span class="text-border-default">|</span>
+<span>LATENCY: <strong class="text-text-primary font-mono">42μs</strong></span>
+<span class="text-border-default">|</span>
+<span>SLIPPAGE MODEL: <strong class="text-text-primary font-mono">1.2 BPS (ADJUSTED)</strong></span>
+<span class="text-border-default">|</span>
+<span>YZ VOL: <strong class="text-text-primary font-mono">16.18</strong></span>
+<span class="text-border-default">|</span>
+<span>ZERO-LOOKAHEAD CYCLE #9042 <strong class="text-primary">PASS</strong></span>
+</div>
+<div class="flex items-center gap-2 text-text-tertiary">
+<span>© 2025 CashClaw Quantitative Platform</span>
+<span class="text-border-default">•</span>
+<span>Paper Sandbox v4.19</span>
+</div>
+</footer>
+</main>
+<!-- ========================================================================= -->
+<!-- Micro-Interactions JavaScript                                             -->
+<!-- ========================================================================= -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const depthSlider = document.getElementById('depthSlider');
+      const depthVal = document.getElementById('depthVal');
+      const gapSlider = document.getElementById('gapSlider');
+      const gapVal = document.getElementById('gapVal');
+      const stressPctDisplay = document.getElementById('stressPctDisplay');
+      const stressGaugeBar = document.getElementById('stressGaugeBar');
+      const simulateBtn = document.getElementById('simulateBtn');
+
+      function updateStress() {
+        const depth = parseFloat(depthSlider.value);
+        const gap = parseFloat(gapSlider.value);
+        
+        depthVal.textContent = `-${depth}.0%`;
+        gapVal.textContent = `+${gap} bps`;
+
+        // Calculate dynamic stress utilization
+        const calculatedStress = Math.min(94.2, Math.max(38.0, 35.0 + (depth * 0.78) + (gap * 0.045))).toFixed(1);
+        stressPctDisplay.textContent = `${calculatedStress}%`;
+        stressGaugeBar.style.width = `${calculatedStress}%`;
+
+        if (calculatedStress > 85.0) {
+          stressGaugeBar.classList.remove('bg-primary');
+          stressGaugeBar.classList.add('bg-color-loss');
+          stressPctDisplay.classList.add('text-color-loss');
+        } else {
+          stressGaugeBar.classList.add('bg-primary');
+          stressGaugeBar.classList.remove('bg-color-loss');
+          stressPctDisplay.classList.remove('text-color-loss');
+        }
+      }
+
+      depthSlider.addEventListener('input', updateStress);
+      gapSlider.addEventListener('input', updateStress);
+
+      simulateBtn.addEventListener('click', () => {
+        simulateBtn.classList.add('scale-95');
+        setTimeout(() => simulateBtn.classList.remove('scale-95'), 150);
+        
+        // Randomize shock depth within crash range
+        const shockTargets = [28, 35, 42, 48];
+        const nextTarget = shockTargets[Math.floor(Math.random() * shockTargets.length)];
+        depthSlider.value = nextTarget;
+        updateStress();
+      });
+    });
+  </script>
+</body></html>

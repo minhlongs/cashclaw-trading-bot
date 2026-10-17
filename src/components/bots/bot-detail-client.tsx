@@ -59,10 +59,7 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
   return (
     <div className="space-y-6">
       <div>
-        <Link
-          href="/bots"
-          className="inline-flex items-center gap-2 text-tertiary hover:text-primary mb-4"
-        >
+        <Link href="/bots" className="inline-flex items-center gap-2 text-tertiary hover:text-primary mb-4">
           <ArrowLeft size={16} /> Back to Bots
         </Link>
         <div className="flex items-center justify-between">
@@ -92,14 +89,7 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
       {actionError && (
         <div className="badge badge-error flex items-center justify-between gap-2 p-3 text-sm" role="alert">
           <span>{actionError}</span>
-          <button
-            type="button"
-            className="text-secondary hover:text-primary ml-2 text-xs"
-            onClick={() => setActionError(null)}
-            aria-label="Dismiss error"
-          >
-            ✕
-          </button>
+          <button type="button" className="text-secondary hover:text-primary ml-2 text-xs" onClick={() => setActionError(null)} aria-label="Dismiss error">✕</button>
         </div>
       )}
 
@@ -107,12 +97,7 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
 
       <div className="tabs">
         {TABS.map((tabItem) => (
-          <button
-            key={tabItem.value}
-            type="button"
-            className={`tab ${tab === tabItem.value ? 'active' : ''}`}
-            onClick={() => setTab(tabItem.value)}
-          >
+          <button key={tabItem.value} type="button" className={`tab ${tab === tabItem.value ? 'active' : ''}`} onClick={() => setTab(tabItem.value)}>
             {tabItem.label}
           </button>
         ))}
@@ -120,13 +105,7 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
 
       {tab === 'overview' && <BotDetailOverview bot={{ ...bot, botStatus: currentStatus }} />}
       {tab === 'trades' && <BotDetailTrades trades={trades} emptyMsg="No trades yet" />}
-      {tab === 'config' && (
-        <BotDetailConfig
-          config={config}
-          botId={bot.id}
-          onConfigSaved={setConfig}
-        />
-      )}
+      {tab === 'config' && <BotDetailConfig config={config} botId={bot.id} onConfigSaved={setConfig} />}
     </div>
   );
 }

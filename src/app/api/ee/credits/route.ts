@@ -6,8 +6,8 @@ import {
   debitDeliberationCredits,
   type DeliberationModelTier,
 } from '@/ee/deliberation-cloud/llm-credit-ledger';
-import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
 import { SaasTierSchema } from '@/ee/tenancy/tenant-policy';
+import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
 
 const QuerySchema = z.object({
   workspaceId: z.string().min(1),
@@ -16,7 +16,7 @@ const QuerySchema = z.object({
 
 const DebitSchema = z.object({
   workspaceId: z.string().min(1),
-  tier: SaasTierSchema.default('BASIC'),
+  tier: SaasTierSchema.optional(),
   modelTier: z.enum(['FAST', 'REASONING', 'LOCAL']),
   promptTokens: z.number().int().nonnegative(),
   completionTokens: z.number().int().nonnegative(),
@@ -37,9 +37,10 @@ export async function GET(req: Request) {
       );
     }
 
-    const resolvedTier =
-      parsed.data.tier ??
-      (await defaultSaasEntitlementStore.getWorkspaceTier(parsed.data.workspaceId));
+    const { tier: resolvedTier } = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: parsed.data.workspaceId,
+      explicitTier: parsed.data.tier,
+    });
     const account = createCreditAccount(parsed.data.workspaceId, resolvedTier);
     return NextResponse.json({
       ok: true,
@@ -65,6 +66,11 @@ export async function POST(req: Request) {
       );
     }
 
+    const { tier: resolvedTier } = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: parsed.data.workspaceId,
+      explicitTier: parsed.data.tier,
+    });
+
     const debitReq = {
       workspaceId: parsed.data.workspaceId,
       modelTier: parsed.data.modelTier as DeliberationModelTier,
@@ -72,7 +78,7 @@ export async function POST(req: Request) {
       completionTokens: parsed.data.completionTokens,
     };
 
-    const account = createCreditAccount(parsed.data.workspaceId, parsed.data.tier);
+    const account = createCreditAccount(parsed.data.workspaceId, resolvedTier);
     const debitResult = debitDeliberationCredits(account, debitReq);
 
     if (!debitResult.ok) {

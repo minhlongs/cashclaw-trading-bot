@@ -1,30 +1,27 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
-import { SaasTierSchema } from '@/ee/tenancy/tenant-policy';
-
-const QuerySchema = z.object({
-  tier: SaasTierSchema.default('BASIC'),
-});
+import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const parsed = QuerySchema.safeParse({
-      tier: url.searchParams.get('tier') ?? undefined,
+    const context = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: url.searchParams.get('workspaceId'),
+      explicitTier: url.searchParams.get('tier'),
     });
 
-    if (!parsed.success) {
+    if (context.invalidExplicitTier) {
       return NextResponse.json(
         { ok: false, error: 'Invalid tier specified' },
         { status: 400 },
       );
     }
 
-    const entitlements = getEntitlementsForTier(parsed.data.tier);
+    const entitlements = getEntitlementsForTier(context.tier);
     return NextResponse.json({
       ok: true,
-      tier: parsed.data.tier,
+      workspaceId: context.workspaceId,
+      tier: context.tier,
       entitlements,
     });
   } catch {

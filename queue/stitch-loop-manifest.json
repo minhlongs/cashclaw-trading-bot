@@ -1,0 +1,172 @@
+{
+  "projectId": "6665149401860401191",
+  "projectResource": "projects/6665149401860401191",
+  "designSystemAsset": "assets/be7563bf9e4c400f85f92f80d27a5de5",
+  "generatedAt": "2026-10-17T10:37:52.400Z",
+  "totalScreens": 16,
+  "totalLinksChecked": 270,
+  "brokenLinksCount": 0,
+  "placeholderLinksCount": 0,
+  "screens": [
+    {
+      "index": 1,
+      "id": "index",
+      "relPath": "index.html",
+      "label": "Cockpit Overview",
+      "stitchScreenResource": "projects/6665149401860401191/screens/index",
+      "publicBytes": 19438,
+      "queueHtml": "queue/index.html",
+      "queuePng": "queue/index.png"
+    },
+    {
+      "index": 2,
+      "id": "alpha-zoo",
+      "relPath": "alpha-zoo.html",
+      "label": "Alpha Zoo Evaluator",
+      "stitchScreenResource": "projects/6665149401860401191/screens/alpha-zoo",
+      "publicBytes": 18028,
+      "queueHtml": "queue/alpha-zoo.html",
+      "queuePng": "queue/alpha-zoo.png"
+    },
+    {
+      "index": 3,
+      "id": "deliberation-theater",
+      "relPath": "deliberation-theater.html",
+      "label": "Deliberation Theater",
+      "stitchScreenResource": "projects/6665149401860401191/screens/deliberation-theater",
+      "publicBytes": 18081,
+      "queueHtml": "queue/deliberation-theater.html",
+      "queuePng": "queue/deliberation-theater.png"
+    },
+    {
+      "index": 4,
+      "id": "volatility-dca",
+      "relPath": "strategies/volatility-dca.html",
+      "label": "Volatility-DCA Bots",
+      "stitchScreenResource": "projects/6665149401860401191/screens/volatility-dca",
+      "publicBytes": 17726,
+      "queueHtml": "queue/volatility-dca.html",
+      "queuePng": "queue/volatility-dca.png"
+    },
+    {
+      "index": 5,
+      "id": "correlation-matrix",
+      "relPath": "correlation-matrix.html",
+      "label": "Correlation Matrix",
+      "stitchScreenResource": "projects/6665149401860401191/screens/correlation-matrix",
+      "publicBytes": 20182,
+      "queueHtml": "queue/correlation-matrix.html",
+      "queuePng": "queue/correlation-matrix.png"
+    },
+    {
+      "index": 6,
+      "id": "execution-ledger",
+      "relPath": "execution-ledger.html",
+      "label": "Execution Ledger",
+      "stitchScreenResource": "projects/6665149401860401191/screens/execution-ledger",
+      "publicBytes": 19064,
+      "queueHtml": "queue/execution-ledger.html",
+      "queuePng": "queue/execution-ledger.png"
+    },
+    {
+      "index": 7,
+      "id": "data-quality-gate",
+      "relPath": "data-quality-gate.html",
+      "label": "Data Quality Gate",
+      "stitchScreenResource": "projects/6665149401860401191/screens/data-quality-gate",
+      "publicBytes": 18541,
+      "queueHtml": "queue/data-quality-gate.html",
+      "queuePng": "queue/data-quality-gate.png"
+    },
+    {
+      "index": 8,
+      "id": "microstructure-liquidity",
+      "relPath": "microstructure-liquidity.html",
+      "label": "Microstructure Liquidity",
+      "stitchScreenResource": "projects/6665149401860401191/screens/microstructure-liquidity",
+      "publicBytes": 17616,
+      "queueHtml": "queue/microstructure-liquidity.html",
+      "queuePng": "queue/microstructure-liquidity.png"
+    },
+    {
+      "index": 9,
+      "id": "survival-gate",
+      "relPath": "survival-gate.html",
+      "label": "Survival Gate",
+      "stitchScreenResource": "projects/6665149401860401191/screens/survival-gate",
+      "publicBytes": 20809,
+      "queueHtml": "queue/survival-gate.html",
+      "queuePng": "queue/survival-gate.png"
+    },
+    {
+      "index": 10,
+      "id": "sovereign-enclave",
+      "relPath": "sovereign-enclave.html",
+      "label": "Sovereign Enclave",
+      "stitchScreenResource": "projects/6665149401860401191/screens/sovereign-enclave",
+      "publicBytes": 23347,
+      "queueHtml": "queue/sovereign-enclave.html",
+      "queuePng": "queue/sovereign-enclave.png"
+    },
+    {
+      "index": 11,
+      "id": "relative-value-basis",
+      "relPath": "relative-value-basis.html",
+      "label": "Relative-Value Basis",
+      "stitchScreenResource": "projects/6665149401860401191/screens/relative-value-basis",
+      "publicBytes": 25738,
+      "queueHtml": "queue/relative-value-basis.html",
+      "queuePng": "queue/relative-value-basis.png"
+    },
+    {
+      "index": 12,
+      "id": "billing",
+      "relPath": "billing.html",
+      "label": "SaaS Billing & Quota",
+      "stitchScreenResource": "projects/6665149401860401191/screens/billing",
+      "publicBytes": 17643,
+      "queueHtml": "queue/billing.html",
+      "queuePng": "queue/billing.png"
+    },
+    {
+      "index": 13,
+      "id": "regime-attribution",
+      "relPath": "regime-attribution.html",
+      "label": "Regime Attribution",
+      "stitchScreenResource": "projects/6665149401860401191/screens/ed2c9afb27504e86bdd268390891804e",
+      "publicBytes": 31736,
+      "queueHtml": "queue/regime-attribution.html",
+      "queuePng": "queue/regime-attribution.png"
+    },
+    {
+      "index": 14,
+      "id": "fdr-multiple-testing-gate",
+      "relPath": "fdr-multiple-testing-gate.html",
+      "label": "FDR Multiple-Testing Gate",
+      "stitchScreenResource": "projects/6665149401860401191/screens/9c29f01089bf437299bdbd007ece5cd5",
+      "publicBytes": 30631,
+      "queueHtml": "queue/fdr-multiple-testing-gate.html",
+      "queuePng": "queue/fdr-multiple-testing-gate.png"
+    },
+    {
+      "index": 15,
+      "id": "style-guide",
+      "relPath": "style-guide.html",
+      "label": "Style Guide & Tokens",
+      "stitchScreenResource": "projects/6665149401860401191/screens/e66e2bcc9f70496495802789c24a5b36",
+      "publicBytes": 24889,
+      "queueHtml": "queue/style-guide.html",
+      "queuePng": "queue/style-guide.png"
+    },
+    {
+      "index": 16,
+      "id": "portfolio-cvar-stress",
+      "relPath": "portfolio-cvar-stress.html",
+      "label": "CVaR Tail-Risk Stress",
+      "stitchScreenResource": "projects/6665149401860401191/screens/ba2a8615438049aea19867bff9ae00b9",
+      "publicBytes": 28797,
+      "queueHtml": "queue/portfolio-cvar-stress.html",
+      "queuePng": "queue/portfolio-cvar-stress.png"
+    }
+  ]
+}

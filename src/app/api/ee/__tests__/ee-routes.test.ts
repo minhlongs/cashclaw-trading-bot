@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GET as getQuotas } from '../quotas/route';
 import { POST as postIpn } from '../billing/ipn/route';
+import { POST as postNowPaymentsIpn } from '../billing/nowpayments-ipn/route';
 import { POST as postSync } from '../sync/route';
 import {
   canonicalizeNowPaymentsJson,
@@ -31,6 +32,42 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       expect(body.tier).toBe('PREMIUM');
       expect((body.entitlements as Record<string, unknown>).maxRunningPaperBots).toBe(5);
     });
+
+    it('resolves upgraded tier from entitlement store via x-cashclaw-workspace header', async () => {
+      const secret = 'test_ipn_secret';
+      const payload = {
+        payment_id: 'np_quota_upgrade_01',
+        payment_status: 'finished',
+        order_id: 'order_ent_quota_01',
+        workspace_id: 'ws_quota_upgraded_01',
+        target_tier: 'ENTERPRISE',
+        pay_amount: 149.0,
+        pay_currency: 'USDT',
+      };
+      const canonical = canonicalizeNowPaymentsJson(payload);
+      const signature = await computeNowPaymentsHmacSha512(canonical, secret);
+
+      const ipnRes = await postNowPaymentsIpn(
+        new Request('http://localhost/api/ee/billing/nowpayments-ipn', {
+          method: 'POST',
+          headers: { 'x-nowpayments-sig': signature },
+          body: JSON.stringify(payload),
+        }),
+      );
+      expect(ipnRes.status).toBe(200);
+
+      const quotaRes = await getQuotas(
+        new Request('http://localhost/api/ee/quotas', {
+          headers: { 'x-cashclaw-workspace': 'ws_quota_upgraded_01' },
+        }),
+      );
+      expect(quotaRes.status).toBe(200);
+      const body = (await quotaRes.json()) as Record<string, unknown>;
+      expect(body.ok).toBe(true);
+      expect(body.workspaceId).toBe('ws_quota_upgraded_01');
+      expect(body.tier).toBe('ENTERPRISE');
+      expect((body.entitlements as Record<string, unknown>).maxRunningPaperBots).toBe(25);
+    });
   });
 
   describe('POST /api/ee/billing/ipn', () => {
@@ -43,7 +80,21 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       expect(res.status).toBe(401);
     });
 
-    it('processes valid IPN payload with correct HMAC-SHA512 signature', async () => {
+    it('rejects stale timestamp outside 300s replay window (403)', async () => {
+      const staleTime = Math.floor(Date.now() / 1000) - 600;
+      const req = new Request('http://localhost/api/ee/billing/ipn', {
+        method: 'POST',
+        headers: {
+          'x-nowpayments-sig': 'abc123',
+          'x-nowpayments-timestamp': String(staleTime),
+        },
+        body: JSON.stringify({ payment_id: 'np_123' }),
+      });
+      const res = await postIpn(req);
+      expect(res.status).toBe(403);
+    });
+
+    it('processes valid IPN payload with case-normalized HMAC-SHA512 signature', async () => {
       const secret = 'test_ipn_secret';
       const payload = {
         payment_id: 'np_payment_999',
@@ -60,7 +111,7 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       const req = new Request('http://localhost/api/ee/billing/ipn', {
         method: 'POST',
         headers: {
-          'x-nowpayments-sig': signature,
+          'x-nowpayments-sig': `  ${signature.toUpperCase()}  `,
         },
         body: JSON.stringify(payload),
       });

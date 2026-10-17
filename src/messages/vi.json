@@ -5,7 +5,20 @@
     "backtests": "Backtest",
     "settings": "Cài đặt",
     "logout": "Đăng xuất",
-    "monitoring": "Giám sát"
+    "monitoring": "Giám sát",
+    "regime-attribution": "Phân Bổ Chế Độ",
+    "fdr-gate": "Cổng Kiểm Định FDR",
+    "alpha-zoo": "Alpha Zoo",
+    "deliberation": "Tranh Biện Đa Tác Tử",
+    "survival-gate": "Cổng Sinh Tồn",
+    "microstructure": "Vi Cấu Trúc L2",
+    "correlation-matrix": "Ma Trận Tương Quan",
+    "execution-ledger": "Sổ Cái Khớp Lệnh",
+    "data-quality-gate": "Cổng Chất Lượng Dữ Liệu",
+    "sovereign-enclave": "Enclave Mật Mã",
+    "relative-value-basis": "Chênh Lệch Basis",
+    "portfolio-cvar-stress": "Kiểm Thử CVaR 99%",
+    "style-guide": "Hệ Thống Thiết Kế"
   },
   "dashboard": {
     "title": "Bảng điều khiển",

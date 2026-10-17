@@ -7,8 +7,10 @@ import { NextResponse } from 'next/server';
 import { botListHandler, botCreateHandler } from '@/forest/api/routes';
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
 import { enforceWorkspaceQuota } from '@/ee/billing/quota-guard';
-import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
-import { SaasTierSchema, type SaasTier } from '@/ee/tenancy/tenant-policy';
+import {
+  resolveActiveBotCount,
+  resolveWorkspaceTierContext,
+} from '@/ee/tenancy/workspace-request-context';
 import { z } from 'zod';
 
 const createBotConfigSchema = z.object({
@@ -69,27 +71,11 @@ export async function POST(req: Request) {
     );
   }
 
-  // Quota check per SaaS tier (resolves header -> workspace store -> BASIC)
-  const rawTierHeader = req.headers.get('x-cashclaw-tier')?.toUpperCase();
-  const parsedHeaderTier = rawTierHeader ? SaasTierSchema.safeParse(rawTierHeader) : undefined;
-  const workspaceHeader = req.headers.get('x-cashclaw-workspace');
-  const resolvedTier: SaasTier = parsedHeaderTier?.success
-    ? parsedHeaderTier.data
-    : workspaceHeader
-      ? await defaultSaasEntitlementStore.getWorkspaceTier(workspaceHeader)
-      : 'BASIC';
-
-  const listResult = (await botListHandler()) as
-    | { data?: unknown[]; bots?: unknown[] }
-    | undefined;
-  const currentBotCount = Array.isArray(listResult?.data)
-    ? listResult.data.length
-    : Array.isArray(listResult?.bots)
-      ? listResult.bots.length
-      : 0;
+  const { tier } = await resolveWorkspaceTierContext(req);
+  const currentBotCount = await resolveActiveBotCount(req, botListHandler);
 
   const quotaCheck = enforceWorkspaceQuota({
-    tier: resolvedTier,
+    tier,
     activeRunningBots: currentBotCount,
     requestedWalkForwardWindows: 1,
   });

@@ -20,6 +20,7 @@
     "start": "next start",
     "lint": "eslint src/ --max-warnings 0",
     "type-check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "quality:gate": "npm run type-check && npm run lint && npx vitest run --coverage && npx knip",
     "db:generate": "wrangler d1 migrations create cashclaw-db --local",
     "db:apply": "wrangler d1 migrations apply cashclaw-db --local",

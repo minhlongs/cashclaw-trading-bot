@@ -4,22 +4,16 @@ import {
   verifyAndImportCloudSyncBundle,
 } from '@/ee/sync/local-to-cloud-sync';
 import { enforceWorkspaceQuota } from '@/ee/billing/quota-guard';
-import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
-import { SaasTierSchema, type SaasTier } from '@/ee/tenancy/tenant-policy';
+import {
+  resolveActiveBotCount,
+  resolveWorkspaceTierContext,
+} from '@/ee/tenancy/workspace-request-context';
+import { botListHandler } from '@/forest/api/routes';
 
 export async function POST(req: Request) {
   try {
-    const rawTier = req.headers.get('x-cashclaw-tier')?.toUpperCase();
-    const parsedTier = rawTier ? SaasTierSchema.safeParse(rawTier) : undefined;
-    const workspaceId = req.headers.get('x-cashclaw-workspace');
-    const tier: SaasTier = parsedTier?.success
-      ? parsedTier.data
-      : workspaceId
-        ? await defaultSaasEntitlementStore.getWorkspaceTier(workspaceId)
-        : 'BASIC';
-
-    const activeBotsHeader = parseInt(req.headers.get('x-cashclaw-active-bots') ?? '0', 10);
-    const activeRunningBots = Number.isNaN(activeBotsHeader) ? 0 : Math.max(0, activeBotsHeader);
+    const { tier } = await resolveWorkspaceTierContext(req);
+    const activeRunningBots = await resolveActiveBotCount(req, botListHandler);
 
     const quotaCheck = enforceWorkspaceQuota({
       tier,

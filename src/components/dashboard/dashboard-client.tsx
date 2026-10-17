@@ -5,8 +5,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-import type { BotCardData } from '@/forest/dashboard/actions';
-import type { DashboardKpis } from '@/forest/dashboard/bot-kpis';
 import { StrategyVisualizerCard } from './strategy-visualizer-card';
 import { MarketWatchCard } from './market-watch-card';
 import { TerminalQuickActions } from './terminal-quick-actions';
@@ -15,14 +13,11 @@ import { CockpitHudSection } from './cockpit-hud-section';
 import { V7MetricsCard } from './v7-metrics-card';
 import { DashboardBotList } from './dashboard-bot-list';
 import { DashboardTopKpiCards, DashboardPerformanceGrid } from './dashboard-kpi-cards';
-
-interface BotCardDataApi {
-  id: string; name: string; strategy: 'grid' | 'mean_reversion' | 'volatility_dca' | string;
-  pair: string; exchange: string; status: string; totalPnl: number; winCount: number;
-  lossCount: number; startedAt: number | null; updatedAt: number; capitalAllocated: number;
-}
-
-interface DashboardData { kpis: DashboardKpis; bots: BotCardData[]; }
+import {
+  mapBotsPayloadToDashboardData,
+  type BotCardDataApi,
+  type DashboardData,
+} from './dashboard-data-mapper';
 
 export default function DashboardClient() {
   const t = useTranslations('dashboard');
@@ -43,39 +38,29 @@ export default function DashboardClient() {
           cache: 'no-store',
         });
         if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-        const body = (await response.json()) as { ok: boolean; data?: BotCardDataApi[] | null; error?: string | null };
-        if (!body.ok || !Array.isArray(body.data)) throw new Error(body.error ?? 'Unable to load bots.');
-
-        const bots: BotCardData[] = body.data.map((item) => ({
-          id: item.id, name: item.name, strategy: item.strategy, pair: item.pair,
-          exchange: item.exchange, botStatus: item.status,
-          totalPnl: Number.isFinite(item.totalPnl) ? item.totalPnl : 0,
-          winCount: Number.isFinite(item.winCount) ? item.winCount : 0,
-          lossCount: Number.isFinite(item.lossCount) ? item.lossCount : 0,
-          startedAt: item.startedAt ?? null, updatedAt: item.updatedAt,
-          capitalAllocated: Number.isFinite(item.capitalAllocated) ? item.capitalAllocated : 0,
-          maxDrawdownPct: 0,
-        }));
-
-        const totalWinCount = bots.reduce((sum, b) => sum + b.winCount, 0);
-        const totalLossCount = bots.reduce((sum, b) => sum + b.lossCount, 0);
-        const totalTrades = totalWinCount + totalLossCount;
-        const kpis: DashboardKpis = {
-          totalBalance: bots.reduce((sum, b) => sum + b.capitalAllocated + b.totalPnl, 0),
-          todayPnl: bots.reduce((sum, b) => sum + b.totalPnl, 0),
-          activeBots: bots.filter((b) => b.botStatus === 'running' || b.botStatus === 'active').length,
-          totalTrades,
-          winRate: totalTrades > 0 ? Math.round((totalWinCount / totalTrades) * 100) : 0,
+        const body = (await response.json()) as {
+          ok: boolean;
+          data?: BotCardDataApi[] | null;
+          error?: string | null;
         };
-        if (!cancelled) setData({ kpis, bots });
+        if (!body.ok || !Array.isArray(body.data)) {
+          throw new Error(body.error ?? 'Unable to load bots.');
+        }
+
+        const mapped = mapBotsPayloadToDashboardData(body.data);
+        if (!cancelled) setData(mapped);
       } catch (fetchError) {
-        if (!cancelled) setError(fetchError instanceof Error ? fetchError.message : 'Unknown dashboard error');
+        if (!cancelled) {
+          setError(fetchError instanceof Error ? fetchError.message : 'Unknown dashboard error');
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) {

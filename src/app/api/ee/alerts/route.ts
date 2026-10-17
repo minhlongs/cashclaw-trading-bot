@@ -19,6 +19,7 @@ const CloudAlertEventSchema = z.object({
   message: z.string().min(1),
   timestampMs: z.number().int().positive(),
   cooldownMs: z.number().int().positive().optional(),
+  signingSecret: z.string().min(8).optional(),
 });
 
 export const defaultAlertDeduplicator = new CloudAlertDeduplicator();
@@ -53,11 +54,15 @@ export async function POST(req: Request) {
         ok: true,
         dispatched: false,
         deduplicated: true,
+        suppressed: true,
         eventId: event.eventId,
       });
     }
 
-    const secret = process.env.CASHCLAW_ALERT_WEBHOOK_SECRET || 'default_alert_secret';
+    const secret =
+      parsed.data.signingSecret ||
+      process.env.CASHCLAW_ALERT_WEBHOOK_SECRET ||
+      'default_alert_secret';
     const payloadJson = JSON.stringify(event);
     const signatureHex = await signAlertWebhookPayload(payloadJson, secret);
 
@@ -71,6 +76,8 @@ export async function POST(req: Request) {
       ok: true,
       dispatched: true,
       deduplicated: false,
+      suppressed: false,
+      signatureHex,
       envelope,
     });
   } catch {

@@ -36,6 +36,19 @@ describe('Sidebar', () => {
     { label: 'nav.bots', href: '/vi/bots' },
     { label: 'nav.backtests', href: '/vi/backtests' },
     { label: 'nav.monitoring', href: '/vi/monitoring' },
+    { label: 'nav.regime-attribution', href: '/vi/regime-attribution' },
+    { label: 'nav.fdr-gate', href: '/vi/fdr-gate' },
+    { label: 'nav.alpha-zoo', href: '/vi/alpha-zoo' },
+    { label: 'nav.deliberation', href: '/vi/deliberation' },
+    { label: 'nav.survival-gate', href: '/vi/survival-gate' },
+    { label: 'nav.microstructure', href: '/vi/microstructure' },
+    { label: 'nav.correlation-matrix', href: '/vi/correlation-matrix' },
+    { label: 'nav.execution-ledger', href: '/vi/execution-ledger' },
+    { label: 'nav.data-quality-gate', href: '/vi/data-quality-gate' },
+    { label: 'nav.sovereign-enclave', href: '/vi/sovereign-enclave' },
+    { label: 'nav.relative-value-basis', href: '/vi/relative-value-basis' },
+    { label: 'nav.portfolio-cvar-stress', href: '/vi/portfolio-cvar-stress' },
+    { label: 'nav.style-guide', href: '/vi/style-guide' },
     { label: 'nav.settings', href: '/vi/settings' },
   ];
 
@@ -60,21 +73,17 @@ describe('Sidebar', () => {
     const user = userEvent.setup();
     render(<Sidebar />);
 
-    // Initially expanded: aside carries the base sidebar class
     const aside = document.querySelector('aside');
     expect(aside).not.toHaveClass('sidebar-collapsed');
 
     expect(screen.getByText('CashClaw')).toBeInTheDocument();
 
-    // Single collapse toggle button
     const collapseButton = screen.getByRole('button');
     await user.click(collapseButton);
 
-    // After collapse: aside carries the collapsed class and brand name is unmounted
     expect(aside).toHaveClass('sidebar-collapsed');
     expect(screen.queryByText('CashClaw')).toBeNull();
 
-    // Toggling back restores the expanded state
     await user.click(collapseButton);
     expect(aside).not.toHaveClass('sidebar-collapsed');
     expect(screen.getByText('CashClaw')).toBeInTheDocument();
@@ -83,11 +92,9 @@ describe('Sidebar', () => {
   it('highlights active nav item based on current pathname', () => {
     render(<Sidebar />);
 
-    // Mocked pathname is /vi/dashboard, so only that link carries the active class
     const activeLink = screen.getByText('nav.dashboard').closest('a') as HTMLElement;
     expect(activeLink).toHaveClass('active');
 
-    // Every other nav item stays transparent / secondary
     for (const item of navItems.filter((i) => i.href !== '/vi/dashboard')) {
       const link = screen.getByText(item.label).closest('a') as HTMLElement;
       expect(link).not.toHaveClass('active');
@@ -98,16 +105,13 @@ describe('Sidebar', () => {
     const user = userEvent.setup();
     render(<Sidebar />);
 
-    // Expanded: all labels visible
     for (const item of navItems) {
       expect(screen.getByText(item.label)).toBeDefined();
     }
 
-    // Collapse the sidebar
     const collapseButton = screen.getByRole('button');
     await user.click(collapseButton);
 
-    // Labels are removed via conditional rendering: {!collapsed && <span>{label}</span>}
     const aside = document.querySelector('aside');
     expect(aside).toHaveClass('sidebar-collapsed');
 
@@ -118,7 +122,6 @@ describe('Sidebar', () => {
 
   it('renders status footer with loading text', () => {
     render(<Sidebar />);
-    // useTranslations mock returns the key itself as translation text
     expect(screen.getByText('common.loading')).toBeInTheDocument();
   });
 });

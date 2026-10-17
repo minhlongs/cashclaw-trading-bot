@@ -1,0 +1,1398 @@
+{
+  "projectId": "6665149401860401191",
+  "designSystemAsset": "assets/be7563bf9e4c400f85f92f80d27a5de5",
+  "uploadRes": {
+    "height": 884,
+    "id": "12131800845160397211",
+    "sourceScreen": "projects/6665149401860401191/screens/12131800845160397211",
+    "width": 390,
+    "x": 490
+  },
+  "generatedResults": [
+    {
+      "page": "regime-attribution",
+      "title": "Regime-Conditional Alpha Attribution & Stress Scenario Simulator",
+      "screenName": "projects/6665149401860401191/screens/ed2c9afb27504e86bdd268390891804e",
+      "htmlDownloaded": true,
+      "pngDownloaded": true,
+      "rawResponse": {
+        "outputComponents": [
+          {
+            "design": {
+              "screens": [
+                {
+                  "designSystem": {
+                    "designSystem": {
+                      "displayName": "CashClaw Quant OS",
+                      "styleGuidelines": "## Brand & Style\n\nThis design system establishes a high-density quantitative research terminal and institutional paper-trading cockpit. The visual atmosphere blends dark obsidian surfaces with precision emerald-teal accents, crisp monospace telemetry, and structured violet indicators for multi-agent LLM deliberation. \n\nThe aesthetic style is a refined hybrid of **Minimalism** and **High-Contrast Data Density**, prioritizing causal signal clarity, zero clutter, and uncompromising focus on trading performance and safety invariants. Every visual element communicates precision, institutional reliability, and rigorous operational control.\n\n## Layout & Spacing\n\nThe layout employs a fixed-to-fluid application shell featuring a collapsible left sidebar (240px expanded, 64px collapsed) alongside a fluid main workspace bounded by a 1440px max-width constraint. \n\nThe spatial rhythm relies on a strict 4px base scale. Layout structures utilize a 4-column KPI summary grid and a 12-column analytical split for deep-dive charts and multi-agent strategy tables, scaling down gracefully to a single column on mobile viewports.\n\n## Elevation & Depth\n\nVisual hierarchy is achieved through **Tonal Layering** combined with subtle **Ambient Shadows** and low-contrast boundaries. \n\nSurfaces step upward from the deep obsidian root canvas (`#0B0E11`) to slate carbon panels (`#141820`) and elevated midnight overlays (`#1A2030`). Depth is reinforced through hairline structural borders (`#1E2530`) and delicate emerald glow accents (`0 0 20px rgba(0, 212, 170, 0.08)`) rather than heavy drop shadows, maintaining an ultra-clean, institutional workspace feel.\n\n## Components\n\n- **Buttons:** Built with a minimum touch target height of 44px, 600 font weight, and 8px rounding. Primary actions use solid Quant Emerald (`#00D4AA`) with dark text; secondary actions rely on slate surfaces with crisp borders.\n- **Cards & Panels:** Framed by 1px solid structural borders (`#1E2530`) over slate carbon backgrounds, complete with internal padding and subtle stacked shadows.\n- **Inputs & Selects:** Feature 44px minimum heights, deep obsidian backgrounds, and high-visibility 2px focus rings in Quant Emerald.\n- **Checkboxes & Radios:** Compact, precise geometry utilizing monochromatic borders that snap instantly to emerald-teal upon selection.\n- **Chips & Badges:** Uppercase monospace labels utilizing tight tracking, reserved strictly for status flags, paper-trading safety warnings, and AI agent deliberation tags.\n- **Data Tables:** High-density telemetry layouts featuring alternating row hover states, pinned header rows, and strict right-alignment for tabular numeric data.",
+                      "theme": {
+                        "bodyFont": "GEIST",
+                        "bodyFontFamily": "Geist",
+                        "colorMode": "DARK",
+                        "colorVariant": "FIDELITY",
+                        "customColor": "#00d4aa",
+                        "designMd": "---\nname: CashClaw Quant OS\ncolors:\n  surface: '#0d1512'\n  surface-dim: '#0d1512'\n  surface-bright: '#333b37'\n  surface-container-lowest: '#08100d'\n  surface-container-low: '#161d1a'\n  surface-container: '#19211e'\n  surface-container-high: '#242c28'\n  surface-container-highest: '#2f3633'\n  on-surface: '#dce4df'\n  on-surface-variant: '#bacac2'\n  inverse-surface: '#dce4df'\n  inverse-on-surface: '#2a322f'\n  outline: '#85948d'\n  outline-variant: '#3b4a44'\n  surface-tint: '#28dfb5'\n  primary: '#46f1c5'\n  on-primary: '#00382b'\n  primary-container: '#00d4aa'\n  on-primary-container: '#005643'\n  inverse-primary: '#006b55'\n  secondary: '#cebdff'\n  on-secondary: '#381385'\n  secondary-container: '#4f319c'\n  on-secondary-container: '#bea8ff'\n  tertiary: '#ffcea6'\n  on-tertiary: '#4c2700'\n  tertiary-container: '#ffa858'\n  on-tertiary-container: '#733e00'\n  error: '#ffb4ab'\n  on-error: '#690005'\n  error-container: '#93000a'\n  on-error-container: '#ffdad6'\n  primary-fixed: '#55fcd0'\n  primary-fixed-dim: '#28dfb5'\n  on-primary-fixed: '#002118'\n  on-primary-fixed-variant: '#00513f'\n  secondary-fixed: '#e8ddff'\n  secondary-fixed-dim: '#cebdff'\n  on-secondary-fixed: '#21005e'\n  on-secondary-fixed-variant: '#4f319c'\n  tertiary-fixed: '#ffdcc1'\n  tertiary-fixed-dim: '#ffb77a'\n  on-tertiary-fixed: '#2e1500'\n  on-tertiary-fixed-variant: '#6c3a00'\n  background: '#0d1512'\n  on-background: '#dce4df'\n  surface-variant: '#2f3633'\n  bg-primary: '#0B0E11'\n  bg-surface: '#141820'\n  bg-elevated: '#1A2030'\n  bg-hover: '#1E2838'\n  color-loss: '#FF4757'\n  color-warning: '#FFB020'\n  text-primary: '#E8EAED'\n  text-secondary: '#8B95A5'\n  text-tertiary: '#5A6577'\n  border-subtle: '#1E2530'\n  border-default: '#2A3340'\ntypography:\n  hero:\n    fontFamily: Geist\n    fontSize: 56px\n    fontWeight: '900'\n    lineHeight: '1.25'\n  headline-lg:\n    fontFamily: Geist\n    fontSize: 40px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-md:\n    fontFamily: Geist\n    fontSize: 28px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-sm:\n    fontFamily: Geist\n    fontSize: 20px\n    fontWeight: '600'\n    lineHeight: '1.25'\n  title-lg:\n    fontFamily: Geist\n    fontSize: 16px\n    fontWeight: '600'\n    lineHeight: '1.5'\n  body-base:\n    fontFamily: Geist\n    fontSize: 14px\n    fontWeight: '400'\n    lineHeight: '1.5'\n  body-sm:\n    fontFamily: Geist\n    fontSize: 13px\n    fontWeight: '500'\n    lineHeight: '1.5'\n  caption:\n    fontFamily: JetBrains Mono\n    fontSize: 11px\n    fontWeight: '600'\n    lineHeight: '1.4'\n    letterSpacing: 0.04em\nrounded:\n  sm: 0.125rem\n  DEFAULT: 0.25rem\n  md: 0.375rem\n  lg: 0.5rem\n  xl: 0.75rem\n  full: 9999px\nspacing:\n  gutter: 16px\n  margin: 24px\n  space-xs: 4px\n  space-sm: 8px\n  space-md: 12px\n  space-lg: 16px\n  space-xl: 24px\n  space-2xl: 32px\n  space-3xl: 48px\n  space-4xl: 64px\n---\n\n# Design System: CashClaw Alpha Research & Paper Trading OS\n\n**Project ID:** `cashclaw-quant-os`\n**Device:** `DESKTOP` (Responsive Tablet & Mobile Fallback)\n**Safety Mode:** `PAPER_ONLY` (ADR-001 Strict Invariant)\n\n## 1. Visual Theme & Atmosphere\n\nHigh-density quantitative research terminal and institutional paper-trading cockpit. The interface blends dark obsidian surfaces with precision emerald-teal accents (`#00D4AA`), crisp monospace telemetry (`JetBrains Mono`), and structured violet indicators (`#A78BFA`) for multi-agent LLM deliberation. Every screen prioritizes causal signal clarity, zero-clutter data density, and explicit paper-mode safety badges.\n\n## 2. Color Palette & Roles\n\n| Semantic Token | Hex / Value | Functional Role |\n|----------------|-------------|-----------------|\n| `--bg-primary` | `#0B0E11` | Deep Obsidian Abyss — root page canvas and primary terminal backdrop |\n| `--bg-surface` | `#141820` | Slate Carbon Panel — cards, sidebar navigation, KPI containers, data tables |\n| `--bg-elevated` | `#1A2030` | Elevated Midnight Surface — modals, dropdowns, active tooltips, drawer overlays |\n| `--bg-hover` | `#1E2838` | Interactive Slate Hover — table row hover, secondary button hover state |\n| `--color-accent` / `--color-profit` | `#00D4AA` | Quant Emerald Teal — primary CTAs, positive PnL, active focus rings, buy signals |\n| `--color-loss` / `--color-error` | `#FF4757` | Crimson Signal Alert — negative PnL, drawdown warnings, sell signals, validation errors |\n| `--color-warning` | `#FFB020` | Amber Regime Caution — volatility spike alerts, quota thresholds, paper-only badges |\n| `--color-ai` | `#A78BFA` | Deliberation Violet — multi-agent LLM reasoning badges, IC/IR research tags |\n| `--text-primary` | `#E8EAED` | Crisp Alabaster — primary headlines, ticker prices, active labels |\n| `--text-secondary` | `#8B95A5` | Muted Steel Gray — table column headers, secondary metadata, axis labels |\n| `--text-tertiary` | `#5A6577` | Dim Slate — disabled states, timestamps, hash checksums |\n| `--border-subtle` | `#1E2530` | Hairline Structural Divider — card borders, grid lines, section separators |\n| `--border-default` | `#2A3340` | Input & Control Border — form controls, inactive tabs, modal frames |\n\n## 3. Typography Rules\n\n- **Primary UI Font (`--font-sans`):** `Geist`, `-apple-system`, `BlinkMacSystemFont`, sans-serif — clean geometric legibility for navigation, labels, and bilingual EN/VI copy.\n- **Quantitative & Telemetry Font (`--font-mono`):** `JetBrains Mono`, `ui-monospace`, monospace — tabular numerals for prices, Sharpe ratios, IC/IR metrics, SHA-256 hashes, and order book depth.\n\n### Type Scale\n- **Hero (`--text-hero`):** `56px` (`900` weight, `1.25` line-height)\n- **Display H1 (`--text-2xl` to `--text-3xl`):** `28px–40px` (`700` weight, `1.25` line-height)\n- **Section Header H2 (`--text-xl`):** `20px` (`600` weight, `1.25` line-height)\n- **Card Title H3 (`--text-lg`):** `16px` (`600` weight, `1.5` line-height)\n- **Body Copy (`--text-base`):** `14px` (`400` weight, `1.5` line-height)\n- **Secondary / Table Cell (`--text-sm`):** `13px` (`500` weight, `1.5` line-height)\n- **Caption / Badge (`--text-xs`):** `11px` (`600` weight, uppercase tracking `0.04em`)\n\n## 4. Component Stylings & Geometry\n\n- **Buttons & Interactive Targets:** Minimum `44px` touch target height, `8px` border radius (`--radius-md`), `600` font weight. Primary buttons use filled Quant Emerald (`#00D4AA`) with dark `#0B0E11` text; secondary buttons use `#1A2030` surface with `#2A3340` border.\n- **Cards & Panels:** `12px` border radius (`--radius-lg`), `1px solid #1E2530` border, `#141820` surface fill, `16px` (`--space-4`) internal padding, subtle elevation (`0 4px 12px rgba(0, 0, 0, 0.25)`).\n- **Modals & Drawers:** `16px` border radius (`--radius-xl`), `#1A2030` elevated surface, `0 8px 24px rgba(0, 0, 0, 0.3)` shadow, emerald glow accent (`0 0 20px rgba(0, 212, 170, 0.08)`).\n- **Inputs & Selects:** `44px` min-height, `8px` radius, `#0B0E11` background, `1px solid #2A3340` border, `2px solid #00D4AA` focus-visible ring with `2px` offset.\n\n## 5. Layout Principles & Motion\n\n- **Application Shell:** Left fixed sidebar (`240px` expanded, `64px` collapsed) + fluid main workspace (`max-width: 1440px`, `24px` padding).\n- **Grid System:** 4-column KPI summary grid (`gap: 16px`), 12-column analytical split for charts and strategy tables, single-column stack below `768px`.\n- **Spacing Scale:** Base `4px` unit (`4px`, `8px`, `12px`, `16px`, `24px`, `32px`, `48px`, `64px`).\n- **Motion System:** Fast micro-interactions (`150ms ease`), standard transitions (`200ms ease`), panel transitions (`300ms ease`), with strict `@media (prefers-reduced-motion: reduce)` reset.\n",
+                        "font": "GEIST",
+                        "headlineFont": "GEIST",
+                        "headlineFontFamily": "Geist",
+                        "labelFont": "JETBRAINS_MONO",
+                        "labelFontFamily": "JetBrains Mono",
+                        "namedColors": {
+                          "background": "#0d1512",
+                          "bg-elevated": "#1A2030",
+                          "bg-hover": "#1E2838",
+                          "bg-primary": "#0B0E11",
+                          "bg-surface": "#141820",
+                          "border-default": "#2A3340",
+                          "border-subtle": "#1E2530",
+                          "color-loss": "#FF4757",
+                          "color-warning": "#FFB020",
+                          "error": "#ffb4ab",
+                          "error_container": "#93000a",
+                          "inverse_on_surface": "#2a322f",
+                          "inverse_primary": "#006b55",
+                          "inverse_surface": "#dce4df",
+                          "on_background": "#dce4df",
+                          "on_error": "#690005",
+                          "on_error_container": "#ffdad6",
+                          "on_primary": "#00382b",
+                          "on_primary_container": "#005643",
+                          "on_primary_fixed": "#002118",
+                          "on_primary_fixed_variant": "#00513f",
+                          "on_secondary": "#381385",
+                          "on_secondary_container": "#bea8ff",
+                          "on_secondary_fixed": "#21005e",
+                          "on_secondary_fixed_variant": "#4f319c",
+                          "on_surface": "#dce4df",
+                          "on_surface_variant": "#bacac2",
+                          "on_tertiary": "#4c2700",
+                          "on_tertiary_container": "#733e00",
+                          "on_tertiary_fixed": "#2e1500",
+                          "on_tertiary_fixed_variant": "#6c3a00",
+                          "outline": "#85948d",
+                          "outline_variant": "#3b4a44",
+                          "primary": "#46f1c5",
+                          "primary_container": "#00d4aa",
+                          "primary_fixed": "#55fcd0",
+                          "primary_fixed_dim": "#28dfb5",
+                          "secondary": "#cebdff",
+                          "secondary_container": "#4f319c",
+                          "secondary_fixed": "#e8ddff",
+                          "secondary_fixed_dim": "#cebdff",
+                          "surface": "#0d1512",
+                          "surface_bright": "#333b37",
+                          "surface_container": "#19211e",
+                          "surface_container_high": "#242c28",
+                          "surface_container_highest": "#2f3633",
+                          "surface_container_low": "#161d1a",
+                          "surface_container_lowest": "#08100d",
+                          "surface_dim": "#0d1512",
+                          "surface_tint": "#28dfb5",
+                          "surface_variant": "#2f3633",
+                          "tertiary": "#ffcea6",
+                          "tertiary_container": "#ffa858",
+                          "tertiary_fixed": "#ffdcc1",
+                          "tertiary_fixed_dim": "#ffb77a",
+                          "text-primary": "#E8EAED",
+                          "text-secondary": "#8B95A5",
+                          "text-tertiary": "#5A6577"
+                        },
+                        "overridePrimaryColor": "#00d4aa",
+                        "overrideSecondaryColor": "#a78bfa",
+                        "roundness": "ROUND_FOUR",
+                        "spacing": {
+                          "gutter": "16px",
+                          "margin": "24px",
+                          "space-2xl": "32px",
+                          "space-3xl": "48px",
+                          "space-4xl": "64px",
+                          "space-lg": "16px",
+                          "space-md": "12px",
+                          "space-sm": "8px",
+                          "space-xl": "24px",
+                          "space-xs": "4px"
+                        },
+                        "spacingScale": 2,
+                        "typography": {
+                          "body-base": {
+                            "fontFamily": "Geist",
+                            "fontSize": "14px",
+                            "fontWeight": "400",
+                            "lineHeight": "1.5"
+                          },
+                          "body-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "13px",
+                            "fontWeight": "500",
+                            "lineHeight": "1.5"
+                          },
+                          "caption": {
+                            "fontFamily": "JetBrains Mono",
+                            "fontSize": "11px",
+                            "fontWeight": "600",
+                            "letterSpacing": "0.04em",
+                            "lineHeight": "1.4"
+                          },
+                          "headline-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "40px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-md": {
+                            "fontFamily": "Geist",
+                            "fontSize": "28px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.25"
+                          },
+                          "hero": {
+                            "fontFamily": "Geist",
+                            "fontSize": "56px",
+                            "fontWeight": "900",
+                            "lineHeight": "1.25"
+                          },
+                          "title-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "16px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.5"
+                          }
+                        }
+                      }
+                    },
+                    "name": "assets/be7563bf9e4c400f85f92f80d27a5de5",
+                    "version": "1"
+                  },
+                  "deviceType": "DESKTOP",
+                  "generatedBy": "figaro_agent",
+                  "height": "3880",
+                  "htmlCode": {
+                    "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzIzZWU1MDI3NjRkNzQ0OTNhYjFkNzg3MzhmMDU4NTAzEgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NjY1MTQ5NDAxODYwNDAxMTkx&filename=&opi=96797242",
+                    "mimeType": "text/html",
+                    "name": "projects/6665149401860401191/files/7ed6682f4af34b19a0b3ac1c856d025a"
+                  },
+                  "id": "ed2c9afb27504e86bdd268390891804e",
+                  "name": "projects/6665149401860401191/screens/ed2c9afb27504e86bdd268390891804e",
+                  "prompt": "Generate the Regime-Conditional Alpha Attribution & Stress Scenario Simulator (regime-attribution.html) for CashClaw OS (src/forest/regime/ & src/forest/alpha/ Volatility Regime Conditioning & EXTREME Cost Sensitivity Engine) matching the design system specifications:\n- Platform: Desktop Web Application (1440px max container, 240px left sidebar).\n- Theme: Dark Mode First (Institutional Quantitative Terminal aesthetic). Background #0B0E11, Cards #141820, Elevated Panels #1A2030, Quant Emerald Teal #00D4AA, Crimson #FF4757, Amber Caution #FFB020, Deliberation Violet #A78BFA. Hairline borders 1px solid #1E2530. Geist Sans and JetBrains Mono fonts.\n- Include:\n1. Left sidebar (240px) with active state on \"Regime Attribution\" and wired links to all 15 CashClaw OS screens:\n   - Cockpit Overview, Regime Attribution (active with emerald indicator & #1A2030 bg), Alpha Decomposition, Strategy Orchestration, Execution Routing, Risk & Invariants, Order Book L3, Volatility Surface, LLM Multi-Agent, Portfolio Factor Risk, Transaction Cost Model, Zero-Lookahead Audit, Telemetry Logs, Backtest Engine, System Settings.\n   - Also includes CashClaw OS brand logo, version \"Terminal v4.19 Institutional\", and bottom status badges (PAPER_ONLY ADR-001 Invariant, Audit Live: OK, SHA-256 state hash).\n2. Top header:\n   - Breadcrumb/Title: \"Regime-Conditional Alpha Attribution • Garman-Klass / Yang-Zhang Volatility States • Zero Lookahead\"\n   - Telemetry pills: \"VOL: GK 18.42 (NORM)\", \"YZ VOL: 16.18\", \"LOOKAHEAD: PASS [SHUFFLE_SAFE]\", \"SLIPPAGE: 1.2 BPS\", \"LATENCY: 42µs\", \"MODE: PAPER_ONLY\" (Amber badge)\n   - Action buttons: \"Re-Compute Regime Surface\" (primary emerald CTA), \"Export Matrix (.CSV / .PARQUET)\", and \"Emergency Halt\" (crimson secondary button).\n3. 3 Telemetry KPI Cards in top row:\n   - Card 1: Active Market Regime (BTC/ETH 1d): \"HIGH_VOL_CHOP\" (σ = 68.4% annualized) with badge \"Yang-Zhang 21d Annualized • Causal State Transition\", subtext: \"GK Vol: 62.1% • Regime Shift detected 4.2h ago (T-4h: LOW_VOL_TREND)\". Amber/Violet glow.\n   - Card 2: Regime-Conditional Net IC (Low vs High Vol): \"+0.041 / -0.019\" (Alpha Decay Under Volatility Expansion). Subtext: \"Information Ratio (IR): +1.84 (Low Vol) → -0.42 (High Vol) • p-val: 0.0024 • Statistically Significant Decay\". Color coded Emerald (+0.041) vs Crimson (-0.019).\n   - Card 3: Extreme Cost Stress Survival (35 bps): \"0 / 4 STRATEGIES\" (Crimson alert badge: \"CRITICAL BREACH\") with subtext: \"All Candidate Portfolios Breached Max Drawdown Ceiling (-15.0% Invariant) under 35 bps fee + slippage stress. Survival Rate: 0.0%\".\n4. Regime-Conditional Alpha Decomposition Matrix:\n   - High-density quantitative data table with headers: Market Regime, Bar Occupancy (%), Gross Sharpe, Net Sharpe (EXTREME Stress 35 bps), Max Drawdown, Information Coefficient (IC), t-stat, and Regime Gating Action.\n   - Rows:\n     * LOW_VOL_TREND: Bar Occupancy: 38.4%, Gross Sharpe: 3.12, Net Sharpe (EXTREME): 1.84 (Emerald), Max DD: -4.8%, IC: +0.058 (t=4.82), Gating Action: ALLOW_PAPER (Emerald badge with checkmark).\n     * HIGH_VOL_BREAKOUT: Bar Occupancy: 22.1%, Gross Sharpe: 2.45, Net Sharpe (EXTREME): 0.62 (Warning Amber), Max DD: -11.2%, IC: +0.024 (t=2.15), Gating Action: THROTTLE_50% (Amber badge).\n     * HIGH_VOL_CHOP: Bar Occupancy: 27.8%, Gross Sharpe: 0.94, Net Sharpe (EXTREME): -1.14 (Crimson), Max DD: -19.4% (Breach), IC: -0.019 (t=-1.89), Gating Action: FLAT_FENCE (Crimson badge: \"NO TRADING\").\n     * LIQUIDITY_CRISIS: Bar Occupancy: 11.7%, Gross Sharpe: -0.45, Net Sharpe (EXTREME): -3.28 (Crimson), Max DD: -28.7% (Catastrophic), IC: -0.062 (t=-5.12), Gating Action: FLAT_FENCE (Crimson alert: \"HALT_KILL_SWITCH\").\n   - Summary footer with Causal Regime Invariant Verification Hash and Zero-Lookahead Audit Stamp.\n5. Interactive Transaction Cost & Volatility Regime Sensitivity Surface Simulator:\n   - Cost Sensitivity Controls: Fee/Slippage Tier selector (BASE 10 bps, ELEVATED 20 bps, EXTREME 35 bps with active toggle state) + Volatility Multiplier slider (0.5x, 1.0x, 1.5x, 2.0x) + Liquidity Depth Shock toggle.\n   - Interactive Degradation Comparison Chart / Matrix Grid: Visual heat-map matrix showing Sharpe and Drawdown decay across 3 fee tiers x 4 regimes.\n   - Stress Scenario Summary Panel: Simulation results panel highlighting \"Breach Horizon: T+14 Days\", \"Estimated Alpha Half-Life: 3.8h under High Vol\", and dynamic recommendation from LLM Multi-Agent: \"Gating rule enforced: Flatten positions in HIGH_VOL_CHOP and route order flow strictly through dark limit books.\"\n- Visual polish: crisp borders (#1E2530), sleek glowing tags, monospace typography for numbers, dark institutional Bloomberg/Terminal aesthetic.",
+                  "screenMetadata": {
+                    "agentType": "PRO_AGENT",
+                    "status": "COMPLETE"
+                  },
+                  "screenType": "DESIGN",
+                  "screenshot": {
+                    "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1UgKnxMQpDTgl7faae7EjxNslEBcwyOSsDz3ST5pkoFhB12v6SLXgkCU7N7cz9CDTTdadUE4cHIS93ybraBXwmk0MKw7-ncPV9YiM9I8UBzyi98wgIVlhJEWpkX_MtKuAyLMujJgdG80hkQkqnjdJ5PvqbvmZxuPa-8f0R5g7SfeWR96VEvYDIdKQu0pqt8AK4lhxYmH20KOMKLFzwt8rJb4fp6b6oFC83774MQp2jC6UMnE0H_VqLkQc4",
+                    "name": "projects/6665149401860401191/files/55d8f25e8eba4453af1b17cf05f0ca6d"
+                  },
+                  "theme": {
+                    "bodyFont": "GEIST",
+                    "bodyFontFamily": "Geist",
+                    "colorMode": "DARK",
+                    "colorVariant": "FIDELITY",
+                    "customColor": "#00d4aa",
+                    "font": "GEIST",
+                    "headlineFont": "GEIST",
+                    "headlineFontFamily": "Geist",
+                    "labelFont": "JETBRAINS_MONO",
+                    "labelFontFamily": "JetBrains Mono",
+                    "namedColors": {
+                      "background": "#0d1512",
+                      "bg-elevated": "#1A2030",
+                      "bg-hover": "#1E2838",
+                      "bg-primary": "#0B0E11",
+                      "bg-surface": "#141820",
+                      "border-default": "#2A3340",
+                      "border-subtle": "#1E2530",
+                      "color-loss": "#FF4757",
+                      "color-warning": "#FFB020",
+                      "error": "#ffb4ab",
+                      "error_container": "#93000a",
+                      "inverse_on_surface": "#2a322f",
+                      "inverse_primary": "#006b55",
+                      "inverse_surface": "#dce4df",
+                      "on_background": "#dce4df",
+                      "on_error": "#690005",
+                      "on_error_container": "#ffdad6",
+                      "on_primary": "#00382b",
+                      "on_primary_container": "#005643",
+                      "on_primary_fixed": "#002118",
+                      "on_primary_fixed_variant": "#00513f",
+                      "on_secondary": "#381385",
+                      "on_secondary_container": "#bea8ff",
+                      "on_secondary_fixed": "#21005e",
+                      "on_secondary_fixed_variant": "#4f319c",
+                      "on_surface": "#dce4df",
+                      "on_surface_variant": "#bacac2",
+                      "on_tertiary": "#4c2700",
+                      "on_tertiary_container": "#733e00",
+                      "on_tertiary_fixed": "#2e1500",
+                      "on_tertiary_fixed_variant": "#6c3a00",
+                      "outline": "#85948d",
+                      "outline_variant": "#3b4a44",
+                      "primary": "#46f1c5",
+                      "primary_container": "#00d4aa",
+                      "primary_fixed": "#55fcd0",
+                      "primary_fixed_dim": "#28dfb5",
+                      "secondary": "#cebdff",
+                      "secondary_container": "#4f319c",
+                      "secondary_fixed": "#e8ddff",
+                      "secondary_fixed_dim": "#cebdff",
+                      "surface": "#0d1512",
+                      "surface_bright": "#333b37",
+                      "surface_container": "#19211e",
+                      "surface_container_high": "#242c28",
+                      "surface_container_highest": "#2f3633",
+                      "surface_container_low": "#161d1a",
+                      "surface_container_lowest": "#08100d",
+                      "surface_dim": "#0d1512",
+                      "surface_tint": "#28dfb5",
+                      "surface_variant": "#2f3633",
+                      "tertiary": "#ffcea6",
+                      "tertiary_container": "#ffa858",
+                      "tertiary_fixed": "#ffdcc1",
+                      "tertiary_fixed_dim": "#ffb77a",
+                      "text-primary": "#E8EAED",
+                      "text-secondary": "#8B95A5",
+                      "text-tertiary": "#5A6577"
+                    },
+                    "overridePrimaryColor": "#00d4aa",
+                    "overrideSecondaryColor": "#a78bfa",
+                    "roundness": "ROUND_FOUR",
+                    "spacing": {
+                      "gutter": "16px",
+                      "margin": "24px",
+                      "space-2xl": "32px",
+                      "space-3xl": "48px",
+                      "space-4xl": "64px",
+                      "space-lg": "16px",
+                      "space-md": "12px",
+                      "space-sm": "8px",
+                      "space-xl": "24px",
+                      "space-xs": "4px"
+                    },
+                    "spacingScale": 2,
+                    "typography": {
+                      "body-base": {
+                        "fontFamily": "Geist",
+                        "fontSize": "14px",
+                        "fontWeight": "400",
+                        "lineHeight": "1.5"
+                      },
+                      "body-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "13px",
+                        "fontWeight": "500",
+                        "lineHeight": "1.5"
+                      },
+                      "caption": {
+                        "fontFamily": "JetBrains Mono",
+                        "fontSize": "11px",
+                        "fontWeight": "600",
+                        "letterSpacing": "0.04em",
+                        "lineHeight": "1.4"
+                      },
+                      "headline-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "40px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-md": {
+                        "fontFamily": "Geist",
+                        "fontSize": "28px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "20px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.25"
+                      },
+                      "hero": {
+                        "fontFamily": "Geist",
+                        "fontSize": "56px",
+                        "fontWeight": "900",
+                        "lineHeight": "1.25"
+                      },
+                      "title-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "16px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.5"
+                      }
+                    }
+                  },
+                  "title": "Regime-Conditional Alpha Attribution & Stress Simulator",
+                  "width": "2908"
+                }
+              ],
+              "theme": {}
+            }
+          },
+          {
+            "text": "I have designed and implemented the **Regime-Conditional Alpha Attribution & Stress Scenario Simulator** (`regime-attribution.html`) for CashClaw OS in strict adherence to your institutional quantitative design system specifications.\n\n### Key Architecture & Design Highlights:\n1. **Institutional 240px Navigation Sidebar:**\n   - Active highlighted tab on **\"Regime Attribution\"** with emerald boundary indicator and elevated `#1A2030` container.\n   - Comprehensive navigation links to all 15 CashClaw OS terminal modules (Cockpit Overview, Alpha Decomposition, Strategy Orchestration, Execution Routing, Risk & Invariants, Order Book L3, Volatility Surface, LLM Multi-Agent, Zero-Lookahead Audit, etc.).\n   - Integrated `ADR-001 PAPER_ONLY` safety badge, system versioning, node status, and live audit telemetry hash.\n\n2. **Terminal Header & Telemetry Badges:**\n   - Header with full causal provenance: `Regime-Conditional Alpha Attribution • Garman-Klass / Yang-Zhang Volatility States • Zero Lookahead`.\n   - Real-time quantitative telemetry badges: `GK VOL: 18.42 (NORM)`, `YZ VOL: 16.18`, `ZERO-LOOKAHEAD: PASS [SHUFFLE_SAFE]`, `SLIPPAGE: 1.2 BPS`, and `LATENCY: 42µs`.\n   - Action controls including **\"Re-Compute Regime Surface\"** (primary emerald CTA), **\"Export Matrix\"**, and the safety-critical **\"Emergency Halt\"**.\n\n3. **3 Quantitative Telemetry KPI Cards:**\n   - **Active Market Regime (BTC/ETH 1d):** Highlights `HIGH_VOL_CHOP (σ = 68.4%)` based on Yang-Zhang 21d annualized causal estimation, noting regime shift detection and high kernel persistence.\n   - **Regime-Conditional Net IC (Low vs High Vol):** Telemetry showing `+0.041 / -0.019` illustrating alpha decay under volatility expansion, accompanied by Information Ratio decay (`+1.84 → -0.42`) and statistical significance tests (`p-val: 0.0024`).\n   - **Extreme Cost Stress Survival (35 bps):** Critical alert badge displaying `0 / 4 STRATEGIES` surviving under fee + slippage stress beyond the `-15.0%` max drawdown ceiling.\n\n4. **Regime-Conditional Alpha Decomposition Matrix:**\n   - Multi-state breakdown across `LOW_VOL_TREND`, `HIGH_VOL_BREAKOUT`, `HIGH_VOL_CHOP`, and `LIQUIDITY_CRISIS`.\n   - Includes Bar Occupancy (%), Gross Sharpe, Net Sharpe under extreme 35 bps stress, Maximum Drawdown, Information Coefficient (IC), t-statistics, and explicit automated gating controls (`ALLOW_PAPER`, `THROTTLE_50%`, `FLAT_FENCE (NO TRADING)`, `HALT_KILL_SWITCH`).\n   - Verified with SHA-256 state hash and zero-lookahead lag alignment guarantees.\n\n5. **Interactive Transaction Cost & Volatility Regime Sensitivity Surface:**\n   - Interactive parameters to toggle fee/slippage tiers (`BASE 10bps`, `ELEVATED 20bps`, `EXTREME 35bps`), adjust volatility stress multipliers (`0.5x` to `2.0x`), and toggle L3 order book depth shocks (`-50% Bid/Ask Depth`).\n   - Sharpe degradation heatmap grid showing cross-tier margin erosion across regimes.\n   - Stress diagnostic meters for breach horizon, alpha half-life decay, and an embedded **LLM Multi-Agent Deliberation** consensus card detailing execution directives.\n   - Historical Regime State Transitions timeline (Last 250 daily bars)."
+          },
+          {
+            "suggestion": "Explore the Alpha Decomposition or Volatility Surface module next"
+          },
+          {
+            "suggestion": "Simulate adding execution routing slippage models to the sensitivity surface"
+          },
+          {
+            "suggestion": "Add a modal drawer for custom Markov transition matrix inspection"
+          }
+        ],
+        "projectId": "6665149401860401191",
+        "sessionId": "11427752690004584760"
+      },
+      "screenId": "ed2c9afb27504e86bdd268390891804e",
+      "screenTitle": "Regime-Conditional Alpha Attribution & Stress Simulator",
+      "stitchHtmlBytes": 50056,
+      "stitchPngBytes": 118107
+    },
+    {
+      "page": "fdr-multiple-testing-gate",
+      "title": "Multiple-Testing False Discovery Rate (BH-FDR & Deflated Sharpe) Gate",
+      "screenName": "projects/6665149401860401191/screens/9c29f01089bf437299bdbd007ece5cd5",
+      "htmlDownloaded": true,
+      "pngDownloaded": true,
+      "rawResponse": {
+        "outputComponents": [
+          {
+            "design": {
+              "screens": [
+                {
+                  "designSystem": {
+                    "designSystem": {
+                      "displayName": "CashClaw Quant OS",
+                      "styleGuidelines": "## Brand & Style\n\nThis design system establishes a high-density quantitative research terminal and institutional paper-trading cockpit. The visual atmosphere blends dark obsidian surfaces with precision emerald-teal accents, crisp monospace telemetry, and structured violet indicators for multi-agent LLM deliberation. \n\nThe aesthetic style is a refined hybrid of **Minimalism** and **High-Contrast Data Density**, prioritizing causal signal clarity, zero clutter, and uncompromising focus on trading performance and safety invariants. Every visual element communicates precision, institutional reliability, and rigorous operational control.\n\n## Layout & Spacing\n\nThe layout employs a fixed-to-fluid application shell featuring a collapsible left sidebar (240px expanded, 64px collapsed) alongside a fluid main workspace bounded by a 1440px max-width constraint. \n\nThe spatial rhythm relies on a strict 4px base scale. Layout structures utilize a 4-column KPI summary grid and a 12-column analytical split for deep-dive charts and multi-agent strategy tables, scaling down gracefully to a single column on mobile viewports.\n\n## Elevation & Depth\n\nVisual hierarchy is achieved through **Tonal Layering** combined with subtle **Ambient Shadows** and low-contrast boundaries. \n\nSurfaces step upward from the deep obsidian root canvas (`#0B0E11`) to slate carbon panels (`#141820`) and elevated midnight overlays (`#1A2030`). Depth is reinforced through hairline structural borders (`#1E2530`) and delicate emerald glow accents (`0 0 20px rgba(0, 212, 170, 0.08)`) rather than heavy drop shadows, maintaining an ultra-clean, institutional workspace feel.\n\n## Components\n\n- **Buttons:** Built with a minimum touch target height of 44px, 600 font weight, and 8px rounding. Primary actions use solid Quant Emerald (`#00D4AA`) with dark text; secondary actions rely on slate surfaces with crisp borders.\n- **Cards & Panels:** Framed by 1px solid structural borders (`#1E2530`) over slate carbon backgrounds, complete with internal padding and subtle stacked shadows.\n- **Inputs & Selects:** Feature 44px minimum heights, deep obsidian backgrounds, and high-visibility 2px focus rings in Quant Emerald.\n- **Checkboxes & Radios:** Compact, precise geometry utilizing monochromatic borders that snap instantly to emerald-teal upon selection.\n- **Chips & Badges:** Uppercase monospace labels utilizing tight tracking, reserved strictly for status flags, paper-trading safety warnings, and AI agent deliberation tags.\n- **Data Tables:** High-density telemetry layouts featuring alternating row hover states, pinned header rows, and strict right-alignment for tabular numeric data.",
+                      "theme": {
+                        "bodyFont": "GEIST",
+                        "bodyFontFamily": "Geist",
+                        "colorMode": "DARK",
+                        "colorVariant": "FIDELITY",
+                        "customColor": "#00d4aa",
+                        "designMd": "---\nname: CashClaw Quant OS\ncolors:\n  surface: '#0d1512'\n  surface-dim: '#0d1512'\n  surface-bright: '#333b37'\n  surface-container-lowest: '#08100d'\n  surface-container-low: '#161d1a'\n  surface-container: '#19211e'\n  surface-container-high: '#242c28'\n  surface-container-highest: '#2f3633'\n  on-surface: '#dce4df'\n  on-surface-variant: '#bacac2'\n  inverse-surface: '#dce4df'\n  inverse-on-surface: '#2a322f'\n  outline: '#85948d'\n  outline-variant: '#3b4a44'\n  surface-tint: '#28dfb5'\n  primary: '#46f1c5'\n  on-primary: '#00382b'\n  primary-container: '#00d4aa'\n  on-primary-container: '#005643'\n  inverse-primary: '#006b55'\n  secondary: '#cebdff'\n  on-secondary: '#381385'\n  secondary-container: '#4f319c'\n  on-secondary-container: '#bea8ff'\n  tertiary: '#ffcea6'\n  on-tertiary: '#4c2700'\n  tertiary-container: '#ffa858'\n  on-tertiary-container: '#733e00'\n  error: '#ffb4ab'\n  on-error: '#690005'\n  error-container: '#93000a'\n  on-error-container: '#ffdad6'\n  primary-fixed: '#55fcd0'\n  primary-fixed-dim: '#28dfb5'\n  on-primary-fixed: '#002118'\n  on-primary-fixed-variant: '#00513f'\n  secondary-fixed: '#e8ddff'\n  secondary-fixed-dim: '#cebdff'\n  on-secondary-fixed: '#21005e'\n  on-secondary-fixed-variant: '#4f319c'\n  tertiary-fixed: '#ffdcc1'\n  tertiary-fixed-dim: '#ffb77a'\n  on-tertiary-fixed: '#2e1500'\n  on-tertiary-fixed-variant: '#6c3a00'\n  background: '#0d1512'\n  on-background: '#dce4df'\n  surface-variant: '#2f3633'\n  bg-primary: '#0B0E11'\n  bg-surface: '#141820'\n  bg-elevated: '#1A2030'\n  bg-hover: '#1E2838'\n  color-loss: '#FF4757'\n  color-warning: '#FFB020'\n  text-primary: '#E8EAED'\n  text-secondary: '#8B95A5'\n  text-tertiary: '#5A6577'\n  border-subtle: '#1E2530'\n  border-default: '#2A3340'\ntypography:\n  hero:\n    fontFamily: Geist\n    fontSize: 56px\n    fontWeight: '900'\n    lineHeight: '1.25'\n  headline-lg:\n    fontFamily: Geist\n    fontSize: 40px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-md:\n    fontFamily: Geist\n    fontSize: 28px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-sm:\n    fontFamily: Geist\n    fontSize: 20px\n    fontWeight: '600'\n    lineHeight: '1.25'\n  title-lg:\n    fontFamily: Geist\n    fontSize: 16px\n    fontWeight: '600'\n    lineHeight: '1.5'\n  body-base:\n    fontFamily: Geist\n    fontSize: 14px\n    fontWeight: '400'\n    lineHeight: '1.5'\n  body-sm:\n    fontFamily: Geist\n    fontSize: 13px\n    fontWeight: '500'\n    lineHeight: '1.5'\n  caption:\n    fontFamily: JetBrains Mono\n    fontSize: 11px\n    fontWeight: '600'\n    lineHeight: '1.4'\n    letterSpacing: 0.04em\nrounded:\n  sm: 0.125rem\n  DEFAULT: 0.25rem\n  md: 0.375rem\n  lg: 0.5rem\n  xl: 0.75rem\n  full: 9999px\nspacing:\n  gutter: 16px\n  margin: 24px\n  space-xs: 4px\n  space-sm: 8px\n  space-md: 12px\n  space-lg: 16px\n  space-xl: 24px\n  space-2xl: 32px\n  space-3xl: 48px\n  space-4xl: 64px\n---\n\n# Design System: CashClaw Alpha Research & Paper Trading OS\n\n**Project ID:** `cashclaw-quant-os`\n**Device:** `DESKTOP` (Responsive Tablet & Mobile Fallback)\n**Safety Mode:** `PAPER_ONLY` (ADR-001 Strict Invariant)\n\n## 1. Visual Theme & Atmosphere\n\nHigh-density quantitative research terminal and institutional paper-trading cockpit. The interface blends dark obsidian surfaces with precision emerald-teal accents (`#00D4AA`), crisp monospace telemetry (`JetBrains Mono`), and structured violet indicators (`#A78BFA`) for multi-agent LLM deliberation. Every screen prioritizes causal signal clarity, zero-clutter data density, and explicit paper-mode safety badges.\n\n## 2. Color Palette & Roles\n\n| Semantic Token | Hex / Value | Functional Role |\n|----------------|-------------|-----------------|\n| `--bg-primary` | `#0B0E11` | Deep Obsidian Abyss — root page canvas and primary terminal backdrop |\n| `--bg-surface` | `#141820` | Slate Carbon Panel — cards, sidebar navigation, KPI containers, data tables |\n| `--bg-elevated` | `#1A2030` | Elevated Midnight Surface — modals, dropdowns, active tooltips, drawer overlays |\n| `--bg-hover` | `#1E2838` | Interactive Slate Hover — table row hover, secondary button hover state |\n| `--color-accent` / `--color-profit` | `#00D4AA` | Quant Emerald Teal — primary CTAs, positive PnL, active focus rings, buy signals |\n| `--color-loss` / `--color-error` | `#FF4757` | Crimson Signal Alert — negative PnL, drawdown warnings, sell signals, validation errors |\n| `--color-warning` | `#FFB020` | Amber Regime Caution — volatility spike alerts, quota thresholds, paper-only badges |\n| `--color-ai` | `#A78BFA` | Deliberation Violet — multi-agent LLM reasoning badges, IC/IR research tags |\n| `--text-primary` | `#E8EAED` | Crisp Alabaster — primary headlines, ticker prices, active labels |\n| `--text-secondary` | `#8B95A5` | Muted Steel Gray — table column headers, secondary metadata, axis labels |\n| `--text-tertiary` | `#5A6577` | Dim Slate — disabled states, timestamps, hash checksums |\n| `--border-subtle` | `#1E2530` | Hairline Structural Divider — card borders, grid lines, section separators |\n| `--border-default` | `#2A3340` | Input & Control Border — form controls, inactive tabs, modal frames |\n\n## 3. Typography Rules\n\n- **Primary UI Font (`--font-sans`):** `Geist`, `-apple-system`, `BlinkMacSystemFont`, sans-serif — clean geometric legibility for navigation, labels, and bilingual EN/VI copy.\n- **Quantitative & Telemetry Font (`--font-mono`):** `JetBrains Mono`, `ui-monospace`, monospace — tabular numerals for prices, Sharpe ratios, IC/IR metrics, SHA-256 hashes, and order book depth.\n\n### Type Scale\n- **Hero (`--text-hero`):** `56px` (`900` weight, `1.25` line-height)\n- **Display H1 (`--text-2xl` to `--text-3xl`):** `28px–40px` (`700` weight, `1.25` line-height)\n- **Section Header H2 (`--text-xl`):** `20px` (`600` weight, `1.25` line-height)\n- **Card Title H3 (`--text-lg`):** `16px` (`600` weight, `1.5` line-height)\n- **Body Copy (`--text-base`):** `14px` (`400` weight, `1.5` line-height)\n- **Secondary / Table Cell (`--text-sm`):** `13px` (`500` weight, `1.5` line-height)\n- **Caption / Badge (`--text-xs`):** `11px` (`600` weight, uppercase tracking `0.04em`)\n\n## 4. Component Stylings & Geometry\n\n- **Buttons & Interactive Targets:** Minimum `44px` touch target height, `8px` border radius (`--radius-md`), `600` font weight. Primary buttons use filled Quant Emerald (`#00D4AA`) with dark `#0B0E11` text; secondary buttons use `#1A2030` surface with `#2A3340` border.\n- **Cards & Panels:** `12px` border radius (`--radius-lg`), `1px solid #1E2530` border, `#141820` surface fill, `16px` (`--space-4`) internal padding, subtle elevation (`0 4px 12px rgba(0, 0, 0, 0.25)`).\n- **Modals & Drawers:** `16px` border radius (`--radius-xl`), `#1A2030` elevated surface, `0 8px 24px rgba(0, 0, 0, 0.3)` shadow, emerald glow accent (`0 0 20px rgba(0, 212, 170, 0.08)`).\n- **Inputs & Selects:** `44px` min-height, `8px` radius, `#0B0E11` background, `1px solid #2A3340` border, `2px solid #00D4AA` focus-visible ring with `2px` offset.\n\n## 5. Layout Principles & Motion\n\n- **Application Shell:** Left fixed sidebar (`240px` expanded, `64px` collapsed) + fluid main workspace (`max-width: 1440px`, `24px` padding).\n- **Grid System:** 4-column KPI summary grid (`gap: 16px`), 12-column analytical split for charts and strategy tables, single-column stack below `768px`.\n- **Spacing Scale:** Base `4px` unit (`4px`, `8px`, `12px`, `16px`, `24px`, `32px`, `48px`, `64px`).\n- **Motion System:** Fast micro-interactions (`150ms ease`), standard transitions (`200ms ease`), panel transitions (`300ms ease`), with strict `@media (prefers-reduced-motion: reduce)` reset.\n",
+                        "font": "GEIST",
+                        "headlineFont": "GEIST",
+                        "headlineFontFamily": "Geist",
+                        "labelFont": "JETBRAINS_MONO",
+                        "labelFontFamily": "JetBrains Mono",
+                        "namedColors": {
+                          "background": "#0d1512",
+                          "bg-elevated": "#1A2030",
+                          "bg-hover": "#1E2838",
+                          "bg-primary": "#0B0E11",
+                          "bg-surface": "#141820",
+                          "border-default": "#2A3340",
+                          "border-subtle": "#1E2530",
+                          "color-loss": "#FF4757",
+                          "color-warning": "#FFB020",
+                          "error": "#ffb4ab",
+                          "error_container": "#93000a",
+                          "inverse_on_surface": "#2a322f",
+                          "inverse_primary": "#006b55",
+                          "inverse_surface": "#dce4df",
+                          "on_background": "#dce4df",
+                          "on_error": "#690005",
+                          "on_error_container": "#ffdad6",
+                          "on_primary": "#00382b",
+                          "on_primary_container": "#005643",
+                          "on_primary_fixed": "#002118",
+                          "on_primary_fixed_variant": "#00513f",
+                          "on_secondary": "#381385",
+                          "on_secondary_container": "#bea8ff",
+                          "on_secondary_fixed": "#21005e",
+                          "on_secondary_fixed_variant": "#4f319c",
+                          "on_surface": "#dce4df",
+                          "on_surface_variant": "#bacac2",
+                          "on_tertiary": "#4c2700",
+                          "on_tertiary_container": "#733e00",
+                          "on_tertiary_fixed": "#2e1500",
+                          "on_tertiary_fixed_variant": "#6c3a00",
+                          "outline": "#85948d",
+                          "outline_variant": "#3b4a44",
+                          "primary": "#46f1c5",
+                          "primary_container": "#00d4aa",
+                          "primary_fixed": "#55fcd0",
+                          "primary_fixed_dim": "#28dfb5",
+                          "secondary": "#cebdff",
+                          "secondary_container": "#4f319c",
+                          "secondary_fixed": "#e8ddff",
+                          "secondary_fixed_dim": "#cebdff",
+                          "surface": "#0d1512",
+                          "surface_bright": "#333b37",
+                          "surface_container": "#19211e",
+                          "surface_container_high": "#242c28",
+                          "surface_container_highest": "#2f3633",
+                          "surface_container_low": "#161d1a",
+                          "surface_container_lowest": "#08100d",
+                          "surface_dim": "#0d1512",
+                          "surface_tint": "#28dfb5",
+                          "surface_variant": "#2f3633",
+                          "tertiary": "#ffcea6",
+                          "tertiary_container": "#ffa858",
+                          "tertiary_fixed": "#ffdcc1",
+                          "tertiary_fixed_dim": "#ffb77a",
+                          "text-primary": "#E8EAED",
+                          "text-secondary": "#8B95A5",
+                          "text-tertiary": "#5A6577"
+                        },
+                        "overridePrimaryColor": "#00d4aa",
+                        "overrideSecondaryColor": "#a78bfa",
+                        "roundness": "ROUND_FOUR",
+                        "spacing": {
+                          "gutter": "16px",
+                          "margin": "24px",
+                          "space-2xl": "32px",
+                          "space-3xl": "48px",
+                          "space-4xl": "64px",
+                          "space-lg": "16px",
+                          "space-md": "12px",
+                          "space-sm": "8px",
+                          "space-xl": "24px",
+                          "space-xs": "4px"
+                        },
+                        "spacingScale": 2,
+                        "typography": {
+                          "body-base": {
+                            "fontFamily": "Geist",
+                            "fontSize": "14px",
+                            "fontWeight": "400",
+                            "lineHeight": "1.5"
+                          },
+                          "body-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "13px",
+                            "fontWeight": "500",
+                            "lineHeight": "1.5"
+                          },
+                          "caption": {
+                            "fontFamily": "JetBrains Mono",
+                            "fontSize": "11px",
+                            "fontWeight": "600",
+                            "letterSpacing": "0.04em",
+                            "lineHeight": "1.4"
+                          },
+                          "headline-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "40px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-md": {
+                            "fontFamily": "Geist",
+                            "fontSize": "28px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.25"
+                          },
+                          "hero": {
+                            "fontFamily": "Geist",
+                            "fontSize": "56px",
+                            "fontWeight": "900",
+                            "lineHeight": "1.25"
+                          },
+                          "title-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "16px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.5"
+                          }
+                        }
+                      }
+                    },
+                    "name": "assets/be7563bf9e4c400f85f92f80d27a5de5",
+                    "version": "1"
+                  },
+                  "deviceType": "DESKTOP",
+                  "generatedBy": "figaro_agent",
+                  "height": "3862",
+                  "htmlCode": {
+                    "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sX2U0Mjk3NDcxZGMyNTRlZmI5N2VjN2UyYThhODA2YWZlEgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NjY1MTQ5NDAxODYwNDAxMTkx&filename=&opi=96797242",
+                    "mimeType": "text/html",
+                    "name": "projects/6665149401860401191/files/6c9cf1879cc54d8cbb53eae28f330844"
+                  },
+                  "id": "9c29f01089bf437299bdbd007ece5cd5",
+                  "name": "projects/6665149401860401191/screens/9c29f01089bf437299bdbd007ece5cd5",
+                  "prompt": "Design the Multiple-Testing False Discovery Rate (BH-FDR & Deflated Sharpe) Gate (fdr-multiple-testing-gate.html) for CashClaw OS.\n\nPlatform: Desktop Web Application (1440px max container, 240px left sidebar).\nTheme: Institutional Quantitative Terminal aesthetic. Dark mode first. Deep Obsidian Abyss (#0B0E11), Slate Carbon Cards (#141820), Elevated Midnight Panels (#1A2030), Quant Emerald Teal (#00D4AA), Crimson Alert (#FF4757), Amber Caution (#FFB020), Deliberation Violet (#A78BFA). Geist Sans headers/labels, JetBrains Mono for telemetry, statistical tests, p-values, DSR, hashes.\n\nLayout & Structure:\n1. Left Navigation Sidebar (240px wide, docked):\n   - Header: CashClaw OS / Terminal v4.19 Institutional / Quantum Node status badge\n   - Safety badge: ADR-001 INVARIANT [PAPER_ONLY] in amber pill\n   - Navigation links across 15 tabs: Cockpit Overview, Regime Attribution, Alpha Decomposition, Strategy Orchestration, Execution Routing, Risk & Invariants, Order Book L3, Volatility Surface, LLM Multi-Agent, Portfolio Factor Risk, Transaction Cost Model, Zero-Lookahead Audit, FDR Multiple-Testing Gate (ACTIVE STATE with emerald highlight border and indicator dot), Telemetry Logs, Backtest Engine.\n   - Footer: Audit Live: OK (200.0% OK, SHA256 verification hash), CTA button: \"Run Multi-Trial Audit\".\n\n2. Top Navigation Bar:\n   - Breadcrumbs: TERMINAL ROOT / ALPHA RESEARCH / MULTIPLE-TESTING FALSE DISCOVERY GATE\n   - Product Name: CASHCLAW // FDR & DEFLATED SHARPE GATE\n   - Top metrics bar: \"TRIALS (N): 148\", \"NULL E[max(SR)]: 2.64σ\", \"BH q-CUTOFF: 0.05\", \"DSR THRESHOLD: > 0.95\", \"SAFETY: ADR-001 PAPER_ONLY\"\n   - Action buttons: \"Export FDR Ledger (CSV)\", Primary CTA: \"Run Multi-Trial Audit\" (emerald teal glow).\n\n3. Top Section - 3 Telemetry KPI Cards (Grid 3 cols):\n   - Card 1: Total Backtest Trials Audited (N)\n     * Value: 148 TRIALS (12 Alpha Zoo Seeds × Parameter Perturbations)\n     * Subtext: Family-Wise Error Rate (FWER) cumulative inflation α_family = 99.94% without correction. Effective independent trials N_eff = 64.2.\n     * Status tag: MULTI_TRIAL_EXPANSION [HIGH_INFLATION]\n   - Card 2: Expected Max Sharpe Under Null E[max(SR0)]\n     * Value: 2.64 σ (Hurdle Rate)\n     * Formula badge: Bailey & Lopez de Prado (2014) closed-form Euler-Mascheroni hurdle.\n     * Subtext: Any raw Sharpe < 2.64 has >50% probability of being pure selection bias over 148 trials.\n     * Status tag: SELECTION_BIAS_HAZARD [CRITICAL]\n   - Card 3: BH-FDR Surviving Factors (q = 0.05)\n     * Value: 1 / 12 SEEDS (8.3% PASS RATE)\n     * Champion: alpha_003 (Funding Carry Arbitrage) • DSR = 0.964 • PROMOTE_TO_PAPER\n     * Failed: 11 seeds rejected due to p-value step-up breach or negative skewness penalty.\n     * Status badge: ADR-001 PASS [1 APPROVED]\n\n4. Main Analytical Section - Holm-Bonferroni & Benjamini-Hochberg Step-Up Matrix:\n   - Comprehensive tabular matrix displaying all 12 candidate alphas sorted by raw p-value rank (k=1 to 12).\n   - Table columns:\n     * Rank (k)\n     * Alpha ID & Name (e.g., alpha_003 Funding Carry, alpha_008 Vol Skew Arp, alpha_001 Momentum L3, alpha_007 Mean Rev, etc.)\n     * Raw Sharpe (Ann.)\n     * Skewness (γ1) & Kurtosis (γ2)\n     * Raw p-value (p_k)\n     * Holm-Bonferroni Threshold [α / (M - k + 1)]\n     * Benjamini-Hochberg Threshold [(k / M) × q]\n     * Adjusted q-value\n     * Deflated Sharpe Ratio (DSR)\n     * Gate Verdict (Pills: PROMOTE_TO_PAPER in emerald, REJECT_TRIAL_INFLATION in crimson, BORDERLINE_QUARANTINE in amber).\n   - First row (alpha_003) highlighted in active emerald subtle background showing survival across all tests.\n\n5. Bottom Section (2-Column Analytical Split):\n   - Left Column (7 cols): Interactive Deflated Sharpe Ratio (DSR) & Trial Inflation Penalty Auditor:\n     * Interactive slider / range controller: \"Simulate Number of Backtest Trials (N): [148]\" (slider 12 to 500).\n     * Visual Step-Up Chart / SVG visualization: Comparing Raw Sharpe curves vs Bailey-Lopez de Prado Inflation Hurdle Curve as N expands from 10 to 500 trials. Showing where candidate alphas drop below statistical significance.\n     * Parameter toggles: Sample Length T (years = 3.5), Skewness Adjustment toggle (-0.42), Kurtosis Adjustment toggle (4.88).\n   - Right Column (5 cols): Multi-Agent Econometric Auditor Consensus Panel:\n     * Agent Card: \"CHIEF_STATISTICIAN_AGENT\" & \"RISK_INVARIANT_SENTINEL\"\n     * Deliberation box in violet (#A78BFA) styling:\n       - Consensus Verdict: \"STRICT_FDR_ENFORCED\"\n       - Reasoning: \"11 of 12 alpha seeds exhibit non-zero selection bias from 148 exploratory trials. Raw Sharpes up to 2.18 fail Bailey-Lopez de Prado Deflated Sharpe testing when adjusted for negative return skewness (-0.68) and excess fat tails. Only alpha_003 (Funding Rate Basis) maintains DSR = 0.964 > 0.950 hurdle. ADR-001 prevents live execution; routing strictly to simulated Paper Execution Engine.\"\n       - Cryptographic Audit Hash: SHA-256 [0x7b92f...4d90a]\n       - Action: \"Lock Invariant & Gate Promotion\" button.\n\nDesign precision: High contrast, dark terminal theme, rich statistical typography, crisp badges, no placeholder generic text. Everything strictly aligned with CashClaw Quant OS styling.",
+                  "screenMetadata": {
+                    "agentType": "PRO_AGENT",
+                    "status": "COMPLETE"
+                  },
+                  "screenType": "DESIGN",
+                  "screenshot": {
+                    "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1XJ2AIDcgbkkpS-2sP8Gj69DMu25dLGmKMJHpRzkLCc2kbMFsrdCxDFmDIleVRXj1VYzcBhZs1wNDd9N2cteaqT-_FvpO059Bh2Jp49k-zTsS896yijf8DNMG_77mQlF3tWuCJyfEpb8VLSOp2xwOWSAIetOw2xG7C68y1UEvxUggOv1BcCAhGmn3VbztlTx2CmkhZujU_XgEwaptPEF5YSFeMuZKfSXr7dRQ4Efft_AVTI5xecj8ZgOyg",
+                    "name": "projects/6665149401860401191/files/f2d01ce1f89b426999197610d6d9e1bf"
+                  },
+                  "theme": {
+                    "bodyFont": "GEIST",
+                    "bodyFontFamily": "Geist",
+                    "colorMode": "DARK",
+                    "colorVariant": "FIDELITY",
+                    "customColor": "#00d4aa",
+                    "font": "GEIST",
+                    "headlineFont": "GEIST",
+                    "headlineFontFamily": "Geist",
+                    "labelFont": "JETBRAINS_MONO",
+                    "labelFontFamily": "JetBrains Mono",
+                    "namedColors": {
+                      "background": "#0d1512",
+                      "bg-elevated": "#1A2030",
+                      "bg-hover": "#1E2838",
+                      "bg-primary": "#0B0E11",
+                      "bg-surface": "#141820",
+                      "border-default": "#2A3340",
+                      "border-subtle": "#1E2530",
+                      "color-loss": "#FF4757",
+                      "color-warning": "#FFB020",
+                      "error": "#ffb4ab",
+                      "error_container": "#93000a",
+                      "inverse_on_surface": "#2a322f",
+                      "inverse_primary": "#006b55",
+                      "inverse_surface": "#dce4df",
+                      "on_background": "#dce4df",
+                      "on_error": "#690005",
+                      "on_error_container": "#ffdad6",
+                      "on_primary": "#00382b",
+                      "on_primary_container": "#005643",
+                      "on_primary_fixed": "#002118",
+                      "on_primary_fixed_variant": "#00513f",
+                      "on_secondary": "#381385",
+                      "on_secondary_container": "#bea8ff",
+                      "on_secondary_fixed": "#21005e",
+                      "on_secondary_fixed_variant": "#4f319c",
+                      "on_surface": "#dce4df",
+                      "on_surface_variant": "#bacac2",
+                      "on_tertiary": "#4c2700",
+                      "on_tertiary_container": "#733e00",
+                      "on_tertiary_fixed": "#2e1500",
+                      "on_tertiary_fixed_variant": "#6c3a00",
+                      "outline": "#85948d",
+                      "outline_variant": "#3b4a44",
+                      "primary": "#46f1c5",
+                      "primary_container": "#00d4aa",
+                      "primary_fixed": "#55fcd0",
+                      "primary_fixed_dim": "#28dfb5",
+                      "secondary": "#cebdff",
+                      "secondary_container": "#4f319c",
+                      "secondary_fixed": "#e8ddff",
+                      "secondary_fixed_dim": "#cebdff",
+                      "surface": "#0d1512",
+                      "surface_bright": "#333b37",
+                      "surface_container": "#19211e",
+                      "surface_container_high": "#242c28",
+                      "surface_container_highest": "#2f3633",
+                      "surface_container_low": "#161d1a",
+                      "surface_container_lowest": "#08100d",
+                      "surface_dim": "#0d1512",
+                      "surface_tint": "#28dfb5",
+                      "surface_variant": "#2f3633",
+                      "tertiary": "#ffcea6",
+                      "tertiary_container": "#ffa858",
+                      "tertiary_fixed": "#ffdcc1",
+                      "tertiary_fixed_dim": "#ffb77a",
+                      "text-primary": "#E8EAED",
+                      "text-secondary": "#8B95A5",
+                      "text-tertiary": "#5A6577"
+                    },
+                    "overridePrimaryColor": "#00d4aa",
+                    "overrideSecondaryColor": "#a78bfa",
+                    "roundness": "ROUND_FOUR",
+                    "spacing": {
+                      "gutter": "16px",
+                      "margin": "24px",
+                      "space-2xl": "32px",
+                      "space-3xl": "48px",
+                      "space-4xl": "64px",
+                      "space-lg": "16px",
+                      "space-md": "12px",
+                      "space-sm": "8px",
+                      "space-xl": "24px",
+                      "space-xs": "4px"
+                    },
+                    "spacingScale": 2,
+                    "typography": {
+                      "body-base": {
+                        "fontFamily": "Geist",
+                        "fontSize": "14px",
+                        "fontWeight": "400",
+                        "lineHeight": "1.5"
+                      },
+                      "body-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "13px",
+                        "fontWeight": "500",
+                        "lineHeight": "1.5"
+                      },
+                      "caption": {
+                        "fontFamily": "JetBrains Mono",
+                        "fontSize": "11px",
+                        "fontWeight": "600",
+                        "letterSpacing": "0.04em",
+                        "lineHeight": "1.4"
+                      },
+                      "headline-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "40px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-md": {
+                        "fontFamily": "Geist",
+                        "fontSize": "28px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "20px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.25"
+                      },
+                      "hero": {
+                        "fontFamily": "Geist",
+                        "fontSize": "56px",
+                        "fontWeight": "900",
+                        "lineHeight": "1.25"
+                      },
+                      "title-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "16px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.5"
+                      }
+                    }
+                  },
+                  "title": "FDR Multiple-Testing Gate & Deflated Sharpe Auditor",
+                  "width": "2560"
+                }
+              ],
+              "theme": {}
+            }
+          },
+          {
+            "text": "I have designed and implemented the **FDR Multiple-Testing Gate & Deflated Sharpe Auditor** (`FDR Multiple-Testing Gate & Deflated Sharpe Auditor`) for the **CashClaw Quant OS** institutional terminal, maintaining 100% fidelity with your design system and econometric specifications.\n\n### Key Architectural & Quantitative Highlights:\n1. **Docked Navigation & ADR-001 Invariant Shell**:\n   - 240px left terminal sidebar with active highlight state on **BH-FDR Gate**, live SHA-256 audit health hash, and `ADR-001 PAPER_ONLY` amber invariant pill.\n   - Top telemetry bar with live quantitative state monitors (`Trials N=148`, `Null E[max(SR)]=2.64σ`, `BH q-cutoff=0.05`, `DSR Threshold >0.95`, `42μs latency`).\n\n2. **Multi-Trial Inflation KPI Telemetry**:\n   - **Backtest Trials Audited (N=148)**: Surfaces cumulative family-wise inflation ($\\alpha_{\\text{family}} = 99.94\\%$) and effective independent degrees of freedom ($N_{\\text{eff}} = 64.2$).\n   - **Expected Max Sharpe Under Null $E[\\max(SR_0)] = 2.64\\sigma$**: Visualizes the Bailey & López de Prado Euler-Mascheroni selection-bias hurdle.\n   - **BH-FDR Surviving Factors ($q = 0.05$)**: Explicitly flags `1/12 Seeds (8.3%)` passing (`alpha_003 Funding Carry Arbitrage` with $\\text{DSR} = 0.964$).\n\n3. **Holm-Bonferroni & Benjamini-Hochberg Step-Up Matrix**:\n   - Structured 12-alpha candidate ranking by raw $p$-value ($p_{(k)}$), side-by-side with Holm-Bonferroni conservative threshold $\\frac{\\alpha}{M - k + 1}$ and Benjamini-Hochberg FDR threshold $\\frac{k}{M} \\cdot q$.\n   - Explicit Deflated Sharpe Ratio (DSR) metrics accounting for empirical skewness ($\\gamma_1$) and fat-tailed kurtosis ($\\gamma_2$), with clear badge tagging (`PROMOTE_TO_PAPER` vs `REJECT_TRIAL_INFLATION`).\n\n4. **Trial Inflation Curve & Multi-Agent Deliberation Auditor**:\n   - Interactive SVG hurdle curve depicting how increasing trials from $N=12 \\to 500$ inflates the required Sharpe hurdle, showing where sub-hurdle strategies decay.\n   - Multi-agent consensus box in Deliberation Violet (`#A78BFA`) featuring unanimous sign-off from `CHIEF_STATISTICIAN` and `RISK_INVARIANT_SENTINEL` with cryptographic SHA-256 verification."
+          },
+          {
+            "suggestion": "Export Benjamini-Hochberg audit trail as a downloadable ledger or report"
+          },
+          {
+            "suggestion": "Add a deep-dive drawer for alpha_003 parameter perturbation history"
+          },
+          {
+            "suggestion": "Simulate cluster bootstrap block resampling for cross-alpha correlation matrix"
+          }
+        ],
+        "projectId": "6665149401860401191",
+        "sessionId": "15274728723371697052"
+      },
+      "screenId": "9c29f01089bf437299bdbd007ece5cd5",
+      "screenTitle": "FDR Multiple-Testing Gate & Deflated Sharpe Auditor",
+      "stitchHtmlBytes": 55232,
+      "stitchPngBytes": 129025
+    },
+    {
+      "page": "style-guide",
+      "title": "CashClaw OS Component Style Guide & Quantitative Design Tokens",
+      "screenName": "projects/6665149401860401191/screens/e66e2bcc9f70496495802789c24a5b36",
+      "htmlDownloaded": true,
+      "pngDownloaded": true,
+      "rawResponse": {
+        "outputComponents": [
+          {
+            "design": {
+              "screens": [
+                {
+                  "designSystem": {
+                    "designSystem": {
+                      "displayName": "CashClaw Quant OS",
+                      "styleGuidelines": "## Brand & Style\n\nThis design system establishes a high-density quantitative research terminal and institutional paper-trading cockpit. The visual atmosphere blends dark obsidian surfaces with precision emerald-teal accents, crisp monospace telemetry, and structured violet indicators for multi-agent LLM deliberation. \n\nThe aesthetic style is a refined hybrid of **Minimalism** and **High-Contrast Data Density**, prioritizing causal signal clarity, zero clutter, and uncompromising focus on trading performance and safety invariants. Every visual element communicates precision, institutional reliability, and rigorous operational control.\n\n## Layout & Spacing\n\nThe layout employs a fixed-to-fluid application shell featuring a collapsible left sidebar (240px expanded, 64px collapsed) alongside a fluid main workspace bounded by a 1440px max-width constraint. \n\nThe spatial rhythm relies on a strict 4px base scale. Layout structures utilize a 4-column KPI summary grid and a 12-column analytical split for deep-dive charts and multi-agent strategy tables, scaling down gracefully to a single column on mobile viewports.\n\n## Elevation & Depth\n\nVisual hierarchy is achieved through **Tonal Layering** combined with subtle **Ambient Shadows** and low-contrast boundaries. \n\nSurfaces step upward from the deep obsidian root canvas (`#0B0E11`) to slate carbon panels (`#141820`) and elevated midnight overlays (`#1A2030`). Depth is reinforced through hairline structural borders (`#1E2530`) and delicate emerald glow accents (`0 0 20px rgba(0, 212, 170, 0.08)`) rather than heavy drop shadows, maintaining an ultra-clean, institutional workspace feel.\n\n## Components\n\n- **Buttons:** Built with a minimum touch target height of 44px, 600 font weight, and 8px rounding. Primary actions use solid Quant Emerald (`#00D4AA`) with dark text; secondary actions rely on slate surfaces with crisp borders.\n- **Cards & Panels:** Framed by 1px solid structural borders (`#1E2530`) over slate carbon backgrounds, complete with internal padding and subtle stacked shadows.\n- **Inputs & Selects:** Feature 44px minimum heights, deep obsidian backgrounds, and high-visibility 2px focus rings in Quant Emerald.\n- **Checkboxes & Radios:** Compact, precise geometry utilizing monochromatic borders that snap instantly to emerald-teal upon selection.\n- **Chips & Badges:** Uppercase monospace labels utilizing tight tracking, reserved strictly for status flags, paper-trading safety warnings, and AI agent deliberation tags.\n- **Data Tables:** High-density telemetry layouts featuring alternating row hover states, pinned header rows, and strict right-alignment for tabular numeric data.",
+                      "theme": {
+                        "bodyFont": "GEIST",
+                        "bodyFontFamily": "Geist",
+                        "colorMode": "DARK",
+                        "colorVariant": "FIDELITY",
+                        "customColor": "#00d4aa",
+                        "designMd": "---\nname: CashClaw Quant OS\ncolors:\n  surface: '#0d1512'\n  surface-dim: '#0d1512'\n  surface-bright: '#333b37'\n  surface-container-lowest: '#08100d'\n  surface-container-low: '#161d1a'\n  surface-container: '#19211e'\n  surface-container-high: '#242c28'\n  surface-container-highest: '#2f3633'\n  on-surface: '#dce4df'\n  on-surface-variant: '#bacac2'\n  inverse-surface: '#dce4df'\n  inverse-on-surface: '#2a322f'\n  outline: '#85948d'\n  outline-variant: '#3b4a44'\n  surface-tint: '#28dfb5'\n  primary: '#46f1c5'\n  on-primary: '#00382b'\n  primary-container: '#00d4aa'\n  on-primary-container: '#005643'\n  inverse-primary: '#006b55'\n  secondary: '#cebdff'\n  on-secondary: '#381385'\n  secondary-container: '#4f319c'\n  on-secondary-container: '#bea8ff'\n  tertiary: '#ffcea6'\n  on-tertiary: '#4c2700'\n  tertiary-container: '#ffa858'\n  on-tertiary-container: '#733e00'\n  error: '#ffb4ab'\n  on-error: '#690005'\n  error-container: '#93000a'\n  on-error-container: '#ffdad6'\n  primary-fixed: '#55fcd0'\n  primary-fixed-dim: '#28dfb5'\n  on-primary-fixed: '#002118'\n  on-primary-fixed-variant: '#00513f'\n  secondary-fixed: '#e8ddff'\n  secondary-fixed-dim: '#cebdff'\n  on-secondary-fixed: '#21005e'\n  on-secondary-fixed-variant: '#4f319c'\n  tertiary-fixed: '#ffdcc1'\n  tertiary-fixed-dim: '#ffb77a'\n  on-tertiary-fixed: '#2e1500'\n  on-tertiary-fixed-variant: '#6c3a00'\n  background: '#0d1512'\n  on-background: '#dce4df'\n  surface-variant: '#2f3633'\n  bg-primary: '#0B0E11'\n  bg-surface: '#141820'\n  bg-elevated: '#1A2030'\n  bg-hover: '#1E2838'\n  color-loss: '#FF4757'\n  color-warning: '#FFB020'\n  text-primary: '#E8EAED'\n  text-secondary: '#8B95A5'\n  text-tertiary: '#5A6577'\n  border-subtle: '#1E2530'\n  border-default: '#2A3340'\ntypography:\n  hero:\n    fontFamily: Geist\n    fontSize: 56px\n    fontWeight: '900'\n    lineHeight: '1.25'\n  headline-lg:\n    fontFamily: Geist\n    fontSize: 40px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-md:\n    fontFamily: Geist\n    fontSize: 28px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-sm:\n    fontFamily: Geist\n    fontSize: 20px\n    fontWeight: '600'\n    lineHeight: '1.25'\n  title-lg:\n    fontFamily: Geist\n    fontSize: 16px\n    fontWeight: '600'\n    lineHeight: '1.5'\n  body-base:\n    fontFamily: Geist\n    fontSize: 14px\n    fontWeight: '400'\n    lineHeight: '1.5'\n  body-sm:\n    fontFamily: Geist\n    fontSize: 13px\n    fontWeight: '500'\n    lineHeight: '1.5'\n  caption:\n    fontFamily: JetBrains Mono\n    fontSize: 11px\n    fontWeight: '600'\n    lineHeight: '1.4'\n    letterSpacing: 0.04em\nrounded:\n  sm: 0.125rem\n  DEFAULT: 0.25rem\n  md: 0.375rem\n  lg: 0.5rem\n  xl: 0.75rem\n  full: 9999px\nspacing:\n  gutter: 16px\n  margin: 24px\n  space-xs: 4px\n  space-sm: 8px\n  space-md: 12px\n  space-lg: 16px\n  space-xl: 24px\n  space-2xl: 32px\n  space-3xl: 48px\n  space-4xl: 64px\n---\n\n# Design System: CashClaw Alpha Research & Paper Trading OS\n\n**Project ID:** `cashclaw-quant-os`\n**Device:** `DESKTOP` (Responsive Tablet & Mobile Fallback)\n**Safety Mode:** `PAPER_ONLY` (ADR-001 Strict Invariant)\n\n## 1. Visual Theme & Atmosphere\n\nHigh-density quantitative research terminal and institutional paper-trading cockpit. The interface blends dark obsidian surfaces with precision emerald-teal accents (`#00D4AA`), crisp monospace telemetry (`JetBrains Mono`), and structured violet indicators (`#A78BFA`) for multi-agent LLM deliberation. Every screen prioritizes causal signal clarity, zero-clutter data density, and explicit paper-mode safety badges.\n\n## 2. Color Palette & Roles\n\n| Semantic Token | Hex / Value | Functional Role |\n|----------------|-------------|-----------------|\n| `--bg-primary` | `#0B0E11` | Deep Obsidian Abyss — root page canvas and primary terminal backdrop |\n| `--bg-surface` | `#141820` | Slate Carbon Panel — cards, sidebar navigation, KPI containers, data tables |\n| `--bg-elevated` | `#1A2030` | Elevated Midnight Surface — modals, dropdowns, active tooltips, drawer overlays |\n| `--bg-hover` | `#1E2838` | Interactive Slate Hover — table row hover, secondary button hover state |\n| `--color-accent` / `--color-profit` | `#00D4AA` | Quant Emerald Teal — primary CTAs, positive PnL, active focus rings, buy signals |\n| `--color-loss` / `--color-error` | `#FF4757` | Crimson Signal Alert — negative PnL, drawdown warnings, sell signals, validation errors |\n| `--color-warning` | `#FFB020` | Amber Regime Caution — volatility spike alerts, quota thresholds, paper-only badges |\n| `--color-ai` | `#A78BFA` | Deliberation Violet — multi-agent LLM reasoning badges, IC/IR research tags |\n| `--text-primary` | `#E8EAED` | Crisp Alabaster — primary headlines, ticker prices, active labels |\n| `--text-secondary` | `#8B95A5` | Muted Steel Gray — table column headers, secondary metadata, axis labels |\n| `--text-tertiary` | `#5A6577` | Dim Slate — disabled states, timestamps, hash checksums |\n| `--border-subtle` | `#1E2530` | Hairline Structural Divider — card borders, grid lines, section separators |\n| `--border-default` | `#2A3340` | Input & Control Border — form controls, inactive tabs, modal frames |\n\n## 3. Typography Rules\n\n- **Primary UI Font (`--font-sans`):** `Geist`, `-apple-system`, `BlinkMacSystemFont`, sans-serif — clean geometric legibility for navigation, labels, and bilingual EN/VI copy.\n- **Quantitative & Telemetry Font (`--font-mono`):** `JetBrains Mono`, `ui-monospace`, monospace — tabular numerals for prices, Sharpe ratios, IC/IR metrics, SHA-256 hashes, and order book depth.\n\n### Type Scale\n- **Hero (`--text-hero`):** `56px` (`900` weight, `1.25` line-height)\n- **Display H1 (`--text-2xl` to `--text-3xl`):** `28px–40px` (`700` weight, `1.25` line-height)\n- **Section Header H2 (`--text-xl`):** `20px` (`600` weight, `1.25` line-height)\n- **Card Title H3 (`--text-lg`):** `16px` (`600` weight, `1.5` line-height)\n- **Body Copy (`--text-base`):** `14px` (`400` weight, `1.5` line-height)\n- **Secondary / Table Cell (`--text-sm`):** `13px` (`500` weight, `1.5` line-height)\n- **Caption / Badge (`--text-xs`):** `11px` (`600` weight, uppercase tracking `0.04em`)\n\n## 4. Component Stylings & Geometry\n\n- **Buttons & Interactive Targets:** Minimum `44px` touch target height, `8px` border radius (`--radius-md`), `600` font weight. Primary buttons use filled Quant Emerald (`#00D4AA`) with dark `#0B0E11` text; secondary buttons use `#1A2030` surface with `#2A3340` border.\n- **Cards & Panels:** `12px` border radius (`--radius-lg`), `1px solid #1E2530` border, `#141820` surface fill, `16px` (`--space-4`) internal padding, subtle elevation (`0 4px 12px rgba(0, 0, 0, 0.25)`).\n- **Modals & Drawers:** `16px` border radius (`--radius-xl`), `#1A2030` elevated surface, `0 8px 24px rgba(0, 0, 0, 0.3)` shadow, emerald glow accent (`0 0 20px rgba(0, 212, 170, 0.08)`).\n- **Inputs & Selects:** `44px` min-height, `8px` radius, `#0B0E11` background, `1px solid #2A3340` border, `2px solid #00D4AA` focus-visible ring with `2px` offset.\n\n## 5. Layout Principles & Motion\n\n- **Application Shell:** Left fixed sidebar (`240px` expanded, `64px` collapsed) + fluid main workspace (`max-width: 1440px`, `24px` padding).\n- **Grid System:** 4-column KPI summary grid (`gap: 16px`), 12-column analytical split for charts and strategy tables, single-column stack below `768px`.\n- **Spacing Scale:** Base `4px` unit (`4px`, `8px`, `12px`, `16px`, `24px`, `32px`, `48px`, `64px`).\n- **Motion System:** Fast micro-interactions (`150ms ease`), standard transitions (`200ms ease`), panel transitions (`300ms ease`), with strict `@media (prefers-reduced-motion: reduce)` reset.\n",
+                        "font": "GEIST",
+                        "headlineFont": "GEIST",
+                        "headlineFontFamily": "Geist",
+                        "labelFont": "JETBRAINS_MONO",
+                        "labelFontFamily": "JetBrains Mono",
+                        "namedColors": {
+                          "background": "#0d1512",
+                          "bg-elevated": "#1A2030",
+                          "bg-hover": "#1E2838",
+                          "bg-primary": "#0B0E11",
+                          "bg-surface": "#141820",
+                          "border-default": "#2A3340",
+                          "border-subtle": "#1E2530",
+                          "color-loss": "#FF4757",
+                          "color-warning": "#FFB020",
+                          "error": "#ffb4ab",
+                          "error_container": "#93000a",
+                          "inverse_on_surface": "#2a322f",
+                          "inverse_primary": "#006b55",
+                          "inverse_surface": "#dce4df",
+                          "on_background": "#dce4df",
+                          "on_error": "#690005",
+                          "on_error_container": "#ffdad6",
+                          "on_primary": "#00382b",
+                          "on_primary_container": "#005643",
+                          "on_primary_fixed": "#002118",
+                          "on_primary_fixed_variant": "#00513f",
+                          "on_secondary": "#381385",
+                          "on_secondary_container": "#bea8ff",
+                          "on_secondary_fixed": "#21005e",
+                          "on_secondary_fixed_variant": "#4f319c",
+                          "on_surface": "#dce4df",
+                          "on_surface_variant": "#bacac2",
+                          "on_tertiary": "#4c2700",
+                          "on_tertiary_container": "#733e00",
+                          "on_tertiary_fixed": "#2e1500",
+                          "on_tertiary_fixed_variant": "#6c3a00",
+                          "outline": "#85948d",
+                          "outline_variant": "#3b4a44",
+                          "primary": "#46f1c5",
+                          "primary_container": "#00d4aa",
+                          "primary_fixed": "#55fcd0",
+                          "primary_fixed_dim": "#28dfb5",
+                          "secondary": "#cebdff",
+                          "secondary_container": "#4f319c",
+                          "secondary_fixed": "#e8ddff",
+                          "secondary_fixed_dim": "#cebdff",
+                          "surface": "#0d1512",
+                          "surface_bright": "#333b37",
+                          "surface_container": "#19211e",
+                          "surface_container_high": "#242c28",
+                          "surface_container_highest": "#2f3633",
+                          "surface_container_low": "#161d1a",
+                          "surface_container_lowest": "#08100d",
+                          "surface_dim": "#0d1512",
+                          "surface_tint": "#28dfb5",
+                          "surface_variant": "#2f3633",
+                          "tertiary": "#ffcea6",
+                          "tertiary_container": "#ffa858",
+                          "tertiary_fixed": "#ffdcc1",
+                          "tertiary_fixed_dim": "#ffb77a",
+                          "text-primary": "#E8EAED",
+                          "text-secondary": "#8B95A5",
+                          "text-tertiary": "#5A6577"
+                        },
+                        "overridePrimaryColor": "#00d4aa",
+                        "overrideSecondaryColor": "#a78bfa",
+                        "roundness": "ROUND_FOUR",
+                        "spacing": {
+                          "gutter": "16px",
+                          "margin": "24px",
+                          "space-2xl": "32px",
+                          "space-3xl": "48px",
+                          "space-4xl": "64px",
+                          "space-lg": "16px",
+                          "space-md": "12px",
+                          "space-sm": "8px",
+                          "space-xl": "24px",
+                          "space-xs": "4px"
+                        },
+                        "spacingScale": 2,
+                        "typography": {
+                          "body-base": {
+                            "fontFamily": "Geist",
+                            "fontSize": "14px",
+                            "fontWeight": "400",
+                            "lineHeight": "1.5"
+                          },
+                          "body-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "13px",
+                            "fontWeight": "500",
+                            "lineHeight": "1.5"
+                          },
+                          "caption": {
+                            "fontFamily": "JetBrains Mono",
+                            "fontSize": "11px",
+                            "fontWeight": "600",
+                            "letterSpacing": "0.04em",
+                            "lineHeight": "1.4"
+                          },
+                          "headline-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "40px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-md": {
+                            "fontFamily": "Geist",
+                            "fontSize": "28px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.25"
+                          },
+                          "hero": {
+                            "fontFamily": "Geist",
+                            "fontSize": "56px",
+                            "fontWeight": "900",
+                            "lineHeight": "1.25"
+                          },
+                          "title-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "16px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.5"
+                          }
+                        }
+                      }
+                    },
+                    "name": "assets/be7563bf9e4c400f85f92f80d27a5de5",
+                    "version": "1"
+                  },
+                  "deviceType": "DESKTOP",
+                  "generatedBy": "figaro_agent",
+                  "height": "5640",
+                  "htmlCode": {
+                    "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sX2Q1NWY1MWMyZDJjODQ5NzZhZTcyOGFiMmU5ZWIzODI1EgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NjY1MTQ5NDAxODYwNDAxMTkx&filename=&opi=96797242",
+                    "mimeType": "text/html",
+                    "name": "projects/6665149401860401191/files/bde4eb72f76a49b0a513d500d7fcffdd"
+                  },
+                  "id": "e66e2bcc9f70496495802789c24a5b36",
+                  "name": "projects/6665149401860401191/screens/e66e2bcc9f70496495802789c24a5b36",
+                  "prompt": "Create a comprehensive, production-grade desktop design screen titled 'CashClaw OS Component Style Guide & Quantitative Design Tokens' (style-guide.html) implementing the DESIGN.md Visual Contract.\n\nKey Architectural & Layout Requirements:\n1. Application Shell:\n- Fixed 240px left navigation sidebar with 'CashClaw OS' (Terminal v4.19 Institutional), active highlight state on 'Style Guide & Tokens' (or System Settings / Design Tokens), and navigation tabs for all quant views: Cockpit Overview, Regime Attribution, Alpha Decomposition, Strategy Orchestration, Execution Routing, Risk & Invariants, Order Book L3, Volatility Surface, LLM Multi-Agent, Portfolio Factor Risk, Transaction Cost Model, Zero-Lookahead Audit, Telemetry Logs, Backtest Engine, System Settings.\n- Node status pill: 'NODE #QNT-8812 SYNC 100%', safety state badge: 'ADR-001 INVARIANT: PAPER_ONLY'.\n- Top telemetry header: 'CashClaw // DESIGN TOKEN REGISTRY & COMPONENT STYLE GUIDE', with sub-badges 'DESIGN.md Visual Contract v1.0.4', 'PAPER_ONLY Invariant (ADR-001 Strict)', 'WCAG AAA Quant Contrast', and trailing action buttons ('Export Tokens (.css/.json)', 'Copy System Variables', 'Audit Invariants').\n\n2. Semantic Color Swatch Grid (DESIGN.md Section 2 Tokens):\n- Grid displaying token cards with live color blocks, hex codes, CSS variables, and functional role descriptions:\n  * Surface tokens: --bg-primary (#0B0E11, Deep Obsidian Abyss), --bg-surface (#141820, Slate Carbon Panel), --bg-elevated (#1A2030, Elevated Midnight Surface), --bg-hover (#1E2838, Interactive Slate Hover).\n  * Accent & Semantic: --color-accent / --color-profit (#00D4AA, Quant Emerald Teal), --color-loss / --color-error (#FF4757, Crimson Signal Alert), --color-warning (#FFB020, Amber Regime Caution), --color-ai (#A78BFA, Deliberation Violet).\n  * Text tokens: --text-primary (#E8EAED, Crisp Alabaster), --text-secondary (#8B95A5, Muted Steel Gray), --text-tertiary (#5A6577, Dim Slate).\n  * Border tokens: --border-subtle (#1E2530, Hairline Structural), --border-default (#2A3340, Control Border).\n- Each token card has contrast ratio indicator (e.g. '14.2:1 AAA') and a one-click copy badge code.\n\n3. Typography Scale & Telemetry Inspector:\n- Side-by-side or stacked comparative inspector:\n  * Sans Scale (Geist Sans): Hero 56px (900 weight), Display H1 32px (700), Section H2 20px (600), Card H3 16px (600), Body 14px (400), Secondary 13px (500), Caption/Badge 11px (600 uppercase tracking 0.04em).\n  * Mono Telemetry (JetBrains Mono): Tabular numeral stress test (+1,248,590.42 USD, Sharpe: 3.1415, IC: +0.0581, IR: +1.84, Latency: 42μs, Slip: 1.2 bps, Fee: 35 bps), SHA-256 cryptographic hash formatting ('0x7b92fae49811d044bb71239c8942ef3a61d8c119e7a2b904c').\n\n4. Interactive Component Matrix & Design Patterns:\n- Buttons & Controls: 44px min touch target buttons (Primary Emerald CTA with dark text, Secondary Midnight control with #2A3340 border, Danger/Halt button #FF4757, Ghost/Outline icon buttons).\n- Quantitative Badges & State Tags: 'PAPER_ONLY' (amber border glow), 'INVARIANT VERIFIED' (emerald), 'BREACH / HALT' (crimson), 'LLM DELIBERATION' (violet with agent chip).\n- Live Fail-Closed Signal Fence Alert & Micro-Widgets: Card demonstrating 12px rounded borders, 1px solid #1E2530, and high-density metric key-value displays.\n\nAtmosphere: Hyper-clean institutional quant terminal, high data density, dark mode first, Geist Sans and JetBrains Mono typography, flawless spacing and alignment.",
+                  "screenMetadata": {
+                    "agentType": "PRO_AGENT",
+                    "status": "COMPLETE"
+                  },
+                  "screenType": "DESIGN",
+                  "screenshot": {
+                    "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1UmGG67MgBIg90g9Yt7ehRHMZpchAbe479ejI2bKakIcYx3xqTxKEGVWWY04DoB2tEPCPmP7iMgmAHNTLrn-_6MbrmiZ_JyrkvfhJpscofBU19xfpauhWrv-lw1SOe90JUXMMdLNJH_qTO8g6VQYchLjNQy152Vk-ygawvGiQudEQmBHam66WIn_72fDR8vQrwSlZS7CJr9ck6mzkBXgeQ0RIyc6gzjCrifiLqncXnIwFZZcbcX2mh0KQ",
+                    "name": "projects/6665149401860401191/files/2fce64d7532345779feafe2d58fbf5f0"
+                  },
+                  "theme": {
+                    "bodyFont": "GEIST",
+                    "bodyFontFamily": "Geist",
+                    "colorMode": "DARK",
+                    "colorVariant": "FIDELITY",
+                    "customColor": "#00d4aa",
+                    "font": "GEIST",
+                    "headlineFont": "GEIST",
+                    "headlineFontFamily": "Geist",
+                    "labelFont": "JETBRAINS_MONO",
+                    "labelFontFamily": "JetBrains Mono",
+                    "namedColors": {
+                      "background": "#0d1512",
+                      "bg-elevated": "#1A2030",
+                      "bg-hover": "#1E2838",
+                      "bg-primary": "#0B0E11",
+                      "bg-surface": "#141820",
+                      "border-default": "#2A3340",
+                      "border-subtle": "#1E2530",
+                      "color-loss": "#FF4757",
+                      "color-warning": "#FFB020",
+                      "error": "#ffb4ab",
+                      "error_container": "#93000a",
+                      "inverse_on_surface": "#2a322f",
+                      "inverse_primary": "#006b55",
+                      "inverse_surface": "#dce4df",
+                      "on_background": "#dce4df",
+                      "on_error": "#690005",
+                      "on_error_container": "#ffdad6",
+                      "on_primary": "#00382b",
+                      "on_primary_container": "#005643",
+                      "on_primary_fixed": "#002118",
+                      "on_primary_fixed_variant": "#00513f",
+                      "on_secondary": "#381385",
+                      "on_secondary_container": "#bea8ff",
+                      "on_secondary_fixed": "#21005e",
+                      "on_secondary_fixed_variant": "#4f319c",
+                      "on_surface": "#dce4df",
+                      "on_surface_variant": "#bacac2",
+                      "on_tertiary": "#4c2700",
+                      "on_tertiary_container": "#733e00",
+                      "on_tertiary_fixed": "#2e1500",
+                      "on_tertiary_fixed_variant": "#6c3a00",
+                      "outline": "#85948d",
+                      "outline_variant": "#3b4a44",
+                      "primary": "#46f1c5",
+                      "primary_container": "#00d4aa",
+                      "primary_fixed": "#55fcd0",
+                      "primary_fixed_dim": "#28dfb5",
+                      "secondary": "#cebdff",
+                      "secondary_container": "#4f319c",
+                      "secondary_fixed": "#e8ddff",
+                      "secondary_fixed_dim": "#cebdff",
+                      "surface": "#0d1512",
+                      "surface_bright": "#333b37",
+                      "surface_container": "#19211e",
+                      "surface_container_high": "#242c28",
+                      "surface_container_highest": "#2f3633",
+                      "surface_container_low": "#161d1a",
+                      "surface_container_lowest": "#08100d",
+                      "surface_dim": "#0d1512",
+                      "surface_tint": "#28dfb5",
+                      "surface_variant": "#2f3633",
+                      "tertiary": "#ffcea6",
+                      "tertiary_container": "#ffa858",
+                      "tertiary_fixed": "#ffdcc1",
+                      "tertiary_fixed_dim": "#ffb77a",
+                      "text-primary": "#E8EAED",
+                      "text-secondary": "#8B95A5",
+                      "text-tertiary": "#5A6577"
+                    },
+                    "overridePrimaryColor": "#00d4aa",
+                    "overrideSecondaryColor": "#a78bfa",
+                    "roundness": "ROUND_FOUR",
+                    "spacing": {
+                      "gutter": "16px",
+                      "margin": "24px",
+                      "space-2xl": "32px",
+                      "space-3xl": "48px",
+                      "space-4xl": "64px",
+                      "space-lg": "16px",
+                      "space-md": "12px",
+                      "space-sm": "8px",
+                      "space-xl": "24px",
+                      "space-xs": "4px"
+                    },
+                    "spacingScale": 2,
+                    "typography": {
+                      "body-base": {
+                        "fontFamily": "Geist",
+                        "fontSize": "14px",
+                        "fontWeight": "400",
+                        "lineHeight": "1.5"
+                      },
+                      "body-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "13px",
+                        "fontWeight": "500",
+                        "lineHeight": "1.5"
+                      },
+                      "caption": {
+                        "fontFamily": "JetBrains Mono",
+                        "fontSize": "11px",
+                        "fontWeight": "600",
+                        "letterSpacing": "0.04em",
+                        "lineHeight": "1.4"
+                      },
+                      "headline-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "40px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-md": {
+                        "fontFamily": "Geist",
+                        "fontSize": "28px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "20px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.25"
+                      },
+                      "hero": {
+                        "fontFamily": "Geist",
+                        "fontSize": "56px",
+                        "fontWeight": "900",
+                        "lineHeight": "1.25"
+                      },
+                      "title-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "16px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.5"
+                      }
+                    }
+                  },
+                  "title": "CashClaw OS Component Style Guide & Design Tokens",
+                  "width": "2560"
+                }
+              ],
+              "theme": {}
+            }
+          },
+          {
+            "text": "I have designed and implemented the **CashClaw OS Component Style Guide & Quantitative Design Tokens** screen (`style-guide.html`), strictly embodying the visual contract defined in `DESIGN.md`.\n\n### Core Sections Delivered:\n\n1. **Terminal Application Shell & Navigation:**\n   - Fixed 240px dark obsidian sidebar (`#0B0E11`) with node telemetry (`NODE #QNT-8812 SYNC 100%`) and strict safety gating indicator (`ADR-001 INVARIANT: PAPER_ONLY`).\n   - Wired tab list representing all 15 CashClaw OS quantitative modules, with an active highlight state on **System Settings / Design Tokens**.\n   - Top invariant telemetry header featuring the **DESIGN.md Token Registry**, **PAPER_ONLY Strict Lock**, **WCAG AAA Compliance**, and action triggers (`Export Tokens (.css/.json)`, `Copy System Variables`, `Audit Invariants`).\n\n2. **Semantic Color Tokens & Contrast Matrix (DESIGN.md Section 2):**\n   - **Surface & Canvas:** `--bg-primary` (`#0B0E11`), `--bg-surface` (`#141820`), `--bg-elevated` (`#1A2030`), `--bg-hover` (`#1E2838`).\n   - **Semantic Signals:** `--color-accent` / profit (`#00D4AA`), `--color-loss` / emergency halt (`#FF4757`), `--color-warning` / regime caution (`#FFB020`), `--color-ai` / deliberation (`#A78BFA`).\n   - **Text & Borders:** `--text-primary` (`#E8EAED`), `--text-secondary` (`#8B95A5`), `--border-subtle` (`#1E2530`), `--border-default` (`#2A3340`).\n   - Displays real WCAG contrast ratios (all exceeding AAA thresholds up to 21.0:1) with copyable token variable identifiers.\n\n3. **Typography Scale & Monospace Telemetry Precision:**\n   - **Geist Sans UI Scale:** Live render hierarchy from Hero (56px / 900), Headline-MD (28px / 700), Headline-SM (20px / 600), Title-LG (16px / 600), down to Body and Monospace Captions with `0.04em` tracking.\n   - **JetBrains Mono Telemetry Inspector:** Tabular numeric stress-test displaying real-time financial metrics (+1,248,590.42 USD, Sharpe 3.1415, IC +0.0581, IR +1.84, Latency 42μs, Slippage 1.2 bps) and SHA-256 invariant hash formatting.\n\n4. **Component Matrix & Operational Controls:**\n   - Strict 44px physical height interactive targets across Primary Emerald CTAs, Slate Surface secondary controls, and Crimson Emergency Halt triggers.\n   - Monospace state badges (`PAPER_ONLY`, `INVARIANT VERIFIED`, `BREACH / HALT`, `DELIBERATION (3/3)`).\n   - High-density micro-widget demo showing the 12px rounded container pattern, 1px hairline dividers, and tabular telemetry table rows."
+          },
+          {
+            "suggestion": "Export CSS custom properties and JSON token registry to a downloadable document"
+          },
+          {
+            "suggestion": "Add interactive state demos (focus-visible rings, modal overlay previews, tooltip behavior)"
+          },
+          {
+            "suggestion": "Navigate to Strategy Orchestration or Volatility Surface screens"
+          }
+        ],
+        "projectId": "6665149401860401191",
+        "sessionId": "134275863516143639"
+      },
+      "screenId": "e66e2bcc9f70496495802789c24a5b36",
+      "screenTitle": "CashClaw OS Component Style Guide & Design Tokens",
+      "stitchHtmlBytes": 61056,
+      "stitchPngBytes": 87810
+    },
+    {
+      "page": "portfolio-cvar-stress",
+      "title": "Cross-Margin CVaR Tail-Risk & Liquidation Cascade Simulator",
+      "screenName": "projects/6665149401860401191/screens/ba2a8615438049aea19867bff9ae00b9",
+      "screenId": "ba2a8615438049aea19867bff9ae00b9",
+      "htmlDownloaded": true,
+      "pngDownloaded": true,
+      "rawResponse": {
+        "outputComponents": [
+          {
+            "design": {
+              "screens": [
+                {
+                  "designSystem": {
+                    "designSystem": {
+                      "displayName": "CashClaw Quant OS",
+                      "styleGuidelines": "## Brand & Style\n\nThis design system establishes a high-density quantitative research terminal and institutional paper-trading cockpit. The visual atmosphere blends dark obsidian surfaces with precision emerald-teal accents, crisp monospace telemetry, and structured violet indicators for multi-agent LLM deliberation. \n\nThe aesthetic style is a refined hybrid of **Minimalism** and **High-Contrast Data Density**, prioritizing causal signal clarity, zero clutter, and uncompromising focus on trading performance and safety invariants. Every visual element communicates precision, institutional reliability, and rigorous operational control.\n\n## Layout & Spacing\n\nThe layout employs a fixed-to-fluid application shell featuring a collapsible left sidebar (240px expanded, 64px collapsed) alongside a fluid main workspace bounded by a 1440px max-width constraint. \n\nThe spatial rhythm relies on a strict 4px base scale. Layout structures utilize a 4-column KPI summary grid and a 12-column analytical split for deep-dive charts and multi-agent strategy tables, scaling down gracefully to a single column on mobile viewports.\n\n## Elevation & Depth\n\nVisual hierarchy is achieved through **Tonal Layering** combined with subtle **Ambient Shadows** and low-contrast boundaries. \n\nSurfaces step upward from the deep obsidian root canvas (`#0B0E11`) to slate carbon panels (`#141820`) and elevated midnight overlays (`#1A2030`). Depth is reinforced through hairline structural borders (`#1E2530`) and delicate emerald glow accents (`0 0 20px rgba(0, 212, 170, 0.08)`) rather than heavy drop shadows, maintaining an ultra-clean, institutional workspace feel.\n\n## Components\n\n- **Buttons:** Built with a minimum touch target height of 44px, 600 font weight, and 8px rounding. Primary actions use solid Quant Emerald (`#00D4AA`) with dark text; secondary actions rely on slate surfaces with crisp borders.\n- **Cards & Panels:** Framed by 1px solid structural borders (`#1E2530`) over slate carbon backgrounds, complete with internal padding and subtle stacked shadows.\n- **Inputs & Selects:** Feature 44px minimum heights, deep obsidian backgrounds, and high-visibility 2px focus rings in Quant Emerald.\n- **Checkboxes & Radios:** Compact, precise geometry utilizing monochromatic borders that snap instantly to emerald-teal upon selection.\n- **Chips & Badges:** Uppercase monospace labels utilizing tight tracking, reserved strictly for status flags, paper-trading safety warnings, and AI agent deliberation tags.\n- **Data Tables:** High-density telemetry layouts featuring alternating row hover states, pinned header rows, and strict right-alignment for tabular numeric data.",
+                      "theme": {
+                        "bodyFont": "GEIST",
+                        "bodyFontFamily": "Geist",
+                        "colorMode": "DARK",
+                        "colorVariant": "FIDELITY",
+                        "customColor": "#00d4aa",
+                        "designMd": "---\nname: CashClaw Quant OS\ncolors:\n  surface: '#0d1512'\n  surface-dim: '#0d1512'\n  surface-bright: '#333b37'\n  surface-container-lowest: '#08100d'\n  surface-container-low: '#161d1a'\n  surface-container: '#19211e'\n  surface-container-high: '#242c28'\n  surface-container-highest: '#2f3633'\n  on-surface: '#dce4df'\n  on-surface-variant: '#bacac2'\n  inverse-surface: '#dce4df'\n  inverse-on-surface: '#2a322f'\n  outline: '#85948d'\n  outline-variant: '#3b4a44'\n  surface-tint: '#28dfb5'\n  primary: '#46f1c5'\n  on-primary: '#00382b'\n  primary-container: '#00d4aa'\n  on-primary-container: '#005643'\n  inverse-primary: '#006b55'\n  secondary: '#cebdff'\n  on-secondary: '#381385'\n  secondary-container: '#4f319c'\n  on-secondary-container: '#bea8ff'\n  tertiary: '#ffcea6'\n  on-tertiary: '#4c2700'\n  tertiary-container: '#ffa858'\n  on-tertiary-container: '#733e00'\n  error: '#ffb4ab'\n  on-error: '#690005'\n  error-container: '#93000a'\n  on-error-container: '#ffdad6'\n  primary-fixed: '#55fcd0'\n  primary-fixed-dim: '#28dfb5'\n  on-primary-fixed: '#002118'\n  on-primary-fixed-variant: '#00513f'\n  secondary-fixed: '#e8ddff'\n  secondary-fixed-dim: '#cebdff'\n  on-secondary-fixed: '#21005e'\n  on-secondary-fixed-variant: '#4f319c'\n  tertiary-fixed: '#ffdcc1'\n  tertiary-fixed-dim: '#ffb77a'\n  on-tertiary-fixed: '#2e1500'\n  on-tertiary-fixed-variant: '#6c3a00'\n  background: '#0d1512'\n  on-background: '#dce4df'\n  surface-variant: '#2f3633'\n  bg-primary: '#0B0E11'\n  bg-surface: '#141820'\n  bg-elevated: '#1A2030'\n  bg-hover: '#1E2838'\n  color-loss: '#FF4757'\n  color-warning: '#FFB020'\n  text-primary: '#E8EAED'\n  text-secondary: '#8B95A5'\n  text-tertiary: '#5A6577'\n  border-subtle: '#1E2530'\n  border-default: '#2A3340'\ntypography:\n  hero:\n    fontFamily: Geist\n    fontSize: 56px\n    fontWeight: '900'\n    lineHeight: '1.25'\n  headline-lg:\n    fontFamily: Geist\n    fontSize: 40px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-md:\n    fontFamily: Geist\n    fontSize: 28px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-sm:\n    fontFamily: Geist\n    fontSize: 20px\n    fontWeight: '600'\n    lineHeight: '1.25'\n  title-lg:\n    fontFamily: Geist\n    fontSize: 16px\n    fontWeight: '600'\n    lineHeight: '1.5'\n  body-base:\n    fontFamily: Geist\n    fontSize: 14px\n    fontWeight: '400'\n    lineHeight: '1.5'\n  body-sm:\n    fontFamily: Geist\n    fontSize: 13px\n    fontWeight: '500'\n    lineHeight: '1.5'\n  caption:\n    fontFamily: JetBrains Mono\n    fontSize: 11px\n    fontWeight: '600'\n    lineHeight: '1.4'\n    letterSpacing: 0.04em\nrounded:\n  sm: 0.125rem\n  DEFAULT: 0.25rem\n  md: 0.375rem\n  lg: 0.5rem\n  xl: 0.75rem\n  full: 9999px\nspacing:\n  gutter: 16px\n  margin: 24px\n  space-xs: 4px\n  space-sm: 8px\n  space-md: 12px\n  space-lg: 16px\n  space-xl: 24px\n  space-2xl: 32px\n  space-3xl: 48px\n  space-4xl: 64px\n---\n\n# Design System: CashClaw Alpha Research & Paper Trading OS\n\n**Project ID:** `cashclaw-quant-os`\n**Device:** `DESKTOP` (Responsive Tablet & Mobile Fallback)\n**Safety Mode:** `PAPER_ONLY` (ADR-001 Strict Invariant)\n\n## 1. Visual Theme & Atmosphere\n\nHigh-density quantitative research terminal and institutional paper-trading cockpit. The interface blends dark obsidian surfaces with precision emerald-teal accents (`#00D4AA`), crisp monospace telemetry (`JetBrains Mono`), and structured violet indicators (`#A78BFA`) for multi-agent LLM deliberation. Every screen prioritizes causal signal clarity, zero-clutter data density, and explicit paper-mode safety badges.\n\n## 2. Color Palette & Roles\n\n| Semantic Token | Hex / Value | Functional Role |\n|----------------|-------------|-----------------|\n| `--bg-primary` | `#0B0E11` | Deep Obsidian Abyss — root page canvas and primary terminal backdrop |\n| `--bg-surface` | `#141820` | Slate Carbon Panel — cards, sidebar navigation, KPI containers, data tables |\n| `--bg-elevated` | `#1A2030` | Elevated Midnight Surface — modals, dropdowns, active tooltips, drawer overlays |\n| `--bg-hover` | `#1E2838` | Interactive Slate Hover — table row hover, secondary button hover state |\n| `--color-accent` / `--color-profit` | `#00D4AA` | Quant Emerald Teal — primary CTAs, positive PnL, active focus rings, buy signals |\n| `--color-loss` / `--color-error` | `#FF4757` | Crimson Signal Alert — negative PnL, drawdown warnings, sell signals, validation errors |\n| `--color-warning` | `#FFB020` | Amber Regime Caution — volatility spike alerts, quota thresholds, paper-only badges |\n| `--color-ai` | `#A78BFA` | Deliberation Violet — multi-agent LLM reasoning badges, IC/IR research tags |\n| `--text-primary` | `#E8EAED` | Crisp Alabaster — primary headlines, ticker prices, active labels |\n| `--text-secondary` | `#8B95A5` | Muted Steel Gray — table column headers, secondary metadata, axis labels |\n| `--text-tertiary` | `#5A6577` | Dim Slate — disabled states, timestamps, hash checksums |\n| `--border-subtle` | `#1E2530` | Hairline Structural Divider — card borders, grid lines, section separators |\n| `--border-default` | `#2A3340` | Input & Control Border — form controls, inactive tabs, modal frames |\n\n## 3. Typography Rules\n\n- **Primary UI Font (`--font-sans`):** `Geist`, `-apple-system`, `BlinkMacSystemFont`, sans-serif — clean geometric legibility for navigation, labels, and bilingual EN/VI copy.\n- **Quantitative & Telemetry Font (`--font-mono`):** `JetBrains Mono`, `ui-monospace`, monospace — tabular numerals for prices, Sharpe ratios, IC/IR metrics, SHA-256 hashes, and order book depth.\n\n### Type Scale\n- **Hero (`--text-hero`):** `56px` (`900` weight, `1.25` line-height)\n- **Display H1 (`--text-2xl` to `--text-3xl`):** `28px–40px` (`700` weight, `1.25` line-height)\n- **Section Header H2 (`--text-xl`):** `20px` (`600` weight, `1.25` line-height)\n- **Card Title H3 (`--text-lg`):** `16px` (`600` weight, `1.5` line-height)\n- **Body Copy (`--text-base`):** `14px` (`400` weight, `1.5` line-height)\n- **Secondary / Table Cell (`--text-sm`):** `13px` (`500` weight, `1.5` line-height)\n- **Caption / Badge (`--text-xs`):** `11px` (`600` weight, uppercase tracking `0.04em`)\n\n## 4. Component Stylings & Geometry\n\n- **Buttons & Interactive Targets:** Minimum `44px` touch target height, `8px` border radius (`--radius-md`), `600` font weight. Primary buttons use filled Quant Emerald (`#00D4AA`) with dark `#0B0E11` text; secondary buttons use `#1A2030` surface with `#2A3340` border.\n- **Cards & Panels:** `12px` border radius (`--radius-lg`), `1px solid #1E2530` border, `#141820` surface fill, `16px` (`--space-4`) internal padding, subtle elevation (`0 4px 12px rgba(0, 0, 0, 0.25)`).\n- **Modals & Drawers:** `16px` border radius (`--radius-xl`), `#1A2030` elevated surface, `0 8px 24px rgba(0, 0, 0, 0.3)` shadow, emerald glow accent (`0 0 20px rgba(0, 212, 170, 0.08)`).\n- **Inputs & Selects:** `44px` min-height, `8px` radius, `#0B0E11` background, `1px solid #2A3340` border, `2px solid #00D4AA` focus-visible ring with `2px` offset.\n\n## 5. Layout Principles & Motion\n\n- **Application Shell:** Left fixed sidebar (`240px` expanded, `64px` collapsed) + fluid main workspace (`max-width: 1440px`, `24px` padding).\n- **Grid System:** 4-column KPI summary grid (`gap: 16px`), 12-column analytical split for charts and strategy tables, single-column stack below `768px`.\n- **Spacing Scale:** Base `4px` unit (`4px`, `8px`, `12px`, `16px`, `24px`, `32px`, `48px`, `64px`).\n- **Motion System:** Fast micro-interactions (`150ms ease`), standard transitions (`200ms ease`), panel transitions (`300ms ease`), with strict `@media (prefers-reduced-motion: reduce)` reset.\n",
+                        "font": "GEIST",
+                        "headlineFont": "GEIST",
+                        "headlineFontFamily": "Geist",
+                        "labelFont": "JETBRAINS_MONO",
+                        "labelFontFamily": "JetBrains Mono",
+                        "namedColors": {
+                          "background": "#0d1512",
+                          "bg-elevated": "#1A2030",
+                          "bg-hover": "#1E2838",
+                          "bg-primary": "#0B0E11",
+                          "bg-surface": "#141820",
+                          "border-default": "#2A3340",
+                          "border-subtle": "#1E2530",
+                          "color-loss": "#FF4757",
+                          "color-warning": "#FFB020",
+                          "error": "#ffb4ab",
+                          "error_container": "#93000a",
+                          "inverse_on_surface": "#2a322f",
+                          "inverse_primary": "#006b55",
+                          "inverse_surface": "#dce4df",
+                          "on_background": "#dce4df",
+                          "on_error": "#690005",
+                          "on_error_container": "#ffdad6",
+                          "on_primary": "#00382b",
+                          "on_primary_container": "#005643",
+                          "on_primary_fixed": "#002118",
+                          "on_primary_fixed_variant": "#00513f",
+                          "on_secondary": "#381385",
+                          "on_secondary_container": "#bea8ff",
+                          "on_secondary_fixed": "#21005e",
+                          "on_secondary_fixed_variant": "#4f319c",
+                          "on_surface": "#dce4df",
+                          "on_surface_variant": "#bacac2",
+                          "on_tertiary": "#4c2700",
+                          "on_tertiary_container": "#733e00",
+                          "on_tertiary_fixed": "#2e1500",
+                          "on_tertiary_fixed_variant": "#6c3a00",
+                          "outline": "#85948d",
+                          "outline_variant": "#3b4a44",
+                          "primary": "#46f1c5",
+                          "primary_container": "#00d4aa",
+                          "primary_fixed": "#55fcd0",
+                          "primary_fixed_dim": "#28dfb5",
+                          "secondary": "#cebdff",
+                          "secondary_container": "#4f319c",
+                          "secondary_fixed": "#e8ddff",
+                          "secondary_fixed_dim": "#cebdff",
+                          "surface": "#0d1512",
+                          "surface_bright": "#333b37",
+                          "surface_container": "#19211e",
+                          "surface_container_high": "#242c28",
+                          "surface_container_highest": "#2f3633",
+                          "surface_container_low": "#161d1a",
+                          "surface_container_lowest": "#08100d",
+                          "surface_dim": "#0d1512",
+                          "surface_tint": "#28dfb5",
+                          "surface_variant": "#2f3633",
+                          "tertiary": "#ffcea6",
+                          "tertiary_container": "#ffa858",
+                          "tertiary_fixed": "#ffdcc1",
+                          "tertiary_fixed_dim": "#ffb77a",
+                          "text-primary": "#E8EAED",
+                          "text-secondary": "#8B95A5",
+                          "text-tertiary": "#5A6577"
+                        },
+                        "overridePrimaryColor": "#00d4aa",
+                        "overrideSecondaryColor": "#a78bfa",
+                        "roundness": "ROUND_FOUR",
+                        "spacing": {
+                          "gutter": "16px",
+                          "margin": "24px",
+                          "space-2xl": "32px",
+                          "space-3xl": "48px",
+                          "space-4xl": "64px",
+                          "space-lg": "16px",
+                          "space-md": "12px",
+                          "space-sm": "8px",
+                          "space-xl": "24px",
+                          "space-xs": "4px"
+                        },
+                        "spacingScale": 2,
+                        "typography": {
+                          "body-base": {
+                            "fontFamily": "Geist",
+                            "fontSize": "14px",
+                            "fontWeight": "400",
+                            "lineHeight": "1.5"
+                          },
+                          "body-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "13px",
+                            "fontWeight": "500",
+                            "lineHeight": "1.5"
+                          },
+                          "caption": {
+                            "fontFamily": "JetBrains Mono",
+                            "fontSize": "11px",
+                            "fontWeight": "600",
+                            "letterSpacing": "0.04em",
+                            "lineHeight": "1.4"
+                          },
+                          "headline-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "40px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-md": {
+                            "fontFamily": "Geist",
+                            "fontSize": "28px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.25"
+                          },
+                          "hero": {
+                            "fontFamily": "Geist",
+                            "fontSize": "56px",
+                            "fontWeight": "900",
+                            "lineHeight": "1.25"
+                          },
+                          "title-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "16px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.5"
+                          }
+                        }
+                      }
+                    },
+                    "name": "assets/be7563bf9e4c400f85f92f80d27a5de5",
+                    "version": "1"
+                  },
+                  "deviceType": "DESKTOP",
+                  "generatedBy": "figaro_agent",
+                  "height": "3132",
+                  "htmlCode": {
+                    "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzdiYjgzODU5YmYyNDRkMDRiOTg3Y2RmNTAxZDJlYTBmEgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NjY1MTQ5NDAxODYwNDAxMTkx&filename=&opi=96797242",
+                    "mimeType": "text/html",
+                    "name": "projects/6665149401860401191/files/b85ae522b784465ca5522b8de7be852c"
+                  },
+                  "id": "ba2a8615438049aea19867bff9ae00b9",
+                  "name": "projects/6665149401860401191/screens/ba2a8615438049aea19867bff9ae00b9",
+                  "prompt": "Design the institutional desktop terminal screen for 'Cross-Margin CVaR Tail-Risk & Liquidation Cascade Simulator' (portfolio-cvar-stress.html) adhering to the CashClaw Quant OS design system.\n\nVisual Theme & Layout:\n- Platform: Desktop (1440px+ container, fixed 240px left sidebar, deep obsidian dark theme #0B0E11, slate carbon cards #141820, elevated midnight panels #1A2030, quant emerald #00D4AA, crimson alert #FF4757, amber caution #FFB020, deliberation violet #A78BFA, subtle borders #1E2530).\n- Typography: Geist Sans for UI labels/headers, JetBrains Mono for telemetry numerals, percentages, SHA-256 hashes, mathematical formulas.\n\n1. Fixed Left Sidebar (240px wide, h-screen):\n   - Terminal branding: \"CashClaw OS\" with badge \"v4.19 Institutional\", Node #QNT-8812 SYNC 100%, and amber safety badge \"ADR-001 INVARIANT: PAPER_ONLY\".\n   - Navigation links with icons (lucide/material style):\n     * Cockpit Overview (index.html)\n     * Regime Attribution (regime-attribution.html)\n     * Alpha Zoo Decomposition (alpha-zoo.html)\n     * Multi-Agent Deliberation (deliberation-theater.html)\n     * Volatility DCA (strategies/volatility-dca.html)\n     * Correlation & Factor Risk (correlation-matrix.html)\n     * Execution Ledger (execution-ledger.html)\n     * Data Quality & Lookahead Gate (data-quality-gate.html)\n     * Microstructure & Order Book (microstructure-liquidity.html)\n     * Survival Gate & Ruin Probability (survival-gate.html)\n     * CVaR Tail-Risk Stress (portfolio-cvar-stress.html) [ACTIVE STATE with glowing emerald pill indicator]\n     * Sovereign Enclave Security (sovereign-enclave.html)\n     * Relative Value Basis (relative-value-basis.html)\n     * FDR Multiple-Testing Gate (fdr-multiple-testing-gate.html)\n     * Billing & Quota (billing.html)\n     * Design System Tokens (style-guide.html)\n   - Bottom sidebar footer: \"Audit Live: OK 200.0% OK (SHA256: 0x9f32b84e11...c289)\" and primary button \"Deploy Paper Agent\" with hotkey badge \"⌘D\".\n\n2. Top Navigation Bar (Sticky header, pl-64):\n   - Left breadcrumb: \"CashClaw // RISK & INVARIANTS // CROSS-MARGIN CVaR TAIL-RISK ENGINE (src/forest/risk/ & src/forest/evaluation/)\"\n   - Telemetry strip: \"CROSS-MARGIN: 3.42x\", \"PORTFOLIO CVaR 99%: -8.94%\", \"KURTOSIS κ: 9.42 (FAT-TAIL)\", \"ZERO-LOOKAHEAD: PASS\", \"SAFETY: ADR-001 [PAPER_ONLY]\"\n   - Action buttons: \"Export Risk Ledger\", \"Lock Invariant\", and Primary CTA button \"Simulate Flash-Crash Shock\" with lightning icon, plus Emergency Kill Switch \"Emergency Flat Fence\".\n\n3. Section Header:\n   - Title: \"Cross-Margin CVaR 99% Tail-Risk & Liquidation Cascade Simulator\"\n   - Formal Invariant Badge: \"Cornish-Fisher Fourth-Moment Adjustment • P(Margin Breach | Shock) < 10^-5 • PAPER_ONLY SAFETY LOCK\"\n   - Seed Entropy: 0xDEADBEEF42 • Invariant Verification: ADR-001 PASS [SHUFFLE_SAFE] • Cryptographic Audit Hash: SHA-256 0x7b92fae49811d044bb71239c8942ef3a61d8c119e7a2b904c\n\n4. 3 Telemetry KPI Summary Cards (Grid 3 cols):\n   - Card 1: \"Parametric vs Cornish-Fisher CVaR (99%, 1d)\"\n     Value: \"-4.82% / -8.94%\"\n     Detail: \"Fat-Tail Excess Kurtosis κ = 9.42 • Skewness S = -1.18 • Underestimates tail loss by 85.5% without 4th-moment expansion\"\n     Indicator: Crimson alert badge \"FAT-TAIL DIVERGENCE\"\n   - Card 2: \"Cross-Exchange Liquidation Cascade Buffer\"\n     Value: \"3.42x Margin Coverage\"\n     Detail: \"Zero Forced Deleveraging under -35% BTC flash crash shock • Aggregate Maintenance Margin: $418,200 vs Equity: $1,430,244\"\n     Indicator: Emerald teal badge \"OPTIMAL BUFFER (PAPER)\"\n   - Card 3: \"Tail-Risk Kill-Switch Fence Status\"\n     Value: \"ARMED (FLAT_FENCE @ -10.0% DD)\"\n     Detail: \"Causal Intraday Drawdown Circuit Breaker Verified • Auto-routes orders to passive post-only liquidation fences\"\n     Indicator: Amber status badge \"HARDWARE-ENFORCED\"\n\n5. Main Table: Multi-Asset Tail-Risk & Expected Shortfall Matrix\n   - Columns: Asset Pair & Weight, Position Notional, Gaussian VaR (95%), Historical CVaR (99%), Cornish-Fisher Modified ES (99%), Stress Correlation Breakdown (ρ → 0.96), Liquidation Cascade Distance, Deleveraging Action\n   - Rows:\n     1. BTC-USDT (Weight: 42.5%, Notional: $607,850, Gaussian: -3.12%, Hist CVaR: -6.40%, CF Mod ES: -8.15%, Stress Corr: 0.98, Distance to Liq: +44.2%, Action: [ALLOW_PAPER_ALLOCATION])\n     2. ETH-USDT (Weight: 28.0%, Notional: $400,460, Gaussian: -4.05%, Hist CVaR: -8.12%, CF Mod ES: -10.84%, Stress Corr: 0.96, Distance to Liq: +38.5%, Action: [DYNAMIC_HEDGE_DELTA])\n     3. SOL-USDT (Weight: 18.5%, Notional: $264,600, Gaussian: -5.80%, Hist CVaR: -11.90%, CF Mod ES: -16.42%, Stress Corr: 0.94, Distance to Liq: +29.1%, Action: [CAP_LEVERAGE_2.0X])\n     4. BNB-USDT (Weight: 11.0%, Notional: $157,334, Gaussian: -3.88%, Hist CVaR: -7.25%, CF Mod ES: -9.50%, Stress Corr: 0.91, Distance to Liq: +41.8%, Action: [ALLOW_PAPER_ALLOCATION])\n   - Table footers and badges with interactive tooltips and crisp monospace values.\n\n6. Historical Crisis Replay & Liquidation Cascade Stress Simulator (Interactive 2-column panel layout):\n   - Left Column (Scenario Selector & Friction Knobs):\n     * Crisis Scenarios: March 2020 COVID Crash (-48.2% in 24h), May 2021 Cascading Deleveraging (-39.4%), Nov 2022 FTX Contagion (-26.8%), Aug 2024 Yen Carry Trade Unwind (-18.2%) with active selector pills.\n     * Synthetic Shock Sliders & Toggles: Flash-Crash Depth (-10% to -50%), L3 Bid-Ask Liquidity Gap (+50bps to +400bps), Correlation Asymptote Toggle (ρ → 1.0 in tails).\n     * Stress Horizon: Intraday 4-Hour Cascade Window.\n   - Right Column (Dynamic Telemetry & Cascade Diagnostics):\n     * Margin Utilization Trajectory gauge: Peak Margin Stress: 68.4% (Max Safe Threshold: 85.0%).\n     * Slippage Amplification Curve readout: Base Cost: 1.8 bps -> Stress Convexity Cost: 24.6 bps.\n     * LLM Multi-Agent Risk Consensus: Agent 'RISK_ORCHESTRATOR' & 'CVAR_SENTINEL': \"Consensus Verdict: Zero liquidation triggers breach. Under worst-case joint tail event (Aug 2024 + -35% shock), cross-margin coverage preserves $512k surplus. ADR-001 paper invariants fully satisfied.\"\n     * Action CTA: \"Lock Invariant & Commit Paper Boundary\" with lock icon.\n\n7. Bottom Bar & Status Telemetry:\n   - Node status, Latency 42μs, Slippage Model 1.2 BPS (ADJUSTED), YZ Vol 16.18, Zero-Lookahead Cycle #9042 PASS, Copyright 2025 CashClaw Quantitative Platform.\n\nEnsure pixel-perfect fidelity, high-contrast dark mode AAA accessibility, and institutional fintech design elegance.",
+                  "screenMetadata": {
+                    "agentType": "PRO_AGENT",
+                    "status": "COMPLETE"
+                  },
+                  "screenType": "DESIGN",
+                  "screenshot": {
+                    "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1WlAl1VGX3BH_Qd8Wgv7jK7ynkWIHixsit-rFOO7sjtuXlNUNsRvrRuYH39wxIvLWCFrpkBpgasIiq2y_wYzeZ-LWP6CC3aBsFNVJmQSRO-XKwddUvGIpSUQOH-ZREcQsPTpDWh6NHChyA8rpDgHaRJR_Sl02MXqLePUl7FDIjBAEZp3oY1JFGP8Q7a7ZdJdZz1QXVHioP2wzPDd640onBWq8OpurJxnqtV6Wy_QCV0viPTgikT1Hi74Bg",
+                    "name": "projects/6665149401860401191/files/0db78d6722954a1b93536048e8b463a4"
+                  },
+                  "theme": {
+                    "bodyFont": "GEIST",
+                    "bodyFontFamily": "Geist",
+                    "colorMode": "DARK",
+                    "colorVariant": "FIDELITY",
+                    "customColor": "#00d4aa",
+                    "font": "GEIST",
+                    "headlineFont": "GEIST",
+                    "headlineFontFamily": "Geist",
+                    "labelFont": "JETBRAINS_MONO",
+                    "labelFontFamily": "JetBrains Mono",
+                    "namedColors": {
+                      "background": "#0d1512",
+                      "bg-elevated": "#1A2030",
+                      "bg-hover": "#1E2838",
+                      "bg-primary": "#0B0E11",
+                      "bg-surface": "#141820",
+                      "border-default": "#2A3340",
+                      "border-subtle": "#1E2530",
+                      "color-loss": "#FF4757",
+                      "color-warning": "#FFB020",
+                      "error": "#ffb4ab",
+                      "error_container": "#93000a",
+                      "inverse_on_surface": "#2a322f",
+                      "inverse_primary": "#006b55",
+                      "inverse_surface": "#dce4df",
+                      "on_background": "#dce4df",
+                      "on_error": "#690005",
+                      "on_error_container": "#ffdad6",
+                      "on_primary": "#00382b",
+                      "on_primary_container": "#005643",
+                      "on_primary_fixed": "#002118",
+                      "on_primary_fixed_variant": "#00513f",
+                      "on_secondary": "#381385",
+                      "on_secondary_container": "#bea8ff",
+                      "on_secondary_fixed": "#21005e",
+                      "on_secondary_fixed_variant": "#4f319c",
+                      "on_surface": "#dce4df",
+                      "on_surface_variant": "#bacac2",
+                      "on_tertiary": "#4c2700",
+                      "on_tertiary_container": "#733e00",
+                      "on_tertiary_fixed": "#2e1500",
+                      "on_tertiary_fixed_variant": "#6c3a00",
+                      "outline": "#85948d",
+                      "outline_variant": "#3b4a44",
+                      "primary": "#46f1c5",
+                      "primary_container": "#00d4aa",
+                      "primary_fixed": "#55fcd0",
+                      "primary_fixed_dim": "#28dfb5",
+                      "secondary": "#cebdff",
+                      "secondary_container": "#4f319c",
+                      "secondary_fixed": "#e8ddff",
+                      "secondary_fixed_dim": "#cebdff",
+                      "surface": "#0d1512",
+                      "surface_bright": "#333b37",
+                      "surface_container": "#19211e",
+                      "surface_container_high": "#242c28",
+                      "surface_container_highest": "#2f3633",
+                      "surface_container_low": "#161d1a",
+                      "surface_container_lowest": "#08100d",
+                      "surface_dim": "#0d1512",
+                      "surface_tint": "#28dfb5",
+                      "surface_variant": "#2f3633",
+                      "tertiary": "#ffcea6",
+                      "tertiary_container": "#ffa858",
+                      "tertiary_fixed": "#ffdcc1",
+                      "tertiary_fixed_dim": "#ffb77a",
+                      "text-primary": "#E8EAED",
+                      "text-secondary": "#8B95A5",
+                      "text-tertiary": "#5A6577"
+                    },
+                    "overridePrimaryColor": "#00d4aa",
+                    "overrideSecondaryColor": "#a78bfa",
+                    "roundness": "ROUND_FOUR",
+                    "spacing": {
+                      "gutter": "16px",
+                      "margin": "24px",
+                      "space-2xl": "32px",
+                      "space-3xl": "48px",
+                      "space-4xl": "64px",
+                      "space-lg": "16px",
+                      "space-md": "12px",
+                      "space-sm": "8px",
+                      "space-xl": "24px",
+                      "space-xs": "4px"
+                    },
+                    "spacingScale": 2,
+                    "typography": {
+                      "body-base": {
+                        "fontFamily": "Geist",
+                        "fontSize": "14px",
+                        "fontWeight": "400",
+                        "lineHeight": "1.5"
+                      },
+                      "body-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "13px",
+                        "fontWeight": "500",
+                        "lineHeight": "1.5"
+                      },
+                      "caption": {
+                        "fontFamily": "JetBrains Mono",
+                        "fontSize": "11px",
+                        "fontWeight": "600",
+                        "letterSpacing": "0.04em",
+                        "lineHeight": "1.4"
+                      },
+                      "headline-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "40px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-md": {
+                        "fontFamily": "Geist",
+                        "fontSize": "28px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "20px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.25"
+                      },
+                      "hero": {
+                        "fontFamily": "Geist",
+                        "fontSize": "56px",
+                        "fontWeight": "900",
+                        "lineHeight": "1.25"
+                      },
+                      "title-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "16px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.5"
+                      }
+                    }
+                  },
+                  "title": "Cross-Margin CVaR Tail-Risk & Liquidation Cascade Simulator",
+                  "width": "2660"
+                }
+              ],
+              "theme": {}
+            }
+          },
+          {
+            "text": "### Cross-Margin CVaR Tail-Risk & Liquidation Cascade Simulator (`portfolio-cvar-stress.html`)\n\nI have designed and implemented the institutional quantitative terminal interface for **Cross-Margin CVaR 99% Tail-Risk & Liquidation Cascade Simulator** (`Cross-Margin CVaR Tail-Risk & Liquidation Cascade Simulator`) within the CashClaw Quant OS ecosystem.\n\n---\n\n### Core Architecture & Structural Highlights\n\n1. **Fixed Terminal Navigation Shell (`240px` Sidebar)**:\n   - Synchronized node status (`#QNT-8812 SYNC 100%`) with prominent amber invariant badge (`ADR-001 INVARIANT: PAPER_ONLY`).\n   - Active state indicator with glowing emerald pill docked on **CVaR Tail-Risk Stress**.\n   - Comprehensive navigation mapping to all 15 CashClaw OS screens (`Cockpit Overview`, `Regime Attribution`, `Alpha Zoo Decomposition`, `Multi-Agent Deliberation`, `Volatility DCA`, `Correlation & Factor Risk`, `Execution Ledger`, `Data Quality Gate`, `Microstructure & Order Book`, `Survival Gate & Ruin Prob`, `Sovereign Enclave Security`, `Relative Value Basis`, `FDR Multiple-Testing Gate`, `Billing & Quota`, and `Design System Tokens`).\n   - Terminal footer displaying SHA-256 live audit validation with hotkey quick action `Deploy Paper Agent [⌘D]`.\n\n2. **Top Invariant Telemetry & Action Strip**:\n   - Header path: `CashClaw // RISK & INVARIANTS // CROSS-MARGIN CVaR TAIL-RISK ENGINE`.\n   - Live telemetry indicators: `CROSS-MARGIN: 3.42x`, `PORTFOLIO CVaR 99%: -8.94%`, `KURTOSIS κ: 9.42 (FAT-TAIL)`, `ZERO-LOOKAHEAD: PASS`, and `ADR-001 [PAPER_ONLY]`.\n   - Action triggers: `Export Risk Ledger`, `Lock Invariant`, primary CTA `Simulate Flash-Crash Shock`, and emergency fail-safe `Emergency Flat Fence`.\n\n3. **Three Core Tail-Risk KPI Summary Containers**:\n   - **Parametric vs. Cornish-Fisher CVaR (99%, 1d)**: Displays the fat-tail divergence (`-4.82%` parametric vs. `-8.94%` 4th-moment expansion), highlighting the 85.5% underestimation of tail risk when ignoring kurtosis ($\\kappa = 9.42$) and skewness ($S = -1.18$).\n   - **Cross-Exchange Cascade Buffer**: Shows `3.42x Margin Coverage` with verified zero forced deleveraging under a $-35\\%$ flash crash scenario ($1,430,244 total equity vs. $418,200 maintenance margin requirement).\n   - **Tail-Risk Kill-Switch Fence**: Status `ARMED (-10% DD)` with causal intraday circuit breaker enforcement preventing cascading margin liquidations.\n\n4. **Multi-Asset Tail-Risk & Expected Shortfall Matrix**:\n   - Compares asset weights, position notional, Gaussian VaR (95%), Historical CVaR (99%), Cornish-Fisher Modified ES (99%), stress correlation breakdown ($\\rho \\to 0.96$), distance to liquidation, and autonomous invariant actions for `BTC-USDT` (`ALLOW_PAPER_ALLOCATION`), `ETH-USDT` (`DYNAMIC_HEDGE_DELTA`), `SOL-USDT` (`CAP_LEVERAGE_2.0X`), and `BNB-USDT` (`ALLOW_PAPER_ALLOCATION`).\n\n5. **Historical Crisis Replay & Friction Stress Simulator**:\n   - **Scenario Replay Selectors**: Quick anchors for March 2020 COVID Crash ($-48.2\\%$), May 2021 Cascading Deleveraging ($-39.4\\%$), Nov 2022 FTX Contagion ($-26.8\\%$), and Aug 2024 Yen Carry Unwind ($-18.2\\%$).\n   - **Stress Friction Knobs**: Interactive controls for Synthetic Flash-Crash Depth ($-10\\%$ to $-50\\%$), L3 Bid-Ask Liquidity Hole (+50 bps to +400 bps), and Correlation Asymptote ($\\rho \\to 1.0$ in tails).\n   - **Diagnostics & LLM Deliberation**: Real-time peak margin utilization trajectory ($68.4\\%$ vs $85\\%$ limit), slippage convexity cost tracking ($1.8\\text{ bps} \\to 24.6\\text{ bps}$), multi-agent consensus log (`RISK_ORCHESTRATOR` & `CVAR_SENTINEL`), and invariant commit CTA."
+          },
+          {
+            "suggestion": "Simulate extreme -50% flash-crash stress scenario in the crisis engine"
+          },
+          {
+            "suggestion": "View Sovereign Enclave Security audit screen"
+          },
+          {
+            "suggestion": "Open Multi-Agent Deliberation Theater"
+          }
+        ],
+        "projectId": "6665149401860401191",
+        "sessionId": "17251142634524151185"
+      }
+    }
+  ]
+}

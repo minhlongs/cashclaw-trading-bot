@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashClaw OS — Sovereign Enclave Cryptographic Attestation & Audit Ledger</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E11;
+      --bg-surface: #141820;
+      --bg-elevated: #1A2030;
+      --bg-hover: #1E2838;
+      --color-accent: #00D4AA;
+      --color-loss: #FF4757;
+      --color-warning: #FFB020;
+      --color-ai: #A78BFA;
+      --text-primary: #E8EAED;
+      --text-secondary: #8B95A5;
+      --border-subtle: #1E2530;
+      --border-default: #2A3340;
+    }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Geist', -apple-system, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased">
+  <!-- Left Sidebar (240px) -->
+  <aside class="w-60 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 flex-shrink-0">
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center font-bold text-black text-sm">CC</div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-wide">CashClaw OS</span>
+          <span class="text-[10px] text-[var(--color-warning)] font-mono font-semibold">PAPER_ONLY • ADR-001</span>
+        </div>
+      </div>
+
+                        <nav class="flex flex-col gap-1.5 text-xs font-medium">
+        <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Cockpit Overview
+        </a>
+        <a href="alpha-zoo.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Alpha Zoo Evaluator
+        </a>
+        <a href="deliberation-theater.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+          Deliberation Theater
+        </a>
+        <a href="strategies/volatility-dca.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Volatility-DCA Bots
+        </a>
+        <a href="correlation-matrix.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Correlation Matrix
+        </a>
+        <a href="execution-ledger.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Execution Ledger
+        </a>
+        <a href="data-quality-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Data Quality Gate
+        </a>
+        <a href="microstructure-liquidity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Microstructure Liquidity
+        </a>
+        <a href="survival-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Survival Gate
+        </a>
+        <a href="sovereign-enclave.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Sovereign Enclave
+        </a>
+        <a href="relative-value-basis.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Relative-Value Basis
+        </a>
+        <a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          SaaS Billing & Quota
+        </a>
+        <a href="regime-attribution.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Regime Attribution
+        </a>
+        <a href="fdr-multiple-testing-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          FDR Multiple-Testing Gate
+        </a>
+        <a href="style-guide.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Style Guide & Tokens
+        </a>
+        <a href="portfolio-cvar-stress.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          CVaR Tail-Risk Stress
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs flex flex-col gap-1">
+      <span class="text-[var(--text-secondary)] text-[10px]">Cryptographic Runtime</span>
+      <span class="font-mono text-[var(--text-primary)] font-semibold truncate">WebCrypto HMAC-SHA256</span>
+      <span class="text-[10px] text-[var(--color-accent)] font-semibold">SOVEREIGN ATTESTATION OK</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Header Bar -->
+    <header class="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-primary)]">
+      <div class="flex items-center gap-3">
+        <h1 class="font-bold text-base">Sovereign Enclave Cryptographic Attestation</h1>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)] border border-[rgba(0,212,170,0.25)]">
+          WebCrypto HMAC-SHA256 • Anti-IDOR Tenant Boundary • SHA-256 Hash Chain
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-mono text-[var(--text-secondary)]">Chain Head: #1428</span>
+        <button class="px-3.5 py-2 rounded-lg bg-[var(--color-accent)] text-black font-semibold text-xs hover:brightness-110 transition-all flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Verify Bundle Signature
+        </button>
+      </div>
+    </header>
+
+    <div class="p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+      <!-- 3 Telemetry KPI Cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <span class="text-xs text-[var(--text-secondary)]">Hash-Chained Audit Ledger</span>
+          <span class="text-2xl font-bold font-mono text-[var(--text-primary)]">1,428 Blocks</span>
+          <span class="text-xs font-mono text-[var(--color-accent)]">Genesis → Head SHA-256 Tamper-Evident</span>
+        </div>
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <span class="text-xs text-[var(--text-secondary)]">Multi-Tenant Anti-IDOR Guard</span>
+          <span class="text-2xl font-bold font-mono text-[var(--color-accent)]">0 Leaks (100% Scoped)</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Direct-D1 User Scoping • 30s TTL Cache</span>
+        </div>
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <span class="text-xs text-[var(--text-secondary)]">ExperimentSpec Determinism</span>
+          <span class="text-2xl font-bold font-mono text-[var(--color-ai)]">100% Byte-Identical</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">FNV-1a32 Seed + WebCrypto SHA-256 SpecID</span>
+        </div>
+      </section>
+
+      <!-- Interactive Bundle Signature & Enclave Lock Status -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold flex items-center gap-2">
+              <span>Cloudflare Workers WebCrypto Hardware Enclave</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)]">ISOLATE CERTIFIED</span>
+            </h2>
+            <span class="text-xs font-mono text-[var(--text-secondary)]">crypto.subtle.sign</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+              <span class="text-[11px] text-[var(--text-secondary)]">Enclave Cryptographic Standard</span>
+              <span class="text-xs font-mono font-semibold text-[var(--text-primary)]">HMAC-SHA256 (RFC 2104)</span>
+              <p class="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                Zero external dependencies in tree layer. Native WebCrypto API binds state mutation to immutable secret keys.
+              </p>
+            </div>
+            <div class="p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+              <span class="text-[11px] text-[var(--text-secondary)]">ADR-001 Enforcement Level</span>
+              <span class="text-xs font-mono font-semibold text-[var(--color-warning)]">HARD LOCK • PAPER ONLY</span>
+              <p class="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                Hardware enclave fails closed on any live execution instruction. Zero exchange credential storage.
+              </p>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="text-[var(--text-secondary)]">Latest Verified Cloud Bundle Checksum</span>
+              <span class="text-[var(--color-accent)] font-semibold">SIG_VALID</span>
+            </div>
+            <div class="text-[11px] font-mono text-[var(--text-primary)] break-all bg-[var(--bg-elevated)] p-2 rounded border border-[var(--border-subtle)]">
+              SHA-256: 7d4e689bf150dc76a91c944ebc402120e2ef52fdb446b77df072051e5927ad9e
+            </div>
+          </div>
+        </div>
+
+        <!-- Tenant Isolation & IDOR Boundary Monitor -->
+        <div class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <h2 class="text-sm font-semibold flex items-center justify-between">
+            <span>Anti-IDOR Tenant Guard</span>
+            <span class="text-[10px] font-mono text-[var(--color-accent)]">ZERO LEAK</span>
+          </h2>
+
+          <div class="flex flex-col gap-3 text-xs">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+              <span class="text-[var(--text-secondary)]">Isolated Tenant Context</span>
+              <span class="font-mono text-[var(--text-primary)] font-semibold">usr_tenant_alpha9</span>
+            </div>
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+              <span class="text-[var(--text-secondary)]">Direct-D1 Query Scope</span>
+              <span class="font-mono text-[var(--color-accent)]">WHERE user_id = ?</span>
+            </div>
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+              <span class="text-[var(--text-secondary)]">Bot Cache TTL Invariant</span>
+              <span class="font-mono text-[var(--text-primary)]">30,000 ms</span>
+            </div>
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+              <span class="text-[var(--text-secondary)]">Open-Core Boundary Test</span>
+              <span class="font-mono text-[var(--color-accent)]">0 EE Imports in Tree</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-[var(--text-secondary)]">Audit Ledger Tamper State</span>
+              <span class="font-mono text-[var(--color-accent)]">100% UNBROKEN</span>
+            </div>
+          </div>
+
+          <button class="w-full mt-auto py-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--color-accent)] transition-all">
+            Inspect Tenant Boundary Tests
+          </button>
+        </div>
+      </section>
+
+      <!-- Hash-Chained Decision & Lineage Verification Table -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-semibold">Hash-Chained Decision & Research Lineage Ledger</h2>
+            <p class="text-xs text-[var(--text-secondary)]">Append-only causal DAG connecting TradingAgents Deliberation to CashClaw Execution</p>
+          </div>
+          <span class="text-xs font-mono text-[var(--color-accent)]">1,428 Verified Blocks</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead>
+              <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)]">
+                <th class="pb-2.5 font-medium">BLOCK</th>
+                <th class="pb-2.5 font-medium">PREVIOUS HASH (prevHash)</th>
+                <th class="pb-2.5 font-medium">PAYLOAD DIGEST / SPEC_ID</th>
+                <th class="pb-2.5 font-medium">ACTION / STAGE</th>
+                <th class="pb-2.5 font-medium">TENANT SCOPE</th>
+                <th class="pb-2.5 font-medium text-right">SIGNATURE</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border-subtle)]">
+              <tr>
+                <td class="py-2.5 text-[var(--color-accent)] font-semibold">#1428</td>
+                <td class="py-2.5 text-[var(--text-secondary)]">6e8a1f...9b24</td>
+                <td class="py-2.5 text-[var(--text-primary)]">spec_vol_dca_v2_btc</td>
+                <td class="py-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)]">BOT_CYCLE_RUN</span></td>
+                <td class="py-2.5 text-[var(--text-secondary)]">usr_tenant_alpha9</td>
+                <td class="py-2.5 text-right text-[var(--color-accent)] font-semibold">VALID_SIG</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 text-[var(--color-accent)] font-semibold">#1427</td>
+                <td class="py-2.5 text-[var(--text-secondary)]">a34b22...11c0</td>
+                <td class="py-2.5 text-[var(--text-primary)]">spec_vol_dca_v2_eth</td>
+                <td class="py-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] bg-[rgba(167,139,250,0.12)] text-[var(--color-ai)]">DELIBERATION_PASS</span></td>
+                <td class="py-2.5 text-[var(--text-secondary)]">usr_tenant_alpha9</td>
+                <td class="py-2.5 text-right text-[var(--color-accent)] font-semibold">VALID_SIG</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 text-[var(--color-accent)] font-semibold">#1426</td>
+                <td class="py-2.5 text-[var(--text-secondary)]">88cf10...e45a</td>
+                <td class="py-2.5 text-[var(--text-primary)]">hypo_orderbook_imbalance</td>
+                <td class="py-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] bg-[rgba(255,176,32,0.12)] text-[var(--color-warning)]">RESEARCH_STAGE</span></td>
+                <td class="py-2.5 text-[var(--text-secondary)]">usr_tenant_alpha9</td>
+                <td class="py-2.5 text-right text-[var(--color-accent)] font-semibold">VALID_SIG</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 text-[var(--color-accent)] font-semibold">#1425</td>
+                <td class="py-2.5 text-[var(--text-secondary)]">4d119a...57fb</td>
+                <td class="py-2.5 text-[var(--text-primary)]">hypo_amihud_liquidity</td>
+                <td class="py-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)]">LINEAGE_APPEND</span></td>
+                <td class="py-2.5 text-[var(--text-secondary)]">usr_tenant_alpha9</td>
+                <td class="py-2.5 text-right text-[var(--color-accent)] font-semibold">VALID_SIG</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 text-[var(--color-accent)] font-semibold">#1424</td>
+                <td class="py-2.5 text-[var(--text-secondary)]">000000...genesis</td>
+                <td class="py-2.5 text-[var(--text-primary)]">genesis_tenant_alpha9</td>
+                <td class="py-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] bg-[var(--bg-elevated)] text-[var(--text-secondary)]">GENESIS_INIT</span></td>
+                <td class="py-2.5 text-[var(--text-secondary)]">usr_tenant_alpha9</td>
+                <td class="py-2.5 text-right text-[var(--color-accent)] font-semibold">VALID_SIG</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

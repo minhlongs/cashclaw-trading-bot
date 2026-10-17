@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CashClaw OS // Multiple-Testing False Discovery Rate Gate</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "background": "#0d1512",
+            "on-tertiary-fixed": "#2e1500",
+            "tertiary": "#ffcea6",
+            "outline-variant": "#3b4a44",
+            "bg-hover": "#1E2838",
+            "surface-container-low": "#161d1a",
+            "on-secondary": "#381385",
+            "error": "#ffb4ab",
+            "on-surface-variant": "#bacac2",
+            "on-error-container": "#ffdad6",
+            "color-loss": "#FF4757",
+            "tertiary-fixed": "#ffdcc1",
+            "primary-container": "#00d4aa",
+            "primary-fixed": "#55fcd0",
+            "on-secondary-container": "#bea8ff",
+            "surface-container-highest": "#2f3633",
+            "on-primary-fixed-variant": "#00513f",
+            "surface-tint": "#28dfb5",
+            "bg-surface": "#141820",
+            "surface-bright": "#333b37",
+            "tertiary-fixed-dim": "#ffb77a",
+            "primary": "#46f1c5",
+            "secondary-fixed-dim": "#cebdff",
+            "on-background": "#dce4df",
+            "inverse-on-surface": "#2a322f",
+            "secondary": "#cebdff",
+            "tertiary-container": "#ffa858",
+            "inverse-primary": "#006b55",
+            "color-warning": "#FFB020",
+            "on-surface": "#dce4df",
+            "secondary-fixed": "#e8ddff",
+            "on-secondary-fixed": "#21005e",
+            "secondary-container": "#4f319c",
+            "surface": "#0d1512",
+            "on-tertiary": "#4c2700",
+            "on-primary": "#00382b",
+            "surface-dim": "#0d1512",
+            "on-tertiary-container": "#733e00",
+            "surface-variant": "#2f3633",
+            "border-default": "#2A3340",
+            "border-subtle": "#1E2530",
+            "on-error": "#690005",
+            "on-primary-fixed": "#002118",
+            "on-secondary-fixed-variant": "#4f319c",
+            "surface-container": "#19211e",
+            "inverse-surface": "#dce4df",
+            "error-container": "#93000a",
+            "primary-fixed-dim": "#28dfb5",
+            "bg-primary": "#0B0E11",
+            "text-tertiary": "#5A6577",
+            "on-tertiary-fixed-variant": "#6c3a00",
+            "outline": "#85948d",
+            "on-primary-container": "#005643",
+            "bg-elevated": "#1A2030",
+            "surface-container-high": "#242c28",
+            "surface-container-lowest": "#08100d",
+            "text-primary": "#E8EAED",
+            "text-secondary": "#8B95A5"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "space-2xl": "32px",
+            "margin": "24px",
+            "gutter": "16px",
+            "space-xs": "4px",
+            "space-xl": "24px",
+            "space-lg": "16px",
+            "space-4xl": "64px",
+            "space-sm": "8px",
+            "space-3xl": "48px",
+            "space-md": "12px"
+          },
+          "fontFamily": {
+            "title-lg": ["Geist", "sans-serif"],
+            "hero": ["Geist", "sans-serif"],
+            "headline-sm": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist", "sans-serif"],
+            "caption": ["JetBrains Mono", "monospace"],
+            "body-sm": ["Geist", "sans-serif"],
+            "body-base": ["Geist", "sans-serif"],
+            "headline-md": ["Geist", "sans-serif"]
+          },
+          "fontSize": {
+            "title-lg": ["16px", { "lineHeight": "1.5", "fontWeight": "600" }],
+            "hero": ["56px", { "lineHeight": "1.25", "fontWeight": "900" }],
+            "headline-sm": ["20px", { "lineHeight": "1.25", "fontWeight": "600" }],
+            "headline-lg": ["40px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "caption": ["11px", { "lineHeight": "1.4", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "body-sm": ["13px", { "lineHeight": "1.5", "fontWeight": "500" }],
+            "body-base": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+            "headline-md": ["28px", { "lineHeight": "1.25", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 18px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+      vertical-align: middle;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      height: 16px;
+      width: 16px;
+      border-radius: 4px;
+      background: #00D4AA;
+      cursor: pointer;
+      -webkit-appearance: none;
+      box-shadow: 0 0 10px rgba(0, 212, 170, 0.4);
+    }
+    /* Custom scrollbar for terminal density */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B0E11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E2530;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2A3340;
+    }
+  </style>
+</head>
+<body class="bg-bg-primary text-text-primary antialiased font-body-base overflow-x-hidden selection:bg-primary-container selection:text-bg-primary">
+<!-- Left Navigation Sidebar (240px fixed docked) -->
+<aside class="fixed top-0 left-0 h-screen w-60 z-40 bg-bg-primary border-r border-border-subtle flex flex-col justify-between p-space-sm">
+<!-- Sidebar Header -->
+<div class="flex flex-col gap-space-xs pb-space-sm border-b border-border-subtle">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-7 h-7 rounded bg-bg-elevated border border-border-default flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="terminal">terminal</span>
+</div>
+<div>
+<h1 class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight leading-none">CashClaw OS</h1>
+<span class="font-caption text-caption text-text-tertiary">Terminal v4.19 Institutional</span>
+</div>
+</div>
+</div>
+<!-- Quant Node status & safety invariant -->
+<div class="mt-space-xs flex flex-col gap-1">
+<div class="flex items-center justify-between bg-bg-surface px-2 py-1 rounded border border-border-subtle">
+<span class="font-caption text-caption text-text-secondary flex items-center gap-1.5">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            NODE #QNT-8812
+          </span>
+<span class="font-caption text-caption text-primary">SYNC 100%</span>
+</div>
+<div class="flex items-center justify-between bg-bg-surface px-2 py-1 rounded border border-border-subtle">
+<span class="font-caption text-caption text-color-warning flex items-center gap-1">
+<span class="material-symbols-outlined text-color-warning" data-icon="shield">shield</span>
+            ADR-001 INVARIANT
+          </span>
+<span class="font-caption text-caption bg-surface-container-high text-color-warning px-1 rounded font-bold">PAPER_ONLY</span>
+</div>
+</div>
+</div>
+<!-- Navigation List (15 items, FDR Gate Active) -->
+<nav class="flex-1 overflow-y-auto my-space-xs pr-1 space-y-0.5">
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="dashboard">dashboard</span>
+<span class="font-caption text-caption">Cockpit Overview</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="monitoring">monitoring</span>
+<span class="font-caption text-caption">Regime Attribution</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="matrix">unfold_more_double</span>
+<span class="font-caption text-caption">Alpha Decomposition</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="alt_route">alt_route</span>
+<span class="font-caption text-caption">Strategy Orchestration</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="swap_horiz">swap_horiz</span>
+<span class="font-caption text-caption">Execution Routing</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="shield">shield</span>
+<span class="font-caption text-caption">Risk &amp; Invariants</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="stacked_bar_chart">stacked_bar_chart</span>
+<span class="font-caption text-caption">Order Book L3</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="multiline_chart">multiline_chart</span>
+<span class="font-caption text-caption">Volatility Surface</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="smart_toy">smart_toy</span>
+<span class="font-caption text-caption">LLM Multi-Agent</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="pie_chart">pie_chart</span>
+<span class="font-caption text-caption">Portfolio Factor Risk</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="calculate">calculate</span>
+<span class="font-caption text-caption">Transaction Cost Model</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="verified_user">verified_user</span>
+<span class="font-caption text-caption">Zero-Lookahead Audit</span>
+</a>
+<!-- ACTIVE NAVIGATION TAB -->
+<a class="flex items-center justify-between px-2.5 py-1.5 rounded text-primary bg-bg-elevated border-l-2 border-primary font-semibold" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary" data-icon="gpp_good">gpp_good</span>
+<span class="font-caption text-caption text-primary">BH-FDR Gate</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-primary shadow-sm"></span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="terminal">terminal</span>
+<span class="font-caption text-caption">Telemetry Logs</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="history">history</span>
+<span class="font-caption text-caption">Backtest Engine</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="settings">settings</span>
+<span class="font-caption text-caption">System Settings</span>
+</a>
+</nav>
+<!-- Sidebar Footer -->
+<div class="pt-space-sm border-t border-border-subtle flex flex-col gap-2">
+<div class="bg-bg-surface p-2 rounded border border-border-subtle flex flex-col gap-1">
+<div class="flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="gpp_good">gpp_good</span>
+            Audit Live: OK
+          </span>
+<span class="text-primary font-bold">200.0% OK</span>
+</div>
+<div class="font-caption text-[9px] text-text-tertiary truncate">
+          SHA256: 0x9f32b84e11...c289
+        </div>
+</div>
+<button class="w-full h-9 rounded bg-primary text-bg-primary font-title-lg text-body-sm font-semibold hover:bg-primary-fixed transition-colors flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+        Run Multi-Trial Audit
+      </button>
+</div>
+</aside>
+<!-- Top Navigation Bar (Docked full-width pl-60) -->
+<header class="fixed top-0 left-0 right-0 z-30 h-14 pl-60 bg-bg-surface border-b border-border-subtle flex items-center justify-between px-space-lg">
+<!-- Left: Breadcrumb & Title -->
+<div class="flex items-center gap-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 font-caption text-[10px] text-text-tertiary tracking-wider uppercase">
+<span>TERMINAL ROOT</span>
+<span>/</span>
+<span>ALPHA RESEARCH</span>
+<span>/</span>
+<span class="text-primary">MULTIPLE-TESTING FALSE DISCOVERY GATE</span>
+</div>
+<div class="font-title-lg text-title-lg font-bold text-text-primary tracking-wide">
+          CashClaw // REGIME ATTRIBUTION &amp; DEFLATED SHARPE GATE
+        </div>
+</div>
+</div>
+<!-- Center/Right: Top Metrics Bar -->
+<div class="hidden xl:flex items-center gap-space-lg border-l border-r border-border-subtle px-space-md h-full">
+<div class="flex flex-col">
+<span class="font-caption text-[9px] text-text-tertiary">TRIALS (N)</span>
+<span class="font-caption text-caption text-text-primary font-bold">148 AUDITED</span>
+</div>
+<div class="flex flex-col">
+<span class="font-caption text-[9px] text-text-tertiary">NULL E[max(SR)]</span>
+<span class="font-caption text-caption text-color-warning font-bold">2.64 σ HURDLE</span>
+</div>
+<div class="flex flex-col">
+<span class="font-caption text-[9px] text-text-tertiary">BH q-CUTOFF</span>
+<span class="font-caption text-caption text-primary font-bold">α = 0.05</span>
+</div>
+<div class="flex flex-col">
+<span class="font-caption text-[9px] text-text-tertiary">DSR THRESHOLD</span>
+<span class="font-caption text-caption text-text-primary font-bold">&gt; 0.950</span>
+</div>
+<div class="flex flex-col">
+<span class="font-caption text-[9px] text-text-tertiary">SAFETY STATE</span>
+<span class="font-caption text-caption text-color-warning font-bold">ADR-001 [PAPER]</span>
+</div>
+</div>
+<!-- Right: Actions & Tools -->
+<div class="flex items-center gap-space-sm">
+<button class="h-8 px-2.5 rounded bg-bg-elevated hover:bg-bg-hover text-text-secondary hover:text-text-primary border border-border-default font-caption text-caption flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="file_download">file_download</span>
+        Export FDR Ledger
+      </button>
+<button class="h-8 px-3 rounded bg-primary text-bg-primary font-caption text-caption font-semibold hover:bg-primary-fixed shadow-[0_0_12px_rgba(70,241,197,0.25)] flex items-center gap-1.5 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="bolt">bolt</span>
+        Run Multi-Trial Audit
+      </button>
+<div class="w-px h-6 bg-border-subtle mx-1"></div>
+<button class="w-8 h-8 rounded bg-bg-elevated hover:bg-bg-hover text-text-secondary hover:text-text-primary flex items-center justify-center transition-colors" title="Audit Telemetry">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+</button>
+<button class="w-8 h-8 rounded bg-bg-elevated hover:bg-bg-hover text-text-secondary hover:text-text-primary flex items-center justify-center transition-colors" title="Notifications">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</button>
+</div>
+</header>
+<!-- Main Workspace Canvas (fluid bounded container, pl-60 for sidebar, pt-14 for header) -->
+<main class="pl-60 pt-14 min-h-screen">
+<div class="max-w-[1440px] mx-auto p-space-lg space-y-space-lg">
+<!-- Sub-banner Context info -->
+<div class="bg-surface-container-low border border-border-subtle rounded p-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary animate-ping"></div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-caption text-caption text-text-primary font-bold">MULTIPLE TESTING INVARIANT GATE:</span>
+<span class="font-caption text-caption text-primary">BH-FDR STEP-UP &amp; BAILEY-LOPEZ DE PRADO DSR</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary">
+              Controlling False Discovery Rate among <code class="font-caption text-primary text-xs">M = 12</code> candidate strategies over <code class="font-caption text-primary text-xs">N = 148</code> cumulative parameter explorations. Preventing selection bias overfitting.
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end md:self-auto shrink-0">
+<span class="font-caption text-[10px] text-text-tertiary">FORMAL INVARIANT:</span>
+<span class="font-caption text-[11px] bg-bg-surface px-2 py-0.5 rounded border border-border-default text-text-secondary">
+            P(FDR ≤ q) ≥ 0.95 ∩ DSR &gt; 0.95
+          </span>
+</div>
+</div>
+<!-- Section 3: Telemetry KPI Cards (3-column grid) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<!-- KPI 1 -->
+<div class="bg-bg-surface border border-border-subtle rounded p-space-md flex flex-col justify-between hover:border-border-default transition-all shadow-sm">
+<div class="flex items-center justify-between pb-2 border-b border-border-subtle">
+<span class="font-caption text-caption text-text-secondary tracking-wider">TOTAL BACKTEST TRIALS AUDITED</span>
+<span class="font-caption text-[10px] bg-error-container text-color-loss px-1.5 py-0.5 rounded font-bold">HIGH_INFLATION</span>
+</div>
+<div class="my-3">
+<div class="font-headline-md text-headline-md font-bold text-text-primary tracking-tight flex items-baseline gap-2">
+<span>148</span>
+<span class="font-caption text-caption text-text-tertiary font-normal">TRIALS (M=12 SEEDS)</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1 font-caption text-caption text-color-loss">
+<span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
+<span>Cumulative α_family = 99.94% without gate</span>
+</div>
+</div>
+<div class="pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-[10px] text-text-tertiary">
+<span>Effective Independent N_eff: <strong class="text-text-primary">64.2</strong></span>
+<span>Avg Covariance: <strong class="text-text-primary">ρ = 0.38</strong></span>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-bg-surface border border-border-subtle rounded p-space-md flex flex-col justify-between hover:border-border-default transition-all shadow-sm">
+<div class="flex items-center justify-between pb-2 border-b border-border-subtle">
+<span class="font-caption text-caption text-text-secondary tracking-wider">EXPECTED MAX SHARPE UNDER NULL</span>
+<span class="font-caption text-[10px] bg-[#3d2700] text-color-warning px-1.5 py-0.5 rounded font-bold">SELECTION_BIAS_HAZARD</span>
+</div>
+<div class="my-3">
+<div class="font-headline-md text-headline-md font-bold text-color-warning tracking-tight flex items-baseline gap-2">
+<span>2.64 σ</span>
+<span class="font-caption text-caption text-text-tertiary font-normal">E[max(SR₀)] HURDLE</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1 font-caption text-caption text-text-secondary">
+<span class="material-symbols-outlined text-sm text-color-warning" data-icon="functions">functions</span>
+<span>Euler-Mascheroni closed form (γ = 0.5772)</span>
+</div>
+</div>
+<div class="pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-[10px] text-text-tertiary">
+<span>Raw Sharpe &lt; 2.64 has &gt;50% pure luck prob</span>
+<span class="text-color-warning font-semibold">T = 3.5 YRS</span>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="bg-bg-surface border border-border-subtle rounded p-space-md flex flex-col justify-between hover:border-border-default transition-all shadow-sm">
+<div class="flex items-center justify-between pb-2 border-b border-border-subtle">
+<span class="font-caption text-caption text-text-secondary tracking-wider">BH-FDR SURVIVING FACTORS (q = 0.05)</span>
+<span class="font-caption text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">ADR-001 PASS [1 APPROVED]</span>
+</div>
+<div class="my-3">
+<div class="font-headline-md text-headline-md font-bold text-primary tracking-tight flex items-baseline gap-2">
+<span>1 / 12</span>
+<span class="font-caption text-caption text-text-secondary font-normal">SEEDS SURVIVE (8.3%)</span>
+</div>
+<div class="flex items-center gap-1.5 mt-1 font-caption text-caption text-text-primary">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-bold text-primary">alpha_003</span>
+<span class="text-text-secondary">(Funding Carry) • DSR = 0.964</span>
+</div>
+</div>
+<div class="pt-2 border-t border-border-subtle flex items-center justify-between font-caption text-[10px] text-text-tertiary">
+<span>11 Seeds Rejected (p-value step breach)</span>
+<span class="text-primary font-bold">PROMOTED_TO_PAPER</span>
+</div>
+</div>
+</section>
+<!-- Section 4: Main Analytical Matrix - Holm-Bonferroni & Benjamini-Hochberg Step-Up -->
+<section class="bg-bg-surface border border-border-subtle rounded overflow-hidden">
+<div class="p-space-md border-b border-border-subtle flex flex-col md:flex-row md:items-center justify-between gap-3 bg-bg-surface">
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-title-lg text-title-lg font-bold text-text-primary">Multiple Testing Step-Up Audit Matrix</h2>
+<span class="font-caption text-[10px] bg-bg-elevated px-2 py-0.5 rounded text-text-secondary border border-border-subtle">M = 12 Hypotheses</span>
+<span class="font-caption text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">FDR Target q ≤ 0.05</span>
+</div>
+<p class="font-caption text-caption text-text-tertiary mt-0.5">
+              Strict step-up comparison: p_(k) ≤ (k/M) × q. Row 1 survives both Benjamini-Hochberg and Bailey-Lopez de Prado Deflated Sharpe testing.
+            </p>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-caption text-caption text-text-tertiary">Sort:</span>
+<span class="font-caption text-caption text-primary bg-bg-elevated px-2 py-1 rounded border border-border-default">p-value ASC (Rank k)</span>
+<button class="h-7 px-2 text-text-secondary hover:text-text-primary bg-bg-elevated hover:bg-bg-hover rounded border border-border-subtle font-caption text-caption flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="filter_list">filter_list</span>
+              Filters
+            </button>
+</div>
+</div>
+<!-- High-density Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-bg-elevated/70 border-b border-border-subtle font-caption text-[11px] text-text-secondary uppercase tracking-wider">
+<th class="py-2.5 px-3 font-semibold text-center w-12">k</th>
+<th class="py-2.5 px-3 font-semibold">Alpha Seed ID &amp; Strategy</th>
+<th class="py-2.5 px-3 font-semibold text-right">Raw SR</th>
+<th class="py-2.5 px-3 font-semibold text-right">Skew (γ1)</th>
+<th class="py-2.5 px-3 font-semibold text-right">Kurt (γ2)</th>
+<th class="py-2.5 px-3 font-semibold text-right">Raw p-val (p_k)</th>
+<th class="py-2.5 px-3 font-semibold text-right">Holm-Bonf [α/(M-k+1)]</th>
+<th class="py-2.5 px-3 font-semibold text-right text-primary">BH-FDR [(k/M)·q]</th>
+<th class="py-2.5 px-3 font-semibold text-right">Adj q-val</th>
+<th class="py-2.5 px-3 font-semibold text-right">DSR</th>
+<th class="py-2.5 px-3 font-semibold text-center">Gate Verdict</th>
+</tr>
+</thead>
+<tbody class="font-caption text-caption divide-y divide-border-subtle">
+<!-- Row 1: Champion alpha_003 (SURVIVED) -->
+<tr class="bg-primary/5 hover:bg-primary/10 transition-colors border-l-2 border-l-primary">
+<td class="py-2 px-3 text-center font-bold text-primary">1</td>
+<td class="py-2 px-3 font-medium text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-primary">alpha_003</span>
+<span class="text-text-secondary text-xs">Funding Carry Arb</span>
+<span class="font-caption text-[9px] bg-primary/20 text-primary px-1 rounded">CHAMPION</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-bold text-primary">3.14</td>
+<td class="py-2 px-3 text-right text-text-secondary">-0.18</td>
+<td class="py-2 px-3 text-right text-text-secondary">3.42</td>
+<td class="py-2 px-3 text-right font-bold text-primary">0.0008</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0042</td>
+<td class="py-2 px-3 text-right text-primary font-bold">0.0042</td>
+<td class="py-2 px-3 text-right text-primary font-bold">0.0096</td>
+<td class="py-2 px-3 text-right font-bold text-primary">0.964</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/20 text-primary font-bold text-[10px] border border-primary/30">
+<span class="material-symbols-outlined text-[12px]" data-icon="check">check</span>
+                    PROMOTE_TO_PAPER
+                  </span>
+</td>
+</tr>
+<!-- Row 2: alpha_008 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">2</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_008</span>
+<span class="text-text-secondary text-xs">Vol Skew Dispersion</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">2.38</td>
+<td class="py-2 px-3 text-right text-color-loss">-0.94</td>
+<td class="py-2 px-3 text-right text-text-secondary">5.81</td>
+<td class="py-2 px-3 text-right text-color-warning">0.0089</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0045</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0083</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0534</td>
+<td class="py-2 px-3 text-right text-color-loss">0.912</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 3: alpha_001 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">3</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_001</span>
+<span class="text-text-secondary text-xs">L3 Order Flow Momentum</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">2.18</td>
+<td class="py-2 px-3 text-right text-text-secondary">-0.32</td>
+<td class="py-2 px-3 text-right text-text-secondary">4.10</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0145</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0050</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0125</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0580</td>
+<td class="py-2 px-3 text-right text-color-loss">0.884</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 4: alpha_007 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">4</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_007</span>
+<span class="text-text-secondary text-xs">Mean Reversion Ornstein</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">2.04</td>
+<td class="py-2 px-3 text-right text-color-loss">-0.72</td>
+<td class="py-2 px-3 text-right text-text-secondary">6.12</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0210</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0056</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0167</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0630</td>
+<td class="py-2 px-3 text-right text-color-loss">0.825</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 5: alpha_011 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">5</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_011</span>
+<span class="text-text-secondary text-xs">Cross-Exchange Lead-Lag</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">1.96</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.12</td>
+<td class="py-2 px-3 text-right text-text-secondary">3.80</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0250</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0063</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0208</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0667</td>
+<td class="py-2 px-3 text-right text-color-loss">0.791</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 6: alpha_005 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">6</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_005</span>
+<span class="text-text-secondary text-xs">Liquidity Provisioning Depth</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">1.82</td>
+<td class="py-2 px-3 text-right text-color-loss">-1.15</td>
+<td class="py-2 px-3 text-right text-text-secondary">7.20</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0345</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0071</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0250</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0782</td>
+<td class="py-2 px-3 text-right text-color-loss">0.710</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 7: alpha_009 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">7</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_009</span>
+<span class="text-text-secondary text-xs">Multi-Asset Basis Term</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">1.75</td>
+<td class="py-2 px-3 text-right text-text-secondary">-0.05</td>
+<td class="py-2 px-3 text-right text-text-secondary">3.20</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0402</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0083</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0292</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0804</td>
+<td class="py-2 px-3 text-right text-color-loss">0.680</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 8: alpha_002 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">8</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_002</span>
+<span class="text-text-secondary text-xs">High Frequency VWAP Break</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">1.68</td>
+<td class="py-2 px-3 text-right text-text-secondary">-0.45</td>
+<td class="py-2 px-3 text-right text-text-secondary">4.60</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0465</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0100</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0333</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0814</td>
+<td class="py-2 px-3 text-right text-color-loss">0.624</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 9: alpha_006 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">9</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_006</span>
+<span class="text-text-secondary text-xs">Funding Spread Mean-Rev</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">1.54</td>
+<td class="py-2 px-3 text-right text-text-secondary">-0.22</td>
+<td class="py-2 px-3 text-right text-text-secondary">3.50</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0618</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0125</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0375</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0927</td>
+<td class="py-2 px-3 text-right text-color-loss">0.531</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 10: alpha_012 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">10</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_012</span>
+<span class="text-text-secondary text-xs">Gamma Scalp Delta Neutral</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">1.42</td>
+<td class="py-2 px-3 text-right text-color-loss">-1.40</td>
+<td class="py-2 px-3 text-right text-text-secondary">8.90</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0778</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0167</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0417</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.1037</td>
+<td class="py-2 px-3 text-right text-color-loss">0.428</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 11: alpha_004 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">11</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_004</span>
+<span class="text-text-secondary text-xs">DEX-CEX Toxic Flow Sniffer</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">1.31</td>
+<td class="py-2 px-3 text-right text-color-warning">0.08</td>
+<td class="py-2 px-3 text-right text-text-secondary">4.12</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.0951</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0250</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0458</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.1141</td>
+<td class="py-2 px-3 text-right text-color-loss">0.345</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+<!-- Row 12: alpha_010 -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="py-2 px-3 text-center text-text-tertiary">12</td>
+<td class="py-2 px-3 text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-secondary">alpha_010</span>
+<span class="text-text-secondary text-xs">Perp Funding Dislocation</span>
+</div>
+</td>
+<td class="py-2 px-3 text-right font-mono text-text-primary">1.19</td>
+<td class="py-2 px-3 text-right text-color-loss">-0.88</td>
+<td class="py-2 px-3 text-right text-text-secondary">5.40</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.1170</td>
+<td class="py-2 px-3 text-right text-text-tertiary">0.0500</td>
+<td class="py-2 px-3 text-right text-text-secondary">0.0500</td>
+<td class="py-2 px-3 text-right text-color-loss font-mono">0.1170</td>
+<td class="py-2 px-3 text-right text-color-loss">0.260</td>
+<td class="py-2 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container text-color-loss font-bold text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="close">close</span>
+                    REJECT_TRIAL_INFLATION
+                  </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-space-sm bg-bg-surface border-t border-border-subtle flex flex-col md:flex-row items-center justify-between font-caption text-caption text-text-secondary gap-2">
+<div class="flex items-center gap-2">
+<span class="inline-block w-2 h-2 rounded-full bg-primary"></span>
+<span>Step-Up Rule: alpha_003 satisfies <code class="text-primary font-mono">p_1 (0.0008) ≤ 0.0042</code>. Subsequent alphas fail step-up constraint.</span>
+</div>
+<div class="flex items-center gap-3">
+<span>DSR Critical Cutoff: <strong class="text-text-primary font-mono">0.950</strong></span>
+<span>Max Inflation Penalty: <strong class="text-color-loss font-mono">-0.704</strong></span>
+</div>
+</div>
+</section>
+<!-- Section 5: Bottom Analytical Split (7 cols left, 5 cols right) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Left: DSR & Trial Inflation Penalty Auditor (7 cols) -->
+<div class="lg:col-span-7 bg-bg-surface border border-border-subtle rounded p-space-md flex flex-col justify-between">
+<div>
+<!-- Header & Interactive Slider -->
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-space-sm border-b border-border-subtle gap-2">
+<div>
+<h3 class="font-title-lg text-title-lg font-bold text-text-primary">Deflated Sharpe &amp; Trial Expansion Auditor</h3>
+<span class="font-caption text-caption text-text-tertiary">Bailey &amp; Lopez de Prado (2014) E[max(SR₀)] Asymptotic Horizon</span>
+</div>
+<div class="flex items-center gap-2 bg-bg-elevated px-2.5 py-1 rounded border border-border-subtle">
+<span class="font-caption text-caption text-text-secondary">Simulated N:</span>
+<span class="font-caption text-caption font-bold text-primary font-mono" id="trials-display">148 Trials</span>
+</div>
+</div>
+<!-- Slider control -->
+<div class="my-space-md bg-surface-container-low p-space-sm rounded border border-border-subtle">
+<div class="flex items-center justify-between mb-1">
+<label class="font-caption text-caption text-text-secondary" for="trialSlider">Parameter Search Trials (N)</label>
+<span class="font-caption text-[10px] text-text-tertiary">Range: 12 to 500 backtest runs</span>
+</div>
+<input class="w-full h-1.5 bg-bg-elevated rounded appearance-none cursor-pointer accent-primary" id="trialSlider" max="500" min="12" type="range" value="148"/>
+<div class="flex justify-between font-caption text-[10px] text-text-tertiary mt-1">
+<span>N = 12</span>
+<span class="text-primary font-semibold">Current Audit = 148</span>
+<span>N = 300</span>
+<span>N = 500 (Overfit Zone)</span>
+</div>
+</div>
+<!-- SVG Visualization: Raw Sharpe vs Hurdle curve -->
+<div class="relative w-full h-56 bg-bg-primary rounded border border-border-subtle p-3 flex flex-col justify-between overflow-hidden">
+<div class="flex items-center justify-between text-xs z-10">
+<span class="font-caption text-[11px] text-text-secondary flex items-center gap-1.5">
+<span class="w-2.5 h-0.5 bg-color-warning inline-block"></span>
+                  Null Hurdle E[max(SR₀)] Curve
+                </span>
+<span class="font-caption text-[11px] text-text-secondary flex items-center gap-1.5">
+<span class="w-2.5 h-0.5 bg-primary inline-block"></span>
+                  alpha_003 Raw SR (3.14)
+                </span>
+<span class="font-caption text-[11px] text-text-secondary flex items-center gap-1.5">
+<span class="w-2.5 h-0.5 bg-color-loss inline-block"></span>
+                  alpha_008 Raw SR (2.38)
+                </span>
+</div>
+<!-- SVG Canvas for Curves -->
+<svg class="w-full h-40 overflow-visible mt-2" preserveaspectratio="none" viewbox="0 0 600 160">
+<!-- Grid lines -->
+<line stroke="#1E2530" stroke-dasharray="2 2" stroke-width="1" x1="0" x2="600" y1="40" y2="40"></line>
+<line stroke="#1E2530" stroke-dasharray="2 2" stroke-width="1" x1="0" x2="600" y1="80" y2="80"></line>
+<line stroke="#1E2530" stroke-dasharray="2 2" stroke-width="1" x1="0" x2="600" y1="120" y2="120"></line>
+<!-- Vertical marker at N=148 (approx x=180 in 600 width) -->
+<line opacity="0.6" stroke="#46f1c5" stroke-dasharray="3 3" stroke-width="1.5" x1="180" x2="180" y1="0" y2="160"></line>
+<text fill="#46f1c5" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="186" y="22">AUDIT N=148</text>
+<!-- Null Hurdle Curve: rises logarithmically with sqrt(2 ln N) -->
+<!-- Path points: (10, 130), (50, 95), (100, 78), (180, 62 [y=2.64]), (300, 48), (450, 38), (600, 30) -->
+<path d="M 10 135 C 60 100, 120 75, 180 62 C 260 48, 420 36, 600 28" fill="none" stroke="#FFB020" stroke-width="2.5"></path>
+<!-- Candidate 1: alpha_003 constant SR=3.14 (y=42) -->
+<line stroke="#46f1c5" stroke-width="2" x1="10" x2="600" y1="42" y2="42"></line>
+<circle cx="180" cy="42" fill="#46f1c5" r="4" stroke="#0B0E11" stroke-width="2"></circle>
+<text fill="#46f1c5" font-family="JetBrains Mono" font-size="9" x="186" y="38">alpha_003 (SURVIVES &gt; HURDLE)</text>
+<!-- Candidate 2: alpha_008 constant SR=2.38 (y=75) -->
+<line stroke="#FF4757" stroke-dasharray="4 4" stroke-width="1.5" x1="10" x2="600" y1="75" y2="75"></line>
+<circle cx="180" cy="75" fill="#FF4757" r="4" stroke="#0B0E11" stroke-width="2"></circle>
+<text fill="#FF4757" font-family="JetBrains Mono" font-size="9" x="186" y="86">alpha_008 (SUB-HURDLE REJECT)</text>
+<!-- Zone labels -->
+<text fill="#FFB020" font-family="JetBrains Mono" font-size="9" x="490" y="22">E[max(SR₀)]</text>
+<text fill="#8B95A5" font-family="JetBrains Mono" font-size="8" x="15" y="152">N=12</text>
+<text fill="#8B95A5" font-family="JetBrains Mono" font-size="8" x="280" y="152">N=250</text>
+<text fill="#8B95A5" font-family="JetBrains Mono" font-size="8" x="560" y="152">N=500</text>
+</svg>
+<!-- Footer legend on chart -->
+<div class="flex items-center justify-between font-caption text-[10px] text-text-tertiary border-t border-border-subtle pt-1 mt-1">
+<span>Hurdle Formula: <code class="text-color-warning">E[max] ≈ (1 - γ)·Z⁻¹(1 - 1/N) + γ·Z⁻¹(1 - 1/(N·e))</code></span>
+<span class="text-primary font-bold">DSR Critical Hurdle = 0.950</span>
+</div>
+</div>
+</div>
+<!-- Parameter Toggle Cluster -->
+<div class="mt-space-md pt-space-sm border-t border-border-subtle grid grid-cols-3 gap-2">
+<div class="bg-surface-container-low p-2 rounded border border-border-subtle">
+<span class="font-caption text-[9px] text-text-tertiary block">SAMPLE LENGTH (T)</span>
+<div class="flex items-center justify-between mt-1">
+<span class="font-caption text-caption text-text-primary font-bold">3.5 Years</span>
+<span class="font-caption text-[9px] text-primary">882 SESSIONS</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-2 rounded border border-border-subtle">
+<span class="font-caption text-[9px] text-text-tertiary block">SKEWNESS ADJUSTMENT</span>
+<div class="flex items-center justify-between mt-1">
+<span class="font-caption text-caption text-color-loss font-bold">-0.42 (Active)</span>
+<span class="font-caption text-[9px] text-color-loss">PENALTY +0.14</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-2 rounded border border-border-subtle">
+<span class="font-caption text-[9px] text-text-tertiary block">KURTOSIS ADJUSTMENT</span>
+<div class="flex items-center justify-between mt-1">
+<span class="font-caption text-caption text-color-warning font-bold">4.88 (Fat Tails)</span>
+<span class="font-caption text-[9px] text-color-warning">LEPTOKURTIC</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Multi-Agent Econometric Consensus Panel (5 cols) -->
+<div class="lg:col-span-5 bg-bg-surface border border-border-subtle rounded p-space-md flex flex-col justify-between">
+<div>
+<!-- Agents in deliberation header -->
+<div class="flex items-center justify-between pb-space-sm border-b border-border-subtle">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-[#4f319c]/40 border border-[#cebdff]/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#cebdff] text-sm" data-icon="smart_toy">smart_toy</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg font-bold text-text-primary">Multi-Agent Econometric Consensus</h3>
+<span class="font-caption text-caption text-text-tertiary">Invariant Verification Engine</span>
+</div>
+</div>
+<span class="font-caption text-[10px] bg-[#4f319c]/30 text-[#cebdff] border border-[#cebdff]/30 px-2 py-0.5 rounded font-bold">
+                2 AGENTS ACTIVE
+              </span>
+</div>
+<!-- Agents Participating -->
+<div class="grid grid-cols-2 gap-2 my-space-sm">
+<div class="bg-bg-elevated p-2 rounded border border-border-subtle flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<div>
+<div class="font-caption text-[10px] font-bold text-text-primary">CHIEF_STATISTICIAN</div>
+<div class="font-caption text-[9px] text-text-tertiary">Benjamini-Hochberg Protocol</div>
+</div>
+</div>
+<div class="bg-bg-elevated p-2 rounded border border-border-subtle flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-color-warning"></span>
+<div>
+<div class="font-caption text-[10px] font-bold text-text-primary">RISK_INVARIANT_SENTINEL</div>
+<div class="font-caption text-[9px] text-text-tertiary">ADR-001 Enforcement Node</div>
+</div>
+</div>
+</div>
+<!-- Deliberation Box in violet styling -->
+<div class="bg-[#1A1828] border border-[#4f319c]/50 rounded p-space-sm space-y-2.5">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-[#cebdff] font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-[#cebdff]" data-icon="gavel">gavel</span>
+                  CONSENSUS VERDICT: STRICT_FDR_ENFORCED
+                </span>
+<span class="font-caption text-[9px] bg-[#4f319c]/40 text-[#cebdff] px-1.5 py-0.5 rounded">UNANIMOUS</span>
+</div>
+<p class="font-body-sm text-[12px] text-text-primary leading-relaxed">
+                "11 of 12 alpha seeds exhibit non-zero selection bias from 148 exploratory trials. Raw Sharpes up to 2.18 fail Bailey-Lopez de Prado Deflated Sharpe testing when adjusted for negative return skewness (-0.68) and excess fat tails. Only <span class="text-primary font-bold font-mono">alpha_003 (Funding Rate Basis)</span> maintains <span class="text-primary font-bold font-mono">DSR = 0.964 &gt; 0.950 hurdle</span>. ADR-001 prevents live execution; routing strictly to simulated Paper Execution Engine."
+              </p>
+<div class="bg-bg-primary/80 p-2 rounded border border-border-subtle flex flex-col gap-1">
+<div class="flex items-center justify-between font-caption text-[10px]">
+<span class="text-text-tertiary">Cryptographic Audit Hash:</span>
+<span class="text-primary font-mono font-bold">SHA-256 VALIDATED</span>
+</div>
+<div class="font-caption text-[10px] text-text-secondary font-mono truncate">
+                  0x7b92fae49811d044bb71239c8942ef3a61d8c119e7a2b904c
+                </div>
+</div>
+</div>
+<!-- Invariant Check Items -->
+<div class="mt-space-sm space-y-1">
+<div class="flex items-center justify-between font-caption text-[10px] py-1 border-b border-border-subtle text-text-secondary">
+<span>INVARIANT I-01: Zero Lookahead in Weights</span>
+<span class="text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="check">check</span> VERIFIED
+                </span>
+</div>
+<div class="flex items-center justify-between font-caption text-[10px] py-1 border-b border-border-subtle text-text-secondary">
+<span>INVARIANT I-02: Negative Skewness Haircut</span>
+<span class="text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="check">check</span> APPLIED (-14.2%)
+                </span>
+</div>
+<div class="flex items-center justify-between font-caption text-[10px] py-1 text-text-secondary">
+<span>INVARIANT I-03: Live Trading Isolation (ADR-001)</span>
+<span class="text-color-warning font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="lock">lock</span> LOCKED_TO_PAPER
+                </span>
+</div>
+</div>
+</div>
+<!-- Action CTA -->
+<div class="mt-space-md pt-space-sm border-t border-border-subtle flex flex-col gap-2">
+<button class="w-full h-10 rounded bg-[#4f319c] hover:bg-[#5f3bbd] text-text-primary font-title-lg text-body-sm font-semibold transition-colors flex items-center justify-center gap-2 border border-[#cebdff]/40 shadow-[0_0_15px_rgba(79,49,156,0.3)]">
+<span class="material-symbols-outlined" data-icon="lock_open">lock_open</span>
+              Lock Invariant &amp; Gate Promotion (1 Seed)
+            </button>
+<div class="flex items-center justify-between font-caption text-[9px] text-text-tertiary">
+<span>Paper Execution Engine: <strong class="text-text-primary">ONLINE</strong></span>
+<span>Next Audit Cycle: <strong class="text-primary font-mono">00:14:59</strong></span>
+</div>
+</div>
+</div>
+</section>
+<!-- System Diagnostic Telemetry Ribbon -->
+<footer class="bg-bg-surface border border-border-subtle rounded px-4 py-2 flex flex-col md:flex-row items-center justify-between text-xs font-caption text-text-tertiary gap-2">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1.5 text-text-secondary">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+            KERNEL: CASHCLAW-CORE 4.19.4-INST
+          </span>
+<span>LATENCY: <strong class="text-text-primary font-mono">42µs</strong></span>
+<span>SLIPPAGE MODEL: <strong class="text-text-primary font-mono">1.2 BPS (ADJUSTED)</strong></span>
+<span>YZ VOL: <strong class="text-text-primary font-mono">16.18</strong></span>
+</div>
+<div class="flex items-center gap-3">
+<span>ZERO-LOOKAHEAD AUDIT: <strong class="text-primary">PASS (CYCLE #8921)</strong></span>
+<span class="text-text-secondary">© 2025 CASHCLAW QUANTITATIVE PLATFORM</span>
+</div>
+</footer>
+</div>
+</main>
+<!-- Interactive slider logic for DSR Trials Simulation -->
+<script>
+    const slider = document.getElementById('trialSlider');
+    const display = document.getElementById('trials-display');
+
+    if (slider && display) {
+      slider.addEventListener('input', function(e) {
+        const val = e.target.value;
+        display.textContent = val + ' Trials';
+      });
+    }
+  </script>
+</body></html>
