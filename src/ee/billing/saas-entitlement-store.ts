@@ -44,7 +44,7 @@ export class SaasEntitlementStore {
     if (this.processedPayments.has(paymentId)) return true;
     if (this.db) {
       const row = await this.db
-        .prepare('SELECT payment_id FROM saas_nowpayments_ipn_events WHERE payment_id = ?')
+        .prepare("SELECT payment_id FROM saas_nowpayments_ipn_events WHERE payment_id = ? AND payment_status IN ('finished', 'confirmed')")
         .bind(paymentId)
         .first<{ payment_id: string }>();
       if (row?.payment_id) {
@@ -63,7 +63,7 @@ export class SaasEntitlementStore {
     if (this.db) {
       await this.db
         .prepare(
-          `INSERT OR IGNORE INTO saas_nowpayments_ipn_events
+          `INSERT OR REPLACE INTO saas_nowpayments_ipn_events
            (payment_id, workspace_id, target_tier, payment_status, pay_amount, pay_currency, signature_verified, processed_at_ms)
            VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
         )
