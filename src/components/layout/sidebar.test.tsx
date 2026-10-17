@@ -48,6 +48,8 @@ describe('Sidebar', () => {
     { label: 'nav.sovereign-enclave', href: '/vi/sovereign-enclave' },
     { label: 'nav.relative-value-basis', href: '/vi/relative-value-basis' },
     { label: 'nav.portfolio-cvar-stress', href: '/vi/portfolio-cvar-stress' },
+    { label: 'nav.orderbook-imbalance-lob', href: '/vi/orderbook-imbalance-lob' },
+    { label: 'nav.rough-volatility-hurst', href: '/vi/rough-volatility-hurst' },
     { label: 'nav.style-guide', href: '/vi/style-guide' },
     { label: 'nav.settings', href: '/vi/settings' },
   ];

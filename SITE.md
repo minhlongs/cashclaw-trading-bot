@@ -26,6 +26,8 @@ High-fidelity institutional quantitative alpha research and paper trading cockpi
 - [x] fdr-multiple-testing-gate.html — Multiple-Testing False Discovery Rate (BH-FDR & Deflated Sharpe) Gate
 - [x] style-guide.html — CashClaw OS Component Style Guide & Quantitative Design Tokens
 - [x] portfolio-cvar-stress.html — Cross-Margin CVaR Tail-Risk & Liquidation Cascade Simulator
+- [x] orderbook-imbalance-lob.html — L3 Order Book Imbalance & Hawkes Process Micro-Burst Predictor
+- [x] rough-volatility-hurst.html — Gatheral Rough Volatility Hurst Exponent (H < 0.5) & Barndorff-Nielsen Bipower Variation Jump Detector
 
 ## Roadmap
 1. `index.html` — Cockpit Overview, 4-col KPI row, BTC/USDT candlestick chart, TradingAgents feed (Completed)
@@ -44,8 +46,10 @@ High-fidelity institutional quantitative alpha research and paper trading cockpi
 14. `fdr-multiple-testing-gate.html` — Multiple-Testing False Discovery Rate (BH-FDR & Deflated Sharpe) Gate (Completed)
 15. `style-guide.html` — CashClaw OS Component Style Guide & Quantitative Design Tokens (Completed)
 16. `portfolio-cvar-stress.html` — Cross-Margin CVaR Tail-Risk & Liquidation Cascade Simulator (Completed)
-17. `orderbook-imbalance-lob.html` — L3 Order Book Imbalance & Hawkes Process Micro-Burst Predictor (Next)
+17. `orderbook-imbalance-lob.html` — L3 Order Book Imbalance & Hawkes Process Micro-Burst Predictor (Completed)
+18. `rough-volatility-hurst.html` — Gatheral Rough Volatility Hurst Exponent (H < 0.5) & Barndorff-Nielsen Bipower Variation Jump Detector (Completed)
+19. `leadlag-hayashi-yoshida.html` — Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix (Next)
 
 ## Creative Freedom
-- L3 Order Book Imbalance & Hawkes Process Micro-Burst Predictor (`orderbook-imbalance-lob.html`): Self-exciting Hawkes intensity λ(t), top-5 level queue depletion skew, and toxic order-flow VPIN toxicity gate
+- Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix (`leadlag-hayashi-yoshida.html`): Hayashi-Yoshida overlap-interval covariance estimator, asynchronous tick lead-lag response curve $\rho_{HY}(\ell)$, and Epps-effect neutralization across BTC-PERP, ETH-USDT, SOL-USDT, and BNB-USDT
 - Hierarchical Risk Parity (HRP) & Eigen-Portfolio Factor Allocator (`hrp-allocator.html`): Quasi-diagonalization dendrogram, recursive bisection weights, and shrinkage covariance estimator

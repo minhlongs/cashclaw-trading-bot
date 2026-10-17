@@ -1,5 +1,5 @@
 ---
-page: orderbook-imbalance-lob
+page: leadlag-hayashi-yoshida
 ---
 
 **DESIGN SYSTEM (REQUIRED):**
@@ -14,13 +14,13 @@ page: orderbook-imbalance-lob
 - Geometry: 12px rounded cards, 8px rounded buttons/inputs, 44px minimum interactive height, compact data-dense spacing (16px grid gaps)
 
 **Page request:**
-Design the **L3 Order Book Imbalance & Hawkes Process Micro-Burst Predictor** (`orderbook-imbalance-lob.html`) for CashClaw OS (`src/forest/microstructure/` & `src/forest/execution/` LOB Queue Depletion & Self-Exciting Hawkes Arrival Engine).
+Design the **Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix** (`leadlag-hayashi-yoshida.html`) for CashClaw OS (`src/forest/microstructure/` & `src/forest/relative-value/` Asynchronous Tick Cross-Covariance & Lead-Lag Discovery Engine).
 Include:
-1. Left sidebar (`240px`) with active state on "LOB Hawkes Imbalance" and wired links to all 16 CashClaw OS screens (`index.html`, `alpha-zoo.html`, `deliberation-theater.html`, `strategies/volatility-dca.html`, `correlation-matrix.html`, `execution-ledger.html`, `data-quality-gate.html`, `microstructure-liquidity.html`, `survival-gate.html`, `sovereign-enclave.html`, `relative-value-basis.html`, `billing.html`, `regime-attribution.html`, `fdr-multiple-testing-gate.html`, `style-guide.html`, `portfolio-cvar-stress.html`).
-2. Top header with `L3 Order Book Imbalance • Self-Exciting Hawkes Process λ(t) • VPIN Flow Toxicity Fence • PAPER_ONLY` badge and `Calibrate Hawkes Kernel` button.
+1. Left sidebar (`240px`) with active state on "Hayashi-Yoshida Lead-Lag" and wired links to all 18 CashClaw OS screens (`index.html`, `alpha-zoo.html`, `deliberation-theater.html`, `strategies/volatility-dca.html`, `correlation-matrix.html`, `execution-ledger.html`, `data-quality-gate.html`, `microstructure-liquidity.html`, `survival-gate.html`, `sovereign-enclave.html`, `relative-value-basis.html`, `billing.html`, `regime-attribution.html`, `fdr-multiple-testing-gate.html`, `style-guide.html`, `portfolio-cvar-stress.html`, `orderbook-imbalance-lob.html`, `rough-volatility-hurst.html`).
+2. Top header with `Hayashi-Yoshida (2005) Overlap-Interval Estimator • Epps-Effect Neutralized Cross-Correlation • PAPER_ONLY • ADR-001` badge and `Re-Compute Lead-Lag Curve` button.
 3. 3 Telemetry KPI Cards:
-   - Top-5 Queue Order Book Imbalance (OBI): `+0.418 (Bid-Heavy Skew)` (`Cont-Kukanov-Stoikov Linear Impact • 250ms Horizon`)
-   - Hawkes Branching Ratio ($\eta = \alpha / \beta$): `0.784 (Sub-Critical Clustering)` (`Self-Exciting Trade Arrival Intensity λ(t) = 42.6 events/s`)
-   - VPIN Informed Flow Toxicity Percentile: `91.4% (TOXIC_FLOW_ALERT)` (`Maker Quote Pull Fence Triggered Above 90th Percentile`)
-4. Multi-Level L2/L3 Limit Order Book Depth & Queue Depletion Matrix comparing Bid/Ask Queue Sizes, Cancel-to-Fill Ratios, Micro-Price Deviation ($\Delta P_{\text{micro}}$), Hawkes Excitation Contribution, and Execution Routing Verdict (`PASSIVE_MAKER`, `TWAP_SLICE`, `HALT_TOXIC_SWEEP`).
-5. Interactive Hawkes Intensity Decay Kernel ($\alpha e^{-\beta(t - t_i)}$) & VPIN Bucket Simulator showing micro-burst clustering and adverse selection protection across BTC-USDT, ETH-USDT, SOL-USDT, and BNB-USDT paper books.
+   - Dominant Leader-Lagger Pair: `BTC-PERP → SOL-USDT (τ* = +340ms)` (`Peak HY Cross-Correlation ρ_HY(τ*) = +0.742`)
+   - Epps Bias Attenuation Recovered: `+0.284 Δρ vs Synchronous 1s Grid` (`Zero Interpolation Lookahead • Poisson Tick Arrivals`)
+   - Lead-Lag Signal Ratio (LLR): `2.84 (SIGNIFICANT_LEADER)` (`Causal Cross-Asset Propagation Hurdle Passed`)
+4. Asynchronous Pairwise Lead-Lag & Hayashi-Yoshida Cross-Correlation Matrix comparing Synchronous Correlation ($\rho_{\text{sync}}$), Hayashi-Yoshida Correlation ($\rho_{\text{HY}}$), Optimal Lag ($\tau^*$), Lead-Lag Ratio ($\text{LLR}$), Information Share (%), and Paper Execution Action (`PROPAGATION_ARB`, `PASSIVE_SHADOW`, `NO_LEAD_LAG`).
+5. Interactive Cross-Correlation Asymmetric Lag Curve ($\rho_{\text{HY}}(\tau)$ for $\tau \in [-2000\text{ms}, +2000\text{ms}]$) & Overlap-Interval Indicator $\mathbb{I}(I_i \cap J_j \neq \emptyset)$ Inspector.

@@ -18,6 +18,8 @@
     "sovereign-enclave": "Enclave Mật Mã",
     "relative-value-basis": "Chênh Lệch Basis",
     "portfolio-cvar-stress": "Kiểm Thử CVaR 99%",
+    "orderbook-imbalance-lob": "Mất Cân Bằng Sổ Lệnh L3",
+    "rough-volatility-hurst": "Biến Động Nhám Hurst",
     "style-guide": "Hệ Thống Thiết Kế"
   },
   "dashboard": {

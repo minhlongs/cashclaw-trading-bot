@@ -1,4 +1,4 @@
-/* CashClaw Quant OS — Tailwind Theme Mapping (stitch-design-system)
+/* CashClaw Quant OS — Tailwind Theme Mapping (stitch-design-system & stitch-animate)
  * Maps DESIGN.md CSS custom properties into Tailwind theme tokens & utility classes.
  */
 
@@ -33,13 +33,14 @@
   --radius-modal: var(--radius-xl);
 }
 
-/* Stitch Component Geometry & A11y Primitives */
+/* Stitch Component Geometry, Motion & A11y Primitives */
 .stitch-card {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   box-shadow: var(--shadow-md);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .stitch-panel-elevated {
@@ -60,6 +61,19 @@
 .stitch-control:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+.stitch-animate-micro {
+  transition: transform 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-card,
+  .stitch-control,
+  .stitch-animate-micro {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 .stitch-badge-paper {

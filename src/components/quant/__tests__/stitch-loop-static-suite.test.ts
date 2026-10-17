@@ -23,6 +23,8 @@ const EXPECTED_SCREENS = [
   { relPath: 'fdr-multiple-testing-gate.html', queueBase: 'fdr-multiple-testing-gate' },
   { relPath: 'style-guide.html', queueBase: 'style-guide' },
   { relPath: 'portfolio-cvar-stress.html', queueBase: 'portfolio-cvar-stress' },
+  { relPath: 'orderbook-imbalance-lob.html', queueBase: 'orderbook-imbalance-lob' },
+  { relPath: 'rough-volatility-hurst.html', queueBase: 'rough-volatility-hurst' },
 ] as const;
 
 const DESIGN_SECTION_6_BLOCK = [
@@ -52,7 +54,7 @@ interface StitchManifest {
 }
 
 describe('CashClaw OS Stitch-Loop Static Suite & Baton Verification', () => {
-  it('verifies all 15 HTML screens in site/public/ exceed 5 KB and include PAPER_ONLY & DESIGN.md tokens', () => {
+  it('verifies all 18 HTML screens in site/public/ exceed 5 KB and include PAPER_ONLY & DESIGN.md tokens', () => {
     for (const screen of EXPECTED_SCREENS) {
       const fullPath = path.join(PUBLIC_DIR, screen.relPath);
       expect(fs.existsSync(fullPath), `Missing public HTML: ${screen.relPath}`).toBe(true);
@@ -79,20 +81,20 @@ describe('CashClaw OS Stitch-Loop Static Suite & Baton Verification', () => {
     expect(fs.existsSync(manifestPath)).toBe(true);
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as StitchManifest;
     expect(manifest.projectId).toBe('6665149401860401191');
-    expect(manifest.totalScreens).toBe(16);
+    expect(manifest.totalScreens).toBe(18);
     expect(manifest.brokenLinksCount).toBe(0);
     expect(manifest.placeholderLinksCount).toBe(0);
-    expect(manifest.screens).toHaveLength(16);
+    expect(manifest.screens).toHaveLength(18);
   });
 
-  it('verifies zero broken relative links and zero href="#" placeholders across all 15 screens', () => {
+  it('verifies zero broken relative links and zero href="#" placeholders across all 18 screens', () => {
     const hrefRegex = /<a\b[^>]*?\bhref=["']([^"']+)["']/gi;
 
     for (const screen of EXPECTED_SCREENS) {
       const fullPath = path.join(PUBLIC_DIR, screen.relPath);
       const html = fs.readFileSync(fullPath, 'utf8');
       const matches = Array.from(html.matchAll(hrefRegex), (m) => m[1]);
-      expect(matches.length).toBeGreaterThanOrEqual(15);
+      expect(matches.length).toBeGreaterThanOrEqual(18);
 
       for (const href of matches) {
         expect(href, `Placeholder href="#" found in ${screen.relPath}`).not.toBe('#');
@@ -106,15 +108,23 @@ describe('CashClaw OS Stitch-Loop Static Suite & Baton Verification', () => {
     }
   });
 
-  it('verifies SITE.md marks all 15 screens [x] and next-prompt.md contains valid frontmatter + DESIGN.md §6 block', () => {
+  it('verifies SITE.md marks all 18 screens [x], next-prompt.md has leadlag-hayashi-yoshida + DESIGN.md §6, and quant files <= 120 LOC', () => {
     const siteMd = fs.readFileSync(path.join(REPO_ROOT, 'SITE.md'), 'utf8');
     for (const screen of EXPECTED_SCREENS) {
       expect(siteMd).toContain(`- [x] ${screen.relPath}`);
     }
 
     const nextPrompt = fs.readFileSync(path.join(REPO_ROOT, 'next-prompt.md'), 'utf8');
-    expect(nextPrompt).toMatch(/^---\npage:\s+[a-z0-9-]+\n---/);
+    expect(nextPrompt).toMatch(/^---\npage:\s+leadlag-hayashi-yoshida\n---/);
     expect(nextPrompt).toContain(DESIGN_SECTION_6_BLOCK);
+
+    const quantDir = path.join(REPO_ROOT, 'src/components/quant');
+    const quantFiles = fs.readdirSync(quantDir).filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+    for (const file of quantFiles) {
+      const content = fs.readFileSync(path.join(quantDir, file), 'utf8');
+      const lineCount = content.endsWith('\n') ? content.split('\n').length - 1 : content.split('\n').length;
+      expect(lineCount, `${file} exceeds 120 lines (${lineCount})`).toBeLessThanOrEqual(120);
+    }
   });
 
   it('verifies design-tokens.css and tailwind-theme.css define CashClaw Quant OS semantic tokens', () => {

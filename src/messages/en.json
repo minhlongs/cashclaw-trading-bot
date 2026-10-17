@@ -18,6 +18,8 @@
     "sovereign-enclave": "Sovereign Enclave",
     "relative-value-basis": "Relative Value Basis",
     "portfolio-cvar-stress": "Portfolio CVaR Stress",
+    "orderbook-imbalance-lob": "Hawkes LOB Imbalance",
+    "rough-volatility-hurst": "Rough Volatility Hurst",
     "style-guide": "Style Guide"
   },
   "dashboard": {

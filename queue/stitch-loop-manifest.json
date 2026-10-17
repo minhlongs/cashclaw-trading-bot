@@ -2,9 +2,9 @@
   "projectId": "6665149401860401191",
   "projectResource": "projects/6665149401860401191",
   "designSystemAsset": "assets/be7563bf9e4c400f85f92f80d27a5de5",
-  "generatedAt": "2026-10-17T10:37:52.400Z",
-  "totalScreens": 16,
-  "totalLinksChecked": 270,
+  "generatedAt": "2026-10-17T11:08:56.165Z",
+  "totalScreens": 18,
+  "totalLinksChecked": 344,
   "brokenLinksCount": 0,
   "placeholderLinksCount": 0,
   "screens": [
@@ -14,7 +14,7 @@
       "relPath": "index.html",
       "label": "Cockpit Overview",
       "stitchScreenResource": "projects/6665149401860401191/screens/index",
-      "publicBytes": 19438,
+      "publicBytes": 20340,
       "queueHtml": "queue/index.html",
       "queuePng": "queue/index.png"
     },
@@ -24,7 +24,7 @@
       "relPath": "alpha-zoo.html",
       "label": "Alpha Zoo Evaluator",
       "stitchScreenResource": "projects/6665149401860401191/screens/alpha-zoo",
-      "publicBytes": 18028,
+      "publicBytes": 18930,
       "queueHtml": "queue/alpha-zoo.html",
       "queuePng": "queue/alpha-zoo.png"
     },
@@ -34,7 +34,7 @@
       "relPath": "deliberation-theater.html",
       "label": "Deliberation Theater",
       "stitchScreenResource": "projects/6665149401860401191/screens/deliberation-theater",
-      "publicBytes": 18081,
+      "publicBytes": 18983,
       "queueHtml": "queue/deliberation-theater.html",
       "queuePng": "queue/deliberation-theater.png"
     },
@@ -44,7 +44,7 @@
       "relPath": "strategies/volatility-dca.html",
       "label": "Volatility-DCA Bots",
       "stitchScreenResource": "projects/6665149401860401191/screens/volatility-dca",
-      "publicBytes": 17726,
+      "publicBytes": 18634,
       "queueHtml": "queue/volatility-dca.html",
       "queuePng": "queue/volatility-dca.png"
     },
@@ -54,7 +54,7 @@
       "relPath": "correlation-matrix.html",
       "label": "Correlation Matrix",
       "stitchScreenResource": "projects/6665149401860401191/screens/correlation-matrix",
-      "publicBytes": 20182,
+      "publicBytes": 21084,
       "queueHtml": "queue/correlation-matrix.html",
       "queuePng": "queue/correlation-matrix.png"
     },
@@ -64,7 +64,7 @@
       "relPath": "execution-ledger.html",
       "label": "Execution Ledger",
       "stitchScreenResource": "projects/6665149401860401191/screens/execution-ledger",
-      "publicBytes": 19064,
+      "publicBytes": 19966,
       "queueHtml": "queue/execution-ledger.html",
       "queuePng": "queue/execution-ledger.png"
     },
@@ -74,7 +74,7 @@
       "relPath": "data-quality-gate.html",
       "label": "Data Quality Gate",
       "stitchScreenResource": "projects/6665149401860401191/screens/data-quality-gate",
-      "publicBytes": 18541,
+      "publicBytes": 19443,
       "queueHtml": "queue/data-quality-gate.html",
       "queuePng": "queue/data-quality-gate.png"
     },
@@ -84,7 +84,7 @@
       "relPath": "microstructure-liquidity.html",
       "label": "Microstructure Liquidity",
       "stitchScreenResource": "projects/6665149401860401191/screens/microstructure-liquidity",
-      "publicBytes": 17616,
+      "publicBytes": 18518,
       "queueHtml": "queue/microstructure-liquidity.html",
       "queuePng": "queue/microstructure-liquidity.png"
     },
@@ -94,7 +94,7 @@
       "relPath": "survival-gate.html",
       "label": "Survival Gate",
       "stitchScreenResource": "projects/6665149401860401191/screens/survival-gate",
-      "publicBytes": 20809,
+      "publicBytes": 21711,
       "queueHtml": "queue/survival-gate.html",
       "queuePng": "queue/survival-gate.png"
     },
@@ -104,7 +104,7 @@
       "relPath": "sovereign-enclave.html",
       "label": "Sovereign Enclave",
       "stitchScreenResource": "projects/6665149401860401191/screens/sovereign-enclave",
-      "publicBytes": 23347,
+      "publicBytes": 24249,
       "queueHtml": "queue/sovereign-enclave.html",
       "queuePng": "queue/sovereign-enclave.png"
     },
@@ -114,7 +114,7 @@
       "relPath": "relative-value-basis.html",
       "label": "Relative-Value Basis",
       "stitchScreenResource": "projects/6665149401860401191/screens/relative-value-basis",
-      "publicBytes": 25738,
+      "publicBytes": 26640,
       "queueHtml": "queue/relative-value-basis.html",
       "queuePng": "queue/relative-value-basis.png"
     },
@@ -124,7 +124,7 @@
       "relPath": "billing.html",
       "label": "SaaS Billing & Quota",
       "stitchScreenResource": "projects/6665149401860401191/screens/billing",
-      "publicBytes": 17643,
+      "publicBytes": 18545,
       "queueHtml": "queue/billing.html",
       "queuePng": "queue/billing.png"
     },
@@ -134,7 +134,7 @@
       "relPath": "regime-attribution.html",
       "label": "Regime Attribution",
       "stitchScreenResource": "projects/6665149401860401191/screens/ed2c9afb27504e86bdd268390891804e",
-      "publicBytes": 31736,
+      "publicBytes": 32638,
       "queueHtml": "queue/regime-attribution.html",
       "queuePng": "queue/regime-attribution.png"
     },
@@ -144,7 +144,7 @@
       "relPath": "fdr-multiple-testing-gate.html",
       "label": "FDR Multiple-Testing Gate",
       "stitchScreenResource": "projects/6665149401860401191/screens/9c29f01089bf437299bdbd007ece5cd5",
-      "publicBytes": 30631,
+      "publicBytes": 31533,
       "queueHtml": "queue/fdr-multiple-testing-gate.html",
       "queuePng": "queue/fdr-multiple-testing-gate.png"
     },
@@ -154,7 +154,7 @@
       "relPath": "style-guide.html",
       "label": "Style Guide & Tokens",
       "stitchScreenResource": "projects/6665149401860401191/screens/e66e2bcc9f70496495802789c24a5b36",
-      "publicBytes": 24889,
+      "publicBytes": 25791,
       "queueHtml": "queue/style-guide.html",
       "queuePng": "queue/style-guide.png"
     },
@@ -164,9 +164,29 @@
       "relPath": "portfolio-cvar-stress.html",
       "label": "CVaR Tail-Risk Stress",
       "stitchScreenResource": "projects/6665149401860401191/screens/ba2a8615438049aea19867bff9ae00b9",
-      "publicBytes": 28797,
+      "publicBytes": 29699,
       "queueHtml": "queue/portfolio-cvar-stress.html",
       "queuePng": "queue/portfolio-cvar-stress.png"
+    },
+    {
+      "index": 17,
+      "id": "orderbook-imbalance-lob",
+      "relPath": "orderbook-imbalance-lob.html",
+      "label": "LOB Hawkes Imbalance",
+      "stitchScreenResource": "projects/6665149401860401191/screens/315841d3afc441ba8b856d10a9af5f8c",
+      "publicBytes": 28803,
+      "queueHtml": "queue/orderbook-imbalance-lob.html",
+      "queuePng": "queue/orderbook-imbalance-lob.png"
+    },
+    {
+      "index": 18,
+      "id": "rough-volatility-hurst",
+      "relPath": "rough-volatility-hurst.html",
+      "label": "Rough Volatility & Jumps",
+      "stitchScreenResource": "projects/6665149401860401191/screens/049696d3e3b3497492b29a7b4c01ef2c",
+      "publicBytes": 28730,
+      "queueHtml": "queue/rough-volatility-hurst.html",
+      "queuePng": "queue/rough-volatility-hurst.png"
     }
   ]
 }

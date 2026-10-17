@@ -1,4 +1,4 @@
-/* CashClaw Quant OS — Tailwind Theme Mapping (stitch-design-system)
+/* CashClaw Quant OS — Tailwind Theme Mapping (stitch-design-system & stitch-animate)
  * Maps DESIGN.md CSS custom properties into Tailwind theme tokens & utility classes.
  */
 
@@ -31,4 +31,15 @@
   --radius-card: var(--radius-lg);
   --radius-control: var(--radius-md);
   --radius-modal: var(--radius-xl);
+}
+
+.stitch-animate-micro {
+  transition: transform 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-animate-micro {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

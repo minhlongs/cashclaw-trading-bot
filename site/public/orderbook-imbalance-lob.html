@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<!-- Stitch Project: projects/6665149401860401191 | Screen: projects/6665149401860401191/screens/315841d3afc441ba8b856d10a9af5f8c | Design System: assets/be7563bf9e4c400f85f92f80d27a5de5 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashClaw OS — L3 Order Book Imbalance &amp; Hawkes Process Micro-Burst Predictor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E11;
+      --bg-surface: #141820;
+      --bg-elevated: #1A2030;
+      --bg-hover: #1E2838;
+      --color-accent: #00D4AA;
+      --color-profit: #00D4AA;
+      --color-loss: #FF4757;
+      --color-error: #FF4757;
+      --color-warning: #FFB020;
+      --color-ai: #A78BFA;
+      --text-primary: #E8EAED;
+      --text-secondary: #8B95A5;
+      --text-tertiary: #5A6577;
+      --border-subtle: #1E2530;
+      --border-default: #2A3340;
+    }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased">
+  <!-- Left Sidebar (240px) -->
+  <aside class="w-60 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 flex-shrink-0">
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center font-bold text-black text-sm">CC</div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-wide">CashClaw OS</span>
+          <span class="text-[10px] text-[var(--color-warning)] font-mono font-semibold">PAPER_ONLY • ADR-001</span>
+        </div>
+      </div>
+
+            <nav class="flex flex-col gap-1.5 text-xs font-medium">
+        <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Cockpit Overview
+        </a>
+        <a href="alpha-zoo.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Alpha Zoo Evaluator
+        </a>
+        <a href="deliberation-theater.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+          Deliberation Theater
+        </a>
+        <a href="strategies/volatility-dca.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Volatility-DCA Bots
+        </a>
+        <a href="correlation-matrix.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Correlation Matrix
+        </a>
+        <a href="execution-ledger.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Execution Ledger
+        </a>
+        <a href="data-quality-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Data Quality Gate
+        </a>
+        <a href="microstructure-liquidity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Microstructure Liquidity
+        </a>
+        <a href="survival-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Survival Gate
+        </a>
+        <a href="sovereign-enclave.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Sovereign Enclave
+        </a>
+        <a href="relative-value-basis.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Relative-Value Basis
+        </a>
+        <a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          SaaS Billing & Quota
+        </a>
+        <a href="regime-attribution.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Regime Attribution
+        </a>
+        <a href="fdr-multiple-testing-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          FDR Multiple-Testing Gate
+        </a>
+        <a href="style-guide.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Style Guide & Tokens
+        </a>
+        <a href="portfolio-cvar-stress.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          CVaR Tail-Risk Stress
+        </a>
+        <a href="orderbook-imbalance-lob.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          LOB Hawkes Imbalance
+        </a>
+        <a href="rough-volatility-hurst.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+          Rough Volatility & Jumps
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs flex flex-col gap-1">
+      <span class="text-[var(--text-secondary)] text-[10px]">LOB Micro-Burst Engine</span>
+      <span class="font-mono text-[var(--text-primary)] font-semibold truncate">Hawkes λ(t) • VPIN</span>
+      <span class="text-[10px] text-[var(--color-accent)] font-semibold">SUB-CRITICAL • CAUSAL</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Header Bar -->
+    <header class="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-primary)]">
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="font-bold text-base">L3 Order Book Imbalance &amp; Hawkes Process Micro-Burst Predictor</h1>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)] border border-[rgba(0,212,170,0.25)]">
+          L3 Order Book Imbalance • Self-Exciting Hawkes Process &lambda;(t) • VPIN Flow Toxicity Fence • PAPER_ONLY
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="microstructure-liquidity.html" class="h-9 px-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-primary)] font-semibold text-xs flex items-center gap-1.5 hover:bg-[var(--bg-hover)] transition-colors">
+          <span>Amihud / Roll Liquidity</span>
+        </a>
+        <button id="calibrateHawkesBtn" onclick="document.getElementById('hawkesCalibStamp').textContent = 'KERNEL CALIBRATED • ' + new Date().toISOString().slice(11,19) + ' UTC'" class="h-9 px-4 rounded-lg bg-[var(--color-accent)] text-black font-semibold text-xs flex items-center gap-1.5 hover:brightness-110 transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <span>Calibrate Hawkes Kernel</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+      <!-- 3 Telemetry KPI Cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Top-5 Queue Order Book Imbalance (OBI)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-mono font-semibold">BID-HEAVY SKEW</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-accent)]">+0.418 (Bid-Heavy Skew)</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Cont-Kukanov-Stoikov Linear Impact • 250ms Horizon</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Hawkes Branching Ratio (&eta; = &alpha; / &beta;)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(167,139,250,0.15)] text-[var(--color-ai)] font-mono font-semibold">STATIONARY (&eta; &lt; 1)</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-ai)]">0.784 (Sub-Critical Clustering)</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Self-Exciting Trade Arrival Intensity &lambda;(t) = 42.6 events/s</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">VPIN Informed Flow Toxicity Percentile</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-mono font-semibold">TOXIC_FLOW_ALERT</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-loss)]">91.4% (TOXIC_FLOW_ALERT)</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Maker Quote Pull Fence Triggered Above 90th Percentile</span>
+        </div>
+      </section>
+
+      <!-- Multi-Level L2/L3 Limit Order Book Depth & Queue Depletion Matrix -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex flex-col gap-0.5">
+            <h2 class="text-sm font-semibold">Multi-Level L2/L3 Limit Order Book Depth &amp; Hawkes Queue Depletion Matrix</h2>
+            <span class="text-xs text-[var(--text-secondary)]">Real-time Order Flow Imbalance (OFI), micro-price deviation (&Delta;P_micro), and self-exciting Hawkes intensity &lambda;(t) = &mu; + &Sigma; &alpha;&middot;exp(-&beta;(t - t_i))</span>
+          </div>
+          <span id="hawkesCalibStamp" class="text-xs font-mono text-[var(--color-accent)]">CONT-KUKANOV-STOIKOV OFI • ZERO LOOKAHEAD</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead>
+              <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)]">
+                <th class="pb-2.5">Book Instrument / Depth</th>
+                <th class="pb-2.5">Top-5 Bid / Ask Queue</th>
+                <th class="pb-2.5">OBI Skew [-1, +1]</th>
+                <th class="pb-2.5">Cancel-to-Fill Ratio</th>
+                <th class="pb-2.5">Micro-Price Shift (&Delta;P_micro)</th>
+                <th class="pb-2.5">Hawkes &eta; = &alpha;/&beta;</th>
+                <th class="pb-2.5">VPIN Toxicity</th>
+                <th class="pb-2.5 text-right">Execution Routing Verdict</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border-subtle)]">
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">BTC-USDT (L3 Top-5)</td>
+                <td class="py-3 text-[var(--text-secondary)]">48.4 BTC / 19.8 BTC</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">+0.418 (Bid-Heavy)</td>
+                <td class="py-3 text-[var(--text-primary)]">3.42 : 1</td>
+                <td class="py-3 text-[var(--color-accent)] font-semibold">+$4.85 (+0.72 bps)</td>
+                <td class="py-3 text-[var(--color-ai)] font-semibold">0.642 (&lambda;=28.4/s)</td>
+                <td class="py-3 text-[var(--color-accent)]">64.2% (Normal)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">PASSIVE_MAKER</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">ETH-USDT (L3 Top-5)</td>
+                <td class="py-3 text-[var(--text-secondary)]">312 ETH / 248 ETH</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">+0.114 (Balanced)</td>
+                <td class="py-3 text-[var(--text-primary)]">4.18 : 1</td>
+                <td class="py-3 text-[var(--color-accent)] font-semibold">+$0.42 (+0.16 bps)</td>
+                <td class="py-3 text-[var(--color-ai)] font-semibold">0.715 (&lambda;=34.1/s)</td>
+                <td class="py-3 text-[var(--color-warning)]">78.9% (Elevated)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] font-bold">TWAP_SLICE</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors bg-[rgba(255,71,87,0.04)]">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">SOL-USDT (L3 Top-5)</td>
+                <td class="py-3 text-[var(--text-secondary)]">1,420 SOL / 4,890 SOL</td>
+                <td class="py-3 text-[var(--color-loss)] font-bold">-0.550 (Ask Sweep)</td>
+                <td class="py-3 text-[var(--color-loss)]">11.84 : 1 (Spoof Alert)</td>
+                <td class="py-3 text-[var(--color-loss)] font-bold">-$0.38 (-2.14 bps)</td>
+                <td class="py-3 text-[var(--color-loss)] font-bold">0.912 (&lambda;=84.2/s)</td>
+                <td class="py-3 text-[var(--color-loss)] font-bold">91.4% (TOXIC)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-bold">HALT_TOXIC_SWEEP</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">BNB-USDT (L3 Top-5)</td>
+                <td class="py-3 text-[var(--text-secondary)]">410 BNB / 465 BNB</td>
+                <td class="py-3 text-[var(--color-warning)] font-semibold">-0.063 (Neutral)</td>
+                <td class="py-3 text-[var(--text-primary)]">2.95 : 1</td>
+                <td class="py-3 text-[var(--text-secondary)]">-$0.08 (-0.14 bps)</td>
+                <td class="py-3 text-[var(--color-ai)] font-semibold">0.588 (&lambda;=16.2/s)</td>
+                <td class="py-3 text-[var(--color-accent)]">52.0% (Normal)</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">PASSIVE_MAKER</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Interactive Hawkes Intensity Decay Kernel & VPIN Bucket Simulator -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left 5 Cols: Hawkes Parameter Sliders & VPIN Fence -->
+        <div class="lg:col-span-5 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold">Hawkes Decay Kernel &amp; VPIN Toxicity Controls</h3>
+            <span class="text-[10px] font-mono text-[var(--color-ai)]">&lambda;(t) = &mu; + &Sigma;&alpha;e^{-&beta;&Delta;t}</span>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-[var(--text-secondary)]">Self-Excitation Jump Magnitude (&alpha;)</span>
+              <span id="hawkesAlphaLabel" class="font-mono text-[var(--color-ai)]">&alpha; = 31.4 s&#8315;&#185; (Branching &eta; = 0.785)</span>
+            </div>
+            <input id="hawkesAlphaSlider" type="range" class="accent-[var(--color-accent)]" min="5" max="39" value="31" oninput="document.getElementById('hawkesAlphaLabel').textContent = 'α = ' + this.value + '.4 s⁻¹ (Branching η = ' + (this.value / 40).toFixed(3) + ')'">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-[var(--text-secondary)]">Exponential Memory Decay Rate (&beta;)</span>
+              <span id="hawkesBetaLabel" class="font-mono text-[var(--color-accent)]">&beta; = 40.0 s&#8315;&#185; (Half-Life &tau; = 17.3ms)</span>
+            </div>
+            <input id="hawkesBetaSlider" type="range" class="accent-[var(--color-accent)]" min="20" max="80" value="40" oninput="document.getElementById('hawkesBetaLabel').textContent = 'β = ' + this.value + '.0 s⁻¹ (Half-Life τ = ' + (693 / this.value).toFixed(1) + 'ms)'">
+          </div>
+
+          <div class="p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-2 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Baseline Exogenous Rate (&mu;):</span>
+              <span class="text-[var(--text-primary)]">9.20 events/sec</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Expected Stationary Intensity E[&lambda;]:</span>
+              <span class="text-[var(--color-ai)] font-bold">42.60 events/sec (&mu; / (1 - &eta;))</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Adverse Selection Maker Pull Gate:</span>
+              <span class="text-[var(--color-loss)] font-bold">ACTIVE @ VPIN &ge; 0.90</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <a href="rough-volatility-hurst.html" class="text-xs font-mono text-[var(--color-accent)] hover:underline">Inspect Rough Volatility Hurst &rarr;</a>
+            <a href="execution-ledger.html" class="text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Paper Fill Ledger &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Right 7 Cols: Self-Exciting Hawkes Arrival Intensity SVG & L3 Queue Bars -->
+        <div class="lg:col-span-7 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-0.5">
+              <h3 class="text-sm font-semibold">Hawkes Conditional Intensity &lambda;(t) Micro-Burst Trajectory &amp; VPIN Fence</h3>
+              <span class="text-xs text-[var(--text-secondary)]">Clustered market-order sweeps trigger instantaneous jump &alpha; followed by exponential relaxation &beta;</span>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(167,139,250,0.15)] text-[var(--color-ai)] font-semibold">SUB-CRITICAL &eta; = 0.784</span>
+          </div>
+
+          <div class="h-52 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] p-4 flex flex-col justify-between relative">
+            <svg class="w-full h-36 overflow-visible" viewBox="0 0 600 130">
+              <!-- Toxicity Threshold Line -->
+              <line x1="30" y1="30" x2="570" y2="30" stroke="#FF4757" stroke-width="1.5" stroke-dasharray="4 3" />
+              <line x1="30" y1="95" x2="570" y2="95" stroke="#2A3340" stroke-dasharray="2 2" />
+              <line x1="30" y1="115" x2="570" y2="115" stroke="#2A3340" />
+              <!-- Hawkes Sawtooth Intensity Curve -->
+              <polyline fill="none" stroke="#A78BFA" stroke-width="2.2" points="30,95 75,95 75,62 110,82 145,91 145,48 165,64 165,22 195,46 195,16 235,54 280,78 330,90 365,94 365,58 410,79 460,91 510,94 570,95" />
+              <!-- Arrival Tick Markers -->
+              <circle cx="75" cy="115" r="3.5" fill="#00D4AA" />
+              <circle cx="145" cy="115" r="3.5" fill="#FFB020" />
+              <circle cx="165" cy="115" r="4" fill="#FF4757" />
+              <circle cx="195" cy="115" r="4" fill="#FF4757" />
+              <circle cx="365" cy="115" r="3.5" fill="#00D4AA" />
+              <text x="380" y="24" fill="#FF4757" font-size="9" font-family="JetBrains Mono">VPIN 90% QUOTE-PULL FENCE (&lambda; &gt; 65/s)</text>
+              <text x="35" y="90" fill="#8B95A5" font-size="9" font-family="JetBrains Mono">Baseline &mu; = 9.2/s</text>
+            </svg>
+            <div class="flex items-center justify-between text-[11px] font-mono text-[var(--text-secondary)] border-t border-[var(--border-subtle)] pt-2">
+              <span class="text-[var(--color-ai)]">&mdash; Hawkes Intensity &lambda;(t)</span>
+              <span class="text-[var(--color-loss)]">--- VPIN Quote-Pull Threshold</span>
+              <span class="text-[var(--color-accent)]">&bull; Causal Trade Arrival Ticks</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 text-xs font-mono">
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Cont-Kukanov-Stoikov R&sup2;</span>
+              <span class="text-sm font-bold text-[var(--color-accent)]">0.684 Linear OFI Fit</span>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Adverse Fill Avoidance</span>
+              <span class="text-sm font-bold text-[var(--color-ai)]">-14.2 bps Saved</span>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Safety Execution Lock</span>
+              <span class="text-sm font-bold text-[var(--color-warning)]">PAPER_ONLY • ADR-001</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CashClaw OS // L3 Order Book Imbalance &amp; Hawkes Micro-Burst Predictor</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;900&amp;family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with CDN Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "text-tertiary": "#5A6577",
+            "surface-container-low": "#161d1a",
+            "color-warning": "#FFB020",
+            "surface-container-lowest": "#08100d",
+            "surface-container": "#19211e",
+            "tertiary-fixed": "#ffdcc1",
+            "surface-container-highest": "#2f3633",
+            "secondary-fixed": "#e8ddff",
+            "surface-variant": "#2f3633",
+            "on-secondary-fixed": "#21005e",
+            "color-loss": "#FF4757",
+            "secondary-container": "#4f319c",
+            "text-secondary": "#8B95A5",
+            "on-primary-fixed": "#002118",
+            "inverse-surface": "#dce4df",
+            "outline-variant": "#3b4a44",
+            "bg-primary": "#0B0E11",
+            "outline": "#85948d",
+            "secondary": "#cebdff",
+            "on-tertiary-fixed-variant": "#6c3a00",
+            "background": "#0d1512",
+            "on-secondary-fixed-variant": "#4f319c",
+            "bg-surface": "#141820",
+            "surface-tint": "#28dfb5",
+            "border-subtle": "#1E2530",
+            "bg-hover": "#1E2838",
+            "surface-container-high": "#242c28",
+            "on-error": "#690005",
+            "on-tertiary-container": "#733e00",
+            "bg-elevated": "#1A2030",
+            "primary-fixed": "#55fcd0",
+            "on-tertiary-fixed": "#2e1500",
+            "on-primary": "#00382b",
+            "on-background": "#dce4df",
+            "primary-fixed-dim": "#28dfb5",
+            "tertiary-container": "#ffa858",
+            "surface": "#0d1512",
+            "on-tertiary": "#4c2700",
+            "text-primary": "#E8EAED",
+            "surface-bright": "#333b37",
+            "primary-container": "#00d4aa",
+            "error": "#ffb4ab",
+            "border-default": "#2A3340",
+            "on-secondary-container": "#bea8ff",
+            "primary": "#46f1c5",
+            "inverse-on-surface": "#2a322f",
+            "error-container": "#93000a",
+            "tertiary": "#ffcea6",
+            "on-error-container": "#ffdad6",
+            "tertiary-fixed-dim": "#ffb77a",
+            "on-primary-container": "#005643",
+            "on-surface-variant": "#bacac2",
+            "inverse-primary": "#006b55",
+            "surface-dim": "#0d1512",
+            "on-primary-fixed-variant": "#00513f",
+            "secondary-fixed-dim": "#cebdff",
+            "on-surface": "#dce4df",
+            "on-secondary": "#381385"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "space-sm": "8px",
+            "space-xl": "24px",
+            "space-lg": "16px",
+            "space-3xl": "48px",
+            "gutter": "16px",
+            "space-2xl": "32px",
+            "space-md": "12px",
+            "margin": "24px",
+            "space-4xl": "64px",
+            "space-xs": "4px"
+          },
+          "fontFamily": {
+            "title-lg": ["Geist", "sans-serif"],
+            "headline-sm": ["Geist", "sans-serif"],
+            "headline-md": ["Geist", "sans-serif"],
+            "body-sm": ["Geist", "sans-serif"],
+            "hero": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist", "sans-serif"],
+            "body-base": ["Geist", "sans-serif"],
+            "caption": ["JetBrains Mono", "monospace"]
+          },
+          "fontSize": {
+            "title-lg": ["16px", { "lineHeight": "1.5", "fontWeight": "600" }],
+            "headline-sm": ["20px", { "lineHeight": "1.25", "fontWeight": "600" }],
+            "headline-md": ["28px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "body-sm": ["13px", { "lineHeight": "1.5", "fontWeight": "500" }],
+            "hero": ["56px", { "lineHeight": "1.25", "fontWeight": "900" }],
+            "headline-lg": ["40px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "body-base": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+            "caption": ["11px", { "lineHeight": "1.4", "letterSpacing": "0.04em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0B0E11;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1E2530;
+      border-radius: 2px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #2A3340;
+    }
+    .glow-teal {
+      box-shadow: 0 0 16px rgba(0, 212, 170, 0.12);
+    }
+    .glow-crimson {
+      box-shadow: 0 0 16px rgba(255, 71, 87, 0.15);
+    }
+  </style>
+</head>
+<body class="bg-bg-primary text-text-primary antialiased font-body-base selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden min-h-screen flex flex-col">
+<!-- ========================================================================= -->
+<!-- 1. LEFT NAVIGATION SIDEBAR (240px Fixed, Institutional CashClaw Shell)     -->
+<!-- ========================================================================= -->
+<aside class="fixed top-0 left-0 h-screen w-60 z-40 bg-bg-primary border-r border-border-subtle flex flex-col justify-between p-space-sm custom-scrollbar overflow-y-auto">
+<!-- Top Branding & Institutional Node Status -->
+<div>
+<div class="px-space-sm pt-space-xs pb-space-md border-b border-border-subtle mb-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-DEFAULT bg-primary inline-block"></span>
+<span class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight">CashClaw OS</span>
+</div>
+<span class="px-1.5 py-0.5 rounded-DEFAULT font-caption text-caption bg-color-warning/10 text-color-warning border border-color-warning/30">ADR-001</span>
+</div>
+<div class="flex items-center justify-between mt-1">
+<span class="font-caption text-caption text-text-secondary">Terminal v4.19 Institutional</span>
+<span class="font-caption text-caption text-primary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> QNT-8812
+          </span>
+</div>
+</div>
+<!-- Navigation Tabs (Shared Components JSON Anchor) -->
+<nav class="space-y-0.5">
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Cockpit Overview</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span>Regime Attribution</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">unfold_more_double</span>
+<span>Alpha Decomposition</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">alt_route</span>
+<span>Strategy Orchestration</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">swap_horiz</span>
+<span>Execution Routing</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">shield</span>
+<span>Risk &amp; Invariants</span>
+</a>
+<!-- ACTIVE TAB: Order Book L3 / Microstructure Hawkes Engine -->
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-primary bg-bg-elevated border-l-2 border-primary font-semibold transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-primary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">stacked_bar_chart</span>
+<span>Order Book L3</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">multiline_chart</span>
+<span>Volatility Surface</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span>LLM Multi-Agent</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">pie_chart</span>
+<span>Portfolio Factor Risk</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">calculate</span>
+<span>Transaction Cost Model</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span>Zero-Lookahead Audit</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span>Telemetry Logs</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">history</span>
+<span>Backtest Engine</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT font-caption text-caption text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>System Settings</span>
+</a>
+</nav>
+</div>
+<!-- Sidebar Bottom Action & Telemetry Footers -->
+<div class="pt-space-sm border-t border-border-subtle mt-space-sm space-y-space-sm">
+<div class="px-space-sm py-1.5 rounded-DEFAULT bg-bg-surface border border-border-subtle">
+<div class="flex items-center justify-between text-caption font-caption">
+<span class="text-text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">gpp_good</span> Audit Live: OK
+          </span>
+<span class="text-primary font-bold">200.0%</span>
+</div>
+<p class="font-caption text-[9px] text-text-tertiary truncate mt-0.5">SHA: 7e2f...b9c1 (Cycle #9043)</p>
+</div>
+<button class="w-full h-11 px-space-sm py-2 rounded-DEFAULT bg-primary text-on-primary-container font-title-lg text-title-lg font-semibold flex items-center justify-center gap-2 hover:opacity-95 transition-opacity active:scale-[0.99] glow-teal">
+<span class="material-symbols-outlined">rocket_launch</span>
+<span>Deploy Agent</span>
+</button>
+<div class="flex items-center justify-between px-space-xs font-caption text-caption text-text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">sensors</span> System Status
+        </span>
+<span class="text-primary uppercase">SYNC 100%</span>
+</div>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- 2. TOP TELEMETRY NAVBAR                                                   -->
+<!-- ========================================================================= -->
+<header class="fixed top-0 left-0 right-0 z-30 flex items-center justify-between w-full h-14 pl-64 pr-space-lg bg-bg-surface border-b border-border-subtle">
+<!-- Left: Breadcrumb & Title -->
+<div class="flex items-center gap-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 font-caption text-[10px] text-text-tertiary uppercase tracking-wider">
+<span>ROOT</span>
+<span>/</span>
+<span>MICROSTRUCTURE</span>
+<span>/</span>
+<span class="text-primary">HAWKES_LOB_ENGINE</span>
+</div>
+<div class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
+<span>CashClaw // REGIME ATTRIBUTION</span>
+<span class="px-1.5 py-0.2 rounded-DEFAULT font-caption text-[10px] bg-bg-elevated text-secondary border border-secondary/30">L3 MICRO-BURST λ(t)</span>
+</div>
+</div>
+</div>
+<!-- Center: Institutional Telemetry Invariants Bar -->
+<div class="hidden xl:flex items-center gap-space-md font-caption text-caption">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-DEFAULT bg-bg-primary border border-border-subtle">
+<span class="w-1.5 h-1.5 rounded-full bg-color-warning"></span>
+<span class="text-text-secondary">INVARIANT:</span>
+<span class="text-color-warning font-bold">ADR-001 [PAPER_ONLY]</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-DEFAULT bg-bg-primary border border-border-subtle">
+<span class="material-symbols-outlined text-primary text-[14px]">verified</span>
+<span class="text-text-secondary">ZERO-LOOKAHEAD:</span>
+<span class="text-primary font-bold">PASS (#9043)</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-1 rounded-DEFAULT bg-bg-primary text-text-secondary border border-border-subtle">
+<span>LATENCY:</span>
+<span class="text-text-primary font-bold">38μs</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-1 rounded-DEFAULT bg-bg-primary text-text-secondary border border-border-subtle">
+<span>TICK RATE:</span>
+<span class="text-text-primary font-bold">14,200/s</span>
+</div>
+<div class="flex items-center gap-1.5 px-2 py-1 rounded-DEFAULT bg-color-loss/10 border border-color-loss/30 text-color-loss font-bold">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span>VPIN CDF: 91.4% [TOXIC]</span>
+</div>
+</div>
+<!-- Right: High-Priority Emergency Actions -->
+<div class="flex items-center gap-space-sm">
+<button class="h-10 px-3 rounded-DEFAULT bg-bg-elevated border border-border-default font-title-lg text-title-lg text-text-primary hover:bg-bg-hover hover:border-text-secondary transition-colors duration-150 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span>Export Matrix</span>
+</button>
+<button class="h-10 px-3 rounded-DEFAULT bg-color-loss text-white font-title-lg text-title-lg font-bold hover:bg-color-loss/90 transition-colors duration-150 flex items-center gap-1.5 glow-crimson active:scale-[0.98]">
+<span class="material-symbols-outlined text-[18px]">emergency_home</span>
+<span>Emergency Halt</span>
+</button>
+<div class="h-6 w-px bg-border-subtle mx-1"></div>
+<div class="flex items-center gap-1 text-text-secondary">
+<button class="w-8 h-8 rounded-DEFAULT hover:bg-bg-hover hover:text-text-primary flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="w-8 h-8 rounded-DEFAULT hover:bg-bg-hover hover:text-text-primary flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE CANVAS                                                     -->
+<!-- ========================================================================= -->
+<main class="pl-64 pt-16 pr-space-lg pb-space-2xl min-h-screen w-full max-w-[1720px] mx-auto space-y-space-md">
+<!-- Sub-header Alert Banner: Active Invariant State -->
+<div class="w-full mt-2 px-space-md py-2 bg-bg-surface border border-border-subtle rounded-DEFAULT flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-2">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-color-warning opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-color-warning"></span>
+</span>
+<span class="font-caption text-caption text-color-warning font-bold uppercase tracking-wider">L3 MICROSTRUCTURE SAFETY LOCK ENGAGED</span>
+</div>
+<span class="text-text-tertiary">|</span>
+<span class="font-caption text-caption text-text-secondary">
+          Cont-Kukanov-Stoikov Impact Linearizer Active: Bid/Ask Top-5 Depth Asymmetry skew exceeds +0.40 threshold.
+        </span>
+</div>
+<div class="flex items-center gap-space-md font-caption text-caption">
+<span class="text-text-secondary">Calibration Epoch: <span class="text-text-primary font-bold">t_0 - 15m</span></span>
+<span class="text-text-secondary">Kernel Memory: <span class="text-primary font-bold">e^{-βΔt} (Half-life: 140ms)</span></span>
+<span class="text-text-secondary">Safety Hash: <span class="text-text-tertiary font-mono">0x4a9b...f08d</span></span>
+</div>
+</div>
+<!-- ========================================================================= -->
+<!-- 3. THREE PRIMARY QUANTITATIVE KPI TELEMETRY CARDS                          -->
+<!-- ========================================================================= -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- KPI 1: Top-5 Queue Order Book Imbalance (OBI) -->
+<div class="bg-bg-surface border border-border-subtle p-space-md rounded-DEFAULT relative overflow-hidden group hover:border-border-default transition-colors">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5 font-caption text-caption text-text-secondary uppercase">
+<span class="material-symbols-outlined text-primary text-[15px]">align_horizontal_left</span>
+<span>Top-5 Queue Imbalance (OBI)</span>
+</div>
+<p class="font-caption text-[10px] text-text-tertiary mt-0.5">Cont-Kukanov-Stoikov Linear Price Impact • τ = 250ms</p>
+</div>
+<span class="px-2 py-0.5 rounded-DEFAULT font-caption text-[10px] bg-primary/10 text-primary border border-primary/20 font-bold">BID-HEAVY SKEW</span>
+</div>
+<div class="mt-space-md flex items-baseline gap-space-sm">
+<span class="font-headline-lg text-headline-lg font-mono text-primary font-bold tracking-tight">+0.418</span>
+<span class="font-caption text-caption text-text-secondary font-mono">ΔP_micro = +$4.82 over Mid</span>
+</div>
+<!-- Micro Depth Split Bar -->
+<div class="mt-space-sm space-y-1">
+<div class="flex justify-between font-caption text-[10px]">
+<span class="text-primary font-bold">BID DEPTH: 70.9% (24.85 BTC)</span>
+<span class="text-color-loss font-bold">ASK DEPTH: 29.1% (10.20 BTC)</span>
+</div>
+<div class="w-full h-2 rounded-DEFAULT bg-bg-primary overflow-hidden flex">
+<div class="h-full bg-primary" style="width: 70.9%;"></div>
+<div class="h-full bg-color-loss" style="width: 29.1%;"></div>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs border-t border-border-subtle flex justify-between items-center font-caption text-[10px] text-text-tertiary">
+<span>Spread: 1.00 USDT (0.15 bps)</span>
+<span class="text-text-secondary">Depletion Velocity: <span class="text-primary font-bold">+18.4 BTC/s</span></span>
+</div>
+</div>
+<!-- KPI 2: Hawkes Process Branching Ratio -->
+<div class="bg-bg-surface border border-border-subtle p-space-md rounded-DEFAULT relative overflow-hidden group hover:border-border-default transition-colors">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5 font-caption text-caption text-text-secondary uppercase">
+<span class="material-symbols-outlined text-secondary text-[15px]">scatter_plot</span>
+<span>Hawkes Branching Ratio (η = α / β)</span>
+</div>
+<p class="font-caption text-[10px] text-text-tertiary mt-0.5">Self-Exciting Arrival Intensity λ(t) • Base μ = 9.2/s</p>
+</div>
+<span class="px-2 py-0.5 rounded-DEFAULT font-caption text-[10px] bg-secondary/10 text-secondary border border-secondary/30 font-bold">SUB-CRITICAL</span>
+</div>
+<div class="mt-space-md flex items-baseline gap-space-sm">
+<span class="font-headline-lg text-headline-lg font-mono text-secondary font-bold tracking-tight">0.784</span>
+<span class="font-caption text-caption text-text-secondary font-mono">λ(t) = 42.6 events/s</span>
+</div>
+<!-- Micro Stationarity Bar -->
+<div class="mt-space-sm space-y-1">
+<div class="flex justify-between font-caption text-[10px]">
+<span class="text-secondary font-bold">STATIONARY: η &lt; 1.0</span>
+<span class="text-color-loss font-mono">CRITICAL EXPLOSION: 1.0</span>
+</div>
+<div class="w-full h-2 rounded-DEFAULT bg-bg-primary overflow-hidden relative">
+<div class="h-full bg-secondary" style="width: 78.4%;"></div>
+<div class="absolute top-0 bottom-0 left-[85%] w-0.5 bg-color-warning" title="Warning Threshold"></div>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs border-t border-border-subtle flex justify-between items-center font-caption text-[10px] text-text-tertiary">
+<span>Mean Cluster Size: 4.63 fills</span>
+<span class="text-text-secondary">Kernel Decay β: <span class="text-text-primary font-bold">4.85 /s</span></span>
+</div>
+</div>
+<!-- KPI 3: VPIN Informed Flow Toxicity -->
+<div class="bg-bg-surface border border-color-loss/40 p-space-md rounded-DEFAULT relative overflow-hidden group hover:border-color-loss transition-colors glow-crimson">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5 font-caption text-caption text-color-loss uppercase font-bold">
+<span class="material-symbols-outlined text-[15px]">shield_with_heart</span>
+<span>VPIN Flow Toxicity Percentile</span>
+</div>
+<p class="font-caption text-[10px] text-text-tertiary mt-0.5">Easley-Lopez de Prado-O'Hara Synchronized Volume</p>
+</div>
+<span class="px-2 py-0.5 rounded-DEFAULT font-caption text-[10px] bg-color-loss/20 text-color-loss border border-color-loss/40 font-bold animate-pulse">TOXIC_FLOW_ALERT</span>
+</div>
+<div class="mt-space-md flex items-baseline gap-space-sm">
+<span class="font-headline-lg text-headline-lg font-mono text-color-loss font-bold tracking-tight">91.4%</span>
+<span class="font-caption text-caption text-color-warning font-mono">FENCE: MAKER QUOTE PULL</span>
+</div>
+<!-- Micro Toxicity Percentile Gauge -->
+<div class="mt-space-sm space-y-1">
+<div class="flex justify-between font-caption text-[10px]">
+<span class="text-text-secondary">CDF Percentile Rank</span>
+<span class="text-color-loss font-bold">Spread Haircut: +8.5 bps</span>
+</div>
+<div class="w-full h-2 rounded-DEFAULT bg-bg-primary overflow-hidden flex">
+<div class="h-full bg-primary" style="width: 50%;"></div>
+<div class="h-full bg-color-warning" style="width: 35%;"></div>
+<div class="h-full bg-color-loss" style="width: 15%;"></div>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs border-t border-border-subtle flex justify-between items-center font-caption text-[10px] text-text-tertiary">
+<span>Bucket Vol V: 50.0 BTC</span>
+<span class="text-color-loss font-semibold">Adverse Selection Guard: ACTIVE</span>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 4. MULTI-LEVEL L2/L3 LIMIT ORDER BOOK DEPTH & QUEUE DEPLETION MATRIX      -->
+<!-- ========================================================================= -->
+<section class="bg-bg-surface border border-border-subtle rounded-DEFAULT overflow-hidden">
+<!-- Section Header with Controls -->
+<div class="px-space-md py-3 border-b border-border-subtle flex flex-wrap items-center justify-between gap-space-sm bg-bg-surface">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary">table_rows</span>
+<h2 class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight">L3 Order Book Microstructure &amp; Queue Depletion Matrix</h2>
+<span class="px-2 py-0.5 rounded-DEFAULT font-caption text-[10px] bg-bg-elevated text-text-secondary border border-border-default">Real-Time LOB Stream</span>
+</div>
+<div class="flex items-center gap-space-sm font-caption text-caption">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-DEFAULT bg-bg-primary border border-border-subtle text-text-secondary">
+<span>Filter:</span>
+<span class="text-text-primary font-bold">INSTITUTIONAL_PAIRS (4)</span>
+</div>
+<button class="px-2.5 py-1 rounded-DEFAULT bg-bg-elevated border border-border-default text-text-primary hover:bg-bg-hover flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">refresh</span>
+<span>Force Resync</span>
+</button>
+</div>
+</div>
+<!-- High-Density Telemetry Data Table -->
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left font-caption text-caption border-collapse">
+<thead>
+<tr class="bg-bg-primary/80 border-b border-border-subtle text-text-secondary text-[11px] uppercase tracking-wider">
+<th class="py-2.5 px-space-md font-semibold">Asset / Tier</th>
+<th class="py-2.5 px-space-md font-semibold text-right">Mid Price (USD)</th>
+<th class="py-2.5 px-space-md font-semibold text-right">Top-5 OBI</th>
+<th class="py-2.5 px-space-md font-semibold text-right">Micro-Price Δ</th>
+<th class="py-2.5 px-space-md font-semibold text-right">C/F Ratio</th>
+<th class="py-2.5 px-space-md font-semibold text-right">Hawkes λ_burst</th>
+<th class="py-2.5 px-space-md font-semibold text-right">VPIN CDF</th>
+<th class="py-2.5 px-space-md font-semibold text-right">Depletion Rate</th>
+<th class="py-2.5 px-space-md font-semibold text-center">Execution Routing Verdict</th>
+<th class="py-2.5 px-space-md font-semibold text-center">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle font-mono text-[12px]">
+<!-- Row 1: BTC-USDT (High Imbalance, Toxic Sweep Detected) -->
+<tr class="hover:bg-bg-hover/60 transition-colors bg-bg-surface">
+<td class="py-3 px-space-md font-title-lg text-title-lg font-bold text-text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>BTC-USDT</span>
+<span class="px-1 py-0.2 rounded-DEFAULT font-caption text-[9px] bg-primary/10 text-primary border border-primary/20">W: 42%</span>
+</td>
+<td class="py-3 px-space-md text-right text-text-primary font-bold">68,419.50</td>
+<td class="py-3 px-space-md text-right font-bold text-primary">
+                +0.418 <span class="text-[10px] text-text-tertiary">▲</span>
+</td>
+<td class="py-3 px-space-md text-right text-primary font-bold">+$4.82</td>
+<td class="py-3 px-space-md text-right text-text-secondary">4.28</td>
+<td class="py-3 px-space-md text-right text-secondary font-bold">42.6/s</td>
+<td class="py-3 px-space-md text-right font-bold text-color-loss">91.4%</td>
+<td class="py-3 px-space-md text-right text-primary font-semibold">18.4 BTC/s</td>
+<td class="py-3 px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-DEFAULT font-caption text-[10px] bg-color-loss/15 text-color-loss border border-color-loss/30 font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-color-loss animate-pulse"></span> HALT_TOXIC_SWEEP
+                </span>
+</td>
+<td class="py-3 px-space-md text-center">
+<button class="px-2 py-1 rounded-DEFAULT bg-bg-elevated text-text-secondary hover:text-text-primary hover:border-text-secondary border border-border-default font-caption text-[11px] transition-colors">
+                  Inspect L3
+                </button>
+</td>
+</tr>
+<!-- Row 2: ETH-USDT (Moderate Imbalance, TWAP Slice Recommended) -->
+<tr class="hover:bg-bg-hover/60 transition-colors bg-bg-surface">
+<td class="py-3 px-space-md font-title-lg text-title-lg font-bold text-text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>ETH-USDT</span>
+<span class="px-1 py-0.2 rounded-DEFAULT font-caption text-[9px] bg-secondary/10 text-secondary border border-secondary/20">W: 28%</span>
+</td>
+<td class="py-3 px-space-md text-right text-text-primary font-bold">3,542.10</td>
+<td class="py-3 px-space-md text-right font-bold text-primary">
+                +0.182 <span class="text-[10px] text-text-tertiary">▲</span>
+</td>
+<td class="py-3 px-space-md text-right text-primary">+$0.34</td>
+<td class="py-3 px-space-md text-right text-text-secondary">3.12</td>
+<td class="py-3 px-space-md text-right text-text-primary">19.4/s</td>
+<td class="py-3 px-space-md text-right text-color-warning font-semibold">68.2%</td>
+<td class="py-3 px-space-md text-right text-text-primary">124.0 ETH/s</td>
+<td class="py-3 px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-DEFAULT font-caption text-[10px] bg-secondary/15 text-secondary border border-secondary/30 font-bold">
+                  TWAP_SLICE
+                </span>
+</td>
+<td class="py-3 px-space-md text-center">
+<button class="px-2 py-1 rounded-DEFAULT bg-bg-elevated text-text-secondary hover:text-text-primary hover:border-text-secondary border border-border-default font-caption text-[11px] transition-colors">
+                  Inspect L3
+                </button>
+</td>
+</tr>
+<!-- Row 3: SOL-USDT (Ask Heavy Skew, Post Only Skew) -->
+<tr class="hover:bg-bg-hover/60 transition-colors bg-bg-surface">
+<td class="py-3 px-space-md font-title-lg text-title-lg font-bold text-text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-fixed"></span>
+<span>SOL-USDT</span>
+<span class="px-1 py-0.2 rounded-DEFAULT font-caption text-[9px] bg-primary-fixed/10 text-primary-fixed border border-primary-fixed/20">W: 18%</span>
+</td>
+<td class="py-3 px-space-md text-right text-text-primary font-bold">148.85</td>
+<td class="py-3 px-space-md text-right font-bold text-color-loss">
+                -0.304 <span class="text-[10px] text-text-tertiary">▼</span>
+</td>
+<td class="py-3 px-space-md text-right text-color-loss">-$0.12</td>
+<td class="py-3 px-space-md text-right text-text-secondary">5.89</td>
+<td class="py-3 px-space-md text-right text-text-primary">31.0/s</td>
+<td class="py-3 px-space-md text-right text-text-secondary">52.1%</td>
+<td class="py-3 px-space-md text-right text-color-loss">490.2 SOL/s</td>
+<td class="py-3 px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-DEFAULT font-caption text-[10px] bg-bg-elevated text-primary border border-primary/30 font-bold">
+                  POST_ONLY_SKEW
+                </span>
+</td>
+<td class="py-3 px-space-md text-center">
+<button class="px-2 py-1 rounded-DEFAULT bg-bg-elevated text-text-secondary hover:text-text-primary hover:border-text-secondary border border-border-default font-caption text-[11px] transition-colors">
+                  Inspect L3
+                </button>
+</td>
+</tr>
+<!-- Row 4: BNB-USDT (Low Toxicity, Passive Maker) -->
+<tr class="hover:bg-bg-hover/60 transition-colors bg-bg-surface">
+<td class="py-3 px-space-md font-title-lg text-title-lg font-bold text-text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-color-warning"></span>
+<span>BNB-USDT</span>
+<span class="px-1 py-0.2 rounded-DEFAULT font-caption text-[9px] bg-color-warning/10 text-color-warning border border-color-warning/20">W: 12%</span>
+</td>
+<td class="py-3 px-space-md text-right text-text-primary font-bold">592.40</td>
+<td class="py-3 px-space-md text-right font-bold text-text-secondary">
+                +0.041 <span class="text-[10px] text-text-tertiary">≈</span>
+</td>
+<td class="py-3 px-space-md text-right text-text-secondary">+$0.01</td>
+<td class="py-3 px-space-md text-right text-text-secondary">2.04</td>
+<td class="py-3 px-space-md text-right text-text-secondary">8.7/s</td>
+<td class="py-3 px-space-md text-right text-primary">28.4%</td>
+<td class="py-3 px-space-md text-right text-text-secondary">15.1 BNB/s</td>
+<td class="py-3 px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-DEFAULT font-caption text-[10px] bg-primary/15 text-primary border border-primary/30 font-bold">
+                  PASSIVE_MAKER
+                </span>
+</td>
+<td class="py-3 px-space-md text-center">
+<button class="px-2 py-1 rounded-DEFAULT bg-bg-elevated text-text-secondary hover:text-text-primary hover:border-text-secondary border border-border-default font-caption text-[11px] transition-colors">
+                  Inspect L3
+                </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-space-md py-2 bg-bg-primary border-t border-border-subtle flex flex-wrap items-center justify-between text-[11px] font-caption text-text-tertiary">
+<div class="flex items-center gap-space-md">
+<span>Formula: <span class="font-mono text-text-secondary">OBI = (V_bid - V_ask) / (V_bid + V_ask)</span></span>
+<span>•</span>
+<span>Linear Impact: <span class="font-mono text-text-secondary">ΔP = λ * OBI + η * Sgn(OBI)</span></span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span>Zero-Lookahead Queue Verification Passed: Epoch 1713290432.194</span>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 5. INTERACTIVE HAWKES INTENSITY SIMULATOR & VPIN PROTECTION CONSOLE       -->
+<!-- ========================================================================= -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Left Panel (7 cols): Real-Time Hawkes Arrival Intensity Kernel λ(t) -->
+<div class="lg:col-span-7 bg-bg-surface border border-border-subtle rounded-DEFAULT p-space-md flex flex-col justify-between">
+<div>
+<!-- Panel Header -->
+<div class="flex items-start justify-between pb-space-sm border-b border-border-subtle">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">insights</span>
+<h3 class="font-title-lg text-title-lg font-bold text-text-primary">Hawkes Self-Exciting Trade Arrival Intensity λ(t)</h3>
+</div>
+<p class="font-caption text-caption text-text-secondary mt-0.5">
+                λ(t) = μ + Σ α_j · exp(-β · (t - t_j)) • Exponential Kernel Micro-Clustering
+              </p>
+</div>
+<div class="flex items-center gap-1 font-caption text-[10px]">
+<span class="px-2 py-0.5 rounded-DEFAULT bg-secondary/15 text-secondary border border-secondary/30 font-bold">BURST SKEW: POSITIVE</span>
+</div>
+</div>
+<!-- Real-Time SVG Hawkes Curve Simulation -->
+<div class="mt-space-md bg-bg-primary rounded-DEFAULT p-space-sm border border-border-subtle relative">
+<div class="flex justify-between items-center text-[10px] font-caption text-text-tertiary mb-1">
+<span>INTENSITY λ(t) [events/sec]</span>
+<span class="text-secondary font-mono">Current λ = 42.6/s (Baseline μ = 9.2/s)</span>
+</div>
+<!-- SVG Visual Waveform: Baseline, Micro-burst Spikes, and Exponential Decay -->
+<div class="w-full h-48 relative overflow-hidden flex items-end">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 600 180">
+<defs>
+<lineargradient id="hawkesGrad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#cebdff" stop-opacity="0.35"></stop>
+<stop offset="100%" stop-color="#cebdff" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Grid lines -->
+<line stroke="#1E2530" stroke-dasharray="3,3" x1="0" x2="600" y1="40" y2="40"></line>
+<line stroke="#1E2530" stroke-dasharray="3,3" x1="0" x2="600" y1="90" y2="90"></line>
+<line stroke="#1E2530" stroke-dasharray="3,3" x1="0" x2="600" y1="140" y2="140"></line>
+<!-- Baseline μ horizontal line -->
+<line stroke="#46f1c5" stroke-dasharray="4,4" stroke-width="1.5" x1="0" x2="600" y1="145" y2="145"></line>
+<text fill="#46f1c5" font-family="JetBrains Mono" font-size="9" x="8" y="141">μ (Baseline: 9.2/s)</text>
+<!-- Critical Threshold Line -->
+<line stroke="#FF4757" stroke-dasharray="2,2" stroke-width="1" x1="0" x2="600" y1="35" y2="35"></line>
+<text fill="#FF4757" font-family="JetBrains Mono" font-size="9" x="490" y="30">Critical Barrier</text>
+<!-- Hawkes Area Fill -->
+<path d="M 0 145 
+                         L 40 145 
+                         L 45 60 
+                         Q 70 120 120 140 
+                         L 150 142 
+                         L 155 45 
+                         Q 175 90 220 130 
+                         L 260 138 
+                         L 265 85 
+                         Q 290 120 330 142 
+                         L 380 144 
+                         L 385 25 
+                         Q 410 75 460 115 
+                         L 480 118 
+                         L 485 50 
+                         Q 510 95 560 135 
+                         L 600 138 
+                         L 600 180 
+                         L 0 180 Z" fill="url(#hawkesGrad)"></path>
+<!-- Hawkes Trajectory Line -->
+<path d="M 0 145 
+                         L 40 145 
+                         L 45 60 
+                         Q 70 120 120 140 
+                         L 150 142 
+                         L 155 45 
+                         Q 175 90 220 130 
+                         L 260 138 
+                         L 265 85 
+                         Q 290 120 330 142 
+                         L 380 144 
+                         L 385 25 
+                         Q 410 75 460 115 
+                         L 480 118 
+                         L 485 50 
+                         Q 510 95 560 135 
+                         L 600 138" fill="none" stroke="#cebdff" stroke-width="2.5"></path>
+<!-- Micro-burst Points -->
+<circle cx="45" cy="60" fill="#46f1c5" r="3"></circle>
+<circle cx="155" cy="45" fill="#46f1c5" r="3"></circle>
+<circle cx="265" cy="85" fill="#46f1c5" r="3"></circle>
+<circle cx="385" cy="25" fill="#FF4757" r="4"></circle>
+<circle cx="485" cy="50" fill="#FFB020" r="3"></circle>
+</svg>
+<!-- Live Burst Pill Tag Overlay -->
+<div class="absolute right-3 top-3 bg-bg-surface/90 border border-secondary/40 px-2 py-1 rounded-DEFAULT font-caption text-[10px] text-secondary">
+<span class="font-bold">LAST BURST:</span> +38.4 events/s @ t-42ms
+              </div>
+</div>
+<div class="flex justify-between items-center text-[10px] font-caption text-text-tertiary mt-2">
+<span>t - 5.0 sec</span>
+<span>t - 3.5 sec</span>
+<span>t - 2.0 sec</span>
+<span>t - 0.5 sec</span>
+<span class="text-primary font-bold">t (Now: 38μs latency)</span>
+</div>
+</div>
+<!-- Parameter Adjustment Simulator Controls -->
+<div class="mt-space-md grid grid-cols-1 sm:grid-cols-3 gap-space-sm pt-space-sm border-t border-border-subtle">
+<div class="bg-bg-primary p-2 rounded-DEFAULT border border-border-subtle">
+<div class="flex justify-between text-caption font-caption">
+<span class="text-text-secondary">α (Self-Excitation)</span>
+<span class="text-secondary font-bold font-mono">3.80</span>
+</div>
+<input class="w-full mt-2 accent-[#cebdff] cursor-pointer" max="10" min="1" type="range" value="7"/>
+<span class="font-caption text-[9px] text-text-tertiary block mt-1">Jump size per trade execution</span>
+</div>
+<div class="bg-bg-primary p-2 rounded-DEFAULT border border-border-subtle">
+<div class="flex justify-between text-caption font-caption">
+<span class="text-text-secondary">β (Exponential Decay)</span>
+<span class="text-primary font-bold font-mono">4.85</span>
+</div>
+<input class="w-full mt-2 accent-[#46f1c5] cursor-pointer" max="10" min="1" type="range" value="5"/>
+<span class="font-caption text-[9px] text-text-tertiary block mt-1">Memory half-life: ~143ms</span>
+</div>
+<div class="bg-bg-primary p-2 rounded-DEFAULT border border-border-subtle">
+<div class="flex justify-between text-caption font-caption">
+<span class="text-text-secondary">Trade Volume Shock</span>
+<span class="text-color-warning font-bold font-mono">25.0 BTC</span>
+</div>
+<input class="w-full mt-2 accent-[#FFB020] cursor-pointer" max="50" min="1" type="range" value="25"/>
+<span class="font-caption text-[9px] text-text-tertiary block mt-1">Simulated aggression size</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between font-caption text-caption text-text-tertiary">
+<span>Branching Ratio: <span class="font-mono text-secondary font-bold">η = 0.784 &lt; 1.0</span> (Verified Sub-Critical)</span>
+<button class="px-3 py-1.5 rounded-DEFAULT bg-bg-elevated text-text-primary hover:bg-bg-hover border border-border-default transition-colors flex items-center gap-1 font-title-lg text-title-lg">
+<span class="material-symbols-outlined text-[15px]">auto_fix_high</span>
+<span>Auto-Calibrate MLE Kernel</span>
+</button>
+</div>
+</div>
+<!-- Right Panel (5 cols): VPIN Adverse Selection & Flow Toxicity Protection Console -->
+<div class="lg:col-span-5 bg-bg-surface border border-border-subtle rounded-DEFAULT p-space-md flex flex-col justify-between">
+<div>
+<!-- Console Header -->
+<div class="flex items-start justify-between pb-space-sm border-b border-border-subtle">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-color-loss">shield_lock</span>
+<h3 class="font-title-lg text-title-lg font-bold text-text-primary">VPIN Flow Toxicity Protection Console</h3>
+</div>
+<p class="font-caption text-caption text-text-secondary mt-0.5">
+                Volume-Synchronized Probability of Toxicity • Adverse Selection Guard
+              </p>
+</div>
+<span class="px-2 py-0.5 rounded-DEFAULT font-caption text-[10px] bg-color-loss/20 text-color-loss border border-color-loss/40 font-bold">
+              FENCE TRIPPED
+            </span>
+</div>
+<!-- Live Volume Bucket Progress Bar -->
+<div class="mt-space-md space-y-space-sm">
+<div class="bg-bg-primary p-space-sm rounded-DEFAULT border border-border-subtle space-y-2">
+<div class="flex justify-between items-center text-caption font-caption">
+<span class="text-text-secondary">Current Bucket Fill (V = 50.0 BTC)</span>
+<span class="font-mono text-text-primary font-bold">41.8 / 50.0 BTC (83.6%)</span>
+</div>
+<div class="w-full h-2.5 rounded-DEFAULT bg-bg-surface overflow-hidden flex">
+<div class="h-full bg-primary" style="width: 58.5%;" title="Buy Volume"></div>
+<div class="h-full bg-color-loss" style="width: 25.1%;" title="Sell Volume"></div>
+</div>
+<div class="flex justify-between text-[10px] font-caption text-text-tertiary">
+<span class="text-primary font-semibold">Buy Order Inflow: 29.25 BTC</span>
+<span class="text-color-loss font-semibold">Sell Order Inflow: 12.55 BTC</span>
+</div>
+</div>
+<!-- Flow Toxicity State & Spread Haircut Matrix -->
+<div class="grid grid-cols-2 gap-space-sm font-caption text-caption">
+<div class="p-2.5 rounded-DEFAULT bg-bg-primary border border-border-subtle">
+<span class="text-text-secondary block">Adverse Selection Penalty</span>
+<span class="font-title-lg text-title-lg font-mono font-bold text-color-loss mt-0.5 block">+8.50 bps</span>
+<span class="text-[10px] text-text-tertiary">Wide quotes to buffer toxics</span>
+</div>
+<div class="p-2.5 rounded-DEFAULT bg-bg-primary border border-border-subtle">
+<span class="text-text-secondary block">Maker Queue Survival</span>
+<span class="font-title-lg text-title-lg font-mono font-bold text-color-warning mt-0.5 block">180 ms</span>
+<span class="text-[10px] text-text-tertiary">Estimated time until queue sweep</span>
+</div>
+</div>
+<!-- Multi-Agent Deliberation Module -->
+<div class="p-space-sm rounded-DEFAULT bg-bg-elevated border border-secondary/30 space-y-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 font-caption text-caption text-secondary font-bold">
+<span class="material-symbols-outlined text-[16px]">smart_toy</span>
+<span>Multi-Agent Invariant Deliberation</span>
+</div>
+<span class="px-1.5 py-0.2 rounded-DEFAULT font-caption text-[9px] bg-secondary/20 text-secondary border border-secondary/40 font-bold">
+                  CONSENSUS 2/2
+                </span>
+</div>
+<div class="text-[11px] font-caption text-text-secondary space-y-1.5">
+<div class="flex items-start gap-1.5">
+<span class="text-primary font-bold">SENTINEL_LOB:</span>
+<span>Micro-price (+4.82) indicates asymmetric toxic sweep on ask side. Recommend instant quote pull.</span>
+</div>
+<div class="flex items-start gap-1.5">
+<span class="text-secondary font-bold">RISK_ORCHESTRATOR:</span>
+<span>ADR-001 paper invariants intact. Throttling maker limits. Spread widener set to 2.5x base.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Protection Commitment CTA -->
+<div class="mt-space-md pt-space-sm border-t border-border-subtle space-y-space-xs">
+<button class="w-full h-11 rounded-DEFAULT bg-primary text-on-primary-container font-title-lg text-title-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.99] glow-teal">
+<span class="material-symbols-outlined">gpp_maybe</span>
+<span>Lock Hawkes Invariant &amp; Commit Execution Fence</span>
+</button>
+<div class="flex justify-between items-center text-[10px] font-caption text-text-tertiary px-1">
+<span>Safety Rule: Zero-Unhedged Maker Inventory</span>
+<span class="text-primary font-mono">Invariant Hash: 0xb482_f01a</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- ========================================================================= -->
+<!-- 6. QUANTITATIVE FOOTER STATUS STRIP                                       -->
+<!-- ========================================================================= -->
+<footer class="w-full bg-bg-surface border-t border-border-subtle py-2 px-space-lg text-text-tertiary font-caption text-[11px] mt-auto">
+<div class="max-w-[1720px] mx-auto flex flex-wrap items-center justify-between gap-space-md">
+<!-- Left: Node and Audit Verification -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-1.5 text-text-secondary">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-bold text-text-primary">CashClaw Institutional Node #QNT-8812</span>
+</div>
+<span>•</span>
+<span class="text-text-secondary">L3 Microstructure Engine: <span class="text-primary font-mono">ONLINE</span></span>
+<span>•</span>
+<span>Zero-Lookahead: <span class="text-primary font-mono font-bold">AUDIT_OK</span></span>
+</div>
+<!-- Center: Mathematical Telemetry Metrics -->
+<div class="hidden md:flex items-center gap-space-lg text-text-secondary">
+<span>INTERNAL LATENCY: <span class="text-text-primary font-mono font-bold">38μs</span></span>
+<span>SLIPPAGE MODEL: <span class="text-text-primary font-mono font-bold">1.2 BPS</span></span>
+<span>YZ VOLATILITY: <span class="text-text-primary font-mono font-bold">16.18</span></span>
+<span>GK VOL: <span class="text-text-primary font-mono font-bold">18.42 (NORM)</span></span>
+</div>
+<!-- Right: Safety Invariant & SHA-256 Hash Stamp -->
+<div class="flex items-center gap-space-sm font-mono text-[10px]">
+<span class="px-1.5 py-0.5 rounded-DEFAULT bg-color-warning/10 text-color-warning border border-color-warning/30 font-bold">ADR-001 [PAPER_ONLY]</span>
+<span class="text-text-tertiary">HASH: 7e2f5b84c89a01d6</span>
+</div>
+</div>
+</footer>
+<!-- Micro-interactions Script for Real-Time Telemetry Pulses -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Periodic subtle flash to mimic continuous 38μs tick data arrivals
+      setInterval(() => {
+        const tickElement = document.querySelector('header span.text-text-primary.font-bold');
+        if (tickElement && Math.random() > 0.4) {
+          tickElement.classList.add('text-primary');
+          setTimeout(() => {
+            tickElement.classList.remove('text-primary');
+          }, 300);
+        }
+      }, 1200);
+    });
+  </script>
+</body></html>

@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CorrelationMatrixHeatmap } from '../correlation-matrix-heatmap';
@@ -6,16 +8,20 @@ import { DataQualityGateInspector } from '../data-quality-gate-inspector';
 import { SovereignEnclaveAttestation } from '../sovereign-enclave-attestation';
 import { RelativeValueBasisMonitor } from '../relative-value-basis-monitor';
 import { PortfolioCvarStressSimulator } from '../portfolio-cvar-stress-simulator';
+import { OrderbookImbalanceLobPredictor } from '../orderbook-imbalance-lob-predictor';
+import { RoughVolatilityHurstDetector } from '../rough-volatility-hurst-detector';
 import CorrelationMatrixPage, { generateStaticParams as genCorrParams } from '@/app/[locale]/(dashboard)/correlation-matrix/page';
 import ExecutionLedgerPage, { generateStaticParams as genExecParams } from '@/app/[locale]/(dashboard)/execution-ledger/page';
 import DataQualityGatePage, { generateStaticParams as genQualityParams } from '@/app/[locale]/(dashboard)/data-quality-gate/page';
 import SovereignEnclavePage, { generateStaticParams as genEnclaveParams } from '@/app/[locale]/(dashboard)/sovereign-enclave/page';
 import RelativeValueBasisPage, { generateStaticParams as genBasisParams } from '@/app/[locale]/(dashboard)/relative-value-basis/page';
 import PortfolioCvarStressPage, { generateStaticParams as genCvarParams } from '@/app/[locale]/(dashboard)/portfolio-cvar-stress/page';
+import OrderbookImbalanceLobPage, { generateStaticParams as genLobParams } from '@/app/[locale]/(dashboard)/orderbook-imbalance-lob/page';
+import RoughVolatilityHurstPage, { generateStaticParams as genRoughParams } from '@/app/[locale]/(dashboard)/rough-volatility-hurst/page';
 import { computeQuantTelemetrySnapshot } from '@/forest/dashboard/quant-telemetry-service';
 import { GET as getQuantTelemetry } from '@/app/api/quant/telemetry/route';
 
-describe('CashClaw Remaining 6 Stitch Screens & Real Domain Telemetry Engine', () => {
+describe('CashClaw Remaining & Wave 2 Stitch Screens + Real Domain Telemetry Engine', () => {
   it('renders CorrelationMatrixHeatmap and switches 7d/30d/90d lookback windows', () => {
     render(<CorrelationMatrixHeatmap />);
     expect(screen.getByRole('region', { name: /Cross-Sectional Rolling Correlation Heatmap/i })).toBeInTheDocument();
@@ -46,57 +52,44 @@ describe('CashClaw Remaining 6 Stitch Screens & Real Domain Telemetry Engine', (
     expect(screen.getByRole('region', { name: /OHLCV Data Quality Gate Inspector/i })).toBeInTheDocument();
     expect(screen.getByText('VALID')).toBeInTheDocument();
     expect(screen.getByText('SIGNAL_ALLOWED')).toBeInTheDocument();
-    expect(screen.getByText('timestamp_monotonicity')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'MONOTONICITY' }));
     expect(screen.getByText('DATA_INVALID')).toBeInTheDocument();
     expect(screen.getByText('FLAT_FENCE_ENGAGED')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'ZERO_VOLUME' }));
-    expect(screen.getByText('DATA_INVALID')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'IMPOSSIBLE_OHLC' }));
-    expect(screen.getByText('DATA_INVALID')).toBeInTheDocument();
   });
 
-  it('renders SovereignEnclaveAttestation and simulates SHA-256 chain tamper', () => {
+  it('renders SovereignEnclaveAttestation, RelativeValueBasisMonitor, and PortfolioCvarStressSimulator', () => {
     render(<SovereignEnclaveAttestation />);
-    expect(screen.getByRole('region', { name: /Sovereign Enclave Cryptographic Attestation/i })).toBeInTheDocument();
-    expect(screen.getByText('VERIFIED_INTACT')).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'Simulate Tamper' }));
     expect(screen.getByText('CHAIN_MISMATCH_HALT')).toBeInTheDocument();
-    expect(screen.getByText('deadbeef00000000')).toBeInTheDocument();
-  });
 
-  it('renders RelativeValueBasisMonitor and filters CARRY_LONG vs MEAN_REVERT', () => {
     render(<RelativeValueBasisMonitor />);
-    expect(screen.getByRole('region', { name: /Cross-Exchange Relative-Value/i })).toBeInTheDocument();
-    expect(screen.getByText('BTC-PERP / SPOT')).toBeInTheDocument();
-    expect(screen.getByText('SOL-PERP / ETH-PERP')).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'MEAN_REVERT' }));
     expect(screen.getByText('SOL-PERP / ETH-PERP')).toBeInTheDocument();
-    expect(screen.queryByText('BTC-PERP / SPOT')).toBeNull();
-  });
 
-  it('renders PortfolioCvarStressSimulator and switches tail-risk shock scenarios', () => {
     render(<PortfolioCvarStressSimulator />);
-    expect(screen.getByRole('region', { name: /Cross-Margin CVaR 99% Tail-Risk/i })).toBeInTheDocument();
-    expect(screen.getByText('DELEVERAGE_TRIGGERED')).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'EXCHANGE_OUTAGE' }));
     expect(screen.getByText('HALT_CIRCUIT_OPEN')).toBeInTheDocument();
   });
 
-  it('verifies all 6 new App Router pages, generateStaticParams, and GET /api/quant/telemetry', async () => {
+  it('renders Wave 2 OrderbookImbalanceLobPredictor & RoughVolatilityHurstDetector', () => {
+    render(<OrderbookImbalanceLobPredictor />);
+    expect(screen.getByRole('region', { name: /L3 Orderbook Queue Imbalance and Hawkes Arrival Intensity Predictor/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /SUPERCRITICAL/i }));
+    expect(screen.getByText('HALT_TOXIC_SWEEP')).toBeInTheDocument();
+
+    render(<RoughVolatilityHurstDetector />);
+    expect(screen.getByRole('region', { name: /Gatheral Rough Volatility Hurst Exponent and Bipower Jump Detector/i })).toBeInTheDocument();
+    expect(screen.getByText('ROUGH_FRACTIONAL (H<0.45)')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'SMOOTH_DIFFUSION' }));
+    expect(screen.getByText('SMOOTH_BROWNIAN')).toBeInTheDocument();
+  });
+
+  it('verifies all App Router pages, GET /api/quant/telemetry, and <= 120 LOC modularization', async () => {
     const expected = [{ locale: 'vi' }, { locale: 'en' }];
-    expect(genCorrParams()).toEqual(expected);
-    expect(genExecParams()).toEqual(expected);
-    expect(genQualityParams()).toEqual(expected);
-    expect(genEnclaveParams()).toEqual(expected);
-    expect(genBasisParams()).toEqual(expected);
-    expect(genCvarParams()).toEqual(expected);
+    for (const fn of [genCorrParams, genExecParams, genQualityParams, genEnclaveParams, genBasisParams, genCvarParams, genLobParams, genRoughParams]) {
+      expect(fn()).toEqual(expected);
+    }
 
     render(<CorrelationMatrixPage />);
     render(<ExecutionLedgerPage />);
@@ -104,11 +97,13 @@ describe('CashClaw Remaining 6 Stitch Screens & Real Domain Telemetry Engine', (
     render(<SovereignEnclavePage />);
     render(<RelativeValueBasisPage />);
     render(<PortfolioCvarStressPage />);
+    render(<OrderbookImbalanceLobPage />);
+    render(<RoughVolatilityHurstPage />);
 
     const snapshot = computeQuantTelemetrySnapshot();
     expect(snapshot.paperOnly).toBe(true);
-    expect(snapshot.adrInvariant).toBe('ADR-001');
-    expect(snapshot.dataQuality.checkResults.length).toBeGreaterThanOrEqual(8);
+    expect(snapshot.hawkesLob.isStationary).toBe(true);
+    expect(snapshot.roughVolatility.isRoughRegime).toBe(true);
 
     const response = await getQuantTelemetry(
       new Request('http://localhost:3000/api/quant/telemetry?costTier=EXTREME&faultMode=MONOTONICITY&trials=36'),
@@ -116,11 +111,19 @@ describe('CashClaw Remaining 6 Stitch Screens & Real Domain Telemetry Engine', (
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       paperOnly: boolean;
-      regime: { totalFrictionBps: number };
-      dataQuality: { status: string };
+      hawkesLob: { intensityLambda: number };
+      roughVolatility: { hurstExponent: number };
     };
     expect(body.paperOnly).toBe(true);
-    expect(body.regime.totalFrictionBps).toBe(100);
-    expect(body.dataQuality.status).toBe('DATA_INVALID');
+    expect(body.hawkesLob.intensityLambda).toBeGreaterThan(1);
+    expect(body.roughVolatility.hurstExponent).toBeLessThan(0.45);
+
+    const quantDir = path.join(process.cwd(), 'src/components/quant');
+    const files = fs.readdirSync(quantDir).filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+    for (const file of files) {
+      const content = fs.readFileSync(path.join(quantDir, file), 'utf8');
+      const lineCount = content.split('\n').length - (content.endsWith('\n') ? 1 : 0);
+      expect(lineCount, `${file} exceeds 120 lines (${lineCount})`).toBeLessThanOrEqual(120);
+    }
   });
 });

@@ -44,6 +44,8 @@ const NAV_ROUTES = [
   { path: 'sovereign-enclave', icon: KeyRound },
   { path: 'relative-value-basis', icon: Scale },
   { path: 'portfolio-cvar-stress', icon: Flame },
+  { path: 'orderbook-imbalance-lob', icon: Activity },
+  { path: 'rough-volatility-hurst', icon: Zap },
   { path: 'style-guide', icon: Palette },
   { path: 'settings', icon: Settings },
 ];
