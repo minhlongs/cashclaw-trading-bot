@@ -25,24 +25,10 @@ import type { RVWalkForwardResult } from './walk-forward';
 /** Unconsumed BacktestResult shell carrying only the real test PnL. */
 function placeholderMetrics(totalPnl: number): BacktestResult {
   return {
-    id: '',
-    bot_id: '',
-    strategy: 'rv_shim',
-    pair: 'PAIR',
-    exchange: '',
-    start_date: 0,
-    end_date: 0,
-    total_trades: 0,
-    win_count: 0,
-    loss_count: 0,
-    win_rate: 0,
-    total_pnl: totalPnl,
-    max_drawdown: 0,
-    sharpe_ratio: null,
-    params_json: '',
-    equity_curve_json: [],
-    trades_json: [],
-    created_at: 0,
+    id: '', bot_id: '', strategy: 'rv_shim', pair: 'PAIR', exchange: '',
+    start_date: 0, end_date: 0, total_trades: 0, win_count: 0, loss_count: 0,
+    win_rate: 0, total_pnl: totalPnl, max_drawdown: 0, sharpe_ratio: null,
+    params_json: '', equity_curve_json: [], trades_json: [], created_at: 0,
   };
 }
 

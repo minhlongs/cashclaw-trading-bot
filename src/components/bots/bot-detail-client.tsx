@@ -9,12 +9,7 @@ import { BotDetailKpi } from './bot-detail-kpi';
 import { BotDetailOverview } from './bot-detail-overview';
 import { BotDetailTrades } from './bot-detail-trades';
 import { BotDetailConfig } from './bot-detail-config';
-import {
-  Tab,
-  ControlAction,
-  TABS,
-  BotDetailActionButtons,
-} from './bot-detail-controls';
+import { Tab, ControlAction, TABS, BotDetailActionButtons } from './bot-detail-controls';
 
 export { type Tab, type ControlAction } from './bot-detail-controls';
 

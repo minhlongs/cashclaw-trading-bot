@@ -53,21 +53,13 @@ export async function buildSpec(
     provenance: ctx.provenance ?? null,
   });
 
-  // Compute specId from specBody (excl seed + compiledAt), then derive seed from specId
   const specId = await hashSpecBody(specBody);
   const seed = deriveSeedFromSpecId(specId);
-
-  // Final spec with specId, seed, and compiledAt
   const compiledAt = ctx.nowIso ?? new Date().toISOString();
-  const spec: ExperimentSpec = {
-    ...specBody,
-    specId,
-    seed,
-    compiledAt,
-    compilerVersion: 1,
+  return {
+    ok: true,
+    value: { ...specBody, specId, seed, compiledAt, compilerVersion: 1 },
   };
-
-  return { ok: true, value: spec };
 }
 
 /** Build the spec body (without specId, seed, compiledAt for hashing). */

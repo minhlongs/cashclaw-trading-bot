@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { KeyRound, ShieldCheck, Lock } from 'lucide-react';
+import { KeyRound, Lock } from 'lucide-react';
+import { QuantScreenHeader } from './quant-screen-header';
 
 const AUDIT_CHAIN = [
   { seq: 101, event: 'INIT_ENCLAVE_ISOLATE', prevHash: '0000000000000000', blockHash: '7f83b1657ff1fc53' },
@@ -14,18 +15,11 @@ export function SovereignEnclaveAttestation() {
 
   return (
     <section aria-label="Sovereign Enclave Cryptographic Attestation and Audit Ledger" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <KeyRound size={20} className="text-[var(--color-accent)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">Sovereign Enclave Attestation & Hash-Chained Audit Ledger</h1>
-            <p className="text-xs text-[var(--text-secondary)]">WebCrypto SHA-256 flight recorder • Live exchange keys stripped by ADR-001 invariant</p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} /><span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<KeyRound size={20} className="text-[var(--color-accent)]" />}
+        title="Sovereign Enclave Attestation & Hash-Chained Audit Ledger"
+        subtitle="WebCrypto SHA-256 flight recorder • Live exchange keys stripped by ADR-001 invariant"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">

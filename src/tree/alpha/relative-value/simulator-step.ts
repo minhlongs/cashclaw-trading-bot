@@ -32,25 +32,15 @@ export function applyGate(
   // Opt-out (inSimTradabilityGate === false, default true): no gate runs;
   // the period stays tradeable and the trail records the skip explicitly.
   if (config.inSimTradabilityGate === false) {
-    loop.validationTrail.push({
-      timestamp,
-      tradable: true,
-      reasons: [GATE_SKIPPED_REASON],
-    });
+    loop.validationTrail.push({ timestamp, tradable: true, reasons: [GATE_SKIPPED_REASON] });
     loop.gateOpen = true;
     return;
   }
   const verdict = validatePairTradable(panel, config, timestamp);
-  loop.validationTrail.push({
-    timestamp,
-    tradable: verdict.tradable,
-    reasons: verdict.reasons,
-  });
+  loop.validationTrail.push({ timestamp, tradable: verdict.tradable, reasons: verdict.reasons });
   loop.gateOpen = verdict.tradable;
   if (!loop.gateOpen && loop.position !== POSITION_FLAT) {
-    loop.warnings.push(
-      `validation gate failed at ${timestamp}: forced FLAT (${verdict.reasons.join('; ')})`,
-    );
+    loop.warnings.push(`validation gate failed at ${timestamp}: forced FLAT (${verdict.reasons.join('; ')})`);
     loop.position = POSITION_FLAT;
   }
 }

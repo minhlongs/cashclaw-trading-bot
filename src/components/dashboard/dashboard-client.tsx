@@ -39,28 +39,21 @@ export default function DashboardClient() {
         });
         if (!response.ok) throw new Error(`Request failed: ${response.status}`);
         const body = (await response.json()) as {
-          ok: boolean;
-          data?: BotCardDataApi[] | null;
-          error?: string | null;
+          ok: boolean; data?: BotCardDataApi[] | null; error?: string | null;
         };
         if (!body.ok || !Array.isArray(body.data)) {
           throw new Error(body.error ?? 'Unable to load bots.');
         }
-
         const mapped = mapBotsPayloadToDashboardData(body.data);
         if (!cancelled) setData(mapped);
       } catch (fetchError) {
-        if (!cancelled) {
-          setError(fetchError instanceof Error ? fetchError.message : 'Unknown dashboard error');
-        }
+        if (!cancelled) setError(fetchError instanceof Error ? fetchError.message : 'Unknown dashboard error');
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) {
@@ -72,9 +65,7 @@ export default function DashboardClient() {
           <p className="text-secondary">{t('loading') ?? 'Loading dashboard...'}</p>
         </div>
         <div className="kpi-grid mt-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="skeleton-card" />
-          ))}
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton-card" />)}
         </div>
       </section>
     );

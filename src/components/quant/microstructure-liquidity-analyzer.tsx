@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { BarChart3, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { BarChart3, AlertTriangle } from 'lucide-react';
 import { MICROSTRUCTURE_SNAPSHOTS, type SymbolKey } from './microstructure-liquidity-model';
+import { QuantScreenHeader } from './quant-screen-header';
 
 export function MicrostructureLiquidityAnalyzer() {
   const [selectedSymbol, setSelectedSymbol] = useState<SymbolKey>('BTC/USDT');
@@ -13,23 +14,11 @@ export function MicrostructureLiquidityAnalyzer() {
 
   return (
     <section aria-label="Microstructure and L2 Liquidity Toxicity Analyzer" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <BarChart3 size={20} className="text-[var(--color-accent)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">
-              Microstructure & L2 Liquidity Toxicity Analyzer
-            </h1>
-            <p className="text-xs text-[var(--text-secondary)]">
-              Real-time Order Flow Imbalance (OFI), VPIN toxicity, and TWAP urgency guard
-            </p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} />
-          <span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<BarChart3 size={20} className="text-[var(--color-accent)]" />}
+        title="Microstructure & L2 Liquidity Toxicity Analyzer"
+        subtitle="Real-time Order Flow Imbalance (OFI), VPIN toxicity, and TWAP urgency guard"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">

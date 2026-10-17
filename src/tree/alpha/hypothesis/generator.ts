@@ -97,19 +97,12 @@ export class HypothesisGenerator {
       }
     }
 
-    // Evolve combiner or optimizer with probability = rate
-    const combineMethod = Math.random() < rate ? pick(ALL_COMBINERS) : parent.combineMethod;
-    const optimizerMethod = Math.random() < rate ? pick(ALL_OPTIMIZERS) : parent.optimizerMethod;
-
     return {
-      ...parent,
-      id,
-      name: `${parent.name}-evolved#${this.counter}`,
+      ...parent, id, name: `${parent.name}-evolved#${this.counter}`,
       indicatorSet: indicators,
-      combineMethod,
-      optimizerMethod,
-      confidence: parent.confidence,
-      createdAt: new Date().toISOString(),
+      combineMethod: Math.random() < rate ? pick(ALL_COMBINERS) : parent.combineMethod,
+      optimizerMethod: Math.random() < rate ? pick(ALL_OPTIMIZERS) : parent.optimizerMethod,
+      confidence: parent.confidence, createdAt: new Date().toISOString(),
     };
   }
 }

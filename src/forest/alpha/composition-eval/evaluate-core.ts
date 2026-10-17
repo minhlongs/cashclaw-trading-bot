@@ -44,22 +44,16 @@ export function evaluateComposition(
 
   for (const t of sortedTs) {
     const alphas = alphasAtEachT.get(t)!;
-
     const ret = returnSeriesAtEachT.get(t);
     if (ret === undefined) {
-      throw new Error(
-        `evaluateComposition: missing return for decision time ${t}`,
-      );
+      throw new Error(`evaluateComposition: missing return for decision time ${t}`);
     }
     const risk = riskInputsAtEachT.get(t);
     if (risk === undefined) {
-      throw new Error(
-        `evaluateComposition: missing riskInputs for decision time ${t}`,
-      );
+      throw new Error(`evaluateComposition: missing riskInputs for decision time ${t}`);
     }
 
     const { scored } = scoreComposedAlphas(alphas, config.compositionConfig);
-
     if (scored.length === 0) {
       periods.push(createEmptyPeriod(t));
       netReturns.push(0);
@@ -67,7 +61,6 @@ export function evaluateComposition(
     }
 
     const portfolio = buildPortfolio(scored, prevWeights, risk, config.portfolioConfig);
-
     let grossReturn = 0;
     for (const pos of portfolio.positions) {
       grossReturn += pos.targetWeight * ret;
@@ -78,14 +71,8 @@ export function evaluateComposition(
 
     periods.push({
       timestamp: t,
-      scoredAlphas: scored.map(({ alpha, score }) => ({
-        alphaId: alpha.alphaId,
-        score,
-      })),
-      positions: portfolio.positions.map((p) => ({
-        alphaId: p.alphaId,
-        weight: p.targetWeight,
-      })),
+      scoredAlphas: scored.map(({ alpha, score }) => ({ alphaId: alpha.alphaId, score })),
+      positions: portfolio.positions.map((p) => ({ alphaId: p.alphaId, weight: p.targetWeight })),
       grossReturn,
       costPct,
       netReturn,
@@ -95,7 +82,6 @@ export function evaluateComposition(
     netReturns.push(netReturn);
     totalTurnover += portfolio.totalTurnover;
     totalCosts += costPct;
-
     prevWeights = toWeightMap(portfolio.positions);
   }
 

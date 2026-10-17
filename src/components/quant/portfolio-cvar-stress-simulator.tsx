@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Flame, ShieldCheck, AlertOctagon } from 'lucide-react';
+import { Flame, AlertOctagon } from 'lucide-react';
+import { QuantScreenHeader } from './quant-screen-header';
 
 type ShockScenarioId = 'FLASH_CRASH_-25%' | 'CORRELATION_1.0_SPIKE' | 'EXCHANGE_OUTAGE';
 
@@ -21,18 +22,11 @@ export function PortfolioCvarStressSimulator() {
 
   return (
     <section aria-label="Cross-Margin CVaR 99% Tail-Risk and Liquidation Cascade Simulator" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <Flame size={20} className="text-[var(--color-loss)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">Cross-Margin CVaR 99% Tail-Risk & Liquidation Cascade Simulator</h1>
-            <p className="text-xs text-[var(--text-secondary)]">Phase 6 portfolio risk engine • Expected Shortfall (CVaR 99%) & Half-Kelly margin buffer</p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} /><span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<Flame size={20} className="text-[var(--color-loss)]" />}
+        title="Cross-Margin CVaR 99% Tail-Risk & Liquidation Cascade Simulator"
+        subtitle="Phase 6 portfolio risk engine • Expected Shortfall (CVaR 99%) & Half-Kelly margin buffer"
+      />
 
       <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

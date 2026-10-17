@@ -10,14 +10,24 @@ import {
   type DataFaultMode,
   type RoughVolMode,
 } from './quant-wave2-telemetry';
+import {
+  computeLeadLagTelemetry,
+  computeAlmgrenChrissTelemetry,
+  type LeadLagPairId,
+  type ExecutionUrgencyPreset,
+} from './quant-wave3-telemetry';
 
 export {
   computeHawkesLobTelemetry,
   computeRoughVolatilityTelemetry,
   computeDataQualityTelemetry,
   computeCorrelationTelemetry,
+  computeLeadLagTelemetry,
+  computeAlmgrenChrissTelemetry,
   type DataFaultMode,
   type RoughVolMode,
+  type LeadLagPairId,
+  type ExecutionUrgencyPreset,
 };
 
 export type CostTierId = 'BASE' | 'ELEVATED' | 'EXTREME';
@@ -37,13 +47,7 @@ export function computeRegimeAttributionTelemetry(costTier: CostTierId, regimeFi
     );
     const netSharpe = Number((seed.grossSharpe - penaltyScale * seed.turnoverRate).toFixed(2));
     const stressedDdPct = Number((seed.baseMaxDdPct * ddMultiplier).toFixed(1));
-    return {
-      ...seed,
-      netSharpe,
-      stressedDdPct,
-      dcaSignal: dcaResult.signal.toUpperCase(),
-      dcaConfidence: dcaResult.confidence,
-    };
+    return { ...seed, netSharpe, stressedDdPct, dcaSignal: dcaResult.signal.toUpperCase(), dcaConfidence: dcaResult.confidence };
   });
 
   const meanNetSharpe = Number((rows.reduce((acc, r) => acc + r.netSharpe, 0) / rows.length).toFixed(2));
@@ -71,12 +75,14 @@ export function computeQuantTelemetrySnapshot() {
   return {
     paperOnly: true as const,
     adrInvariant: 'ADR-001' as const,
-    generatedAt: '2026-10-17T11:00:00.000Z',
+    generatedAt: '2026-10-17T11:45:00.000Z',
     regime: computeRegimeAttributionTelemetry('BASE', 'ALL'),
     fdr: computeFdrGateTelemetry(0.05, 12, 'BH_FDR'),
     dataQuality: computeDataQualityTelemetry('NONE'),
     correlation: computeCorrelationTelemetry(30),
     hawkesLob: computeHawkesLobTelemetry(),
     roughVolatility: computeRoughVolatilityTelemetry('ROUGH_BURST'),
+    leadLagHayashiYoshida: computeLeadLagTelemetry('BTC_PERP->ETH_SPOT'),
+    almgrenChrissExecution: computeAlmgrenChrissTelemetry('BALANCED_AC'),
   };
 }

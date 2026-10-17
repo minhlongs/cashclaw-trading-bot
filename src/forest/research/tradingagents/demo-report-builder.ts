@@ -1,15 +1,11 @@
-// Demo report builder — pure functions producing the JSON payload and the
-// bilingual markdown report from a DeliberationReport. No I/O here; the
-// script writes the returned strings. Includes the D11 honesty label and
-// token-cost/latency accounting from model provenance.
+// Demo report builder — pure functions producing JSON and bilingual markdown
+// from a DeliberationReport with D11 honesty label and provenance accounting.
 
 import { summarizeDeliberationReport, type DeliberationReport } from './report-types';
 
-/** D11 honesty label — must appear in every demo artifact. */
 export const D11_HONESTY_LABEL =
   'This demo uses DeterministicFixtureProvider (D11 TEST seam) — not real LLM deliberation quality.';
 
-/** Aggregate token/latency accounting from model provenance records. */
 export interface ProvenanceAccounting {
   readonly callCount: number;
   readonly totalPromptTokens: number;
@@ -19,11 +15,8 @@ export interface ProvenanceAccounting {
   readonly byTier: Readonly<Record<string, { calls: number; tokens: number }>>;
 }
 
-/** Sum token/latency accounting across all provenance records. */
 export function computeProvenanceAccounting(report: DeliberationReport): ProvenanceAccounting {
-  let totalPromptTokens = 0;
-  let totalCompletionTokens = 0;
-  let totalLatencyMs = 0;
+  let totalPromptTokens = 0, totalCompletionTokens = 0, totalLatencyMs = 0;
   const byTier: Record<string, { calls: number; tokens: number }> = {};
   for (const record of report.modelProvenance) {
     const prompt = record.provenance.promptTokens ?? 0;
@@ -45,7 +38,6 @@ export function computeProvenanceAccounting(report: DeliberationReport): Provena
   };
 }
 
-/** Build the committed JSON artifact payload. */
 export function buildDemoJsonPayload(report: DeliberationReport, decisionLog: string): unknown {
   return {
     honestyLabel: D11_HONESTY_LABEL,
@@ -56,16 +48,11 @@ export function buildDemoJsonPayload(report: DeliberationReport, decisionLog: st
   };
 }
 
-/** Build the bilingual (Vietnamese + English) markdown report. */
 export function buildDemoMarkdown(report: DeliberationReport): string {
   const t = report.totals;
   const accounting = computeProvenanceAccounting(report);
-  const tierRows = Object.entries(accounting.byTier)
-    .map(([tier, v]) => `| ${tier} | ${v.calls} | ${v.tokens} |`)
-    .join('\n');
-  const stageRows = report.stageResults
-    .map((s) => `| ${s.stage} | ${s.outcome} | ${s.reasons.join('; ') || '—'} |`)
-    .join('\n');
+  const tierRows = Object.entries(accounting.byTier).map(([tier, v]) => `| ${tier} | ${v.calls} | ${v.tokens} |`).join('\n');
+  const stageRows = report.stageResults.map((s) => `| ${s.stage} | ${s.outcome} | ${s.reasons.join('; ') || '—'} |`).join('\n');
 
   return `# TradingAgents Deliberation Report / Báo cáo Deliberation TradingAgents
 

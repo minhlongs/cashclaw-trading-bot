@@ -2,6 +2,18 @@
 
 ## v1 Paper-Trading Platform
 
+### Quad-Cluster Deep Refactor Wave 4 — 2026-10-17
+- **100% `QuantScreenHeader` Unification (`src/components/quant/quant-screen-header.tsx` & 15/15 Quant Screens)**:
+  - Extended `QuantScreenHeader` with optional `extraBadge?: ReactNode` to support `alpha-zoo-evaluator.tsx` (`ZERO_LOOKAHEAD • CAUSAL_AST`) and wired every single quant screen in `src/components/quant/*.tsx` (15/15) to `QuantScreenHeader`.
+- **Public CLI Executable Decomposition (`bin/cashclaw.js`, `bin/lib/cli-printers.js`, `bin/lib/commands.js`)**:
+  - Extracted terminal table/banner printers (`printHelp`, `printQuickstartReport`, `printEvalReport`, `printSyncBundleReport`, `printStepsAuditReport`, `printSaaSCta`) into `bin/lib/cli-printers.js` (107 LOC), reducing `bin/cashclaw.js` to 101 LOC and `bin/lib/commands.js` to 102 LOC so every file in `bin/` is strictly `<= 110 LOC`.
+- **Strict Non-Test Ceiling (`<= 110 LOC` across all of `src/`)**:
+  - Slimmed all 33 remaining non-test `.ts`/`.tsx` files in `src/` that were between `111–119 LOC` down to `<= 110 LOC` (0 non-test files `> 110 LOC` across all 908 non-test files in `src/`).
+- **Eliminated All Test Files `> 300 LOC` Across `src/`**:
+  - Split `client.test.ts` (343 LOC), `engine.test.ts` (340 LOC), `run-deliberation-helpers.test.ts` (328 LOC), `micro-d1-store.test.ts` (327 LOC), `login-form.test.tsx` (306 LOC), and `overfitting-proxy.test.ts` (303 LOC) into 12 focused test suites (`<= 212 LOC` each), leaving 0 test files `> 300 LOC` across the entire repository (max test file is now 298 LOC).
+- **Verification**:
+  - 713/713 test files passing, `tsc --noEmit` 0 errors, ESLint 0 warnings, OSS package audit clean (3/3 checks passed).
+
 ### Quad-Cluster Deep Refactor Wave 3 — 2026-10-17
 - **SaaS EE Scheduler, Telemetry & Alerts Unification (`src/ee/scheduler/cloud-scheduler-coordinator.ts`, `src/ee/telemetry/conversion-funnel.ts`, `src/app/api/ee/alerts/route.ts`)**:
   - Exported shared `defaultCloudSchedulerCoordinator` singleton uniting `src/worker-cron.ts` (`cronSchedulerCoordinator`) and `GET`/`POST /api/ee/scheduler` (`activeLeaseCount` telemetry).

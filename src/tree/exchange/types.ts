@@ -102,16 +102,7 @@ export interface ExchangeConfig {
 }
 
 export const EXCHANGE_BASE_URLS: Record<ExchangeId, { main: string; testnet: string }> = {
-  binance: {
-    main: 'https://api.binance.com',
-    testnet: 'https://testnet.binance.vision',
-  },
-  bybit: {
-    main: 'https://api.bybit.com',
-    testnet: 'https://api-testnet.bybit.com',
-  },
-  okx: {
-    main: 'https://www.okx.com',
-    testnet: 'https://www.okx.com',
-  },
+  binance: { main: 'https://api.binance.com', testnet: 'https://testnet.binance.vision' },
+  bybit: { main: 'https://api.bybit.com', testnet: 'https://api-testnet.bybit.com' },
+  okx: { main: 'https://www.okx.com', testnet: 'https://www.okx.com' },
 };

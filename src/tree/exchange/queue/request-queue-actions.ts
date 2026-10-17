@@ -39,30 +39,16 @@ export class RequestQueueActions {
     }
 
     const id = `req_${++this.idCounter}_${Date.now()}`;
-    const fullItem: QueueItem<T> = {
-      ...item,
-      id,
-      enqueuedAt: Date.now(),
-    };
-
+    const fullItem: QueueItem<T> = { ...item, id, enqueuedAt: Date.now() };
     this.pool.enqueue(exchange, fullItem as QueueItem);
-
     log.debug('Request enqueued', {
-      id,
-      exchange,
-      priority: item.priority,
-      label: item.label,
-      depth: this.pool.getDepth(exchange),
+      id, exchange, priority: item.priority, label: item.label, depth: this.pool.getDepth(exchange),
     });
-
     return id;
   }
 
   dequeue(exchange: ExchangeId): QueueItem | null {
-    if (this.costTracker.isOverBudget(exchange)) {
-      return null;
-    }
-    return this.pool.dequeue(exchange);
+    return this.costTracker.isOverBudget(exchange) ? null : this.pool.dequeue(exchange);
   }
 
   canEnqueue(exchange: ExchangeId): boolean {

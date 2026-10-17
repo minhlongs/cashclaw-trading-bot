@@ -20,6 +20,8 @@
     "portfolio-cvar-stress": "Portfolio CVaR Stress",
     "orderbook-imbalance-lob": "Hawkes LOB Imbalance",
     "rough-volatility-hurst": "Rough Volatility Hurst",
+    "leadlag-hayashi-yoshida": "Hayashi-Yoshida Lead-Lag",
+    "optimal-execution-almgren-chriss": "Almgren-Chriss Execution",
     "style-guide": "Style Guide"
   },
   "dashboard": {

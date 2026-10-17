@@ -1,8 +1,6 @@
 // AST types, operator call signatures, and static lookback computation for
 // the zoo operator parser (Phase 3, decisions D1/D2). Pure types + data —
-// no parsing, no I/O. The signature table encodes each operator's literal
-// parameter contract (window/lag minimums) used by parser validation and by
-// the evaluator's parameter extraction.
+// no parsing, no I/O.
 
 import type { SupportedOperator } from './operator-vocabulary';
 import type { SupportedDataField } from './zoo-metadata';

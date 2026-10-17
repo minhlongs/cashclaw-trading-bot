@@ -51,12 +51,8 @@ export function SettingsClient() {
         body: JSON.stringify(body),
       });
       const result = (await res.json()) as { ok?: boolean; error?: string };
-      if (result.ok) {
-        onOk();
-        setSaveMessage(okMsg);
-      } else {
-        setSaveMessage(result.error ?? failMsg);
-      }
+      if (result.ok) { onOk(); setSaveMessage(okMsg); }
+      else setSaveMessage(result.error ?? failMsg);
     } catch {
       setSaveMessage('Network error');
     }
@@ -66,8 +62,7 @@ export function SettingsClient() {
     post(
       { type: 'exchange', exchange, apiKey, apiSecret, testnet },
       () => setSettings((p) => ({ ...p, exchanges: { ...p.exchanges, [exchange]: { apiKey, apiSecret, testnet } } })),
-      `${exchange} saved!`,
-      `${exchange} save failed`,
+      `${exchange} saved!`, `${exchange} save failed`,
     );
 
   const handleNotificationSave = (botToken: string, chatId: string) =>

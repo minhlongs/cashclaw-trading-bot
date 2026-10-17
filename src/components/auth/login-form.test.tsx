@@ -44,7 +44,7 @@ function getSubmitButton() {
   return w().getByRole('button', { name: /đăng nhập \/ login/i });
 }
 
-describe('LoginForm', () => {
+describe('LoginForm — Inputs, Auth Responses & Redirect', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -91,7 +91,6 @@ describe('LoginForm', () => {
     });
 
     setup();
-
     await user.type(getEmailInput(), 'user@example.com');
     await user.type(getPasscodeInput(), 'wrong');
     await user.click(getSubmitButton());
@@ -109,7 +108,6 @@ describe('LoginForm', () => {
     });
 
     setup();
-
     await user.type(getEmailInput(), 'user@example.com');
     await user.type(getPasscodeInput(), 'pass');
     await user.click(getSubmitButton());
@@ -127,7 +125,6 @@ describe('LoginForm', () => {
     });
 
     setup();
-
     await user.type(getEmailInput(), 'user@example.com');
     await user.type(getPasscodeInput(), 'pass');
     await user.click(getSubmitButton());
@@ -142,7 +139,6 @@ describe('LoginForm', () => {
     mockFetch.mockRejectedValueOnce(new Error('Network failure'));
 
     setup();
-
     await user.type(getEmailInput(), 'user@example.com');
     await user.type(getPasscodeInput(), 'pass');
     await user.click(getSubmitButton());
@@ -156,14 +152,10 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({
-        ok: true,
-        user: { id: '1', email: 'user@example.com' },
-      }),
+      json: async () => ({ ok: true, user: { id: '1', email: 'user@example.com' } }),
     });
 
     setup();
-
     await user.type(getEmailInput(), 'user@example.com');
     await user.type(getPasscodeInput(), 'correct');
     await user.click(getSubmitButton());
@@ -181,7 +173,6 @@ describe('LoginForm', () => {
     });
 
     setup();
-
     await user.type(getEmailInput(), 'a@b.com');
     await user.type(getPasscodeInput(), 'pw123');
     await user.click(getSubmitButton());
@@ -192,115 +183,6 @@ describe('LoginForm', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: 'a@b.com', passcode: 'pw123' }),
       });
-    });
-  });
-
-  it('disables submit button while loading', async () => {
-    const user = userEvent.setup();
-    let resolveFetch!: (v: unknown) => void;
-    mockFetch.mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolveFetch = resolve;
-      }),
-    );
-
-    setup();
-
-    const button = getSubmitButton();
-    expect(button).not.toBeDisabled();
-
-    await user.type(getEmailInput(), 'a@b.com');
-    await user.type(getPasscodeInput(), 'pw');
-    await user.click(button);
-
-    await waitFor(() => {
-      expect(button).toBeDisabled();
-    });
-
-    // Resolve with a failure: the success path deliberately keeps loading=true
-    // while router.push navigates away, so only the error path re-enables.
-    resolveFetch({ ok: false, json: async () => ({ ok: false, error: 'Nope' }) });
-
-    await waitFor(() => {
-      expect(button).not.toBeDisabled();
-    });
-  });
-
-  it('shows "Loading..." text while submitting', async () => {
-    const user = userEvent.setup();
-    let resolveFetch!: (v: unknown) => void;
-    mockFetch.mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolveFetch = resolve;
-      }),
-    );
-
-    setup();
-
-    await user.type(getEmailInput(), 'a@b.com');
-    await user.type(getPasscodeInput(), 'pw');
-    await user.click(getSubmitButton());
-
-    await waitFor(() => {
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
-    });
-
-    resolveFetch({ ok: false, json: async () => ({ ok: false, error: 'Nope' }) });
-
-    await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
-      expect(w().getByText(/đăng nhập \/ login/i)).toBeInTheDocument();
-    });
-  });
-
-  it('prevents default form submission', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ ok: true, user: { id: '1', email: 'a@b.com' } }),
-    });
-
-    setup();
-    const form = getFormEl();
-    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-    const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
-
-    form.dispatchEvent(submitEvent);
-
-    expect(preventDefaultSpy).toHaveBeenCalled();
-    expect(submitEvent.defaultPrevented).toBe(true);
-
-    // Let the submit handler settle so no state update escapes the test.
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-  });
-
-  it('clears previous error before showing result of new submission', async () => {
-    const user = userEvent.setup();
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ ok: false, error: 'First error' }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ok: true }),
-      });
-
-    setup();
-
-    await user.type(getEmailInput(), 'a@b.com');
-    await user.type(getPasscodeInput(), 'pw');
-    await user.click(getSubmitButton());
-
-    await waitFor(() => {
-      expect(screen.getByText('First error')).toBeInTheDocument();
-    });
-
-    await user.click(getSubmitButton());
-
-    await waitFor(() => {
-      expect(screen.queryByText('First error')).not.toBeInTheDocument();
     });
   });
 });

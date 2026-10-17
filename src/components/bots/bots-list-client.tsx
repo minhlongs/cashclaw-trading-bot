@@ -47,9 +47,7 @@ export default function BotsListClient() {
   const filtered = bots.filter((bot) => {
     const matchesStatus = statusFilter === 'all' || bot.botStatus === statusFilter;
     const q = searchTerm.toLowerCase();
-    const matchesSearch = !q || bot.name.toLowerCase().includes(q) ||
-      bot.pair.toLowerCase().includes(q) || bot.exchange.toLowerCase().includes(q);
-    return matchesStatus && matchesSearch;
+    return matchesStatus && (!q || bot.name.toLowerCase().includes(q) || bot.pair.toLowerCase().includes(q) || bot.exchange.toLowerCase().includes(q));
   });
 
   if (loading) {
@@ -57,35 +55,28 @@ export default function BotsListClient() {
       <div className="space-y-6">
         <div className="flex justify-between items-center"><h1 className="page-title">{t('bots.listTitle')}</h1></div>
         <div className="card flex items-center justify-center p-8 gap-3" aria-live="polite" aria-busy="true">
-          <Loader2 size={24} className="animate-spin text-profit" />
-          <span className="text-secondary">{t('common.loading')}</span>
+          <Loader2 size={24} className="animate-spin text-profit" /><span className="text-secondary">{t('common.loading')}</span>
         </div>
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center"><h1 className="page-title">{t('bots.listTitle')}</h1></div>
         <div className="card error-state" role="alert">
-          <p>{error}</p>
-          <button className="btn btn-ghost mt-4" onClick={() => window.location.reload()}>Thử lại / Try again</button>
+          <p>{error}</p><button className="btn btn-ghost mt-4" onClick={() => window.location.reload()}>Thử lại / Try again</button>
         </div>
       </div>
     );
   }
-
   const activeCount = bots.filter((b) => b.botStatus === 'live_running').length;
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="page-title">{t('bots.listTitle')}</h1>
-          <p className="page-subtitle">
-            {bots.length} {t('bots.columns.name').toLowerCase()} &middot; {activeCount} {t('dashboard.activeBots').toLowerCase()}
-          </p>
+          <p className="page-subtitle">{bots.length} {t('bots.columns.name').toLowerCase()} &middot; {activeCount} {t('dashboard.activeBots').toLowerCase()}</p>
         </div>
         <Link href={`/${locale}/bots/new`} className="btn btn-primary"><Plus size={16} />{t('bots.createNew')}</Link>
       </div>
@@ -111,7 +102,6 @@ export default function BotsListClient() {
           <button type="button" className="text-secondary hover:text-primary ml-2 text-xs" onClick={() => setActionError(null)} aria-label="Dismiss error">✕</button>
         </div>
       )}
-
       <BotsTable bots={filtered} locale={locale} onStatusChange={handleStatusChange} onError={setActionError} />
     </div>
   );

@@ -17,36 +17,15 @@ const EMPTY_EQUITY: BacktestEquityPoint[] = [];
 
 /** Minimal BacktestResult carrying only the fields the consistency check reads. */
 function metricResult(
-  id: string,
-  botId: string,
-  strategy: string,
-  pair: string,
-  exchange: string,
-  startDate: number,
-  endDate: number,
-  totalTrades: number,
-  pnl: number,
-  sharpe: number | null,
+  id: string, botId: string, strategy: string, pair: string, exchange: string,
+  startDate: number, endDate: number, totalTrades: number, pnl: number, sharpe: number | null,
 ): BacktestResult {
   return {
-    id,
-    bot_id: botId,
-    strategy,
-    pair,
-    exchange,
-    start_date: startDate,
-    end_date: endDate,
-    total_trades: totalTrades,
-    win_count: 0,
-    loss_count: 0,
-    win_rate: 0,
-    total_pnl: pnl,
-    max_drawdown: 0,
-    sharpe_ratio: sharpe,
-    params_json: '{}',
-    equity_curve_json: EMPTY_EQUITY,
-    trades_json: EMPTY_TRADES,
-    created_at: startDate,
+    id, bot_id: botId, strategy, pair, exchange,
+    start_date: startDate, end_date: endDate, total_trades: totalTrades,
+    win_count: 0, loss_count: 0, win_rate: 0, total_pnl: pnl, max_drawdown: 0,
+    sharpe_ratio: sharpe, params_json: '{}',
+    equity_curve_json: EMPTY_EQUITY, trades_json: EMPTY_TRADES, created_at: startDate,
   };
 }
 

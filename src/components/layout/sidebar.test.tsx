@@ -50,6 +50,8 @@ describe('Sidebar', () => {
     { label: 'nav.portfolio-cvar-stress', href: '/vi/portfolio-cvar-stress' },
     { label: 'nav.orderbook-imbalance-lob', href: '/vi/orderbook-imbalance-lob' },
     { label: 'nav.rough-volatility-hurst', href: '/vi/rough-volatility-hurst' },
+    { label: 'nav.leadlag-hayashi-yoshida', href: '/vi/leadlag-hayashi-yoshida' },
+    { label: 'nav.optimal-execution-almgren-chriss', href: '/vi/optimal-execution-almgren-chriss' },
     { label: 'nav.style-guide', href: '/vi/style-guide' },
     { label: 'nav.settings', href: '/vi/settings' },
   ];

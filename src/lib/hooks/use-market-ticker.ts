@@ -14,11 +14,7 @@ import {
 } from './use-market-ticker-fetch';
 
 export type {
-  TickerProvenance,
-  UseMarketTickerOptions,
-  UseMarketTickerResult,
-  TickerApiResponse,
-  FetchOutcome,
+  TickerProvenance, UseMarketTickerOptions, UseMarketTickerResult, TickerApiResponse, FetchOutcome,
 } from './use-market-ticker-types';
 export { DEFAULT_POLL_INTERVAL_MS, VALID_EXCHANGES, requestTickerData } from './use-market-ticker-fetch';
 
@@ -80,11 +76,7 @@ export function useMarketTicker({
     void initFetch();
 
     if (intervalMs <= 0) return;
-
-    const timer = setInterval(() => {
-      void executeFetch();
-    }, intervalMs);
-
+    const timer = setInterval(() => { void executeFetch(); }, intervalMs);
     return () => {
       cancelled = true;
       clearInterval(timer);
@@ -92,16 +84,12 @@ export function useMarketTicker({
     };
   }, [isEligible, executeFetch, intervalMs]);
 
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-      activeControllerRef.current?.abort();
-    };
+  useEffect(() => () => {
+    isMountedRef.current = false;
+    activeControllerRef.current?.abort();
   }, []);
 
-  const refetch = useCallback(async (): Promise<void> => {
-    await executeFetch();
-  }, [executeFetch]);
+  const refetch = useCallback(async (): Promise<void> => { await executeFetch(); }, [executeFetch]);
 
   return {
     ticker: isEligible ? ticker : null,

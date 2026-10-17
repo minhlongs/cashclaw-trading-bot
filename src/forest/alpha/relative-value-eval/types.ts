@@ -2,15 +2,9 @@
 // Parallel to cross-sectional-eval types; pure types only.
 
 import type {
-  PairPanel,
-  PairSimConfig,
-  PairSimResult,
-  PairValidationEntry,
+  PairPanel, PairSimConfig, PairSimResult, PairValidationEntry,
 } from '@/tree/alpha/relative-value';
-import type {
-  CostAttributionBreakdown,
-  ExposureSeries,
-} from '@/forest/alpha/cross-sectional-eval/types';
+import type { CostAttributionBreakdown, ExposureSeries } from '@/forest/alpha/cross-sectional-eval/types';
 import type { RegimeLabel } from '@/tree/regime/types';
 import type { AssetReturnSeries } from '@/tree/alpha/cross-sectional/types';
 

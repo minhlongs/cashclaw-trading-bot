@@ -1,71 +1,12 @@
-import {
-  ResearchAgent,
-  DeterministicMockLLMProvider,
-  diagnoseQueueJobFailure,
-  recommendQueueFollowUp,
-  createFollowUpJobSpec,
-  HypothesisProposalSchema,
-  FeatureProposalSchema,
-  FailureDiagnosisSchema,
-  HypothesisClusterSchema,
-  NextExperimentSpecSchema,
-  FalsificationGuardError,
-  NonCausalFeatureError,
-  ProviderError,
-  type ResearchLLMProvider,
-  type LLMPromptPayload,
-  type HypothesisProposal,
-  type FeatureProposal,
-  type FailureDiagnosis,
-  type HypothesisCluster,
-  type NextExperimentSpec,
-  type GenerateHypothesesRequest,
-  type ProposeFeaturesRequest,
-  type ExplainFailureRequest,
-  type ClusterHypothesesRequest,
-  type RecommendExperimentsRequest,
-} from '../index';
-import { SEED_FALSIFIED } from '@/tree/alpha/registry/seed-falsified';
+export * from '../index';
+export { SEED_FALSIFIED } from '@/tree/alpha/registry/seed-falsified';
+export type { ResearchQueueJob } from '@/tree/alpha/queue/types';
+export type { SurvivalVerdict } from '@/forest/alpha/multiple-testing/types';
+export { validateJobSpec } from '@/tree/alpha/queue/validation';
+export { MICROSTRUCTURE_FEATURE_NAMES } from '@/tree/alpha/microstructure/contracts';
+
 import type { ResearchQueueJob } from '@/tree/alpha/queue/types';
 import type { SurvivalVerdict } from '@/forest/alpha/multiple-testing/types';
-import { validateJobSpec } from '@/tree/alpha/queue/validation';
-import { MICROSTRUCTURE_FEATURE_NAMES } from '@/tree/alpha/microstructure/contracts';
-
-export {
-  ResearchAgent,
-  DeterministicMockLLMProvider,
-  diagnoseQueueJobFailure,
-  recommendQueueFollowUp,
-  createFollowUpJobSpec,
-  HypothesisProposalSchema,
-  FeatureProposalSchema,
-  FailureDiagnosisSchema,
-  HypothesisClusterSchema,
-  NextExperimentSpecSchema,
-  FalsificationGuardError,
-  NonCausalFeatureError,
-  ProviderError,
-  SEED_FALSIFIED,
-  validateJobSpec,
-  MICROSTRUCTURE_FEATURE_NAMES,
-};
-
-export type {
-  ResearchLLMProvider,
-  LLMPromptPayload,
-  HypothesisProposal,
-  FeatureProposal,
-  FailureDiagnosis,
-  HypothesisCluster,
-  NextExperimentSpec,
-  GenerateHypothesesRequest,
-  ProposeFeaturesRequest,
-  ExplainFailureRequest,
-  ClusterHypothesesRequest,
-  RecommendExperimentsRequest,
-  ResearchQueueJob,
-  SurvivalVerdict,
-};
 
 /** Creates a sample ResearchQueueJob fixture for testing. */
 export function createMockQueueJob(overrides: Partial<ResearchQueueJob> = {}): ResearchQueueJob {

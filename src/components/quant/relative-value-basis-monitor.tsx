@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Scale, ShieldCheck } from 'lucide-react';
+import { Scale } from 'lucide-react';
+import { QuantScreenHeader } from './quant-screen-header';
 
 type BasisRegime = 'CARRY_LONG' | 'MEAN_REVERT';
 
@@ -26,18 +27,11 @@ export function RelativeValueBasisMonitor() {
 
   return (
     <section aria-label="Cross-Exchange Relative-Value and Perpetual-Spot Funding Basis Monitor" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <Scale size={20} className="text-[var(--color-accent)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">Relative-Value & Perpetual-Spot Funding Basis Monitor</h1>
-            <p className="text-xs text-[var(--text-secondary)]">Phase 5 relative-value engine • Annualized carry yield & OLS spread z-score telemetry</p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} /><span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<Scale size={20} className="text-[var(--color-accent)]" />}
+        title="Relative-Value & Perpetual-Spot Funding Basis Monitor"
+        subtitle="Phase 5 relative-value engine • Annualized carry yield & OLS spread z-score telemetry"
+      />
 
       <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CashClaw OS // Hayashi-Yoshida Lead-Lag Matrix</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary-fixed": "#002118",
+            "text-tertiary": "#5A6577",
+            "on-tertiary": "#4c2700",
+            "surface-container": "#19211e",
+            "tertiary-fixed-dim": "#ffb77a",
+            "surface-dim": "#0d1512",
+            "inverse-surface": "#dce4df",
+            "secondary-fixed-dim": "#cebdff",
+            "primary-fixed-dim": "#28dfb5",
+            "primary-fixed": "#55fcd0",
+            "bg-hover": "#1E2838",
+            "outline": "#85948d",
+            "secondary": "#cebdff",
+            "on-tertiary-fixed-variant": "#6c3a00",
+            "color-loss": "#FF4757",
+            "on-primary": "#00382b",
+            "tertiary": "#ffcea6",
+            "error": "#ffb4ab",
+            "primary": "#46f1c5",
+            "inverse-on-surface": "#2a322f",
+            "surface": "#0d1512",
+            "surface-variant": "#2f3633",
+            "text-primary": "#E8EAED",
+            "on-error-container": "#ffdad6",
+            "on-surface": "#dce4df",
+            "bg-surface": "#141820",
+            "surface-container-low": "#161d1a",
+            "bg-elevated": "#1A2030",
+            "surface-container-high": "#242c28",
+            "tertiary-fixed": "#ffdcc1",
+            "on-secondary-container": "#bea8ff",
+            "on-background": "#dce4df",
+            "border-subtle": "#1E2530",
+            "outline-variant": "#3b4a44",
+            "on-tertiary-container": "#733e00",
+            "background": "#0d1512",
+            "surface-bright": "#333b37",
+            "surface-container-highest": "#2f3633",
+            "on-secondary-fixed": "#21005e",
+            "tertiary-container": "#ffa858",
+            "secondary-fixed": "#e8ddff",
+            "on-surface-variant": "#bacac2",
+            "error-container": "#93000a",
+            "on-primary-fixed-variant": "#00513f",
+            "surface-tint": "#28dfb5",
+            "inverse-primary": "#006b55",
+            "on-secondary": "#381385",
+            "color-warning": "#FFB020",
+            "primary-container": "#00d4aa",
+            "bg-primary": "#0B0E11",
+            "on-secondary-fixed-variant": "#4f319c",
+            "border-default": "#2A3340",
+            "text-secondary": "#8B95A5",
+            "on-error": "#690005",
+            "secondary-container": "#4f319c",
+            "on-primary-container": "#005643",
+            "surface-container-lowest": "#08100d",
+            "on-tertiary-fixed": "#2e1500"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "space-xs": "4px",
+            "space-sm": "8px",
+            "space-md": "12px",
+            "space-lg": "16px",
+            "space-4xl": "64px",
+            "space-xl": "24px",
+            "gutter": "16px",
+            "space-2xl": "32px",
+            "margin": "24px",
+            "space-3xl": "48px"
+          },
+          "fontFamily": {
+            "headline-sm": ["Geist", "sans-serif"],
+            "hero": ["Geist", "sans-serif"],
+            "body-base": ["Geist", "sans-serif"],
+            "headline-md": ["Geist", "sans-serif"],
+            "caption": ["JetBrains Mono", "monospace"],
+            "title-lg": ["Geist", "sans-serif"],
+            "body-sm": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist", "sans-serif"]
+          },
+          "fontSize": {
+            "headline-sm": ["20px", { "lineHeight": "1.25", "fontWeight": "600" }],
+            "hero": ["56px", { "lineHeight": "1.25", "fontWeight": "900" }],
+            "body-base": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+            "headline-md": ["28px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "caption": ["11px", { "lineHeight": "1.4", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "title-lg": ["16px", { "lineHeight": "1.5", "fontWeight": "600" }],
+            "body-sm": ["13px", { "lineHeight": "1.5", "fontWeight": "500" }],
+            "headline-lg": ["40px", { "lineHeight": "1.25", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 16px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B0E11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E2530;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2A3340;
+    }
+  </style>
+</head>
+<body class="bg-bg-primary text-text-primary font-body-base antialiased min-h-screen overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- LEFT FIXED INSTITUTIONAL SIDEBAR -->
+<aside class="fixed top-0 left-0 h-screen w-60 z-40 bg-bg-primary border-r border-border-subtle flex flex-col justify-between p-space-sm select-none">
+<div class="flex flex-col gap-space-sm overflow-hidden">
+<!-- Brand & Node ID -->
+<div class="px-space-sm py-space-xs border-b border-border-subtle pb-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight">CashClaw OS</span>
+</div>
+<span class="font-caption text-caption text-primary bg-bg-elevated px-space-xs py-0.5 rounded border border-border-default">#QNT-8812</span>
+</div>
+<div class="flex items-center justify-between mt-1">
+<span class="font-caption text-caption text-text-tertiary">Terminal v4.19 Institutional</span>
+<span class="font-caption text-caption text-color-warning border border-color-warning/30 px-1 py-0.5 rounded bg-color-warning/10">ADR-001 PAPER</span>
+</div>
+</div>
+<!-- Quick Action CTA -->
+<div class="px-space-xs pt-1">
+<button class="w-full flex items-center justify-center gap-space-xs h-9 bg-primary-container hover:bg-primary text-on-primary-container font-body-sm text-body-sm font-semibold rounded transition-colors duration-150 shadow-sm">
+<span class="material-symbols-outlined text-[15px]" data-icon="smart_toy">smart_toy</span>
+<span>Deploy Agent</span>
+</button>
+</div>
+<!-- Navigation Links (Scrollable) -->
+<nav class="flex flex-col gap-0.5 overflow-y-auto pr-1 mt-1 max-h-[calc(100vh-220px)]">
+<!-- Cockpit Overview -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="dashboard">dashboard</span>
+<span class="truncate">Cockpit Overview</span>
+</a>
+<!-- Regime Attribution -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="monitoring">monitoring</span>
+<span class="truncate">Regime Attribution</span>
+</a>
+<!-- Alpha Decomposition -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="matrix">unfold_more_double</span>
+<span class="truncate">Alpha Decomposition</span>
+</a>
+<!-- Strategy Orchestration -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="alt_route">alt_route</span>
+<span class="truncate">Strategy Orchestration</span>
+</a>
+<!-- Execution Routing -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="swap_horiz">swap_horiz</span>
+<span class="truncate">Execution Routing</span>
+</a>
+<!-- Risk & Invariants -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="shield">shield</span>
+<span class="truncate">Risk &amp; Invariants</span>
+</a>
+<!-- Order Book L3 -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="stacked_bar_chart">stacked_bar_chart</span>
+<span class="truncate">Order Book L3</span>
+</a>
+<!-- Rough Vol & Jumps -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="show_chart">show_chart</span>
+<span class="truncate">Rough Vol (H&lt;0.5)</span>
+</a>
+<!-- Volatility Surface -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="multiline_chart">multiline_chart</span>
+<span class="truncate">Volatility Surface</span>
+</a>
+<!-- ACTIVE: Lead-Lag Matrix (Hayashi-Yoshida) -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded text-primary bg-bg-elevated border-l-2 border-primary font-body-sm text-body-sm font-semibold transition-colors duration-150 shadow-inner" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="sync_alt">sync_alt</span>
+<span class="truncate">Lead-Lag Matrix</span>
+<span class="ml-auto w-1.5 h-1.5 rounded-full bg-primary"></span>
+</a>
+<!-- Multi-Agent Deliberation -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-secondary" data-icon="smart_toy">smart_toy</span>
+<span class="truncate">Multi-Agent Deliberation</span>
+</a>
+<!-- CVaR Tail-Risk -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="pie_chart">pie_chart</span>
+<span class="truncate">CVaR Tail-Risk</span>
+</a>
+<!-- Multiple-Testing Gate (BH-FDR) -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="verified_user">verified_user</span>
+<span class="truncate">Testing Gate (BH-FDR)</span>
+</a>
+<!-- Telemetry Logs -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="terminal">terminal</span>
+<span class="truncate">Telemetry Logs</span>
+</a>
+<!-- System Settings -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded font-body-sm text-body-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-text-tertiary" data-icon="settings">settings</span>
+<span class="truncate">System Settings</span>
+</a>
+</nav>
+</div>
+<!-- Sidebar Footer Telemetry -->
+<div class="pt-space-xs border-t border-border-subtle flex flex-col gap-1">
+<div class="flex items-center justify-between px-space-sm py-1 rounded bg-surface text-text-secondary text-caption font-caption">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[14px]" data-icon="gpp_good">gpp_good</span>
+          Audit Live: OK
+        </span>
+<span class="text-primary font-bold">100%</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 rounded bg-surface text-text-secondary text-caption font-caption">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[14px]" data-icon="sensors">sensors</span>
+          System Status
+        </span>
+<span class="text-text-primary">ONLINE</span>
+</div>
+</div>
+</aside>
+<!-- TOP APP BAR -->
+<header class="flex items-center justify-between w-full h-14 pl-64 pr-space-lg bg-bg-surface border-b border-border-subtle fixed top-0 left-0 z-30">
+<div class="flex items-center gap-space-md overflow-hidden">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary" data-icon="show_chart">show_chart</span>
+<h1 class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight truncate">
+          CashClaw // MICROSTRUCTURE &amp; LEAD-LAG ARBITRAGE
+        </h1>
+</div>
+<span class="hidden xl:inline-block font-caption text-caption text-text-tertiary px-2 py-0.5 rounded bg-bg-primary border border-border-subtle font-mono">
+        src/forest/microstructure/lead_lag_hy.py
+      </span>
+</div>
+<!-- Live Telemetry Pills -->
+<div class="hidden lg:flex items-center gap-space-sm font-caption text-caption">
+<span class="px-2 py-1 rounded bg-bg-elevated border border-border-subtle text-text-secondary font-mono">
+        ESTIMATOR: <strong class="text-primary">HAYASHI-YOSHIDA (2005)</strong>
+</span>
+<span class="px-2 py-1 rounded bg-bg-elevated border border-border-subtle text-text-secondary font-mono">
+        EPPS BIAS: <strong class="text-primary">ATTENUATED</strong>
+</span>
+<span class="px-2 py-1 rounded bg-bg-elevated border border-border-subtle text-text-secondary font-mono">
+        OPTIMAL τ*: <strong class="text-primary">+340ms</strong>
+</span>
+<span class="px-2 py-1 rounded bg-bg-elevated border border-border-subtle text-text-secondary font-mono">
+        ZERO-LOOKAHEAD: <strong class="text-primary">PASS</strong>
+</span>
+<span class="px-2 py-1 rounded bg-bg-elevated border border-border-subtle text-text-secondary font-mono">
+        SLIPPAGE: <span class="text-text-primary">1.2 BPS</span>
+</span>
+<span class="px-2 py-1 rounded bg-bg-elevated border border-border-subtle text-text-secondary font-mono">
+        LATENCY: <span class="text-text-primary">38μs</span>
+</span>
+<span class="px-2 py-1 rounded bg-color-warning/10 border border-color-warning/40 text-color-warning font-mono font-bold">
+        ADR-001 [PAPER_ONLY]
+      </span>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-space-xs">
+<button class="hidden sm:flex items-center gap-1.5 h-9 px-space-md rounded bg-bg-elevated hover:bg-bg-hover text-text-primary border border-border-subtle font-body-sm text-body-sm font-medium transition-colors duration-150">
+<span class="material-symbols-outlined text-[15px]" data-icon="file_download">file_download</span>
+        Export HY Matrix
+      </button>
+<button class="flex items-center gap-1.5 h-9 px-space-md rounded bg-primary-container hover:bg-primary text-on-primary-container font-body-sm text-body-sm font-semibold transition-colors duration-150">
+<span class="material-symbols-outlined text-[15px]" data-icon="refresh">refresh</span>
+        Re-Compute Lead-Lag Curve
+      </button>
+<button class="flex items-center gap-1 h-9 px-space-sm rounded bg-color-loss/15 hover:bg-color-loss/25 text-color-loss border border-color-loss/40 font-caption text-caption font-bold transition-colors duration-150">
+<span class="material-symbols-outlined text-[15px]" data-icon="gpp_bad">gpp_bad</span>
+<span class="hidden md:inline">Emergency Halt</span>
+</button>
+</div>
+</header>
+<!-- MAIN SCROLLABLE CONTENT CANVAS -->
+<main class="pl-64 pt-16 pr-space-lg pb-space-2xl min-h-screen max-w-[1580px] flex flex-col gap-space-lg">
+<!-- MATHEMATICAL INVARIANT BANNER -->
+<section class="mt-2 bg-bg-surface border border-border-subtle rounded-lg p-space-md shadow-sm">
+<div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-sm">
+<div class="flex items-start gap-space-sm">
+<div class="p-2 rounded bg-primary/10 border border-primary/30 text-primary mt-0.5">
+<span class="material-symbols-outlined text-[18px]" data-icon="verified_user">verified_user</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-caption text-caption text-primary font-bold tracking-wider uppercase">
+                INVARIANT ADR-001 (ZERO LOOKAHEAD ENFORCED)
+              </span>
+<span class="font-caption text-caption px-1.5 py-0.5 rounded bg-bg-elevated text-secondary border border-border-subtle font-mono">
+                HAYASHI-YOSHIDA ASYNCHRONOUS CROSS-COVARIANCE
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1">
+              Continuous-time overlap estimator: <code class="font-caption text-primary bg-bg-primary px-1.5 py-0.5 rounded border border-border-subtle">γ_HY(X, Y) = ∑_{i, j} ΔX_{t_i} ΔY_{s_j} 1_{I_i ∩ J_j ≠ ∅}</code>. Overcomes the Epps effect (cross-correlation breakdown under high-frequency calendar time downsampling) without synthetic price interpolation or forward-fill lookahead.
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-space-md font-caption text-caption text-text-tertiary self-end lg:self-center shrink-0">
+<div class="text-right">
+<span class="block">Seed Entropy: <code class="text-text-secondary">0xDEADBEEF42</code></span>
+<span class="block">Checksum: <code class="text-text-secondary">e8b9a2...4f91</code></span>
+</div>
+<div class="w-8 h-8 rounded bg-bg-primary border border-border-subtle flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]" data-icon="lock">lock</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 1: 3 QUANTITATIVE TELEMETRY KPI CARDS -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Card 1: Dominant Leader-Lagger Pair -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between hover:border-border-default transition-colors duration-150">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-caption text-caption text-text-tertiary font-mono uppercase">Dominant Leader-Lagger Pair</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+</div>
+<h2 class="font-headline-sm text-headline-sm font-bold text-text-primary mt-1 tracking-tight flex items-center gap-2">
+              BTC-PERP <span class="text-primary text-[18px]">→</span> SOL-USDT
+            </h2>
+</div>
+<span class="font-caption text-caption px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 font-mono">
+            SIGNIFICANT_ASYMMETRY
+          </span>
+</div>
+<div class="my-space-md">
+<div class="flex items-baseline justify-between mb-1">
+<span class="font-caption text-caption text-text-secondary">Optimal Lead Delta (τ*)</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary font-mono">+340ms</span>
+</div>
+<div class="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden border border-border-subtle">
+<div class="h-full bg-primary rounded-full" style="width: 68%;"></div>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-text-tertiary mt-1">
+<span>0ms (Synchronous)</span>
+<span>+500ms max buffer</span>
+</div>
+</div>
+<div class="pt-space-sm border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary">Peak HY Cross-Correlation:</span>
+<span class="text-text-primary font-mono font-bold">ρ_HY(τ*) = <span class="text-primary">+0.742</span> <span class="text-text-tertiary font-normal">(vs sync +0.458)</span></span>
+</div>
+</div>
+<!-- Card 2: Epps Bias Attenuation Recovered -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between hover:border-border-default transition-colors duration-150">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-caption text-caption text-text-tertiary font-mono uppercase">Epps Bias Attenuation Recovered</span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-primary mt-1 tracking-tight font-mono">
+              +0.284 Δρ <span class="text-text-secondary text-body-sm font-normal">vs Sync 1s Grid</span>
+</h2>
+</div>
+<span class="font-caption text-caption px-2 py-0.5 rounded bg-bg-elevated text-secondary border border-secondary/30 font-mono">
+            EPPS-FREE PASS
+          </span>
+</div>
+<div class="my-space-md flex flex-col gap-2">
+<div class="flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary">Hayashi-Yoshida (Tick-Overlap):</span>
+<span class="font-mono text-primary font-bold">ρ_HY = 0.742</span>
+</div>
+<div class="flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary">Synchronous Downsampled (1s):</span>
+<span class="font-mono text-text-tertiary">ρ_sync(1s) = 0.458</span>
+</div>
+<div class="flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary">Subsampling Distortion Loss:</span>
+<span class="font-mono text-color-loss font-semibold">-38.2%</span>
+</div>
+</div>
+<div class="pt-space-sm border-t border-border-subtle font-caption text-caption text-text-secondary truncate">
+<span>Zero Lookahead • Poisson Arrivals • Non-Interpolated</span>
+</div>
+</div>
+<!-- Card 3: Lead-Lag Signal Ratio (LLR) -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between hover:border-border-default transition-colors duration-150">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-caption text-caption text-text-tertiary font-mono uppercase">Lead-Lag Signal Ratio (LLR)</span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-text-primary mt-1 tracking-tight font-mono flex items-center gap-2">
+              2.84 <span class="text-body-sm text-primary font-body-sm font-semibold">SIGNIFICANT_LEADER</span>
+</h2>
+</div>
+<span class="font-caption text-caption px-2 py-0.5 rounded bg-color-warning/10 text-color-warning border border-color-warning/30 font-mono">
+            LLR &gt; 1.5 HURDLE
+          </span>
+</div>
+<div class="my-space-md">
+<div class="flex items-center justify-between font-caption text-caption mb-1">
+<span class="text-text-secondary">Directional Causal Asymmetry:</span>
+<span class="font-mono text-text-primary font-semibold">73.9% vs 26.1%</span>
+</div>
+<div class="w-full h-2 rounded bg-bg-primary overflow-hidden flex border border-border-subtle">
+<div class="bg-primary h-full" style="width: 73.9%;"></div>
+<div class="bg-text-tertiary h-full" style="width: 26.1%;"></div>
+</div>
+<div class="flex items-center justify-between font-caption text-caption text-text-tertiary mt-1">
+<span class="text-primary">Leader Causal Flow</span>
+<span>Reverse Leakage</span>
+</div>
+</div>
+<div class="pt-space-sm border-t border-border-subtle flex items-center justify-between font-caption text-caption">
+<span class="text-text-secondary">Safety Fence State:</span>
+<span class="font-mono text-primary font-bold">PROPAGATION_ARB_ENABLED</span>
+</div>
+</div>
+</section>
+<!-- SECTION 2: INTERACTIVE ASYMMETRIC LAG CURVE & TICK OVERLAP INSPECTOR -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Left: High-Resolution SVG Cross-Correlation Curve (8 cols) -->
+<div class="lg:col-span-8 bg-bg-surface border border-border-subtle rounded-lg p-space-lg flex flex-col justify-between">
+<!-- Header Controls -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm pb-space-sm border-b border-border-subtle">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-lg text-title-lg font-bold text-text-primary">Asymmetric Cross-Correlation Function ρ_HY(τ)</span>
+<span class="font-caption text-caption px-1.5 py-0.5 rounded bg-bg-elevated text-primary border border-border-subtle font-mono">τ ∈ [-2000ms, +2000ms]</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">Continuous-time overlap curve comparing Hayashi-Yoshida against downsampled synchronous Pearson</p>
+</div>
+<div class="flex items-center gap-space-xs self-stretch sm:self-auto">
+<!-- Pair Selector -->
+<div class="inline-flex rounded border border-border-subtle bg-bg-primary p-0.5 text-caption font-caption">
+<button class="px-2 py-1 rounded bg-bg-elevated text-primary font-semibold border border-border-default">BTC→SOL</button>
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary transition-colors">BTC→ETH</button>
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary transition-colors">ETH→SOL</button>
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary transition-colors">BTC→BNB</button>
+</div>
+<!-- Horizon Selector -->
+<div class="hidden sm:inline-flex rounded border border-border-subtle bg-bg-primary p-0.5 text-caption font-caption">
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary">±500ms</button>
+<button class="px-2 py-1 rounded bg-bg-elevated text-text-primary font-bold border border-border-default">±2000ms</button>
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary">±5000ms</button>
+</div>
+</div>
+</div>
+<!-- SVG Chart Visualization -->
+<div class="relative w-full h-80 my-space-md select-none">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 760 300">
+<defs>
+<lineargradient id="hyGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#00D4AA" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#00D4AA" stop-opacity="0.0"></stop>
+</lineargradient>
+<lineargradient id="eppsGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#8B95A5" stop-opacity="0.12"></stop>
+<stop offset="100%" stop-color="#8B95A5" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Grid Lines & Background Bands -->
+<rect fill="#0B0E11" height="300" rx="4" width="760" x="0" y="0"></rect>
+<!-- Horizontal Grid lines -->
+<line stroke="#1E2530" stroke-dasharray="2,3" stroke-width="1" x1="50" x2="740" y1="40" y2="40"></line>
+<line stroke="#1E2530" stroke-dasharray="2,3" stroke-width="1" x1="50" x2="740" y1="100" y2="100"></line>
+<line stroke="#1E2530" stroke-dasharray="2,3" stroke-width="1" x1="50" x2="740" y1="160" y2="160"></line>
+<line stroke="#1E2530" stroke-dasharray="2,3" stroke-width="1" x1="50" x2="740" y1="220" y2="220"></line>
+<line stroke="#2A3340" stroke-width="1" x1="50" x2="740" y1="270" y2="270"></line>
+<!-- Vertical Center Tau=0 Reference Line -->
+<line stroke="#5A6577" stroke-dasharray="4,4" stroke-width="1" x1="395" x2="395" y1="20" y2="270"></line>
+<text fill="#8B95A5" font-family="JetBrains Mono" font-size="10" text-anchor="middle" x="395" y="285">τ = 0 (Sync)</text>
+<!-- Vertical Optimal Tau* Line (+340ms) -->
+<!-- 395 + (340 / 2000) * 345 ≈ 395 + 58.6 = 453.6 -->
+<line stroke="#00D4AA" stroke-dasharray="3,2" stroke-width="1.5" x1="454" x2="454" y1="20" y2="270"></line>
+<circle cx="454" cy="52" fill="#00D4AA" r="5" stroke="#0B0E11" stroke-width="2"></circle>
+<text fill="#00D4AA" font-family="JetBrains Mono" font-size="10" font-weight="700" text-anchor="middle" x="454" y="285">τ* = +340ms</text>
+<!-- Zero correlation baseline -->
+<line stroke="#1E2530" stroke-width="1" x1="50" x2="740" y1="240" y2="240"></line>
+<text fill="#5A6577" font-family="JetBrains Mono" font-size="9" text-anchor="end" x="42" y="243">0.0</text>
+<text fill="#5A6577" font-family="JetBrains Mono" font-size="9" text-anchor="end" x="42" y="163">0.3</text>
+<text fill="#5A6577" font-family="JetBrains Mono" font-size="9" text-anchor="end" x="42" y="103">0.5</text>
+<text fill="#00D4AA" font-family="JetBrains Mono" font-size="9" font-weight="bold" text-anchor="end" x="42" y="43">0.8</text>
+<!-- Tau labels along x-axis -->
+<text fill="#5A6577" font-family="JetBrains Mono" font-size="10" text-anchor="start" x="50" y="285">-2000ms</text>
+<text fill="#5A6577" font-family="JetBrains Mono" font-size="10" text-anchor="middle" x="222" y="285">-1000ms</text>
+<text fill="#5A6577" font-family="JetBrains Mono" font-size="10" text-anchor="middle" x="567" y="285">+1000ms</text>
+<text fill="#5A6577" font-family="JetBrains Mono" font-size="10" text-anchor="end" x="740" y="285">+2000ms</text>
+<!-- Epps Effect Curve: Synchronous downsampling (Flattened & Peak at zero, attenuated) -->
+<path d="M 50 232 Q 220 225, 340 180 Q 395 130, 450 185 Q 580 220, 740 234 L 740 240 L 50 240 Z" fill="url(#eppsGradient)"></path>
+<path d="M 50 232 Q 220 225, 340 180 Q 395 130, 450 185 Q 580 220, 740 234" fill="none" stroke="#5A6577" stroke-dasharray="4,3" stroke-width="1.8"></path>
+<!-- Hayashi-Yoshida Asymmetric Continuous-Time Curve (Sharp asymmetric peak shifted to +340ms) -->
+<path d="M 50 230 C 180 226, 310 200, 370 145 C 410 95, 435 52, 454 52 C 480 52, 515 110, 560 170 C 640 215, 700 228, 740 232 L 740 240 L 50 240 Z" fill="url(#hyGradient)"></path>
+<path d="M 50 230 C 180 226, 310 200, 370 145 C 410 95, 435 52, 454 52 C 480 52, 515 110, 560 170 C 640 215, 700 228, 740 232" fill="none" stroke="#00D4AA" stroke-width="2.5"></path>
+<!-- Peak Annotation Pill Box -->
+<rect fill="#141820" height="42" rx="4" stroke="#00D4AA" stroke-width="1" width="165" x="466" y="32"></rect>
+<text fill="#E8EAED" font-family="JetBrains Mono" font-size="10" font-weight="700" x="476" y="48">PEAK: ρ_HY = +0.742</text>
+<text fill="#00D4AA" font-family="JetBrains Mono" font-size="9" x="476" y="64">τ* = +340ms (SOL lags BTC)</text>
+<!-- Epps Attenuation Arrow Annotation -->
+<line stroke="#FFB020" stroke-dasharray="2,2" stroke-width="1" x1="395" x2="454" y1="130" y2="52"></line>
+<rect fill="#1A2030" height="26" rx="3" stroke="#FFB020" stroke-width="0.8" width="100" x="290" y="80"></rect>
+<text fill="#FFB020" font-family="JetBrains Mono" font-size="9" font-weight="600" text-anchor="middle" x="340" y="96">+0.284 Epps Gain</text>
+</svg>
+</div>
+<!-- Legend and Diagnostic Badges -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-sm border-t border-border-subtle font-caption text-caption">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-0.5 bg-primary"></span>
+<span class="text-text-primary font-mono">Hayashi-Yoshida Asynchronous Curve (Zero Interpolation)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-0.5 bg-text-tertiary border-b border-dashed border-text-secondary"></span>
+<span class="text-text-secondary font-mono">1-Sec Downsampled Pearson (Epps Attenuated)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="px-2 py-0.5 rounded bg-bg-elevated text-text-tertiary border border-border-subtle font-mono">
+              Poisson Rate λ_X = 412 ticks/s
+            </span>
+<span class="px-2 py-0.5 rounded bg-bg-elevated text-text-tertiary border border-border-subtle font-mono">
+              λ_Y = 289 ticks/s
+            </span>
+</div>
+</div>
+</div>
+<!-- Right: Overlap Inspector & Deliberation Panel (4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md">
+<!-- Overlap-Interval Indicator Visualizer Card -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-xs border-b border-border-subtle">
+<span class="font-caption text-caption text-text-secondary uppercase font-mono">Overlap-Interval Indicator</span>
+<span class="font-caption text-caption text-primary font-mono">1_{I_i ∩ J_j ≠ ∅}</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1">
+              Exact tick arrival timestamps without forward-fill lookahead. Non-zero products counted strictly when tick observation spans intersect:
+            </p>
+</div>
+<!-- Micro Tick arrival timeline visualizer -->
+<div class="my-space-md bg-bg-primary rounded p-space-sm border border-border-subtle flex flex-col gap-2 font-caption text-caption">
+<!-- Asset X (BTC) -->
+<div>
+<div class="flex items-center justify-between text-text-tertiary mb-1">
+<span class="font-bold text-text-primary">Asset X (BTC-PERP):</span>
+<span class="text-primary font-mono">t_i Tick Stream</span>
+</div>
+<div class="relative w-full h-4 bg-bg-elevated rounded overflow-hidden">
+<span class="absolute left-[10%] w-12 h-full bg-primary/40 border-l border-r border-primary"></span>
+<span class="absolute left-[35%] w-8 h-full bg-primary/40 border-l border-r border-primary"></span>
+<span class="absolute left-[55%] w-16 h-full bg-primary/40 border-l border-r border-primary"></span>
+<span class="absolute left-[82%] w-10 h-full bg-primary/40 border-l border-r border-primary"></span>
+</div>
+</div>
+<!-- Overlap connection sparks -->
+<div class="flex justify-around text-text-tertiary py-0.5">
+<span class="text-primary text-[10px]">▲ Overlap</span>
+<span class="text-text-tertiary text-[10px]">✕ Void</span>
+<span class="text-primary text-[10px]">▲ Overlap</span>
+<span class="text-primary text-[10px]">▲ Overlap</span>
+</div>
+<!-- Asset Y (SOL) -->
+<div>
+<div class="flex items-center justify-between text-text-tertiary mb-1">
+<span class="font-bold text-text-primary">Asset Y (SOL-USDT):</span>
+<span class="text-secondary font-mono">s_j Tick Stream</span>
+</div>
+<div class="relative w-full h-4 bg-bg-elevated rounded overflow-hidden">
+<span class="absolute left-[15%] w-14 h-full bg-secondary/40 border-l border-r border-secondary"></span>
+<span class="absolute left-[48%] w-10 h-full bg-secondary/40 border-l border-r border-secondary"></span>
+<span class="absolute left-[62%] w-12 h-full bg-secondary/40 border-l border-r border-secondary"></span>
+<span class="absolute left-[80%] w-14 h-full bg-secondary/40 border-l border-r border-secondary"></span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between font-caption text-caption text-text-secondary pt-space-xs border-t border-border-subtle">
+<span>Discrete Tick Overlags:</span>
+<span class="font-mono text-text-primary font-bold">14,892 / 16,040 (92.8%)</span>
+</div>
+</div>
+<!-- Multi-Agent Consensus Card -->
+<div class="bg-bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col justify-between flex-grow">
+<div>
+<div class="flex items-center justify-between pb-space-xs border-b border-border-subtle">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary" data-icon="smart_toy">smart_toy</span>
+<span class="font-caption text-caption text-secondary font-mono uppercase">Multi-Agent Econometric Consensus</span>
+</div>
+<span class="font-caption text-caption px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 font-mono">
+                2/2 AGREE
+              </span>
+</div>
+<div class="flex flex-col gap-2 mt-2">
+<div class="p-2 rounded bg-bg-primary border border-border-subtle">
+<div class="flex items-center justify-between text-caption font-caption text-text-tertiary">
+<span class="text-primary font-bold">Agent LEAD_LAG_ARBITRAGEUR</span>
+<span>Confidence: 96.4%</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1">
+                  "BTC-PERP leads SOL-USDT by 340ms with LLR 2.84. Epps attenuation of 28.4 bps recovered. Authorize paper shadow quoting on SOL-USDT with 120ms lead cushion."
+                </p>
+</div>
+<div class="p-2 rounded bg-bg-primary border border-border-subtle">
+<div class="flex items-center justify-between text-caption font-caption text-text-tertiary">
+<span class="text-secondary font-bold">Agent MICROSTRUCTURE_WATCHDOG</span>
+<span>Confidence: 99.1%</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1">
+                  "Zero-lookahead strict invariants verified. Bartlett standard error σ = 0.018 satisfies asymptotic normality. No forward-fill artifacts detected."
+                </p>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs border-t border-border-subtle">
+<button class="w-full flex items-center justify-center gap-space-xs h-10 bg-bg-elevated hover:bg-bg-hover text-primary border border-primary/40 font-body-sm text-body-sm font-semibold rounded transition-colors duration-150">
+<span class="material-symbols-outlined text-[16px]" data-icon="verified">verified</span>
+              Lock Lead-Lag Invariant &amp; Route Paper Orders
+            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: ASYNCHRONOUS PAIRWISE LEAD-LAG & HAYASHI-YOSHIDA CROSS-CORRELATION MATRIX -->
+<section class="bg-bg-surface border border-border-subtle rounded-lg p-space-md shadow-sm">
+<!-- Table Header & Filter Bar -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm pb-space-sm border-b border-border-subtle">
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="grid_on">grid_on</span>
+<h2 class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight">
+              Continuous-Time Asynchronous Lead-Lag Cross-Covariance Matrix
+            </h2>
+</div>
+<span class="font-caption text-caption px-2 py-0.5 rounded bg-bg-elevated text-text-secondary border border-border-subtle font-mono">
+            TICK DENSITY: L3 NATIVE
+          </span>
+</div>
+<div class="flex items-center gap-space-xs text-caption font-caption">
+<span class="text-text-tertiary">Filter:</span>
+<button class="px-2 py-1 rounded bg-bg-elevated text-primary border border-border-default font-mono">ALL PAIRS (5)</button>
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary font-mono">PASS ONLY (4)</button>
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary font-mono">LLR &gt; 2.0 (2)</button>
+</div>
+</div>
+<!-- High-Density Telemetry Table -->
+<div class="overflow-x-auto mt-space-sm">
+<table class="w-full border-collapse text-left font-caption text-caption">
+<thead>
+<tr class="border-b border-border-subtle text-text-tertiary bg-bg-primary/50 uppercase tracking-wider select-none font-mono">
+<th class="py-2.5 px-3 font-semibold">PAIR (LEADER → LAGGER)</th>
+<th class="py-2.5 px-3 font-semibold text-right">SYNC CORR (ρ_sync 1s)</th>
+<th class="py-2.5 px-3 font-semibold text-right text-primary">HAYASHI-YOSHIDA (ρ_HY)</th>
+<th class="py-2.5 px-3 font-semibold text-right">EPPS RECOVERY (Δρ)</th>
+<th class="py-2.5 px-3 font-semibold text-right text-text-primary">OPTIMAL LAG (τ*)</th>
+<th class="py-2.5 px-3 font-semibold text-right">LEAD-LAG RATIO (LLR)</th>
+<th class="py-2.5 px-3 font-semibold text-right">INFO SHARE (Hasbrouck)</th>
+<th class="py-2.5 px-3 font-semibold text-center">SAFETY FENCE</th>
+<th class="py-2.5 px-3 font-semibold text-center">PAPER EXECUTION ACTION</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle font-mono">
+<!-- Row 1: BTC-USDT → SOL-USDT -->
+<tr class="hover:bg-bg-hover transition-colors duration-150">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="text-text-primary font-bold">BTC-USDT <span class="text-primary font-normal">→</span> SOL-USDT</span>
+<span class="font-caption text-[9px] px-1 py-0.2 rounded bg-bg-elevated text-primary border border-primary/30">TOP LEADER</span>
+</div>
+</td>
+<td class="py-3 px-3 text-right text-text-tertiary">+0.458</td>
+<td class="py-3 px-3 text-right text-primary font-bold text-[12px]">+0.742</td>
+<td class="py-3 px-3 text-right text-primary font-semibold">+0.284</td>
+<td class="py-3 px-3 text-right text-text-primary font-bold">+340ms</td>
+<td class="py-3 px-3 text-right text-primary font-bold">2.84</td>
+<td class="py-3 px-3 text-right text-text-secondary">78.2%</td>
+<td class="py-3 px-3 text-center">
+<span class="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 font-semibold text-[10px]">
+                  PASS
+                </span>
+</td>
+<td class="py-3 px-3 text-center">
+<button class="h-7 px-3 rounded bg-primary-container hover:bg-primary text-on-primary-container font-caption text-[11px] font-bold transition-colors duration-150 shadow-sm">
+                  PROPAGATION_ARB
+                </button>
+</td>
+</tr>
+<!-- Row 2: BTC-USDT → ETH-USDT -->
+<tr class="hover:bg-bg-hover transition-colors duration-150">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="text-text-primary font-bold">BTC-USDT <span class="text-secondary font-normal">→</span> ETH-USDT</span>
+</div>
+</td>
+<td class="py-3 px-3 text-right text-text-tertiary">+0.612</td>
+<td class="py-3 px-3 text-right text-primary font-bold text-[12px]">+0.819</td>
+<td class="py-3 px-3 text-right text-primary font-semibold">+0.207</td>
+<td class="py-3 px-3 text-right text-text-primary font-bold">+120ms</td>
+<td class="py-3 px-3 text-right text-text-secondary">1.92</td>
+<td class="py-3 px-3 text-right text-text-secondary">64.5%</td>
+<td class="py-3 px-3 text-center">
+<span class="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 font-semibold text-[10px]">
+                  PASS
+                </span>
+</td>
+<td class="py-3 px-3 text-center">
+<button class="h-7 px-3 rounded bg-secondary-container hover:bg-secondary text-secondary-fixed font-caption text-[11px] font-bold transition-colors duration-150">
+                  PASSIVE_SHADOW
+                </button>
+</td>
+</tr>
+<!-- Row 3: ETH-USDT → SOL-USDT -->
+<tr class="hover:bg-bg-hover transition-colors duration-150">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="text-text-primary font-bold">ETH-USDT <span class="text-primary font-normal">→</span> SOL-USDT</span>
+</div>
+</td>
+<td class="py-3 px-3 text-right text-text-tertiary">+0.384</td>
+<td class="py-3 px-3 text-right text-primary font-bold text-[12px]">+0.621</td>
+<td class="py-3 px-3 text-right text-primary font-semibold">+0.237</td>
+<td class="py-3 px-3 text-right text-text-primary font-bold">+210ms</td>
+<td class="py-3 px-3 text-right text-text-secondary">1.74</td>
+<td class="py-3 px-3 text-right text-text-secondary">59.1%</td>
+<td class="py-3 px-3 text-center">
+<span class="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 font-semibold text-[10px]">
+                  PASS
+                </span>
+</td>
+<td class="py-3 px-3 text-center">
+<button class="h-7 px-3 rounded bg-primary-container hover:bg-primary text-on-primary-container font-caption text-[11px] font-bold transition-colors duration-150 shadow-sm">
+                  PROPAGATION_ARB
+                </button>
+</td>
+</tr>
+<!-- Row 4: SOL-USDT → BNB-USDT -->
+<tr class="hover:bg-bg-hover transition-colors duration-150 opacity-75">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-text-tertiary"></span>
+<span class="text-text-secondary">SOL-USDT <span class="text-text-tertiary">→</span> BNB-USDT</span>
+</div>
+</td>
+<td class="py-3 px-3 text-right text-text-tertiary">+0.215</td>
+<td class="py-3 px-3 text-right text-text-secondary">+0.312</td>
+<td class="py-3 px-3 text-right text-text-tertiary">+0.097</td>
+<td class="py-3 px-3 text-right text-text-tertiary">+45ms</td>
+<td class="py-3 px-3 text-right text-text-tertiary">1.18</td>
+<td class="py-3 px-3 text-right text-text-tertiary">51.4%</td>
+<td class="py-3 px-3 text-center">
+<span class="px-2 py-0.5 rounded bg-bg-elevated text-color-warning border border-color-warning/30 font-semibold text-[10px]">
+                  SUB_HURDLE
+                </span>
+</td>
+<td class="py-3 px-3 text-center">
+<span class="inline-block py-1 px-3 rounded bg-bg-primary text-text-tertiary border border-border-subtle font-caption text-[11px]">
+                  NO_LEAD_LAG
+                </span>
+</td>
+</tr>
+<!-- Row 5: BTC-USDT → DOGE-USDT -->
+<tr class="hover:bg-bg-hover transition-colors duration-150">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="text-text-primary font-bold">BTC-USDT <span class="text-primary font-normal">→</span> DOGE-USDT</span>
+<span class="font-caption text-[9px] px-1 py-0.2 rounded bg-bg-elevated text-color-warning border border-color-warning/30">LONG LAG</span>
+</div>
+</td>
+<td class="py-3 px-3 text-right text-text-tertiary">+0.298</td>
+<td class="py-3 px-3 text-right text-primary font-bold text-[12px]">+0.684</td>
+<td class="py-3 px-3 text-right text-primary font-semibold">+0.386</td>
+<td class="py-3 px-3 text-right text-text-primary font-bold">+680ms</td>
+<td class="py-3 px-3 text-right text-primary font-bold">3.42</td>
+<td class="py-3 px-3 text-right text-text-secondary">84.6%</td>
+<td class="py-3 px-3 text-center">
+<span class="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 font-semibold text-[10px]">
+                  PASS
+                </span>
+</td>
+<td class="py-3 px-3 text-center">
+<button class="h-7 px-3 rounded bg-primary-container hover:bg-primary text-on-primary-container font-caption text-[11px] font-bold transition-colors duration-150 shadow-sm">
+                  PROPAGATION_ARB
+                </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Telemetry Validation Notes -->
+<div class="mt-space-sm pt-space-xs border-t border-border-subtle flex flex-wrap items-center justify-between text-caption font-caption text-text-tertiary">
+<div class="flex items-center gap-space-md">
+<span>Asymptotic Bartlett SE: <code class="text-text-secondary">σ_HY = 0.0182</code></span>
+<span>Poisson Arrival Test: <strong class="text-primary">PASS (p &lt; 0.001)</strong></span>
+<span>Forward-Fill Bias: <strong class="text-primary">0.000% (STRICT ZERO-LOOKAHEAD)</strong></span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[14px]" data-icon="sync">sync</span>
+<span>Kernel Refresh: Continuous (Last update: 14:02:18.4912 UTC)</span>
+</div>
+</div>
+</section>
+<!-- BOTTOM SYSTEM TELEMETRY DOCK -->
+<footer class="mt-space-xs pt-space-md border-t border-border-subtle flex flex-col md:flex-row items-center justify-between gap-space-sm font-caption text-caption text-text-tertiary">
+<div class="flex items-center gap-space-md flex-wrap">
+<span class="flex items-center gap-1.5 text-text-secondary">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+          Kernel: <strong class="text-text-primary">CashClaw-v4-HY-Asynch</strong>
+</span>
+<span>Latency: <strong class="text-text-secondary">38μs</strong></span>
+<span>Slippage Model: <strong class="text-text-secondary">1.2 BPS Fixed Impact</strong></span>
+<span>Zero-Lookahead Audit: <strong class="text-primary">PASS (#CYCLE 9046)</strong></span>
+<span class="text-color-warning bg-color-warning/10 px-1.5 py-0.5 rounded border border-color-warning/30 font-bold">
+          ADR-001 [PAPER_ONLY]
+        </span>
+</div>
+<div>
+<span>Copyright 2025 CashClaw Quantitative LLC. Institutional Tier.</span>
+</div>
+</footer>
+</main>
+</body></html>

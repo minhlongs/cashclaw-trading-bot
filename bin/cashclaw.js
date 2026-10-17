@@ -3,43 +3,22 @@
 // CashClaw Public CLI Executable (Apache-2.0 Open-Core)
 // Commands: quickstart | eval | export-sync | steps | --help | --version
 
-const { renderBanner, renderTable, c } = require('./lib/formatters.js');
+const { c } = require('./lib/formatters.js');
 const {
   runQuickstartSimulation,
   runQuantitativeEval,
   generateSyncBundle,
   runStepsAudit,
-  printSaaSCta,
 } = require('./lib/commands.js');
+const {
+  printHelp,
+  printQuickstartReport,
+  printEvalReport,
+  printSyncBundleReport,
+  printStepsAuditReport,
+} = require('./lib/cli-printers.js');
 
 const VERSION = '1.62.0-open-core';
-
-function printHelp() {
-  console.log(renderBanner(VERSION));
-  console.log(`
-${c.bold('USAGE:')}
-  cashclaw <command> [options]
-
-${c.bold('COMMANDS:')}
-  ${c.cyan('quickstart')}     Run paper simulation for Volatility-Adjusted DCA
-  ${c.cyan('eval')}           Run quantitative estimators (Garman-Klass, Corwin-Schultz)
-  ${c.cyan('export-sync')}    Generate signed JSON bundle for 1-click Cloud SaaS migration
-  ${c.cyan('steps')}          Audit 25-step Open-Core & Cloud SaaS readiness
-
-${c.bold('OPTIONS:')}
-  ${c.dim('--json')}         Output structured machine-readable JSON
-  ${c.dim('--symbol')} <sym> Asset trading pair (default: BTC/USDT)
-  ${c.dim('--name')} <name>  Bot instance name for export-sync
-  ${c.dim('-h, --help')}     Show this help message
-  ${c.dim('-v, --version')}  Show version information
-
-${c.bold('EXAMPLES:')}
-  cashclaw quickstart
-  cashclaw quickstart --json
-  cashclaw eval --symbol ETH/USDT
-  cashclaw export-sync --name AlphaGrid --json
-`);
-}
 
 function parseArgs(argv) {
   const args = argv.slice(2);
@@ -73,89 +52,35 @@ async function main(argv = process.argv) {
   }
 
   if (flags.help || !flags.command) {
-    printHelp();
+    printHelp(VERSION);
     return 0;
   }
 
   if (flags.command === 'quickstart') {
     const result = runQuickstartSimulation(flags.symbol);
-    if (flags.json) {
-      console.log(JSON.stringify(result, null, 2));
-    } else {
-      console.log(renderBanner(VERSION));
-      console.log(c.bold(`\n▶ PAPER SIMULATION RESULTS [${flags.symbol}]:\n`));
-      console.log(renderTable([
-        { label: 'Asset Symbol', value: result.symbol },
-        { label: 'Safety Mode', value: result.safetyMode },
-        { label: 'Initial Balance', value: `$${result.initialCapital.toLocaleString()}` },
-        { label: 'Final Portfolio', value: `$${result.finalValue.toLocaleString()}` },
-        { label: 'Simulated PnL', value: `${result.totalPnlPct > 0 ? '+' : ''}${result.totalPnlPct}%` },
-        { label: 'Orders Executed', value: `${result.totalOrders}` },
-        { label: 'Win Rate', value: `${result.winRatePct}%` },
-        { label: 'Max Drawdown', value: `${result.maxDrawdownPct}%` },
-      ]));
-      printSaaSCta();
-    }
+    if (flags.json) console.log(JSON.stringify(result, null, 2));
+    else printQuickstartReport(VERSION, flags.symbol, result);
     return 0;
   }
 
   if (flags.command === 'eval') {
     const result = runQuantitativeEval(flags.symbol);
-    if (flags.json) {
-      console.log(JSON.stringify(result, null, 2));
-    } else {
-      console.log(renderBanner(VERSION));
-      console.log(c.bold(`\n▶ QUANTITATIVE DIAGNOSTIC METRICS [${flags.symbol}]:\n`));
-      console.log(renderTable([
-        { label: 'Asset Symbol', value: result.symbol },
-        { label: 'Sample Bars', value: `${result.sampleBars}` },
-        { label: 'Garman-Klass Volatility', value: `${result.garmanKlassVolAnnualized}% annualized` },
-        { label: 'Corwin-Schultz Spread', value: `${result.corwinSchultzSpreadBps} bps` },
-        { label: 'Amihud Illiquidity', value: `${result.amihudIlliquidityRatio} (1e-6 ratio)` },
-        { label: 'Roll Effective Spread', value: `${result.rollEffectiveSpreadBps} bps` },
-        { label: 'Market Regime', value: result.regime },
-        { label: 'Execution Recommendation', value: result.recommendation },
-      ]));
-      printSaaSCta();
-    }
+    if (flags.json) console.log(JSON.stringify(result, null, 2));
+    else printEvalReport(VERSION, flags.symbol, result);
     return 0;
   }
 
   if (flags.command === 'export-sync') {
     const bundle = generateSyncBundle(flags.name, flags.symbol);
-    if (flags.json) {
-      console.log(JSON.stringify(bundle, null, 2));
-    } else {
-      console.log(renderBanner(VERSION));
-      console.log(c.bold(`\n▶ SIGNED CLOUD SYNC BUNDLE CREATED:\n`));
-      console.log(renderTable([
-        { label: 'Bot Name', value: bundle.payload.botName },
-        { label: 'Strategy', value: bundle.payload.strategyId },
-        { label: 'Safety Invariant', value: bundle.safetyMode },
-        { label: 'SHA-256 Checksum', value: bundle.sha256Checksum },
-      ]));
-      console.log(c.dim('\nRun with --json to pipe bundle output directly into curl / SaaS API.\n'));
-      printSaaSCta();
-    }
+    if (flags.json) console.log(JSON.stringify(bundle, null, 2));
+    else printSyncBundleReport(VERSION, bundle);
     return 0;
   }
 
   if (flags.command === 'steps') {
     const audit = runStepsAudit();
-    if (flags.json) {
-      console.log(JSON.stringify(audit, null, 2));
-    } else {
-      console.log(renderBanner(VERSION));
-      console.log(c.bold(`\n▶ 25-STEP OPEN-CORE & CLOUD SAAS AUDIT:\n`));
-      console.log(renderTable([
-        { label: 'Total Steps', value: `${audit.totalSteps}/25` },
-        { label: 'Apache-2.0 Community Core', value: `${audit.apacheSteps} steps` },
-        { label: 'Proprietary Cloud SaaS (src/ee)', value: `${audit.commercialSteps} steps` },
-        { label: 'Status', value: audit.status },
-        { label: 'Readiness Score', value: `${audit.readinessPct}%` },
-      ]));
-      printSaaSCta();
-    }
+    if (flags.json) console.log(JSON.stringify(audit, null, 2));
+    else printStepsAuditReport(VERSION, audit);
     return 0;
   }
 

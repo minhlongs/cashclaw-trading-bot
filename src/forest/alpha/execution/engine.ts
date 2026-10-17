@@ -9,19 +9,11 @@ import type {
   AlphaExecutionTelemetry,
 } from './types';
 import {
-  makePosition,
-  applyFill,
-  computePnl,
-  isoNow,
-  isTimedOut,
-  buildAlphaPortfolio,
-  totalRealisedPnl,
-  getSignalRejection,
+  makePosition, applyFill, computePnl, isoNow, isTimedOut,
+  buildAlphaPortfolio, totalRealisedPnl, getSignalRejection,
 } from './engine-positions';
 import {
-  telemetrySignalRejected,
-  telemetryPositionOpened,
-  telemetryPositionClosed,
+  telemetrySignalRejected, telemetryPositionOpened, telemetryPositionClosed,
 } from './engine-telemetry';
 
 export class AlphaExecutionEngine {

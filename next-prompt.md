@@ -1,5 +1,5 @@
 ---
-page: leadlag-hayashi-yoshida
+page: regime-switching-hamilton-hmm
 ---
 
 **DESIGN SYSTEM (REQUIRED):**
@@ -14,13 +14,13 @@ page: leadlag-hayashi-yoshida
 - Geometry: 12px rounded cards, 8px rounded buttons/inputs, 44px minimum interactive height, compact data-dense spacing (16px grid gaps)
 
 **Page request:**
-Design the **Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix** (`leadlag-hayashi-yoshida.html`) for CashClaw OS (`src/forest/microstructure/` & `src/forest/relative-value/` Asynchronous Tick Cross-Covariance & Lead-Lag Discovery Engine).
+Design the **Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface** (`regime-switching-hamilton-hmm.html`) for CashClaw OS (`src/forest/regime/` & `src/forest/evaluation/` Causal Hidden Markov Model & Ergodic Transition Engine).
 Include:
-1. Left sidebar (`240px`) with active state on "Hayashi-Yoshida Lead-Lag" and wired links to all 18 CashClaw OS screens (`index.html`, `alpha-zoo.html`, `deliberation-theater.html`, `strategies/volatility-dca.html`, `correlation-matrix.html`, `execution-ledger.html`, `data-quality-gate.html`, `microstructure-liquidity.html`, `survival-gate.html`, `sovereign-enclave.html`, `relative-value-basis.html`, `billing.html`, `regime-attribution.html`, `fdr-multiple-testing-gate.html`, `style-guide.html`, `portfolio-cvar-stress.html`, `orderbook-imbalance-lob.html`, `rough-volatility-hurst.html`).
-2. Top header with `Hayashi-Yoshida (2005) Overlap-Interval Estimator • Epps-Effect Neutralized Cross-Correlation • PAPER_ONLY • ADR-001` badge and `Re-Compute Lead-Lag Curve` button.
+1. Left sidebar (`240px`) with active state on "Hamilton HMM Filter" and wired links to all 20 CashClaw OS screens (`index.html`, `alpha-zoo.html`, `deliberation-theater.html`, `strategies/volatility-dca.html`, `correlation-matrix.html`, `execution-ledger.html`, `data-quality-gate.html`, `microstructure-liquidity.html`, `survival-gate.html`, `sovereign-enclave.html`, `relative-value-basis.html`, `billing.html`, `regime-attribution.html`, `fdr-multiple-testing-gate.html`, `style-guide.html`, `portfolio-cvar-stress.html`, `orderbook-imbalance-lob.html`, `rough-volatility-hurst.html`, `leadlag-hayashi-yoshida.html`, `optimal-execution-almgren-chriss.html`).
+2. Top header with `Hamilton (1989) Causal Markov-Switching Filter • Zero-Lookahead Filtered State Probabilities ξ_{t|t} • PAPER_ONLY • ADR-001` badge and `Run Baum-Welch / Hamilton Filter` button.
 3. 3 Telemetry KPI Cards:
-   - Dominant Leader-Lagger Pair: `BTC-PERP → SOL-USDT (τ* = +340ms)` (`Peak HY Cross-Correlation ρ_HY(τ*) = +0.742`)
-   - Epps Bias Attenuation Recovered: `+0.284 Δρ vs Synchronous 1s Grid` (`Zero Interpolation Lookahead • Poisson Tick Arrivals`)
-   - Lead-Lag Signal Ratio (LLR): `2.84 (SIGNIFICANT_LEADER)` (`Causal Cross-Asset Propagation Hurdle Passed`)
-4. Asynchronous Pairwise Lead-Lag & Hayashi-Yoshida Cross-Correlation Matrix comparing Synchronous Correlation ($\rho_{\text{sync}}$), Hayashi-Yoshida Correlation ($\rho_{\text{HY}}$), Optimal Lag ($\tau^*$), Lead-Lag Ratio ($\text{LLR}$), Information Share (%), and Paper Execution Action (`PROPAGATION_ARB`, `PASSIVE_SHADOW`, `NO_LEAD_LAG`).
-5. Interactive Cross-Correlation Asymmetric Lag Curve ($\rho_{\text{HY}}(\tau)$ for $\tau \in [-2000\text{ms}, +2000\text{ms}]$) & Overlap-Interval Indicator $\mathbb{I}(I_i \cap J_j \neq \emptyset)$ Inspector.
+   - Filtered Crisis State Probability ($\xi_{t|t}^{(2)}$): `P(S_t = HIGH_VOL | Ω_t) = 0.842` (`Causal Forward Filter • Zero Kim-Smoother Lookahead`)
+   - Ergodic Regime Persistence ($p_{11} / p_{22}$): `0.964 / 0.892` (`Expected Duration: 27.8 Bars Low-Vol / 9.3 Bars High-Vol`)
+   - Log-Likelihood Ratio vs Single-Regime Gaussian: `2Δℓ = +148.6 (p < 10⁻⁶)` (`Markov Regime-Switching Strongly Favored`)
+4. Markov Transition Probability Matrix ($P_{ij}$) & State-Conditional Emission Parameters ($\mu_k, \sigma_k$, Ergodic Stationary Weights $\pi_k$, Expected Regime Duration $1/(1 - p_{kk})$, and Dynamic Paper Sizing Multiplier).
+5. Interactive Causal Filtered Probability ($\xi_{t|t}$) vs Non-Causal Smoothed Probability ($\xi_{t|T}$) Comparison Inspector demonstrating why CashClaw OS strictly enforces $\xi_{t|t}$ online filtering to prevent lookahead leakage.

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Database, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
+import { Database, CheckCircle2, XCircle } from 'lucide-react';
 import {
   computeDataQualityTelemetry,
   type DataFaultMode,
 } from '@/forest/dashboard/quant-telemetry-service';
+import { QuantScreenHeader } from './quant-screen-header';
 
 export function DataQualityGateInspector() {
   const [faultMode, setFaultMode] = useState<DataFaultMode>('NONE');
@@ -14,18 +15,11 @@ export function DataQualityGateInspector() {
 
   return (
     <section aria-label="OHLCV Data Quality Gate Inspector and Fail-Closed Signal Fence" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <Database size={20} className="text-[var(--color-accent)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">OHLCV Data Quality Gate Inspector & 9-Validator Signal Fence</h1>
-            <p className="text-xs text-[var(--text-secondary)]">Wired to validateCandleSeries (src/tree/alpha/data-quality) • Bad data produces DATA_INVALID</p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} /><span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<Database size={20} className="text-[var(--color-accent)]" />}
+        title="OHLCV Data Quality Gate Inspector & 9-Validator Signal Fence"
+        subtitle="Wired to validateCandleSeries (src/tree/alpha/data-quality) • Bad data produces DATA_INVALID"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">

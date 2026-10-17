@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<!-- Stitch Project: projects/6665149401860401191 | Screen: projects/6665149401860401191/screens/81cd62e9d41e47b9bfe5e30de2ae3cb9 | Design System: assets/be7563bf9e4c400f85f92f80d27a5de5 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashClaw OS — Continuous-Time Asynchronous Lead-Lag &amp; Hayashi-Yoshida Cross-Covariance</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E11;
+      --bg-surface: #141820;
+      --bg-elevated: #1A2030;
+      --bg-hover: #1E2838;
+      --color-accent: #00D4AA;
+      --color-profit: #00D4AA;
+      --color-loss: #FF4757;
+      --color-error: #FF4757;
+      --color-warning: #FFB020;
+      --color-ai: #A78BFA;
+      --text-primary: #E8EAED;
+      --text-secondary: #8B95A5;
+      --text-tertiary: #5A6577;
+      --border-subtle: #1E2530;
+      --border-default: #2A3340;
+    }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased">
+  <!-- Left Sidebar (240px) -->
+  <aside class="w-60 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 flex-shrink-0">
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center font-bold text-black text-sm">CC</div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-wide">CashClaw OS</span>
+          <span class="text-[10px] text-[var(--color-warning)] font-mono font-semibold">PAPER_ONLY • ADR-001</span>
+        </div>
+      </div>
+
+            <nav class="flex flex-col gap-1.5 text-xs font-medium">
+        <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Cockpit Overview
+        </a>
+        <a href="alpha-zoo.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Alpha Zoo Evaluator
+        </a>
+        <a href="deliberation-theater.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+          Deliberation Theater
+        </a>
+        <a href="strategies/volatility-dca.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Volatility-DCA Bots
+        </a>
+        <a href="correlation-matrix.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Correlation Matrix
+        </a>
+        <a href="execution-ledger.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Execution Ledger
+        </a>
+        <a href="data-quality-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Data Quality Gate
+        </a>
+        <a href="microstructure-liquidity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Microstructure Liquidity
+        </a>
+        <a href="survival-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Survival Gate
+        </a>
+        <a href="sovereign-enclave.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Sovereign Enclave
+        </a>
+        <a href="relative-value-basis.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Relative-Value Basis
+        </a>
+        <a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          SaaS Billing & Quota
+        </a>
+        <a href="regime-attribution.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Regime Attribution
+        </a>
+        <a href="fdr-multiple-testing-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          FDR Multiple-Testing Gate
+        </a>
+        <a href="style-guide.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Style Guide & Tokens
+        </a>
+        <a href="portfolio-cvar-stress.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          CVaR Tail-Risk Stress
+        </a>
+        <a href="orderbook-imbalance-lob.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          LOB Hawkes Imbalance
+        </a>
+        <a href="rough-volatility-hurst.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+          Rough Volatility & Jumps
+        </a>
+        <a href="leadlag-hayashi-yoshida.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+          Hayashi-Yoshida Lead-Lag
+        </a>
+        <a href="optimal-execution-almgren-chriss.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Almgren-Chriss Execution
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs flex flex-col gap-1">
+      <span class="text-[var(--text-secondary)] text-[10px]">Async Tick Engine</span>
+      <span class="font-mono text-[var(--text-primary)] font-semibold truncate">Hayashi-Yoshida (2005)</span>
+      <span class="text-[10px] text-[var(--color-accent)] font-semibold">EPPS-FREE • ZERO-LOOKAHEAD</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Header Bar -->
+    <header class="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-primary)]">
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="font-bold text-base">Continuous-Time Asynchronous Lead-Lag Cross-Covariance &amp; Epps-Free Arbitrage Matrix</h1>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)] border border-[rgba(0,212,170,0.25)]">
+          Hayashi-Yoshida (2005) Overlap-Interval Estimator • Epps-Effect Neutralized Cross-Correlation • PAPER_ONLY • ADR-001
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="correlation-matrix.html" class="h-9 px-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-primary)] font-semibold text-xs flex items-center gap-1.5 hover:bg-[var(--bg-hover)] transition-colors">
+          <span>Synchronous Heatmap</span>
+        </a>
+        <button id="recomputeHyBtn" onclick="document.getElementById('hyAuditStamp').textContent = 'HY RE-COMPUTED • ' + new Date().toISOString().slice(11,19) + ' UTC'" class="h-9 px-4 rounded-lg bg-[var(--color-accent)] text-black font-semibold text-xs flex items-center gap-1.5 hover:brightness-110 transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+          <span>Re-Compute Lead-Lag Curve</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+      <!-- 3 Telemetry KPI Cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Dominant Leader-Lagger Pair</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-mono font-semibold">PROPAGATION_ARB</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-accent)]">BTC-PERP &rarr; SOL-USDT (&tau;* = +340ms)</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Peak HY Cross-Correlation &rho;_HY(&tau;*) = +0.742</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Epps Bias Attenuation Recovered</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(167,139,250,0.15)] text-[var(--color-ai)] font-mono font-semibold">OVERLAP KERNEL</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-ai)]">+0.284 &Delta;&rho; vs 1s Sync Grid</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Zero Interpolation Lookahead • Poisson Tick Arrivals</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Lead-Lag Signal Ratio (LLR)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-mono font-semibold">SIGNIFICANT_LEADER</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-accent)]">LLR = 2.84 (&gt; 1.75 Hurdle)</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">&Sigma;_{&tau;&gt;0} &rho;&sup2;(&tau;) / &Sigma;_{&tau;&lt;0} &rho;&sup2;(&tau;) • Causal Propagation Verified</span>
+        </div>
+      </section>
+
+      <!-- Asynchronous Pairwise Lead-Lag & Hayashi-Yoshida Cross-Correlation Matrix -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex flex-col gap-0.5">
+            <h2 class="text-sm font-semibold">Asynchronous Pairwise Lead-Lag &amp; Hayashi-Yoshida Cross-Covariance Matrix</h2>
+            <span class="text-xs text-[var(--text-secondary)]">Estimator C_HY = &Sigma;_i &Sigma;_j &Delta;X(I_i)&Delta;Y(J_j)&middot;I(I_i &cap; J_j &ne; &empty;) eliminates high-frequency Epps downward correlation bias without previous-tick interpolation</span>
+          </div>
+          <span id="hyAuditStamp" class="text-xs font-mono text-[var(--color-accent)]">HAYASHI-YOSHIDA (2005) • CAUSAL OVERLAP</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead>
+              <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)]">
+                <th class="pb-2.5">Leader &rarr; Lagger Pair</th>
+                <th class="pb-2.5">Sync Grid &rho;_sync (1s)</th>
+                <th class="pb-2.5">Hayashi-Yoshida &rho;_HY(0)</th>
+                <th class="pb-2.5">Peak Lag &tau;* (ms)</th>
+                <th class="pb-2.5">Peak &rho;_HY(&tau;*)</th>
+                <th class="pb-2.5">Lead-Lag Ratio (LLR)</th>
+                <th class="pb-2.5">Hasbrouck Info Share</th>
+                <th class="pb-2.5 text-right">Paper Execution Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border-subtle)]">
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">BTC-PERP &rarr; SOL-USDT</td>
+                <td class="py-3 text-[var(--text-secondary)]">+0.412 (Epps Biased)</td>
+                <td class="py-3 text-[var(--color-ai)] font-semibold">+0.684</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">+340 ms</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">+0.742</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">2.84 (Leader)</td>
+                <td class="py-3 text-[var(--text-primary)]">78.4% BTC-PERP</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">PROPAGATION_ARB</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">BTC-PERP &rarr; ETH-USDT</td>
+                <td class="py-3 text-[var(--text-secondary)]">+0.538 (Epps Biased)</td>
+                <td class="py-3 text-[var(--color-ai)] font-semibold">+0.791</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">+180 ms</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">+0.826</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">2.19 (Leader)</td>
+                <td class="py-3 text-[var(--text-primary)]">71.2% BTC-PERP</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">PROPAGATION_ARB</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">ETH-USDT &rarr; BNB-USDT</td>
+                <td class="py-3 text-[var(--text-secondary)]">+0.319 (Epps Biased)</td>
+                <td class="py-3 text-[var(--color-ai)] font-semibold">+0.542</td>
+                <td class="py-3 text-[var(--color-warning)] font-semibold">+490 ms</td>
+                <td class="py-3 text-[var(--color-warning)] font-semibold">+0.588</td>
+                <td class="py-3 text-[var(--color-warning)]">1.54 (Moderate)</td>
+                <td class="py-3 text-[var(--text-primary)]">61.8% ETH-USDT</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] font-bold">PASSIVE_SHADOW</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">SOL-USDT &rarr; BNB-USDT</td>
+                <td class="py-3 text-[var(--text-secondary)]">+0.244 (Epps Biased)</td>
+                <td class="py-3 text-[var(--text-secondary)]">+0.418</td>
+                <td class="py-3 text-[var(--text-secondary)]">+40 ms</td>
+                <td class="py-3 text-[var(--text-secondary)]">+0.425</td>
+                <td class="py-3 text-[var(--color-loss)]">1.06 (Symmetric)</td>
+                <td class="py-3 text-[var(--text-secondary)]">51.4% Co-Movement</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)] font-bold">NO_LEAD_LAG</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Interactive Cross-Correlation Asymmetric Lag Curve & Overlap Inspector -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left 5 Cols: Lag Shift & Poisson Intensity Controls -->
+        <div class="lg:col-span-5 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold">Asynchronous Lag Shift (&tau;) &amp; Poisson Intensity Controls</h3>
+            <span class="text-[10px] font-mono text-[var(--color-ai)]">I(I_i &cap; J_j(&tau;) &ne; &empty;)</span>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-[var(--text-secondary)]">Evaluated Time-Lag Shift (&tau; ms)</span>
+              <span id="hyLagLabel" class="font-mono text-[var(--color-accent)]">&tau; = +340 ms (&rho;_HY = +0.742)</span>
+            </div>
+            <input id="hyLagSlider" type="range" class="accent-[var(--color-accent)]" min="-1000" max="1000" step="20" value="340" oninput="
+              const lag = Number(this.value);
+              const rho = (0.742 * Math.exp(-Math.pow((lag - 340)/650, 2))).toFixed(3);
+              document.getElementById('hyLagLabel').textContent = 'τ = ' + (lag >= 0 ? '+' : '') + lag + ' ms (ρ_HY = +' + rho + ')';
+            ">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-[var(--text-secondary)]">Lagger Tick Arrival Rate (&lambda;_Y Hz)</span>
+              <span id="hyRateLabel" class="font-mono text-[var(--color-ai)]">&lambda;_Y = 14.5 ticks/sec (Mean Wait 69ms)</span>
+            </div>
+            <input id="hyRateSlider" type="range" class="accent-[var(--color-accent)]" min="2" max="50" value="15" oninput="document.getElementById('hyRateLabel').textContent = 'λ_Y = ' + this.value + '.0 ticks/sec (Mean Wait ' + Math.round(1000/this.value) + 'ms)'">
+          </div>
+
+          <div class="p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-2 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Overlapping Tick Intervals Count:</span>
+              <span class="text-[var(--text-primary)]">4,812 / 6,400 Pairs</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Net Propagation Alpha (After 10 bps):</span>
+              <span class="text-[var(--color-accent)] font-bold">+1.94 Sharpe (BTC&rarr;SOL)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">EXTREME Stress (35 bps) Verdict:</span>
+              <span class="text-[var(--color-warning)] font-bold">PASSIVE_MAKER_ONLY</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <a href="optimal-execution-almgren-chriss.html" class="text-xs font-mono text-[var(--color-accent)] hover:underline">Almgren-Chriss Execution &rarr;</a>
+            <a href="relative-value-basis.html" class="text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Relative-Value Basis &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Right 7 Cols: Asymmetric Cross-Correlation Curve SVG -->
+        <div class="lg:col-span-7 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-0.5">
+              <h3 class="text-sm font-semibold">Hayashi-Yoshida Cross-Correlation Lag Response Curve &rho;_HY(&tau;) vs Epps Sync Curve</h3>
+              <span class="text-xs text-[var(--text-secondary)]">Asymmetric mass shifted to &tau; &gt; 0 confirms causal price discovery leading from BTC-PERP into altcoin books</span>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-semibold">PEAK @ &tau;* = +340ms</span>
+          </div>
+
+          <div class="h-52 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] p-4 flex flex-col justify-between relative">
+            <svg class="w-full h-36 overflow-visible" viewBox="0 0 600 130">
+              <!-- Zero Lag Vertical Axis -->
+              <line x1="300" y1="12" x2="300" y2="112" stroke="#2A3340" stroke-width="1.5" stroke-dasharray="3 3" />
+              <!-- Peak Lag Vertical Marker (τ* = +340ms) -->
+              <line x1="368" y1="12" x2="368" y2="112" stroke="#00D4AA" stroke-width="1.5" stroke-dasharray="4 2" />
+              <line x1="30" y1="112" x2="570" y2="112" stroke="#2A3340" />
+              <!-- Epps-Attenuated Synchronous Grid Curve -->
+              <polyline fill="none" stroke="#8B95A5" stroke-width="1.5" stroke-dasharray="4 3" points="40,108 110,104 180,96 240,84 300,72 368,66 430,78 500,96 560,106" />
+              <!-- Hayashi-Yoshida Epps-Free Asymmetric Curve -->
+              <polyline fill="none" stroke="#00D4AA" stroke-width="2.5" points="40,104 110,96 180,82 240,62 300,38 340,24 368,18 400,26 450,48 510,78 560,98" />
+              <circle cx="368" cy="18" r="5" fill="#00D4AA" />
+              <text x="376" y="22" fill="#00D4AA" font-size="9" font-family="JetBrains Mono">&tau;* = +340ms (&rho;_HY = 0.742)</text>
+              <text x="195" y="124" fill="#8B95A5" font-size="9" font-family="JetBrains Mono">&larr; Lagger Leads (&tau; &lt; 0) | Leader Leads (&tau; &gt; 0) &rarr;</text>
+            </svg>
+            <div class="flex items-center justify-between text-[11px] font-mono text-[var(--text-secondary)] border-t border-[var(--border-subtle)] pt-2">
+              <span class="text-[var(--color-accent)]">&mdash; Hayashi-Yoshida &rho;_HY(&tau;)</span>
+              <span class="text-[var(--text-secondary)]">--- Synchronous 1s Grid (Epps Attenuated)</span>
+              <span class="text-[var(--color-ai)]">LLR = 2.84</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 text-xs font-mono">
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Interpolation Lookahead</span>
+              <span class="text-sm font-bold text-[var(--color-accent)]">0.00% (Exact Overlap)</span>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Asymptotic Variance</span>
+              <span class="text-sm font-bold text-[var(--color-ai)]">Consistency Verified</span>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Safety Execution Mode</span>
+              <span class="text-sm font-bold text-[var(--color-warning)]">PAPER_ONLY • ADR-001</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

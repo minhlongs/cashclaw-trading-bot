@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Palette, ShieldCheck, Type } from 'lucide-react';
+import { Palette, Type } from 'lucide-react';
 import {
   TOKEN_GROUP_FILTERS,
   filterColorSwatches,
   type TokenGroup,
 } from './design-system-style-guide-model';
+import { QuantScreenHeader } from './quant-screen-header';
 
 export function DesignSystemStyleGuide() {
   const [activeGroup, setActiveGroup] = useState<'ALL' | TokenGroup>('ALL');
@@ -14,22 +15,11 @@ export function DesignSystemStyleGuide() {
 
   return (
     <section aria-label="CashClaw OS Design System Style Guide" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <Palette size={20} className="text-[var(--color-accent)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">
-              CashClaw Quant OS — Design System & Accessibility Style Guide
-            </h1>
-            <p className="text-xs text-[var(--text-secondary)]">
-              Synced with DESIGN.md • Geist Sans + JetBrains Mono • 12px Card / 8px Control / 44px Touch Target
-            </p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} /><span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<Palette size={20} className="text-[var(--color-accent)]" />}
+        title="CashClaw Quant OS — Design System & Accessibility Style Guide"
+        subtitle="Synced with DESIGN.md • Geist Sans + JetBrains Mono • 12px Card / 8px Control / 44px Touch Target"
+      />
 
       <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

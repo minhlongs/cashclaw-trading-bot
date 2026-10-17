@@ -30,14 +30,9 @@ export class D1MicrostructureStore implements MicrostructureStore {
        (poll_id, symbol, timestamp, bids_json, asks_json, levels, source, created_at)
        VALUES (?,?,?,?,?,?,?,?)`,
     ).bind(
-      record.pollId,
-      record.symbol,
-      record.timestamp,
-      JSON.stringify(record.bids),
-      JSON.stringify(record.asks),
-      record.levels,
-      record.source,
-      record.createdAt,
+      record.pollId, record.symbol, record.timestamp,
+      JSON.stringify(record.bids), JSON.stringify(record.asks),
+      record.levels, record.source, record.createdAt,
     ).run();
   }
 
@@ -48,15 +43,9 @@ export class D1MicrostructureStore implements MicrostructureStore {
         prints_json, complete, created_at)
        VALUES (?,?,?,?,?,?,?,?,?)`,
     ).bind(
-      record.batchId,
-      record.pollId,
-      record.symbol,
-      record.chunkIndex,
-      record.firstTradeId,
-      record.lastTradeId,
-      JSON.stringify(record.prints),
-      record.complete ? 1 : 0,
-      record.createdAt,
+      record.batchId, record.pollId, record.symbol, record.chunkIndex,
+      record.firstTradeId, record.lastTradeId,
+      JSON.stringify(record.prints), record.complete ? 1 : 0, record.createdAt,
     ).run();
   }
 
@@ -69,13 +58,8 @@ export class D1MicrostructureStore implements MicrostructureStore {
        (vector_id, symbol, timestamp, features_json, computed_at, git_sha, created_at)
        VALUES (?,?,?,?,?,?,?)`,
     ).bind(
-      `v_${vector.symbol}_${vector.timestamp}`,
-      vector.symbol,
-      vector.timestamp,
-      JSON.stringify(vector.features),
-      opts.computedAt,
-      opts.gitSha,
-      opts.computedAt,
+      `v_${vector.symbol}_${vector.timestamp}`, vector.symbol, vector.timestamp,
+      JSON.stringify(vector.features), opts.computedAt, opts.gitSha, opts.computedAt,
     ).run();
   }
 
@@ -84,12 +68,7 @@ export class D1MicrostructureStore implements MicrostructureStore {
       `INSERT INTO micro_ingest_log (log_id, poll_id, symbol, status, reason, created_at)
        VALUES (?,?,?,?,?,?)`,
     ).bind(
-      record.logId,
-      record.pollId,
-      record.symbol,
-      record.status,
-      record.reason,
-      record.createdAt,
+      record.logId, record.pollId, record.symbol, record.status, record.reason, record.createdAt,
     ).run();
   }
 

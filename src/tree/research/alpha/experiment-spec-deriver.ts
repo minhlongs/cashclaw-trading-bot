@@ -17,19 +17,13 @@ export const BARRIER_DERIVATION = {
 /** Parse timeframe string to milliseconds. Supports: 1m, 5m, 15m, 30m, 1h, 4h, 1d. */
 export function parseTimeframeToMs(tf: string): number {
   const match = tf.match(/^(\d+)([mhd])$/);
-  if (!match) return 3_600_000; // default 1h
+  if (!match) return 3_600_000;
   const value = Number(match[1]);
   const unit = match[2];
-  switch (unit) {
-    case 'm':
-      return value * 60_000;
-    case 'h':
-      return value * 3_600_000;
-    case 'd':
-      return value * 86_400_000;
-    default:
-      return 3_600_000;
-  }
+  if (unit === 'm') return value * 60_000;
+  if (unit === 'h') return value * 3_600_000;
+  if (unit === 'd') return value * 86_400_000;
+  return 3_600_000;
 }
 
 /**

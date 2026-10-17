@@ -91,23 +91,15 @@ function calcKpis(bots: BotSummary[]): DashboardKpis {
 
 // ── Server Actions ──────────────────────────────────────────────
 export async function getDashboardData(): Promise<DashboardData> {
-  const service = new BotQueryService();
-  const bots = await service.listBots();
-  const kpis = calcKpis(bots);
-  const botCards = bots.map(botToCard);
-
+  const bots = await new BotQueryService().listBots();
   const recentEvents = await getRecentEvents(bots.map((b) => b.id));
-  return { kpis, bots: botCards, recentEvents };
+  return { kpis: calcKpis(bots), bots: bots.map(botToCard), recentEvents };
 }
 
 export async function getKpis(): Promise<DashboardKpis> {
-  const service = new BotQueryService();
-  const bots = await service.listBots();
-  return calcKpis(bots);
+  return calcKpis(await new BotQueryService().listBots());
 }
 
 export async function getBotCards(): Promise<BotCardData[]> {
-  const service = new BotQueryService();
-  const bots = await service.listBots();
-  return bots.map(botToCard);
+  return (await new BotQueryService().listBots()).map(botToCard);
 }

@@ -4,26 +4,9 @@ import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Bot,
-  Settings,
-  BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  Activity,
-  Zap,
-  Filter,
-  Cpu,
-  MessageSquare,
-  GitBranch,
-  BarChart3,
-  Grid,
-  Layers,
-  Database,
-  KeyRound,
-  Scale,
-  Flame,
-  Palette,
+  LayoutDashboard, Bot, Settings, BookOpen, ChevronLeft, ChevronRight,
+  Activity, Zap, Filter, Cpu, MessageSquare, GitBranch, BarChart3,
+  Grid, Layers, Database, KeyRound, Scale, Flame, Palette,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -46,6 +29,8 @@ const NAV_ROUTES = [
   { path: 'portfolio-cvar-stress', icon: Flame },
   { path: 'orderbook-imbalance-lob', icon: Activity },
   { path: 'rough-volatility-hurst', icon: Zap },
+  { path: 'leadlag-hayashi-yoshida', icon: GitBranch },
+  { path: 'optimal-execution-almgren-chriss', icon: Layers },
   { path: 'style-guide', icon: Palette },
   { path: 'settings', icon: Settings },
 ];

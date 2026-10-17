@@ -71,42 +71,24 @@ export async function POST(req: Request) {
       timestampMs: parsed.data.timestampMs,
     };
 
-    const shouldSend = defaultAlertDeduplicator.shouldDispatch(
-      event,
-      parsed.data.cooldownMs ?? 60_000,
-    );
+    const shouldSend = defaultAlertDeduplicator.shouldDispatch(event, parsed.data.cooldownMs ?? 60_000);
     if (!shouldSend) {
       return NextResponse.json({
-        ok: true,
-        dispatched: false,
-        deduplicated: true,
-        suppressed: true,
-        eventId: event.eventId,
-        tier: tierContext.tier,
+        ok: true, dispatched: false, deduplicated: true, suppressed: true,
+        eventId: event.eventId, tier: tierContext.tier,
       });
     }
 
-    const secret =
-      parsed.data.signingSecret ||
-      process.env.CASHCLAW_ALERT_WEBHOOK_SECRET ||
-      'default_alert_secret';
+    const secret = parsed.data.signingSecret || process.env.CASHCLAW_ALERT_WEBHOOK_SECRET || 'default_alert_secret';
     const payloadJson = JSON.stringify(event);
     const signatureHex = await signAlertWebhookPayload(payloadJson, secret);
     const envelope: SignedWebhookEnvelope = { eventId: event.eventId, signatureHex, payloadJson };
 
     return NextResponse.json({
-      ok: true,
-      dispatched: true,
-      deduplicated: false,
-      suppressed: false,
-      tier: tierContext.tier,
-      signatureHex,
-      envelope,
+      ok: true, dispatched: true, deduplicated: false, suppressed: false,
+      tier: tierContext.tier, signatureHex, envelope,
     });
   } catch {
-    return NextResponse.json(
-      { ok: false, error: 'Failed to dispatch cloud alert' },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, error: 'Failed to dispatch cloud alert' }, { status: 500 });
   }
 }

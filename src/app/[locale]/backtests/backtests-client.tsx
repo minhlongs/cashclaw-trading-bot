@@ -31,15 +31,14 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
     setIsRunning(true);
     setError(null);
     try {
-      const bot = initialBots.find(b => b.id === selectedBotId);
+      const bot = initialBots.find((b) => b.id === selectedBotId);
       if (!bot) {
         setError(t('botNotFound'));
         return;
       }
       const config = JSON.parse(bot.configJson || '{}');
-      const now = new Date();
-      const endDate = now;
-      const startDate = new Date(now.getTime() - 90 * 86400000);
+      const endDate = new Date();
+      const startDate = new Date(endDate.getTime() - 90 * 86400000);
 
       const data = await runBacktestAction({
         botId: bot.id,
@@ -51,11 +50,8 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
         endDate,
         interval: interval as '1h' | '4h' | '1d',
       });
-      if (data.success && data.result) {
-        setResult(data.result as BacktestResult);
-      } else {
-        setError(data.error ?? t('failed'));
-      }
+      if (data.success && data.result) setResult(data.result as BacktestResult);
+      else setError(data.error ?? t('failed'));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('requestFailed'));
     } finally {
@@ -65,34 +61,19 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
 
   return (
     <div className="page-container">
-      <h1 className="text-2xl font-bold mb-6 text-primary">
-        {t('title')}
-      </h1>
+      <h1 className="text-2xl font-bold mb-6 text-primary">{t('title')}</h1>
 
-      {/* Bot Selector */}
       <div className="card mb-4">
         <label htmlFor="backtest-bot-select" className="form-label">{t('selectBotLabel')}</label>
-        <select
-          id="backtest-bot-select"
-          value={selectedBotId}
-          onChange={(e) => setSelectedBotId(e.target.value)}
-          className="form-input form-select"
-        >
+        <select id="backtest-bot-select" value={selectedBotId} onChange={(e) => setSelectedBotId(e.target.value)} className="form-input form-select">
           <option value="">{t('selectBotPlaceholder')}</option>
           {initialBots.map((bot) => (
             <option key={bot.id} value={bot.id}>{bot.name} ({formatStrategy(bot.strategy, locale)})</option>
           ))}
         </select>
         <label htmlFor="backtest-interval-select" className="form-label mt-3">{t('selectIntervalLabel')}</label>
-        <select
-          id="backtest-interval-select"
-          value={interval}
-          onChange={(e) => setInterval(e.target.value)}
-          className="form-input form-select mt-1"
-        >
-          {INTERVALS.map((iv) => (
-            <option key={iv} value={iv}>{iv}</option>
-          ))}
+        <select id="backtest-interval-select" value={interval} onChange={(e) => setInterval(e.target.value)} className="form-input form-select mt-1">
+          {INTERVALS.map((iv) => <option key={iv} value={iv}>{iv}</option>)}
         </select>
       </div>
 

@@ -96,18 +96,12 @@ export function sumZooBuckets(totals: ZooFalsificationTotals): number {
 export function assertNoSilentSkips(report: ZooFalsificationReport, manifestEntries: number): void {
   const bucketSum = sumZooBuckets(report.totals);
   if (bucketSum !== manifestEntries) {
-    throw new Error(
-      `ZooFalsificationReport silent-skip detected: bucket sum ${bucketSum} !== manifest entries ${manifestEntries}`,
-    );
+    throw new Error(`ZooFalsificationReport silent-skip detected: bucket sum ${bucketSum} !== manifest entries ${manifestEntries}`);
   }
   if (report.totals.total !== manifestEntries) {
-    throw new Error(
-      `ZooFalsificationReport silent-skip detected: totals.total ${report.totals.total} !== manifest entries ${manifestEntries}`,
-    );
+    throw new Error(`ZooFalsificationReport silent-skip detected: totals.total ${report.totals.total} !== manifest entries ${manifestEntries}`);
   }
   if (report.rows.length !== manifestEntries) {
-    throw new Error(
-      `ZooFalsificationReport silent-skip detected: rows.length ${report.rows.length} !== manifest entries ${manifestEntries}`,
-    );
+    throw new Error(`ZooFalsificationReport silent-skip detected: rows.length ${report.rows.length} !== manifest entries ${manifestEntries}`);
   }
 }

@@ -67,21 +67,16 @@ function assertSufficientOos(
   tradeReturns: readonly number[],
 ): void {
   if (oosPeriods.length < 2) {
-    throw new Error(
-      `assembleSurvivalInput: at least 2 OOS periods required, got ${oosPeriods.length}`,
-    );
+    throw new Error(`assembleSurvivalInput: at least 2 OOS periods required, got ${oosPeriods.length}`);
   }
   if (tradeReturns.length < 2) {
-    throw new Error(
-      `assembleSurvivalInput: at least 2 completed trades required for bootstrap, got ${tradeReturns.length}`,
-    );
+    throw new Error(`assembleSurvivalInput: at least 2 completed trades required for bootstrap, got ${tradeReturns.length}`);
   }
 }
 
 /**
  * Assemble the complete SurvivalEvaluationInput consumed by
- * evaluateSurvival(). Fails closed when OOS output is too thin for any of
- * the statistical checks.
+ * evaluateSurvival(). Fails closed when OOS output is too thin.
  */
 export function assembleSurvivalInput(
   rv: RVWalkForwardResult,
@@ -95,8 +90,6 @@ export function assembleSurvivalInput(
   assertSufficientOos(oosPeriods, roundTrips.map((t) => t.netReturn));
 
   return {
-    // Per-trade net returns feed the bootstrap CI; per-period net returns +
-    // signals feed the permutation test (alignment needs every period).
     tradeReturns: roundTrips.map((t) => t.netReturn),
     strategyReturns: rv.stitched.netReturns,
     entrySignals: entrySignals(oosPeriods),

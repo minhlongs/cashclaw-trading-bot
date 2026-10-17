@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Cpu, ShieldCheck, Lock } from 'lucide-react';
+import { Cpu, Lock } from 'lucide-react';
 import { ZOO_ENTRIES, type ZooStatus } from './alpha-zoo-evaluator-model';
+import { QuantScreenHeader } from './quant-screen-header';
 
 export function AlphaZooEvaluator() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | ZooStatus>('ALL');
@@ -14,29 +15,17 @@ export function AlphaZooEvaluator() {
 
   return (
     <section aria-label="Alpha Zoo Evaluator and Factor IC/IR Falsification Matrix" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <Cpu size={20} className="text-[var(--color-accent)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">
-              Alpha Zoo Evaluator & Factor IC/IR Falsification Matrix
-            </h1>
-            <p className="text-xs text-[var(--text-secondary)]">
-              17-op causal AST kernel • 3-symbol Binance 1d panel (730 bars) • Σ ≡ 12 invariant
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <QuantScreenHeader
+        icon={<Cpu size={20} className="text-[var(--color-accent)]" />}
+        title="Alpha Zoo Evaluator & Factor IC/IR Falsification Matrix"
+        subtitle="17-op causal AST kernel • 3-symbol Binance 1d panel (730 bars) • Σ ≡ 12 invariant"
+        extraBadge={
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-semibold bg-[rgba(0,212,170,0.12)] text-[var(--color-profit)] border border-[rgba(0,212,170,0.3)]">
             <Lock size={13} />
             <span>ZERO_LOOKAHEAD • CAUSAL_AST</span>
           </span>
-          <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-            <ShieldCheck size={14} />
-            <span>PAPER_ONLY • ADR-001</span>
-          </span>
-        </div>
-      </header>
+        }
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">

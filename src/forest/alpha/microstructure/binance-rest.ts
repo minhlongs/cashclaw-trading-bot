@@ -16,53 +16,33 @@ const AGG_TRADES_LIMIT = 1000;
 
 /** Raw HTTP outcome for one REST call — body stays untrusted (`unknown`). */
 export interface RawFetchResult {
-  /** Unparsed JSON body (untrusted until tree-layer parse validates it). */
   readonly body: unknown;
-  /** Wall-clock ms from request start to body receipt. */
   readonly latencyMs: number;
 }
 
 export interface FetchDepthParams {
   readonly symbol: string;
-  /** Injectable for tests; defaults to the public Binance API host. */
   readonly baseUrl?: string;
 }
 
-/**
- * GET /api/v3/depth?symbol=X&limit=20 — current order-book snapshot.
- * The depth endpoint carries no server timestamp; the caller stamps
- * `receivedAtMs` when this resolves.
- */
+/** GET /api/v3/depth?symbol=X&limit=20 — current order-book snapshot. */
 export async function fetchDepth(params: FetchDepthParams): Promise<RawFetchResult> {
-  const url =
-    `${params.baseUrl ?? DEFAULT_BASE_URL}/api/v3/depth` +
-    `?symbol=${encodeURIComponent(params.symbol)}&limit=${DEPTH_LIMIT}`;
+  const url = `${params.baseUrl ?? DEFAULT_BASE_URL}/api/v3/depth?symbol=${encodeURIComponent(params.symbol)}&limit=${DEPTH_LIMIT}`;
   return fetchWithRetry(url);
 }
 
 export interface FetchAggTradesParams {
   readonly symbol: string;
-  /** Window start/end in ms epoch (inclusive per Binance semantics). */
   readonly startMs: number;
   readonly endMs: number;
-  /** Resume point: only prints with id > fromId are returned when set. */
   readonly fromId?: number;
-  /** Injectable for tests; defaults to the public Binance API host. */
   readonly baseUrl?: string;
 }
 
-/**
- * GET /api/v3/aggTrades?symbol=X&startTime=…&endTime=… — aggregated prints
- * in the window. Empty result array means no trades traded in the window.
- */
+/** GET /api/v3/aggTrades?symbol=X&startTime=…&endTime=… — aggregated prints in the window. */
 export async function fetchAggTrades(params: FetchAggTradesParams): Promise<RawFetchResult> {
-  let url =
-    `${params.baseUrl ?? DEFAULT_BASE_URL}/api/v3/aggTrades` +
-    `?symbol=${encodeURIComponent(params.symbol)}` +
-    `&startTime=${params.startMs}&endTime=${params.endMs}&limit=${AGG_TRADES_LIMIT}`;
-  if (params.fromId !== undefined) {
-    url += `&fromId=${params.fromId}`;
-  }
+  let url = `${params.baseUrl ?? DEFAULT_BASE_URL}/api/v3/aggTrades?symbol=${encodeURIComponent(params.symbol)}&startTime=${params.startMs}&endTime=${params.endMs}&limit=${AGG_TRADES_LIMIT}`;
+  if (params.fromId !== undefined) url += `&fromId=${params.fromId}`;
   return fetchWithRetry(url);
 }
 

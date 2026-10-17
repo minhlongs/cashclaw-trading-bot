@@ -1,15 +1,8 @@
 // Bot Tick — single evaluation cycle (extracted from BotInstance for size compliance)
 // Runs each tick: fetch price, evaluate chain, delegate to strategy, emit events.
 
-import type {
-  OrderRequest,
-} from '../exchange/types';
-import type {
-  BotConfig,
-  BotCallbacks,
-  BotDependencies,
-  BotState,
-} from './types';
+import type { OrderRequest } from '../exchange/types';
+import type { BotConfig, BotCallbacks, BotDependencies, BotState } from './types';
 import { evaluateChain } from './bot-strategy';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';

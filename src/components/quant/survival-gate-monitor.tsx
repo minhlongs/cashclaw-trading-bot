@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ShieldCheck, CheckCircle2, XCircle, GitBranch } from 'lucide-react';
+import { CheckCircle2, XCircle, GitBranch } from 'lucide-react';
 import {
   SURVIVAL_CHECKS,
   type GatePillar,
 } from './survival-gate-monitor-model';
+import { QuantScreenHeader } from './quant-screen-header';
 
 export function SurvivalGateMonitor() {
   const [pillarFilter, setPillarFilter] = useState<'ALL' | GatePillar>('ALL');
@@ -19,18 +20,11 @@ export function SurvivalGateMonitor() {
 
   return (
     <section aria-label="Survival Gate and Promotion Lifecycle Monitor" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <GitBranch size={20} className="text-[var(--color-accent)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">Survival Gate & Promotion State Lifecycle Monitor</h1>
-            <p className="text-xs text-[var(--text-secondary)]">Multi-pair composition sweep pin • 4 Structural PASS / 4 Economic FAIL → RESEARCH to KILLED</p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} /><span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<GitBranch size={20} className="text-[var(--color-accent)]" />}
+        title="Survival Gate & Promotion State Lifecycle Monitor"
+        subtitle="Multi-pair composition sweep pin • 4 Structural PASS / 4 Economic FAIL → RESEARCH to KILLED"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">

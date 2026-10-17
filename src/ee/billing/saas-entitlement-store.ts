@@ -59,10 +59,7 @@ export class SaasEntitlementStore {
     const nowMs = record.processedAtMs ?? Date.now();
     const isActivated = record.paymentStatus === 'finished' || record.paymentStatus === 'confirmed';
     if (isActivated) this.processedPayments.add(record.paymentId);
-
-    if (this.db) {
-      await insertD1IpnEvent(this.db, record, nowMs);
-    }
+    if (this.db) await insertD1IpnEvent(this.db, record, nowMs);
     if (!isActivated) return this.getWorkspaceEntitlement(record.workspaceId);
 
     const spec = getEntitlementsForTier(record.targetTier);
@@ -78,10 +75,7 @@ export class SaasEntitlementStore {
     };
 
     this.workspaceEntitlements.set(record.workspaceId, updatedRow);
-    if (this.db) {
-      await upsertD1WorkspaceEntitlement(this.db, updatedRow);
-    }
-
+    if (this.db) await upsertD1WorkspaceEntitlement(this.db, updatedRow);
     return updatedRow;
   }
 
@@ -93,15 +87,12 @@ export class SaasEntitlementStore {
         return dbRow;
       }
     }
-
     const cached = this.workspaceEntitlements.get(workspaceId);
     if (cached) return cached;
 
     const basicSpec = getEntitlementsForTier('BASIC');
     return {
-      workspaceId,
-      ownerUserId: 'default',
-      tier: 'BASIC',
+      workspaceId, ownerUserId: 'default', tier: 'BASIC',
       maxRunningBots: basicSpec.maxRunningPaperBots,
       maxWalkForwardWindows: basicSpec.maxWalkForwardWindows,
       monthlyLlmCredits: basicSpec.monthlyLlmCredits,
@@ -111,8 +102,7 @@ export class SaasEntitlementStore {
   }
 
   public async getWorkspaceTier(workspaceId: string): Promise<SaasTier> {
-    const entitlement = await this.getWorkspaceEntitlement(workspaceId);
-    return entitlement.tier;
+    return (await this.getWorkspaceEntitlement(workspaceId)).tier;
   }
 }
 

@@ -57,15 +57,9 @@ export function mapCCXTOrderBook(book: CCXTOrderBook, symbol: string): CCXTOrder
 type RawBalanceMap = Record<string, number | undefined>;
 
 function toBalanceMap(value: unknown): RawBalanceMap {
-  if (value && typeof value === 'object') {
-    return value as RawBalanceMap;
-  }
-  return {};
+  return value && typeof value === 'object' ? (value as RawBalanceMap) : {};
 }
 
-/**
- * Maps CCXT raw balance structure to an array of CCXTBalanceResult entries.
- */
 export function mapCCXTBalances(raw: CCXTBalances): CCXTBalanceResult[] {
   const balances: CCXTBalanceResult[] = [];
   const freeMap = toBalanceMap(raw.free);
@@ -75,19 +69,19 @@ export function mapCCXTBalances(raw: CCXTBalances): CCXTBalanceResult[] {
   for (const [currency, totalVal] of Object.entries(totalMap)) {
     const total = Number(totalVal) || 0;
     if (total <= 0) continue;
-    const free = Number(freeMap[currency] ?? 0);
-    const used = Number(usedMap[currency] ?? 0);
-    balances.push({ currency, free, used, total });
+    balances.push({
+      currency,
+      free: Number(freeMap[currency] ?? 0),
+      used: Number(usedMap[currency] ?? 0),
+      total,
+    });
   }
   return balances;
 }
 
 function mapFee(raw: CCXTOrder): { fee?: number; feeCurrency?: string } {
   if (!raw.fee) return {};
-  return {
-    fee: Number(raw.fee.cost ?? 0),
-    feeCurrency: String(raw.fee.currency) || undefined,
-  };
+  return { fee: Number(raw.fee.cost ?? 0), feeCurrency: String(raw.fee.currency) || undefined };
 }
 
 /**

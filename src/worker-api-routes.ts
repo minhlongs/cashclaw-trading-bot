@@ -28,10 +28,8 @@ export function registerPublicStatusRoutes(app: AppType): void {
   app.get('/api/health', async (c) => {
     const bots = await new BotQueryService().listBots();
     return c.json({
-      status: 'ok',
-      bots: bots.length,
-      running: bots.filter((bot) => bot.status === 'running').length,
-      timestamp: Date.now(),
+      status: 'ok', bots: bots.length,
+      running: bots.filter((bot) => bot.status === 'running').length, timestamp: Date.now(),
     });
   });
 

@@ -28,6 +28,8 @@ High-fidelity institutional quantitative alpha research and paper trading cockpi
 - [x] portfolio-cvar-stress.html — Cross-Margin CVaR Tail-Risk & Liquidation Cascade Simulator
 - [x] orderbook-imbalance-lob.html — L3 Order Book Imbalance & Hawkes Process Micro-Burst Predictor
 - [x] rough-volatility-hurst.html — Gatheral Rough Volatility Hurst Exponent (H < 0.5) & Barndorff-Nielsen Bipower Variation Jump Detector
+- [x] leadlag-hayashi-yoshida.html — Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix
+- [x] optimal-execution-almgren-chriss.html — Almgren-Chriss (2000) Optimal Execution Trajectory (sinh(κ(T-t))/sinh(κT)) & Cont-Kukanov Order Placement Cockpit
 
 ## Roadmap
 1. `index.html` — Cockpit Overview, 4-col KPI row, BTC/USDT candlestick chart, TradingAgents feed (Completed)
@@ -48,8 +50,10 @@ High-fidelity institutional quantitative alpha research and paper trading cockpi
 16. `portfolio-cvar-stress.html` — Cross-Margin CVaR Tail-Risk & Liquidation Cascade Simulator (Completed)
 17. `orderbook-imbalance-lob.html` — L3 Order Book Imbalance & Hawkes Process Micro-Burst Predictor (Completed)
 18. `rough-volatility-hurst.html` — Gatheral Rough Volatility Hurst Exponent (H < 0.5) & Barndorff-Nielsen Bipower Variation Jump Detector (Completed)
-19. `leadlag-hayashi-yoshida.html` — Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix (Next)
+19. `leadlag-hayashi-yoshida.html` — Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix (Completed)
+20. `optimal-execution-almgren-chriss.html` — Almgren-Chriss (2000) Optimal Execution Trajectory (sinh(κ(T-t))/sinh(κT)) & Cont-Kukanov Order Placement Cockpit (Completed)
+21. `regime-switching-hamilton-hmm.html` — Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface (Next)
 
 ## Creative Freedom
-- Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix (`leadlag-hayashi-yoshida.html`): Hayashi-Yoshida overlap-interval covariance estimator, asynchronous tick lead-lag response curve $\rho_{HY}(\ell)$, and Epps-effect neutralization across BTC-PERP, ETH-USDT, SOL-USDT, and BNB-USDT
+- Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface (`regime-switching-hamilton-hmm.html`): 2-state and 3-state ergodic transition matrix $P_{ij}$, causal Hamilton filtered probabilities $\xi_{t|t}$, and Kim smoother retrodiction vs zero-lookahead online regime gating
 - Hierarchical Risk Parity (HRP) & Eigen-Portfolio Factor Allocator (`hrp-allocator.html`): Quasi-diagonalization dendrogram, recursive bisection weights, and shrinkage covariance estimator

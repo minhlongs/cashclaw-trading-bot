@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<!-- Stitch Project: projects/6665149401860401191 | Screen: projects/6665149401860401191/screens/68e82bf32bc34f99a73847f9ae831780 | Design System: assets/be7563bf9e4c400f85f92f80d27a5de5 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashClaw OS — Almgren-Chriss (2000) Optimal Execution Trajectory &amp; Cont-Kukanov Cockpit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E11;
+      --bg-surface: #141820;
+      --bg-elevated: #1A2030;
+      --bg-hover: #1E2838;
+      --color-accent: #00D4AA;
+      --color-profit: #00D4AA;
+      --color-loss: #FF4757;
+      --color-error: #FF4757;
+      --color-warning: #FFB020;
+      --color-ai: #A78BFA;
+      --text-primary: #E8EAED;
+      --text-secondary: #8B95A5;
+      --text-tertiary: #5A6577;
+      --border-subtle: #1E2530;
+      --border-default: #2A3340;
+    }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased">
+  <!-- Left Sidebar (240px) -->
+  <aside class="w-60 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 flex-shrink-0">
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center font-bold text-black text-sm">CC</div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-wide">CashClaw OS</span>
+          <span class="text-[10px] text-[var(--color-warning)] font-mono font-semibold">PAPER_ONLY • ADR-001</span>
+        </div>
+      </div>
+
+            <nav class="flex flex-col gap-1.5 text-xs font-medium">
+        <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Cockpit Overview
+        </a>
+        <a href="alpha-zoo.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Alpha Zoo Evaluator
+        </a>
+        <a href="deliberation-theater.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+          Deliberation Theater
+        </a>
+        <a href="strategies/volatility-dca.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Volatility-DCA Bots
+        </a>
+        <a href="correlation-matrix.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Correlation Matrix
+        </a>
+        <a href="execution-ledger.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Execution Ledger
+        </a>
+        <a href="data-quality-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Data Quality Gate
+        </a>
+        <a href="microstructure-liquidity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Microstructure Liquidity
+        </a>
+        <a href="survival-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Survival Gate
+        </a>
+        <a href="sovereign-enclave.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Sovereign Enclave
+        </a>
+        <a href="relative-value-basis.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Relative-Value Basis
+        </a>
+        <a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          SaaS Billing & Quota
+        </a>
+        <a href="regime-attribution.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Regime Attribution
+        </a>
+        <a href="fdr-multiple-testing-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          FDR Multiple-Testing Gate
+        </a>
+        <a href="style-guide.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Style Guide & Tokens
+        </a>
+        <a href="portfolio-cvar-stress.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          CVaR Tail-Risk Stress
+        </a>
+        <a href="orderbook-imbalance-lob.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          LOB Hawkes Imbalance
+        </a>
+        <a href="rough-volatility-hurst.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+          Rough Volatility & Jumps
+        </a>
+        <a href="leadlag-hayashi-yoshida.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+          Hayashi-Yoshida Lead-Lag
+        </a>
+        <a href="optimal-execution-almgren-chriss.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Almgren-Chriss Execution
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs flex flex-col gap-1">
+      <span class="text-[var(--text-secondary)] text-[10px]">Optimal Execution Engine</span>
+      <span class="font-mono text-[var(--text-primary)] font-semibold truncate">sinh(&kappa;(T-t))/sinh(&kappa;T)</span>
+      <span class="text-[10px] text-[var(--color-accent)] font-semibold">ALMGREN-CHRISS • CONT</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Header Bar -->
+    <header class="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-primary)]">
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="font-bold text-base">Almgren-Chriss (2000) Optimal Execution Trajectory &amp; Cont-Kukanov Order Placement Cockpit</h1>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)] border border-[rgba(0,212,170,0.25)]">
+          Almgren-Chriss (2000) Hyperbolic Trajectory • Cont-Kukanov Limit/Market Split • Implementation Shortfall Frontier • PAPER_ONLY • ADR-001
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="execution-ledger.html" class="h-9 px-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-primary)] font-semibold text-xs flex items-center gap-1.5 hover:bg-[var(--bg-hover)] transition-colors">
+          <span>Paper Execution Ledger</span>
+        </a>
+        <button id="reSolveAcBtn" onclick="document.getElementById('acAuditStamp').textContent = 'TRAJECTORY SOLVED • ' + new Date().toISOString().slice(11,19) + ' UTC'" class="h-9 px-4 rounded-lg bg-[var(--color-accent)] text-black font-semibold text-xs flex items-center gap-1.5 hover:brightness-110 transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Re-Solve Optimal Trajectory</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+      <!-- 3 Telemetry KPI Cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Urgency Decay Rate (&kappa; = &radic;(&lambda;&sigma;&sup2;/&eta;))</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(167,139,250,0.15)] text-[var(--color-ai)] font-mono font-semibold">HYPERBOLIC DECAY</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-ai)]">&kappa; = 0.0482 min&#8315;&#185;</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Half-Life t_{1/2} = 14.4 min • Hyperbolic Front-Loading</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Expected Implementation Shortfall E[IS]</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-mono font-semibold">-34.2% VS TWAP</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-accent)]">11.84 bps &plusmn; 6.42 bps</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Permanent Impact &gamma; = 3.20 bps + Temporary Impact &eta; = 8.64 bps</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Cont-Kukanov Optimal Order Split (q_L / q_M)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] font-mono font-semibold">QUEUE OPTIMAL</span>
+          </div>
+          <span class="text-2xl font-bold font-mono text-[var(--color-warning)]">68.4% Limit / 31.6% Market</span>
+          <span class="text-xs font-mono text-[var(--text-secondary)]">Queue Fill Probability P(&xi; &ge; L + q_L) = 0.742</span>
+        </div>
+      </section>
+
+      <!-- Multi-Slice Almgren-Chriss Inventory & Cont-Kukanov Child Order Schedule Matrix -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex flex-col gap-0.5">
+            <h2 class="text-sm font-semibold">Multi-Slice Almgren-Chriss Inventory Schedule &amp; Cont-Kukanov Child Order Allocation Matrix</h2>
+            <span class="text-xs text-[var(--text-secondary)]">Minimizes U(x) = E[IS] + &lambda;&middot;V[IS] via exact hyperbolic trajectory x_k = X&middot;sinh(&kappa;(T - t_k)) / sinh(&kappa;T) across K = 5 execution slices</span>
+          </div>
+          <span id="acAuditStamp" class="text-xs font-mono text-[var(--color-accent)]">PARENT ORDER X = 25.00 BTC • HORIZON T = 60 MIN</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead>
+              <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)]">
+                <th class="pb-2.5">Slice (t_k)</th>
+                <th class="pb-2.5">Remaining Inventory (x_k)</th>
+                <th class="pb-2.5">Child Slice Size (n_k)</th>
+                <th class="pb-2.5">TWAP Benchmark</th>
+                <th class="pb-2.5">Cont-Kukanov Limit (q_L)</th>
+                <th class="pb-2.5">Aggressive Market (q_M)</th>
+                <th class="pb-2.5">Slice Impact (bps)</th>
+                <th class="pb-2.5 text-right">Routing Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border-subtle)]">
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">k = 1 (0–12m)</td>
+                <td class="py-3 text-[var(--text-primary)]">25.00 &rarr; 13.85 BTC</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">11.15 BTC (44.6%)</td>
+                <td class="py-3 text-[var(--text-secondary)]">5.00 BTC (20.0%)</td>
+                <td class="py-3 text-[var(--color-accent)]">7.14 BTC (64.0%)</td>
+                <td class="py-3 text-[var(--color-warning)]">4.01 BTC (36.0%)</td>
+                <td class="py-3 text-[var(--color-warning)]">4.82 bps</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">FRONT_LOADED_PASS</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">k = 2 (12–24m)</td>
+                <td class="py-3 text-[var(--text-primary)]">13.85 &rarr; 7.52 BTC</td>
+                <td class="py-3 text-[var(--color-accent)] font-bold">6.33 BTC (25.3%)</td>
+                <td class="py-3 text-[var(--text-secondary)]">5.00 BTC (20.0%)</td>
+                <td class="py-3 text-[var(--color-accent)]">4.30 BTC (68.0%)</td>
+                <td class="py-3 text-[var(--color-warning)]">2.03 BTC (32.0%)</td>
+                <td class="py-3 text-[var(--text-primary)]">2.94 bps</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">QUEUE_OPTIMAL</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">k = 3 (24–36m)</td>
+                <td class="py-3 text-[var(--text-primary)]">7.52 &rarr; 3.88 BTC</td>
+                <td class="py-3 text-[var(--color-ai)] font-semibold">3.64 BTC (14.6%)</td>
+                <td class="py-3 text-[var(--text-secondary)]">5.00 BTC (20.0%)</td>
+                <td class="py-3 text-[var(--color-accent)]">2.58 BTC (71.0%)</td>
+                <td class="py-3 text-[var(--text-secondary)]">1.06 BTC (29.0%)</td>
+                <td class="py-3 text-[var(--text-primary)]">1.88 bps</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">QUEUE_OPTIMAL</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">k = 4 (36–48m)</td>
+                <td class="py-3 text-[var(--text-primary)]">3.88 &rarr; 1.66 BTC</td>
+                <td class="py-3 text-[var(--text-primary)]">2.22 BTC (8.9%)</td>
+                <td class="py-3 text-[var(--text-secondary)]">5.00 BTC (20.0%)</td>
+                <td class="py-3 text-[var(--color-accent)]">1.64 BTC (74.0%)</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.58 BTC (26.0%)</td>
+                <td class="py-3 text-[var(--color-accent)]">1.24 bps</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">PASSIVE_MAKER</span></td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 font-semibold text-[var(--text-primary)]">k = 5 (48–60m)</td>
+                <td class="py-3 text-[var(--text-primary)]">1.66 &rarr; 0.00 BTC</td>
+                <td class="py-3 text-[var(--text-secondary)]">1.66 BTC (6.6%)</td>
+                <td class="py-3 text-[var(--text-secondary)]">5.00 BTC (20.0%)</td>
+                <td class="py-3 text-[var(--color-accent)]">1.26 BTC (76.0%)</td>
+                <td class="py-3 text-[var(--text-secondary)]">0.40 BTC (24.0%)</td>
+                <td class="py-3 text-[var(--color-accent)]">0.96 bps</td>
+                <td class="py-3 text-right"><span class="px-2 py-0.5 rounded bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-bold">TERMINAL_CLEANUP</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Interactive Risk-Aversion Efficient Frontier & Hyperbolic Inventory Decay Simulator -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left 5 Cols: Risk Aversion λ & Temporary Impact η Sliders -->
+        <div class="lg:col-span-5 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold">Risk Aversion (&lambda;) &amp; Market Impact Controls</h3>
+            <span class="text-[10px] font-mono text-[var(--color-ai)]">&kappa; = &radic;(&lambda;&sigma;&sup2;/&eta;)</span>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-[var(--text-secondary)]">Trader Risk Aversion Parameter (&lambda;)</span>
+              <span id="acLambdaLabel" class="font-mono text-[var(--color-ai)]">&lambda; = 2.40 &times; 10&#8315;&#8309; (&kappa; = 0.0482 min&#8315;&#185;)</span>
+            </div>
+            <input id="acLambdaSlider" type="range" class="accent-[var(--color-accent)]" min="1" max="100" value="24" oninput="
+              const l = (this.value / 10).toFixed(2);
+              const k = (Math.sqrt(this.value) * 0.00984).toFixed(4);
+              document.getElementById('acLambdaLabel').textContent = 'λ = ' + l + ' × 10⁻⁵ (κ = ' + k + ' min⁻¹)';
+            ">
+            <div class="flex justify-between text-[10px] font-mono text-[var(--text-secondary)]">
+              <span>&lambda; &rarr; 0 (TWAP Linear)</span>
+              <span>Balanced (&kappa;=0.048)</span>
+              <span>&lambda; &rarr; &infin; (Immediate Sweep)</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-[var(--text-secondary)]">Cont-Kukanov Rebate / Taker Fee Spread (h + f)</span>
+              <span id="ckFeeLabel" class="font-mono text-[var(--color-accent)]">8.50 bps Maker Saving</span>
+            </div>
+            <input id="ckFeeSlider" type="range" class="accent-[var(--color-accent)]" min="20" max="200" value="85" oninput="document.getElementById('ckFeeLabel').textContent = (this.value/10).toFixed(2) + ' bps Maker Saving'">
+          </div>
+
+          <div class="p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-2 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Naive TWAP Expected Variance V[IS]:</span>
+              <span class="text-[var(--color-loss)]">142.8 bps&sup2; (Unhedged Drift)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Almgren-Chriss Optimal Variance V[IS]:</span>
+              <span class="text-[var(--color-accent)] font-bold">41.2 bps&sup2; (-71.1% Timing Risk)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--text-secondary)]">Non-Execution Penalty Fence:</span>
+              <span class="text-[var(--color-warning)]">CAUSAL CATCH-UP ARMED</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <a href="leadlag-hayashi-yoshida.html" class="text-xs font-mono text-[var(--color-accent)] hover:underline">&larr; Hayashi-Yoshida Lead-Lag</a>
+            <a href="orderbook-imbalance-lob.html" class="text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)]">LOB Hawkes Imbalance &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Right 7 Cols: Hyperbolic Inventory Trajectory SVG -->
+        <div class="lg:col-span-7 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-0.5">
+              <h3 class="text-sm font-semibold">Inventory Liquidation Trajectory: Almgren-Chriss Hyperbolic vs TWAP Linear</h3>
+              <span class="text-xs text-[var(--text-secondary)]">x(t) = X&middot;sinh(&kappa;(T - t))/sinh(&kappa;T) front-loads execution to compress variance exposure</span>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(0,212,170,0.15)] text-[var(--color-accent)] font-semibold">OPTIMAL FRONTIER</span>
+          </div>
+
+          <div class="h-52 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] p-4 flex flex-col justify-between relative">
+            <svg class="w-full h-36 overflow-visible" viewBox="0 0 600 130">
+              <!-- Grid lines -->
+              <line x1="40" y1="18" x2="560" y2="18" stroke="#1E2530" stroke-dasharray="3 3" />
+              <line x1="40" y1="64" x2="560" y2="64" stroke="#1E2530" stroke-dasharray="3 3" />
+              <line x1="40" y1="110" x2="560" y2="110" stroke="#2A3340" />
+              <!-- TWAP Linear Benchmark (λ → 0) -->
+              <line x1="50" y1="18" x2="550" y2="110" stroke="#8B95A5" stroke-width="1.5" stroke-dasharray="5 4" />
+              <!-- High Urgency Trajectory (λ High) -->
+              <polyline fill="none" stroke="#FFB020" stroke-width="1.5" stroke-dasharray="3 3" points="50,18 150,76 250,98 350,106 450,109 550,110" />
+              <!-- Optimal Almgren-Chriss Hyperbolic Trajectory -->
+              <polyline fill="none" stroke="#00D4AA" stroke-width="2.5" points="50,18 150,59 250,82 350,96 450,104 550,110" />
+              <circle cx="50" cy="18" r="4.5" fill="#00D4AA" />
+              <circle cx="150" cy="59" r="4.5" fill="#00D4AA" />
+              <circle cx="250" cy="82" r="4.5" fill="#00D4AA" />
+              <circle cx="350" cy="96" r="4.5" fill="#00D4AA" />
+              <circle cx="450" cy="104" r="4.5" fill="#00D4AA" />
+              <circle cx="550" cy="110" r="4.5" fill="#00D4AA" />
+              <text x="310" y="54" fill="#8B95A5" font-size="9" font-family="JetBrains Mono">TWAP Linear (&lambda; &rarr; 0)</text>
+              <text x="165" y="75" fill="#00D4AA" font-size="9" font-family="JetBrains Mono">Almgren-Chriss sinh(&kappa;(T-t))/sinh(&kappa;T)</text>
+            </svg>
+            <div class="flex items-center justify-between text-[11px] font-mono text-[var(--text-secondary)] border-t border-[var(--border-subtle)] pt-2">
+              <span class="text-[var(--color-accent)]">&mdash; Optimal Hyperbolic x_k (&kappa;=0.0482)</span>
+              <span class="text-[var(--text-secondary)]">--- TWAP Linear Benchmark</span>
+              <span class="text-[var(--color-warning)]">--- High-Urgency Front-Load</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 text-xs font-mono">
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Shortfall Saving vs Market</span>
+              <span class="text-sm font-bold text-[var(--color-accent)]">-23.16 bps Saved</span>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Queue Depletion Guard</span>
+              <span class="text-sm font-bold text-[var(--color-ai)]">Cont-Kukanov L1 Split</span>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
+              <span class="text-[10px] text-[var(--text-secondary)] block">Safety Execution Lock</span>
+              <span class="text-sm font-bold text-[var(--color-warning)]">PAPER_ONLY • ADR-001</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

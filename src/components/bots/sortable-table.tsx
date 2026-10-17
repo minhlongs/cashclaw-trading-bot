@@ -14,10 +14,7 @@ export interface SortableColumn<T> {
 }
 
 export function SortableTable<T>({
-  data,
-  columns,
-  emptyMsg,
-  getRowId,
+  data, columns, emptyMsg, getRowId,
 }: {
   data: T[];
   columns: SortableColumn<T>[];
@@ -85,10 +82,7 @@ export function SortableTable<T>({
                   }
                 }}
               >
-                <span className="inline-flex items-center gap-1">
-                  {col.label}
-                  {col.sortable !== false && <SortIcon col={col.key} />}
-                </span>
+                <span className="inline-flex items-center gap-1">{col.label}{col.sortable !== false && <SortIcon col={col.key} />}</span>
               </th>
             ))}
           </tr>

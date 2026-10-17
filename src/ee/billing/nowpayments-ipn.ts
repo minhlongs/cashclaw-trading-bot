@@ -9,15 +9,8 @@ import { SaasTierSchema, type SaasTier } from '../tenancy/tenant-policy';
 export const NowPaymentsIpnPayloadSchema = z.object({
   payment_id: z.string().min(1),
   payment_status: z.enum([
-    'waiting',
-    'confirming',
-    'confirmed',
-    'sending',
-    'partially_paid',
-    'finished',
-    'failed',
-    'refunded',
-    'expired',
+    'waiting', 'confirming', 'confirmed', 'sending',
+    'partially_paid', 'finished', 'failed', 'refunded', 'expired',
   ]),
   order_id: z.string().min(1),
   workspace_id: z.string().min(1),

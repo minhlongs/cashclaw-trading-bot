@@ -1,14 +1,14 @@
-// CashClaw CLI Core Commands: quickstart, eval, exportSync
-// Pure, deterministic paper-trading and quantitative diagnostics (< 150 LOC)
+// CashClaw CLI Core Commands: quickstart, eval, exportSync, steps
+// Pure, deterministic paper-trading and quantitative diagnostics (<= 110 LOC)
 
 const crypto = require('node:crypto');
-const { c, renderTable, renderBox } = require('./formatters.js');
+const { printSaaSCta } = require('./cli-printers.js');
 
 function runQuickstartSimulation(symbol = 'BTC/USDT', initialCapital = 10000) {
   const steps = 30;
   let cash = initialCapital;
   let asset = 0;
-  let basePrice = 50000;
+  const basePrice = 50000;
   let ordersCount = 0;
 
   for (let i = 0; i < steps; i++) {
@@ -48,18 +48,13 @@ function runQuantitativeEval(symbol = 'ETH/USDT') {
   const cP = Math.log(close / open);
   const garmanKlass = Math.sqrt(0.5 * Math.pow(u - d, 2) - (2 * Math.log(2) - 1) * Math.pow(cP, 2));
 
-  // Amihud (2002) Illiquidity Ratio (|R| / VolumeUsd * 1e6)
-  const amihudIlliq = 0.42;
-  // Roll (1984) Effective Spread (bps)
-  const rollEffectiveSpreadBps = 14.8;
-
   return {
     symbol,
     sampleBars: 100,
     garmanKlassVolAnnualized: Math.round(garmanKlass * Math.sqrt(365) * 10000) / 100,
     corwinSchultzSpreadBps: 18.5,
-    amihudIlliquidityRatio: amihudIlliq,
-    rollEffectiveSpreadBps,
+    amihudIlliquidityRatio: 0.42,
+    rollEffectiveSpreadBps: 14.8,
     regime: 'LOW_VOLATILITY_ACCUMULATION',
     recommendation: 'STRATEGY_PERMITTED_VOLATILITY_DCA',
   };
@@ -73,15 +68,9 @@ function generateSyncBundle(botName = 'MyLocalBot', symbol = 'BTC/USDT') {
     intervalMinutes: 15,
     feeBps: 10,
     slippageBps: 5,
-    parameters: {
-      baseOrderUsd: 250,
-      volatilityLookback: 24,
-      safetyMultiplier: 1.5,
-    },
+    parameters: { baseOrderUsd: 250, volatilityLookback: 24, safetyMultiplier: 1.5 },
   };
-
-  const payloadString = JSON.stringify(payload);
-  const sha256Checksum = crypto.createHash('sha256').update(payloadString).digest('hex');
+  const sha256Checksum = crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex');
 
   return {
     schemaVersion: '1.0',
@@ -102,15 +91,6 @@ function runStepsAudit() {
     tiers: ['BASIC', 'PREMIUM', 'ENTERPRISE', 'MASTER'],
     cloudBilling: 'NOWPAYMENTS_IPN',
   };
-}
-
-function printSaaSCta() {
-  const ctaContent = [
-    `  ${c.cyan('Ready for 24/7 cloud execution with zero server ops?')}`,
-    `  ${c.dim('Upgrade to CashClaw Cloud SaaS to run your bots in Cloudflare Workers:')}`,
-    `  ${c.bold(c.green('https://cashclaw.app/pricing'))}  ${c.magenta('[Instant Activation via NOWPayments]')}`,
-  ].join('\n');
-  console.log('\n' + renderBox('CashClaw Cloud Upgrade (Enterprise & Pro)', ctaContent) + '\n');
 }
 
 module.exports = {

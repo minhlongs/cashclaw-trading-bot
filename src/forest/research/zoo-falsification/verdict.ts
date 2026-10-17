@@ -61,21 +61,12 @@ const MAX_SIGN_FLIPS = 3;
 /**
  * D5 mapping: bootstrap CI excludes 0 AND permutation pValue < 0.05 AND
  * walk-forward consistency — all must pass (fail-closed conjunction).
- *
- * NOTE (escrow O-1): `permutationTest`'s statistic is the elementwise
- * `returns × signals` product (a covariance proxy), NOT Pearson IC. The
- * pooled global null also ignores panel structure — acceptable research
- * triage, disclosed in report meta.
  */
 export function mapVerdict(input: VerdictInput): VerdictOutput {
   const seed = deriveSeed(input.hypothesisId);
   const checks: ZooCheckResult[] = [];
 
-  const ci = bootstrapCi(input.icValues, mean, {
-    iterations: BOOTSTRAP_ITERATIONS,
-    confidence: BOOTSTRAP_CONFIDENCE,
-    seed,
-  });
+  const ci = bootstrapCi(input.icValues, mean, { iterations: BOOTSTRAP_ITERATIONS, confidence: BOOTSTRAP_CONFIDENCE, seed });
   const bootstrapPassed = ciExcludesZero(ci);
   checks.push({
     check: 'bootstrap_ic_ci',
@@ -83,10 +74,7 @@ export function mapVerdict(input: VerdictInput): VerdictOutput {
     detail: `CI [${ci.lower.toFixed(6)}, ${ci.upper.toFixed(6)}] ${bootstrapPassed ? 'excludes' : 'includes'} 0`,
   });
 
-  const perm = permutationTest(input.pooledForwardReturns, input.pooledScores, mean, {
-    iterations: PERMUTATION_ITERATIONS,
-    seed,
-  });
+  const perm = permutationTest(input.pooledForwardReturns, input.pooledScores, mean, { iterations: PERMUTATION_ITERATIONS, seed });
   const permutationPassed = perm.pValue < SIGNIFICANCE_LEVEL;
   checks.push({
     check: 'permutation',
@@ -94,10 +82,7 @@ export function mapVerdict(input: VerdictInput): VerdictOutput {
     detail: `pValue ${perm.pValue.toFixed(4)} ${permutationPassed ? '<' : '>='} ${SIGNIFICANCE_LEVEL}`,
   });
 
-  const wf = assessWalkForwardConsistency(input.walkForward, {
-    minPositiveFraction: MIN_POSITIVE_FRACTION,
-    maxSignFlips: MAX_SIGN_FLIPS,
-  });
+  const wf = assessWalkForwardConsistency(input.walkForward, { minPositiveFraction: MIN_POSITIVE_FRACTION, maxSignFlips: MAX_SIGN_FLIPS });
   checks.push({
     check: 'ic_walk_forward_consistency',
     passed: wf.consistent,
@@ -105,12 +90,6 @@ export function mapVerdict(input: VerdictInput): VerdictOutput {
   });
 
   const failures = checks.filter((c) => !c.passed);
-  if (failures.length === 0) {
-    return { verdict: 'ALIVE_FOR_FURTHER_RESEARCH', reasons: [], checks };
-  }
-  return {
-    verdict: 'FALSIFIED',
-    reasons: failures.map((f) => `${f.check}: ${f.detail}`),
-    checks,
-  };
+  if (failures.length === 0) return { verdict: 'ALIVE_FOR_FURTHER_RESEARCH', reasons: [], checks };
+  return { verdict: 'FALSIFIED', reasons: failures.map((f) => `${f.check}: ${f.detail}`), checks };
 }

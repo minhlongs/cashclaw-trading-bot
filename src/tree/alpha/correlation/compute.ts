@@ -85,15 +85,9 @@ export function computeSpreadStatistics(
   const residuals = olsResiduals(s1, s2);
   const spreadMean = mean(residuals);
   const spreadStd = stddev(residuals);
-  const zScore = spreadStd === 0
-    ? 0
-    : (residuals[residuals.length - 1] - spreadMean) / spreadStd;
-
-  const halfLife = computeHalfLife(residuals);
-  return { spreadMean, spreadStd, zScore, halfLife };
+  const zScore = spreadStd === 0 ? 0 : (residuals[residuals.length - 1] - spreadMean) / spreadStd;
+  return { spreadMean, spreadStd, zScore, halfLife: computeHalfLife(residuals) };
 }
-
-// ── Internal ──────────────────────────────────────────────────────────────────
 
 /** Estimate half-life of mean reversion via OLS: spread[t] = phi * spread[t-1] + c. */
 function computeHalfLife(residuals: number[]): number {
@@ -109,6 +103,5 @@ function computeHalfLife(residuals: number[]): number {
     ssXX += (lag[i] - mLag) ** 2;
   }
   const phi = ssXX === 0 ? 0 : ssXY / ssXX;
-  if (phi <= 0 || phi >= 1) return Infinity;
-  return -Math.log(2) / Math.log(phi);
+  return phi <= 0 || phi >= 1 ? Infinity : -Math.log(2) / Math.log(phi);
 }

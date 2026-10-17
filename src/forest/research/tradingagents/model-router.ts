@@ -3,16 +3,10 @@
 // (never silent fallback). Built on ProviderChain provenance pattern.
 
 import {
-  type LlmProvider,
-  type ProviderRegistry,
-  type LlmProviderInput,
-  createProviderRegistry,
+  type LlmProvider, type ProviderRegistry, type LlmProviderInput, createProviderRegistry,
 } from './provider-adapter';
 import type {
-  AgentRole,
-  DeliberationTask,
-  ModelTier,
-  ModelProvenanceRecord,
+  AgentRole, DeliberationTask, ModelTier, ModelProvenanceRecord,
 } from '@/tree/research/tradingagents';
 import { executeRouteCall } from './model-router-execute';
 

@@ -36,16 +36,14 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
           <span className="text-[var(--text-primary)] font-semibold text-sm">{t('title')}</span>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.3)]">
-          <ShieldCheck size={14} />
-          <span>{t('badgePaperOnly')}</span>
+          <ShieldCheck size={14} /><span>{t('badgePaperOnly')}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
           <h2 className="text-base font-semibold text-[var(--text-primary)] flex items-center gap-2">
-            <Activity size={18} className="text-[var(--color-accent)]" />
-            {t('paramsHeading')}
+            <Activity size={18} className="text-[var(--color-accent)]" />{t('paramsHeading')}
           </h2>
 
           <div className="flex flex-col gap-2">

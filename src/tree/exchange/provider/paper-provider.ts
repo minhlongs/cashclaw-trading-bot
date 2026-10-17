@@ -6,19 +6,13 @@ import { PaperExchange, type MarketDataFetcher } from '../paper';
 import type { ExchangeProvider, PaperProviderConfig, ProviderHealth, ProviderBudget } from './types';
 import { CircuitBreaker } from './circuit-breaker';
 import {
-  createInitialHealth,
-  applyRecordSuccess,
-  applyRecordFailure,
-  isScoreUnhealthy,
+  createInitialHealth, applyRecordSuccess, applyRecordFailure, isScoreUnhealthy,
 } from './paper-provider-health';
 import { computeNextBackoff, resolveBackoffMs } from './paper-provider-circuit';
 import {
-  fetchTicker as apiFetchTicker,
-  fetchOrderBook as apiFetchOrderBook,
-  fetchBalances as apiFetchBalances,
-  placeOrder as apiPlaceOrder,
-  cancelOrder as apiCancelOrder,
-  fetchOrder as apiFetchOrder,
+  fetchTicker as apiFetchTicker, fetchOrderBook as apiFetchOrderBook,
+  fetchBalances as apiFetchBalances, placeOrder as apiPlaceOrder,
+  cancelOrder as apiCancelOrder, fetchOrder as apiFetchOrder,
 } from './paper-provider-api';
 
 export { createInitialHealth, applyRecordSuccess, applyRecordFailure, isScoreUnhealthy } from './paper-provider-health';

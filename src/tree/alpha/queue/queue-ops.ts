@@ -49,39 +49,22 @@ export function createQueue(): ResearchQueue {
  *   (duplicate-research prevention — the error names the colliding id).
  */
 export function enqueue(queue: ResearchQueue, spec: QueueJobSpec): ResearchQueue {
-  if (spec.id.trim() === '') {
-    throw new Error('Queue job id must be non-empty');
-  }
-  if (spec.hypothesis.trim() === '') {
-    throw new Error('Queue job hypothesis must be non-empty');
-  }
-  if (spec.rationale.trim() === '') {
-    throw new Error('Queue job rationale must be non-empty');
-  }
-  if (spec.dataset.trim() === '') {
-    throw new Error('Queue job dataset must be non-empty');
-  }
-  if (spec.generatedBy.trim() === '') {
-    throw new Error('Queue job generatedBy must be non-empty');
-  }
+  if (spec.id.trim() === '') throw new Error('Queue job id must be non-empty');
+  if (spec.hypothesis.trim() === '') throw new Error('Queue job hypothesis must be non-empty');
+  if (spec.rationale.trim() === '') throw new Error('Queue job rationale must be non-empty');
+  if (spec.dataset.trim() === '') throw new Error('Queue job dataset must be non-empty');
+  if (spec.generatedBy.trim() === '') throw new Error('Queue job generatedBy must be non-empty');
   if (queue.jobs.some((job) => job.id === spec.id)) {
     throw new Error(`Duplicate queue job id: ${spec.id}`);
   }
   const hash = jobConfigHash(spec);
-  const duplicate = queue.jobs.find(
-    (job) => job.status !== 'ARCHIVED' && job.configHash === hash,
-  );
+  const duplicate = queue.jobs.find((job) => job.status !== 'ARCHIVED' && job.configHash === hash);
   if (duplicate) {
     throw new Error(
       `Duplicate queue job configuration (collides with id '${duplicate.id}', hash ${hash}): ${spec.hypothesis}`,
     );
   }
-  const job: ResearchQueueJob = {
-    ...spec,
-    status: 'PROPOSED',
-    configHash: hash,
-    result: null,
-  };
+  const job: ResearchQueueJob = { ...spec, status: 'PROPOSED', configHash: hash, result: null };
   return { jobs: [...queue.jobs, job] };
 }
 
