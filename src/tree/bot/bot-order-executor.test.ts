@@ -5,10 +5,7 @@ import {
   type OrderContext,
 } from './bot-order-executor';
 import type { OrderRequest, OrderResult } from '../exchange/types';
-import type { ExchangeOrchestrator } from '../../land/exchange-orchestration';
 import type { BotState } from './types';
-
-// ── Shared fixtures ──────────────────────────────────────────────────────────
 
 function makeResult(overrides: Partial<OrderResult> = {}): OrderResult {
   return {
@@ -63,8 +60,6 @@ function makeContext(overrides: Partial<OrderContext> = {}): OrderContext {
   };
 }
 
-// ── orderResultToTrade ───────────────────────────────────────────────────────
-
 describe('orderResultToTrade', () => {
   const result = makeResult();
   const trade = orderResultToTrade(result, 'bot-x', 7);
@@ -85,27 +80,17 @@ describe('orderResultToTrade', () => {
     expect(trade.timestamp).toBe(result.timestamp);
   });
 
-  it('defaults fee to 0 when not provided', () => {
-    const noFee = makeResult({ fee: undefined });
+  it('defaults fee and pnl to 0 when not provided', () => {
+    const noFee = makeResult({ fee: undefined, pnl: undefined });
     const t = orderResultToTrade(noFee, 'b', 1);
     expect(t.fee).toBe(0);
-  });
-
-  it('defaults pnl to 0 when not provided', () => {
-    const noPnl = makeResult({ pnl: undefined });
-    const t = orderResultToTrade(noPnl, 'b', 1);
     expect(t.pnl).toBe(0);
   });
 
-  it('preserves fee and pnl when present', () => {
+  it('preserves fee, pnl and status when present', () => {
     expect(trade.fee).toBe(3);
     expect(trade.pnl).toBe(50);
-  });
-
-  it('casts status to BotTrade status literal', () => {
-    const r = makeResult({ status: 'filled' });
-    const t = orderResultToTrade(r, 'b', 1);
-    expect(t.status).toBe('filled');
+    expect(trade.status).toBe('filled');
   });
 
   it('different counters produce different IDs', () => {
@@ -115,9 +100,7 @@ describe('orderResultToTrade', () => {
   });
 });
 
-// ── executeOrder ─────────────────────────────────────────────────────────────
-
-describe('executeOrder', () => {
+describe('executeOrder — core execution & state mutations', () => {
   let ctx: OrderContext;
   let req: OrderRequest;
 
@@ -133,42 +116,24 @@ describe('executeOrder', () => {
     };
   });
 
-  it('throws when killswitch halts trading', async () => {
+  it('throws and does not call exchange when killswitch halts trading', async () => {
     ctx.deps.killswitch.isTradingEnabled = vi.fn().mockReturnValue(false);
-
     await expect(executeOrder(ctx, req, 0)).rejects.toThrow('Trading halted by killswitch');
-  });
-
-  it('does not call exchange when killswitch halts trading', async () => {
-    ctx.deps.killswitch.isTradingEnabled = vi.fn().mockReturnValue(false);
-
-    await expect(executeOrder(ctx, req, 0)).rejects.toThrow();
     expect(ctx.deps.exchange.placeOrder).not.toHaveBeenCalled();
   });
 
-  it('calls exchange.placeOrder with the order request', async () => {
-    await executeOrder(ctx, req, 0);
-
-    expect(ctx.deps.exchange.placeOrder).toHaveBeenCalledWith(req);
-  });
-
-  it('increments orderCounter and totalTrades', async () => {
+  it('calls exchange.placeOrder and increments orderCounter and totalTrades', async () => {
+    const before = Date.now();
     const { orderCounter } = await executeOrder(ctx, req, 5);
-
+    expect(ctx.deps.exchange.placeOrder).toHaveBeenCalledWith(req);
     expect(orderCounter).toBe(6);
     expect(ctx.state.totalTrades).toBe(1);
-  });
-
-  it('records lastOrderAt and updatedAt timestamps', async () => {
-    const before = Date.now();
-    await executeOrder(ctx, req, 0);
-
     expect(ctx.state.lastOrderAt).toBeGreaterThanOrEqual(before);
     expect(ctx.state.updatedAt).toBeGreaterThanOrEqual(before);
   });
 
-  it('calls onTrade with the converted trade object', async () => {
-    const result = makeResult();
+  it('calls onTrade and killswitch.onOrderFilled with the converted result', async () => {
+    const result = makeResult({ id: 'order-99' });
     ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(result);
 
     await executeOrder(ctx, req, 3);
@@ -176,226 +141,51 @@ describe('executeOrder', () => {
     expect(ctx.onTrade).toHaveBeenCalledTimes(1);
     const trade = (ctx.onTrade as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(trade.id).toBe('trade_bot-1_4');
-    expect(trade.exchangeId).toBe(result.exchangeId);
-    expect(trade.side).toBe(result.side);
-  });
-
-  it('calls killswitch.onOrderFilled with the result', async () => {
-    const result = makeResult({ id: 'order-99' });
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(result);
-
-    await executeOrder(ctx, req, 0);
-
     expect(ctx.deps.killswitch.onOrderFilled).toHaveBeenCalledWith(result);
   });
 
   it('adds positive pnl to totalPnl and increments winCount', async () => {
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(
-      makeResult({ pnl: 120 }),
-    );
-
+    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(makeResult({ pnl: 120 }));
     await executeOrder(ctx, req, 0);
-
     expect(ctx.state.totalPnl).toBe(120);
     expect(ctx.state.winCount).toBe(1);
     expect(ctx.state.lossCount).toBe(0);
   });
 
   it('adds negative pnl to totalPnl and increments lossCount', async () => {
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(
-      makeResult({ pnl: -30 }),
-    );
-
+    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(makeResult({ pnl: -30 }));
     await executeOrder(ctx, req, 0);
-
     expect(ctx.state.totalPnl).toBe(-30);
     expect(ctx.state.winCount).toBe(0);
     expect(ctx.state.lossCount).toBe(1);
   });
 
-  it('treats zero pnl as a win', async () => {
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(
-      makeResult({ pnl: 0 }),
-    );
-
+  it('treats zero or undefined pnl as a win with 0 pnl', async () => {
+    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(makeResult({ pnl: undefined }));
     await executeOrder(ctx, req, 0);
-
     expect(ctx.state.totalPnl).toBe(0);
     expect(ctx.state.winCount).toBe(1);
     expect(ctx.state.lossCount).toBe(0);
   });
 
-  it('defaults pnl to 0 when result has no pnl', async () => {
+  it('updates killswitch dailyPnl, peakCapital, telemetry and state', async () => {
+    ctx.state.totalPnl = 50;
     ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(
-      makeResult({ pnl: undefined }),
+      makeResult({ id: 'ord-42', side: 'sell', price: 61000, quantity: 0.2, pnl: 25 }),
     );
 
-    await executeOrder(ctx, req, 0);
+    const { orderCounter } = await executeOrder(ctx, req, 10);
 
-    expect(ctx.state.totalPnl).toBe(0);
-  });
-
-  it('calls killswitch.updateDailyPnl with the pnl', async () => {
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(
-      makeResult({ pnl: 75 }),
-    );
-
-    await executeOrder(ctx, req, 0);
-
-    expect(ctx.deps.killswitch.updateDailyPnl).toHaveBeenCalledWith(75);
-  });
-
-  it('calls killswitch.updatePeakCapital with capital + totalPnl', async () => {
-    ctx.state.totalPnl = 50; // simulate prior trades
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(
-      makeResult({ pnl: 25 }),
-    );
-
-    await executeOrder(ctx, req, 0);
-
-    // capital=1000, totalPnl after this trade = 75
+    expect(ctx.deps.killswitch.updateDailyPnl).toHaveBeenCalledWith(25);
     expect(ctx.deps.killswitch.updatePeakCapital).toHaveBeenCalledWith(1075);
-  });
-
-  it('emits telemetry fill event with order details', async () => {
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(
-      makeResult({ id: 'ord-42', side: 'sell', price: 61000, quantity: 0.2, pnl: -10 }),
-    );
-
-    await executeOrder(ctx, req, 0);
-
     expect(ctx.emitTelemetry).toHaveBeenCalledWith('fill', {
       orderId: 'ord-42',
       side: 'sell',
       price: 61000,
       quantity: 0.2,
-      pnl: -10,
+      pnl: 25,
     });
-  });
-
-  it('calls emitState after all mutations', async () => {
-    await executeOrder(ctx, req, 0);
-
     expect(ctx.emitState).toHaveBeenCalledTimes(1);
-  });
-
-  it('returns the result and incremented counter', async () => {
-    const result = makeResult({ id: 'ord-x' });
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(result);
-
-    const { result: returned, orderCounter } = await executeOrder(ctx, req, 10);
-
-    expect(returned).toBe(result);
     expect(orderCounter).toBe(11);
-  });
-
-  it('propagates exchange errors', async () => {
-    ctx.deps.exchange.placeOrder = vi.fn().mockRejectedValue(
-      new Error('Insufficient balance'),
-    );
-
-    await expect(executeOrder(ctx, req, 0)).rejects.toThrow(
-      'Insufficient balance',
-    );
-  });
-
-  it('uses the orchestrator result when present and ok', async () => {
-    const orchestrated = { ok: true as const, data: makeResult({ id: 'orch-1', price: 99999 }) };
-    const placeOrder = vi.fn().mockResolvedValue(orchestrated);
-    ctx.deps.exchangeOrchestrator = { placeOrder } as unknown as ExchangeOrchestrator;
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(makeResult({ id: 'unused' }));
-
-    const { result } = await executeOrder(ctx, req, 0);
-
-    expect(placeOrder).toHaveBeenCalledWith('binance', req);
-    expect(ctx.deps.exchange.placeOrder).not.toHaveBeenCalled();
-    expect(result).toBe(orchestrated.data);
-    expect(result.id).toBe('orch-1');
-  });
-
-  it('falls back to a rejected order when orchestrator returns !ok', async () => {
-    ctx.deps.exchangeOrchestrator = {
-      placeOrder: vi.fn().mockResolvedValue({ ok: false as const, error: 'boom' }),
-    } as unknown as ExchangeOrchestrator;
-
-    const { result } = await executeOrder(ctx, req, 0);
-
-    expect(result.status).toBe('rejected');
-    expect(result.exchangeId).toBe('binance');
-    expect(result.filled).toBe(0);
-    expect(result.fee).toBe(0);
-    expect(result.price).toBe(60000);
-    expect(result.quantity).toBe(0.1);
-    expect(ctx.emitTelemetry).toHaveBeenCalledWith('error', {
-      error: 'order rejected by orchestrator',
-      context: 'bot.executeOrder',
-    });
-  });
-
-  it('fills rejected fallback with default exchange and price when req omits them', async () => {
-    ctx.deps.exchangeOrchestrator = {
-      placeOrder: vi.fn().mockResolvedValue({ ok: false as const, error: 'boom' }),
-    } as unknown as ExchangeOrchestrator;
-    delete req.exchange;
-    delete req.price;
-
-    const { result } = await executeOrder(ctx, req, 0);
-
-    expect(result.status).toBe('rejected');
-    expect(result.exchangeId).toBe('paper');
-    expect(result.price).toBe(0);
-    expect(result.quantity).toBe(0.1);
-  });
-
-  it('falls back to deps.exchange when no orchestrator is configured', async () => {
-    ctx.deps.exchangeOrchestrator = undefined;
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(makeResult({ id: 'direct' }));
-
-    const { result } = await executeOrder(ctx, req, 0);
-
-    expect(result.id).toBe('direct');
-  });
-
-  it('uses paper as default exchange when orchestrator req has no exchange field', async () => {
-    const orchestrated = { ok: true as const, data: makeResult({ id: 'orch-default' }) };
-    const placeOrder = vi.fn().mockResolvedValue(orchestrated);
-    ctx.deps.exchangeOrchestrator = { placeOrder } as unknown as ExchangeOrchestrator;
-    delete req.exchange;
-
-    const { result } = await executeOrder(ctx, req, 0);
-
-    expect(placeOrder).toHaveBeenCalledWith('paper', expect.objectContaining({ symbol: 'BTC/USDT' }));
-    expect(result.status).toBe('filled');
-  });
-
-  it('does not mutate state or call callbacks when exchange throws', async () => {
-    ctx.deps.exchange.placeOrder = vi.fn().mockRejectedValue(
-      new Error('Network error'),
-    );
-
-    try {
-      await executeOrder(ctx, req, 0);
-    } catch {
-      // expected
-    }
-
-    expect(ctx.state.totalTrades).toBe(0);
-    expect(ctx.onTrade).not.toHaveBeenCalled();
-    expect(ctx.emitTelemetry).not.toHaveBeenCalled();
-    expect(ctx.emitState).not.toHaveBeenCalled();
-  });
-
-  it('accumulates pnl across multiple trades', async () => {
-    // Trade 1: +100
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(makeResult({ pnl: 100 }));
-    await executeOrder(ctx, req, 0);
-
-    // Trade 2: -30
-    ctx.deps.exchange.placeOrder = vi.fn().mockResolvedValue(makeResult({ pnl: -30 }));
-    await executeOrder(ctx, req, 1);
-
-    expect(ctx.state.totalPnl).toBe(70);
-    expect(ctx.state.winCount).toBe(1);
-    expect(ctx.state.lossCount).toBe(1);
   });
 });

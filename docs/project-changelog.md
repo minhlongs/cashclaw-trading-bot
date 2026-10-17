@@ -2,6 +2,17 @@
 
 ## v1 Paper-Trading Platform
 
+### Quad-Cluster Deep Refactor Wave 1 & Wave 2 — 2026-10-17
+- **SaaS Billing & Workspace Context Unification (`src/ee/billing/nowpayments-ipn-verifier.ts`, `src/ee/billing/workspace-request-context.ts`)**:
+  - Extracted shared `verifyNowPaymentsIpnHttpRequest` centralizing header checks (`x-nowpayments-sig`), 300s replay window (`x-nowpayments-timestamp`), raw JSON body parsing, WebCrypto HMAC-SHA512 canonical JSON verification, and `NowPaymentsIpnPayloadSchema` validation across both `POST /api/ee/billing/nowpayments-ipn` and `POST /api/ee/billing/ipn`.
+  - Unified `resolveWorkspaceTierContext` across `/api/ee/credits`, `/api/ee/sync`, `/api/bots`, and `GET /api/ee/quotas` so IPN-upgraded workspaces receive upgraded tier entitlements and invalid explicit tier strings return HTTP 400.
+- **Codebase Modularization & Non-Test Ceiling (`<= 131 LOC` across all of `src/`)**:
+  - Extracted pure data/fixture modules (`design-system-style-guide-model.ts`, `survival-gate-monitor-model.ts`, `dashboard-data-mapper.ts`, `quant-telemetry-seeds.ts`, `bot-manager-test-fixtures.ts`, `backtests-test-messages.ts`, `open-core-25-steps-phases-early.ts`, `open-core-25-steps-phases-late.ts`, `cli-steps-command.ts`, `cli-quant-commands.ts`, `volatility-dca-visualizer-math.ts`, `saas-upgrade-banner-styles.ts`) reducing the highest non-test file size across `src/` to `131 LOC`.
+- **Test Monolith Decomposition (`< 240 LOC`)**:
+  - Split the 4 largest test files (`398–410 LOC`) into 8 cohesive domain test suites (`scheduler.test.ts` + `scheduler-resilience.test.ts`, `bot-order-executor.test.ts` + `bot-order-executor-orchestrator.test.ts`, `evaluator.test.ts` + `evaluator-direction-rules.test.ts`, `compiler.test.ts` + `compiler-spec.test.ts`), all strictly `< 240 LOC`.
+- **Verification**:
+  - 702/702 test files (6,046/6,046 tests) passing, `tsc --noEmit` 0 errors, ESLint 0 warnings, OSS package audit clean (3/3 checks passed).
+
 ### 25-Step Open-Core & Cloud SaaS Runtime Seam Closure (G1–G5) — 2026-10-17
 - **Seam G1 (`src/app/api/bots/route.ts`)**:
   - Replaced hardcoded `currentBotCount: 0` with live active bot count queried from `botListHandler()` (`status === 'RUNNING'`).
