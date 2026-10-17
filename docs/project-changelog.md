@@ -2,6 +2,23 @@
 
 ## v1 Paper-Trading Platform
 
+### 25-Step Open-Core Public GitHub & Cloud SaaS Restructuring (Phases 1–5) — 2026-10-17
+- **Phase 1 (Steps 1–5): Repository Hygiene, Dual-Layer Licensing & Boundary Enforcement**:
+  - Added root `LICENSE` (`Apache-2.0`), `src/ee/LICENSE-COMMERCIAL.md` (CashClaw Enterprise Edition Commercial License), `TRADEMARK.md`, `SECURITY.md`, `CONTRIBUTING.md`, and `.npmignore`.
+  - Hardened `.gitignore` to prevent local agent harnesses (`.claude/`, `.agentkit/`, `.mekong/`) and `.env` secrets from leaking to public GitHub.
+  - Added `src/tree/__tests__/open-core-boundary.test.ts` enforcing zero imports from `src/ee/` inside `src/tree/` and `src/land/`.
+- **Phase 2 (Steps 6–10): Open-Source Core SDKs & 60-Second CLI Quickstart**:
+  - Shipped public SDK barrels `src/tree/quantlib/public-sdk.ts` (`@cashclaw/quantlib`) and `src/tree/research/alpha/zoo/public-sdk.ts` (`@cashclaw/alpha-zoo`).
+  - Added runtime edition detector `src/lib/edition/edition-mode.ts` (`OSS_LOCAL` default vs `CLOUD_SAAS`).
+  - Added deterministic 3-asset paper quickstart fixture (`src/tree/cli/quickstart-fixture.ts`) and CLI paper report generator (`src/tree/cli/paper-cli-report.ts`) with 1-click Cloud sync CTA (`src/tree/cli/__tests__/paper-cli-report.test.ts`).
+- **Phase 3 (Steps 11–15): Cloud-Native SaaS Value Moat (`src/ee/`)**:
+  - Implemented multi-tenant workspace RBAC (`src/ee/tenancy/tenant-policy.ts`), 24/7 Cloud Scheduler tick-lease coordinator (`src/ee/scheduler/cloud-scheduler-coordinator.ts`), Managed LLM deliberation credit ledger (`src/ee/deliberation-cloud/llm-credit-ledger.ts`), tier-gated Cloud Alpha IC/IR feed (`src/ee/alpha-cloud/alpha-feed-service.ts`), and HMAC-SHA256 webhook alert dispatcher (`src/ee/alerts/cloud-alert-dispatcher.ts`), verified by `src/ee/__tests__/saas-value-moat.test.ts`.
+- **Phase 4 (Steps 16–20): SaaS Billing, Quotas & 1-Click Local-to-Cloud Sync**:
+  - Added D1 migration `migrations/0013_saas_entitlements.sql` and canonical tier matrix `BASIC | PREMIUM | ENTERPRISE | MASTER` (`src/ee/billing/tier-entitlements.ts`).
+  - Implemented workspace quota enforcement middleware (`src/ee/billing/quota-guard.ts`), WebCrypto HMAC-SHA512 NOWPayments IPN webhook verifier (`src/ee/billing/nowpayments-ipn.ts`), BYOK vs Managed LLM Pool router (`src/ee/billing/key-mode-router.ts`), and secret-stripping SHA-256 Local-to-Cloud sync bridge (`src/ee/sync/local-to-cloud-sync.ts`), verified by `src/ee/__tests__/saas-billing-and-sync.test.ts`.
+- **Phase 5 (Steps 21–25): Open-Source Growth Engine, CI Governance & Telemetry**:
+  - Added `.github/workflows/open-core-ci.yml`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/ISSUE_TEMPLATE/alpha-hypothesis.md`, `docs/open-core-saas-architecture.md`, and privacy-first opt-in conversion funnel tracker `src/ee/telemetry/conversion-funnel.ts` (`src/ee/__tests__/conversion-funnel.test.ts`).
+
 ### Unified v62 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-17
 - **Pillar 1: Corwin & Schultz (2012) High-Low Bid-Ask Spread & Volatility Engine** (`src/tree/quantlib/microstructure/`):
   - Academic foundation: Shane A. Corwin and Paul Schultz (2012), *"A Simple Way to Estimate Bid-Ask Spreads from Daily High and Low Prices"*, The Journal of Finance, 67(2), 719–760.

@@ -3,6 +3,12 @@ node_modules/
 .wrangler/
 .orchestrate/
 .agents/
+.claude/
+.agentkit/
+GEMINI.md
+HARNESS.md
+scripts/hooks/
+scripts/mcp_server.py
 tsconfig.tsbuildinfo
 .dev.vars
 .env

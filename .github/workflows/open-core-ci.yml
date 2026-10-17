@@ -1,0 +1,41 @@
+name: CashClaw Open-Core & ADR-001 Governance CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  open-core-governance:
+    name: Open-Core Boundary, Secret Hygiene & ADR-001 Paper-Only Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Verify zero .claude / .agentkit / .env tracked in git
+        run: |
+          TRACKED_LEAKS=$(git ls-files | grep -E '^(\.claude/|\.agentkit/|\.mekong/|\.env($|\.))' | grep -v '\.env\.example$' || true)
+          if [ -n "$TRACKED_LEAKS" ]; then
+            echo "ERROR: Local harness or secret files tracked in git:"
+            echo "$TRACKED_LEAKS"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript & ESLint zero-warning gate
+        run: |
+          npm run type-check
+          npm run lint
+
+      - name: Run Open-Core Boundary & SaaS Moat Test Suites
+        run: npx vitest run src/tree/__tests__/open-core-boundary.test.ts src/tree/cli/__tests__/paper-cli-report.test.ts src/ee/__tests__/
