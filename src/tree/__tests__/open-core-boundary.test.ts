@@ -31,12 +31,13 @@ describe('Phase 1 (Steps 1-5): Open-Core Apache-2.0 & EE Commercial Boundary', (
     expect(npmignore).toContain('src/ee/');
   });
 
-  it('Step 2, 4, 5: Dual-license, trademark, security, and contributing docs exist', () => {
+  it('Step 2, 4, 5: Dual-license, trademark, security, contributing, and code-of-conduct docs exist', () => {
     const license = fs.readFileSync(path.join(REPO_ROOT, 'LICENSE'), 'utf8');
     const eeLicense = fs.readFileSync(path.join(REPO_ROOT, 'src/ee/LICENSE-COMMERCIAL.md'), 'utf8');
     const trademark = fs.readFileSync(path.join(REPO_ROOT, 'TRADEMARK.md'), 'utf8');
     const security = fs.readFileSync(path.join(REPO_ROOT, 'SECURITY.md'), 'utf8');
     const contributing = fs.readFileSync(path.join(REPO_ROOT, 'CONTRIBUTING.md'), 'utf8');
+    const coc = fs.readFileSync(path.join(REPO_ROOT, 'CODE_OF_CONDUCT.md'), 'utf8');
 
     expect(license).toContain('Apache License');
     expect(license).toContain('src/ee/');
@@ -44,6 +45,7 @@ describe('Phase 1 (Steps 1-5): Open-Core Apache-2.0 & EE Commercial Boundary', (
     expect(trademark).toContain('CashClaw');
     expect(security).toContain('PAPER/BACKTEST ONLY');
     expect(contributing).toContain('200 LOC');
+    expect(coc).toContain('Contributor Covenant');
   });
 
   it('Step 3: Pure Apache-2.0 layers (src/tree and src/land) never import from src/ee', () => {

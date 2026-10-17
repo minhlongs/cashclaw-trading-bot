@@ -1,7 +1,7 @@
 ---
 title: "Open-Core Public GitHub and Cloud SaaS 25-Step Restructuring"
 description: "Transform CashClaw (trade-bot) into an Apache-2.0 Open-Core Public GitHub project with a Proprietary Cloud SaaS layer (src/ee/) for recurring revenue."
-status: pending
+status: completed
 priority: P1
 effort: "5d"
 tags: [open-core, saas, apache-2.0, enterprise-edition, billing, quantlib]
@@ -32,17 +32,17 @@ Restructure CashClaw (`trade-bot`) across 5 phases (25 concrete steps) into an *
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | [Phase 1: IP Sanitization & Licensing Boundary (Steps 1–5)](./phase-01-start.md) | Pending |
-| 2 | [Phase 2: Modular Package Extraction and CLI Experience (Steps 6–10)](./phase-02-modular-package-extraction-and-cli-experience.md) | Pending |
-| 3 | [Phase 3: SaaS Value Moat and Cloud-Only Architecture (Steps 11–15)](./phase-03-saas-value-moat-and-cloud-only-architecture.md) | Pending |
-| 4 | [Phase 4: SaaS Billing Quotas and Conversion Funnel (Steps 16–20)](./phase-04-saas-billing-quotas-and-conversion-funnel.md) | Pending |
-| 5 | [Phase 5: Open-Source Growth Engine and CI Governance (Steps 21–25)](./phase-05-open-source-growth-engine-and-ci-governance.md) | Pending |
+| 1 | [Phase 1: IP Sanitization & Licensing Boundary (Steps 1–5)](./phase-01-start.md) | Completed (100%) |
+| 2 | [Phase 2: Modular Package Extraction and CLI Experience (Steps 6–10)](./phase-02-modular-package-extraction-and-cli-experience.md) | Completed (100%) |
+| 3 | [Phase 3: SaaS Value Moat and Cloud-Only Architecture (Steps 11–15)](./phase-03-saas-value-moat-and-cloud-only-architecture.md) | Completed (100%) |
+| 4 | [Phase 4: SaaS Billing Quotas and Conversion Funnel (Steps 16–20)](./phase-04-saas-billing-quotas-and-conversion-funnel.md) | Completed (100%) |
+| 5 | [Phase 5: Open-Source Growth Engine and CI Governance (Steps 21–25)](./phase-05-open-source-growth-engine-and-ci-governance.md) | Completed (100%) |
 
 ## Success Criteria
 
-- [ ] `LICENSE` (Apache-2.0) and `src/ee/LICENSE-COMMERCIAL.md` committed; `.gitignore` and `.npmignore` exclude `.claude/`, `.agentkit/`, `.wrangler/`, and secrets.
-- [ ] Pure OSS core (`src/tree/**`) has zero imports from `src/ee/**` enforced by automated architectural test.
-- [ ] `src/ee/` implements 4-tier SaaS entitlement checks (`BASIC | PREMIUM | ENTERPRISE | MASTER`), NOWPayments IPN webhook verification, and Local-to-Cloud bot sync.
-- [ ] All existing 5,903+ tests plus new Open-Core/SaaS boundary tests pass with 0 TypeScript/ESLint errors and < 200 LOC per file.
+- [x] `LICENSE` (Apache-2.0) and `src/ee/LICENSE-COMMERCIAL.md` committed; `.gitignore` and `.npmignore` exclude `.claude/`, `.agentkit/`, `.wrangler/`, and secrets.
+- [x] Pure OSS core (`src/tree/**`) has zero imports from `src/ee/**` enforced by automated architectural test.
+- [x] `src/ee/` implements 4-tier SaaS entitlement checks (`BASIC | PREMIUM | ENTERPRISE | MASTER`), NOWPayments IPN webhook verification, and Local-to-Cloud bot sync.
+- [x] All existing 5,903+ tests plus new Open-Core/SaaS boundary tests pass with 0 TypeScript/ESLint errors and < 200 LOC per file.
 
 <!-- slug: open-core-public-github-and-cloud-saas-25-step-restructuring -->

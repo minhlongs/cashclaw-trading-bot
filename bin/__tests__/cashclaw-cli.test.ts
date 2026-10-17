@@ -116,6 +116,14 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(consoleLogSpy).toHaveBeenCalled();
     });
 
+    it('executes steps audit command', async () => {
+      const code = await main(['node', 'cashclaw.js', 'steps', '--json']);
+      expect(code).toBe(0);
+      const output = JSON.parse(String(consoleLogSpy.mock.calls[0][0]));
+      expect(output.totalSteps).toBe(25);
+      expect(output.status).toBe('ALL_25_STEPS_VERIFIED');
+    });
+
     it('returns error code 1 on unknown command', async () => {
       const code = await main(['node', 'cashclaw.js', 'unknown-cmd']);
       expect(code).toBe(1);

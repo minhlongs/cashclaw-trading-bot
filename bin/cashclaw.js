@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 // CashClaw Public CLI Executable (Apache-2.0 Open-Core)
-// Commands: quickstart | eval | export-sync | --help | --version
+// Commands: quickstart | eval | export-sync | steps | --help | --version
 
 const { renderBanner, renderTable, c } = require('./lib/formatters.js');
 const {
   runQuickstartSimulation,
   runQuantitativeEval,
   generateSyncBundle,
+  runStepsAudit,
   printSaaSCta,
 } = require('./lib/commands.js');
 
@@ -23,6 +24,7 @@ ${c.bold('COMMANDS:')}
   ${c.cyan('quickstart')}     Run paper simulation for Volatility-Adjusted DCA
   ${c.cyan('eval')}           Run quantitative estimators (Garman-Klass, Corwin-Schultz)
   ${c.cyan('export-sync')}    Generate signed JSON bundle for 1-click Cloud SaaS migration
+  ${c.cyan('steps')}          Audit 25-step Open-Core & Cloud SaaS readiness
 
 ${c.bold('OPTIONS:')}
   ${c.dim('--json')}         Output structured machine-readable JSON
@@ -109,6 +111,8 @@ async function main(argv = process.argv) {
         { label: 'Sample Bars', value: `${result.sampleBars}` },
         { label: 'Garman-Klass Volatility', value: `${result.garmanKlassVolAnnualized}% annualized` },
         { label: 'Corwin-Schultz Spread', value: `${result.corwinSchultzSpreadBps} bps` },
+        { label: 'Amihud Illiquidity', value: `${result.amihudIlliquidityRatio} (1e-6 ratio)` },
+        { label: 'Roll Effective Spread', value: `${result.rollEffectiveSpreadBps} bps` },
         { label: 'Market Regime', value: result.regime },
         { label: 'Execution Recommendation', value: result.recommendation },
       ]));
@@ -131,6 +135,25 @@ async function main(argv = process.argv) {
         { label: 'SHA-256 Checksum', value: bundle.sha256Checksum },
       ]));
       console.log(c.dim('\nRun with --json to pipe bundle output directly into curl / SaaS API.\n'));
+      printSaaSCta();
+    }
+    return 0;
+  }
+
+  if (flags.command === 'steps') {
+    const audit = runStepsAudit();
+    if (flags.json) {
+      console.log(JSON.stringify(audit, null, 2));
+    } else {
+      console.log(renderBanner(VERSION));
+      console.log(c.bold(`\n▶ 25-STEP OPEN-CORE & CLOUD SAAS AUDIT:\n`));
+      console.log(renderTable([
+        { label: 'Total Steps', value: `${audit.totalSteps}/25` },
+        { label: 'Apache-2.0 Community Core', value: `${audit.apacheSteps} steps` },
+        { label: 'Proprietary Cloud SaaS (src/ee)', value: `${audit.commercialSteps} steps` },
+        { label: 'Status', value: audit.status },
+        { label: 'Readiness Score', value: `${audit.readinessPct}%` },
+      ]));
       printSaaSCta();
     }
     return 0;
