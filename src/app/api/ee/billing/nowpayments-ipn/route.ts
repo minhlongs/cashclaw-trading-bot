@@ -4,10 +4,19 @@ import {
   canonicalizeNowPaymentsJson,
   computeNowPaymentsHmacSha512,
 } from '@/ee/billing/nowpayments-ipn';
+import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
 
-// In-memory processed payment ID set for idempotent replay protection
-const processedPayments = new Set<string>();
 const MAX_TIMESTAMP_AGE_SECONDS = 300;
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const workspaceId = url.searchParams.get('workspaceId') || 'default';
+  const entitlement = await defaultSaasEntitlementStore.getWorkspaceEntitlement(workspaceId);
+  return NextResponse.json({
+    ok: true,
+    entitlement,
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -61,10 +70,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const { payment_id, payment_status, target_tier, workspace_id } = validated.data;
+    const {
+      payment_id,
+      payment_status,
+      target_tier,
+      workspace_id,
+      pay_amount,
+      pay_currency,
+    } = validated.data;
 
-    // Idempotency check
-    if (processedPayments.has(payment_id)) {
+    // Idempotency check against D1 + in-memory store
+    if (await defaultSaasEntitlementStore.hasProcessedPayment(payment_id)) {
       return NextResponse.json({
         ok: true,
         activated: false,
@@ -76,9 +92,14 @@ export async function POST(req: Request) {
     }
 
     const isActivated = payment_status === 'finished' || payment_status === 'confirmed';
-    if (isActivated) {
-      processedPayments.add(payment_id);
-    }
+    const entitlement = await defaultSaasEntitlementStore.recordIpnAndUpgradeTier({
+      paymentId: payment_id,
+      workspaceId: workspace_id,
+      targetTier: target_tier,
+      paymentStatus: payment_status,
+      payAmount: pay_amount,
+      payCurrency: pay_currency,
+    });
 
     return NextResponse.json({
       ok: true,
@@ -88,6 +109,7 @@ export async function POST(req: Request) {
       status: payment_status,
       targetTier: target_tier,
       workspaceId: workspace_id,
+      entitlement,
     });
   } catch {
     return NextResponse.json(

@@ -1,23 +1,41 @@
 // Cloudflare Workers Scheduled Cron Handler — CashClaw Trading Bot Platform
 import { getBotManager } from './tree/bot';
+import { CloudSchedulerCoordinator } from './ee/scheduler/cloud-scheduler-coordinator';
 import type { WorkerEnv } from './worker-env';
 import type { ScheduledEvent } from './worker-types';
 import type { D1Database } from '@/lib/db/types';
 
+export const cronSchedulerCoordinator = new CloudSchedulerCoordinator();
+
 // CF Cron trigger — fires every 5 minutes per wrangler.jsonc [[triggers]]
 // Drains exchange request queues and logs outcome for observability.
 export async function scheduled(
-  _event: ScheduledEvent,
+  event: ScheduledEvent,
   env: WorkerEnv,
   _ctx?: ExecutionContext
 ): Promise<void> {
+  const { createLogger } = await import('@/lib/logger');
+  const log = createLogger('cron');
+
+  if (env.CLOUD_LEASE_ENABLED === 'true') {
+    const nowMs = event.scheduledTime || Date.now();
+    const leaseResult = cronSchedulerCoordinator.acquireTickLease({
+      botId: 'cron-queue-drainer',
+      workspaceId: 'global-cloud',
+      isolateId: env.ISOLATE_ID ?? 'worker-isolate-1',
+      nowMs,
+    });
+    if (!leaseResult.ok) {
+      log.warn(leaseResult.error, { action: 'cron-lease-skip' });
+      return;
+    }
+  }
+
   const manager = getBotManager();
   // BotManager reads D1 directly — no separate hydration phase needed.
   const report = await manager.drainQueues();
   const entries = Object.values(report);
   const total = entries.reduce((sum, e) => sum + e.processed + e.skipped + e.pending, 0);
-  const { createLogger } = await import('@/lib/logger');
-  const log = createLogger('cron');
   if (total > 0) {
     log.info(`drained ${total} across ${entries.length} exchange queues`, {
       processed: entries.reduce((s, e) => s + e.processed, 0),

@@ -6,11 +6,12 @@ import {
   debitDeliberationCredits,
   type DeliberationModelTier,
 } from '@/ee/deliberation-cloud/llm-credit-ledger';
+import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
 import { SaasTierSchema } from '@/ee/tenancy/tenant-policy';
 
 const QuerySchema = z.object({
   workspaceId: z.string().min(1),
-  tier: SaasTierSchema.default('BASIC'),
+  tier: SaasTierSchema.optional(),
 });
 
 const DebitSchema = z.object({
@@ -36,7 +37,10 @@ export async function GET(req: Request) {
       );
     }
 
-    const account = createCreditAccount(parsed.data.workspaceId, parsed.data.tier);
+    const resolvedTier =
+      parsed.data.tier ??
+      (await defaultSaasEntitlementStore.getWorkspaceTier(parsed.data.workspaceId));
+    const account = createCreditAccount(parsed.data.workspaceId, resolvedTier);
     return NextResponse.json({
       ok: true,
       account,

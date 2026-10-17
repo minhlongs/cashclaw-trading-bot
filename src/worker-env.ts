@@ -9,6 +9,8 @@ export interface WorkerEnv {
   ALLOWED_ORIGINS?: string;
   MICRO_INGEST_ENABLED?: string;
   MICRO_INGEST_SYMBOLS?: string;
+  CLOUD_LEASE_ENABLED?: string;
+  ISOLATE_ID?: string;
 }
 
 export type Env = WorkerEnv;

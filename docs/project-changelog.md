@@ -2,6 +2,22 @@
 
 ## v1 Paper-Trading Platform
 
+### 25-Step Open-Core & Cloud SaaS Runtime Seam Closure (G1–G5) — 2026-10-17
+- **Seam G1 (`src/app/api/bots/route.ts`)**:
+  - Replaced hardcoded `currentBotCount: 0` with live active bot count queried from `botListHandler()` (`status === 'RUNNING'`).
+  - Resolved workspace tier from `x-cashclaw-tier` or `defaultSaasEntitlementStore.getWorkspaceTier()` (`x-cashclaw-workspace`) prior to `enforceWorkspaceQuota()`.
+- **Seam G2 (`src/ee/billing/saas-entitlement-store.ts`, `src/app/api/ee/billing/nowpayments-ipn/route.ts`, `src/app/api/ee/credits/route.ts`)**:
+  - Implemented dual-mode Cloudflare D1 + in-memory `SaasEntitlementStore` binding Migration `0013` tables (`saas_workspace_entitlements`, `saas_nowpayments_ipn_events`) to NOWPayments IPN webhook activation and `GET /api/ee/credits` tier resolution.
+- **Seam G3 (`src/app/api/ee/sync/route.ts`)**:
+  - Enforced `enforceWorkspaceQuota()` on `POST /api/ee/sync` before `verifyAndImportCloudSyncBundle()` so CLI-to-Cloud imports honor tier running-bot limits.
+- **Seam G4 (`src/app/api/ee/alpha-feed/route.ts`, `src/app/api/ee/alerts/route.ts`)**:
+  - Added `GET /api/ee/alpha-feed` returning tier-filtered curated Alpha Zoo IC/IR records (`PAPER_ADVISORY_ONLY`).
+  - Added `POST /api/ee/alerts` integrating `CloudAlertDeduplicator` cooldown windows and WebCrypto HMAC-SHA256 `signAlertWebhookPayload`.
+- **Seam G5 (`src/worker-cron.ts`, `src/worker-env.ts`)**:
+  - Wired `cronSchedulerCoordinator` (`CloudSchedulerCoordinator`) into Worker `scheduled()` when `CLOUD_LEASE_ENABLED === 'true'` to prevent duplicate cron tick execution across isolates.
+- **Verification**:
+  - Added `src/ee/__tests__/runtime-seams-e2e.test.ts` (198 LOC) testing all closed runtime seams end-to-end; 12 test files / 61 tests passing, 0 `:any`, 0 ESLint warnings, `./bin/cashclaw.js steps` reporting `25/25 ALL_25_STEPS_VERIFIED`.
+
 ### 25-Step Open-Core Public GitHub & Cloud SaaS Restructuring (Phases 1–5) — 2026-10-17
 - **Phase 1 (Steps 1–5): Repository Hygiene, Dual-Layer Licensing & Boundary Enforcement**:
   - Added root `LICENSE` (`Apache-2.0`), `src/ee/LICENSE-COMMERCIAL.md` (CashClaw Enterprise Edition Commercial License), `TRADEMARK.md`, `SECURITY.md`, `CONTRIBUTING.md`, and `.npmignore`.

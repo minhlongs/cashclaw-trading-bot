@@ -1,39 +1,54 @@
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { getCloudAlphaFeedForTier } from '@/ee/alpha-cloud/alpha-feed-service';
-import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
-import { SaasTierSchema } from '@/ee/tenancy/tenant-policy';
+// Step 14 HTTP Endpoint: GET /api/ee/alpha-feed
+// Returns pre-computed IC/IR survival leaderboards filtered by workspace SaaS tier.
 
-const QuerySchema = z.object({
-  tier: SaasTierSchema.default('BASIC'),
-});
+import { NextResponse } from 'next/server';
+import { getCloudAlphaFeedForTier } from '@/ee/alpha-cloud/alpha-feed-service';
+import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
+import { SaasTierSchema, type SaasTier } from '@/ee/tenancy/tenant-policy';
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const parsed = QuerySchema.safeParse({
-      tier: url.searchParams.get('tier') ?? undefined,
-    });
+    const queryTier = url.searchParams.get('tier')?.toUpperCase();
+    const headerTier = req.headers.get('x-cashclaw-tier')?.toUpperCase();
+    const workspaceId =
+      url.searchParams.get('workspaceId') ?? req.headers.get('x-cashclaw-workspace');
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { ok: false, error: 'Invalid tier parameter' },
-        { status: 400 },
-      );
+    const rawTier = queryTier ?? headerTier;
+    if (rawTier) {
+      const parsed = SaasTierSchema.safeParse(rawTier);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { ok: false, error: `Invalid SaaS tier: ${rawTier}` },
+          { status: 400 },
+        );
+      }
+      const items = getCloudAlphaFeedForTier(parsed.data);
+      return NextResponse.json({
+        ok: true,
+        tier: parsed.data,
+        safetyMode: 'PAPER_ADVISORY_ONLY',
+        count: items.length,
+        items,
+      });
     }
 
-    const entitlements = getEntitlementsForTier(parsed.data.tier);
-    const feed = getCloudAlphaFeedForTier(parsed.data.tier);
+    const resolvedTier: SaasTier = workspaceId
+      ? await defaultSaasEntitlementStore.getWorkspaceTier(workspaceId)
+      : 'BASIC';
+    const items = getCloudAlphaFeedForTier(resolvedTier);
+
     return NextResponse.json({
       ok: true,
-      tier: parsed.data.tier,
-      fullFeedAccess: entitlements.cloudAlphaFeedAccess,
-      itemCount: feed.length,
-      feed,
+      tier: resolvedTier,
+      workspaceId: workspaceId ?? 'default',
+      safetyMode: 'PAPER_ADVISORY_ONLY',
+      count: items.length,
+      items,
     });
   } catch {
     return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
+      { ok: false, error: 'Failed to load Cloud Alpha Feed' },
       { status: 500 },
     );
   }

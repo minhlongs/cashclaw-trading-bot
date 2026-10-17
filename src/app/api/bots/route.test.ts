@@ -71,5 +71,43 @@ describe('/api/bots route', () => {
       const res = await POST(req);
       expect(res.status).toBe(400);
     });
+
+    it('returns 403 QUOTA_EXCEEDED on BASIC tier when 1 bot is already running, and allows on PREMIUM', async () => {
+      mockCheckRateLimit.mockReturnValue({ allowed: true });
+      mockBotListHandler.mockResolvedValue({ ok: true, data: [{ id: 'existing-bot-1' }] });
+      mockBotCreateHandler.mockResolvedValue({ ok: true, id: 'bot-2' });
+
+      const basicReq = new Request('http://localhost/api/bots', {
+        method: 'POST',
+        headers: { 'x-cashclaw-tier': 'BASIC' },
+        body: JSON.stringify({
+          id: 'bot-2',
+          name: 'Second Bot',
+          strategy: 'grid',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          capital: 1000,
+        }),
+      });
+      const basicRes = await POST(basicReq);
+      expect(basicRes.status).toBe(403);
+      const basicBody = (await basicRes.json()) as { ok: boolean; error: string };
+      expect(basicBody.error).toContain('QUOTA_EXCEEDED');
+
+      const premiumReq = new Request('http://localhost/api/bots', {
+        method: 'POST',
+        headers: { 'x-cashclaw-tier': 'PREMIUM' },
+        body: JSON.stringify({
+          id: 'bot-2',
+          name: 'Second Bot',
+          strategy: 'grid',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          capital: 1000,
+        }),
+      });
+      const premiumRes = await POST(premiumReq);
+      expect(premiumRes.status).toBe(200);
+    });
   });
 });

@@ -1,72 +1,81 @@
+// Step 15 HTTP Endpoint: POST /api/ee/alerts
+// Validates CloudAlertEvent, suppresses duplicates within cooldown, and signs
+// webhook payloads with WebCrypto HMAC-SHA256.
+
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
-  signAlertWebhookPayload,
   CloudAlertDeduplicator,
-  type AlertChannel,
+  signAlertWebhookPayload,
+  type CloudAlertEvent,
+  type SignedWebhookEnvelope,
 } from '@/ee/alerts/cloud-alert-dispatcher';
 
-const AlertRequestSchema = z.object({
+const CloudAlertEventSchema = z.object({
   eventId: z.string().min(1),
   workspaceId: z.string().min(1),
   botId: z.string().min(1),
   channel: z.enum(['TELEGRAM', 'WEBHOOK', 'EMAIL']),
   message: z.string().min(1),
-  timestampMs: z.number().int().positive().default(() => Date.now()),
-  signingSecret: z.string().min(8).optional(),
+  timestampMs: z.number().int().positive(),
+  cooldownMs: z.number().int().positive().optional(),
 });
 
-const globalAlertDedup = new CloudAlertDeduplicator();
+export const defaultAlertDeduplicator = new CloudAlertDeduplicator();
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const parsed = AlertRequestSchema.safeParse(body);
-
+    const raw = await req.json().catch(() => ({}));
+    const parsed = CloudAlertEventSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(
-        { ok: false, error: 'Invalid alert payload', details: parsed.error.format() },
+        { ok: false, error: parsed.error.issues.map((i) => i.message).join(', ') },
         { status: 400 },
       );
     }
 
-    const event = {
+    const event: CloudAlertEvent = {
       eventId: parsed.data.eventId,
       workspaceId: parsed.data.workspaceId,
       botId: parsed.data.botId,
-      channel: parsed.data.channel as AlertChannel,
+      channel: parsed.data.channel,
       message: parsed.data.message,
       timestampMs: parsed.data.timestampMs,
     };
 
-    const allowed = globalAlertDedup.shouldDispatch(event, 60_000);
-    if (!allowed) {
+    const shouldSend = defaultAlertDeduplicator.shouldDispatch(
+      event,
+      parsed.data.cooldownMs ?? 60_000,
+    );
+
+    if (!shouldSend) {
       return NextResponse.json({
         ok: true,
-        suppressed: true,
-        reason: 'Duplicate alert suppressed within deduplication window',
+        dispatched: false,
+        deduplicated: true,
         eventId: event.eventId,
       });
     }
 
-    let signatureHex: string | null = null;
-    if (parsed.data.signingSecret) {
-      signatureHex = await signAlertWebhookPayload(
-        JSON.stringify(event),
-        parsed.data.signingSecret,
-      );
-    }
+    const secret = process.env.CASHCLAW_ALERT_WEBHOOK_SECRET || 'default_alert_secret';
+    const payloadJson = JSON.stringify(event);
+    const signatureHex = await signAlertWebhookPayload(payloadJson, secret);
+
+    const envelope: SignedWebhookEnvelope = {
+      eventId: event.eventId,
+      signatureHex,
+      payloadJson,
+    };
 
     return NextResponse.json({
       ok: true,
-      suppressed: false,
-      eventId: event.eventId,
-      channel: event.channel,
-      signatureHex,
+      dispatched: true,
+      deduplicated: false,
+      envelope,
     });
   } catch {
     return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
+      { ok: false, error: 'Failed to dispatch cloud alert' },
       { status: 500 },
     );
   }

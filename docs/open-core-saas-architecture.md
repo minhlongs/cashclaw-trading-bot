@@ -48,3 +48,16 @@ CashClaw áp dụng mô hình **Open-Core (giống GitLab / Supabase / PostHog)*
 1. **Step 1 (Local CLI Discovery):** Developer runs a local paper simulation (`generateCliPaperReport`).
 2. **Step 2 (Sanitized Bundle Export):** `createLocalToCloudSyncBundle` strips all local secrets (`apiKey`, `secret`, `token`, `password`, `private`) and signs the paper strategy config with a WebCrypto SHA-256 checksum (`safetyMode: 'PAPER_ONLY'`).
 3. **Step 3 (Cloud SaaS Import & Upgrade):** `verifyAndImportCloudSyncBundle` verifies the SHA-256 hash and `PAPER_ONLY` invariant on CashClaw Cloud, hydrating the strategy into a 24/7 Cloudflare Worker bot slot.
+
+---
+
+## 5. End-to-End Cloud SaaS Runtime Seams (G1–G5)
+
+| Seam | Endpoint / Module | Runtime Integration (VI / EN) |
+|---|---|---|
+| **G1** | `POST /api/bots` (`src/app/api/bots/route.ts`) | Truy vấn số lượng bot thực tế qua `botListHandler()` và phân giải gói thuê bao từ `defaultSaasEntitlementStore` (`x-cashclaw-workspace`) trước khi kiểm tra hạn mức `enforceWorkspaceQuota()`. |
+| **G2** | `SaasEntitlementStore` (`src/ee/billing/saas-entitlement-store.ts`) | Lưu trữ bền vững trạng thái thuê bao (`saas_workspace_entitlements`) và chống phát lại webhook NOWPayments IPN (`saas_nowpayments_ipn_events` — Migration `0013`) trên Cloudflare D1 + bộ nhớ đệm. Đồng bộ tức thì với `GET /api/ee/credits`. |
+| **G3** | `POST /api/ee/sync` (`src/app/api/ee/sync/route.ts`) | Kiểm tra hạn mức bot đang chạy (`enforceWorkspaceQuota`) trước khi cho phép nhập gói cấu hình CLI (`verifyAndImportCloudSyncBundle`). |
+| **G4** | `GET /api/ee/alpha-feed` & `POST /api/ee/alerts` | Cung cấp REST API cho dòng tín hiệu Alpha phân tầng (`PAPER_ADVISORY_ONLY`) và bộ phát cảnh báo đa kênh có chữ ký HMAC-SHA256 kèm khử trùng lặp theo chu kỳ (`CloudAlertDeduplicator`). |
+| **G5** | `scheduled()` (`src/worker-cron.ts`) | Tích hợp `cronSchedulerCoordinator` (`CloudSchedulerCoordinator`) để khóa lease theo từng isolate (`CLOUD_LEASE_ENABLED='true'`), ngăn chặn chạy trùng cron tick giữa các Cloudflare Workers isolates. |
+
