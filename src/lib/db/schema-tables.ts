@@ -1,16 +1,6 @@
-/**
- * D1 Database Schema — Table DDL Definitions
- */
-
-import {
-  CREATE_AUDIT_LOG,
-  CREATE_AUDIT_LEDGER,
-  CREATE_BACKTEST_RESULTS,
-  CREATE_CIRCUIT_BREAKER,
-} from './schema-tables-aux';
+import { CREATE_AUDIT_LOG, CREATE_AUDIT_LEDGER, CREATE_BACKTEST_RESULTS, CREATE_CIRCUIT_BREAKER } from './schema-tables-aux';
 
 export const SQL_TABLES = {
-  // Users
   CREATE_USERS: `
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,

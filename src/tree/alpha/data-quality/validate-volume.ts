@@ -27,9 +27,7 @@ function checkBasicVolume(candle: Candle, index: number, allowZero: boolean): Qu
 }
 
 function checkIsolatedZero(candles: readonly Candle[], index: number): QualityViolation | null {
-  if (index <= 0 || index >= candles.length - 1) {
-    return null;
-  }
+  if (index <= 0 || index >= candles.length - 1) return null;
   const curr = candles[index];
   const prev = candles[index - 1];
   const next = candles[index + 1];
@@ -40,26 +38,12 @@ function checkIsolatedZero(candles: readonly Candle[], index: number): QualityVi
       message: `Suspicious isolated zero volume at index ${index} surrounded by non-zero volume (${prev.volume}, ${next.volume})`,
       index,
       timestamp: curr.timestamp,
-      details: {
-        index,
-        timestamp: curr.timestamp,
-        prevVolume: prev.volume,
-        currVolume: curr.volume,
-        nextVolume: next.volume,
-        reason: 'isolated_zero_volume',
-      },
+      details: { index, timestamp: curr.timestamp, prevVolume: prev.volume, currVolume: curr.volume, nextVolume: next.volume, reason: 'isolated_zero_volume' },
     };
   }
   return null;
 }
 
-/**
- * Validates volume data:
- * 1. Volume must be non-negative (>= 0) and finite.
- * 2. Optional disallowance of zero volume.
- * 3. Optional detection of suspicious isolated zero-volume bars.
- * 4. Optional threshold on consecutive zero-volume bars.
- */
 export function validateVolume(
   candles: readonly Candle[],
   config?: VolumeConfig,

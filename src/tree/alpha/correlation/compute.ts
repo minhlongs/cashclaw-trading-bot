@@ -38,15 +38,10 @@ export function computePairCorrelation(
   candles2: readonly IndicatorCandle[],
   lookback: number,
 ): number {
-  const s1 = closes(candles1).slice(-lookback);
-  const s2 = closes(candles2).slice(-lookback);
-  return pearsonCorrelation(s1, s2);
+  return pearsonCorrelation(closes(candles1).slice(-lookback), closes(candles2).slice(-lookback));
 }
 
-/**
- * Rolling correlation series over two candle arrays.
- * Each output element is the Pearson correlation of the preceding `window` closes.
- */
+/** Rolling correlation series over two candle arrays. */
 export function computeRollingCorrelation(
   candles1: readonly IndicatorCandle[],
   candles2: readonly IndicatorCandle[],
@@ -57,11 +52,8 @@ export function computeRollingCorrelation(
   const s2 = closes(candles2).slice(-lookback);
   const minLen = Math.min(s1.length, s2.length);
   const result: number[] = [];
-
   for (let i = window; i <= minLen; i++) {
-    const slice1 = s1.slice(i - window, i);
-    const slice2 = s2.slice(i - window, i);
-    result.push(pearsonCorrelation(slice1, slice2));
+    result.push(pearsonCorrelation(s1.slice(i - window, i), s2.slice(i - window, i)));
   }
   return result;
 }

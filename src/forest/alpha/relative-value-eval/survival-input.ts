@@ -33,29 +33,16 @@ export interface SurvivalAssemblyConfig {
   readonly maxPbo: number;
 }
 
-/**
- * Entry-signal series aligned with `strategyReturns`: 1 when the period's
- * decision held a position, else 0. The permutation test shuffles this
- * series to break the return<->signal alignment.
- */
 function entrySignals(periods: readonly PairPeriodRecord[]): number[] {
   return periods.map((p) => (p.position === 'flat' ? 0 : 1));
 }
 
-/**
- * Build the random-entry baseline report over candles covering the IDENTICAL
- * stitched OOS span (Step 8 benchmark wiring supplies the slices).
- */
-function randomEntryBaseline(
-  candles: readonly Candle[],
-  options: RVAdapterOptions,
-): EvaluationReport {
-  const stressMode = options.stressMode ?? 'conservative';
+function randomEntryBaseline(candles: readonly Candle[], options: RVAdapterOptions): EvaluationReport {
   return runBaseline([...candles], {
     strategy: 'random_entry',
     symbol: options.symbol,
     timeframe: options.timeframe,
-    stressMode,
+    stressMode: options.stressMode ?? 'conservative',
     feePct: 0.0008,
     slipPct: 0.0003,
   });

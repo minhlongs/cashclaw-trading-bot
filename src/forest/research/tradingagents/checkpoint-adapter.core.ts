@@ -89,19 +89,10 @@ export async function createCheckpoint(
 
   const resultHash = await computeDebateResultHash(debateState);
   const checkpoint: DebateCheckpoint = {
-    researchGoalId,
-    proposalId,
-    debateState,
-    modelProvenance,
-    toolProvenance,
-    timestamp,
-    resultHash,
+    researchGoalId, proposalId, debateState, modelProvenance, toolProvenance, timestamp, resultHash,
   };
 
   const validated = await serializeCheckpoint(checkpoint);
-  if (!validated.ok) {
-    return { ok: false, reasons: validated.reasons };
-  }
-
+  if (!validated.ok) return { ok: false, reasons: validated.reasons };
   return { ok: true, value: checkpoint };
 }

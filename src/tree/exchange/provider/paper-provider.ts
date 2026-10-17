@@ -83,24 +83,12 @@ export class PaperExchangeProvider implements ExchangeProvider {
     };
   }
 
-  async fetchTicker(exchangeId: ExchangeId, symbol: string): Promise<Ticker> {
-    return apiFetchTicker(this.adapter, this.breaker, exchangeId, symbol, this.rec);
-  }
-  async fetchOrderBook(exchangeId: ExchangeId, symbol: string, depth = 20): Promise<OrderBook> {
-    return apiFetchOrderBook(this.adapter, this.breaker, exchangeId, symbol, depth, this.rec);
-  }
-  async fetchBalances(exchangeId: ExchangeId): Promise<Balance[]> {
-    return apiFetchBalances(this.adapter, this.breaker, exchangeId, this.rec);
-  }
-  async placeOrder(exchangeId: ExchangeId, req: OrderRequest): Promise<OrderResult> {
-    return apiPlaceOrder(this.adapter, this.breaker, exchangeId, req, this.rec);
-  }
-  async cancelOrder(exchangeId: ExchangeId, orderId: string, symbol: string): Promise<boolean> {
-    return apiCancelOrder(this.adapter, this.breaker, orderId, symbol, this.rec);
-  }
-  async fetchOrder(exchangeId: ExchangeId, orderId: string, _symbol: string): Promise<OrderResult> {
-    return apiFetchOrder(this.adapter, this.breaker, orderId, this.rec);
-  }
+  async fetchTicker(exchangeId: ExchangeId, symbol: string): Promise<Ticker> { return apiFetchTicker(this.adapter, this.breaker, exchangeId, symbol, this.rec); }
+  async fetchOrderBook(exchangeId: ExchangeId, symbol: string, depth = 20): Promise<OrderBook> { return apiFetchOrderBook(this.adapter, this.breaker, exchangeId, symbol, depth, this.rec); }
+  async fetchBalances(exchangeId: ExchangeId): Promise<Balance[]> { return apiFetchBalances(this.adapter, this.breaker, exchangeId, this.rec); }
+  async placeOrder(exchangeId: ExchangeId, req: OrderRequest): Promise<OrderResult> { return apiPlaceOrder(this.adapter, this.breaker, exchangeId, req, this.rec); }
+  async cancelOrder(exchangeId: ExchangeId, orderId: string, symbol: string): Promise<boolean> { return apiCancelOrder(this.adapter, this.breaker, orderId, symbol, this.rec); }
+  async fetchOrder(exchangeId: ExchangeId, orderId: string, _symbol: string): Promise<OrderResult> { return apiFetchOrder(this.adapter, this.breaker, orderId, this.rec); }
 
   isCircuitOpen(): boolean { return this.breaker.getState() === 'open'; }
   getCircuitBreaker(): CircuitBreaker { return this.breaker; }

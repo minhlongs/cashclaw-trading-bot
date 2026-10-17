@@ -48,7 +48,6 @@ describe('quantFunctions.grid — invalid inputs', () => {
 
 describe('quantFunctions.grid — buy signal', () => {
   it('emits buy when price is at the lower grid level (exact match)', () => {
-    // anchor=50000, spacing=0.02 → first lower level = 50000 * 0.98 = 49000
     const result = quantFunctions.grid(
       { ...ctx, lastPrice: 49000 },
       { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
@@ -59,11 +58,9 @@ describe('quantFunctions.grid — buy signal', () => {
   });
 
   it('emits buy when price is within tolerance of lower level', () => {
-    // distToLower ≈ 0.002 which is < tolerance 0.005
-    const lowerLevel = 50000 * 0.98; // 49000
-    const slightlyAbove = lowerLevel * 1.002; // 49098
+    const lowerLevel = 50000 * 0.98;
     const result = quantFunctions.grid(
-      { ...ctx, lastPrice: slightlyAbove },
+      { ...ctx, lastPrice: lowerLevel * 1.002 },
       { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
     );
     expect(result.signal).toBe('buy');
@@ -72,10 +69,8 @@ describe('quantFunctions.grid — buy signal', () => {
   });
 
   it('buy confidence is clamped to [0,1]', () => {
-    // exact hit → confidence should be 1.0
-    const lowerLevel = 50000 * 0.98;
     const result = quantFunctions.grid(
-      { ...ctx, lastPrice: lowerLevel },
+      { ...ctx, lastPrice: 50000 * 0.98 },
       { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.01 },
     );
     expect(result.signal).toBe('buy');
@@ -84,7 +79,6 @@ describe('quantFunctions.grid — buy signal', () => {
   });
 
   it('emits buy when price is near deeper lower grid level (level 2)', () => {
-    // anchor=50000, spacing=0.02, level 2 = 50000 * 0.96 = 48000
     const result = quantFunctions.grid(
       { ...ctx, lastPrice: 48000 },
       { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
@@ -96,7 +90,6 @@ describe('quantFunctions.grid — buy signal', () => {
 
 describe('quantFunctions.grid — sell signal', () => {
   it('emits sell when price is at the upper grid level (exact match)', () => {
-    // anchor=50000, spacing=0.02 → first upper level = 50000 * 1.02 = 51000
     const result = quantFunctions.grid(
       { ...ctx, lastPrice: 51000 },
       { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
@@ -108,16 +101,14 @@ describe('quantFunctions.grid — sell signal', () => {
 
   it('emits sell when price is within tolerance of upper level', () => {
     const upperLevel = 50000 * 1.02;
-    const slightlyBelow = upperLevel * 0.998;
     const result = quantFunctions.grid(
-      { ...ctx, lastPrice: slightlyBelow },
+      { ...ctx, lastPrice: upperLevel * 0.998 },
       { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
     );
     expect(result.signal).toBe('sell');
   });
 
   it('emits sell when price is near deeper upper grid level (level 2)', () => {
-    // anchor=50000, spacing=0.02, level 2 = 50000 * 1.04 = 52000
     const result = quantFunctions.grid(
       { ...ctx, lastPrice: 52000 },
       { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
@@ -127,9 +118,6 @@ describe('quantFunctions.grid — sell signal', () => {
   });
 
   it('emits sell when within tolerance of both levels but closer to upper level', () => {
-    // anchor=50000, spacing=0.02 (lower=49000, upper=51000)
-    // price=50400 -> distToLower = 1400/50400 ≈ 0.0277, distToUpper = 600/50400 ≈ 0.0119
-    // tolerance=0.03 -> both are <= tolerance, but distToLower > distToUpper
     const result = quantFunctions.grid(
       { ...ctx, lastPrice: 50400 },
       { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.03 },
@@ -140,7 +128,6 @@ describe('quantFunctions.grid — sell signal', () => {
 
 describe('quantFunctions.grid — hold signal', () => {
   it('emits hold when price is mid-grid (far from any level)', () => {
-    // at anchor (50000) with spacing=0.02, nearest level is 49000 or 51000 — both 1000 away = 2% = tolerance 0.005 not met
     const result = quantFunctions.grid(ctx, { anchor: 50000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 });
     expect(result.signal).toBe('hold');
     expect(result.confidence).toBe(0);
@@ -149,9 +136,7 @@ describe('quantFunctions.grid — hold signal', () => {
   });
 
   it('uses lastPrice as default anchor when anchor param is omitted', () => {
-    // With lastPrice as anchor, distance to nearest level = spacing (2%) >> default tolerance (0.5%)
-    const result = quantFunctions.grid(ctx);
-    expect(result.signal).toBe('hold');
+    expect(quantFunctions.grid(ctx).signal).toBe('hold');
   });
 });
 
@@ -188,11 +173,7 @@ describe('quantFunctions.mean_reversion — invalid inputs', () => {
 
 describe('quantFunctions.mean_reversion — buy signal', () => {
   it('emits buy when price is below fair value by more than threshold', () => {
-    // fairValue=50000, threshold=0.015 → price < 49250 triggers buy
-    const result = quantFunctions.mean_reversion(
-      { ...ctx, lastPrice: 48000 },
-      { fairValue: 50000, threshold: 0.015 },
-    );
+    const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: 48000 }, { fairValue: 50000, threshold: 0.015 });
     expect(result.signal).toBe('buy');
     expect(result.confidence).toBeGreaterThan(0);
     expect(result.meta.strategy).toBe('mean_reversion');
@@ -200,11 +181,7 @@ describe('quantFunctions.mean_reversion — buy signal', () => {
   });
 
   it('buy confidence scales with deviation up to maxConf', () => {
-    // deviation=-0.03 threshold=0.015 → strength=min(1,0.03/0.03)=1.0 → confidence=maxConf=0.8
-    const result = quantFunctions.mean_reversion(
-      { ...ctx, lastPrice: 48500 },
-      { fairValue: 50000, threshold: 0.015, maxConf: 0.8 },
-    );
+    const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: 48500 }, { fairValue: 50000, threshold: 0.015, maxConf: 0.8 });
     expect(result.signal).toBe('buy');
     expect(result.confidence).toBeLessThanOrEqual(0.8);
   });
@@ -212,22 +189,14 @@ describe('quantFunctions.mean_reversion — buy signal', () => {
 
 describe('quantFunctions.mean_reversion — sell signal', () => {
   it('emits sell when price is above fair value by more than threshold', () => {
-    // fairValue=50000, threshold=0.015 → price > 50750 triggers sell
-    const result = quantFunctions.mean_reversion(
-      { ...ctx, lastPrice: 52000 },
-      { fairValue: 50000, threshold: 0.015 },
-    );
+    const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: 52000 }, { fairValue: 50000, threshold: 0.015 });
     expect(result.signal).toBe('sell');
     expect(result.confidence).toBeGreaterThan(0);
     expect(result.meta.deviation).toBeGreaterThan(0);
   });
 
   it('sell confidence is capped at maxConf', () => {
-    // deviation=+0.1 >> 2*threshold=0.03 → strength=1.0 → confidence=maxConf
-    const result = quantFunctions.mean_reversion(
-      { ...ctx, lastPrice: 55000 },
-      { fairValue: 50000, threshold: 0.015, maxConf: 0.75 },
-    );
+    const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: 55000 }, { fairValue: 50000, threshold: 0.015, maxConf: 0.75 });
     expect(result.signal).toBe('sell');
     expect(result.confidence).toBeLessThanOrEqual(0.75);
   });
@@ -235,11 +204,7 @@ describe('quantFunctions.mean_reversion — sell signal', () => {
 
 describe('quantFunctions.mean_reversion — hold signal', () => {
   it('emits hold when price is within threshold of fair value', () => {
-    // deviation = 0.005, threshold = 0.015 → hold
-    const result = quantFunctions.mean_reversion(
-      { ...ctx, lastPrice: 50250 },
-      { fairValue: 50000, threshold: 0.015 },
-    );
+    const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: 50250 }, { fairValue: 50000, threshold: 0.015 });
     expect(result.signal).toBe('hold');
     expect(result.confidence).toBe(0);
     expect(result.meta.fairValue).toBe(50000);
@@ -257,7 +222,6 @@ describe('quantFunctions.volatility_dca', () => {
   it('generates buy and sell signals through registry mapping', () => {
     const buyRes = quantFunctions.volatility_dca({ ...ctx, lastPrice: 48000 }, { referencePrice: 50000 });
     expect(buyRes.signal).toBe('buy');
-
     const sellRes = quantFunctions.volatility_dca({ ...ctx, lastPrice: 53000 }, { referencePrice: 50000 });
     expect(sellRes.signal).toBe('sell');
   });

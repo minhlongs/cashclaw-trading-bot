@@ -29,40 +29,21 @@ export const SPREAD_REASONS = {
   zeroSpreadStd: 'spread standard deviation is zero in z window',
 } as const;
 
-/**
- * s(j) := closesB[j] − β(timestamps[j+1])·closesA[j]. The β here was made
- * strictly before timestamps[j+1], so s(j) reads nothing beyond index j.
- * Null whenever that β failed (no forward-fill).
- */
-function spreadValues(
-  panel: PairPanel,
-  betaAt: readonly HedgeRatioResult[],
-): Array<number | null> {
+function spreadValues(panel: PairPanel, betaAt: readonly HedgeRatioResult[]): Array<number | null> {
   const n = panel.timestamps.length;
   const spreads: Array<number | null> = [];
   for (let j = 0; j < n - 1; j++) {
     const beta = betaAt[j + 1]!;
-    spreads.push(
-      beta.hedgeRatio === null
-        ? null
-        : panel.closesB[j]! - beta.hedgeRatio * panel.closesA[j]!,
-    );
+    spreads.push(beta.hedgeRatio === null ? null : panel.closesB[j]! - beta.hedgeRatio * panel.closesA[j]!);
   }
   return spreads;
 }
 
 /**
  * Build the causal spread/z-score series for every panel timestamp.
- * Each state preserves whatever is causally computable: hedgeRatio and the
- * latest spread survive even while the z-window is still warming up (their
- * fields stay independently nullable per SpreadStateAtTime). A state whose
- * hedge ratio itself is unavailable is fully degenerate (all-null + reason).
- * Nothing is ever forward-filled and no stale β is carried.
+ * Nothing is ever forward-filled and no stale beta is carried.
  */
-export function buildSpreadSeries(
-  panel: PairPanel,
-  config: PairSimConfig,
-): SpreadStateAtTime[] {
+export function buildSpreadSeries(panel: PairPanel, config: PairSimConfig): SpreadStateAtTime[] {
   const n = panel.timestamps.length;
   if (n !== panel.closesA.length || n !== panel.closesB.length) {
     throw new Error('buildSpreadSeries: panel array lengths differ');

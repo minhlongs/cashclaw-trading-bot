@@ -26,10 +26,21 @@ export async function resolveWorkspaceTierContext(
   req: Request,
   options?: WorkspaceTierResolutionOptions,
 ): Promise<WorkspaceTierContext> {
-  const headerWorkspace = req.headers.get('x-cashclaw-workspace');
-  const workspaceId = (options?.explicitWorkspaceId ?? headerWorkspace)?.trim() || undefined;
+  let queryWorkspace: string | null = null;
+  let queryTier: string | null = null;
+  try {
+    const url = new URL(req.url);
+    queryWorkspace = url.searchParams.get('workspaceId');
+    queryTier = url.searchParams.get('tier');
+  } catch {
+    // Ignore malformed URLs in synthetic Request mocks
+  }
 
-  const rawExplicitTier = options?.explicitTier?.trim().toUpperCase();
+  const headerWorkspace = req.headers.get('x-cashclaw-workspace');
+  const workspaceId =
+    (options?.explicitWorkspaceId ?? queryWorkspace ?? headerWorkspace)?.trim() || undefined;
+
+  const rawExplicitTier = (options?.explicitTier ?? queryTier)?.trim().toUpperCase();
   const rawHeaderTier = req.headers.get('x-cashclaw-tier')?.trim().toUpperCase();
   const candidateTier = rawExplicitTier || rawHeaderTier;
 

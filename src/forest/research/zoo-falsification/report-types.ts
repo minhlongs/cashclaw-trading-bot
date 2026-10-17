@@ -66,11 +66,7 @@ export interface ZooFalsificationReport {
 /** Derive bucket counters from rows (total = rows.length). */
 export function computeZooTotals(rows: readonly ZooFalsificationRow[]): ZooFalsificationTotals {
   const totals: ZooFalsificationTotals = {
-    evaluatedAlive: 0,
-    falsified: 0,
-    notEvaluable: 0,
-    skippedImport: 0,
-    total: rows.length,
+    evaluatedAlive: 0, falsified: 0, notEvaluable: 0, skippedImport: 0, total: rows.length,
   };
   const mutable = totals as Record<keyof ZooFalsificationTotals, number>;
   for (const row of rows) {
@@ -87,12 +83,7 @@ export function sumZooBuckets(totals: ZooFalsificationTotals): number {
   return totals.evaluatedAlive + totals.falsified + totals.notEvaluable + totals.skippedImport;
 }
 
-/**
- * Fail-closed invariant: evaluated_alive + falsified + not_evaluable +
- * skipped_import ≡ manifest entries AND totals.total ≡ manifest entries.
- * Throws on any mismatch — a silent skip or tampered row is a bug, never a
- * warning. Called inside the bridge before every report is returned.
- */
+/** Fail-closed invariant: bucket sum === totals.total === rows.length === manifestEntries. */
 export function assertNoSilentSkips(report: ZooFalsificationReport, manifestEntries: number): void {
   const bucketSum = sumZooBuckets(report.totals);
   if (bucketSum !== manifestEntries) {

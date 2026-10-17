@@ -58,11 +58,7 @@ export function MonitoringClient() {
   }, [fetchData]);
 
   if (loading && !data) {
-    return (
-      <div className="flex-center h-50">
-        <Loader2 size={32} className="animate-spin text-profit" />
-      </div>
-    );
+    return <div className="flex-center h-50"><Loader2 size={32} className="animate-spin text-profit" /></div>;
   }
 
   if (error && !data) {
@@ -70,9 +66,7 @@ export function MonitoringClient() {
       <div className="flex-col flex-center gap-4 p-8 text-loss text-center">
         <AlertTriangle size={48} />
         <p className="text-loss">{error}</p>
-        <button className="btn btn-ghost" onClick={fetchData}>
-          {t('refresh')}
-        </button>
+        <button className="btn btn-ghost" onClick={fetchData}>{t('refresh')}</button>
       </div>
     );
   }
@@ -83,12 +77,8 @@ export function MonitoringClient() {
     <div className="flex-col gap-6">
       <div className="flex-between">
         <div>
-          <h2 className="text-xl font-semibold text-primary mb-0">
-            {t('systemHealth.title')}
-          </h2>
-          <p className="text-sm text-tertiary mb-0">
-            {lastRefresh.toLocaleTimeString('vi-VN')}
-          </p>
+          <h2 className="text-xl font-semibold text-primary mb-0">{t('systemHealth.title')}</h2>
+          <p className="text-sm text-tertiary mb-0">{lastRefresh.toLocaleTimeString('vi-VN')}</p>
         </div>
         <button className="btn btn-ghost" onClick={fetchData} disabled={loading}>
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />

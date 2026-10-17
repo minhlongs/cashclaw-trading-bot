@@ -32,9 +32,7 @@ export function SortableTable<T>({
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortKey === 'asc' ? aVal - bVal : bVal - aVal;
       }
-      const aStr = String(aVal ?? '');
-      const bStr = String(bVal ?? '');
-      const cmp = aStr.localeCompare(bStr);
+      const cmp = String(aVal ?? '').localeCompare(String(bVal ?? ''));
       return sortKey === 'asc' ? cmp : -cmp;
     });
   }, [data, sortCol, sortKey]);
@@ -42,8 +40,7 @@ export function SortableTable<T>({
   const handleSort = (key: keyof T) => {
     if (sortCol === key) {
       const cycle: SortDir[] = ['asc', 'desc', null];
-      const idx = cycle.indexOf(sortKey);
-      setSortKey(cycle[idx + 1] ?? null);
+      setSortKey(cycle[cycle.indexOf(sortKey) + 1] ?? null);
       if (sortKey === 'desc') setSortCol(null);
     } else {
       setSortCol(key);
@@ -51,15 +48,11 @@ export function SortableTable<T>({
     }
   };
 
-  const SortIcon = ({ col }: { col: keyof T }) => {
-    if (sortCol !== col || !sortKey) return null;
-    return sortKey === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />;
-  };
+  const SortIcon = ({ col }: { col: keyof T }) =>
+    sortCol !== col || !sortKey ? null : sortKey === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />;
 
-  const ariaSortFor = (col: keyof T): 'ascending' | 'descending' | 'none' => {
-    if (sortCol !== col || !sortKey) return 'none';
-    return sortKey === 'asc' ? 'ascending' : 'descending';
-  };
+  const ariaSortFor = (col: keyof T): 'ascending' | 'descending' | 'none' =>
+    sortCol !== col || !sortKey ? 'none' : sortKey === 'asc' ? 'ascending' : 'descending';
 
   return (
     <div className="table-container">

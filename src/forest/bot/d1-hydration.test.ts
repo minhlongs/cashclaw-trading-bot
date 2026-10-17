@@ -31,12 +31,7 @@ function makeRow(overrides: Record<string, unknown> = {}) {
     id: 'bot_1',
     user_id: 'user_1',
     config_json: JSON.stringify({
-      strategy: 'grid',
-      symbol: 'BTC/USDT',
-      exchange: 'binance',
-      capital: 500,
-      gridSpacingPct: 1,
-      gridLevels: 4,
+      strategy: 'grid', symbol: 'BTC/USDT', exchange: 'binance', capital: 500, gridSpacingPct: 1, gridLevels: 4,
     }),
     total_trades: 10,
     started_at: 1000,
@@ -59,9 +54,7 @@ beforeEach(() => {
   mockedFindBotsByUser.mockReset();
   mockedFindAllBots.mockReset();
   mockedGetBotManager.mockReset();
-
-  const manager = createBotLike();
-  mockedGetBotManager.mockReturnValue(manager as any);
+  mockedGetBotManager.mockReturnValue(createBotLike() as never);
 });
 
 describe('d1-hydration', () => {
@@ -69,9 +62,7 @@ describe('d1-hydration', () => {
     it('returns early when db client is null', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       mockedCreateServerClient.mockReturnValue(null);
-
       await hydrateFromD1('user_1');
-
       expect(mockedFindBotsByUser).not.toHaveBeenCalled();
     });
 
@@ -79,24 +70,16 @@ describe('d1-hydration', () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
       const manager = { createBot: vi.fn().mockResolvedValue(bot) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow()] as any);
+      mockedGetBotManager.mockReturnValue(manager as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow()] as never);
 
       await hydrateFromD1('user_1');
-
       expect(manager.createBot).toHaveBeenCalledTimes(1);
       expect(bot.patchState).toHaveBeenCalledWith(
         expect.objectContaining({
-          totalTrades: 10,
-          startedAt: 1000,
-          totalPnl: 12,
-          winCount: 4,
-          lossCount: 3,
-          maxDrawdown: 1.2,
-          currentDrawdown: 0.5,
-          lastTickAt: 900,
-          lastOrderAt: 800,
+          totalTrades: 10, startedAt: 1000, totalPnl: 12, winCount: 4, lossCount: 3,
+          maxDrawdown: 1.2, currentDrawdown: 0.5, lastTickAt: 900, lastOrderAt: 800,
         }),
       );
     });
@@ -105,12 +88,11 @@ describe('d1-hydration', () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const onError = vi.fn();
       const manager = { createBot: vi.fn().mockRejectedValue(new Error('create failed')) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow()] as any);
+      mockedGetBotManager.mockReturnValue(manager as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow()] as never);
 
       await hydrateFromD1('user_1', onError);
-
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError.mock.calls[0][0].message).toBe('create failed');
       expect(onError.mock.calls[0][1]).toBe('d1-adapter:hydrateBot:bot_1');
@@ -120,12 +102,11 @@ describe('d1-hydration', () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const onError = vi.fn();
       const manager = { createBot: vi.fn() };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow({ config_json: '{bad' })] as any);
+      mockedGetBotManager.mockReturnValue(manager as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow({ config_json: '{bad' })] as never);
 
       await hydrateFromD1('user_1', onError);
-
       expect(onError).toHaveBeenCalledTimes(1);
       expect(manager.createBot).not.toHaveBeenCalled();
     });
@@ -134,90 +115,77 @@ describe('d1-hydration', () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
       const manager = { createBot: vi.fn().mockResolvedValue(bot) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow({ last_error: 'tick failed' })] as any);
+      mockedGetBotManager.mockReturnValue(manager as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow({ last_error: 'tick failed' })] as never);
 
       await hydrateFromD1('user_1');
-
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ error: 'tick failed' }));
     });
 
     it('maps D1 status paper_test to runtime running', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
-      const manager = { createBot: vi.fn().mockResolvedValue(bot) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'paper_test' })] as any);
+      mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'paper_test' })] as never);
 
       await hydrateFromD1('user_1');
-
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'running' }));
     });
 
     it('maps D1 status live_running to runtime running', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
-      const manager = { createBot: vi.fn().mockResolvedValue(bot) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'live_running' })] as any);
+      mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'live_running' })] as never);
 
       await hydrateFromD1('user_1');
-
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'running' }));
     });
 
     it('maps D1 status paused to runtime paused', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
-      const manager = { createBot: vi.fn().mockResolvedValue(bot) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'paused' })] as any);
+      mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'paused' })] as never);
 
       await hydrateFromD1('user_1');
-
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'paused' }));
     });
 
     it('maps D1 status stopped to runtime stopped', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
-      const manager = { createBot: vi.fn().mockResolvedValue(bot) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'stopped' })] as any);
+      mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'stopped' })] as never);
 
       await hydrateFromD1('user_1');
-
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'stopped' }));
     });
 
     it('maps D1 status error to runtime error', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
-      const manager = { createBot: vi.fn().mockResolvedValue(bot) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'error' })] as any);
+      mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'error' })] as never);
 
       await hydrateFromD1('user_1');
-
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
     });
 
     it('maps D1 status draft to runtime idle', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
-      const manager = { createBot: vi.fn().mockResolvedValue(bot) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'draft' })] as any);
+      mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'draft' })] as never);
 
       await hydrateFromD1('user_1');
-
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'idle' }));
     });
   });
@@ -227,24 +195,22 @@ describe('d1-hydration', () => {
       const { loadAllBotsFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
       const manager = { createBot: vi.fn().mockResolvedValue(bot) };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindAllBots.mockResolvedValue([makeRow()] as any);
+      mockedGetBotManager.mockReturnValue(manager as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindAllBots.mockResolvedValue([makeRow()] as never);
 
       await loadAllBotsFromD1();
       await loadAllBotsFromD1();
-
       expect(manager.createBot).toHaveBeenCalledTimes(1);
     });
 
     it('returns early when db client is null', async () => {
       const { loadAllBotsFromD1 } = await import('./d1-hydration');
       const manager = { createBot: vi.fn() };
-      mockedGetBotManager.mockReturnValue(manager as any);
+      mockedGetBotManager.mockReturnValue(manager as never);
       mockedCreateServerClient.mockReturnValue(null);
 
       await loadAllBotsFromD1();
-
       expect(mockedFindAllBots).not.toHaveBeenCalled();
       expect(manager.createBot).not.toHaveBeenCalled();
     });
@@ -253,17 +219,13 @@ describe('d1-hydration', () => {
       const { loadAllBotsFromD1 } = await import('./d1-hydration');
       const onError = vi.fn();
       const manager = {
-        createBot: vi
-          .fn()
-          .mockRejectedValueOnce(new Error('bad row'))
-          .mockResolvedValueOnce(createBotLike()),
+        createBot: vi.fn().mockRejectedValueOnce(new Error('bad row')).mockResolvedValueOnce(createBotLike()),
       };
-      mockedGetBotManager.mockReturnValue(manager as any);
-      mockedCreateServerClient.mockReturnValue({} as any);
-      mockedFindAllBots.mockResolvedValue([makeRow({ id: 'a1' }), makeRow({ id: 'a2' })] as any);
+      mockedGetBotManager.mockReturnValue(manager as never);
+      mockedCreateServerClient.mockReturnValue({} as never);
+      mockedFindAllBots.mockResolvedValue([makeRow({ id: 'a1' }), makeRow({ id: 'a2' })] as never);
 
       await loadAllBotsFromD1(onError);
-
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError.mock.calls[0][1]).toBe('d1-adapter:loadBot:a1');
       expect(manager.createBot).toHaveBeenCalledTimes(2);

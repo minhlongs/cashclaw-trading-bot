@@ -64,9 +64,7 @@ export default function BotsListClient() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center"><h1 className="page-title">{t('bots.listTitle')}</h1></div>
-        <div className="card error-state" role="alert">
-          <p>{error}</p><button className="btn btn-ghost mt-4" onClick={() => window.location.reload()}>Thử lại / Try again</button>
-        </div>
+        <div className="card error-state" role="alert"><p>{error}</p><button className="btn btn-ghost mt-4" onClick={() => window.location.reload()}>Thử lại / Try again</button></div>
       </div>
     );
   }
@@ -95,7 +93,6 @@ export default function BotsListClient() {
         </select>
         <button className="btn btn-ghost btn-icon" aria-label="Filter"><Filter size={14} /></button>
       </div>
-
       {actionError && (
         <div className="badge badge-error flex items-center justify-between gap-2 p-3 text-sm" role="alert">
           <span>{actionError}</span>

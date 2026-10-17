@@ -82,25 +82,12 @@ export function transitionStrategy(
   return { from: phase, to, trigger };
 }
 
-/**
- * Map a promotion or survival gate result onto a transition trigger.
- * `PASSED` / `PAPER_CANDIDATE` advances the lifecycle one step (up to SHADOW);
- * `KILLED` terminates it.
- */
-export function gateResultToTrigger(
-  result: GateResultInput,
-): TransitionTrigger {
+export function gateResultToTrigger(result: GateResultInput): TransitionTrigger {
   if (typeof result === 'string') {
-    return result === 'PASSED' || result === 'PAPER_CANDIDATE'
-      ? { type: 'gate_passed' }
-      : { type: 'gate_failed' };
+    return result === 'PASSED' || result === 'PAPER_CANDIDATE' ? { type: 'gate_passed' } : { type: 'gate_failed' };
   }
   if ('verdict' in result) {
-    return result.verdict === 'PASSED'
-      ? { type: 'gate_passed' }
-      : { type: 'gate_failed' };
+    return result.verdict === 'PASSED' ? { type: 'gate_passed' } : { type: 'gate_failed' };
   }
-  return result.status === 'PASSED' || result.status === 'PAPER_CANDIDATE'
-    ? { type: 'gate_passed' }
-    : { type: 'gate_failed' };
+  return result.status === 'PASSED' || result.status === 'PAPER_CANDIDATE' ? { type: 'gate_passed' } : { type: 'gate_failed' };
 }

@@ -56,19 +56,10 @@ export interface RelativeValueReport {
   readonly validationSummary: RelativeValueValidationSummary;
   readonly periodCount: number;
   readonly periodsPerYear: number;
-  /** Trade-level metrics over completed round trips (additive, Step 6+). */
   readonly roundTripMetrics: RoundTripMetrics;
-  /**
-   * Funding carry share of returns. Constantly 0 — Binance derivative
-   * endpoints return HTTP 403 from this environment (roadmap Known Backlog);
-   * spot assumption documented in docs/PAIRS_RESEARCH_INTEGRATION.md §3.
-   */
   readonly fundingPct: number;
-  /** Why fundingPct carries no data. */
   readonly fundingNote: string;
-  /** Stability scores per pair label, when supplied by the caller. */
   readonly pairStability?: Readonly<Record<string, number>>;
-  /** Per-regime breakdown via injected causal labels (optional, additive). */
   readonly regimeBreakdown?: Readonly<Record<RegimeLabel, RVRegimeSubReport>>;
 }
 

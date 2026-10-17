@@ -8,10 +8,7 @@ import { evaluateCrossSectional } from './evaluate';
 import type { CrossSectionalEvalConfig } from './evaluate-config';
 import { rankAssets } from '@/tree/alpha/universe/universe';
 import { runCrossSectionalSim } from '@/tree/alpha/cross-sectional/simulator';
-import type {
-  AssetReturnSeries,
-  CrossSectionalSimConfig,
-} from '@/tree/alpha/cross-sectional/types';
+import type { AssetReturnSeries, CrossSectionalSimConfig } from '@/tree/alpha/cross-sectional/types';
 import type { CrossSectionalSnapshot, Universe } from '@/tree/alpha/universe/types';
 import { RegimeLabel } from '@/tree/regime/types';
 
@@ -33,7 +30,6 @@ const BASE_EVAL_CONFIG = {
   periodsPerYear: 365 * 24,
 } satisfies CrossSectionalEvalConfig;
 
-/** Rotating deterministic scores so ranks cycle across snapshots. */
 function buildRotatingSnapshots(times: readonly number[]): CrossSectionalSnapshot[] {
   const symbols = UNIVERSE.symbols;
   return times.map((t, i) => {
@@ -45,7 +41,6 @@ function buildRotatingSnapshots(times: readonly number[]): CrossSectionalSnapsho
   });
 }
 
-/** Deterministic pseudo-random panel in [-0.02, 0.02]. */
 function buildPanel(symbols: readonly string[], times: readonly number[]): AssetReturnSeries[] {
   return symbols.map((symbol, j) => ({
     symbol,
@@ -60,7 +55,6 @@ describe('evaluateCrossSectional — end-to-end determinism', () => {
   it('produces a stable deep-equal result across runs on a 5x10 fixture', () => {
     const snapshots = buildRotatingSnapshots(TIMES);
     const panel = buildPanel(UNIVERSE.symbols, TIMES);
-
     const a = evaluateCrossSectional(UNIVERSE, snapshots, panel, BASE_EVAL_CONFIG);
     const b = evaluateCrossSectional(UNIVERSE, snapshots, panel, BASE_EVAL_CONFIG);
 
@@ -77,21 +71,16 @@ describe('evaluateCrossSectional — end-to-end determinism', () => {
     const panel = buildPanel(UNIVERSE.symbols, TIMES);
     const result = evaluateCrossSectional(UNIVERSE, snapshots, panel, BASE_EVAL_CONFIG);
 
-    // Every period holds 2 long (+0.5) and 2 short (-0.5) positions.
     for (const period of result.sim.periods) {
       const entries = Object.entries(period.weights);
       expect(entries).toHaveLength(4);
-      for (const [, weight] of entries) {
-        expect(Math.abs(weight)).toBeCloseTo(0.5, 12);
-      }
+      for (const [, weight] of entries) expect(Math.abs(weight)).toBeCloseTo(0.5, 12);
       expect(period.netExposure).toBeCloseTo(0, 12);
     }
   });
 });
 
 describe('evaluateCrossSectional — beta-aware sizing', () => {
-  // Fixed betas vs benchmark; asset returns are EXACTLY beta * benchmark so
-  // OLS recovers them perfectly and realized beta is hand-checkable.
   const BETAS: Record<string, number> = { AAA: 2, BBB: 1, CCC: 0.5, DDD: 1, EEE: 1.5 };
   const WARMUP = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
   const SNAP_TIMES = [10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000];
@@ -102,7 +91,6 @@ describe('evaluateCrossSectional — beta-aware sizing', () => {
     panel: AssetReturnSeries[];
     benchmark: AssetReturnSeries;
   } {
-    // Fixed ranking: long {AAA, BBB}, short {DDD, EEE}, CCC idle.
     const snapshots = SNAP_TIMES.map((t) => ({
       timestamp: t,
       universeId: UNIVERSE.id,
@@ -127,8 +115,6 @@ describe('evaluateCrossSectional — beta-aware sizing', () => {
 
   it('scales every rebalance toward targetBeta and reports realized betas at target', () => {
     const { snapshots, panel, benchmark } = buildBetaWorld();
-
-    // βp = 0.5·2 + 0.5·1 − 0.5·1 − 0.5·1.5 = 0.25; scale = 0.5 / 0.25 = 2.
     const result = evaluateCrossSectional(UNIVERSE, snapshots, panel, {
       ...evalConfig(0.5),
       benchmarkReturns: benchmark,
@@ -137,10 +123,8 @@ describe('evaluateCrossSectional — beta-aware sizing', () => {
     expect(result.sizing).toEqual({ betaApplied: true });
     expect(result.sim.periods).toHaveLength(9);
     expect(result.report.realizedBetaSeries).toHaveLength(9);
-    for (const realized of result.report.realizedBetaSeries) {
-      expect(realized).toBeCloseTo(0.5, 6);
-    }
-    // First-period weights doubled vs equal weight.
+    for (const realized of result.report.realizedBetaSeries) expect(realized).toBeCloseTo(0.5, 6);
+
     const first = result.sim.periods[0]!.weights;
     expect(first.AAA).toBeCloseTo(1, 9);
     expect(first.BBB).toBeCloseTo(1, 9);
@@ -151,7 +135,6 @@ describe('evaluateCrossSectional — beta-aware sizing', () => {
 
   it('fails closed to equal weights when history is insufficient, sim still completes', () => {
     const { snapshots, panel, benchmark } = buildBetaWorld();
-    // Strip warmup: at most 8 prior observations exist, below betaMinObs 10.
     const coldStart = (series: AssetReturnSeries): AssetReturnSeries => ({
       ...series,
       timestamps: series.timestamps.filter((t) => t >= SNAP_TIMES[0]!),
@@ -167,22 +150,15 @@ describe('evaluateCrossSectional — beta-aware sizing', () => {
     expect(result.sizing.betaApplied).toBe(false);
     expect(result.sizing.fallbackReason).toContain('missing beta estimate');
     expect(result.report.realizedBetaSeries).toEqual([]);
-
-    // Sim completed anyway on the snapshot's own equal weights.
     expect(result.sim.periods).toHaveLength(9);
+
     const firstWeights = result.sim.periods[0]!.weights;
     expect(firstWeights.AAA).toBeCloseTo(0.5, 12);
     expect(firstWeights.BBB).toBeCloseTo(0.5, 12);
     expect(firstWeights.DDD).toBeCloseTo(-0.5, 12);
     expect(firstWeights.EEE).toBeCloseTo(-0.5, 12);
 
-    // Identical to running the plain simulator with no sizing hook.
-    const plainConfig: CrossSectionalSimConfig = {
-      topN: 2,
-      bottomN: 2,
-      minObservations: 2,
-      costBps: 0,
-    };
+    const plainConfig: CrossSectionalSimConfig = { topN: 2, bottomN: 2, minObservations: 2, costBps: 0 };
     const plain = runCrossSectionalSim(UNIVERSE, snapshots, panel.map(coldStart), plainConfig);
     expect(result.sim).toEqual(plain);
   });
@@ -194,9 +170,9 @@ describe('evaluateCrossSectional — validation and error propagation', () => {
   const panel = buildPanel(UNIVERSE.symbols, TIMES);
 
   it('rejects an empty return panel before any computation', () => {
-    expect(() =>
-      evaluateCrossSectional(UNIVERSE, snapshots, [], BASE_EVAL_CONFIG),
-    ).toThrow(/assetReturnSeries must be non-empty/);
+    expect(() => evaluateCrossSectional(UNIVERSE, snapshots, [], BASE_EVAL_CONFIG)).toThrow(
+      /assetReturnSeries must be non-empty/,
+    );
   });
 
   it('requires benchmarkReturns when targetBeta is non-zero', () => {
@@ -208,9 +184,7 @@ describe('evaluateCrossSectional — validation and error propagation', () => {
   it('rejects non-finite targetBeta', () => {
     expect(() =>
       evaluateCrossSectional(UNIVERSE, snapshots, panel, {
-        ...BASE_EVAL_CONFIG,
-        targetBeta: Number.NaN,
-        benchmarkReturns: panel[0]!,
+        ...BASE_EVAL_CONFIG, targetBeta: Number.NaN, benchmarkReturns: panel[0]!,
       }),
     ).toThrow(/targetBeta must be a finite number/);
   });
@@ -230,8 +204,7 @@ describe('evaluateCrossSectional — validation and error propagation', () => {
   it('rejects regime label arrays whose length differs from the period count', () => {
     expect(() =>
       evaluateCrossSectional(UNIVERSE, snapshots, panel, {
-        ...BASE_EVAL_CONFIG,
-        regimeLabels: [RegimeLabel.RANGE, RegimeLabel.SHOCK],
+        ...BASE_EVAL_CONFIG, regimeLabels: [RegimeLabel.RANGE, RegimeLabel.SHOCK],
       }),
     ).toThrow(/regimeLabels length \(2\) must equal period count \(4\)/);
   });

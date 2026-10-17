@@ -1,7 +1,5 @@
 // Model Router tests — tiered routing (FAST/REASONING/LOCAL), fallback
-// selection, typed failure on missing key/config. Built on
-// DeterministicFixtureProvider so routing logic is tested with zero
-// tokens/keys.
+// selection, typed failure on missing key/config.
 
 import { describe, expect, it, vi } from 'vitest';
 import { ModelRouter, createModelRouter, RoutingError } from './model-router';
@@ -13,11 +11,6 @@ import {
 } from './test-fixtures';
 import type { SupportedProvider } from '@/tree/research/tradingagents';
 
-/**
- * Build a registry from fixture providers keyed by id.
- * `DeterministicFixtureProvider` hardcodes its id to 'Anthropic', so we use
- * the factory functions when more than one distinct provider is needed.
- */
 function registryByIds(ids: readonly SupportedProvider[]): ProviderRegistry {
   const providers = ids.map((id) =>
     id === 'Anthropic' ? new DeterministicFixtureProvider() : makeFixtureProvider(id),
@@ -29,10 +22,6 @@ function registryByIds(ids: readonly SupportedProvider[]): ProviderRegistry {
 
 describe('RoutingError', () => {
   it('carries task and agentRole alongside the message', () => {
-    // RoutingError is exported as part of the router's public contract
-    // (index.ts re-exports it) even though `route()` currently returns a
-    // typed failure rather than throwing — the class exists for callers
-    // that want to type-narrow router errors.
     const err = new RoutingError('no route', 'debate', 'bull-researcher');
     expect(err).toBeInstanceOf(Error);
     expect(err.name).toBe('RoutingError');
@@ -51,8 +40,6 @@ describe('createModelRouter', () => {
   });
 
   it('rejects a provider list containing an unallowlisted id', () => {
-    // Unknown providerId → createProviderRegistry returns { ok: false } and
-    // createModelRouter propagates that failure (line 200).
     const bad = {
       providerId: 'BogusProvider' as never,
       displayName: 'Bad',
@@ -69,10 +56,6 @@ describe('createModelRouter', () => {
   });
 
   it('accepts an empty provider list (route fails typed, not silently)', () => {
-    // An empty list builds an empty registry — no duplicate-id violation.
-    // The typed failure surfaces later, in `route`, when no provider exists
-    // for the tier. That separation is the contract: construction never
-    // rejects on emptiness, routing does.
     const result = createModelRouter([]);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -82,14 +65,8 @@ describe('createModelRouter', () => {
 
 describe('ModelRouter.route — tier routing', () => {
   it('routes a REASONING task to the REASONING-tier provider', async () => {
-    const router = new ModelRouter({
-      registry: registryByIds(['Anthropic']),
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
-    const outcome = await router.route('bull-researcher', 'debate', {
-      prompt: 'Debate the thesis',
-    });
+    const router = new ModelRouter({ registry: registryByIds(['Anthropic']), defaultTimeoutMs: 5000, maxTokensCap: 1000 });
+    const outcome = await router.route('bull-researcher', 'debate', { prompt: 'Debate the thesis' });
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
     expect(outcome.value.text).toBeTruthy();
@@ -98,14 +75,8 @@ describe('ModelRouter.route — tier routing', () => {
   });
 
   it('routes a FAST task to a FAST-capable provider', async () => {
-    const router = new ModelRouter({
-      registry: registryByIds(['OpenAI']),
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
-    const outcome = await router.route('analyst', 'summarization', {
-      prompt: 'Summarize this report',
-    });
+    const router = new ModelRouter({ registry: registryByIds(['OpenAI']), defaultTimeoutMs: 5000, maxTokensCap: 1000 });
+    const outcome = await router.route('analyst', 'summarization', { prompt: 'Summarize this report' });
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
     expect(outcome.value.text).toBeTruthy();
@@ -113,14 +84,8 @@ describe('ModelRouter.route — tier routing', () => {
   });
 
   it('routes a LOCAL task to a LOCAL-capable provider', async () => {
-    const router = new ModelRouter({
-      registry: registryByIds(['Ollama/local']),
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
-    const outcome = await router.route('analyst', 'repetitive-research', {
-      prompt: 'Repeat this research',
-    });
+    const router = new ModelRouter({ registry: registryByIds(['Ollama/local']), defaultTimeoutMs: 5000, maxTokensCap: 1000 });
+    const outcome = await router.route('analyst', 'repetitive-research', { prompt: 'Repeat this research' });
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
     expect(outcome.value.text).toBeTruthy();
@@ -134,14 +99,8 @@ describe('ModelRouter.route — fallback + failure', () => {
     vi.spyOn(throwing, 'call').mockRejectedValue(new Error('provider down'));
     const registry = createProviderRegistry([throwing]);
     if (!registry.ok) throw new Error('registry');
-    const router = new ModelRouter({
-      registry: registry.registry,
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
-    const outcome = await router.route('bull-researcher', 'debate', {
-      prompt: 'fail',
-    });
+    const router = new ModelRouter({ registry: registry.registry, defaultTimeoutMs: 5000, maxTokensCap: 1000 });
+    const outcome = await router.route('bull-researcher', 'debate', { prompt: 'fail' });
     expect(outcome.ok).toBe(false);
     if (outcome.ok) return;
     expect(outcome.reasons.some((r) => r.includes('provider down'))).toBe(true);
@@ -152,14 +111,8 @@ describe('ModelRouter.route — fallback + failure', () => {
     const fallback = makeFixtureProvider('OpenAI');
     const registry = createProviderRegistry([primary, fallback]);
     if (!registry.ok) throw new Error(`registry: ${registry.reasons.join('; ')}`);
-    const router = new ModelRouter({
-      registry: registry.registry,
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
-    const outcome = await router.route('research-manager', 'research-synthesis', {
-      prompt: 'Synthesize',
-    });
+    const router = new ModelRouter({ registry: registry.registry, defaultTimeoutMs: 5000, maxTokensCap: 1000 });
+    const outcome = await router.route('research-manager', 'research-synthesis', { prompt: 'Synthesize' });
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
     expect(outcome.value.fallbackUsed).toBe(true);
@@ -167,14 +120,8 @@ describe('ModelRouter.route — fallback + failure', () => {
   });
 
   it('records provenance with agentRole and task', async () => {
-    const router = new ModelRouter({
-      registry: registryByIds(['Anthropic']),
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
-    const outcome = await router.route('research-manager', 'research-synthesis', {
-      prompt: 'Synthesize',
-    });
+    const router = new ModelRouter({ registry: registryByIds(['Anthropic']), defaultTimeoutMs: 5000, maxTokensCap: 1000 });
+    const outcome = await router.route('research-manager', 'research-synthesis', { prompt: 'Synthesize' });
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
     expect(outcome.value.provenance.agentRole).toBe('research-manager');
@@ -186,14 +133,8 @@ describe('ModelRouter.route — fallback + failure', () => {
     const fallback = makeFailingFixtureProvider('OpenAI');
     const registry = createProviderRegistry([primary, fallback]);
     if (!registry.ok) throw new Error(`registry: ${registry.reasons.join('; ')}`);
-    const router = new ModelRouter({
-      registry: registry.registry,
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
-    const outcome = await router.route('bull-researcher', 'debate', {
-      prompt: 'fail',
-    });
+    const router = new ModelRouter({ registry: registry.registry, defaultTimeoutMs: 5000, maxTokensCap: 1000 });
+    const outcome = await router.route('bull-researcher', 'debate', { prompt: 'fail' });
     expect(outcome.ok).toBe(false);
     if (outcome.ok) return;
     expect(outcome.reasons.length).toBe(1);
@@ -202,24 +143,16 @@ describe('ModelRouter.route — fallback + failure', () => {
   });
 
   it('returns typed failure when no provider is configured for the tier', async () => {
-    // Empty registry → no primary for any tier.
     const result = createModelRouter([]);
     if (!result.ok) throw new Error('router');
-    const outcome = await result.router.route('bull-researcher', 'debate', {
-      prompt: 'fail',
-    });
+    const outcome = await result.router.route('bull-researcher', 'debate', { prompt: 'fail' });
     expect(outcome.ok).toBe(false);
     if (outcome.ok) return;
     expect(outcome.reasons.some((r) => r.includes('no configured primary provider'))).toBe(true);
   });
 
   it('returns typed failure when the agentRole is empty (provenance gate)', async () => {
-    // Primary succeeds but recordModelProvenance rejects the empty role.
-    const router = new ModelRouter({
-      registry: registryByIds(['Anthropic']),
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
+    const router = new ModelRouter({ registry: registryByIds(['Anthropic']), defaultTimeoutMs: 5000, maxTokensCap: 1000 });
     const outcome = await router.route('' as never, 'debate', { prompt: 'p' });
     expect(outcome.ok).toBe(false);
     if (outcome.ok) return;
@@ -227,29 +160,18 @@ describe('ModelRouter.route — fallback + failure', () => {
   });
 
   it('falls back and returns typed failure when the fallback succeeds but provenance rejects', async () => {
-    // Primary throws → fallback succeeds → recordModelProvenance rejects empty role.
     const primary = makeFailingFixtureProvider('Anthropic');
     const fallback = makeFixtureProvider('OpenAI');
     const registry = createProviderRegistry([primary, fallback]);
     if (!registry.ok) throw new Error(`registry: ${registry.reasons.join('; ')}`);
-    const router = new ModelRouter({
-      registry: registry.registry,
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
-    const outcome = await router.route('' as never, 'research-synthesis', {
-      prompt: 'p',
-    });
+    const router = new ModelRouter({ registry: registry.registry, defaultTimeoutMs: 5000, maxTokensCap: 1000 });
+    const outcome = await router.route('' as never, 'research-synthesis', { prompt: 'p' });
     expect(outcome.ok).toBe(false);
     if (outcome.ok) return;
     expect(outcome.reasons.some((r) => r.includes('agentRole must be non-empty'))).toBe(true);
   });
 
   it('uses wall-clock latency when the provider reports zero latency', async () => {
-    // The `latencyMs > 0 ? result.latencyMs : Date.now() - startMs` ternary
-    // prefers provider-reported latency when positive; a zero report falls
-    // through to wall-clock. Outcomes remain ok — only the recorded latency
-    // changes from the deterministic 10ms to a measured value.
     const zeroLatency = {
       providerId: 'Anthropic' as const,
       displayName: 'Zero-Latency Fixture (TEST)',
@@ -261,11 +183,7 @@ describe('ModelRouter.route — fallback + failure', () => {
     };
     const registryResult = createProviderRegistry([zeroLatency]);
     if (!registryResult.ok) throw new Error('registry');
-    const router = new ModelRouter({
-      registry: registryResult.registry,
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
+    const router = new ModelRouter({ registry: registryResult.registry, defaultTimeoutMs: 5000, maxTokensCap: 1000 });
     const outcome = await router.route('bull-researcher', 'debate', { prompt: 'p' });
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
@@ -275,22 +193,14 @@ describe('ModelRouter.route — fallback + failure', () => {
 
 describe('ModelRouter.getSelectedProvider', () => {
   it('returns the primary and fallback for a tier', () => {
-    const router = new ModelRouter({
-      registry: registryByIds(['Anthropic', 'OpenAI']),
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
+    const router = new ModelRouter({ registry: registryByIds(['Anthropic', 'OpenAI']), defaultTimeoutMs: 5000, maxTokensCap: 1000 });
     const selected = router.getSelectedProvider('REASONING');
     expect(selected.primary?.providerId).toBe('Anthropic');
     expect(selected.fallback?.providerId).toBe('OpenAI');
   });
 
   it('returns null when no provider covers the tier', () => {
-    const router = new ModelRouter({
-      registry: registryByIds([]),
-      defaultTimeoutMs: 5000,
-      maxTokensCap: 1000,
-    });
+    const router = new ModelRouter({ registry: registryByIds([]), defaultTimeoutMs: 5000, maxTokensCap: 1000 });
     const selected = router.getSelectedProvider('REASONING');
     expect(selected.primary).toBeNull();
     expect(selected.fallback).toBeNull();

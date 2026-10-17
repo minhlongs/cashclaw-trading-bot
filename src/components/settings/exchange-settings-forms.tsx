@@ -13,17 +13,8 @@ interface ExchangeSettingsCardProps {
 
 export function ExchangeSettingsCard({ name, config, state, onSave }: ExchangeSettingsCardProps) {
   const {
-    editing,
-    apiKey,
-    apiSecret,
-    testnet,
-    saving,
-    setApiKey,
-    setApiSecret,
-    setTestnet,
-    setEditing,
-    handleEdit,
-    handleSave,
+    editing, apiKey, apiSecret, testnet, saving,
+    setApiKey, setApiSecret, setTestnet, setEditing, handleEdit, handleSave,
   } = state;
 
   return (
@@ -32,18 +23,11 @@ export function ExchangeSettingsCard({ name, config, state, onSave }: ExchangeSe
         <div className="exchange-card-title">
           <Shield size={14} className={config.apiKey ? 'exchange-active' : 'exchange-inactive'} />
           <span className="font-600 text-cap">{name}</span>
-          {config.apiKey && (
-            <span className="badge badge-profit text-xs-sm">Configured</span>
-          )}
-          {config.testnet && (
-            <span className="badge badge-neutral text-xs-sm">Testnet</span>
-          )}
+          {config.apiKey && <span className="badge badge-profit text-xs-sm">Configured</span>}
+          {config.testnet && <span className="badge badge-neutral text-xs-sm">Testnet</span>}
         </div>
         {editing !== name && (
-          <button
-            className="btn btn-ghost btn-sm-ghost"
-            onClick={() => handleEdit(name)}
-          >
+          <button className="btn btn-ghost btn-sm-ghost" onClick={() => handleEdit(name)}>
             {config.apiKey ? 'Update' : 'Add'}
           </button>
         )}

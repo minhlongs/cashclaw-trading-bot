@@ -38,22 +38,15 @@ export function DeliberationTheater() {
         <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between">
           <div>
             <span className="text-xs text-[var(--text-secondary)]">Risk Manager Veto Gate</span>
-            <div className="mt-1 font-mono text-xs text-[var(--text-primary)]">
-              {riskVetoActive ? 'VETO_ENFORCED' : 'ADVISORY_PASS'}
-            </div>
+            <div className="mt-1 font-mono text-xs text-[var(--text-primary)]">{riskVetoActive ? 'VETO_ENFORCED' : 'ADVISORY_PASS'}</div>
           </div>
           <button
             type="button"
             onClick={() => setRiskVetoActive((v) => !v)}
             aria-pressed={riskVetoActive}
-            className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-mono font-semibold border transition-all flex items-center gap-1.5 ${
-              riskVetoActive
-                ? 'bg-[var(--color-loss)] text-[var(--text-primary)] border-[var(--color-loss)]'
-                : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'
-            }`}
+            className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-mono font-semibold border transition-all flex items-center gap-1.5 ${riskVetoActive ? 'bg-[var(--color-loss)] text-[var(--text-primary)] border-[var(--color-loss)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}
           >
-            <ShieldAlert size={14} />
-            <span>{riskVetoActive ? 'Clear Veto' : 'Trigger Veto'}</span>
+            <ShieldAlert size={14} /><span>{riskVetoActive ? 'Clear Veto' : 'Trigger Veto'}</span>
           </button>
         </div>
       </div>
@@ -68,11 +61,7 @@ export function DeliberationTheater() {
                 type="button"
                 onClick={() => setStageFilter(stage)}
                 aria-pressed={stageFilter === stage}
-                className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all ${
-                  stageFilter === stage
-                    ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]'
-                    : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'
-                }`}
+                className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all ${stageFilter === stage ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}
               >
                 {stage}
               </button>

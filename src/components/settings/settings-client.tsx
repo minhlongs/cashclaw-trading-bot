@@ -45,11 +45,7 @@ export function SettingsClient() {
   const post = async (body: Record<string, unknown>, onOk: () => void, okMsg: string, failMsg: string) => {
     setSaveMessage(null);
     try {
-      const res = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      const res = await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const result = (await res.json()) as { ok?: boolean; error?: string };
       if (result.ok) { onOk(); setSaveMessage(okMsg); }
       else setSaveMessage(result.error ?? failMsg);
@@ -77,8 +73,7 @@ export function SettingsClient() {
       await post(
         action === 'halt' ? { type: 'killswitch', action, reason: 'Manual halt' } : { type: 'killswitch', action },
         () => setSettings((p) => ({ ...p, killswitch: { ...p.killswitch, enabled, reason: action === 'halt' ? 'Manual halt' : null } })),
-        okMsg,
-        failMsg,
+        okMsg, failMsg,
       );
     } finally {
       if (mountedRef.current) setKsSaving(false);
@@ -87,9 +82,7 @@ export function SettingsClient() {
   const handleHalt = () => handleKs('halt', false, 'Trading halted', 'Halt failed');
   const handleResume = () => handleKs('resume', true, 'Trading resumed', 'Resume failed');
 
-  if (loading) {
-    return <div className="settings-loading"><Loader2 size={32} className="animate-spin text-profit" /></div>;
-  }
+  if (loading) return <div className="settings-loading"><Loader2 size={32} className="animate-spin text-profit" /></div>;
 
   const isError = saveMessage && (saveMessage.includes('failed') || saveMessage.toLowerCase().includes('error'));
 

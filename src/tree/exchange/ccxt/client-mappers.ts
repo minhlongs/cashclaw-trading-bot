@@ -10,25 +10,14 @@ import type {
 } from './client-types';
 
 const STATUS_MAP: Record<string, string> = {
-  open: 'open',
-  closed: 'filled',
-  partially_filled: 'partially_filled',
-  canceled: 'cancelled',
-  cancelled: 'cancelled',
-  rejected: 'rejected',
-  expired: 'expired',
+  open: 'open', closed: 'filled', partially_filled: 'partially_filled',
+  canceled: 'cancelled', cancelled: 'cancelled', rejected: 'rejected', expired: 'expired',
 };
 
-/**
- * Normalizes raw CCXT status string to standard internal status.
- */
 export function mapCCXTStatus(rawStatus?: string): string {
   return STATUS_MAP[rawStatus ?? ''] ?? 'open';
 }
 
-/**
- * Maps CCXT ticker object to normalized CCXTTickerResult.
- */
 export function mapCCXTTicker(ticker: CCXTTicker, symbol: string): CCXTTickerResult {
   return {
     symbol,
@@ -42,9 +31,6 @@ export function mapCCXTTicker(ticker: CCXTTicker, symbol: string): CCXTTickerRes
   };
 }
 
-/**
- * Maps CCXT order book to normalized CCXTOrderBookResult.
- */
 export function mapCCXTOrderBook(book: CCXTOrderBook, symbol: string): CCXTOrderBookResult {
   return {
     symbol,

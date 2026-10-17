@@ -37,24 +37,12 @@ const DATA_WINDOW: DataWindow = {
   barCount: 1000,
 };
 
-const UNIVERSE: Universe = {
-  id: 'universe-1',
-  symbols: ['BTC-USD'],
-  weighting: 'equal',
-  rebalanceRule: 'daily',
-};
+const UNIVERSE: Universe = { id: 'universe-1', symbols: ['BTC-USD'], weighting: 'equal', rebalanceRule: 'daily' };
 
 const PORTFOLIO_CONFIG: PortfolioConfig = {
-  targetVolatility: 0.15,
-  maxPositionWeight: 0.3,
-  maxGrossExposure: 0.8,
-  maxNetExposure: 0.5,
-  maxCorrelatedExposure: 0.4,
-  correlationBucketThreshold: 0.7,
-  maxBetaExposure: 0.3,
-  maxTurnover: 0.5,
-  drawdownThreshold: 0.1,
-  deRiskFactor: 0.5,
+  targetVolatility: 0.15, maxPositionWeight: 0.3, maxGrossExposure: 0.8, maxNetExposure: 0.5,
+  maxCorrelatedExposure: 0.4, correlationBucketThreshold: 0.7, maxBetaExposure: 0.3,
+  maxTurnover: 0.5, drawdownThreshold: 0.1, deRiskFactor: 0.5,
 };
 
 const RISK_INPUTS: RiskInputs = {
@@ -65,16 +53,9 @@ const RISK_INPUTS: RiskInputs = {
 };
 
 const COMPOSED_ALPHAS: ComposedAlpha[] = [{
-  alphaId: 'alpha-momentum',
-  direction: 'buy',
-  confidence: 0.6,
-  expectedReturn: 0.02,
-  expectedCost: 0.001,
-  expectedTurnover: 0.1,
-  regime: RegimeLabel.TREND_UP,
-  horizon: '20d',
-  provenance: 'deliberation',
-  featureDependencies: ['momentum_20d'],
+  alphaId: 'alpha-momentum', direction: 'buy', confidence: 0.6, expectedReturn: 0.02,
+  expectedCost: 0.001, expectedTurnover: 0.1, regime: RegimeLabel.TREND_UP,
+  horizon: '20d', provenance: 'deliberation', featureDependencies: ['momentum_20d'],
   timestamp: Date.parse(NOW),
 }];
 
@@ -144,9 +125,6 @@ describe('runDeliberation', () => {
   });
 });
 
-/** A provider returning unparseable JSON for the risk-advisor role
- * so that parseRiskScenarios finds no parseable scenarios, covering the
- * "no parseable risk scenarios" else-branch in run-deliberation.ts. */
 function makeUnparseableRiskProvider(): LlmProvider {
   return {
     providerId: 'Anthropic',
@@ -163,7 +141,6 @@ function makeUnparseableRiskProvider(): LlmProvider {
   };
 }
 
-/** Detect agent role from systemPrompt (mirrors test-fixtures). */
 function detectRole(systemPrompt: string | undefined): string {
   if (!systemPrompt) return 'analyst';
   if (systemPrompt.includes('bull researcher')) return 'bull-researcher';
@@ -174,22 +151,15 @@ function detectRole(systemPrompt: string | undefined): string {
   return 'analyst';
 }
 
-/**
- * Canned JSON per role matching the DeterministicFixtureProvider schema.
- * The mechanism strings are intentionally long enough to pass the hypothesis
- * extraction mechanism gate (≥40 chars + causal connective or 2 domain tokens).
- */
 const CANNED_BY_ROLE: Record<string, string> = {
   analyst: JSON.stringify({ claim: 'metrics support thesis', evidence: ['e1'] }),
   'bull-researcher': JSON.stringify({
-    thesis: 'Momentum persists',
-    evidence: ['Trend above MA'],
+    thesis: 'Momentum persists', evidence: ['Trend above MA'],
     mechanism: 'Trend-following momentum drives continued returns due to persistent investor flows',
     expectedDirection: 'long', horizon: 20, features: ['f1'],
   }),
   'bear-researcher': JSON.stringify({
-    thesis: 'Mean reversion',
-    evidence: ['RSI high'],
+    thesis: 'Mean reversion', evidence: ['RSI high'],
     mechanism: 'Overextension in momentum leads to reversal as positioning unwinds',
     expectedDirection: 'short', horizon: 20, features: ['f2'],
   }),
@@ -205,8 +175,7 @@ const CANNED_BY_ROLE: Record<string, string> = {
     volatilityConcern: 'high', correlationConcern: 'low',
   }),
   'portfolio-advisor': JSON.stringify({
-    assets: ['alpha-momentum'], weights: [0.3], hedge: 'overlay',
-    rebalance: 'weekly', exposure: 0.5,
+    assets: ['alpha-momentum'], weights: [0.3], hedge: 'overlay', rebalance: 'weekly', exposure: 0.5,
   }),
 };
 
@@ -221,9 +190,6 @@ describe('runDeliberation — failure and resume paths', () => {
   });
 
   it('skips cashclaw-validation when risk-advisor JSON is unparseable', async () => {
-    // Provider returns valid JSON for all roles except 'risk-advisor',
-    // which gets unparseable content so parseRiskScenarios finds nothing,
-    // covering the "no parseable risk scenarios" else-branch.
     const routerResult = createModelRouter([makeUnparseableRiskProvider()]);
     if (!routerResult.ok) throw new Error(`router: ${routerResult.reasons.join('; ')}`);
     const result = await runDeliberation({ ...makeConfig(), router: routerResult.router });
@@ -234,7 +200,6 @@ describe('runDeliberation — failure and resume paths', () => {
       );
       expect(skipped).toBeDefined();
       expect(skipped?.reasons[0]).toContain('no parseable risk scenarios');
-      // human-decision is also skipped because riskAdvisory is null
       const humanSkipped = result.report.stageResults.find(
         (s) => s.stage === 'human-decision' && s.outcome === 'skipped',
       );
@@ -255,7 +220,6 @@ describe('runDeliberation — failure and resume paths', () => {
 
   it('records a resume failure when the decision log JSON is invalid', async () => {
     const result = await runDeliberation({ ...makeConfig(), initialDecisionLog: 'not-json' });
-    // Fail-closed: a corrupt resume log aborts the run with ok=false.
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.reasons.some((r: string) => r.startsWith('decision-log resume:'))).toBe(true);

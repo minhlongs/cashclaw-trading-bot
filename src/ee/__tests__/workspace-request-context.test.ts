@@ -11,7 +11,7 @@ describe('workspace-request-context', () => {
     defaultSaasEntitlementStore.resetMemoryForTesting();
   });
 
-  it('resolves explicit workspaceId and explicit valid tier', async () => {
+  it('resolves explicit workspaceId and explicit valid tier or URL query params', async () => {
     const req = new Request('http://localhost/api/ee/credits');
     const ctx = await resolveWorkspaceTierContext(req, {
       explicitWorkspaceId: 'ws_explicit',
@@ -20,6 +20,14 @@ describe('workspace-request-context', () => {
     expect(ctx).toEqual({
       workspaceId: 'ws_explicit',
       tier: 'PREMIUM',
+      invalidExplicitTier: undefined,
+    });
+
+    const queryReq = new Request('http://localhost/api/ee/quotas?workspaceId=ws_query&tier=ENTERPRISE');
+    const queryCtx = await resolveWorkspaceTierContext(queryReq);
+    expect(queryCtx).toEqual({
+      workspaceId: 'ws_query',
+      tier: 'ENTERPRISE',
       invalidExplicitTier: undefined,
     });
   });

@@ -3,19 +3,11 @@
 // Sim-level field checks delegate to validateConfig (errors keep the
 // runCrossSectionalSim prefix and propagate verbatim).
 
-import type {
-  AssetReturnSeries,
-} from '@/tree/alpha/cross-sectional/types';
+import type { AssetReturnSeries } from '@/tree/alpha/cross-sectional/types';
 import { validateConfig } from '@/tree/alpha/cross-sectional/weight-builder';
 import type { CrossSectionalSnapshot, Universe } from '@/tree/alpha/universe/types';
 import type { CrossSectionalEvalConfig } from './evaluate-config';
 
-/**
- * Validate the full evaluation input set. Throws on: invalid sim config,
- * empty return panel, non-finite/out-of-range eval fields, missing benchmark
- * for a non-zero beta target, empty/degenerate snapshot list, misaligned
- * snapshot timestamps or universeId, and regime-label count mismatch.
- */
 export function validateEvalInputs(
   universe: Universe,
   snapshots: readonly CrossSectionalSnapshot[],

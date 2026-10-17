@@ -49,43 +49,24 @@ export interface ResearchResult {
 }
 
 /**
- * One machine-readable research record. Every field required by the
- * research protocol: hypothesis, data sources, feature set, regime,
- * train/validation/OOS periods, costs, slippage, seed, git commit,
- * result, falsification reason, and status.
+ * One machine-readable research record.
  */
 export interface ResearchEntry {
-  /** Unique identifier (slug, e.g. 'funding-fade'). */
   readonly id: string;
-  /** Human-readable hypothesis statement. */
   readonly hypothesis: string;
-  /** Data sources consumed (e.g. 'binance-ohlcv', 'funding-rate'). */
   readonly dataSources: readonly string[];
-  /** Feature set derived from the data sources. */
   readonly featureSet: readonly string[];
-  /** Regime scope: 'all' or a specific regime label. */
   readonly regime: string;
-  /** In-sample training window. */
   readonly trainPeriod: ResearchPeriod;
-  /** Validation window (may equal trainPeriod when unused). */
   readonly validationPeriod: ResearchPeriod;
-  /** Out-of-sample window(s). */
   readonly oosPeriod: ResearchPeriod;
-  /** Cost model applied. */
   readonly costs: ResearchCosts;
-  /** Slippage model applied. */
   readonly slippage: ResearchSlippage;
-  /** PRNG seed used by the experiment (null when deterministic by construction). */
   readonly seed: number | null;
-  /** Git commit SHA of the code that produced the result (null for class-level seeds). */
   readonly gitCommit: string | null;
-  /** Recorded outcome. */
   readonly result: ResearchResult;
-  /** Why the hypothesis was falsified (null unless status is FALSIFIED). */
   readonly falsificationReason: string | null;
-  /** Lifecycle status. */
   readonly status: ResearchStatus;
-  /** How precisely this entry can be reproduced. */
   readonly reproducibility: ReproducibilityLevel;
 }
 

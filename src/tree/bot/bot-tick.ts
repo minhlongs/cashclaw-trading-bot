@@ -70,13 +70,8 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
     const regimeCtx = computeRegimeContext(config.symbol, recentCandles);
 
     const chainOrder = evaluateChain({
-      config,
-      strategyChain,
-      totalPnl: state.totalPnl,
-      totalTrades: state.totalTrades,
-      winCount: state.winCount,
-      lossCount: state.lossCount,
-      price,
+      config, strategyChain, totalPnl: state.totalPnl, totalTrades: state.totalTrades,
+      winCount: state.winCount, lossCount: state.lossCount, price,
     });
     if (chainOrder) {
       callbacks.onLog(`[${id}] Chain signal: ${chainOrder.side} ${chainOrder.quantity} @ market`);
@@ -86,10 +81,7 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
         emitTelemetry('error', { error: error instanceof Error ? error.message : 'unknown', context: 'bot.chainOrder' });
       }
     }
-
-    if (strategy) {
-      strategy.onTicker(ticker);
-    }
+    if (strategy) strategy.onTicker(ticker);
 
     emitTelemetry('tick', {
       price,

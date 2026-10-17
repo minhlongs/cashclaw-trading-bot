@@ -2,6 +2,21 @@
 
 ## v1 Paper-Trading Platform
 
+### Quad-Cluster Deep Refactor Wave 5 — 2026-10-18
+- **Stateful `CreditLedgerStore` & Unified URL/Header `resolveWorkspaceTierContext` (`src/ee/deliberation-cloud/llm-credit-ledger.ts`, `src/ee/tenancy/workspace-request-context.ts`, `src/app/api/ee/credits/route.ts`, `src/app/api/ee/sync/route.ts`)**:
+  - Added `CreditLedgerStore` (`defaultCreditLedgerStore`) persisting workspace credit balances and consumed credits across `GET /api/ee/credits` and `POST /api/ee/credits`, and automatically reconciling monthly allowance deltas when a workspace upgrades its SaaS tier (`BASIC -> PREMIUM -> ENTERPRISE -> MASTER`).
+  - Enhanced `resolveWorkspaceTierContext` to automatically extract `workspaceId` and `tier` from URL query parameters (`?workspaceId=&tier=`) when explicit options are omitted, and added `invalidExplicitTier` 400 validation across `GET/POST /api/ee/credits` and `POST /api/ee/sync`.
+- **Non-`src/` Monolith Decomposition (`<= 190 LOC` across all of `scripts/` & `test/alpha/`)**:
+  - Split `scripts/multi-pair-composition-sweep.ts` (309 LOC) into `scripts/multi-pair-composition-sweep-helpers.ts` (168 LOC) + `scripts/multi-pair-composition-sweep.ts` (115 LOC).
+  - Split `test/alpha/adversarial-challenger.test.ts` (314 LOC) into `test/alpha/adversarial-challenger.test.ts` (151 LOC) + `test/alpha/adversarial-challenger-windfall-hash.test.ts` (164 LOC).
+  - Slimmed all remaining active helper and challenger modules in `test/alpha/` (`m1-2-empirical-challenger.ts`, `m2-1-empirical-challenger.ts`, `m3-1-empirical-challenger.ts`, `empirical-challenger.ts`, `tier1-robustness.ts`, `tier2-robustness.ts`, `tier1-financial.ts`, `tier3-cross-feature.ts`, `m3-3-adversarial-verifier.ts`) so zero active files in `scripts/` or `test/alpha/` exceed `190 LOC`.
+- **Strict Non-Test Ceiling (`<= 105 LOC` across all of `src/`)**:
+  - Compacted all 31 non-test `.ts`/`.tsx` files in `src/` between `106–110 LOC` down to `<= 105 LOC` (0 non-test files `> 105 LOC` across all of `src/`).
+- **Strict Test Ceiling (`<= 260 LOC` across all of `src/`)**:
+  - Compacted all 17 test files in `src/` exceeding `260 LOC` (`262–297 LOC`) down to `<= 250 LOC` each (0 test files `> 260 LOC` across all of `src/`, max test file is now 258 LOC).
+- **Verification**:
+  - 715/715 test files (6,001/6,001 tests) passing, `tsc --noEmit` 0 errors, ESLint 0 warnings, OSS package audit clean (3/3 checks passed).
+
 ### Quad-Cluster Deep Refactor Wave 4 — 2026-10-17
 - **100% `QuantScreenHeader` Unification (`src/components/quant/quant-screen-header.tsx` & 15/15 Quant Screens)**:
   - Extended `QuantScreenHeader` with optional `extraBadge?: ReactNode` to support `alpha-zoo-evaluator.tsx` (`ZERO_LOOKAHEAD • CAUSAL_AST`) and wired every single quant screen in `src/components/quant/*.tsx` (15/15) to `QuantScreenHeader`.

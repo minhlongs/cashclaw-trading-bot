@@ -81,11 +81,7 @@ export function liquidationSignal(f: DerivativeFeatures): { direction: 'long' | 
   return { direction, confidence, reasons };
 }
 
-/**
- * Basis expansion signal.
- * Positive basis = futures premium → bullish sentiment.
- * Negative basis = futures discount → bearish.
- */
+/** Basis expansion signal: positive basis = bullish, negative basis = bearish. */
 export function basisSignal(f: DerivativeFeatures): { direction: 'long' | 'short' | 'neutral'; confidence: number; reasons: string[] } | null {
   if (f.basis === null || f.basisZScore === null) return null;
   const reasons: string[] = [];
@@ -101,6 +97,5 @@ export function basisSignal(f: DerivativeFeatures): { direction: 'long' | 'short
     confidence = Math.min(1, Math.abs(f.basisZScore) / 3);
     reasons.push(`basis contraction: ${(f.basis * 100).toFixed(3)}%, z=${f.basisZScore.toFixed(2)}`);
   }
-
   return { direction, confidence, reasons };
 }

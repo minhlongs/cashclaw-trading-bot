@@ -83,18 +83,12 @@ export class ModelRouter {
   }
 }
 
-/**
- * Create a ModelRouter from an array of providers.
- * Validates and builds the registry first.
- */
 export function createModelRouter(
   providers: readonly LlmProvider[],
   options: { defaultTimeoutMs?: number; maxTokensCap?: number } = {},
 ): { ok: true; router: ModelRouter } | { ok: false; reasons: readonly string[] } {
   const registryResult = createProviderRegistry(providers);
-  if (!registryResult.ok) {
-    return registryResult;
-  }
+  if (!registryResult.ok) return registryResult;
   return {
     ok: true,
     router: new ModelRouter({

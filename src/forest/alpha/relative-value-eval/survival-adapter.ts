@@ -1,23 +1,12 @@
 // Survival evaluation adapters for relative-value results.
-// ADAPTER, NOT ENGINE: maps stitched relative-value OOS output into the
-// exact shapes consumed by evaluateSurvival() and runSurvivalGate(). Every
-// simulated period still originates from runPairSpreadSim; nothing here
-// re-simulates or re-ranks. Pure and deterministic — no I/O, no network.
-//
-// Unit convention: expectancy/PnL fields carry PORTFOLIO-FRACTION returns
-// (per-period net return of the stitched OOS series). The price-unit
-// runBaseline() benchmark reports live in benchmarks.ts and are compared
-// directionally only — never mix the two unit systems in one table.
+// Maps stitched relative-value OOS output into EvaluationReport shapes consumed by evaluateSurvival() and runSurvivalGate().
 
 import { RegimeLabel } from '@/tree/regime/types';
 import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
 import type { PairPeriodRecord } from '@/tree/alpha/relative-value';
 import type { StressMode } from '@/tree/alpha/cost-stress';
 import {
-  annualizedSharpe,
-  annualizedSortino,
-  compoundReturn,
-  maxDrawdownPct,
+  annualizedSharpe, annualizedSortino, compoundReturn, maxDrawdownPct,
 } from '@/forest/alpha/cross-sectional-eval/return-metrics';
 import { attributeCosts } from '@/forest/alpha/cross-sectional-eval/attribution';
 import { extractRoundTrips } from './round-trips';
@@ -26,22 +15,12 @@ import { equityCurve, medianOf, singleRegimeBucket } from './survival-adapter-he
 /** Identity + metric options for mapping RV output into EvaluationReport. */
 export interface RVAdapterOptions {
   readonly experimentId: string;
-  /** Report symbol label, e.g. 'PAIRS/M4' or a pair label 'AAA/BBB'. */
   readonly symbol: string;
   readonly timeframe: string;
-  /** Annualization factor for Sharpe/Sortino (periods per year). */
   readonly periodsPerYear: number;
-  /** Cost-attribution share split (matches the sim's stress mode). */
   readonly stressMode?: StressMode;
 }
 
-/**
- * Map stitched relative-value OOS periods into the EvaluationReport consumed
- * by evaluateSurvival()/runSurvivalGate() UNCHANGED. Trades come from
- * completed round trips; Sharpe/Sortino/maxDD reuse the Phase-4 return
- * metrics helpers. Fail-closed: throws on empty input or invalid options —
- * a thin result must never reach the gates silently.
- */
 export function toEvaluationReport(
   oosPeriods: readonly PairPeriodRecord[],
   options: RVAdapterOptions,

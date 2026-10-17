@@ -27,7 +27,6 @@ describe('RequestQueue', () => {
       const q = makeQueue();
       const id = q.enqueue(fakeItem());
       expect(id).toBeTruthy();
-
       const item = q.dequeue('binance');
       expect(item).toBeTruthy();
       expect(item!.id).toBe(id);
@@ -45,17 +44,10 @@ describe('RequestQueue', () => {
       q.enqueue(fakeItem({ priority: RequestPriority.MARKET_DATA, label: 'market' }));
       q.enqueue(fakeItem({ priority: RequestPriority.STRATEGY_EVAL, label: 'strat' }));
 
-      const first = q.dequeue('binance')!;
-      expect(first.label).toBe('live');
-
-      const second = q.dequeue('binance')!;
-      expect(second.label).toBe('strat');
-
-      const third = q.dequeue('binance')!;
-      expect(third.label).toBe('market');
-
-      const fourth = q.dequeue('binance')!;
-      expect(fourth.label).toBe('hist');
+      expect(q.dequeue('binance')!.label).toBe('live');
+      expect(q.dequeue('binance')!.label).toBe('strat');
+      expect(q.dequeue('binance')!.label).toBe('market');
+      expect(q.dequeue('binance')!.label).toBe('hist');
     });
 
     it('preserves FIFO within same priority', () => {
@@ -74,32 +66,22 @@ describe('RequestQueue', () => {
       q.enqueue(fakeItem({ exchange: 'binance', label: 'b' }));
       q.enqueue(fakeItem({ exchange: 'bybit', label: 'by' }));
 
-      const b = q.dequeue('binance')!;
-      expect(b.label).toBe('b');
-
-      const by = q.dequeue('bybit')!;
-      expect(by.label).toBe('by');
+      expect(q.dequeue('binance')!.label).toBe('b');
+      expect(q.dequeue('bybit')!.label).toBe('by');
     });
   });
 
   describe('budget enforcement', () => {
     it('dequeue respects daily budget', () => {
       const q = makeQueue({ dailyBudget: { binance: 3, bybit: 80, okx: 60 } });
+      for (let i = 0; i < 4; i++) q.enqueue(fakeItem({ cost: 1 }));
 
-      // Enqueue 4 items (capacity allows it)
-      q.enqueue(fakeItem({ cost: 1 }));
-      q.enqueue(fakeItem({ cost: 1 }));
-      q.enqueue(fakeItem({ cost: 1 }));
-      q.enqueue(fakeItem({ cost: 1 }));
-
-      // Dequeue first 3 — each costs 1, total 3 = budget
       for (let i = 0; i < 3; i++) {
         const item = q.dequeue('binance');
         expect(item).not.toBeNull();
         q.recordCost('binance', 1);
       }
 
-      // 4th dequeue should be rejected (budget exhausted)
       expect(q.dequeue('binance')).toBeNull();
     });
 
@@ -108,26 +90,19 @@ describe('RequestQueue', () => {
       q.enqueue(fakeItem({ cost: 1 }));
       q.enqueue(fakeItem({ cost: 1 }));
 
-      // Process first two (spends full budget)
       const item1 = q.dequeue('binance')!;
-      q.recordCost('binance', item1.cost); // cost 1
-
+      q.recordCost('binance', item1.cost);
       const item2 = q.dequeue('binance')!;
-      q.recordCost('binance', item2.cost); // cost 2 (budget hit)
+      q.recordCost('binance', item2.cost);
 
-      // Should now return null
       expect(q.dequeue('binance')).toBeNull();
     });
 
     it('canEnqueue checks capacity only; budget enforced at dequeue', () => {
       const q = makeQueue({ dailyBudget: { binance: 5, bybit: 80, okx: 60 } });
       expect(q.canEnqueue('binance')).toBe(true);
-
       q.recordCost('binance', 5);
-      // canEnqueue still true — budget is checked at dequeue/drain
       expect(q.canEnqueue('binance')).toBe(true);
-
-      // dequeue blocked by budget
       expect(q.dequeue('binance')).toBeNull();
     });
   });
@@ -137,15 +112,12 @@ describe('RequestQueue', () => {
       const q = makeQueue({ maxDepth: { binance: 2, bybit: 5, okx: 5 } });
       q.enqueue(fakeItem());
       q.enqueue(fakeItem());
-
-      const rejected = q.enqueue(fakeItem());
-      expect(rejected).toBeNull();
+      expect(q.enqueue(fakeItem())).toBeNull();
     });
 
     it('reports depth correctly', () => {
       const q = makeQueue();
       expect(q.getDepth('binance')).toBe(0);
-
       q.enqueue(fakeItem());
       q.enqueue(fakeItem({ priority: RequestPriority.LIVE_TRADE }));
       expect(q.getDepth('binance')).toBe(2);
@@ -157,13 +129,9 @@ describe('RequestQueue', () => {
   describe('drain', () => {
     it('processes items up to batch size', async () => {
       const q = makeQueue({ drainBatchSize: 3 });
-      q.enqueue(fakeItem({ cost: 1 }));
-      q.enqueue(fakeItem({ cost: 1 }));
-      q.enqueue(fakeItem({ cost: 1 }));
-      q.enqueue(fakeItem({ cost: 1 })); // 4th won't be processed (batch=3)
+      for (let i = 0; i < 4; i++) q.enqueue(fakeItem({ cost: 1 }));
 
       const result = await q.drain('binance', async () => true);
-
       expect(result.processed).toBe(3);
       expect(result.pending).toBe(1);
     });
@@ -174,7 +142,6 @@ describe('RequestQueue', () => {
       q.enqueue(fakeItem({ cost: 4 }));
 
       await q.drain('binance', async () => true);
-
       expect(q.getCostSnapshot().binance.used).toBe(7);
     });
 
@@ -183,28 +150,17 @@ describe('RequestQueue', () => {
       q.enqueue(fakeItem({ cost: 1, label: 'will-skip' }));
       q.enqueue(fakeItem({ cost: 1, label: 'will-process' }));
 
-      const result = await q.drain('binance', async (item) => {
-        return item.label !== 'will-skip';
-      });
-
+      const result = await q.drain('binance', async (item) => item.label !== 'will-skip');
       expect(result.processed).toBe(1);
       expect(result.skipped).toBe(1);
       expect(result.pending).toBe(0);
     });
 
     it('stops draining when budget exceeded mid-cycle', async () => {
-      const q = makeQueue({
-        dailyBudget: { binance: 5, bybit: 80, okx: 60 },
-        drainBatchSize: 10,
-      });
-      q.enqueue(fakeItem({ cost: 3 }));
-      q.enqueue(fakeItem({ cost: 3 }));
-      q.enqueue(fakeItem({ cost: 3 }));
+      const q = makeQueue({ dailyBudget: { binance: 5, bybit: 80, okx: 60 }, drainBatchSize: 10 });
+      for (let i = 0; i < 3; i++) q.enqueue(fakeItem({ cost: 3 }));
 
-      // After first drain: cost=3, remaining=2. isOverBudget → false
-      // After second drain: cost=6, remaining=0. isOverBudget → true → break
       const result = await q.drain('binance', async () => true);
-
       expect(result.processed).toBe(2);
       expect(result.skipped).toBe(0);
       expect(result.pending).toBe(1);
@@ -218,7 +174,6 @@ describe('RequestQueue', () => {
       const result = await q.drain('binance', async () => {
         throw new Error('API timeout');
       });
-
       expect(result.processed).toBe(0);
       expect(result.skipped).toBe(2);
       expect(result.pending).toBe(0);
@@ -230,9 +185,7 @@ describe('RequestQueue', () => {
       const q = makeQueue();
       const id = q.enqueue(fakeItem({ label: 'removable' }));
       expect(q.getDepth('binance')).toBe(1);
-
-      const removed = q.remove('binance', id!);
-      expect(removed).toBe(true);
+      expect(q.remove('binance', id!)).toBe(true);
       expect(q.getDepth('binance')).toBe(0);
     });
 
@@ -248,9 +201,8 @@ describe('RequestQueue', () => {
       q.enqueue(fakeItem({ label: 'a' }));
       q.enqueue(fakeItem({ label: 'b' }));
 
-      const items = q.peek('binance', 2);
-      expect(items).toHaveLength(2);
-      expect(q.getDepth('binance')).toBe(2); // still in queue
+      expect(q.peek('binance', 2)).toHaveLength(2);
+      expect(q.getDepth('binance')).toBe(2);
     });
   });
 

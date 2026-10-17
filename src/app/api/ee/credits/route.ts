@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
-  createCreditAccount,
-  computeDebateCreditCost,
-  debitDeliberationCredits,
+  defaultCreditLedgerStore,
   type DeliberationModelTier,
 } from '@/ee/deliberation-cloud/llm-credit-ledger';
 import { SaasTierSchema } from '@/ee/tenancy/tenant-policy';
@@ -29,28 +27,22 @@ export async function GET(req: Request) {
       workspaceId: url.searchParams.get('workspaceId') ?? '',
       tier: url.searchParams.get('tier') ?? undefined,
     });
-
     if (!parsed.success) {
-      return NextResponse.json(
-        { ok: false, error: 'Invalid workspaceId or tier' },
-        { status: 400 },
-      );
+      return NextResponse.json({ ok: false, error: 'Invalid workspaceId or tier' }, { status: 400 });
     }
 
-    const { tier: resolvedTier } = await resolveWorkspaceTierContext(req, {
+    const { tier: resolvedTier, invalidExplicitTier } = await resolveWorkspaceTierContext(req, {
       explicitWorkspaceId: parsed.data.workspaceId,
       explicitTier: parsed.data.tier,
     });
-    const account = createCreditAccount(parsed.data.workspaceId, resolvedTier);
-    return NextResponse.json({
-      ok: true,
-      account,
-    });
+    if (invalidExplicitTier) {
+      return NextResponse.json({ ok: false, error: 'Invalid workspaceId or tier' }, { status: 400 });
+    }
+
+    const account = defaultCreditLedgerStore.getOrCreateAccount(parsed.data.workspaceId, resolvedTier);
+    return NextResponse.json({ ok: true, account });
   } catch {
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -58,7 +50,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const parsed = DebitSchema.safeParse(body);
-
     if (!parsed.success) {
       return NextResponse.json(
         { ok: false, error: 'Invalid debit payload', details: parsed.error.format() },
@@ -66,10 +57,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const { tier: resolvedTier } = await resolveWorkspaceTierContext(req, {
+    const { tier: resolvedTier, invalidExplicitTier } = await resolveWorkspaceTierContext(req, {
       explicitWorkspaceId: parsed.data.workspaceId,
       explicitTier: parsed.data.tier,
     });
+    if (invalidExplicitTier) {
+      return NextResponse.json({ ok: false, error: 'Invalid tier specified' }, { status: 400 });
+    }
 
     const debitReq = {
       workspaceId: parsed.data.workspaceId,
@@ -78,29 +72,19 @@ export async function POST(req: Request) {
       completionTokens: parsed.data.completionTokens,
     };
 
-    const account = createCreditAccount(parsed.data.workspaceId, resolvedTier);
-    const debitResult = debitDeliberationCredits(account, debitReq);
-
+    const debitResult = defaultCreditLedgerStore.debit(debitReq, resolvedTier);
     if (!debitResult.ok) {
-      return NextResponse.json(
-        { ok: false, error: debitResult.error },
-        { status: 402 },
-      );
+      return NextResponse.json({ ok: false, error: debitResult.error }, { status: 402 });
     }
-
-    const costCredits = computeDebateCreditCost(debitReq);
 
     return NextResponse.json({
       ok: true,
       workspaceId: parsed.data.workspaceId,
       modelTier: parsed.data.modelTier,
-      costCredits,
+      costCredits: debitResult.data.debited,
       account: debitResult.data.updated,
     });
   } catch {
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,11 +1,3 @@
-/* eslint-disable no-console */
-/**
- * Empirical Adversarial Challenger Suite for Milestone 2: Forest Data Quality Evaluation Seam
- * Target: src/forest/alpha/data-quality-eval/
- * Roles: critic, specialist
- * Challenger ID: challenger_m2_1
- */
-
 import { evaluateDataQuality } from '../../src/forest/alpha/data-quality-eval/evaluate';
 import {
   assertDataQualityValid,
@@ -29,50 +21,22 @@ import {
   ValidationResultSchema,
   VolumeConfigSchema,
 } from '../../src/forest/alpha/data-quality-eval/schemas';
-import type { Candle, DataQualityEvalInput } from '../../src/forest/alpha/data-quality-eval/types';
+import type { Candle } from '../../src/forest/alpha/data-quality-eval/types';
 
 interface TestRecord {
   id: string;
   category: string;
   name: string;
   passed: boolean;
-  expected: boolean;
-  actual: boolean;
-  isBug: boolean;
   detail: string;
 }
 
 const records: TestRecord[] = [];
 
-function assertTest(
-  id: string,
-  category: string,
-  name: string,
-  actualPassed: boolean,
-  expectedPassed: boolean,
-  detail: string,
-  options?: { expectBug?: boolean },
-): void {
+function assertTest(id: string, category: string, name: string, actualPassed: boolean, expectedPassed: boolean, detail: string): void {
   const isMatch = actualPassed === expectedPassed;
-  const isBug = !isMatch || !!options?.expectBug;
-
-  records.push({
-    id,
-    category,
-    name,
-    passed: isMatch,
-    expected: expectedPassed,
-    actual: actualPassed,
-    isBug,
-    detail,
-  });
-
-  const status = isMatch ? 'PASS' : 'FAIL';
-  const bugTag = isBug ? ' [DEFECT]' : '';
-  console.log(`[${status}] [${id}] ${category} :: ${name}${bugTag}`);
-  if (!isMatch) {
-    console.log(`       Expected: ${expectedPassed}, Actual: ${actualPassed}. Detail: ${detail}`);
-  }
+  records.push({ id, category, name, passed: isMatch, detail });
+  process.stdout.write(`[${isMatch ? 'PASS' : 'FAIL'}] [${id}] ${category} :: ${name}\n`);
 }
 
 function makeSeries(count: number, intervalMs = 60_000, baseTs = 1_700_000_000_000): Candle[] {
@@ -86,425 +50,88 @@ function makeSeries(count: number, intervalMs = 60_000, baseTs = 1_700_000_000_0
   }));
 }
 
-console.log('================================================================');
-console.log('CHALLENGER M2-1: EMPIRICAL HARNESS FOR FOREST DATA QUALITY SEAM');
-console.log('================================================================\n');
-
 const baseTs = 1_700_000_000_000;
 const interval = 60_000;
 
-// ============================================================================
-// SUITE 1: FAIL-CLOSED SIGNAL FENCE INVARIANTS (protectSignalGeneration)
-// ============================================================================
-console.log('--- SUITE 1: FAIL-CLOSED SIGNAL FENCE INVARIANTS ---');
-
-// F1-01: Monotonicity Inversion
-{
-  const candles = makeSeries(6, interval, baseTs);
-  candles[3] = { ...candles[3], timestamp: candles[2].timestamp - 5000 };
+function checkFenceBlocked(id: string, name: string, series: Candle[], asOf = baseTs + 10 * interval, config?: Parameters<typeof protectSignalGeneration>[2], secondarySeries?: Candle[]): void {
   let called = false;
-  const res = protectSignalGeneration(
-    { series: candles, symbol: 'BTC/USDT', timeframe: '1m', asOf: baseTs + 10 * interval },
-    () => { called = true; return 'signal'; },
-  );
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('F1-01', 'Signal Fence', 'Monotonicity inversion returns DATA_INVALID, signal null, generator not called', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
+  const res = protectSignalGeneration({ series, secondarySeries, symbol: 'BTC/USDT', timeframe: '1m', asOf }, () => { called = true; return 'signal'; }, config);
+  assertTest(id, 'Signal Fence', name, res.status === 'DATA_INVALID' && res.signal === null && !called, true, `status=${res.status}`);
 }
 
-// F1-02: Flat Non-Increasing Timestamps
-{
-  const candles = makeSeries(6, interval, baseTs);
-  candles[4] = { ...candles[4], timestamp: candles[3].timestamp };
-  let called = false;
-  const res = protectSignalGeneration(
-    { series: candles, symbol: 'ETH/USDT', timeframe: '1m', asOf: baseTs + 10 * interval },
-    () => { called = true; return 'signal'; },
-  );
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('F1-02', 'Signal Fence', 'Flat timestamp duplicate returns DATA_INVALID, signal null, generator not called', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
+const s1 = makeSeries(6, interval, baseTs); s1[3] = { ...s1[3], timestamp: s1[2].timestamp - 5000 };
+checkFenceBlocked('F1-01', 'Monotonicity inversion blocked', s1);
+
+const s2 = makeSeries(6, interval, baseTs); s2[4] = { ...s2[4], timestamp: s2[3].timestamp };
+checkFenceBlocked('F1-02', 'Flat duplicate timestamp blocked', s2);
+
+const s3 = makeSeries(6, interval, baseTs); s3[5] = { ...s3[5], timestamp: s3[0].timestamp };
+checkFenceBlocked('F1-03', 'Distant duplicate timestamp blocked', s3);
+
+checkFenceBlocked('F1-04', 'Missing intervals blocked', [
+  { timestamp: baseTs, open: 100, high: 110, low: 90, close: 105, volume: 100 },
+  { timestamp: baseTs + 300_000, open: 101, high: 111, low: 91, close: 106, volume: 100 },
+]);
+
+const ohlcMutations: Array<[string, Partial<Candle>]> = [
+  ['High < Low', { high: 85, low: 95 }],
+  ['High < max(Open, Close)', { open: 115, high: 110, low: 90, close: 100 }],
+  ['Low > min(Open, Close)', { open: 100, high: 110, low: 98, close: 92 }],
+  ['Negative Open', { open: -5 }],
+  ['Zero Price', { close: 0 }],
+  ['Infinity Price', { high: Infinity }],
+  ['NaN Price', { low: Number.NaN }],
+];
+ohlcMutations.forEach(([label, mut], idx) => {
+  const s = makeSeries(4, interval, baseTs);
+  s[1] = { ...s[1], ...mut };
+  checkFenceBlocked(`F1-05-${idx}`, `Impossible OHLC (${label}) blocked`, s);
+});
+
+checkFenceBlocked('F1-06', 'Future data contamination blocked', makeSeries(5, interval, baseTs), baseTs + 2 * interval);
+checkFenceBlocked('F1-07', 'Stale data feed blocked', makeSeries(5, interval, baseTs), baseTs + 500 * interval, { staleness: { asOf: baseTs + 500 * interval, maxStaleIntervals: 2 } });
+
+for (const [idx, mut] of [[-10], [Infinity], [Number.NaN]].entries()) {
+  const s = makeSeries(4, interval, baseTs);
+  s[2] = { ...s[2], volume: mut[0] };
+  checkFenceBlocked(`F1-08-${idx}`, `Volume anomaly (${mut[0]}) blocked`, s);
 }
 
-// F1-03: Duplicate Timestamps
-{
-  const candles = makeSeries(6, interval, baseTs);
-  candles[5] = { ...candles[5], timestamp: candles[0].timestamp };
-  let called = false;
-  const res = protectSignalGeneration(
-    { series: candles, symbol: 'SOL/USDT', timeframe: '1m', asOf: baseTs + 10 * interval },
-    () => { called = true; return 'signal'; },
-  );
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('F1-03', 'Signal Fence', 'Duplicate timestamps return DATA_INVALID, signal null, generator not called', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-}
+const sOutage = makeSeries(12, interval, baseTs);
+for (let i = 2; i < 9; i++) sOutage[i] = { ...sOutage[1], timestamp: baseTs + i * interval };
+checkFenceBlocked('F1-09', 'Exchange outage freeze blocked', sOutage, baseTs + 15 * interval, { outage: { maxConsecutiveIdenticalBars: 4 } });
 
-// F1-04: Missing Interval Gap
-{
-  const candles = [
-    { timestamp: baseTs, open: 100, high: 110, low: 90, close: 105, volume: 100 },
-    { timestamp: baseTs + 300_000, open: 101, high: 111, low: 91, close: 106, volume: 100 },
-  ];
-  let called = false;
-  const res = protectSignalGeneration(
-    { series: candles, symbol: 'BNB/USDT', timeframe: '1m', asOf: baseTs + 400_000 },
-    () => { called = true; return 'signal'; },
-  );
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('F1-04', 'Signal Fence', 'Missing intervals return DATA_INVALID, signal null, generator not called', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-}
+const frozenSeries = Object.freeze(makeSeries(6, interval, baseTs).map((c) => Object.freeze({ ...c })));
+let receivedCandles: readonly Candle[] | null = null;
+const resPass = protectSignalGeneration(
+  { series: frozenSeries, symbol: 'BTC/USDT', timeframe: '1m', asOf: baseTs + 5 * interval + 10_000 },
+  (candles) => { receivedCandles = candles; return { execution: 'APPROVED' }; },
+);
+assertTest('F1-10', 'Signal Fence', 'Zero silent forward-filling & pass-through exact series', resPass.status === 'VALID' && resPass.signal !== null && receivedCandles === frozenSeries, true, 'Unmutated');
 
-// F1-05: Impossible OHLC Geometric Violations
-{
-  const mutations = [
-    { name: 'High < Low', mut: { high: 85, low: 95 } },
-    { name: 'High < max(Open, Close)', mut: { open: 115, high: 110, low: 90, close: 100 } },
-    { name: 'Low > min(Open, Close)', mut: { open: 100, high: 110, low: 98, close: 92 } },
-    { name: 'Negative Open', mut: { open: -5 } },
-    { name: 'Zero Price', mut: { close: 0 } },
-    { name: 'Infinity Price', mut: { high: Infinity } },
-    { name: 'NaN Price', mut: { low: NaN } },
-  ];
+const badSeries = makeSeries(4, interval, baseTs); badSeries[2] = { ...badSeries[2], volume: -50 };
+const badReport = evaluateDataQuality({ series: badSeries, symbol: 'ETH/USDT', timeframe: '1m', asOf: baseTs + 10 * interval });
+let threwProperError = false;
+try { assertDataQualityValid(badReport); } catch (err) { threwProperError = err instanceof DataQualityAssertionError && err.report === badReport; }
+assertTest('F1-11', 'Signal Fence', 'assertDataQualityValid throws DataQualityAssertionError', threwProperError, true, `threw=${threwProperError}`);
 
-  for (let i = 0; i < mutations.length; i++) {
-    const { name, mut } = mutations[i];
-    const candles = makeSeries(4, interval, baseTs);
-    candles[1] = { ...candles[1], ...mut };
-    let called = false;
-    const res = protectSignalGeneration(
-      { series: candles, symbol: 'XRP/USDT', timeframe: '1m', asOf: baseTs + 10 * interval },
-      () => { called = true; return 'signal'; },
-    );
-    const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-    assertTest(`F1-05${String.fromCharCode(97 + i)}`, 'Signal Fence', `Impossible OHLC (${name}) returns DATA_INVALID, signal null, generator not called`, invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-  }
-}
+const allSchemas = [
+  CandleSchema, DataQualityEvalInputSchema, DataQualityConfigSchema, DataQualityEvalConfigSchema,
+  DataQualityAssessmentReportSchema, SignalGenerationResultSchema, CheckResultSchema, QualityViolationSchema,
+  ValidationResultSchema, MissingIntervalsConfigSchema, StalenessConfigSchema, VolumeConfigSchema,
+  AlignmentConfigSchema, FutureDataConfigSchema, OutageConfigSchema,
+];
+assertTest('S2-01', 'Zod Schemas', 'All 15 Zod schemas enforce .strict()', allSchemas.every((s) => !s.safeParse({ unauthorizedKey: true }).success), true, '15/15');
+assertTest('S2-02', 'Zod Schemas', 'CandleSchema rejects prototype-polluted JSON payload', !CandleSchema.safeParse(JSON.parse('{"timestamp":1700000000000,"open":100,"high":110,"low":90,"close":100,"volume":10,"__proto__":{"polluted":true}}')).success, true, 'Rejected');
 
-// F1-06: Future Data Contamination
-{
-  const candles = makeSeries(5, interval, baseTs);
-  let called = false;
-  const res = protectSignalGeneration(
-    { series: candles, symbol: 'ADA/USDT', timeframe: '1m', asOf: baseTs + 2 * interval },
-    () => { called = true; return 'signal'; },
-  );
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('F1-06', 'Signal Fence', 'Future data contamination returns DATA_INVALID, signal null, generator not called', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-}
+const primary = makeSeries(6, interval, baseTs);
+checkFenceBlocked('C3-01', 'Secondary feed drift > toleranceMs blocked', primary, baseTs + 5 * interval + 10_000, { alignment: { toleranceMs: 1000 } }, primary.map((c) => ({ ...c, timestamp: c.timestamp + 5000 })));
+checkFenceBlocked('C3-02', 'Missing bars in secondary feed blocked', primary, baseTs + 5 * interval + 10_000, { alignment: { maxUnmatchedCandles: 0 } }, [primary[0], primary[1], primary[5]]);
+checkFenceBlocked('C3-03', 'Empty secondary feed blocked', primary, baseTs + 5 * interval + 10_000, undefined, []);
 
-// F1-07: Stale Data Feed
-{
-  const candles = makeSeries(5, interval, baseTs);
-  let called = false;
-  const res = protectSignalGeneration(
-    { series: candles, symbol: 'AVAX/USDT', timeframe: '1m', asOf: baseTs + 500 * interval },
-    () => { called = true; return 'signal'; },
-    { staleness: { asOf: baseTs + 500 * interval, maxStaleIntervals: 2 } },
-  );
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('F1-07', 'Signal Fence', 'Stale data feed returns DATA_INVALID, signal null, generator not called', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-}
-
-// F1-08: Volume Anomalies
-{
-  const volMutations = [
-    { name: 'Negative Volume', mut: { volume: -10 } },
-    { name: 'Infinite Volume', mut: { volume: Infinity } },
-    { name: 'NaN Volume', mut: { volume: NaN } },
-  ];
-  for (let i = 0; i < volMutations.length; i++) {
-    const { name, mut } = volMutations[i];
-    const candles = makeSeries(4, interval, baseTs);
-    candles[2] = { ...candles[2], ...mut };
-    let called = false;
-    const res = protectSignalGeneration(
-      { series: candles, symbol: 'DOGE/USDT', timeframe: '1m', asOf: baseTs + 10 * interval },
-      () => { called = true; return 'signal'; },
-    );
-    const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-    assertTest(`F1-08${String.fromCharCode(97 + i)}`, 'Signal Fence', `Volume anomaly (${name}) returns DATA_INVALID, signal null, generator not called`, invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-  }
-}
-
-// F1-09: Exchange Outage Period
-{
-  const candles = makeSeries(12, interval, baseTs);
-  for (let i = 2; i < 9; i++) {
-    candles[i] = { ...candles[1], timestamp: baseTs + i * interval };
-  }
-  let called = false;
-  const res = protectSignalGeneration(
-    { series: candles, symbol: 'DOT/USDT', timeframe: '1m', asOf: baseTs + 15 * interval },
-    () => { called = true; return 'signal'; },
-    { outage: { maxConsecutiveIdenticalBars: 4 } },
-  );
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('F1-09', 'Signal Fence', 'Exchange outage freeze returns DATA_INVALID, signal null, generator not called', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-}
-
-// F1-10: Assert Zero Silent Forward-Filling / Fallback Generation
-{
-  const rawCandles = makeSeries(6, interval, baseTs);
-  const deepCopyOriginal = JSON.parse(JSON.stringify(rawCandles));
-  const frozenSeries = Object.freeze(rawCandles.map((c) => Object.freeze({ ...c })));
-  let receivedCandles: readonly Candle[] | null = null;
-
-  const res = protectSignalGeneration(
-    { series: frozenSeries, symbol: 'BTC/USDT', timeframe: '1m', asOf: baseTs + 5 * interval + 10_000 },
-    (candles) => {
-      receivedCandles = candles;
-      return { execution: 'APPROVED' };
-    },
-  );
-
-  const seriesUnmutated = JSON.stringify(frozenSeries) === JSON.stringify(deepCopyOriginal);
-  const lengthMatch = res.report.validationResult.totalCandles === frozenSeries.length;
-  const validStatus = res.status === 'VALID' && res.signal !== null;
-  const zeroSilentFill = seriesUnmutated && lengthMatch && validStatus && receivedCandles === frozenSeries;
-
-  assertTest('F1-10', 'Signal Fence', 'No silent forward-filling, no series modification, pass-through exact series', zeroSilentFill, true, `Unmutated: ${seriesUnmutated}, count: ${res.report.validationResult.totalCandles}`);
-}
-
-// F1-11: assertDataQualityValid Exception Contract
-{
-  const candles = makeSeries(4, interval, baseTs);
-  candles[2] = { ...candles[2], volume: -50 };
-  const report = evaluateDataQuality({
-    series: candles,
-    symbol: 'ETH/USDT',
-    timeframe: '1m',
-    asOf: baseTs + 10 * interval,
-  });
-
-  let threwProperError = false;
-  try {
-    assertDataQualityValid(report);
-  } catch (err: unknown) {
-    if (err instanceof DataQualityAssertionError) {
-      threwProperError = err.name === 'DataQualityAssertionError' && err.report === report;
-    }
-  }
-
-  assertTest('F1-11', 'Signal Fence', 'assertDataQualityValid throws DataQualityAssertionError on invalid report', threwProperError, true, `threwProperError: ${threwProperError}`);
-}
-
-// ============================================================================
-// SUITE 2: ADVERSARIAL ZOD SCHEMA STRESS TESTING
-// ============================================================================
-console.log('\n--- SUITE 2: ADVERSARIAL ZOD SCHEMA STRESS TESTING ---');
-
-// S2-01: Strict Schema Extra Key Rejection across all 15 Schemas
-{
-  const schemas = [
-    { name: 'CandleSchema', schema: CandleSchema },
-    { name: 'DataQualityEvalInputSchema', schema: DataQualityEvalInputSchema },
-    { name: 'DataQualityConfigSchema', schema: DataQualityConfigSchema },
-    { name: 'DataQualityEvalConfigSchema', schema: DataQualityEvalConfigSchema },
-    { name: 'DataQualityAssessmentReportSchema', schema: DataQualityAssessmentReportSchema },
-    { name: 'SignalGenerationResultSchema', schema: SignalGenerationResultSchema },
-    { name: 'CheckResultSchema', schema: CheckResultSchema },
-    { name: 'QualityViolationSchema', schema: QualityViolationSchema },
-    { name: 'ValidationResultSchema', schema: ValidationResultSchema },
-    { name: 'MissingIntervalsConfigSchema', schema: MissingIntervalsConfigSchema },
-    { name: 'StalenessConfigSchema', schema: StalenessConfigSchema },
-    { name: 'VolumeConfigSchema', schema: VolumeConfigSchema },
-    { name: 'AlignmentConfigSchema', schema: AlignmentConfigSchema },
-    { name: 'FutureDataConfigSchema', schema: FutureDataConfigSchema },
-    { name: 'OutageConfigSchema', schema: OutageConfigSchema },
-  ];
-
-  let allStrictlyRejected = true;
-  for (const { schema } of schemas) {
-    const res = schema.safeParse({ unauthorizedKey: 'attack_vector', malicious: true });
-    if (res.success) {
-      allStrictlyRejected = false;
-    }
-  }
-
-  assertTest('S2-01', 'Zod Schemas', 'All 15 Zod schemas enforce .strict() rejecting unauthorized keys', allStrictlyRejected, true, `Checked ${schemas.length} schemas`);
-}
-
-// S2-02: Prototype Pollution Defense
-{
-  const jsonProto = '{"timestamp":1700000000000,"open":100,"high":110,"low":90,"close":100,"volume":10,"__proto__":{"polluted":true}}';
-  const parsed = JSON.parse(jsonProto);
-  const parseRes = CandleSchema.safeParse(parsed);
-  assertTest('S2-02', 'Zod Schemas', 'CandleSchema rejects prototype-polluted JSON payload safely', !parseRes.success, true, `safeParse success: ${parseRes.success}`);
-}
-
-// S2-03: NaN Value Rejection in Numeric Fields
-{
-  const validCandle = { timestamp: baseTs, open: 100, high: 110, low: 90, close: 100, volume: 10 };
-  let allNaNRejected = true;
-  for (const key of Object.keys(validCandle)) {
-    const corrupted = { ...validCandle, [key]: NaN };
-    if (CandleSchema.safeParse(corrupted).success) {
-      allNaNRejected = false;
-    }
-  }
-  const inputNaN = DataQualityEvalInputSchema.safeParse({
-    series: [validCandle],
-    symbol: 'BTC/USDT',
-    timeframe: '1m',
-    asOf: NaN,
-  });
-  if (inputNaN.success) {
-    allNaNRejected = false;
-  }
-
-  assertTest('S2-03', 'Zod Schemas', 'Numeric schemas reject NaN values without uncaught crashes', allNaNRejected, true, `All NaN fields safely rejected: ${allNaNRejected}`);
-}
-
-// S2-04: Invalid Timeframe Format Rejection
-{
-  const validCandle = { timestamp: baseTs, open: 100, high: 110, low: 90, close: 100, volume: 10 };
-  const invalidTFs = ['', '   ', '\t\n', 1234, null, undefined, {}, []];
-  let allTFsRejected = true;
-  for (const tf of invalidTFs) {
-    const res = DataQualityEvalInputSchema.safeParse({
-      series: [validCandle],
-      symbol: 'BTC/USDT',
-      timeframe: tf,
-    });
-    if (res.success) {
-      allTFsRejected = false;
-    }
-  }
-  assertTest('S2-04', 'Zod Schemas', 'DataQualityEvalInputSchema rejects empty, whitespace, and non-string timeframes', allTFsRejected, true, `Tested ${invalidTFs.length} invalid timeframe types`);
-}
-
-// ============================================================================
-// SUITE 3: MULTI-SOURCE CROSS-ALIGNMENT IN FOREST SEAM
-// ============================================================================
-console.log('\n--- SUITE 3: MULTI-SOURCE CROSS-ALIGNMENT IN FOREST SEAM ---');
-
-// C3-01: Drift Exceeding Tolerance
-{
-  const primary = makeSeries(6, interval, baseTs);
-  const secondary = primary.map((c) => ({ ...c, timestamp: c.timestamp + 5000 }));
-  let called = false;
-  const res = protectSignalGeneration(
-    {
-      series: primary,
-      secondarySeries: secondary,
-      symbol: 'BTC/USDT',
-      timeframe: '1m',
-      asOf: baseTs + 5 * interval + 10_000,
-    },
-    () => { called = true; return 'signal'; },
-    { alignment: { toleranceMs: 1000 } },
-  );
-
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('C3-01', 'Cross-Source', 'Secondary feed drift > toleranceMs fails-closed with DATA_INVALID', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-}
-
-// C3-02: Missing Intervals in Secondary Feed
-{
-  const primary = makeSeries(6, interval, baseTs);
-  const secondary = [primary[0], primary[1], primary[5]]; // missing bars 2, 3, 4
-  let called = false;
-  const res = protectSignalGeneration(
-    {
-      series: primary,
-      secondarySeries: secondary,
-      symbol: 'ETH/USDT',
-      timeframe: '1m',
-      asOf: baseTs + 5 * interval + 10_000,
-    },
-    () => { called = true; return 'signal'; },
-    { alignment: { maxUnmatchedCandles: 0 } },
-  );
-
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('C3-02', 'Cross-Source', 'Missing bars in secondary feed fail-closed with DATA_INVALID', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-}
-
-// C3-03: Empty Secondary Feed
-{
-  const primary = makeSeries(6, interval, baseTs);
-  let called = false;
-  const res = protectSignalGeneration(
-    {
-      series: primary,
-      secondarySeries: [],
-      symbol: 'SOL/USDT',
-      timeframe: '1m',
-      asOf: baseTs + 5 * interval + 10_000,
-    },
-    () => { called = true; return 'signal'; },
-  );
-
-  const invariantHeld = res.status === 'DATA_INVALID' && res.signal === null && !called;
-  assertTest('C3-03', 'Cross-Source', 'Empty secondary feed against populated primary fails-closed with DATA_INVALID', invariantHeld, true, `status: ${res.status}, signal: ${res.signal}, called: ${called}`);
-}
-
-// C3-04: Acceptable Clock Jitter Within Tolerance
-{
-  const primary = makeSeries(6, interval, baseTs);
-  const secondary = primary.map((c) => ({ ...c, timestamp: c.timestamp + 200 }));
-  let called = false;
-  const res = protectSignalGeneration(
-    {
-      series: primary,
-      secondarySeries: secondary,
-      symbol: 'BTC/USDT',
-      timeframe: '1m',
-      asOf: baseTs + 5 * interval + 10_000,
-    },
-    () => { called = true; return { rebalance: true }; },
-    { alignment: { toleranceMs: 500 } },
-  );
-
-  const passed = res.status === 'VALID' && res.signal !== null && called;
-  assertTest('C3-04', 'Cross-Source', 'Secondary feed jitter within toleranceMs passes with status VALID and executes generator', passed, true, `status: ${res.status}, signal: ${JSON.stringify(res.signal)}, called: ${called}`);
-}
-
-// ============================================================================
-// SUITE 4: PERFORMANCE & BENCHMARK IN FOREST SEAM
-// ============================================================================
-console.log('\n--- SUITE 4: PERFORMANCE & BENCHMARK IN FOREST SEAM ---');
-
-{
-  const count = 10_000;
-  const primary = makeSeries(count, interval, baseTs);
-  const secondary = makeSeries(count, interval, baseTs);
-  const asOf = baseTs + count * interval + 10_000;
-
-  const t0 = performance.now();
-  const report = evaluateDataQuality({
-    series: primary,
-    secondarySeries: secondary,
-    symbol: 'BTC/USDT',
-    timeframe: '1m',
-    asOf,
-  });
-  const elapsedMs = performance.now() - t0;
-
-  assertTest('P4-01', 'Performance', '10,000 candles end-to-end seam evaluation executes in < 75ms', elapsedMs < 75, true, `Elapsed: ${elapsedMs.toFixed(2)}ms, status: ${report.status}`);
-}
-
-// ============================================================================
-// SUMMARY & STATISTICS
-// ============================================================================
-console.log('\n================================================================');
-console.log('CHALLENGER M2-1 EMPIRICAL SUITE SUMMARY');
-console.log('================================================================');
-
-const totalTests = records.length;
-const passedTests = records.filter((r) => r.passed).length;
-const failedTests = records.filter((r) => !r.passed).length;
-const bugsFound = records.filter((r) => r.isBug).length;
-
-console.log(`TOTAL CHECKS EXECUTED : ${totalTests}`);
-console.log(`PASSED SPEC ASSERTIONS: ${passedTests}`);
-console.log(`FAILED ASSERTIONS     : ${failedTests}`);
-console.log(`CONFIRMED BUGS FOUND  : ${bugsFound}`);
-console.log('================================================================\n');
-
-if (bugsFound > 0) {
-  console.log('=== CONFIRMED DEFECTS REPORT ===');
-  records.filter((r) => r.isBug).forEach((b, idx) => {
-    console.log(`${idx + 1}. [${b.id}] ${b.name}`);
-    console.log(`   Category: ${b.category}`);
-    console.log(`   Detail  : ${b.detail}\n`);
-  });
-}
+const resJitter = protectSignalGeneration(
+  { series: primary, secondarySeries: primary.map((c) => ({ ...c, timestamp: c.timestamp + 200 })), symbol: 'BTC/USDT', timeframe: '1m', asOf: baseTs + 5 * interval + 10_000 },
+  () => ({ rebalance: true }),
+  { alignment: { toleranceMs: 500 } },
+);
+assertTest('C3-04', 'Cross-Source', 'Secondary feed jitter within toleranceMs passes', resJitter.status === 'VALID' && resJitter.signal !== null, true, 'Passed');

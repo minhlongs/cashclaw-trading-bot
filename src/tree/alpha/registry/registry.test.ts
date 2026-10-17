@@ -22,12 +22,7 @@ function makeEntry(overrides: Partial<typeof SEED_FALSIFIED[number]> = {}) {
     hypothesis: overrides.hypothesis ?? `hypothesis for ${id}`,
     status: 'PROPOSED' as const,
     falsificationReason: null,
-    result: {
-      oosPassCount: 0,
-      oosTotalCount: 10,
-      aggregatePnlUsd: 0,
-      summary: 'test',
-    },
+    result: { oosPassCount: 0, oosTotalCount: 10, aggregatePnlUsd: 0, summary: 'test' },
     ...overrides,
   };
 }
@@ -36,26 +31,18 @@ describe('createRegistry', () => {
   it('creates an empty registry with zero counts', () => {
     const r = createRegistry();
     expect(r.entries).toEqual([]);
-    expect(r.counts).toEqual({
-      PROPOSED: 0,
-      RUNNING: 0,
-      SURVIVED: 0,
-      FALSIFIED: 0,
-      ARCHIVED: 0,
-    });
+    expect(r.counts).toEqual({ PROPOSED: 0, RUNNING: 0, SURVIVED: 0, FALSIFIED: 0, ARCHIVED: 0 });
   });
 });
 
 describe('addEntry', () => {
   it('rejects empty id', () => {
-    const r = createRegistry();
-    expect(() => addEntry(r, makeEntry({ id: '' }))).toThrow(/id/);
+    expect(() => addEntry(createRegistry(), makeEntry({ id: '' }))).toThrow(/id/);
   });
 
   it('rejects duplicate hypothesis + config hash', () => {
     let r = createRegistry();
     r = addEntry(r, makeEntry({ id: 'a' }));
-    // Same hypothesis AND same configuration (hash) → must be rejected.
     expect(() =>
       addEntry(r, makeEntry({ id: 'b', hypothesis: makeEntry({ id: 'a' }).hypothesis })),
     ).toThrow(/Duplicate/);
@@ -70,9 +57,7 @@ describe('addEntry', () => {
   it('accepts a genuinely different hypothesis with same feature set', () => {
     let r = createRegistry();
     r = addEntry(r, makeEntry({ id: 'a', hypothesis: 'hypothesis one' }));
-    expect(() =>
-      addEntry(r, makeEntry({ id: 'b', hypothesis: 'hypothesis two' })),
-    ).not.toThrow();
+    expect(() => addEntry(r, makeEntry({ id: 'b', hypothesis: 'hypothesis two' }))).not.toThrow();
   });
 });
 
@@ -104,8 +89,7 @@ describe('falsifyEntry', () => {
   });
 
   it('throws on unknown id', () => {
-    const r = createRegistry();
-    expect(() => falsifyEntry(r, 'nope', 'x')).toThrow(/unknown/);
+    expect(() => falsifyEntry(createRegistry(), 'nope', 'x')).toThrow(/unknown/);
   });
 
   it('throws on empty reason', () => {
@@ -118,52 +102,24 @@ describe('falsifyEntry', () => {
 describe('summarize', () => {
   it('reports zero counts for an empty registry', () => {
     expect(summarize(createRegistry())).toEqual({
-      total: 0,
-      proposed: 0,
-      running: 0,
-      survived: 0,
-      falsified: 0,
-      archived: 0,
-      oosPassCount: 0,
+      total: 0, proposed: 0, running: 0, survived: 0, falsified: 0, archived: 0, oosPassCount: 0,
     });
   });
 
   it('computes status counts and aggregates OOS passes', () => {
     let r = createRegistry();
-    r = addEntry(
-      r,
-      makeEntry({
-        id: 'a',
-        status: 'PROPOSED',
-        result: { oosPassCount: 3, oosTotalCount: 10, aggregatePnlUsd: 0, summary: 's' },
-      }),
-    );
-    r = addEntry(
-      r,
-      makeEntry({
-        id: 'b',
-        status: 'FALSIFIED',
-        falsificationReason: 'r',
-        result: { oosPassCount: 1, oosTotalCount: 5, aggregatePnlUsd: 0, summary: 's' },
-      }),
-    );
-    r = addEntry(
-      r,
-      makeEntry({
-        id: 'c',
-        status: 'SURVIVED',
-        result: { oosPassCount: 0, oosTotalCount: 2, aggregatePnlUsd: 0, summary: 's' },
-      }),
-    );
-    const s = summarize(r);
-    expect(s).toEqual({
-      total: 3,
-      proposed: 1,
-      running: 0,
-      survived: 1,
-      falsified: 1,
-      archived: 0,
-      oosPassCount: 4,
+    r = addEntry(r, makeEntry({
+      id: 'a', status: 'PROPOSED', result: { oosPassCount: 3, oosTotalCount: 10, aggregatePnlUsd: 0, summary: 's' },
+    }));
+    r = addEntry(r, makeEntry({
+      id: 'b', status: 'FALSIFIED', falsificationReason: 'r',
+      result: { oosPassCount: 1, oosTotalCount: 5, aggregatePnlUsd: 0, summary: 's' },
+    }));
+    r = addEntry(r, makeEntry({
+      id: 'c', status: 'SURVIVED', result: { oosPassCount: 0, oosTotalCount: 2, aggregatePnlUsd: 0, summary: 's' },
+    }));
+    expect(summarize(r)).toEqual({
+      total: 3, proposed: 1, running: 0, survived: 1, falsified: 1, archived: 0, oosPassCount: 4,
     });
   });
 });
@@ -178,20 +134,13 @@ describe('entryConfigHash', () => {
 
   it('differs when the configuration changes', () => {
     const a = entryConfigHash(SEED_FALSIFIED[0]);
-    const b = entryConfigHash({
-      ...SEED_FALSIFIED[0],
-      hypothesis: 'totally different hypothesis',
-    });
+    const b = entryConfigHash({ ...SEED_FALSIFIED[0], hypothesis: 'totally different hypothesis' });
     expect(a).not.toBe(b);
   });
 
   it('ignores outcome-only fields (status, falsificationReason)', () => {
     const a = entryConfigHash(SEED_FALSIFIED[0]);
-    const b = entryConfigHash({
-      ...SEED_FALSIFIED[0],
-      status: 'ARCHIVED',
-      falsificationReason: 'something else',
-    });
+    const b = entryConfigHash({ ...SEED_FALSIFIED[0], status: 'ARCHIVED', falsificationReason: 'something else' });
     expect(a).toBe(b);
   });
 });
@@ -199,9 +148,7 @@ describe('entryConfigHash', () => {
 describe('toCanonicalJson', () => {
   it('is deterministic (same input → same output)', () => {
     const r = createRegistry();
-    const a = toCanonicalJson(r);
-    const b = toCanonicalJson(r);
-    expect(a).toBe(b);
+    expect(toCanonicalJson(r)).toBe(toCanonicalJson(r));
   });
 
   it('differs when entries change', () => {
@@ -214,8 +161,7 @@ describe('toCanonicalJson', () => {
   it('sorts keys (stable regardless of insertion order)', () => {
     let r = createRegistry();
     r = addEntry(r, makeEntry({ id: 'a' }));
-    const a = toCanonicalJson(r);
-    const parsed = JSON.parse(a);
+    const parsed = JSON.parse(toCanonicalJson(r));
     const keys = Object.keys(parsed);
     expect(keys).toEqual([...keys].sort((x, y) => x.localeCompare(y)));
   });
@@ -227,21 +173,15 @@ describe('SEED_FALSIFIED', () => {
   });
 
   it('all entries are FALSIFIED', () => {
-    for (const e of SEED_FALSIFIED) {
-      expect(e.status).toBe('FALSIFIED');
-    }
+    for (const e of SEED_FALSIFIED) expect(e.status).toBe('FALSIFIED');
   });
 
   it('every entry has a non-empty falsificationReason', () => {
-    for (const e of SEED_FALSIFIED) {
-      expect(e.falsificationReason).toBeTruthy();
-    }
+    for (const e of SEED_FALSIFIED) expect(e.falsificationReason).toBeTruthy();
   });
 
   it('every entry has reproducibility class-level', () => {
-    for (const e of SEED_FALSIFIED) {
-      expect(e.reproducibility).toBe('class-level');
-    }
+    for (const e of SEED_FALSIFIED) expect(e.reproducibility).toBe('class-level');
   });
 
   it('every entry has a non-empty id, hypothesis, and featureSet', () => {
@@ -254,9 +194,7 @@ describe('SEED_FALSIFIED', () => {
 
   it('loads into a registry without duplicate rejection', () => {
     let r = createRegistry();
-    for (const e of SEED_FALSIFIED) {
-      r = addEntry(r, e);
-    }
+    for (const e of SEED_FALSIFIED) r = addEntry(r, e);
     expect(r.entries.length).toBe(30);
     expect(summarize(r).falsified).toBe(30);
     expect(summarize(r).oosPassCount).toBe(20);

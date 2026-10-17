@@ -13,28 +13,18 @@ export interface CheckoutModalProps {
 }
 
 export function NowpaymentsCheckoutModal({
-  isOpen,
-  targetTier,
-  workspaceId,
-  onClose,
-  onSuccess,
+  isOpen, targetTier, workspaceId, onClose, onSuccess,
 }: CheckoutModalProps) {
   const [currency, setCurrency] = useState<'USDT' | 'USDC' | 'BTC'>('USDT');
   const [loading, setLoading] = useState(false);
   const [invoiceCreated, setInvoiceCreated] = useState(false);
 
   if (!isOpen) return null;
-
   const ent = SAAS_TIER_ENTITLEMENTS[targetTier];
 
   const handleCreatePayment = () => {
     setLoading(true);
-    // Simulate NOWPayments IPN checkout generation
-    setTimeout(() => {
-      setLoading(false);
-      setInvoiceCreated(true);
-      onSuccess?.();
-    }, 600);
+    setTimeout(() => { setLoading(false); setInvoiceCreated(true); onSuccess?.(); }, 600);
   };
 
   return (

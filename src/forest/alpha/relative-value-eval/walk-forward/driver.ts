@@ -1,17 +1,10 @@
 // Walk-forward driver for relative-value evaluation.
 // Pure, deterministic — orchestrates selectPairs + runPairSpreadSim ONLY.
-// No second simulation engine: every simulated period comes from
-// runPairSpreadSim; every selection is causally confined to the window's
-// training slice. Method arms differ ONLY via config variants.
 
 import type { WindowConfig, WindowMode } from '@/forest/backtest/walkforward';
 import {
-  runPairSpreadSim,
-  selectPairs,
-  type PairPanel,
-  type PairSelectionConfig,
-  type PairSimConfig,
-  type UniversePanel,
+  runPairSpreadSim, selectPairs,
+  type PairPanel, type PairSelectionConfig, type PairSimConfig, type UniversePanel,
 } from '@/tree/alpha/relative-value';
 import { planWindows, type RVPlannedWindow } from './windows';
 import type { RVPairWindowResult, RVWalkForwardResult, RVWindowResult } from './types';
@@ -19,21 +12,11 @@ import type { RVPairWindowResult, RVWalkForwardResult, RVWindowResult } from './
 /** Per-pair simulator config factory (method arms differ only via config). */
 export type PairConfigFactory = (pair: PairPanel) => PairSimConfig;
 
-function pairPanelFromUniverse(
-  universe: UniversePanel,
-  legA: string,
-  legB: string,
-): PairPanel | null {
+function pairPanelFromUniverse(universe: UniversePanel, legA: string, legB: string): PairPanel | null {
   const i = universe.symbols.indexOf(legA);
   const j = universe.symbols.indexOf(legB);
   if (i < 0 || j < 0) return null;
-  return {
-    legA,
-    legB,
-    timestamps: universe.timestamps,
-    closesA: universe.closes[i]!,
-    closesB: universe.closes[j]!,
-  };
+  return { legA, legB, timestamps: universe.timestamps, closesA: universe.closes[i]!, closesB: universe.closes[j]! };
 }
 
 /**

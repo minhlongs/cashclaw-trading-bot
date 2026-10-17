@@ -4,22 +4,12 @@
 import { describe, expect, it } from 'vitest';
 import { validateJobSpec } from './validation';
 import type { QueueJobSpec } from './types';
-import type {
-  ResearchCosts,
-  ResearchEntry,
-  ResearchSlippage,
-} from '@/tree/alpha/registry/types';
+import type { ResearchCosts, ResearchEntry, ResearchSlippage } from '@/tree/alpha/registry/types';
 import { RegimeLabel } from '@/tree/regime/types';
 import type { Universe } from '@/tree/alpha/universe/types';
 
-// ── Helpers ──────────────────────────────────────────────
 function makeSpec(overrides: Partial<QueueJobSpec> = {}): QueueJobSpec {
-  const universe: Universe = {
-    id: 'test-universe',
-    symbols: ['BTCUSDT', 'ETHUSDT'],
-    weighting: 'equal',
-    rebalanceRule: 'none',
-  };
+  const universe: Universe = { id: 'test-universe', symbols: ['BTCUSDT', 'ETHUSDT'], weighting: 'equal', rebalanceRule: 'none' };
   const costs: ResearchCosts = { feeBps: 10, impactBps: 5 };
   const slippage: ResearchSlippage = { slippageBps: 3 };
   return {
@@ -126,28 +116,19 @@ describe('validateJobSpec', () => {
     });
 
     it('negative feeBps → ok:false with reason', () => {
-      const result = validateJobSpec(
-        makeSpec({ costs: { feeBps: -1, impactBps: 5 } }),
-        [],
-      );
+      const result = validateJobSpec(makeSpec({ costs: { feeBps: -1, impactBps: 5 } }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('costs.feeBps must be a finite non-negative number');
     });
 
     it('negative impactBps → ok:false with reason', () => {
-      const result = validateJobSpec(
-        makeSpec({ costs: { feeBps: 10, impactBps: -1 } }),
-        [],
-      );
+      const result = validateJobSpec(makeSpec({ costs: { feeBps: 10, impactBps: -1 } }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('costs.impactBps must be a finite non-negative number');
     });
 
     it('negative slippageBps → ok:false with reason', () => {
-      const result = validateJobSpec(
-        makeSpec({ slippage: { slippageBps: -1 } }),
-        [],
-      );
+      const result = validateJobSpec(makeSpec({ slippage: { slippageBps: -1 } }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('slippage.slippageBps must be a finite non-negative number');
     });
@@ -155,14 +136,8 @@ describe('validateJobSpec', () => {
     it('multiple missing fields → all reasons reported', () => {
       const result = validateJobSpec(
         makeSpec({
-          id: '',
-          hypothesis: '',
-          rationale: '',
-          dataset: '',
-          generatedBy: '',
-          features: [],
-          universe: { id: '', symbols: [], weighting: 'equal', rebalanceRule: 'none' },
-          timestamp: NaN,
+          id: '', hypothesis: '', rationale: '', dataset: '', generatedBy: '', features: [],
+          universe: { id: '', symbols: [], weighting: 'equal', rebalanceRule: 'none' }, timestamp: NaN,
         }),
         [],
       );
@@ -179,38 +154,29 @@ describe('validateJobSpec', () => {
     });
 
     it('seed can be null', () => {
-      const result = validateJobSpec(makeSpec({ seed: null }), []);
-      expect(result.ok).toBe(true);
+      expect(validateJobSpec(makeSpec({ seed: null }), []).ok).toBe(true);
     });
 
     it('parentHypothesis can be null', () => {
-      const result = validateJobSpec(makeSpec({ parentHypothesis: null }), []);
-      expect(result.ok).toBe(true);
+      expect(validateJobSpec(makeSpec({ parentHypothesis: null }), []).ok).toBe(true);
     });
 
     it('gitSha can be null', () => {
-      const result = validateJobSpec(makeSpec({ gitSha: null }), []);
-      expect(result.ok).toBe(true);
+      expect(validateJobSpec(makeSpec({ gitSha: null }), []).ok).toBe(true);
     });
   });
 
   describe('registry collision checks', () => {
     it('hypothesis matching falsified registry entry → ok:false with re-test reason', () => {
-      const entry = makeRegistryEntry({ status: 'FALSIFIED' });
-      const result = validateJobSpec(makeSpec(), [entry]);
+      const result = validateJobSpec(makeSpec(), [makeRegistryEntry({ status: 'FALSIFIED' })]);
       expect(result.ok).toBe(false);
-      expect(result.reasons).toContain(
-        "re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses",
-      );
+      expect(result.reasons).toContain("re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses");
     });
 
     it('hypothesis matching non-falsified registry entry → ok:false with duplicate reason', () => {
-      const entry = makeRegistryEntry({ status: 'SURVIVED' });
-      const result = validateJobSpec(makeSpec(), [entry]);
+      const result = validateJobSpec(makeSpec(), [makeRegistryEntry({ status: 'SURVIVED' })]);
       expect(result.ok).toBe(false);
-      expect(result.reasons).toContain(
-        "duplicates existing registry entry 'funding-fade-class' (status SURVIVED)",
-      );
+      expect(result.reasons).toContain("duplicates existing registry entry 'funding-fade-class' (status SURVIVED)");
     });
 
     it('case-insensitive hypothesis matching', () => {
@@ -218,28 +184,20 @@ describe('validateJobSpec', () => {
       const spec = makeSpec({ hypothesis: 'FUNDING RATE MEAN REVERSION ON 8H WINDOWS' });
       const result = validateJobSpec(spec, [entry]);
       expect(result.ok).toBe(false);
-      expect(result.reasons).toContain(
-        "re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses",
-      );
+      expect(result.reasons).toContain("re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses");
     });
 
     it('hypothesis with different casing in registry still matches', () => {
-      const entry = makeRegistryEntry({
-        hypothesis: 'FUNDING RATE MEAN REVERSION ON 8H WINDOWS',
-        status: 'FALSIFIED',
-      });
+      const entry = makeRegistryEntry({ hypothesis: 'FUNDING RATE MEAN REVERSION ON 8H WINDOWS', status: 'FALSIFIED' });
       const result = validateJobSpec(makeSpec(), [entry]);
       expect(result.ok).toBe(false);
-      expect(result.reasons).toContain(
-        "re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses",
-      );
+      expect(result.reasons).toContain("re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses");
     });
 
     it('different hypothesis passes registry check', () => {
       const entry = makeRegistryEntry({ status: 'FALSIFIED' });
       const spec = makeSpec({ hypothesis: 'Momentum on 4h windows' });
-      const result = validateJobSpec(spec, [entry]);
-      expect(result.ok).toBe(true);
+      expect(validateJobSpec(spec, [entry]).ok).toBe(true);
     });
 
     it('multiple registry entries — one falsified match fails', () => {
@@ -249,48 +207,34 @@ describe('validateJobSpec', () => {
       ];
       const result = validateJobSpec(makeSpec(), entries);
       expect(result.ok).toBe(false);
-      expect(result.reasons).toContain(
-        "re-tests falsified hypothesis class 'entry-2' — do not retest dead hypotheses",
-      );
+      expect(result.reasons).toContain("re-tests falsified hypothesis class 'entry-2' — do not retest dead hypotheses");
     });
 
     it('PROPOSED registry entry → duplicate reason (not re-test)', () => {
-      const entry = makeRegistryEntry({ status: 'PROPOSED' });
-      const result = validateJobSpec(makeSpec(), [entry]);
+      const result = validateJobSpec(makeSpec(), [makeRegistryEntry({ status: 'PROPOSED' })]);
       expect(result.ok).toBe(false);
-      expect(result.reasons).toContain(
-        "duplicates existing registry entry 'funding-fade-class' (status PROPOSED)",
-      );
+      expect(result.reasons).toContain("duplicates existing registry entry 'funding-fade-class' (status PROPOSED)");
     });
 
     it('RUNNING registry entry → duplicate reason', () => {
-      const entry = makeRegistryEntry({ status: 'RUNNING' });
-      const result = validateJobSpec(makeSpec(), [entry]);
+      const result = validateJobSpec(makeSpec(), [makeRegistryEntry({ status: 'RUNNING' })]);
       expect(result.ok).toBe(false);
-      expect(result.reasons).toContain(
-        "duplicates existing registry entry 'funding-fade-class' (status RUNNING)",
-      );
+      expect(result.reasons).toContain("duplicates existing registry entry 'funding-fade-class' (status RUNNING)");
     });
 
     it('ARCHIVED registry entry → duplicate reason', () => {
-      const entry = makeRegistryEntry({ status: 'ARCHIVED' });
-      const result = validateJobSpec(makeSpec(), [entry]);
+      const result = validateJobSpec(makeSpec(), [makeRegistryEntry({ status: 'ARCHIVED' })]);
       expect(result.ok).toBe(false);
-      expect(result.reasons).toContain(
-        "duplicates existing registry entry 'funding-fade-class' (status ARCHIVED)",
-      );
+      expect(result.reasons).toContain("duplicates existing registry entry 'funding-fade-class' (status ARCHIVED)");
     });
   });
 
   describe('combined field + registry checks', () => {
     it('missing field AND registry collision → both reasons reported', () => {
-      const entry = makeRegistryEntry({ status: 'FALSIFIED' });
-      const result = validateJobSpec(makeSpec({ id: '' }), [entry]);
+      const result = validateJobSpec(makeSpec({ id: '' }), [makeRegistryEntry({ status: 'FALSIFIED' })]);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('id must be non-empty');
-      expect(result.reasons).toContain(
-        "re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses",
-      );
+      expect(result.reasons).toContain("re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses");
     });
   });
 });

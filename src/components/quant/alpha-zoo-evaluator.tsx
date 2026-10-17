@@ -72,13 +72,7 @@ export function AlphaZooEvaluator() {
           <table className="w-full text-left text-xs font-mono" aria-label="Alpha Zoo IC/IR matrix">
             <thead>
               <tr className="border-b border-[var(--border-subtle)] text-[var(--text-secondary)]">
-                <th className="pb-2">Alpha ID</th>
-                <th className="pb-2">Normalized Formula AST</th>
-                <th className="pb-2">Spearman IC</th>
-                <th className="pb-2">IC_IR</th>
-                <th className="pb-2">95% Bootstrap CI</th>
-                <th className="pb-2">FNV-1a32</th>
-                <th className="pb-2 text-right">Terminal Verdict</th>
+                <th className="pb-2">Alpha ID</th><th className="pb-2">Normalized Formula AST</th><th className="pb-2">Spearman IC</th><th className="pb-2">IC_IR</th><th className="pb-2">95% Bootstrap CI</th><th className="pb-2">FNV-1a32</th><th className="pb-2 text-right">Terminal Verdict</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
@@ -91,9 +85,7 @@ export function AlphaZooEvaluator() {
                   <td className="py-3 text-[var(--text-secondary)]">{item.bootstrapCi}</td>
                   <td className="py-3 text-[var(--text-tertiary)]">{item.fnvSeed}</td>
                   <td className="py-3 text-right">
-                    <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)]">
-                      {item.status}
-                    </span>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[rgba(255,71,87,0.15)] text-[var(--color-loss)]">{item.status}</span>
                   </td>
                 </tr>
               ))}

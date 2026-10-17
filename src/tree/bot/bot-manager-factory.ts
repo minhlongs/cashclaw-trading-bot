@@ -100,8 +100,5 @@ export class BotManagerFactory implements BotFactoryDelegate {
     return results;
   }
 
-  destroy(): void {
-    this.exchanges.clear();
-    this.queues.clear();
-  }
+  destroy(): void { this.exchanges.clear(); this.queues.clear(); }
 }

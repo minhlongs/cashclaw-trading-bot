@@ -1,7 +1,4 @@
 // Step 13: Managed Multi-Agent LLM Deliberation Credit Pool & Token Metering
-// Enables Cloud SaaS users to run multi-agent TradingAgents debates without
-// managing their own 9-provider API keys.
-
 import { type Result, ok, err } from '../../lib/result';
 import type { SaasTier } from '../tenancy/tenant-policy';
 
@@ -35,18 +32,12 @@ const MODEL_TIER_MULTIPLIER: Readonly<Record<DeliberationModelTier, number>> = {
 };
 
 export function createCreditAccount(workspaceId: string, tier: SaasTier): CreditAccount {
-  return {
-    workspaceId,
-    tier,
-    balanceCredits: TIER_MONTHLY_CREDITS[tier],
-    consumedCredits: 0,
-  };
+  return { workspaceId, tier, balanceCredits: TIER_MONTHLY_CREDITS[tier], consumedCredits: 0 };
 }
 
 export function computeDebateCreditCost(req: DebateDebitRequest): number {
   const totalTokens = Math.max(0, req.promptTokens) + Math.max(0, req.completionTokens);
-  const baseUnits = Math.ceil(totalTokens / 1000);
-  return baseUnits * MODEL_TIER_MULTIPLIER[req.modelTier];
+  return Math.ceil(totalTokens / 1000) * MODEL_TIER_MULTIPLIER[req.modelTier];
 }
 
 export function debitDeliberationCredits(
@@ -71,3 +62,43 @@ export function debitDeliberationCredits(
     },
   });
 }
+
+export class CreditLedgerStore {
+  private readonly accounts = new Map<string, CreditAccount>();
+
+  getOrCreateAccount(workspaceId: string, tier: SaasTier): CreditAccount {
+    const existing = this.accounts.get(workspaceId);
+    if (!existing) {
+      const created = createCreditAccount(workspaceId, tier);
+      this.accounts.set(workspaceId, created);
+      return created;
+    }
+    if (existing.tier !== tier) {
+      const reconciled: CreditAccount = {
+        workspaceId,
+        tier,
+        balanceCredits: Math.max(0, TIER_MONTHLY_CREDITS[tier] - existing.consumedCredits),
+        consumedCredits: existing.consumedCredits,
+      };
+      this.accounts.set(workspaceId, reconciled);
+      return reconciled;
+    }
+    return existing;
+  }
+
+  debit(
+    req: DebateDebitRequest,
+    tier: SaasTier,
+  ): Result<{ readonly updated: CreditAccount; readonly debited: number }> {
+    const account = this.getOrCreateAccount(req.workspaceId, tier);
+    const result = debitDeliberationCredits(account, req);
+    if (result.ok) this.accounts.set(req.workspaceId, result.data.updated);
+    return result;
+  }
+
+  resetMemoryForTesting(): void {
+    this.accounts.clear();
+  }
+}
+
+export const defaultCreditLedgerStore = new CreditLedgerStore();

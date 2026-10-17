@@ -5,10 +5,7 @@ import type { D1Database } from '@/lib/db/types';
 import type { SaasTier } from '../tenancy/tenant-policy';
 import { getEntitlementsForTier } from './tier-entitlements';
 import {
-  fetchD1WorkspaceEntitlement,
-  hasD1ProcessedPayment,
-  insertD1IpnEvent,
-  upsertD1WorkspaceEntitlement,
+  fetchD1WorkspaceEntitlement, hasD1ProcessedPayment, insertD1IpnEvent, upsertD1WorkspaceEntitlement,
 } from './saas-entitlement-d1';
 
 export interface IpnActivationRecord {
@@ -40,7 +37,6 @@ export class SaasEntitlementStore {
 
   constructor(db?: D1Database) { this.db = db; }
   public setDatabase(db: D1Database | undefined): void { this.db = db; }
-
   public resetMemoryForTesting(): void {
     this.processedPayments.clear();
     this.workspaceEntitlements.clear();
@@ -73,7 +69,6 @@ export class SaasEntitlementStore {
       managedLlmPoolEnabled: spec.managedLlmPoolAllowed,
       updatedAtMs: nowMs,
     };
-
     this.workspaceEntitlements.set(record.workspaceId, updatedRow);
     if (this.db) await upsertD1WorkspaceEntitlement(this.db, updatedRow);
     return updatedRow;
@@ -89,14 +84,11 @@ export class SaasEntitlementStore {
     }
     const cached = this.workspaceEntitlements.get(workspaceId);
     if (cached) return cached;
-
     const basicSpec = getEntitlementsForTier('BASIC');
     return {
       workspaceId, ownerUserId: 'default', tier: 'BASIC',
-      maxRunningBots: basicSpec.maxRunningPaperBots,
-      maxWalkForwardWindows: basicSpec.maxWalkForwardWindows,
-      monthlyLlmCredits: basicSpec.monthlyLlmCredits,
-      managedLlmPoolEnabled: basicSpec.managedLlmPoolAllowed,
+      maxRunningBots: basicSpec.maxRunningPaperBots, maxWalkForwardWindows: basicSpec.maxWalkForwardWindows,
+      monthlyLlmCredits: basicSpec.monthlyLlmCredits, managedLlmPoolEnabled: basicSpec.managedLlmPoolAllowed,
       updatedAtMs: 0,
     };
   }

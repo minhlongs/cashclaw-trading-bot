@@ -69,39 +69,11 @@ export interface RegimeStrategy {
 }
 
 export const REGIME_STRATEGY: Record<RegimeLabel, RegimeStrategy> = {
-  TREND_UP: {
-    indicators: ['ema', 'macd', 'momentum', 'rsi'],
-    combiner: 'weighted_sum',
-    description: 'Trend-following with momentum confirmation',
-  },
-  TREND_DOWN: {
-    indicators: ['sma', 'volume_zscore', 'rsi', 'atr'],
-    combiner: 'voting',
-    description: 'Defensive trend-down with volume and volatility checks',
-  },
-  RANGE: {
-    indicators: ['bollinger', 'rsi', 'atr', 'distance_from_ma'],
-    combiner: 'max_confidence',
-    description: 'Mean-reversion with mean-distance confirmation',
-  },
-  HIGH_VOLATILITY: {
-    indicators: ['atr', 'realized_volatility', 'volume_zscore', 'macd'],
-    combiner: 'voting',
-    description: 'Volatility-adjusted with risk-aware sizing',
-  },
-  LOW_VOLATILITY: {
-    indicators: ['sma', 'ema', 'momentum', 'returns'],
-    combiner: 'weighted_sum',
-    description: 'Low-vol momentum with trend strength',
-  },
-  SHOCK: {
-    indicators: ['atr', 'volume_zscore', 'rsi'],
-    combiner: 'max_confidence',
-    description: 'Shock detection with rapid mean-reversion',
-  },
-  UNKNOWN: {
-    indicators: ['sma', 'rsi', 'macd', 'volume_zscore'],
-    combiner: 'weighted_sum',
-    description: 'Default balanced indicator set for unknown regimes',
-  },
+  TREND_UP: { indicators: ['ema', 'macd', 'momentum', 'rsi'], combiner: 'weighted_sum', description: 'Trend-following with momentum confirmation' },
+  TREND_DOWN: { indicators: ['sma', 'volume_zscore', 'rsi', 'atr'], combiner: 'voting', description: 'Defensive trend-down with volume and volatility checks' },
+  RANGE: { indicators: ['bollinger', 'rsi', 'atr', 'distance_from_ma'], combiner: 'max_confidence', description: 'Mean-reversion with mean-distance confirmation' },
+  HIGH_VOLATILITY: { indicators: ['atr', 'realized_volatility', 'volume_zscore', 'macd'], combiner: 'voting', description: 'Volatility-adjusted with risk-aware sizing' },
+  LOW_VOLATILITY: { indicators: ['sma', 'ema', 'momentum', 'returns'], combiner: 'weighted_sum', description: 'Low-vol momentum with trend strength' },
+  SHOCK: { indicators: ['atr', 'volume_zscore', 'rsi'], combiner: 'max_confidence', description: 'Shock detection with rapid mean-reversion' },
+  UNKNOWN: { indicators: ['sma', 'rsi', 'macd', 'volume_zscore'], combiner: 'weighted_sum', description: 'Default balanced indicator set for unknown regimes' },
 };

@@ -75,19 +75,13 @@ export interface Position {
 export interface ExchangeAdapter {
   id: ExchangeId;
   name: string;
-
-  // Market data
   fetchTicker(symbol: string): Promise<Ticker>;
   fetchOrderBook(symbol: string, depth?: number): Promise<OrderBook>;
   fetchBalances(): Promise<Balance[]>;
-
-  // Trading
   placeOrder(request: OrderRequest): Promise<OrderResult>;
   cancelOrder(orderId: string, symbol: string): Promise<boolean>;
   fetchOrder(orderId: string, symbol: string): Promise<OrderResult>;
   fetchOpenOrders(symbol?: string): Promise<OrderResult[]>;
-
-  // Health
   ping(): Promise<boolean>;
   getServerTime(): Promise<number>;
 }

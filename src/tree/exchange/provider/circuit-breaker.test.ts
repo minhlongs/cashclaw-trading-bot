@@ -12,7 +12,6 @@ function successFn(): Promise<string> {
 describe('CircuitBreaker', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    // tripTime + 5000ms cooldown + 2000ms half-open delay = 7000ms to half_open
   });
 
   afterEach(() => {
@@ -34,15 +33,13 @@ describe('CircuitBreaker', () => {
   describe('success', () => {
     it('returns the wrapped value', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      const result = await cb.execute(successFn);
-      expect(result).toBe('ok');
+      expect(await cb.execute(successFn)).toBe('ok');
     });
 
     it('resets failure count and closes circuit on success', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
       expect(cb.getFailureCount()).toBe(1);
-
       await cb.execute(successFn);
       expect(cb.getFailureCount()).toBe(0);
       expect(cb.getState()).toBe('closed');
@@ -56,39 +53,27 @@ describe('CircuitBreaker', () => {
       expect(cb.getState()).toBe('closed');
       await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('closed');
-
       await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
 
     it('next failure in degraded trips OPEN', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
+      for (let i = 0; i < 3; i++) await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('degraded');
-
       await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('open');
     });
 
     it('blocks calls when open via CircuitOpenError', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-
+      for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
       await expect(cb.execute(successFn)).rejects.toThrow(CircuitOpenError);
     });
 
     it('error includes retry delay', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-
+      for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
       try {
         await cb.execute(successFn);
       } catch (e) {
@@ -117,52 +102,33 @@ describe('CircuitBreaker', () => {
   describe('half_open trials', () => {
     it('transitions to half_open after full cooldown (7s)', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
+      for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('open');
-
       vi.advanceTimersByTime(7001);
       expect(cb.getState()).toBe('half_open');
     });
 
     it('half_open success closes circuit', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
+      for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('open');
-
       vi.advanceTimersByTime(7001);
-
-      const result = await cb.execute(successFn);
-      expect(result).toBe('ok');
+      expect(await cb.execute(successFn)).toBe('ok');
       expect(cb.getState()).toBe('closed');
     });
 
     it('half_open failure reopens', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
+      for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('open');
-
       vi.advanceTimersByTime(7001);
-
       await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('open');
     });
 
     it('blocks opens before cooldown elapses', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-
+      for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
       vi.advanceTimersByTime(5000);
       expect(cb.getState()).toBe('open');
     });
@@ -171,12 +137,8 @@ describe('CircuitBreaker', () => {
   describe('reset', () => {
     it('resets circuit back to closed', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
+      for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('open');
-
       cb.reset();
       expect(cb.getState()).toBe('closed');
       expect(cb.getFailureCount()).toBe(0);
@@ -187,7 +149,6 @@ describe('CircuitBreaker', () => {
     it('fires callback on state change with kind and timestamp', async () => {
       const onChange = vi.fn();
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000, onStateChange: onChange });
-
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       expect(onChange).not.toHaveBeenCalled();
@@ -201,7 +162,6 @@ describe('CircuitBreaker', () => {
 
       vi.advanceTimersByTime(7001);
       cb.getState();
-
       expect(onChange).toHaveBeenLastCalledWith('open', 'half_open', expect.any(Number), undefined);
 
       await cb.execute(successFn);
@@ -221,13 +181,10 @@ describe('CircuitBreaker', () => {
     it('timeout trips after 3', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       const err = new Error('ETIMEDOUT');
-
       await cb.execute(() => Promise.reject(err)).catch(() => {});
       expect(cb.getState()).toBe('closed');
-
       await cb.execute(() => Promise.reject(err)).catch(() => {});
       expect(cb.getState()).toBe('closed');
-
       await cb.execute(() => Promise.reject(err)).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
@@ -235,34 +192,25 @@ describe('CircuitBreaker', () => {
     it('rate_limit trips after 5', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       const err = new Error('429 Too Many Requests');
-
-      for (let i = 0; i < 4; i++) {
-        await cb.execute(() => Promise.reject(err)).catch(() => {});
-      }
+      for (let i = 0; i < 4; i++) await cb.execute(() => Promise.reject(err)).catch(() => {});
       expect(cb.getState()).toBe('closed');
-
       await cb.execute(() => Promise.reject(err)).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
 
     it('unknown trips after 3', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
+      for (let i = 0; i < 3; i++) await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
 
     it('different kinds use independent counters', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-
       await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
       await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
       expect(cb.getState()).toBe('closed');
-
       await cb.execute(() => Promise.reject(new Error('ENOTFOUND'))).catch(() => {});
       expect(cb.getState()).toBe('closed');
-
       await cb.execute(() => Promise.reject(new Error('ENOTFOUND'))).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
@@ -270,22 +218,14 @@ describe('CircuitBreaker', () => {
     it('onStateChange receives kind for same-kind degraded→open', async () => {
       const onChange = vi.fn();
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000, onStateChange: onChange });
-
-      await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
-      await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
-      await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
-
+      for (let i = 0; i < 3; i++) await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
       expect(onChange).toHaveBeenCalledTimes(1);
       expect(onChange).toHaveBeenLastCalledWith('closed', 'degraded', expect.any(Number), 'timeout');
     });
 
     it('unknown kind uses kind-specific threshold (3)', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      await cb.execute(failingFn).catch(() => {});
-      // ranks up at kind-specific unknown threshold (3)
+      for (let i = 0; i < 3; i++) await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
   });

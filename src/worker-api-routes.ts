@@ -1,6 +1,4 @@
 // Cloudflare Workers HTTP API — Route Registration Helpers
-// Public status endpoints and protected handlers for bot management,
-// killswitch, telemetry, and cron.
 
 import type { Hono } from 'hono';
 import { authGuard } from './forest/api/auth-guard';
@@ -16,7 +14,6 @@ import type { WorkerEnv } from './worker-env';
 import type { D1Database } from './lib/db/types';
 
 const logger = createLogger('worker');
-
 const defaultKillswitch = {
   enabled: true, halted: false, haltReason: null, haltedAt: null,
   dailyPnl: 0, consecutiveLosses: 0, currentDrawdown: 0,
@@ -27,10 +24,7 @@ type AppType = Hono<{ Bindings: WorkerEnv }>;
 export function registerPublicStatusRoutes(app: AppType): void {
   app.get('/api/health', async (c) => {
     const bots = await new BotQueryService().listBots();
-    return c.json({
-      status: 'ok', bots: bots.length,
-      running: bots.filter((bot) => bot.status === 'running').length, timestamp: Date.now(),
-    });
+    return c.json({ status: 'ok', bots: bots.length, running: bots.filter((bot) => bot.status === 'running').length, timestamp: Date.now() });
   });
 
   app.get('/api/version', (c) => {
@@ -51,10 +45,7 @@ export function registerPublicStatusRoutes(app: AppType): void {
         const s = await findSettingsByUser(c.env.DB as D1Database, null);
         if (s) {
           const enabled = s.killswitch_enabled === 1;
-          return c.json({
-            ...defaultKillswitch, enabled, halted: !enabled,
-            haltReason: s.killswitch_reason ?? null, haltedAt: s.killswitch_triggered_at ?? null, timestamp: Date.now(),
-          });
+          return c.json({ ...defaultKillswitch, enabled, halted: !enabled, haltReason: s.killswitch_reason ?? null, haltedAt: s.killswitch_triggered_at ?? null, timestamp: Date.now() });
         }
       }
     } catch { /* fallback */ }

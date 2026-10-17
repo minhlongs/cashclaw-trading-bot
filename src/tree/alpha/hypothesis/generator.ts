@@ -16,16 +16,11 @@ export class HypothesisGenerator {
   generateFromTemplate(template: HypothesisTemplate): AlphaHypothesis {
     this.counter++;
     return {
-      id: `h-${slug()}-${this.counter}`,
-      name: `${template.name} #${this.counter}`,
-      description: template.description,
-      indicatorSet: [...template.indicatorPreset],
-      combineMethod: template.combinePreset,
-      regimeFilter: [...template.regimePreset],
-      barrierConfig: { ...template.barrierPreset },
-      optimizerMethod: 'equal_weight',
-      confidence: 0.5,
-      createdAt: new Date().toISOString(),
+      id: `h-${slug()}-${this.counter}`, name: `${template.name} #${this.counter}`,
+      description: template.description, indicatorSet: [...template.indicatorPreset],
+      combineMethod: template.combinePreset, regimeFilter: [...template.regimePreset],
+      barrierConfig: { ...template.barrierPreset }, optimizerMethod: 'equal_weight',
+      confidence: 0.5, createdAt: new Date().toISOString(),
     };
   }
 
@@ -35,16 +30,12 @@ export class HypothesisGenerator {
     const indicators = pickN(ALL_INDICATORS, 2, 5);
     const combineMethod = pick(ALL_COMBINERS);
     return {
-      id: `h-${slug()}-${this.counter}`,
-      name: `Random-${combineMethod}-#${this.counter}`,
+      id: `h-${slug()}-${this.counter}`, name: `Random-${combineMethod}-#${this.counter}`,
       description: `Auto-generated hypothesis: ${indicators.join('+')} with ${combineMethod}`,
       indicatorSet: indicators.map((name) => ({ indicator: name, lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) })),
-      combineMethod,
-      regimeFilter: pickN(ALL_REGIMES, 1, 3),
-      barrierConfig: { ...DEFAULT_BARRIER },
-      optimizerMethod: pick(ALL_OPTIMIZERS),
-      confidence: 0.5,
-      createdAt: new Date().toISOString(),
+      combineMethod, regimeFilter: pickN(ALL_REGIMES, 1, 3),
+      barrierConfig: { ...DEFAULT_BARRIER }, optimizerMethod: pick(ALL_OPTIMIZERS),
+      confidence: 0.5, createdAt: new Date().toISOString(),
     };
   }
 

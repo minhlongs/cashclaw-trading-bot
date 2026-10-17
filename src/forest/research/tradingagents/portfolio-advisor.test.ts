@@ -12,7 +12,7 @@ const NOW = '2026-08-26T00:00:00.000Z';
 
 const BASE_PORTFOLIO_CONFIG: PortfolioConfig = {
   targetVolatility: 0.15,
-  maxPositionWeight: 0.8, // high enough to not trigger position cap in base case (base weight 0.36 * vol scale 2.0833 = 0.75)
+  maxPositionWeight: 0.8,
   maxGrossExposure: 0.8,
   maxNetExposure: 0.5,
   maxCorrelatedExposure: 0.4,
@@ -86,12 +86,7 @@ const BASE_RISK_ADVISORY: RiskAdvisorySet = {
 
 describe('advisePortfolio', () => {
   it('returns rejected=true when position cap triggers clipped violation', () => {
-    // Very restrictive maxPositionWeight triggers "clipped"
-    const config: PortfolioConfig = {
-      ...BASE_PORTFOLIO_CONFIG,
-      maxPositionWeight: 0.05,
-    };
-
+    const config: PortfolioConfig = { ...BASE_PORTFOLIO_CONFIG, maxPositionWeight: 0.05 };
     const result = advisePortfolio(
       BASE_PROPOSAL,
       [{ alpha: BASE_COMPOSED_ALPHAS[0], score: 0.6 }],
@@ -102,22 +97,16 @@ describe('advisePortfolio', () => {
     );
 
     expect(result.rejected).toBe(true);
-    expect(result.rejectionReasons.some(r => r.includes('clipped'))).toBe(true);
+    expect(result.rejectionReasons.some((r) => r.includes('clipped'))).toBe(true);
   });
 
   it('returns rejected=true when drawdown de-risks to near-zero exposure', () => {
-    const highDrawdownRiskInputs: RiskInputs = {
-      ...BASE_RISK_INPUTS,
-      currentDrawdown: 0.15, // exceeds threshold 0.1
-    };
-
-    // Use a deRiskFactor that would scale to near-zero (0.001)
-    // maxPositionWeight must exceed vol-scaled weight (0.36 * 2.0833 = 0.75)
+    const highDrawdownRiskInputs: RiskInputs = { ...BASE_RISK_INPUTS, currentDrawdown: 0.15 };
     const config: PortfolioConfig = {
       ...BASE_PORTFOLIO_CONFIG,
       deRiskFactor: 0.001,
       drawdownThreshold: 0.1,
-      maxPositionWeight: 1.0, // prevent position cap from triggering
+      maxPositionWeight: 1.0,
     };
 
     const result = advisePortfolio(
@@ -129,29 +118,14 @@ describe('advisePortfolio', () => {
       BASE_RISK_ADVISORY,
     );
 
-    // Debug
-    console.log('drawdown test - rejected:', result.rejected);
-    console.log('drawdown test - reasons:', result.rejectionReasons);
-    console.log('drawdown test - riskAdjustments:', result.portfolioResult.riskAdjustments);
-    console.log('drawdown test - grossExposure:', result.portfolioResult.grossExposure);
-    console.log('drawdown test - drawdownDeRisked:', result.portfolioResult.drawdownDeRisked);
-    console.log('drawdown test - netExposure:', result.portfolioResult.netExposure);
-    console.log('drawdown test - totalTurnover:', result.portfolioResult.totalTurnover);
-
     expect(result.portfolioResult.drawdownDeRisked).toBe(true);
-    // With deRiskFactor=0.001, gross exposure will be very small
     expect(result.portfolioResult.grossExposure).toBeLessThan(0.001);
     expect(result.rejected).toBe(true);
-    expect(result.rejectionReasons.some(r => r.includes('drawdown de-risk'))).toBe(true);
+    expect(result.rejectionReasons.some((r) => r.includes('drawdown de-risk'))).toBe(true);
   });
 
   it('returns rejected=true when risk overlay violation (clamped/clipped/scaled/de-risked)', () => {
-    // Test the clipped (position cap) path
-    const config: PortfolioConfig = {
-      ...BASE_PORTFOLIO_CONFIG,
-      maxPositionWeight: 0.01, // extremely restrictive
-    };
-
+    const config: PortfolioConfig = { ...BASE_PORTFOLIO_CONFIG, maxPositionWeight: 0.01 };
     const result = advisePortfolio(
       BASE_PROPOSAL,
       [{ alpha: BASE_COMPOSED_ALPHAS[0], score: 0.6 }],
@@ -162,18 +136,13 @@ describe('advisePortfolio', () => {
     );
 
     expect(result.rejected).toBe(true);
-    expect(result.rejectionReasons.some(r => r.includes('clamped') || r.includes('clipped') || r.includes('de-risked'))).toBe(true);
+    expect(
+      result.rejectionReasons.some((r) => r.includes('clamped') || r.includes('clipped') || r.includes('de-risked')),
+    ).toBe(true);
   });
 
   it('returns rejected=false when all constraints satisfied', () => {
-    // Use a higher maxPositionWeight so the vol target doesn't trigger clipping
-    // base weight = 0.6 * 0.6 = 0.36; vol scale = 0.15 / (0.36 * 0.2) = 2.0833
-    // vol-scaled weight = 0.36 * 2.0833 = 0.75
-    const config: PortfolioConfig = {
-      ...BASE_PORTFOLIO_CONFIG,
-      maxPositionWeight: 0.9, // higher than the vol-scaled weight (0.75)
-    };
-
+    const config: PortfolioConfig = { ...BASE_PORTFOLIO_CONFIG, maxPositionWeight: 0.9 };
     const result = advisePortfolio(
       BASE_PROPOSAL,
       [{ alpha: BASE_COMPOSED_ALPHAS[0], score: 0.6 }],
@@ -182,15 +151,6 @@ describe('advisePortfolio', () => {
       config,
       BASE_RISK_ADVISORY,
     );
-
-    console.log('=== all constraints satisfied ===');
-    console.log('rejected:', result.rejected);
-    console.log('reasons:', result.rejectionReasons);
-    console.log('riskAdjustments:', result.portfolioResult.riskAdjustments);
-    console.log('grossExposure:', result.portfolioResult.grossExposure);
-    console.log('netExposure:', result.portfolioResult.netExposure);
-    console.log('totalTurnover:', result.portfolioResult.totalTurnover);
-    console.log('drawdownDeRisked:', result.portfolioResult.drawdownDeRisked);
 
     expect(result.rejected).toBe(false);
     expect(result.rejectionReasons.length).toBe(0);
@@ -202,10 +162,9 @@ describe('advisePortfolio', () => {
     const config = { ...BASE_PORTFOLIO_CONFIG };
     const constrained = constrainConfigByAdvisory(config, BASE_RISK_ADVISORY);
 
-    // Most conservative is 0.4 (conservative view)
     expect(constrained.maxGrossExposure).toBe(0.4);
     expect(constrained.maxNetExposure).toBe(0.4);
-    expect(constrained.targetVolatility).toBe(config.targetVolatility); // unchanged
+    expect(constrained.targetVolatility).toBe(config.targetVolatility);
   });
 });
 
@@ -224,10 +183,9 @@ describe('proposalToScoredAlphas', () => {
     ];
 
     const scored = proposalToScoredAlphas(proposal, alphas);
-
     expect(scored).toHaveLength(2);
     expect(scored[0].alpha.alphaId).toBe('alpha-momentum');
-    expect(scored[0].score).toBe(0.6); // uses alpha confidence, not LLM weight
+    expect(scored[0].score).toBe(0.6);
     expect(scored[1].alpha.alphaId).toBe('alpha-value');
     expect(scored[1].score).toBe(0.5);
   });
@@ -242,7 +200,6 @@ describe('proposalToScoredAlphas', () => {
     };
 
     const scored = proposalToScoredAlphas(proposal, BASE_COMPOSED_ALPHAS);
-
     expect(scored).toHaveLength(1);
     expect(scored[0].alpha.alphaId).toBe('alpha-momentum');
   });
@@ -256,8 +213,6 @@ describe('proposalToScoredAlphas', () => {
       ],
     };
 
-    const scored = proposalToScoredAlphas(proposal, BASE_COMPOSED_ALPHAS);
-
-    expect(scored).toHaveLength(0);
+    expect(proposalToScoredAlphas(proposal, BASE_COMPOSED_ALPHAS)).toHaveLength(0);
   });
 });

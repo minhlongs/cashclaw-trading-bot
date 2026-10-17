@@ -22,45 +22,25 @@ export interface StoredAlphaResult {
 
 /** Persisted experiment — serializable snapshot of an Experiment. */
 export interface StoredExperiment {
-  /** Unique experiment identifier. */
   id: string;
-  /** Human-readable hypothesis. */
   hypothesis: string;
-  /** Dataset identifier. */
   dataset: string;
-  /** Trading symbol. */
   symbol: string;
-  /** Candle timeframe (e.g. '1h', '4h'). */
   timeframe: string;
-  /** JSON-serialized feature set. */
   featureSetJson: string;
-  /** JSON-serialized regime filter array. */
   regimeFilterJson: string;
-  /** JSON-serialized entry rule. */
   entryRuleJson: string;
-  /** JSON-serialized exit rule. */
   exitRuleJson: string;
-  /** JSON-serialized position sizing config. */
   positionSizingJson: string;
-  /** JSON-serialized fee model. */
   feeModelJson: string;
-  /** JSON-serialized slippage model. */
   slippageModelJson: string;
-  /** JSON-serialized train period. */
   trainPeriodJson: string;
-  /** JSON-serialized validation period. */
   validationPeriodJson: string;
-  /** JSON-serialized test period. */
   testPeriodJson: string;
-  /** Optional random seed. */
   randomSeed: number | null;
-  /** Optional git commit hash. */
   gitCommit: string | null;
-  /** JSON-serialized config snapshot. */
   configSnapshotJson: string;
-  /** Unix timestamp when stored. */
   createdAt: number;
-  /** Unix timestamp when last updated. */
   updatedAt: number;
 }
 

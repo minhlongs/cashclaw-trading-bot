@@ -72,28 +72,14 @@ export function literalNumber(node: AstNode): number | null {
   return null;
 }
 
-/**
- * Static warmup requirement of a formula: max over field lags and over all
- * window/lag literal arguments. Statically known from the AST — the
- * evaluator never needs to discover it at runtime.
- */
+/** Static warmup requirement of a formula: max over field lags and window/lag literal arguments. */
 export function computeMaxLookback(ast: AstNode): number {
   let max = 0;
   const walk = (node: AstNode): void => {
     if (node.kind === 'number') return;
-    if (node.kind === 'field') {
-      max = Math.max(max, node.lag);
-      return;
-    }
-    if (node.kind === 'unary' || node.kind === 'abs') {
-      walk(node.operand);
-      return;
-    }
-    if (node.kind === 'binary') {
-      walk(node.left);
-      walk(node.right);
-      return;
-    }
+    if (node.kind === 'field') { max = Math.max(max, node.lag); return; }
+    if (node.kind === 'unary' || node.kind === 'abs') { walk(node.operand); return; }
+    if (node.kind === 'binary') { walk(node.left); walk(node.right); return; }
     const sig = OP_SIGNATURES[node.name];
     for (let k = 0; k < sig.params.length; k += 1) {
       const spec = sig.params[k];

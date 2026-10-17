@@ -51,9 +51,7 @@ export function evaluateAlpha(
   const base = { sourceAlphaId: provenance.sourceAlphaId, hypothesisId: hypothesis.id };
 
   const parsed = parseFormula(formula);
-  if (!parsed.ok) {
-    return { ...base, verdict: 'NOT_EVALUABLE', reasons: [parsed.reason] };
-  }
+  if (!parsed.ok) return { ...base, verdict: 'NOT_EVALUABLE', reasons: [parsed.reason] };
 
   const bars = panels[0].timestamps.length;
   const horizon = hypothesis.horizon;
@@ -62,23 +60,15 @@ export function evaluateAlpha(
   }
 
   const evaluated = evaluateFormula(formula, evalPanel);
-  if (!evaluated.ok) {
-    return { ...base, verdict: 'NOT_EVALUABLE', reasons: [evaluated.reason] };
-  }
+  if (!evaluated.ok) return { ...base, verdict: 'NOT_EVALUABLE', reasons: [evaluated.reason] };
 
   const scores: Record<string, readonly (number | null)[]> = {};
-  panels.forEach((p, i) => {
-    scores[p.symbol] = evaluated.value[i];
-  });
+  panels.forEach((p, i) => { scores[p.symbol] = evaluated.value[i]; });
 
   const ic = analyzeIc(panels, scores, { ...config.icOverrides, horizonBars: horizon });
   const icStats = { icMean: ic.icMean, icStd: ic.icStd, icIr: ic.icIr, validIcCount: ic.validIcCount };
-  if (ic.validIcCount === 0) {
-    return { ...base, verdict: 'NOT_EVALUABLE', reasons: ['NO_VALID_IC_POINTS'], icStats };
-  }
-  if (ic.insufficientIcObservations) {
-    return { ...base, verdict: 'NOT_EVALUABLE', reasons: ['INSUFFICIENT_IC_OBSERVATIONS'], icStats };
-  }
+  if (ic.validIcCount === 0) return { ...base, verdict: 'NOT_EVALUABLE', reasons: ['NO_VALID_IC_POINTS'], icStats };
+  if (ic.insufficientIcObservations) return { ...base, verdict: 'NOT_EVALUABLE', reasons: ['INSUFFICIENT_IC_OBSERVATIONS'], icStats };
 
   const validIcs = ic.icSeries.flatMap((p) => (p.ic === null ? [] : [p.ic]));
   const pooledScores: number[] = [];

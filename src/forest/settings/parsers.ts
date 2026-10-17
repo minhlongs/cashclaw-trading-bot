@@ -5,12 +5,8 @@ import { decrypt } from '@/lib/crypto';
 import { createLogger } from '@/lib/logger';
 import type { SettingsRow } from '@/lib/db/repositories';
 import {
-  DEFAULT_EXCHANGES,
-  DEFAULT_RISK,
-  DEFAULT_NOTIFICATION,
-  DEFAULT_KILLSWITCH_DAILY,
-  type SettingsData,
-  type RiskLimitsInput,
+  DEFAULT_EXCHANGES, DEFAULT_RISK, DEFAULT_NOTIFICATION, DEFAULT_KILLSWITCH_DAILY,
+  type SettingsData, type RiskLimitsInput,
 } from './types';
 
 const log = createLogger('settings-parsers');
@@ -85,11 +81,7 @@ export async function rowToSettingsData(row: SettingsRow): Promise<SettingsData>
     exchanges: await parseExchanges(row.exchange_creds_json),
     risk: parseRisk(row.risk_limits_json),
     notification: parseNotification(row.notification_json),
-    killswitch: {
-      enabled: row.killswitch_enabled === 1,
-      reason: row.killswitch_reason,
-      triggeredAt: row.killswitch_triggered_at,
-    },
+    killswitch: { enabled: row.killswitch_enabled === 1, reason: row.killswitch_reason, triggeredAt: row.killswitch_triggered_at },
     killswitchDaily: parseKillswitchDaily(row.killswitch_daily_json),
   };
 }

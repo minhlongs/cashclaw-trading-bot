@@ -33,7 +33,7 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(dataEnterprise.feed.length).toBe(3);
   });
 
-  it('GET and POST /api/ee/credits calculates deliberation token usage', async () => {
+  it('GET and POST /api/ee/credits persists debits across requests and reconciles tier upgrades', async () => {
     const resGet = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=PREMIUM'));
     const dataGet = (await resGet.json()) as { ok: boolean; account: { balanceCredits: number } };
     expect(resGet.status).toBe(200);
@@ -57,6 +57,27 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(dataPost.costCredits).toBe(8);
     expect(dataPost.account.balanceCredits).toBe(9_992);
     expect(dataPost.account.consumedCredits).toBe(8);
+
+    const resGetAfter = await creditsGet(
+      new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=PREMIUM'),
+    );
+    const dataGetAfter = (await resGetAfter.json()) as {
+      ok: boolean;
+      account: { balanceCredits: number; consumedCredits: number };
+    };
+    expect(dataGetAfter.account.balanceCredits).toBe(9_992);
+    expect(dataGetAfter.account.consumedCredits).toBe(8);
+
+    const resUpgraded = await creditsGet(
+      new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=ENTERPRISE'),
+    );
+    const dataUpgraded = (await resUpgraded.json()) as {
+      ok: boolean;
+      account: { tier: string; balanceCredits: number; consumedCredits: number };
+    };
+    expect(dataUpgraded.account.tier).toBe('ENTERPRISE');
+    expect(dataUpgraded.account.balanceCredits).toBe(49_992);
+    expect(dataUpgraded.account.consumedCredits).toBe(8);
   });
 
   it('POST /api/ee/alerts handles alert signing, deduplication, and unconditional WEBHOOK tier gating', async () => {

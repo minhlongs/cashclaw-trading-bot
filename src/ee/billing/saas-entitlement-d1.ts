@@ -16,39 +16,22 @@ interface D1EntitlementRecord {
   updated_at_ms: number;
 }
 
-export async function hasD1ProcessedPayment(
-  db: D1Database,
-  paymentId: string,
-): Promise<boolean> {
+export async function hasD1ProcessedPayment(db: D1Database, paymentId: string): Promise<boolean> {
   const row = await db
-    .prepare(
-      "SELECT payment_id FROM saas_nowpayments_ipn_events WHERE payment_id = ? AND payment_status IN ('finished', 'confirmed')",
-    )
+    .prepare("SELECT payment_id FROM saas_nowpayments_ipn_events WHERE payment_id = ? AND payment_status IN ('finished', 'confirmed')")
     .bind(paymentId)
     .first<{ payment_id: string }>();
   return Boolean(row?.payment_id);
 }
 
-export async function insertD1IpnEvent(
-  db: D1Database,
-  record: IpnActivationRecord,
-  nowMs: number,
-): Promise<void> {
+export async function insertD1IpnEvent(db: D1Database, record: IpnActivationRecord, nowMs: number): Promise<void> {
   await db
     .prepare(
       `INSERT OR REPLACE INTO saas_nowpayments_ipn_events
        (payment_id, workspace_id, target_tier, payment_status, pay_amount, pay_currency, signature_verified, processed_at_ms)
        VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
     )
-    .bind(
-      record.paymentId,
-      record.workspaceId,
-      record.targetTier,
-      record.paymentStatus,
-      record.payAmount,
-      record.payCurrency,
-      nowMs,
-    )
+    .bind(record.paymentId, record.workspaceId, record.targetTier, record.paymentStatus, record.payAmount, record.payCurrency, nowMs)
     .run();
 }
 

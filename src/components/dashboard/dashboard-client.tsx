@@ -13,11 +13,7 @@ import { CockpitHudSection } from './cockpit-hud-section';
 import { V7MetricsCard } from './v7-metrics-card';
 import { DashboardBotList } from './dashboard-bot-list';
 import { DashboardTopKpiCards, DashboardPerformanceGrid } from './dashboard-kpi-cards';
-import {
-  mapBotsPayloadToDashboardData,
-  type BotCardDataApi,
-  type DashboardData,
-} from './dashboard-data-mapper';
+import { mapBotsPayloadToDashboardData, type BotCardDataApi, type DashboardData } from './dashboard-data-mapper';
 
 export default function DashboardClient() {
   const t = useTranslations('dashboard');
@@ -38,14 +34,9 @@ export default function DashboardClient() {
           cache: 'no-store',
         });
         if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-        const body = (await response.json()) as {
-          ok: boolean; data?: BotCardDataApi[] | null; error?: string | null;
-        };
-        if (!body.ok || !Array.isArray(body.data)) {
-          throw new Error(body.error ?? 'Unable to load bots.');
-        }
-        const mapped = mapBotsPayloadToDashboardData(body.data);
-        if (!cancelled) setData(mapped);
+        const body = (await response.json()) as { ok: boolean; data?: BotCardDataApi[] | null; error?: string | null };
+        if (!body.ok || !Array.isArray(body.data)) throw new Error(body.error ?? 'Unable to load bots.');
+        if (!cancelled) setData(mapBotsPayloadToDashboardData(body.data));
       } catch (fetchError) {
         if (!cancelled) setError(fetchError instanceof Error ? fetchError.message : 'Unknown dashboard error');
       } finally {

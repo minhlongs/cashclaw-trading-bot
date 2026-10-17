@@ -69,14 +69,9 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
             </div>
           </div>
           <BotDetailActionButtons
-            resumeAction={resumeAction}
-            loadingAction={loadingAction}
-            onAction={handleControlAction}
-            onOpenConfig={() => setTab('config')}
-            resumeLabel={t('resume')}
-            pauseLabel={t('pause')}
-            resetLabel={t('reset')}
-            configLabel={t('config')}
+            resumeAction={resumeAction} loadingAction={loadingAction}
+            onAction={handleControlAction} onOpenConfig={() => setTab('config')}
+            resumeLabel={t('resume')} pauseLabel={t('pause')} resetLabel={t('reset')} configLabel={t('config')}
           />
         </div>
       </div>

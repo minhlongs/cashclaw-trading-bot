@@ -34,23 +34,14 @@ export function makeEmptyRecord(): Record<RegimeLabel, number> {
 
 /**
  * Build a regime transition matrix from observed regime history.
- *
- * ONLY uses consecutive pairs (regime[t] → regime[t+1]) — causal by construction.
- *
- * KNOWN SIMPLIFICATION: mission §5 wants P(regime[t+1] | regime[t], features[t])
- * but RegimeResult carries no feature vector, so this computes
- * P(regime[t+1] | regime[t]).
+ * ONLY uses consecutive pairs (regime[t] -> regime[t+1]) — causal by construction.
  */
-export function buildTransitionMatrix(
-  history: readonly RegimeResult[],
-): TransitionMatrix {
+export function buildTransitionMatrix(history: readonly RegimeResult[]): TransitionMatrix {
   const counts = makeZeroMatrix(N);
   let totalTransitions = 0;
 
   for (let i = 0; i < history.length - 1; i++) {
-    const fromIdx = labelIndex(history[i].label);
-    const toIdx = labelIndex(history[i + 1].label);
-    counts[fromIdx][toIdx]++;
+    counts[labelIndex(history[i].label)][labelIndex(history[i + 1].label)]++;
     totalTransitions++;
   }
 
@@ -58,25 +49,19 @@ export function buildTransitionMatrix(
   for (let i = 0; i < N; i++) {
     const rowSum = counts[i].reduce((a, b) => a + b, 0);
     if (rowSum > 0) {
-      for (let j = 0; j < N; j++) {
-        probabilities[i][j] = counts[i][j] / rowSum;
-      }
+      for (let j = 0; j < N; j++) probabilities[i][j] = counts[i][j] / rowSum;
     }
   }
 
   const persistence = makeEmptyRecord();
-  for (let i = 0; i < N; i++) {
-    persistence[REGIME_LABELS[i]] = probabilities[i][i];
-  }
+  for (let i = 0; i < N; i++) persistence[REGIME_LABELS[i]] = probabilities[i][i];
 
   const entropy = makeEmptyRecord();
   for (let i = 0; i < N; i++) {
     let h = 0;
     for (let j = 0; j < N; j++) {
       const p = probabilities[i][j];
-      if (p > 0) {
-        h -= p * Math.log2(p);
-      }
+      if (p > 0) h -= p * Math.log2(p);
     }
     entropy[REGIME_LABELS[i]] = h;
   }
@@ -96,14 +81,5 @@ export function buildTransitionMatrix(
     hazard[label] = avgDuration[label] > 0 ? 1 / avgDuration[label] : 0;
   }
 
-  return {
-    labels: REGIME_LABELS,
-    counts,
-    probabilities,
-    persistence,
-    entropy,
-    avgDuration,
-    hazard,
-    totalTransitions,
-  };
+  return { labels: REGIME_LABELS, counts, probabilities, persistence, entropy, avgDuration, hazard, totalTransitions };
 }
