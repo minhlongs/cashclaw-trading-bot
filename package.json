@@ -6,6 +6,11 @@
   "bin": {
     "cashclaw": "./bin/cashclaw.js"
   },
+  "exports": {
+    ".": "./src/tree/quantlib/index.ts",
+    "./quantlib": "./src/tree/quantlib/index.ts",
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "quickstart": "node ./bin/cashclaw.js quickstart",
     "zoo:falsify": "npx tsx scripts/zoo-phase3-falsify.ts",

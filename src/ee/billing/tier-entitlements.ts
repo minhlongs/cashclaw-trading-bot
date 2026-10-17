@@ -11,6 +11,9 @@ export interface TierEntitlementSpec {
   readonly monthlyLlmCredits: number;
   readonly managedLlmPoolAllowed: boolean;
   readonly customWebhookAlertsAllowed: boolean;
+  readonly minDurableCronIntervalMinutes: number;
+  readonly cloudAlphaFeedAccess: boolean;
+  readonly deliberationManagedKeys: boolean;
 }
 
 export const SAAS_TIER_ENTITLEMENTS: Readonly<Record<SaasTier, TierEntitlementSpec>> = {
@@ -22,6 +25,9 @@ export const SAAS_TIER_ENTITLEMENTS: Readonly<Record<SaasTier, TierEntitlementSp
     monthlyLlmCredits: 1_000,
     managedLlmPoolAllowed: false,
     customWebhookAlertsAllowed: false,
+    minDurableCronIntervalMinutes: 60,
+    cloudAlphaFeedAccess: false,
+    deliberationManagedKeys: false,
   },
   PREMIUM: {
     tier: 'PREMIUM',
@@ -31,6 +37,9 @@ export const SAAS_TIER_ENTITLEMENTS: Readonly<Record<SaasTier, TierEntitlementSp
     monthlyLlmCredits: 10_000,
     managedLlmPoolAllowed: true,
     customWebhookAlertsAllowed: true,
+    minDurableCronIntervalMinutes: 5,
+    cloudAlphaFeedAccess: true,
+    deliberationManagedKeys: true,
   },
   ENTERPRISE: {
     tier: 'ENTERPRISE',
@@ -40,6 +49,9 @@ export const SAAS_TIER_ENTITLEMENTS: Readonly<Record<SaasTier, TierEntitlementSp
     monthlyLlmCredits: 50_000,
     managedLlmPoolAllowed: true,
     customWebhookAlertsAllowed: true,
+    minDurableCronIntervalMinutes: 1,
+    cloudAlphaFeedAccess: true,
+    deliberationManagedKeys: true,
   },
   MASTER: {
     tier: 'MASTER',
@@ -49,6 +61,9 @@ export const SAAS_TIER_ENTITLEMENTS: Readonly<Record<SaasTier, TierEntitlementSp
     monthlyLlmCredits: 250_000,
     managedLlmPoolAllowed: true,
     customWebhookAlertsAllowed: true,
+    minDurableCronIntervalMinutes: 1,
+    cloudAlphaFeedAccess: true,
+    deliberationManagedKeys: true,
   },
 };
 
