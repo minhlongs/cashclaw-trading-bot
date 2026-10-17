@@ -49,3 +49,17 @@ export { ParkinsonVolatilityEngine } from './volatility/parkinson-volatility-eng
 export { YangZhangVolatilityEngine } from './volatility/yang-zhang-volatility-engine';
 export { RogersSatchellVolatilityEngine } from './volatility/rogers-satchell-engine';
 export { BessembinderKaufmanEngine } from './microstructure/bessembinder-kaufman-engine';
+
+export { AmihudIlliquidityEngine } from './liquidity/amihud-illiquidity-engine';
+export type {
+  AmihudPriceVolumeBar,
+  AmihudIlliqConfig,
+  AmihudIlliqResult,
+} from './liquidity/amihud-illiquidity-engine';
+
+export {
+  RollEffectiveSpreadEngine,
+  computeRollSpread,
+  type RollSpreadParams,
+  type RollSpreadResult,
+} from './microstructure/roll-effective-spread-engine';

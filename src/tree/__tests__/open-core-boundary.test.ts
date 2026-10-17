@@ -4,19 +4,34 @@ import * as path from 'node:path';
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 
-function collectTsFiles(dirPath: string): string[] {
+function collectSourceFiles(dirPath: string): string[] {
   if (!fs.existsSync(dirPath)) return [];
   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
   const files: string[] = [];
   for (const entry of entries) {
     const fullPath = path.join(dirPath, entry.name);
     if (entry.isDirectory()) {
-      files.push(...collectTsFiles(fullPath));
-    } else if (entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts')) {
+      files.push(...collectSourceFiles(fullPath));
+    } else if (
+      entry.isFile() &&
+      /\.(ts|tsx|js)$/.test(entry.name) &&
+      !/\.test\.(ts|tsx|js)$/.test(entry.name)
+    ) {
       files.push(fullPath);
     }
   }
   return files;
+}
+
+const EE_IMPORT_PATTERNS: readonly RegExp[] = [
+  /import\s+[\s\S]*?\s+from\s+['"](?:@\/ee(?:\/|$)|(?:\.\.?\/)+ee(?:\/|$))/,
+  /export\s+[\s\S]*?\s+from\s+['"](?:@\/ee(?:\/|$)|(?:\.\.?\/)+ee(?:\/|$))/,
+  /import\s*\(\s*['"](?:@\/ee(?:\/|$)|(?:\.\.?\/)+ee(?:\/|$))/,
+  /require\s*\(\s*['"](?:@\/ee(?:\/|$)|(?:\.\.?\/)+ee(?:\/|$))/,
+];
+
+export function hasEeImportLeak(source: string): boolean {
+  return EE_IMPORT_PATTERNS.some((pattern) => pattern.test(source));
 }
 
 describe('Phase 1 (Steps 1-5): Open-Core Apache-2.0 & EE Commercial Boundary', () => {
@@ -48,24 +63,34 @@ describe('Phase 1 (Steps 1-5): Open-Core Apache-2.0 & EE Commercial Boundary', (
     expect(coc).toContain('Contributor Covenant');
   });
 
-  it('Step 3: Pure Apache-2.0 layers (src/tree and src/land) never import from src/ee', () => {
-    const ossFiles = [
-      ...collectTsFiles(path.join(REPO_ROOT, 'src/tree')),
-      ...collectTsFiles(path.join(REPO_ROOT, 'src/land')),
+  it('Step 3: Pure Apache-2.0 layers (tree, land, forest, lib, bin) never import from src/ee', () => {
+    const ossDirectories = [
+      path.join(REPO_ROOT, 'src/tree'),
+      path.join(REPO_ROOT, 'src/land'),
+      path.join(REPO_ROOT, 'src/forest'),
+      path.join(REPO_ROOT, 'src/lib'),
+      path.join(REPO_ROOT, 'bin'),
     ];
 
-    expect(ossFiles.length).toBeGreaterThan(50);
+    const ossFiles = ossDirectories.flatMap(collectSourceFiles);
+    expect(ossFiles.length).toBeGreaterThan(100);
 
     const violations: string[] = [];
-    const eeImportPattern = /from\s+['"](?:@\/ee|\.\.\/.*\/ee\/)/;
-
     for (const file of ossFiles) {
       const source = fs.readFileSync(file, 'utf8');
-      if (eeImportPattern.test(source)) {
+      if (hasEeImportLeak(source)) {
         violations.push(path.relative(REPO_ROOT, file));
       }
     }
 
     expect(violations).toEqual([]);
+  });
+
+  it('Step 3b: Boundary regex catches static, dynamic, re-export, and relative EE imports', () => {
+    expect(hasEeImportLeak("import { TenantPolicy } from '@/ee/tenancy/tenant-policy';")).toBe(true);
+    expect(hasEeImportLeak("export { QuotaGuard } from '@/ee/billing/quota-guard';")).toBe(true);
+    expect(hasEeImportLeak("const mod = await import('@/ee/scheduler/cloud');")).toBe(true);
+    expect(hasEeImportLeak("const mod = require('../../ee/billing');")).toBe(true);
+    expect(hasEeImportLeak("import { QuantLib } from '@/tree/quantlib';")).toBe(false);
   });
 });

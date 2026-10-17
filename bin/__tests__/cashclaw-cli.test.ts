@@ -121,6 +121,9 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(code).toBe(0);
       const output = JSON.parse(String(consoleLogSpy.mock.calls[0][0]));
       expect(output.totalSteps).toBe(25);
+      expect(output.apacheSteps).toBe(14);
+      expect(output.commercialSteps).toBe(11);
+      expect(output.apacheSteps + output.commercialSteps).toBe(25);
       expect(output.status).toBe('ALL_25_STEPS_VERIFIED');
     });
 

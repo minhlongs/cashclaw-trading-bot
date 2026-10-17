@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Phase 4: SaaS Billing Quotas and Conversion Funnel (Steps 16–20)"
-status: todo
+status: completed
 priority: P1
 effort: "1d"
 dependencies: [2, 3]

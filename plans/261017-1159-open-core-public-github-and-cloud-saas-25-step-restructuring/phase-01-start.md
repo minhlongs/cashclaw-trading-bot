@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Phase 1: IP Sanitization & Licensing Boundary (Steps 1–5)"
-status: todo
+status: completed
 priority: P1
 effort: "1d"
 dependencies: []

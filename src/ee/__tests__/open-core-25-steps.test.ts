@@ -13,6 +13,15 @@ describe('25-Step Open-Core Public GitHub & Cloud SaaS Complete Architecture Ver
     expect(OPEN_CORE_25_STEPS).toHaveLength(25);
     const stepNumbers = OPEN_CORE_25_STEPS.map((s) => s.stepNumber);
     expect(stepNumbers).toEqual(Array.from({ length: 25 }, (_, i) => i + 1));
+
+    const uniqueStepNumbers = new Set(stepNumbers);
+    expect(uniqueStepNumbers.size).toBe(25);
+
+    const apacheCount = OPEN_CORE_25_STEPS.filter((s) => s.license === 'APACHE_2_0').length;
+    const commercialCount = OPEN_CORE_25_STEPS.filter((s) => s.license === 'COMMERCIAL_EE').length;
+    expect(apacheCount + commercialCount).toBe(25);
+    expect(apacheCount).toBe(14);
+    expect(commercialCount).toBe(11);
   });
 
   it('correctly partitions open-core community (Apache-2.0) and commercial SaaS (src/ee)', () => {

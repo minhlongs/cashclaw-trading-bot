@@ -1,0 +1,153 @@
+import { vi } from 'vitest';
+import type { BacktestResult } from '@/forest/backtest/types';
+
+export const localeMock = vi.fn().mockReturnValue('vi');
+
+export const MESSAGES: Record<string, string> = {
+  'vi:backtests.title': 'Backtest',
+  'vi:backtests.selectBotPlaceholder': 'Chon bot...',
+  'vi:backtests.running': 'Dang chay...',
+  'vi:backtests.run': 'Chay Backtest',
+  'vi:backtests.pleaseSelectBot': 'Chon bot truoc',
+  'vi:backtests.botNotFound': 'Khong tim thay bot',
+  'vi:backtests.failed': 'Backtest that bai',
+  'vi:backtests.requestFailed': 'Yeu cau that bai',
+  'vi:backtests.performanceMetrics': 'Chi So Hieu Suat',
+  'vi:backtests.totalPnl': 'Tong Loi Nhuan',
+  'vi:backtests.winRate': 'Ty Le Thang',
+  'vi:backtests.maxDrawdown': 'Max Drawdown',
+  'vi:backtests.sharpeRatio': 'Sharpe Ratio',
+  'vi:backtests.totalTrades': 'Tong Giao Dich',
+  'vi:backtests.equityCurve': 'Duong Equity',
+  'vi:backtests.recentTrades': 'Giao Dich Gan Day',
+  'vi:backtests.side': 'Huong',
+  'vi:backtests.entryTime': 'Thoi Gian Vao',
+  'vi:backtests.exitTime': 'Thoi Gian Ra',
+  'vi:backtests.pnlPct': 'Loi Nhuan %',
+  'vi:common.entryPrice': 'Gia Vao',
+  'vi:common.exitPrice': 'Gia Ra',
+  'vi:common.pnl': 'Loi Nhuan',
+  'en:backtests.title': 'Backtest',
+  'en:backtests.selectBotPlaceholder': 'Select a bot...',
+  'en:backtests.running': 'Running...',
+  'en:backtests.run': 'Run Backtest',
+  'en:backtests.pleaseSelectBot': 'Please select a bot',
+  'en:backtests.botNotFound': 'Bot not found',
+  'en:backtests.failed': 'Backtest failed',
+  'en:backtests.requestFailed': 'Request failed',
+  'en:backtests.performanceMetrics': 'Performance Metrics',
+  'en:backtests.totalPnl': 'Total PnL',
+  'en:backtests.winRate': 'Win Rate',
+  'en:backtests.maxDrawdown': 'Max Drawdown',
+  'en:backtests.sharpeRatio': 'Sharpe Ratio',
+  'en:backtests.totalTrades': 'Total Trades',
+  'en:backtests.equityCurve': 'Equity Curve',
+  'en:backtests.recentTrades': 'Recent Trades',
+  'en:backtests.side': 'Side',
+  'en:backtests.entryTime': 'Entry Time',
+  'en:backtests.exitTime': 'Exit Time',
+  'en:backtests.pnlPct': 'PnL %',
+  'en:common.entryPrice': 'Entry Price',
+  'en:common.exitPrice': 'Exit Price',
+  'en:common.pnl': 'PnL',
+};
+
+export const BOTS = [
+  { id: 'bot-1', name: 'Grid BTC', strategy: 'grid', configJson: '{"exchange":"binance","symbol":"BTC/USDT"}' },
+  { id: 'bot-2', name: 'MeanRev ETH', strategy: 'mean_reversion', configJson: '{}' },
+];
+
+export function makeResult(overrides: Partial<BacktestResult> = {}): BacktestResult {
+  return {
+    id: 'res-1',
+    bot_id: 'bot-1',
+    strategy: 'grid',
+    pair: 'BTC/USDT',
+    exchange: 'binance',
+    start_date: 1700000000000,
+    end_date: 1707700000000,
+    total_trades: 4,
+    win_count: 2,
+    loss_count: 2,
+    win_rate: 50,
+    total_pnl: 150.5,
+    max_drawdown: 8.3,
+    sharpe_ratio: 1.85,
+    params_json: '{}',
+    equity_curve_json: [
+      { timestamp: 1700000000000, equity: 10000, drawdownPct: 0 },
+      { timestamp: 1700100000000, equity: 10100, drawdownPct: 0 },
+      { timestamp: 1700200000000, equity: 10150.5, drawdownPct: 0 },
+    ],
+    trades_json: [
+      {
+        entryTimestamp: 1700000000000,
+        exitTimestamp: 1700050000000,
+        side: 'buy' as const,
+        entryPrice: 42000,
+        exitPrice: 42500,
+        quantity: 0.1,
+        pnl: 50,
+        fee: 1.2,
+        pnlPct: 1.19,
+        holdingMinutes: 833,
+      },
+      {
+        entryTimestamp: 1700100000000,
+        exitTimestamp: 1700150000000,
+        side: 'sell' as const,
+        entryPrice: 42500,
+        exitPrice: 42100,
+        quantity: 0.1,
+        pnl: -40,
+        fee: 1.1,
+        pnlPct: -0.94,
+        holdingMinutes: 833,
+      },
+    ],
+    created_at: 1700200000000,
+    ...overrides,
+  };
+}
+
+export const profitData = makeResult({
+  total_pnl: 320.75,
+  win_count: 4,
+  loss_count: 1,
+  win_rate: 80,
+  trades_json: [
+    {
+      entryTimestamp: 1700000000000,
+      exitTimestamp: 1700050000000,
+      side: 'buy' as const,
+      entryPrice: 42000,
+      exitPrice: 43000,
+      quantity: 0.1,
+      pnl: 100,
+      fee: 1.5,
+      pnlPct: 2.38,
+      holdingMinutes: 833,
+    },
+  ],
+});
+
+export const lossData = makeResult({
+  total_pnl: -85.2,
+  win_count: 1,
+  loss_count: 4,
+  win_rate: 20,
+  trades_json: [
+    {
+      entryTimestamp: 1700000000000,
+      exitTimestamp: 1700050000000,
+      side: 'sell' as const,
+      entryPrice: 42000,
+      exitPrice: 42500,
+      quantity: 0.1,
+      pnl: -50,
+      fee: 1.1,
+      pnlPct: -1.19,
+      holdingMinutes: 833,
+    },
+  ],
+});

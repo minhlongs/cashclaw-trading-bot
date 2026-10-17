@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Phase 2: Modular Package Extraction and CLI Experience (Steps 6–10)"
-status: todo
+status: completed
 priority: P1
 effort: "1d"
 dependencies: [1]
