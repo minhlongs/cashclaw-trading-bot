@@ -2,6 +2,7 @@
 .agentkit/
 .agents/
 .orchestrate/
+.mekong/
 .wrangler/
 .open-next/
 .next/

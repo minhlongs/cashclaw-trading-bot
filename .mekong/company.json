@@ -1,0 +1,57 @@
+{
+  "$schema": "https://mekong.agency/schemas/company-v1.json",
+  "name": "CashClaw Trading Bot Platform",
+  "slug": "cashclaw",
+  "version": "1.62.0-open-core",
+  "tagline": "Industrial Open-Core Algorithmic Trading Framework & Cloud SaaS",
+  "stage": "PSF_TO_SCALE",
+  "model": "OPEN_CORE_DUAL_LICENSE",
+  "targetArrUsd": 1000000,
+  "currency": "USD",
+  "licenses": {
+    "ossCore": "Apache-2.0",
+    "commercialCloud": "CashClaw Commercial License"
+  },
+  "tiers": [
+    {
+      "id": "BASIC",
+      "priceUsd": 0,
+      "interval": "month",
+      "maxBots": 1,
+      "durableCronMinutes": 60,
+      "cloudAlphaFeed": false
+    },
+    {
+      "id": "PREMIUM",
+      "priceUsd": 29,
+      "interval": "month",
+      "maxBots": 5,
+      "durableCronMinutes": 5,
+      "cloudAlphaFeed": true
+    },
+    {
+      "id": "ENTERPRISE",
+      "priceUsd": 99,
+      "interval": "month",
+      "maxBots": 25,
+      "durableCronMinutes": 1,
+      "cloudAlphaFeed": true
+    },
+    {
+      "id": "MASTER",
+      "priceUsd": 299,
+      "interval": "month",
+      "maxBots": 100,
+      "durableCronMinutes": 1,
+      "cloudAlphaFeed": true
+    }
+  ],
+  "governance": {
+    "adr001SafetyMode": "PAPER_BACKTEST_ONLY",
+    "zeroRealFundRisk": true,
+    "auditLedger": "SHA-256",
+    "totalSteps": 25,
+    "apacheSteps": 14,
+    "commercialSteps": 11
+  }
+}
