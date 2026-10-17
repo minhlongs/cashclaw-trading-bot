@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "CashClaw AI Trading Bot Platform",
   "private": true,
+  "bin": {
+    "cashclaw": "./bin/cashclaw.js"
+  },
   "scripts": {
+    "quickstart": "node ./bin/cashclaw.js quickstart",
     "build": "next build",
     "build:worker": "node -e \"const{execSync}=require('child_process');const sha=execSync('git rev-parse HEAD').toString().trim();process.env.GIT_COMMIT_SHA=sha;require('child_process').execSync('npx @opennextjs/cloudflare build',{stdio:'inherit',env:process.env})\"",
     "dev": "next dev",

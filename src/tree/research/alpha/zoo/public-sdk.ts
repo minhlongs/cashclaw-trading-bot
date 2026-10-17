@@ -26,5 +26,5 @@ export {
   type NormalizeFormulaResult,
 } from './operator-vocabulary';
 
-export { parseOperatorFormula } from './operator-parser';
-export { evaluateOperatorAst } from './operator-evaluator';
+export { parseFormula as parseOperatorFormula } from './operator-parser';
+export { evaluateFormula as evaluateOperatorFormula } from './operator-evaluator';

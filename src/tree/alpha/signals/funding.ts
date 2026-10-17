@@ -7,6 +7,7 @@ export type {
   LiquidationPoint,
   DerivativeFeatures,
 } from './funding-types';
+export type { Candle } from '@/forest/backtest/ohlcv';
 
 export {
   fetchFundingRate,

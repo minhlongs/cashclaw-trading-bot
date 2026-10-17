@@ -25,7 +25,7 @@ export { AbdiRanaldoEngine } from './microstructure/abdi-ranaldo-engine';
 export type {
   AbdiRanaldoConfig,
   AbdiRanaldoResult,
-  CloseHighLowBar,
+  ChlBar,
 } from './microstructure/abdi-ranaldo-types';
 
 export { LesmondLotEngine } from './liquidity/lesmond-lot-engine';
@@ -35,7 +35,7 @@ export { PastorStambaughEngine } from './liquidity/pastor-stambaugh-engine';
 export type {
   PastorStambaughConfig,
   PastorStambaughResult,
-  PastorStambaughObservation,
+  PastorStambaughBar,
 } from './liquidity/pastor-stambaugh-types';
 
 export { GarmanKlassVolatilityEngine } from './volatility/garman-klass-volatility-engine';
@@ -47,5 +47,5 @@ export type {
 
 export { ParkinsonVolatilityEngine } from './volatility/parkinson-volatility-engine';
 export { YangZhangVolatilityEngine } from './volatility/yang-zhang-volatility-engine';
-export { RogersSatchellEngine } from './volatility/rogers-satchell-engine';
+export { RogersSatchellVolatilityEngine } from './volatility/rogers-satchell-engine';
 export { BessembinderKaufmanEngine } from './microstructure/bessembinder-kaufman-engine';

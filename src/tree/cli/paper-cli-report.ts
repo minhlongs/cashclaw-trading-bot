@@ -39,7 +39,7 @@ export function evaluateQuickstartFixture(fixture: QuickstartSymbolFixture): Cli
     barCount: fixture.bars.length,
     netReturnPct,
     annualizedVolatility: Number(gk.annualizedVolatility.toFixed(4)),
-    estimatedSpreadBps: Number((cs.effectiveSpread * 10000).toFixed(2)),
+    estimatedSpreadBps: Number(cs.estimatedSpreadBps.toFixed(2)),
     feeAndSlippageBps: totalCostBps,
     safetyMode: 'PAPER_ONLY',
   };

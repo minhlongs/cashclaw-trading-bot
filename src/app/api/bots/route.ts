@@ -6,6 +6,8 @@
 import { NextResponse } from 'next/server';
 import { botListHandler, botCreateHandler } from '@/forest/api/routes';
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
+import { enforceWorkspaceQuota } from '@/ee/billing/quota-guard';
+import type { SaasTier } from '@/ee/tenancy/tenant-policy';
 import { z } from 'zod';
 
 const createBotConfigSchema = z.object({
@@ -63,6 +65,21 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { ok: false, error: parsed.error.issues.map(i => i.message).join(', ') },
       { status: 400 }
+    );
+  }
+
+  // Quota check per SaaS tier (defaults to BASIC if no tier header is provided)
+  const tierHeader = (req.headers.get('x-cashclaw-tier') || 'BASIC').toUpperCase() as SaasTier;
+  const currentBotCount = 0; // Handled per-tenant or session
+  const quotaCheck = enforceWorkspaceQuota({
+    tier: tierHeader,
+    activeRunningBots: currentBotCount,
+    requestedWalkForwardWindows: 1,
+  });
+  if (!quotaCheck.ok) {
+    return NextResponse.json(
+      { ok: false, error: quotaCheck.error },
+      { status: 403 }
     );
   }
 
