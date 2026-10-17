@@ -84,37 +84,17 @@ export function BotDetailConfig({ config, botId, onConfigSaved }: BotDetailConfi
           role="alert"
         >
           <span>{status.message}</span>
-          <button
-            type="button"
-            className="text-secondary hover:text-primary ml-2 text-xs"
-            onClick={() => setStatus(null)}
-            aria-label="Dismiss message"
-          >
-            ✕
-          </button>
+          <button type="button" className="text-secondary hover:text-primary ml-2 text-xs" onClick={() => setStatus(null)} aria-label="Dismiss message">✕</button>
         </div>
       )}
       {configEntries.map(([key, value]) => (
         <div key={key}>
           <label className="form-label" htmlFor={`config-${key}`}>{key}</label>
-          <input
-            id={`config-${key}`}
-            type="number"
-            className="form-input"
-            value={value}
-            onChange={(e) => handleInputChange(key, e.target.value)}
-            disabled={isSaving}
-            step="0.1"
-          />
+          <input id={`config-${key}`} type="number" className="form-input" value={value} onChange={(e) => handleInputChange(key, e.target.value)} disabled={isSaving} step="0.1" />
         </div>
       ))}
       <div className="config-full">
-        <button
-          type="button"
-          className="btn btn-primary flex items-center gap-2"
-          onClick={handleSave}
-          disabled={isSaving}
-        >
+        <button type="button" className="btn btn-primary flex items-center gap-2" onClick={handleSave} disabled={isSaving}>
           {isSaving && <Loader2 size={16} className="animate-spin" />}
           {isSaving ? t('saving') : t('saveConfig')}
         </button>

@@ -39,10 +39,7 @@ export function useMarketTicker({
   const isMountedRef = useRef<boolean>(true);
 
   const isEligible = Boolean(
-    enabled &&
-    exchange &&
-    symbol &&
-    VALID_EXCHANGES.has(exchange.toLowerCase()),
+    enabled && exchange && symbol && VALID_EXCHANGES.has(exchange.toLowerCase()),
   );
 
   const executeFetch = useCallback(async (): Promise<void> => {
@@ -65,12 +62,9 @@ export function useMarketTicker({
     } catch (fetchErr: unknown) {
       if (!isMountedRef.current || controller.signal.aborted) return;
       if (fetchErr instanceof Error && fetchErr.name === 'AbortError') return;
-
       setError(fetchErr instanceof Error ? fetchErr.message : 'Failed to fetch ticker data');
     } finally {
-      if (isMountedRef.current && activeControllerRef.current === controller) {
-        setLoading(false);
-      }
+      if (isMountedRef.current && activeControllerRef.current === controller) setLoading(false);
     }
   }, [isEligible, exchange, symbol]);
 

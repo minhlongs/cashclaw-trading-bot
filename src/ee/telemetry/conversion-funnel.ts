@@ -81,3 +81,10 @@ export function recommendUpgradeTierForQuotaHit(currentTier: SaasTier): SaasTier
   if (currentTier === 'PREMIUM') return 'ENTERPRISE';
   return 'MASTER';
 }
+
+export const defaultFunnelSink: FunnelEvent[] = [];
+
+export function clearDefaultFunnelSink(): void {
+  defaultFunnelSink.length = 0;
+}
+

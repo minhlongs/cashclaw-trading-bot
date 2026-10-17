@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Filter, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
-import { computeFdrGateTelemetry } from '@/forest/dashboard/quant-telemetry-service';
-
-type GateMethod = 'BH_FDR' | 'HOLM_BONFERRONI';
+import { Filter, CheckCircle2, XCircle } from 'lucide-react';
+import { computeFdrGateTelemetry, type GateMethod } from './fdr-multiple-testing-model';
+import { QuantScreenHeader } from './quant-screen-header';
 
 export function FdrMultipleTestingGate() {
   const [fdrAlpha, setFdrAlpha] = useState<number>(0.05);
@@ -20,18 +19,11 @@ export function FdrMultipleTestingGate() {
 
   return (
     <section aria-label="Multiple-Testing False Discovery Rate Gate" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <Filter size={20} className="text-[var(--color-ai)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">Multiple-Testing False Discovery Rate (BH-FDR & DSR) Gate</h1>
-            <p className="text-xs text-[var(--text-secondary)]">Data-snooping defense • Live computeDeflatedSharpe & E[max_N] = {fdrTelemetry.expectedMaxSharpe}</p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} /><span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<Filter size={20} className="text-[var(--color-ai)]" />}
+        title="Multiple-Testing False Discovery Rate (BH-FDR & DSR) Gate"
+        subtitle={`Data-snooping defense • Live computeDeflatedSharpe & E[max_N] = ${fdrTelemetry.expectedMaxSharpe}`}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
@@ -57,15 +49,7 @@ export function FdrMultipleTestingGate() {
             <span className="text-xs font-medium text-[var(--text-secondary)]">Correction Procedure</span>
             <div className="grid grid-cols-2 gap-2" role="group" aria-label="Correction procedure selector">
               {(['BH_FDR', 'HOLM_BONFERRONI'] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMethod(m)}
-                  aria-pressed={method === m}
-                  className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold border transition-all ${
-                    method === m ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'
-                  }`}
-                >
+                <button key={m} type="button" onClick={() => setMethod(m)} aria-pressed={method === m} className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold border transition-all ${method === m ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}>
                   {m}
                 </button>
               ))}

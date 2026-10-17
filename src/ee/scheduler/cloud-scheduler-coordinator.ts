@@ -57,4 +57,11 @@ export class CloudSchedulerCoordinator {
     }
     return count;
   }
+
+  public clearLeases(): void {
+    this.leases.clear();
+  }
 }
+
+export const defaultCloudSchedulerCoordinator = new CloudSchedulerCoordinator();
+

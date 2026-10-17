@@ -1,22 +1,15 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Layers, ShieldCheck } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { resolveStressConfig, type StressMode } from '@/tree/alpha/cost-stress';
+import { QuantScreenHeader } from './quant-screen-header';
 
-interface SimFill {
-  fillId: string;
-  symbol: string;
-  side: 'BUY' | 'SELL';
-  notionalUsd: number;
-  baseSlipBps: number;
-}
-
-const PAPER_FILLS: readonly SimFill[] = [
+const PAPER_FILLS = [
   { fillId: 'PAPER-ORD-901', symbol: 'BTC/USDT', side: 'BUY', notionalUsd: 25000, baseSlipBps: 2.4 },
   { fillId: 'PAPER-ORD-902', symbol: 'ETH/USDT', side: 'SELL', notionalUsd: 18000, baseSlipBps: 3.1 },
   { fillId: 'PAPER-ORD-903', symbol: 'SOL/USDT', side: 'BUY', notionalUsd: 12000, baseSlipBps: 4.8 },
-];
+] as const;
 
 export function ExecutionLedgerSimulator() {
   const [stressMode, setStressMode] = useState<StressMode>('normal');
@@ -26,30 +19,21 @@ export function ExecutionLedgerSimulator() {
   const feeBps = Number((stressCfg.feePct * 10000).toFixed(1));
   const impactBps = Number((stressCfg.marketImpactPct * 10000 * depthMultiplier).toFixed(1));
 
-  const ledgerRows = useMemo(
-    () =>
-      PAPER_FILLS.map((fill) => {
-        const effectiveSlipBps = Number((fill.baseSlipBps * depthMultiplier + impactBps).toFixed(1));
-        const totalCostUsd = Number(((fill.notionalUsd * (feeBps + effectiveSlipBps)) / 10000).toFixed(2));
-        return { ...fill, effectiveSlipBps, totalCostUsd };
-      }),
-    [depthMultiplier, feeBps, impactBps],
-  );
+  const ledgerRows = useMemo(() => {
+    return PAPER_FILLS.map((fill) => {
+      const effectiveSlipBps = Number((fill.baseSlipBps * depthMultiplier + impactBps).toFixed(1));
+      const totalCostUsd = Number(((fill.notionalUsd * (feeBps + effectiveSlipBps)) / 10000).toFixed(2));
+      return { ...fill, effectiveSlipBps, totalCostUsd };
+    });
+  }, [depthMultiplier, feeBps, impactBps]);
 
   return (
     <section aria-label="Real-Time Paper Execution Ledger and Slippage Stress Simulator" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <Layers size={20} className="text-[var(--color-accent)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">Paper Execution Ledger & Slippage Stress Simulator</h1>
-            <p className="text-xs text-[var(--text-secondary)]">Wired to resolveStressConfig (src/tree/alpha/cost-stress) • Zero live exchange orders</p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} /><span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<Layers size={20} className="text-[var(--color-accent)]" />}
+        title="Paper Execution Ledger & Slippage Stress Simulator"
+        subtitle="Wired to resolveStressConfig (src/tree/alpha/cost-stress) • Zero live exchange orders"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
@@ -58,15 +42,7 @@ export function ExecutionLedgerSimulator() {
             <span className="text-xs text-[var(--text-secondary)]">Exchange Fee & Impact Regime</span>
             <div className="grid grid-cols-2 gap-2" role="group" aria-label="Fee stress regime selector">
               {(['normal', 'conservative', 'adverse', 'extreme'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setStressMode(mode)}
-                  aria-pressed={stressMode === mode}
-                  className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold uppercase border transition-all ${
-                    stressMode === mode ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'
-                  }`}
-                >
+                <button key={mode} type="button" onClick={() => setStressMode(mode)} aria-pressed={stressMode === mode} className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold uppercase border transition-all duration-150 ease-out ${stressMode === mode ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}>
                   {mode}
                 </button>
               ))}

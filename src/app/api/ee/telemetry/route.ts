@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
+  defaultFunnelSink,
   FunnelEventSchema,
   recordOptInFunnelEvent,
-  type FunnelEvent,
+  summarizeConversionFunnel,
 } from '@/ee/telemetry/conversion-funnel';
 
 const TelemetryPayloadSchema = z.object({
@@ -11,7 +12,13 @@ const TelemetryPayloadSchema = z.object({
   event: FunnelEventSchema,
 });
 
-const globalFunnelSink: FunnelEvent[] = [];
+export async function GET() {
+  return NextResponse.json({
+    ok: true,
+    totalEvents: defaultFunnelSink.length,
+    summary: summarizeConversionFunnel(defaultFunnelSink),
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -28,7 +35,7 @@ export async function POST(req: Request) {
     const result = recordOptInFunnelEvent(
       parsed.data.telemetryOptIn,
       parsed.data.event,
-      globalFunnelSink,
+      defaultFunnelSink,
     );
 
     if (!result.ok) {

@@ -95,22 +95,14 @@ export function SortableTable<T>({
         </thead>
         <tbody>
           {sorted.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length + 1} className="table-empty">
-                {emptyMsg}
-              </td>
-            </tr>
+            <tr><td colSpan={columns.length + 1} className="table-empty">{emptyMsg}</td></tr>
           ) : (
             sorted.map((row) => (
               <tr key={getRowId(row)}>
-                <td className="mono time-cell">
-                  {getRowId(row)}
-                </td>
+                <td className="mono time-cell">{getRowId(row)}</td>
                 {columns.map((col) => (
                   <td key={String(col.key)}>
-                    {col.render
-                      ? col.render(row[col.key], row)
-                      : String(row[col.key] ?? '—')}
+                    {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '—')}
                   </td>
                 ))}
               </tr>

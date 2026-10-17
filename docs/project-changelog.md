@@ -2,6 +2,19 @@
 
 ## v1 Paper-Trading Platform
 
+### Quad-Cluster Deep Refactor Wave 3 — 2026-10-17
+- **SaaS EE Scheduler, Telemetry & Alerts Unification (`src/ee/scheduler/cloud-scheduler-coordinator.ts`, `src/ee/telemetry/conversion-funnel.ts`, `src/app/api/ee/alerts/route.ts`)**:
+  - Exported shared `defaultCloudSchedulerCoordinator` singleton uniting `src/worker-cron.ts` (`cronSchedulerCoordinator`) and `GET`/`POST /api/ee/scheduler` (`activeLeaseCount` telemetry).
+  - Exported `defaultFunnelSink` from `src/ee/telemetry/conversion-funnel.ts` and added `GET /api/ee/telemetry` returning `summarizeConversionFunnel(defaultFunnelSink)`.
+  - Wired `POST /api/ee/alerts` with `resolveWorkspaceTierContext` + `getEntitlementsForTier(tier).customWebhookAlertsAllowed` (returning HTTP 400 on invalid tier and HTTP 402 when `enforceTierGate: true` on non-entitled tiers).
+- **Shared `QuantScreenHeader` & Lowering Non-Test Ceiling (`<= 119 LOC` across all of `src/`)**:
+  - Created `src/components/quant/quant-screen-header.tsx` (32 LOC) centralizing the `<header>` and `PAPER_ONLY • ADR-001` status badge across 9 quant screens (`regime-attribution-simulator.tsx`, `data-quality-gate-inspector.tsx`, `relative-value-basis-monitor.tsx`, `survival-gate-monitor.tsx`, `sovereign-enclave-attestation.tsx`, `execution-ledger-simulator.tsx`, `fdr-multiple-testing-gate.tsx`, `correlation-matrix-heatmap.tsx`, `deliberation-theater.tsx`).
+  - Slimmed `volatility-dca-visualizer.tsx`, `settings-client.tsx`, `bot-detail-config.tsx`, `sortable-table.tsx`, `use-market-ticker.ts`, and `nowpayments-checkout-modal.tsx` so zero non-test files in `src/` exceed `119 LOC`.
+- **Test Monolith Decomposition (`< 220 LOC`)**:
+  - Split `page-client.test.tsx` (363 LOC), `rate-limiter.test.ts` (356 LOC), `queue.test.ts` (348 LOC), and `functions.test.ts` (345 LOC) into 8 focused test suites (`page-client.test.tsx` + `page-client-events.test.tsx`, `rate-limiter.test.ts` + `rate-limiter-acquire-headers.test.ts`, `queue.test.ts` + `queue-transitions.test.ts`, `functions.test.ts` + `functions-fallback.test.ts`), all strictly `< 215 LOC`.
+- **Verification**:
+  - 707/707 test files (6,000/6,000 tests) passing, `tsc --noEmit` 0 errors, ESLint 0 warnings, OSS package audit clean (3/3 checks passed).
+
 ### Quad-Cluster Deep Refactor Wave 1 & Wave 2 — 2026-10-17
 - **SaaS Billing & Workspace Context Unification (`src/ee/billing/nowpayments-ipn-verifier.ts`, `src/ee/billing/workspace-request-context.ts`)**:
   - Extracted shared `verifyNowPaymentsIpnHttpRequest` centralizing header checks (`x-nowpayments-sig`), 300s replay window (`x-nowpayments-timestamp`), raw JSON body parsing, WebCrypto HMAC-SHA512 canonical JSON verification, and `NowPaymentsIpnPayloadSchema` validation across both `POST /api/ee/billing/nowpayments-ipn` and `POST /api/ee/billing/ipn`.

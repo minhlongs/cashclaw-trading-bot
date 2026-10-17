@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { CloudSchedulerCoordinator } from '@/ee/scheduler/cloud-scheduler-coordinator';
+import { defaultCloudSchedulerCoordinator } from '@/ee/scheduler/cloud-scheduler-coordinator';
 
 const LeaseRequestSchema = z.object({
   botId: z.string().min(1),
@@ -10,7 +10,18 @@ const LeaseRequestSchema = z.object({
   leaseDurationMs: z.number().int().positive().optional(),
 });
 
-const globalCoordinator = new CloudSchedulerCoordinator();
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const rawNow = url.searchParams.get('nowMs');
+  const parsedNow = rawNow ? Number(rawNow) : Date.now();
+  const nowMs = Number.isFinite(parsedNow) && parsedNow > 0 ? parsedNow : Date.now();
+
+  return NextResponse.json({
+    ok: true,
+    nowMs,
+    activeLeaseCount: defaultCloudSchedulerCoordinator.activeLeaseCount(nowMs),
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +35,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = globalCoordinator.acquireTickLease(parsed.data);
+    const result = defaultCloudSchedulerCoordinator.acquireTickLease(parsed.data);
     if (!result.ok) {
       return NextResponse.json(
         { ok: false, error: result.error },

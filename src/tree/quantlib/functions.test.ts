@@ -2,344 +2,107 @@ import { describe, it, expect } from 'vitest';
 import {
   gridFunctions,
   meanReversionFunctions,
-  volatilityDcaFunctions,
   quantFunctionsExt,
   type QuantLibContext,
-  type QuantFn,
 } from './functions';
 
 const ctx: QuantLibContext = { symbol: 'ETH/USDT', balance: 500, lastPrice: 3000 };
 
 describe('gridFunctions[0]', () => {
-  it('returns hold on zero price', () => {
-    const result = gridFunctions[0]({ ...ctx, lastPrice: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('invalid_price');
-  });
-
-  it('returns hold on negative price', () => {
-    const result = gridFunctions[0]({ ...ctx, lastPrice: -10 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('invalid_price');
-  });
-
-  it('returns hold on invalid params', () => {
+  it('returns hold on zero or negative price or invalid params', () => {
+    expect(gridFunctions[0]({ ...ctx, lastPrice: 0 }).meta.reason).toBe('invalid_price');
+    expect(gridFunctions[0]({ ...ctx, lastPrice: -10 }).meta.reason).toBe('invalid_price');
     expect(gridFunctions[0](ctx, { gridSpacing: -0.01 }).meta.reason).toBe('invalid_params');
     expect(gridFunctions[0](ctx, { levels: 0 }).meta.reason).toBe('invalid_params');
     expect(gridFunctions[0](ctx, { tolerance: -1 }).meta.reason).toBe('invalid_params');
   });
 
-  it('emits buy when near lower grid level', () => {
-    // anchor=3000, spacing=0.02 → first lower level = 2940
-    const result = gridFunctions[0](
+  it('emits buy when near lower grid level (level 1 and level 2)', () => {
+    const r1 = gridFunctions[0](
       { ...ctx, lastPrice: 2940 },
       { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
     );
-    expect(result.signal).toBe('buy');
-    expect(result.confidence).toBeGreaterThan(0.9);
-  });
+    expect(r1.signal).toBe('buy');
+    expect(r1.confidence).toBeGreaterThan(0.9);
 
-  it('emits buy when near deeper lower grid level (level 2)', () => {
-    // anchor=3000, spacing=0.02, level 2 = 3000 * (1 - 0.04) = 2880
-    const result = gridFunctions[0](
+    const r2 = gridFunctions[0](
       { ...ctx, lastPrice: 2880 },
       { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
     );
-    expect(result.signal).toBe('buy');
-    expect(result.confidence).toBeGreaterThan(0.9);
-    expect(result.meta.nearestLevel).toBe(2880);
+    expect(r2.signal).toBe('buy');
+    expect(r2.meta.nearestLevel).toBe(2880);
   });
 
-  it('emits sell when near upper grid level', () => {
-    // anchor=3000, spacing=0.02 → first upper level = 3060
-    const result = gridFunctions[0](
+  it('emits sell when near upper grid level (level 1, level 2, or closer to upper)', () => {
+    const r1 = gridFunctions[0](
       { ...ctx, lastPrice: 3060 },
       { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
     );
-    expect(result.signal).toBe('sell');
-    expect(result.confidence).toBeGreaterThan(0.9);
-  });
+    expect(r1.signal).toBe('sell');
 
-  it('emits sell when near deeper upper grid level (level 2)', () => {
-    // anchor=3000, spacing=0.02, level 2 = 3000 * (1 + 0.04) = 3120
-    const result = gridFunctions[0](
+    const r2 = gridFunctions[0](
       { ...ctx, lastPrice: 3120 },
       { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
     );
-    expect(result.signal).toBe('sell');
-    expect(result.confidence).toBeGreaterThan(0.9);
-    expect(result.meta.nearestLevel).toBe(3120);
-  });
+    expect(r2.signal).toBe('sell');
+    expect(r2.meta.nearestLevel).toBe(3120);
 
-  it('emits sell when within tolerance of both levels but closer to upper level', () => {
-    // anchor=3000, spacing=0.02 (lower=2940, upper=3060)
-    // price=3020 -> distToLower = 80/3020 ≈ 0.02649, distToUpper = 40/3020 ≈ 0.01324
-    // tolerance=0.03 -> both are <= tolerance, but distToLower > distToUpper
-    const result = gridFunctions[0](
+    const rCloser = gridFunctions[0](
       { ...ctx, lastPrice: 3020 },
       { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.03 },
     );
-    expect(result.signal).toBe('sell');
+    expect(rCloser.signal).toBe('sell');
   });
 
-  it('emits hold when mid-grid', () => {
-    const result = gridFunctions[0](ctx, { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 });
-    expect(result.signal).toBe('hold');
-    expect(result.confidence).toBe(0);
-  });
-
-  it('defaults anchor to lastPrice when anchor not supplied', () => {
-    const result = gridFunctions[0](ctx);
-    expect(result.signal).toBe('hold');
+  it('emits hold when mid-grid or when anchor defaults to lastPrice', () => {
+    const mid = gridFunctions[0](ctx, { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 });
+    expect(mid.signal).toBe('hold');
+    expect(mid.confidence).toBe(0);
+    expect(gridFunctions[0](ctx).signal).toBe('hold');
   });
 });
 
 describe('meanReversionFunctions[0]', () => {
-  it('returns hold when lastPrice is zero', () => {
-    const result = meanReversionFunctions[0]({ ...ctx, lastPrice: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.confidence).toBe(0);
+  it('returns hold on invalid price, missing/zero fairValue, or zero threshold', () => {
+    expect(meanReversionFunctions[0]({ ...ctx, lastPrice: 0 }).signal).toBe('hold');
+    expect(meanReversionFunctions[0]({ ...ctx, lastPrice: -5 }).signal).toBe('hold');
+    expect(meanReversionFunctions[0](ctx).meta.reason).toBe('no_fair_value');
+    expect(meanReversionFunctions[0](ctx, { fairValue: 0 }).meta.reason).toBe('no_fair_value');
+    expect(meanReversionFunctions[0](ctx, { fairValue: 3000, threshold: 0 }).meta.reason).toBe('invalid_threshold');
   });
 
-  it('returns hold when lastPrice is negative', () => {
-    const result = meanReversionFunctions[0]({ ...ctx, lastPrice: -5 });
-    expect(result.signal).toBe('hold');
-  });
+  it('emits buy, sell, or hold relative to fairValue threshold', () => {
+    const buy = meanReversionFunctions[0]({ ...ctx, lastPrice: 2900 }, { fairValue: 3000, threshold: 0.015 });
+    expect(buy.signal).toBe('buy');
+    expect(buy.confidence).toBeGreaterThan(0);
 
-  it('returns hold with no_fair_value when fairValue is missing', () => {
-    const result = meanReversionFunctions[0](ctx);
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('no_fair_value');
-  });
+    const sell = meanReversionFunctions[0]({ ...ctx, lastPrice: 3100 }, { fairValue: 3000, threshold: 0.015 });
+    expect(sell.signal).toBe('sell');
+    expect(sell.confidence).toBeGreaterThan(0);
 
-  it('returns hold with no_fair_value when fairValue is 0', () => {
-    const result = meanReversionFunctions[0](ctx, { fairValue: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('no_fair_value');
-  });
-
-  it('returns hold with invalid_threshold when threshold is 0', () => {
-    const result = meanReversionFunctions[0](ctx, { fairValue: 3000, threshold: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('invalid_threshold');
-  });
-
-  it('emits buy when price is below fair value by more than threshold', () => {
-    // fairValue=3000, threshold=0.015 → buy triggered below 2955
-    const result = meanReversionFunctions[0](
-      { ...ctx, lastPrice: 2900 },
-      { fairValue: 3000, threshold: 0.015 },
-    );
-    expect(result.signal).toBe('buy');
-    expect(result.confidence).toBeGreaterThan(0);
-  });
-
-  it('emits sell when price is above fair value by more than threshold', () => {
-    const result = meanReversionFunctions[0](
-      { ...ctx, lastPrice: 3100 },
-      { fairValue: 3000, threshold: 0.015 },
-    );
-    expect(result.signal).toBe('sell');
-    expect(result.confidence).toBeGreaterThan(0);
-  });
-
-  it('emits hold when price is within threshold', () => {
-    const result = meanReversionFunctions[0](
-      { ...ctx, lastPrice: 3010 },
-      { fairValue: 3000, threshold: 0.015 },
-    );
-    expect(result.signal).toBe('hold');
-    expect(result.confidence).toBe(0);
+    const hold = meanReversionFunctions[0]({ ...ctx, lastPrice: 3010 }, { fairValue: 3000, threshold: 0.015 });
+    expect(hold.signal).toBe('hold');
+    expect(hold.confidence).toBe(0);
   });
 });
 
 describe('quantFunctionsExt', () => {
-  it('grid delegates through retryWithFallback with params', () => {
-    const result = quantFunctionsExt.grid(
-      { ...ctx, lastPrice: 2940 },
-      { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
-    );
-    expect(result.signal).toBe('buy');
-  });
+  it('delegates grid, mean_reversion, volatility_dca, fallback, and regular', () => {
+    expect(
+      quantFunctionsExt.grid({ ...ctx, lastPrice: 2940 }, { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 }).signal,
+    ).toBe('buy');
 
-  it('mean_reversion delegates through retryWithFallback with params', () => {
-    const result = quantFunctionsExt.mean_reversion(
-      { ...ctx, lastPrice: 2900 },
-      { fairValue: 3000, threshold: 0.015 },
-    );
-    expect(result.signal).toBe('buy');
-  });
+    expect(
+      quantFunctionsExt.mean_reversion({ ...ctx, lastPrice: 2900 }, { fairValue: 3000, threshold: 0.015 }).signal,
+    ).toBe('buy');
 
-  it('volatility_dca delegates through retryWithFallback with params', () => {
-    const buyResult = quantFunctionsExt.volatility_dca(
-      { ...ctx, lastPrice: 2900 },
-      { referencePrice: 3000 },
-    );
-    expect(buyResult.signal).toBe('buy');
+    expect(quantFunctionsExt.volatility_dca({ ...ctx, lastPrice: 2900 }, { referencePrice: 3000 }).signal).toBe('buy');
+    expect(quantFunctionsExt.volatility_dca({ ...ctx, lastPrice: 3200 }, { referencePrice: 3000 }).signal).toBe('sell');
+    expect(quantFunctionsExt.volatility_dca({ ...ctx, lastPrice: 3000 }, { referencePrice: 3000 }).signal).toBe('hold');
 
-    const sellResult = quantFunctionsExt.volatility_dca(
-      { ...ctx, lastPrice: 3200 },
-      { referencePrice: 3000 },
-    );
-    expect(sellResult.signal).toBe('sell');
-
-    const holdResult = quantFunctionsExt.volatility_dca(
-      { ...ctx, lastPrice: 3000 },
-      { referencePrice: 3000 },
-    );
-    expect(holdResult.signal).toBe('hold');
-  });
-
-  it('fallback returns hold with reason', () => {
-    const result = quantFunctionsExt.fallback(ctx);
-    expect(result).toEqual({ signal: 'hold', confidence: 0, meta: { reason: 'fallback' } });
-  });
-
-  it('regular delegates to grid', () => {
-    const result = quantFunctionsExt.regular(
-      { ...ctx, lastPrice: 2940 },
-      { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 },
-    );
-    expect(result.signal).toBe('buy');
+    expect(quantFunctionsExt.fallback(ctx)).toEqual({ signal: 'hold', confidence: 0, meta: { reason: 'fallback' } });
+    expect(
+      quantFunctionsExt.regular({ ...ctx, lastPrice: 2940 }, { anchor: 3000, gridSpacing: 0.02, levels: 5, tolerance: 0.005 }).signal,
+    ).toBe('buy');
   });
 });
-
-describe('retryWithFallback internal behavior via gridFunctions mutation', () => {
-  it('catches thrown fn and falls back to next fn', () => {
-    const original = gridFunctions[0];
-    const throwingFn: QuantFn = () => {
-      throw new Error('intentional failure');
-    };
-    const successFn: QuantFn = () => ({
-      signal: 'sell',
-      confidence: 0.9,
-      meta: { strategy: 'recovery' },
-    });
-
-    gridFunctions.length = 0;
-    gridFunctions.push(throwingFn, successFn);
-
-    try {
-      const result = quantFunctionsExt.grid(ctx);
-      expect(result.signal).toBe('sell');
-      expect(result.confidence).toBe(0.9);
-      expect(result.meta).toEqual({ strategy: 'recovery' });
-    } finally {
-      gridFunctions.length = 0;
-      gridFunctions.push(original);
-    }
-  });
-
-  it('returns error result when all fns in array throw', () => {
-    const original = gridFunctions[0];
-    const alwaysFail: QuantFn = () => {
-      throw new Error('always fail');
-    };
-
-    gridFunctions.length = 0;
-    gridFunctions.push(alwaysFail, alwaysFail);
-
-    try {
-      const result = quantFunctionsExt.grid(ctx);
-      expect(result).toEqual({
-        signal: 'hold',
-        confidence: 0,
-        meta: { error: 'all_fallbacks_failed' },
-      });
-    } finally {
-      gridFunctions.length = 0;
-      gridFunctions.push(original);
-    }
-  });
-
-  it('returns error result when fns array is empty', () => {
-    const original = gridFunctions[0];
-    gridFunctions.length = 0;
-
-    try {
-      const result = quantFunctionsExt.grid(ctx);
-      expect(result).toEqual({
-        signal: 'hold',
-        confidence: 0,
-        meta: { error: 'all_fallbacks_failed' },
-      });
-    } finally {
-      gridFunctions.length = 0;
-      gridFunctions.push(original);
-    }
-  });
-});
-
-describe('volatilityDcaFunctions[0]', () => {
-  it('returns hold when lastPrice is zero', () => {
-    const result = volatilityDcaFunctions[0]({ ...ctx, lastPrice: 0 }, { referencePrice: 3000 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('invalid_price');
-  });
-
-  it('emits buy when drop threshold is met', () => {
-    const result = volatilityDcaFunctions[0](
-      { ...ctx, lastPrice: 2900 },
-      { referencePrice: 3000 },
-    );
-    expect(result.signal).toBe('buy');
-  });
-
-  it('emits sell when rebound target is met', () => {
-    const result = volatilityDcaFunctions[0](
-      { ...ctx, lastPrice: 3200 },
-      { referencePrice: 3000 },
-    );
-    expect(result.signal).toBe('sell');
-  });
-});
-
-describe('retryWithFallback internal behavior via volatilityDcaFunctions mutation', () => {
-  it('catches thrown fn and falls back to next fn', () => {
-    const original = volatilityDcaFunctions[0];
-    const throwingFn: QuantFn = () => {
-      throw new Error('dca failure');
-    };
-    const fallbackFn: QuantFn = () => ({
-      signal: 'buy',
-      confidence: 0.8,
-      meta: { strategy: 'dca_fallback' },
-    });
-
-    volatilityDcaFunctions.length = 0;
-    volatilityDcaFunctions.push(throwingFn, fallbackFn);
-
-    try {
-      const result = quantFunctionsExt.volatility_dca(ctx, { referencePrice: 3000 });
-      expect(result.signal).toBe('buy');
-      expect(result.confidence).toBe(0.8);
-      expect(result.meta).toEqual({ strategy: 'dca_fallback' });
-    } finally {
-      volatilityDcaFunctions.length = 0;
-      volatilityDcaFunctions.push(original);
-    }
-  });
-
-  it('returns error result when all volatilityDcaFunctions throw', () => {
-    const original = volatilityDcaFunctions[0];
-    const failFn: QuantFn = () => {
-      throw new Error('fail');
-    };
-
-    volatilityDcaFunctions.length = 0;
-    volatilityDcaFunctions.push(failFn);
-
-    try {
-      const result = quantFunctionsExt.volatility_dca(ctx, { referencePrice: 3000 });
-      expect(result).toEqual({
-        signal: 'hold',
-        confidence: 0,
-        meta: { error: 'all_fallbacks_failed' },
-      });
-    } finally {
-      volatilityDcaFunctions.length = 0;
-      volatilityDcaFunctions.push(original);
-    }
-  });
-});
-

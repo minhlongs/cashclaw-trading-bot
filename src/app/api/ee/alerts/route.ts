@@ -1,6 +1,6 @@
 // Step 15 HTTP Endpoint: POST /api/ee/alerts
-// Validates CloudAlertEvent, suppresses duplicates within cooldown, and signs
-// webhook payloads with WebCrypto HMAC-SHA256.
+// Validates CloudAlertEvent, checks optional SaaS tier entitlement, suppresses
+// duplicates within cooldown, and signs webhook payloads with WebCrypto HMAC-SHA256.
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -10,6 +10,8 @@ import {
   type CloudAlertEvent,
   type SignedWebhookEnvelope,
 } from '@/ee/alerts/cloud-alert-dispatcher';
+import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
+import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
 
 const CloudAlertEventSchema = z.object({
   eventId: z.string().min(1),
@@ -20,6 +22,8 @@ const CloudAlertEventSchema = z.object({
   timestampMs: z.number().int().positive(),
   cooldownMs: z.number().int().positive().optional(),
   signingSecret: z.string().min(8).optional(),
+  tier: z.string().optional(),
+  enforceTierGate: z.boolean().optional(),
 });
 
 export const defaultAlertDeduplicator = new CloudAlertDeduplicator();
@@ -32,6 +36,30 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { ok: false, error: parsed.error.issues.map((i) => i.message).join(', ') },
         { status: 400 },
+      );
+    }
+
+    const tierContext = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: parsed.data.workspaceId,
+      explicitTier: parsed.data.tier,
+    });
+    if (tierContext.invalidExplicitTier) {
+      return NextResponse.json(
+        { ok: false, error: `Invalid tier: ${tierContext.invalidExplicitTier}` },
+        { status: 400 },
+      );
+    }
+
+    const entitlements = getEntitlementsForTier(tierContext.tier);
+    if (parsed.data.enforceTierGate && !entitlements.customWebhookAlertsAllowed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'QUOTA_EXCEEDED',
+          tier: tierContext.tier,
+          error: `Custom webhook alerts require PREMIUM or higher (current tier: ${tierContext.tier})`,
+        },
+        { status: 402 },
       );
     }
 
@@ -48,7 +76,6 @@ export async function POST(req: Request) {
       event,
       parsed.data.cooldownMs ?? 60_000,
     );
-
     if (!shouldSend) {
       return NextResponse.json({
         ok: true,
@@ -56,6 +83,7 @@ export async function POST(req: Request) {
         deduplicated: true,
         suppressed: true,
         eventId: event.eventId,
+        tier: tierContext.tier,
       });
     }
 
@@ -65,18 +93,14 @@ export async function POST(req: Request) {
       'default_alert_secret';
     const payloadJson = JSON.stringify(event);
     const signatureHex = await signAlertWebhookPayload(payloadJson, secret);
-
-    const envelope: SignedWebhookEnvelope = {
-      eventId: event.eventId,
-      signatureHex,
-      payloadJson,
-    };
+    const envelope: SignedWebhookEnvelope = { eventId: event.eventId, signatureHex, payloadJson };
 
     return NextResponse.json({
       ok: true,
       dispatched: true,
       deduplicated: false,
       suppressed: false,
+      tier: tierContext.tier,
       signatureHex,
       envelope,
     });

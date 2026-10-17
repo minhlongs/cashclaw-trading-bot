@@ -49,15 +49,8 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
           </h2>
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="symbol-select" className="text-xs font-medium text-[var(--text-secondary)]">
-              {t('symbolLabel')}
-            </label>
-            <select
-              id="symbol-select"
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
-              className="px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--color-accent)]"
-            >
+            <label htmlFor="symbol-select" className="text-xs font-medium text-[var(--text-secondary)]">{t('symbolLabel')}</label>
+            <select id="symbol-select" value={symbol} onChange={(e) => setSymbol(e.target.value)} className="px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--color-accent)]">
               <option value="BTC/USDT">BTC/USDT</option>
               <option value="ETH/USDT">ETH/USDT</option>
               <option value="SOL/USDT">SOL/USDT</option>
@@ -69,11 +62,7 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
               <span className="text-[var(--text-secondary)]">{t('currentPriceLabel')}</span>
               <span className="font-mono text-[var(--text-primary)]">${currentPrice.toLocaleString()}</span>
             </div>
-            <input
-              type="range" min={referencePrice * 0.85} max={referencePrice * 1.1} step={50}
-              value={currentPrice} onChange={(e) => setCurrentPrice(Number(e.target.value))}
-              className="accent-[var(--color-accent)] cursor-pointer"
-            />
+            <input type="range" min={referencePrice * 0.85} max={referencePrice * 1.1} step={50} value={currentPrice} onChange={(e) => setCurrentPrice(Number(e.target.value))} className="accent-[var(--color-accent)] cursor-pointer" />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -81,19 +70,11 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
               <span className="text-[var(--text-secondary)]">{t('volatilityLabel')}</span>
               <span className="font-mono text-[var(--text-primary)]">{(volatility * 100).toFixed(1)}%</span>
             </div>
-            <input
-              type="range" min={0.01} max={0.1} step={0.002}
-              value={volatility} onChange={(e) => setVolatility(Number(e.target.value))}
-              className="accent-[var(--color-accent)] cursor-pointer"
-            />
+            <input type="range" min={0.01} max={0.1} step={0.002} value={volatility} onChange={(e) => setVolatility(Number(e.target.value))} className="accent-[var(--color-accent)] cursor-pointer" />
           </div>
 
-          <button
-            type="button"
-            className="mt-3 flex items-center justify-center gap-2 h-11 px-4 rounded-lg bg-[var(--color-accent)] text-[var(--bg-primary)] font-semibold text-sm hover:brightness-110 active:scale-[0.98] transition-all"
-          >
-            <Play size={16} />
-            <span>{t('runBacktestButton')}</span>
+          <button type="button" className="mt-3 flex items-center justify-center gap-2 h-11 px-4 rounded-lg bg-[var(--color-accent)] text-[var(--bg-primary)] font-semibold text-sm hover:brightness-110 active:scale-[0.98] transition-all">
+            <Play size={16} /><span>{t('runBacktestButton')}</span>
           </button>
         </div>
 

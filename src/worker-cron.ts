@@ -1,11 +1,11 @@
 // Cloudflare Workers Scheduled Cron Handler — CashClaw Trading Bot Platform
 import { getBotManager } from './tree/bot';
-import { CloudSchedulerCoordinator } from './ee/scheduler/cloud-scheduler-coordinator';
+import { defaultCloudSchedulerCoordinator } from './ee/scheduler/cloud-scheduler-coordinator';
 import type { WorkerEnv } from './worker-env';
 import type { ScheduledEvent } from './worker-types';
 import type { D1Database } from '@/lib/db/types';
 
-export const cronSchedulerCoordinator = new CloudSchedulerCoordinator();
+export const cronSchedulerCoordinator = defaultCloudSchedulerCoordinator;
 
 // CF Cron trigger — fires every 5 minutes per wrangler.jsonc [[triggers]]
 // Drains exchange request queues and logs outcome for observability.

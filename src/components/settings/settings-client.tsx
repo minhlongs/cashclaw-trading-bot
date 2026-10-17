@@ -71,12 +71,7 @@ export function SettingsClient() {
     );
 
   const handleNotificationSave = (botToken: string, chatId: string) =>
-    post(
-      { type: 'notification', botToken, chatId },
-      () => setSettings((p) => ({ ...p, notification: { botToken, chatId } })),
-      'Telegram notifications saved!',
-      'Notification save failed',
-    );
+    post({ type: 'notification', botToken, chatId }, () => setSettings((p) => ({ ...p, notification: { botToken, chatId } })), 'Telegram notifications saved!', 'Notification save failed');
 
   const handleStrategySave = (risk: SettingsData['risk']) =>
     post({ type: 'risk', ...risk }, () => setSettings((p) => ({ ...p, risk })), 'Strategy saved!', 'Save failed');
@@ -98,11 +93,7 @@ export function SettingsClient() {
   const handleResume = () => handleKs('resume', true, 'Trading resumed', 'Resume failed');
 
   if (loading) {
-    return (
-      <div className="settings-loading">
-        <Loader2 size={32} className="animate-spin text-profit" />
-      </div>
-    );
+    return <div className="settings-loading"><Loader2 size={32} className="animate-spin text-profit" /></div>;
   }
 
   const isError = saveMessage && (saveMessage.includes('failed') || saveMessage.toLowerCase().includes('error'));
@@ -118,12 +109,7 @@ export function SettingsClient() {
       <ExchangeSettings exchanges={settings.exchanges} onSave={handleExchangeSave} />
       <NotificationSettings telegram={settings.notification} onSave={handleNotificationSave} />
       <StrategySettings risk={settings.risk} onSave={handleStrategySave} />
-      <KillswitchSettings
-        enabled={settings.killswitch.enabled}
-        onHalt={handleHalt}
-        onResume={handleResume}
-        isSaving={ksSaving}
-      />
+      <KillswitchSettings enabled={settings.killswitch.enabled} onHalt={handleHalt} onResume={handleResume} isSaving={ksSaving} />
     </div>
   );
 }

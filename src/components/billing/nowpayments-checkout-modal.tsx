@@ -42,30 +42,15 @@ export function NowpaymentsCheckoutModal({
       <div className="bg-surface border border-neutral-200 dark:border-neutral-800 rounded-xl max-w-md w-full p-6 shadow-xl">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold">Upgrade to {targetTier}</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-lg leading-none"
-          >
-            ✕
-          </button>
+          <button type="button" onClick={onClose} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-lg leading-none">✕</button>
         </div>
 
         {!invoiceCreated ? (
           <div>
             <div className="bg-surface-raised p-4 rounded-lg mb-4 text-sm">
-              <div className="flex justify-between mb-1">
-                <span className="meta">Workspace:</span>
-                <span className="mono font-semibold">{workspaceId}</span>
-              </div>
-              <div className="flex justify-between mb-1">
-                <span className="meta">Plan Amount:</span>
-                <span className="mono font-bold text-profit">${ent.priceUsdMonthly} / month</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="meta">Max Bots:</span>
-                <span className="mono">{ent.maxRunningPaperBots} Bots (24/7 Cloud)</span>
-              </div>
+              <div className="flex justify-between mb-1"><span className="meta">Workspace:</span><span className="mono font-semibold">{workspaceId}</span></div>
+              <div className="flex justify-between mb-1"><span className="meta">Plan Amount:</span><span className="mono font-bold text-profit">${ent.priceUsdMonthly} / month</span></div>
+              <div className="flex justify-between"><span className="meta">Max Bots:</span><span className="mono">{ent.maxRunningPaperBots} Bots (24/7 Cloud)</span></div>
             </div>
 
             <div className="mb-5">

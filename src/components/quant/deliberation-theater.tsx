@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { MessageSquare, ShieldCheck, Hash, ShieldAlert } from 'lucide-react';
+import { MessageSquare, Hash, ShieldAlert } from 'lucide-react';
 import { DEBATE_LOG, type DebateStage } from './deliberation-theater-model';
+import { QuantScreenHeader } from './quant-screen-header';
 
 export function DeliberationTheater() {
   const [stageFilter, setStageFilter] = useState<'ALL' | DebateStage>('ALL');
@@ -17,23 +18,11 @@ export function DeliberationTheater() {
 
   return (
     <section aria-label="Multi-Agent Deliberation Theater" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3">
-          <MessageSquare size={20} className="text-[var(--color-ai)]" />
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">
-              Multi-Agent Deliberation Theater (TradingAgents Adapter)
-            </h1>
-            <p className="text-xs text-[var(--text-secondary)]">
-              Bull vs Bear dialectical falsification • Hash-chained decision audit ledger • Zero order surface
-            </p>
-          </div>
-        </div>
-        <span role="status" aria-label="Safety mode PAPER_ONLY ADR-001" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgba(255,176,32,0.15)] text-[var(--color-warning)] border border-[rgba(255,176,32,0.35)]">
-          <ShieldCheck size={14} />
-          <span>PAPER_ONLY • ADR-001</span>
-        </span>
-      </header>
+      <QuantScreenHeader
+        icon={<MessageSquare size={20} className="text-[var(--color-ai)]" />}
+        title="Multi-Agent Deliberation Theater (TradingAgents Adapter)"
+        subtitle="Bull vs Bear dialectical falsification • Hash-chained decision audit ledger • Zero order surface"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
