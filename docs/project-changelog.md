@@ -2,6 +2,35 @@
 
 ## v1 Paper-Trading Platform
 
+### Unified v62 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-17
+- **Pillar 1: Corwin & Schultz (2012) High-Low Bid-Ask Spread & Volatility Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Shane A. Corwin and Paul Schultz (2012), *"A Simple Way to Estimate Bid-Ask Spreads from Daily High and Low Prices"*, The Journal of Finance, 67(2), 719–760.
+  - Estimates effective bid-ask spread and intrinsic volatility from two-day high-low log price ranges ($\beta, \gamma \rightarrow \alpha, S = \frac{2(e^\alpha - 1)}{1 + e^\alpha}$) with optional non-negative overnight clamping.
+  - Implemented in `src/tree/quantlib/microstructure/corwin-schultz-types.ts` (18 LOC), `corwin-schultz-estimator.ts` (31 LOC), and `corwin-schultz-engine.ts` (15 LOC).
+- **Pillar 2: Abdi & Ranaldo (2017) Close-High-Low (CHL) Effective Spread Engine** (`src/tree/quantlib/microstructure/`):
+  - Academic foundation: Farshid Abdi and Angelo Ranaldo (2017), *"A Simple Estimation of Bid-Ask Spreads from Daily Close, High, and Low Prices"*, The Review of Financial Studies, 30(12), 4437–4480.
+  - Estimates effective bid-ask spread via serial covariance between daily log close and mid-range $\eta_t = \frac{\ln H_t + \ln L_t}{2}$ using both `'two-day-corrected'` and `'pooled-truncated'` estimators.
+  - Implemented in `src/tree/quantlib/microstructure/abdi-ranaldo-types.ts` (17 LOC), `abdi-ranaldo-estimator.ts` (31 LOC), and `abdi-ranaldo-engine.ts` (15 LOC).
+- **Pillar 3: Lesmond, Ogden & Trzcinka (1999) LOT Zero-Return Transaction Cost Engine** (`src/tree/quantlib/liquidity/`):
+  - Academic foundation: David A. Lesmond, Joseph P. Ogden, and Charles A. Trzcinka (1999), *"A New Estimate of Transaction Costs"*, The Review of Financial Studies, 12(5), 1113–1141.
+  - Quantifies the zero-return proportion (ZRP), asymmetric buy/sell informed trading thresholds ($\alpha_2, \alpha_1$), round-trip transaction cost ($\alpha_2 - \alpha_1$), and latent return volatility.
+  - Implemented in `src/tree/quantlib/liquidity/lesmond-lot-types.ts` (13 LOC), `lesmond-lot-estimator.ts` (34 LOC), and `lesmond-lot-engine.ts` (17 LOC).
+- **Pillar 4: Pástor & Stambaugh (2003) Volume-Induced Return Reversal Liquidity Engine** (`src/tree/quantlib/liquidity/`):
+  - Academic foundation: Ľuboš Pástor and Robert F. Stambaugh (2003), *"Liquidity Risk and Expected Stock Returns"*, Journal of Political Economy, 111(3), 642–685.
+  - Estimates the signed-volume return reversal coefficient $\gamma$ ($r^e_{t+1} = \theta + \phi r_t + \gamma \cdot \text{sign}(r^e_t) v_t + \epsilon_{t+1}$) capturing order-flow temporary price impact and reversal strength.
+  - Implemented in `src/tree/quantlib/liquidity/pastor-stambaugh-types.ts` (16 LOC), `pastor-stambaugh-estimator.ts` (30 LOC), and `pastor-stambaugh-engine.ts` (15 LOC).
+- **Pillar 5: Structural Deep Modularization ($\le 36$ LOC per file)**:
+  - Modularized `src/tree/research/hypothesis/types.ts` (118 LOC $\rightarrow$ 13 LOC facade) via `hypothesis-contracts.ts` (35 LOC), `hypothesis-schema.ts` (36 LOC), and `hypothesis-parser.ts` (22 LOC).
+  - Modularized `src/tree/research/alpha/zoo/operator-kernels.ts` (117 LOC $\rightarrow$ 12 LOC facade) via `operator-kernels-moments.ts` (31 LOC), `operator-kernels-rank.ts` (30 LOC), and `operator-kernels-transform.ts` (27 LOC).
+  - Preserved 100% backward compatibility, exact public method signatures, clean layer boundaries, zero `:any` types, and 0 ESLint warnings.
+- **Verification & Quality Gate**:
+  - `test/quant/corwin-schultz.test.ts` (3 tests) verifying spread estimation, non-negative clamping, and invalid price guards.
+  - `test/quant/abdi-ranaldo.test.ts` (3 tests) verifying two-day-corrected and pooled-truncated CHL spread estimators and bounds.
+  - `test/quant/lesmond-lot.test.ts` (2 tests) verifying zero-return proportion, asymmetric cost thresholds, and round-trip costs.
+  - `test/quant/pastor-stambaugh.test.ts` (2 tests) verifying signed-volume return reversal $\gamma$ and input guards.
+  - `test/quant/v62-apex-suite-simulation.test.ts` (1 test) cross-domain simulation verifying all 4 engines and modularized research kernels.
+  - Full suite: 642 test files passing, 5,903 tests passing (100% green), zero regressions, zero ESLint warnings, 0 `:any`.
+
 ### Unified v61 Golden Apex Multi-Domain Quantitative & Architecture Suite — 2026-10-12
 - **Pillar 1: Rogers & Satchell (1991) Non-Zero Drift OHLC Volatility Engine** (`src/tree/quantlib/volatility/`):
   - Academic foundation: L. C. G. Rogers and Stephen E. Satchell (1991), *"Estimating Variance From High, Low and Closing Prices"*, The Annals of Applied Probability, 1(4), 504–512.
