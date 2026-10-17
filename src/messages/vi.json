@@ -554,5 +554,26 @@
     "refresh": "Làm mới",
     "endpointError": "Một hoặc nhiều API trả về lỗi",
     "loadFailed": "Không thể tải dữ liệu giám sát"
+  },
+  "strategies": {
+    "volatilityDca": {
+      "breadcrumb": "Chiến lược / QuantLib",
+      "title": "DCA Theo Biến Động (volatilityDca)",
+      "badgePaperOnly": "Xác Minh 100% Coverage • Khóa Chế Độ Paper",
+      "paramsHeading": "Tham Số Chiến Lược & Ngưỡng Stress",
+      "symbolLabel": "Cặp Giao Dịch",
+      "currentPriceLabel": "Giá Mô Phỏng",
+      "volatilityLabel": "Độ Biến Động Thực Tế (σ)",
+      "runBacktestButton": "Chạy Walk-Forward Backtest",
+      "signalVerdictLabel": "Tín Hiệu Định Lượng",
+      "currentDrawdownLabel": "Drawdown Hiện Tại",
+      "sharpeStressLabel": "Sharpe Ròng (Sau Chi Phí Stress)",
+      "walkForwardTitle": "Thuộc Tính Tín Hiệu & Chẩn Đoán Walk-Forward",
+      "colWindow": "Khung Thời Gian",
+      "colIc": "IC Trong Mẫu",
+      "colSharpe": "Sharpe Ngoài Mẫu",
+      "colDrawdown": "Drawdown Tối Đa",
+      "colGate": "Cổng Sinh Tồn"
+    }
   }
 }

@@ -554,5 +554,26 @@
     "refresh": "Refresh",
     "endpointError": "One or more API endpoints returned an error",
     "loadFailed": "Failed to load monitoring data"
+  },
+  "strategies": {
+    "volatilityDca": {
+      "breadcrumb": "Strategies / QuantLib",
+      "title": "Volatility-Adjusted DCA (volatilityDca)",
+      "badgePaperOnly": "100% Coverage Verified • Paper Mode Locked",
+      "paramsHeading": "Strategy Parameters & Stress Bounds",
+      "symbolLabel": "Target Symbol",
+      "currentPriceLabel": "Simulated Price",
+      "volatilityLabel": "Realized Volatility (σ)",
+      "runBacktestButton": "Run Walk-Forward Backtest",
+      "signalVerdictLabel": "Signal Verdict",
+      "currentDrawdownLabel": "Current Drawdown",
+      "sharpeStressLabel": "Net Sharpe (After Stress)",
+      "walkForwardTitle": "Signal Attribution & Walk-Forward Diagnostics",
+      "colWindow": "Window Period",
+      "colIc": "In-Sample IC",
+      "colSharpe": "Out-of-Sample Sharpe",
+      "colDrawdown": "Max Drawdown",
+      "colGate": "Survival Gate"
+    }
   }
 }
