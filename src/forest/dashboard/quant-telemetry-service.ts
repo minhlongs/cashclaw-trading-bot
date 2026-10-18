@@ -15,15 +15,19 @@ import {
   computeHamiltonHmmTelemetry, computeHrpAllocatorTelemetry,
   type HamiltonScenarioId, type HrpRegimePreset,
 } from './quant-wave4-telemetry';
+import {
+  computeMartingaleOptimalTransportTelemetry, computeRoughPathSignaturesTelemetry,
+  type MotSmilePreset, type SignatureRegimePreset,
+} from './quant-wave5-telemetry';
 
 export {
   computeHawkesLobTelemetry, computeRoughVolatilityTelemetry,
   computeDataQualityTelemetry, computeCorrelationTelemetry,
   computeLeadLagTelemetry, computeAlmgrenChrissTelemetry,
   computeHamiltonHmmTelemetry, computeHrpAllocatorTelemetry,
-  type DataFaultMode, type RoughVolMode,
-  type LeadLagPairId, type ExecutionUrgencyPreset,
-  type HamiltonScenarioId, type HrpRegimePreset,
+  computeMartingaleOptimalTransportTelemetry, computeRoughPathSignaturesTelemetry,
+  type DataFaultMode, type RoughVolMode, type LeadLagPairId, type ExecutionUrgencyPreset,
+  type HamiltonScenarioId, type HrpRegimePreset, type MotSmilePreset, type SignatureRegimePreset,
 };
 
 export type CostTierId = 'BASE' | 'ELEVATED' | 'EXTREME';
@@ -34,7 +38,6 @@ export function computeRegimeAttributionTelemetry(costTier: CostTierId, regimeFi
   const totalFrictionBps = Math.round((stressCfg.feePct + stressCfg.slipPct + stressCfg.marketImpactPct) * 10000);
   const penaltyScale = totalFrictionBps / 100;
   const ddMultiplier = 1 + (totalFrictionBps - 16) * 0.005;
-
   const filtered = regimeFilter === 'ALL' ? REGIME_SEEDS : REGIME_SEEDS.filter((r) => r.regime === regimeFilter);
   const rows = filtered.map((seed) => {
     const dcaResult = volatilityDca(
@@ -45,7 +48,6 @@ export function computeRegimeAttributionTelemetry(costTier: CostTierId, regimeFi
     const stressedDdPct = Number((seed.baseMaxDdPct * ddMultiplier).toFixed(1));
     return { ...seed, netSharpe, stressedDdPct, dcaSignal: dcaResult.signal.toUpperCase(), dcaConfidence: dcaResult.confidence };
   });
-
   const meanNetSharpe = Number((rows.reduce((acc, r) => acc + r.netSharpe, 0) / rows.length).toFixed(2));
   const worstDdPct = Number(Math.max(...rows.map((r) => r.stressedDdPct)).toFixed(1));
   return { totalFrictionBps, meanNetSharpe, worstDdPct, rows };
@@ -71,7 +73,7 @@ export function computeQuantTelemetrySnapshot() {
   return {
     paperOnly: true as const,
     adrInvariant: 'ADR-001' as const,
-    generatedAt: '2026-10-17T23:59:00.000Z',
+    generatedAt: '2026-10-18T00:35:00.000Z',
     regime: computeRegimeAttributionTelemetry('BASE', 'ALL'),
     fdr: computeFdrGateTelemetry(0.05, 12, 'BH_FDR'),
     dataQuality: computeDataQualityTelemetry('NONE'),
@@ -82,6 +84,8 @@ export function computeQuantTelemetrySnapshot() {
     almgrenChrissExecution: computeAlmgrenChrissTelemetry('BALANCED_AC'),
     hamiltonHmm: computeHamiltonHmmTelemetry('CRISIS_SHOCK'),
     hrpAllocator: computeHrpAllocatorTelemetry('BASELINE_CORR'),
+    martingaleOptimalTransport: computeMartingaleOptimalTransportTelemetry('ARBITRAGE_FREE_SVI'),
+    roughPathSignatures: computeRoughPathSignaturesTelemetry('BTC_LEADS_SOL'),
   };
 }
 

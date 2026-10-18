@@ -25,6 +25,8 @@ export const QUANT_TERMINAL_ROUTES = [
   { slug: 'optimal-execution-almgren-chriss', label: 'Almgren-Chriss' },
   { slug: 'regime-switching-hamilton-hmm', label: 'Hamilton HMM' },
   { slug: 'hrp-allocator', label: 'HRP Allocator' },
+  { slug: 'martingale-optimal-transport', label: 'Dupire MOT' },
+  { slug: 'rough-path-signatures', label: 'Rough Path Signatures' },
 ] as const;
 
 export interface QuantRouteNavProps {
@@ -35,12 +37,12 @@ export interface QuantRouteNavProps {
 export function QuantRouteNav({ locale = 'en', activeSlug }: QuantRouteNavProps) {
   return (
     <nav
-      aria-label="CashClaw 22-Screen Quantitative Terminal Quick Navigation"
+      aria-label="CashClaw 24-Screen Quantitative Terminal Quick Navigation"
       className="flex flex-col gap-2 p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-mono font-semibold text-[var(--text-secondary)]">
-          22/22 QUANT OS ROUTES
+          24/24 QUANT OS ROUTES
         </span>
         <a
           href="#quant-main-content"

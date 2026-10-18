@@ -32,6 +32,8 @@ High-fidelity institutional quantitative alpha research and paper trading cockpi
 - [x] optimal-execution-almgren-chriss.html — Almgren-Chriss (2000) Optimal Execution Trajectory (sinh(κ(T-t))/sinh(κT)) & Cont-Kukanov Order Placement Cockpit
 - [x] regime-switching-hamilton-hmm.html — Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface
 - [x] hrp-allocator.html — López de Prado (2016) Hierarchical Risk Parity (HRP) & Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator
+- [x] martingale-optimal-transport.html — Beiglböck-Henry-Labordère-Penkner Martingale Optimal Transport & Model-Free Dupire Local Volatility Surface Cockpit
+- [x] rough-path-signatures.html — Lyons Rough Path Iterated-Integral Signatures S^(N)(X)_{s,t} & Lévy Area Lead-Lag Anomaly Classifier
 
 ## Roadmap
 1. `index.html` — Cockpit Overview, 4-col KPI row, BTC/USDT candlestick chart, TradingAgents feed (Completed)
@@ -56,8 +58,10 @@ High-fidelity institutional quantitative alpha research and paper trading cockpi
 20. `optimal-execution-almgren-chriss.html` — Almgren-Chriss (2000) Optimal Execution Trajectory (sinh(κ(T-t))/sinh(κT)) & Cont-Kukanov Order Placement Cockpit (Completed)
 21. `regime-switching-hamilton-hmm.html` — Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface (Completed)
 22. `hrp-allocator.html` — López de Prado (2016) Hierarchical Risk Parity (HRP) & Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator (Completed)
-23. `martingale-optimal-transport.html` — Martingale Optimal Transport & Model-Free Dupire Local Volatility Surface Cockpit (Next)
+23. `martingale-optimal-transport.html` — Beiglböck-Henry-Labordère-Penkner Martingale Optimal Transport & Model-Free Dupire Local Volatility Surface Cockpit (Completed)
+24. `rough-path-signatures.html` — Lyons Rough Path Iterated-Integral Signatures S^(N)(X)_{s,t} & Lévy Area Lead-Lag Anomaly Classifier (Completed)
+25. `limit-order-queue-reactive.html` — Huang-Lehalle-Rosenbaum Queue-Reactive Limit Order Book & Fill-Probability Survival Cockpit (Next)
 
 ## Creative Freedom
-- Martingale Optimal Transport & Model-Free Dupire Local Volatility Surface Cockpit (`martingale-optimal-transport.html`): Breeden-Litzenberger risk-neutral density extraction, calendar/butterfly arbitrage-free SVI smile projection, and Kantorovich martingale dual bounds
-- Signature Methods & Rough Path Lead-Lag Feature Extractor (`rough-path-signatures.html`): Truncated Chen iterated-integral path signatures $S^{(N)}(X)_{s,t}$, Lévy area cross-terms, and reparameterization-invariant trajectory classification
+- Huang-Lehalle-Rosenbaum Queue-Reactive Limit Order Book & Fill-Probability Survival Cockpit (`limit-order-queue-reactive.html`): State-dependent arrival/cancellation intensities $\lambda^{\text{add}}(q), \lambda^{\text{cancel}}(q), \lambda^{\text{exec}}(q)$, queue-depletion first-passage survival probability, and adverse-selection-adjusted passive limit order placement
+- Functional Itô Calculus & Dupire Vertical/Horizontal Path-Derivative Hedging Monitor (`functional-ito-dupire.html`): Non-anticipative Dupire horizontal time derivative $\mathcal{D}_t F$ and vertical space derivative $\nabla_x F$ for path-dependent volatility and execution options

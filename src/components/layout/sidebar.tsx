@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Bot, Settings, BookOpen, ChevronLeft, ChevronRight,
   Activity, Zap, Filter, Cpu, MessageSquare, GitBranch, BarChart3,
-  Grid, Layers, Database, KeyRound, Scale, Flame, Palette,
+  Grid, Layers, Database, KeyRound, Scale, Flame, Palette, Compass, Waypoints,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -33,6 +33,8 @@ const NAV_ROUTES = [
   { path: 'optimal-execution-almgren-chriss', icon: Layers },
   { path: 'regime-switching-hamilton-hmm', icon: Activity },
   { path: 'hrp-allocator', icon: Scale },
+  { path: 'martingale-optimal-transport', icon: Compass },
+  { path: 'rough-path-signatures', icon: Waypoints },
   { path: 'style-guide', icon: Palette },
   { path: 'settings', icon: Settings },
 ];

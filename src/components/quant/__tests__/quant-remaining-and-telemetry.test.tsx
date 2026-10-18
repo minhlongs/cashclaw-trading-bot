@@ -117,7 +117,7 @@ describe('CashClaw Remaining, Wave 2 & Wave 3 Stitch Screens + Real Domain Telem
         if (dir === 'src/forest/dashboard' && !file.startsWith('quant-')) continue;
         const content = fs.readFileSync(path.join(fullDir, file), 'utf8');
         const lineCount = content.split('\n').length - (content.endsWith('\n') ? 1 : 0);
-        expect(lineCount, `${dir}/${file} exceeds 120 lines (${lineCount})`).toBeLessThanOrEqual(120);
+        expect(lineCount, `${dir}/${file} exceeds 100 lines (${lineCount})`).toBeLessThanOrEqual(100);
       }
     }
   });

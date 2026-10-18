@@ -24,6 +24,8 @@
     "optimal-execution-almgren-chriss": "Almgren-Chriss Execution",
     "regime-switching-hamilton-hmm": "Hamilton HMM Filter",
     "hrp-allocator": "HRP Risk Parity",
+    "martingale-optimal-transport": "Dupire MOT Surface",
+    "rough-path-signatures": "Rough Path Signatures",
     "style-guide": "Style Guide"
   },
   "dashboard": {

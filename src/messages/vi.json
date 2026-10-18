@@ -24,6 +24,8 @@
     "optimal-execution-almgren-chriss": "Thực Thi Almgren-Chriss",
     "regime-switching-hamilton-hmm": "Bộ Lọc Chế Độ Hamilton",
     "hrp-allocator": "Phân Bổ Vốn HRP",
+    "martingale-optimal-transport": "Mặt Biến Động Dupire MOT",
+    "rough-path-signatures": "Chữ Ký Đường Nhám Lévy",
     "style-guide": "Hệ Thống Thiết Kế"
   },
   "dashboard": {

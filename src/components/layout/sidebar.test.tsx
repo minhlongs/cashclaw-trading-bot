@@ -54,6 +54,8 @@ describe('Sidebar', () => {
     { label: 'nav.optimal-execution-almgren-chriss', href: '/vi/optimal-execution-almgren-chriss' },
     { label: 'nav.regime-switching-hamilton-hmm', href: '/vi/regime-switching-hamilton-hmm' },
     { label: 'nav.hrp-allocator', href: '/vi/hrp-allocator' },
+    { label: 'nav.martingale-optimal-transport', href: '/vi/martingale-optimal-transport' },
+    { label: 'nav.rough-path-signatures', href: '/vi/rough-path-signatures' },
     { label: 'nav.style-guide', href: '/vi/style-guide' },
     { label: 'nav.settings', href: '/vi/settings' },
   ];

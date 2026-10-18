@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyons Rough Path Iterated-Integral Signatures & Lévy Area Lead-Lag Anomaly Classifier — CashClaw OS</title>
+  <!-- Google Fonts: Geist Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- Material Symbols Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-primary': '#0B0E11',
+            'bg-surface': '#141820',
+            'bg-elevated': '#1A2030',
+            'bg-hover': '#1E2838',
+            'accent-teal': '#00D4AA',
+            'alert-crimson': '#FF4757',
+            'caution-amber': '#FFB020',
+            'ai-violet': '#A78BFA',
+            'text-primary': '#E8EAED',
+            'text-secondary': '#8B95A5',
+            'text-tertiary': '#5A6577',
+            'border-subtle': '#1E2530',
+            'border-default': '#2A3340',
+          },
+          fontFamily: {
+            sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for dense quantitative layouts */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B0E11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E2530;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2A3340;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1;
+    }
+  </style>
+</head>
+<body class="bg-bg-primary text-text-primary font-sans antialiased overflow-x-hidden selection:bg-accent-teal/20 selection:text-accent-teal flex min-h-screen">
+
+  <!-- LEFT FIXED SIDEBAR (240px) -->
+  <aside class="fixed top-0 left-0 w-60 h-screen bg-bg-surface border-r border-border-subtle flex flex-col justify-between z-40 select-none">
+    <!-- Brand / Node Status -->
+    <div class="p-4 border-b border-border-subtle">
+      <div class="flex items-center justify-between mb-1.5">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded bg-accent-teal/10 border border-accent-teal/30 flex items-center justify-center text-accent-teal">
+            <span class="material-symbols-outlined text-sm">hub</span>
+          </div>
+          <span class="font-bold text-base tracking-tight text-text-primary">CashClaw OS</span>
+        </div>
+        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-caution-amber/15 text-caution-amber font-semibold border border-caution-amber/30">ADR-001</span>
+      </div>
+      <div class="flex items-center justify-between text-[11px] font-mono text-text-tertiary">
+        <span>Node: QNT-8812</span>
+        <span class="text-accent-teal flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-accent-teal animate-pulse"></span>
+          PAPER_ONLY
+        </span>
+      </div>
+    </div>
+
+    <!-- Navigation List (Institutional Quantitative Suite) -->
+    <nav class="flex-1 overflow-y-auto py-2 px-2 text-[12px] font-medium space-y-0.5">
+      <div class="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-text-tertiary">Terminal Core</div>
+      <a href="cockpit-overview.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span>Cockpit Overview</span>
+      </a>
+      <a href="regime-attribution.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">monitoring</span>
+        <span>Regime Attribution</span>
+      </a>
+      <a href="alpha-decomposition.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">matrix</span>
+        <span>Alpha Decomposition</span>
+      </a>
+      <a href="strategy-orchestration.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">alt_route</span>
+        <span>Strategy Orchestration</span>
+      </a>
+
+      <div class="pt-2 px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-text-tertiary">Stochastic & Microstructure</div>
+      <a href="execution-routing.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">swap_horiz</span>
+        <span>Execution Routing</span>
+      </a>
+      <a href="order-book-l3.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">stacked_bar_chart</span>
+        <span>Order Book L3 Imbalance</span>
+      </a>
+      <a href="volatility-surface.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">multiline_chart</span>
+        <span>Dupire Local Vol & MOT</span>
+      </a>
+      <a href="gatheral-rough-vol.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">analytics</span>
+        <span>Gatheral Rough Vol (H&lt;0.5)</span>
+      </a>
+      <a href="hayashi-yoshida-leadlag.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">timeline</span>
+        <span>Hayashi-Yoshida Matrix</span>
+      </a>
+
+      <!-- ACTIVE SCREEN: Rough Path Signatures -->
+      <a href="rough-path-signatures.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded bg-bg-elevated text-accent-teal border-l-2 border-accent-teal font-semibold shadow-sm">
+        <span class="material-symbols-outlined fill">polyline</span>
+        <span class="tracking-tight">Rough Path Signatures</span>
+      </a>
+
+      <div class="pt-2 px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-text-tertiary">Portfolio & Invariants</div>
+      <a href="portfolio-factor-risk.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">pie_chart</span>
+        <span>Hierarchical Risk Parity (HRP)</span>
+      </a>
+      <a href="cvar-tail-risk.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">warning</span>
+        <span>Cross-Margin CVaR 99%</span>
+      </a>
+      <a href="fdr-multiple-testing.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">verified</span>
+        <span>Deflated Sharpe & FDR Gate</span>
+      </a>
+      <a href="llm-multi-agent.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">smart_toy</span>
+        <span>Multi-Agent Consensus</span>
+      </a>
+      <a href="system-settings.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors">
+        <span class="material-symbols-outlined">settings</span>
+        <span>Style Guide & Tokens</span>
+      </a>
+    </nav>
+
+    <!-- Sidebar Footer Telemetry -->
+    <div class="p-3 border-t border-border-subtle bg-bg-surface/50 text-[11px] font-mono space-y-2">
+      <button class="w-full h-8 rounded bg-accent-teal hover:bg-accent-teal/90 text-bg-primary font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+        <span class="material-symbols-outlined text-[16px]">bolt</span>
+        <span>Deploy Paper Agent</span>
+      </button>
+      <div class="flex items-center justify-between text-text-tertiary pt-1">
+        <span class="flex items-center gap-1 text-accent-teal">
+          <span class="material-symbols-outlined text-[14px]">verified_user</span>
+          Zero-Lookahead: OK
+        </span>
+        <span class="text-text-secondary">42μs Latency</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEWPORT CONTAINER (offset by sidebar 240px) -->
+  <main class="ml-60 flex-1 flex flex-col min-w-0 bg-bg-primary">
+
+    <!-- TOP HEADER BAR (Sticky, docked full-width) -->
+    <header class="sticky top-0 z-30 bg-bg-surface/95 backdrop-blur-md border-b border-border-subtle px-6 py-2.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Breadcrumb / Route -->
+        <div class="flex items-center gap-2 text-xs font-mono text-text-secondary">
+          <span class="text-text-tertiary">src/forest/rough-paths/</span>
+          <span class="text-accent-teal font-semibold">signature_kernel_engine.py</span>
+          <span class="text-border-default">/</span>
+          <span class="px-2 py-0.5 rounded bg-bg-elevated border border-border-default text-text-primary font-mono text-[11px]">
+            TENSOR_RANK_N = 3
+          </span>
+        </div>
+        <!-- Safety Badges -->
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-caution-amber/15 text-caution-amber text-[10px] font-mono font-bold border border-caution-amber/30">
+          <span class="w-1.5 h-1.5 rounded-full bg-caution-amber"></span>
+          PAPER_ONLY • ADR-001
+        </span>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal text-[10px] font-mono font-medium border border-accent-teal/20">
+          <span class="material-symbols-outlined text-[12px]">verified</span>
+          CHEN IDENTITY STRICT
+        </span>
+      </div>
+
+      <!-- Right Header Controls -->
+      <div class="flex items-center gap-3">
+        <!-- Telemetry Pill Indicators -->
+        <div class="hidden lg:flex items-center gap-4 text-[11px] font-mono text-text-secondary border-r border-border-subtle pr-4">
+          <div>P-VAR: <span class="text-text-primary font-semibold">2.18 (GEOM)</span></div>
+          <div>MAHALANOBIS: <span class="text-accent-teal font-semibold">1.64σ</span></div>
+          <div>LÉVY AREA: <span class="text-accent-teal font-semibold">+4.18e-4</span></div>
+          <div>CYCLE: <span class="text-text-tertiary">#9142</span></div>
+        </div>
+
+        <!-- Primary CTA: Recompute Chen Signature Tensor -->
+        <button class="h-8 px-3.5 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-bg-primary text-xs font-semibold font-mono flex items-center gap-1.5 transition-all shadow-sm active:scale-95">
+          <span class="material-symbols-outlined text-[16px]">refresh</span>
+          <span>Recompute Chen Signature Tensor</span>
+        </button>
+
+        <!-- Secondary Action: Emergency Kill Switch / Export -->
+        <button class="h-8 px-3 rounded-md bg-bg-elevated hover:bg-bg-hover border border-border-default text-text-primary text-xs font-mono flex items-center gap-1 transition-colors">
+          <span class="material-symbols-outlined text-[15px]">file_download</span>
+          <span>Export Tensor</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT WORKSPACE (Max 1440px centered padding) -->
+    <div class="p-6 max-w-[1440px] w-full mx-auto space-y-6">
+
+      <!-- HERO TITLE & MATHEMATICAL FORMALISM BANNER -->
+      <div class="rounded-xl bg-bg-surface border border-border-subtle p-5 relative overflow-hidden">
+        <!-- Subtle background watermark graph -->
+        <div class="absolute right-0 top-0 bottom-0 w-96 opacity-5 pointer-events-none flex items-center justify-center font-mono text-[180px] font-black select-none text-accent-teal">
+          ∫dX
+        </div>
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-mono font-semibold uppercase tracking-wider text-accent-teal">Terry Lyons (1998) Rough Path Theory & Chen Tensor Group</span>
+              <span class="text-text-tertiary text-xs">•</span>
+              <span class="text-xs font-mono text-text-tertiary">Universal Feature Map for Continuous Multi-Stream Microstructure</span>
+            </div>
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-text-primary">
+              Iterated-Integral Signature Tensor <span class="font-mono text-accent-teal">S<sup>(N)</sup>(X)<sub>s,t</sub></span> & Antisymmetric Lévy Area <span class="font-mono text-accent-teal">A<sub>s,t</sub><sup>ij</sup></span>
+            </h1>
+            <p class="text-xs text-text-secondary mt-1 font-mono max-w-3xl leading-relaxed">
+              Continuous iterated path calculus invariant to time-reparameterization. Captures strict order of arrivals, cyclical lead-lag drift, and non-commutative geometric curvature without forward-fill leakage or calendar-time discretization bias.
+            </p>
+          </div>
+
+          <!-- Formula Pill Display -->
+          <div class="px-4 py-2.5 rounded-lg bg-bg-primary border border-border-default font-mono text-[11px] text-text-secondary shrink-0">
+            <div class="text-text-tertiary text-[9px] uppercase tracking-wider mb-1">Tensor Invariant Contract</div>
+            <div class="text-text-primary font-semibold">
+              S(X)<sub>s,t</sub> = 1 + S<sup>(1)</sup> ⊕ S<sup>(2)</sup> ⊕ S<sup>(3)</sup> ∈ T((ℝ<sup>d</sup>))
+            </div>
+            <div class="text-accent-teal text-[10px] mt-0.5">
+              A<sub>s,t</sub><sup>ij</sup> = ½ (S<sup>i,j</sup> - S<sup>j,i</sup>) = ∮ X<sup>i</sup> dX<sup>j</sup>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 TELEMETRY KPI CARDS -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- CARD 1: Antisymmetric Lévy Area Dominant Pair -->
+        <div class="rounded-xl bg-bg-surface border border-border-subtle p-5 relative flex flex-col justify-between hover:border-accent-teal/40 transition-colors">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-mono uppercase font-semibold text-text-secondary tracking-wide flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-accent-teal"></span>
+                Dominant Lévy Area Pair A<sub>s,t</sub><sup>BTC,ETH</sup>
+              </span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal font-semibold border border-accent-teal/30">
+                CYCLIC LEAD
+              </span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span class="text-2xl font-bold font-mono text-accent-teal tracking-tight">+4.18 × 10<sup>-4</sup></span>
+              <span class="text-xs font-mono text-text-tertiary">rad² / s</span>
+            </div>
+            <div class="mt-2 text-xs font-mono text-text-secondary leading-snug">
+              A<sub>s,t</sub> = ½(S<sup>BTC,ETH</sup> - S<sup>ETH,BTC</sup>). Positive geometric phase indicates BTC actively leads ETH order-flow trajectory along closed loop.
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-border-subtle flex items-center justify-between text-[11px] font-mono">
+            <span class="text-text-tertiary">Reparameterization:</span>
+            <span class="text-accent-teal font-medium">STRICT INVARIANT (0.00% DRIFT)</span>
+          </div>
+        </div>
+
+        <!-- CARD 2: Expected Signature Mahalanobis Anomaly Score -->
+        <div class="rounded-xl bg-bg-surface border border-border-subtle p-5 relative flex flex-col justify-between hover:border-accent-teal/40 transition-colors">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-mono uppercase font-semibold text-text-secondary tracking-wide flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-accent-teal"></span>
+                Signature Mahalanobis Anomaly D<sub>sig</sub>
+              </span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-teal/15 text-accent-teal font-semibold border border-accent-teal/30">
+                NORMAL GEOMETRY
+              </span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span class="text-2xl font-bold font-mono text-text-primary tracking-tight">1.64 σ</span>
+              <span class="text-xs font-mono text-text-tertiary">/ 3.00 σ GATE</span>
+            </div>
+            <div class="mt-2 text-xs font-mono text-text-secondary leading-snug">
+              Empirical path signature distance to Expected Signature Kernel μ<sub>S</sub>. Normal path topology verified across rolling 256 execution slices.
+            </div>
+          </div>
+          <!-- Gauge Bar -->
+          <div class="mt-4 pt-3 border-t border-border-subtle space-y-1.5">
+            <div class="flex justify-between text-[10px] font-mono text-text-tertiary">
+              <span>0.0σ Baseline</span>
+              <span class="text-accent-teal">Current: 1.64σ</span>
+              <span class="text-alert-crimson">Limit: 3.00σ</span>
+            </div>
+            <div class="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden flex">
+              <div class="h-full bg-accent-teal rounded-full" style="width: 54.6%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: Chen Identity Tensor Truncation Error -->
+        <div class="rounded-xl bg-bg-surface border border-border-subtle p-5 relative flex flex-col justify-between hover:border-accent-teal/40 transition-colors">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-mono uppercase font-semibold text-text-secondary tracking-wide flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-ai-violet"></span>
+                Chen Truncation Error ||S<sup>(3)</sup>||<sub>HS</sub>
+              </span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-ai-violet/15 text-ai-violet font-semibold border border-ai-violet/30">
+                GEOMETRIC PASS
+              </span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span class="text-2xl font-bold font-mono text-text-primary tracking-tight">2.84 × 10<sup>-6</sup></span>
+              <span class="text-xs font-mono text-text-tertiary">Hilbert-Schmidt</span>
+            </div>
+            <div class="mt-2 text-xs font-mono text-text-secondary leading-snug">
+              p-Variation index p = 2.18 &lt; 3. Factorial decay k! ensures Taylor-Chen series convergence across 4 input streams (d=4, dim=85).
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-border-subtle flex items-center justify-between text-[11px] font-mono">
+            <span class="text-text-tertiary">Chen Splitting S(s,u)⊗S(u,t):</span>
+            <span class="text-accent-teal font-medium">RESIDUAL &lt; 1e-9</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ANALYTICAL ROW: Signed Lévy Area Matrix & Interactive Phase-Space Trajectory -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- 7 COLS: Antisymmetric Lévy Area Signed Lead-Lag Matrix A_{s,t}^{ij} -->
+        <div class="lg:col-span-7 rounded-xl bg-bg-surface border border-border-subtle p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h2 class="text-sm font-semibold tracking-wide text-text-primary flex items-center gap-2">
+                  <span class="material-symbols-outlined text-accent-teal text-base">apps</span>
+                  Antisymmetric Lévy Area Matrix <span class="font-mono text-accent-teal">A<sub>s,t</sub><sup>ij</sup> = ½(S<sup>i,j</sup> - S<sup>j,i</sup>)</span>
+                </h2>
+                <p class="text-xs font-mono text-text-secondary mt-0.5">
+                  Pairwise cyclical signed enclosure in ℝ⁴ (BTC, ETH, SOL, OFI). Anti-diagonal skew reveals lead-lag directionality.
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-bg-elevated border border-border-default text-text-secondary">
+                  4×4 Non-Commutative
+                </span>
+              </div>
+            </div>
+
+            <!-- Quantitative Matrix Table -->
+            <div class="overflow-x-auto mt-2">
+              <table class="w-full text-left font-mono text-xs border-collapse">
+                <thead>
+                  <tr class="border-b border-border-subtle text-[11px] text-text-tertiary uppercase">
+                    <th class="py-2.5 px-3">X<sup>i</sup> \ X<sup>j</sup></th>
+                    <th class="py-2.5 px-3 text-right">1. BTC-PERP</th>
+                    <th class="py-2.5 px-3 text-right">2. ETH-PERP</th>
+                    <th class="py-2.5 px-3 text-right">3. SOL-PERP</th>
+                    <th class="py-2.5 px-3 text-right">4. OFI-STREAM</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-border-subtle/40 text-text-primary">
+                  <!-- Row 1: BTC -->
+                  <tr class="hover:bg-bg-hover/60 transition-colors">
+                    <td class="py-3 px-3 font-semibold text-text-secondary flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-accent-teal"></span>
+                      1. BTC-PERP
+                    </td>
+                    <td class="py-3 px-3 text-right text-text-tertiary font-mono">0.0000</td>
+                    <td class="py-3 px-3 text-right text-accent-teal font-semibold bg-accent-teal/5 rounded">
+                      +4.18 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-accent-teal/80">BTC LEADS ETH</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-accent-teal font-semibold">
+                      +2.91 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-accent-teal/80">BTC LEADS SOL</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-alert-crimson font-semibold bg-alert-crimson/5 rounded">
+                      -6.42 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-alert-crimson/80">OFI LEADS BTC</span>
+                    </td>
+                  </tr>
+
+                  <!-- Row 2: ETH -->
+                  <tr class="hover:bg-bg-hover/60 transition-colors">
+                    <td class="py-3 px-3 font-semibold text-text-secondary flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-ai-violet"></span>
+                      2. ETH-PERP
+                    </td>
+                    <td class="py-3 px-3 text-right text-alert-crimson font-semibold">
+                      -4.18 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-alert-crimson/80">SKEW MIRROR</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-text-tertiary font-mono">0.0000</td>
+                    <td class="py-3 px-3 text-right text-accent-teal font-semibold">
+                      +1.12 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-accent-teal/80">ETH LEADS SOL</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-alert-crimson font-semibold">
+                      -3.85 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-alert-crimson/80">OFI LEADS ETH</span>
+                    </td>
+                  </tr>
+
+                  <!-- Row 3: SOL -->
+                  <tr class="hover:bg-bg-hover/60 transition-colors">
+                    <td class="py-3 px-3 font-semibold text-text-secondary flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-text-tertiary"></span>
+                      3. SOL-PERP
+                    </td>
+                    <td class="py-3 px-3 text-right text-alert-crimson font-semibold">
+                      -2.91 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-alert-crimson/80">SKEW MIRROR</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-alert-crimson font-semibold">
+                      -1.12 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-alert-crimson/80">SKEW MIRROR</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-text-tertiary font-mono">0.0000</td>
+                    <td class="py-3 px-3 text-right text-alert-crimson font-semibold">
+                      -5.10 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-alert-crimson/80">OFI LEADS SOL</span>
+                    </td>
+                  </tr>
+
+                  <!-- Row 4: OFI -->
+                  <tr class="hover:bg-bg-hover/60 transition-colors">
+                    <td class="py-3 px-3 font-semibold text-text-secondary flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-caution-amber"></span>
+                      4. OFI-STREAM
+                    </td>
+                    <td class="py-3 px-3 text-right text-accent-teal font-semibold bg-accent-teal/5 rounded">
+                      +6.42 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-accent-teal/80">PRIME DRIVER</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-accent-teal font-semibold">
+                      +3.85 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-accent-teal/80">PRIME DRIVER</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-accent-teal font-semibold">
+                      +5.10 × 10<sup>-4</sup>
+                      <span class="block text-[9px] text-accent-teal/80">PRIME DRIVER</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-text-tertiary font-mono">0.0000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Skew Properties Legend & Invariant Check -->
+          <div class="mt-4 pt-3 border-t border-border-subtle flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1 text-accent-teal">
+                <span class="w-2 h-2 rounded bg-accent-teal"></span> Positive Area (X<sup>i</sup> precedes X<sup>j</sup>)
+              </span>
+              <span class="flex items-center gap-1 text-alert-crimson">
+                <span class="w-2 h-2 rounded bg-alert-crimson"></span> Negative Area (Lagging)
+              </span>
+            </div>
+            <span class="text-text-tertiary">
+              Trace Invariant: <span class="text-text-primary">Tr(A) = 0.000</span> | Skew Check: <span class="text-accent-teal">A<sup>T</sup> = -A [PASS]</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- 5 COLS: Phase-Space Geometric Loop Visualizer (SVG) -->
+        <div class="lg:col-span-5 rounded-xl bg-bg-surface border border-border-subtle p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="text-sm font-semibold tracking-wide text-text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined text-accent-teal text-base">donut_large</span>
+                Lévy Area Geometric Enclosure
+              </h2>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-bg-elevated text-text-secondary border border-border-default">
+                (X<sup>BTC</sup> vs X<sup>ETH</sup>)
+              </span>
+            </div>
+            <p class="text-xs font-mono text-text-secondary mb-3">
+              Closed path integral ∮ X¹ dX² = 2 · A<sup>1,2</sup>. Shaded area corresponds to non-commutative curvature.
+            </p>
+
+            <!-- SVG Geometric Phase Loop -->
+            <div class="w-full h-52 bg-bg-primary rounded-lg border border-border-default relative overflow-hidden flex items-center justify-center p-2">
+              <svg viewBox="0 0 400 200" class="w-full h-full">
+                <!-- Coordinate Grid Lines -->
+                <line x1="20" y1="100" x2="380" y2="100" stroke="#1E2530" stroke-width="1" stroke-dasharray="2 2" />
+                <line x1="200" y1="10" x2="200" y2="190" stroke="#1E2530" stroke-width="1" stroke-dasharray="2 2" />
+
+                <!-- Grid labels -->
+                <text x="375" y="95" fill="#5A6577" font-size="9" font-family="JetBrains Mono" text-anchor="end">ΔX¹ (BTC)</text>
+                <text x="205" y="20" fill="#5A6577" font-size="9" font-family="JetBrains Mono">ΔX² (ETH)</text>
+
+                <!-- Lévy Area Shaded Polygon -->
+                <polygon points="120,120 160,50 250,40 310,90 280,150 190,165 140,145" 
+                         fill="#00D4AA" fill-opacity="0.12" stroke="#00D4AA" stroke-width="1.5" />
+
+                <!-- Trajectory Path with directional arrows -->
+                <path d="M 120 120 Q 140 40 250 40 T 310 90 T 280 150 T 190 165 Z" 
+                      fill="none" stroke="#00D4AA" stroke-width="2" />
+
+                <!-- Circulation Arrow (Counter-Clockwise = Positive Lévy Area) -->
+                <path d="M 235 38 L 245 40 L 238 48" fill="#00D4AA" />
+                <path d="M 290 155 L 280 150 L 282 140" fill="#00D4AA" />
+
+                <!-- Center of Mass & Callout -->
+                <circle cx="215" cy="105" r="3" fill="#A78BFA" />
+                <text x="225" y="105" fill="#A78BFA" font-size="10" font-family="JetBrains Mono" font-weight="bold">
+                  Area = +4.18e-4
+                </text>
+                <text x="225" y="118" fill="#8B95A5" font-size="8" font-family="JetBrains Mono">
+                  (CCW Circulation: BTC Leads)
+                </text>
+
+                <!-- Starting / Terminal Points -->
+                <circle cx="120" cy="120" r="4" fill="#E8EAED" stroke="#0B0E11" stroke-width="1.5" />
+                <text x="100" y="135" fill="#E8EAED" font-size="9" font-family="JetBrains Mono">t=0</text>
+                <circle cx="125" cy="122" r="2" fill="#00D4AA" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Micro-Telemetry Details -->
+          <div class="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between text-[11px] font-mono text-text-secondary">
+            <div>Harmonic Phase: <span class="text-text-primary font-semibold">+38.4°</span></div>
+            <div>Enclosure Confidence: <span class="text-accent-teal font-semibold">99.4% (p &lt; 0.001)</span></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- SIGNATURE KERNEL CLASSIFIER & TENSOR NORM DECOMPOSITION TABLE -->
+      <section class="rounded-xl bg-bg-surface border border-border-subtle p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-sm font-semibold tracking-wide text-text-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-accent-teal text-base">account_tree</span>
+              Reparameterization-Invariant Signature Classifier & Tensor Hierarchy
+            </h2>
+            <p class="text-xs font-mono text-text-secondary mt-0.5">
+              Multilevel tensor embeddings across high-frequency tick regimes. Comparing Level-1 (Displacement), Level-2 (Lévy Skew), Level-3 (Tensor Curvature), and Ridge Alpha Output.
+            </p>
+          </div>
+
+          <!-- Controls Filter -->
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-mono text-text-tertiary">KERNEL:</span>
+            <span class="text-xs font-mono px-2.5 py-1 rounded bg-bg-elevated border border-border-default text-text-primary font-medium">
+              EXPECTED SIGNATURE EXPONENTIAL
+            </span>
+          </div>
+        </div>
+
+        <!-- Density Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left font-mono text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-border-subtle text-[11px] text-text-tertiary uppercase">
+                <th class="py-2.5 px-3">Asset Channel</th>
+                <th class="py-2.5 px-3">Level-1 S<sup>(1)</sup> (Linear Δ)</th>
+                <th class="py-2.5 px-3">Level-2 S<sup>(2)</sup> (Covariance)</th>
+                <th class="py-2.5 px-3">Lévy Area A<sup>ij</sup> (Lead-Lag)</th>
+                <th class="py-2.5 px-3">Level-3 ||S<sup>(3)</sup>||<sub>HS</sub></th>
+                <th class="py-2.5 px-3">Anomaly Z-Score</th>
+                <th class="py-2.5 px-3 text-right">Signature Alpha (Forecast)</th>
+                <th class="py-2.5 px-3 text-center">Fencing Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border-subtle/50 text-text-primary">
+              <!-- ROW 1: BTC-PERP -->
+              <tr class="hover:bg-bg-hover/60 transition-colors">
+                <td class="py-3 px-3 font-semibold flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-accent-teal"></span>
+                  <span>BTC-PERP</span>
+                  <span class="text-[9px] text-text-tertiary px-1 py-0.2 rounded bg-bg-primary">L3</span>
+                </td>
+                <td class="py-3 px-3 text-accent-teal font-medium">+142.50 USD</td>
+                <td class="py-3 px-3 text-text-secondary">8.94 × 10<sup>-3</sup></td>
+                <td class="py-3 px-3 text-accent-teal font-semibold">+4.18 × 10<sup>-4</sup></td>
+                <td class="py-3 px-3 text-text-secondary">2.84 × 10<sup>-6</sup></td>
+                <td class="py-3 px-3">
+                  <span class="px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal text-[10px] font-semibold border border-accent-teal/20">
+                    1.64 σ [NORMAL]
+                  </span>
+                </td>
+                <td class="py-3 px-3 text-right text-accent-teal font-bold font-mono">+12.4 bps</td>
+                <td class="py-3 px-3 text-center">
+                  <span class="px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal text-[10px] font-mono border border-accent-teal/30">
+                    ALLOW_PAPER
+                  </span>
+                </td>
+              </tr>
+
+              <!-- ROW 2: ETH-PERP -->
+              <tr class="hover:bg-bg-hover/60 transition-colors">
+                <td class="py-3 px-3 font-semibold flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-ai-violet"></span>
+                  <span>ETH-PERP</span>
+                  <span class="text-[9px] text-text-tertiary px-1 py-0.2 rounded bg-bg-primary">L3</span>
+                </td>
+                <td class="py-3 px-3 text-accent-teal font-medium">+8.20 USD</td>
+                <td class="py-3 px-3 text-text-secondary">1.42 × 10<sup>-2</sup></td>
+                <td class="py-3 px-3 text-alert-crimson font-semibold">-4.18 × 10<sup>-4</sup></td>
+                <td class="py-3 px-3 text-text-secondary">4.12 × 10<sup>-6</sup></td>
+                <td class="py-3 px-3">
+                  <span class="px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal text-[10px] font-semibold border border-accent-teal/20">
+                    1.92 σ [NORMAL]
+                  </span>
+                </td>
+                <td class="py-3 px-3 text-right text-accent-teal font-bold font-mono">+6.8 bps</td>
+                <td class="py-3 px-3 text-center">
+                  <span class="px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal text-[10px] font-mono border border-accent-teal/30">
+                    ALLOW_PAPER
+                  </span>
+                </td>
+              </tr>
+
+              <!-- ROW 3: SOL-PERP -->
+              <tr class="hover:bg-bg-hover/60 transition-colors">
+                <td class="py-3 px-3 font-semibold flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-text-tertiary"></span>
+                  <span>SOL-PERP</span>
+                  <span class="text-[9px] text-text-tertiary px-1 py-0.2 rounded bg-bg-primary">L3</span>
+                </td>
+                <td class="py-3 px-3 text-alert-crimson font-medium">-0.45 USD</td>
+                <td class="py-3 px-3 text-text-secondary">3.88 × 10<sup>-2</sup></td>
+                <td class="py-3 px-3 text-alert-crimson font-semibold">-2.91 × 10<sup>-4</sup></td>
+                <td class="py-3 px-3 text-text-secondary">9.85 × 10<sup>-6</sup></td>
+                <td class="py-3 px-3">
+                  <span class="px-2 py-0.5 rounded bg-caution-amber/10 text-caution-amber text-[10px] font-semibold border border-caution-amber/20">
+                    2.41 σ [ELEVATED]
+                  </span>
+                </td>
+                <td class="py-3 px-3 text-right text-text-secondary font-mono">-1.2 bps</td>
+                <td class="py-3 px-3 text-center">
+                  <span class="px-2 py-0.5 rounded bg-caution-amber/10 text-caution-amber text-[10px] font-mono border border-caution-amber/30">
+                    THROTTLE_50%
+                  </span>
+                </td>
+              </tr>
+
+              <!-- ROW 4: OFI-STREAM -->
+              <tr class="hover:bg-bg-hover/60 transition-colors">
+                <td class="py-3 px-3 font-semibold flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-caution-amber"></span>
+                  <span>OFI-STREAM</span>
+                  <span class="text-[9px] text-text-tertiary px-1 py-0.2 rounded bg-bg-primary">BURST</span>
+                </td>
+                <td class="py-3 px-3 text-accent-teal font-medium">+42.80 LOTS</td>
+                <td class="py-3 px-3 text-text-secondary">5.19 × 10<sup>-2</sup></td>
+                <td class="py-3 px-3 text-accent-teal font-semibold">+6.42 × 10<sup>-4</sup></td>
+                <td class="py-3 px-3 text-text-secondary">1.28 × 10<sup>-5</sup></td>
+                <td class="py-3 px-3">
+                  <span class="px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal text-[10px] font-semibold border border-accent-teal/20">
+                    1.48 σ [NORMAL]
+                  </span>
+                </td>
+                <td class="py-3 px-3 text-right text-accent-teal font-bold font-mono">+18.5 bps</td>
+                <td class="py-3 px-3 text-center">
+                  <span class="px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal text-[10px] font-mono border border-accent-teal/30">
+                    PROPAGATION_ACTIVE
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer Audit Verification -->
+        <div class="mt-4 pt-3 border-t border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono text-text-tertiary">
+          <div class="flex items-center gap-2">
+            <span class="text-accent-teal flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">lock</span>
+              Zero-Lookahead Causal Filtering: PASS
+            </span>
+            <span>•</span>
+            <span>Signature Dimension: <strong class="text-text-primary">(4³ - 1)/(4 - 1) = 85 Terms</strong></span>
+          </div>
+          <div>
+            Truncation Bound: <span class="text-text-secondary">||S(X) - S<sup>≤3</sup>(X)|| &le; C · (p/3)! · ||X||<sub>p-var</sub><sup>3</sup></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- MULTI-AGENT ECONOMETRIC DELIBERATION & ZERO-LOOKAHEAD AUDIT LOCKBOX -->
+      <section class="rounded-xl bg-bg-surface border border-border-subtle p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded bg-ai-violet/15 border border-ai-violet/30 flex items-center justify-center text-ai-violet">
+              <span class="material-symbols-outlined text-sm">smart_toy</span>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-text-primary">Multi-Agent Econometric Consensus: Rough Path Invariants</h3>
+              <p class="text-xs font-mono text-text-secondary">Zero-lookahead verification across non-commutative signature tensors and causal phase space</p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded bg-ai-violet/10 text-ai-violet font-mono text-xs font-semibold border border-ai-violet/30">
+            CONSENSUS 2/2 PASS
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- AGENT 1 -->
+          <div class="p-3.5 rounded-lg bg-bg-elevated border border-border-default space-y-1.5 font-mono text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-accent-teal font-semibold flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-accent-teal"></span>
+                AGENT 1: ROUGH_PATH_GEOMETER
+              </span>
+              <span class="text-[10px] text-text-tertiary">CONF: 99.4%</span>
+            </div>
+            <p class="text-text-secondary text-[11px] leading-relaxed">
+              "Continuous iterated integral of order 2 confirms strict antisymmetric area A<sup>BTC,ETH</sup> = +4.18×10⁻⁴ rad². Reparameterization invariance holds under arbitrary time-dilation tests. No lead-lag breakdown detected across current 15m window."
+            </p>
+            <div class="text-[10px] text-text-tertiary pt-1 flex items-center justify-between">
+              <span>Model: Claude-3.5-Quant-Sonnet</span>
+              <span class="text-accent-teal">Causal Invariant: VALIDATED</span>
+            </div>
+          </div>
+
+          <!-- AGENT 2 -->
+          <div class="p-3.5 rounded-lg bg-bg-elevated border border-border-default space-y-1.5 font-mono text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-ai-violet font-semibold flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-ai-violet"></span>
+                AGENT 2: SIGNATURE_KERNEL_AUDITOR
+              </span>
+              <span class="text-[10px] text-text-tertiary">CONF: 99.8%</span>
+            </div>
+            <p class="text-text-secondary text-[11px] leading-relaxed">
+              "Expected Signature Mahalanobis score D<sub>sig</sub> = 1.64σ sits comfortably below the 3.0σ regime rupture gate. Chen identity algebraic splitting S(s,t) = S(s,u) ⊗ S(u,t) maintains exact numerical tolerance. Routing permitted under ADR-001 paper mode."
+            </p>
+            <div class="text-[10px] text-text-tertiary pt-1 flex items-center justify-between">
+              <span>Model: DeepSeek-R1-Reasoning-Quant</span>
+              <span class="text-accent-teal">Checksum: 0x8f3b2a9e...42fa</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lock Boundary Button & Invariant Footer -->
+        <div class="mt-4 pt-3 border-t border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="text-xs font-mono text-text-secondary flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-accent-teal animate-pulse"></span>
+            <span>Safety Invariant ADR-001 active: Execution locked to institutional paper hedging simulator.</span>
+          </div>
+          <button class="h-9 px-4 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-bg-primary font-mono text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[16px]">lock</span>
+            <span>Lock Signature Invariant & Route Paper Strategy</span>
+          </button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- TERMINAL GLOBAL STATUS FOOTER -->
+    <footer class="mt-auto border-t border-border-subtle bg-bg-surface px-6 py-2.5 text-[11px] font-mono text-text-secondary flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-accent-teal animate-pulse"></span>
+          <span class="text-text-primary font-medium">CASHCLAW QUANT ENGINE: ACTIVE</span>
+        </div>
+        <div>LATENCY: <span class="text-text-primary">38μs</span></div>
+        <div>TENSOR SLICE: <span class="text-text-primary">Δt = 250ms</span></div>
+        <div>CHEN INTEGRAL: <span class="text-accent-teal">CONVERGED (TOL &lt; 1e-8)</span></div>
+      </div>
+      <div class="flex items-center gap-4 text-text-tertiary">
+        <span>SHA-256: 7e2f5b84c89a01d6...</span>
+        <span class="text-caution-amber">ADR-001 [PAPER_ONLY]</span>
+        <span>CashClaw OS v4.19 Institutional</span>
+      </div>
+    </footer>
+
+  </main>
+
+</body>
+</html>

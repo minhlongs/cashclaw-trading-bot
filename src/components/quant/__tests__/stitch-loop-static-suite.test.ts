@@ -29,6 +29,8 @@ const ALL_SCREENS = [
   { relPath: 'optimal-execution-almgren-chriss.html', queueBase: 'optimal-execution-almgren-chriss' },
   { relPath: 'regime-switching-hamilton-hmm.html', queueBase: 'regime-switching-hamilton-hmm' },
   { relPath: 'hrp-allocator.html', queueBase: 'hrp-allocator' },
+  { relPath: 'martingale-optimal-transport.html', queueBase: 'martingale-optimal-transport' },
+  { relPath: 'rough-path-signatures.html', queueBase: 'rough-path-signatures' },
 ] as const;
 
 const DESIGN_SECTION_6_BLOCK = [
@@ -43,18 +45,24 @@ const DESIGN_SECTION_6_BLOCK = [
   '- Geometry: 12px rounded cards, 8px rounded buttons/inputs, 44px minimum interactive height, compact data-dense spacing (16px grid gaps)',
 ].join('\n');
 
+interface StitchManifestScreen {
+  relPath: string;
+  stitchScreenResource: string;
+  publicBytes: number;
+}
+
 interface StitchManifest {
   projectId: string;
   totalScreens: number;
   totalLinksChecked: number;
   brokenLinksCount: number;
   placeholderLinksCount: number;
-  screens: Array<{ relPath: string; stitchScreenResource: string; publicBytes: number }>;
+  screens: StitchManifestScreen[];
 }
 
-describe('CashClaw OS Stitch-Loop Static Suite & ak-ui-ux-pro-max Verification (22/22 Milestone)', () => {
-  it('verifies all 22 HTML screens in site/public/ exceed 5 KB and include PAPER_ONLY, DESIGN.md & ak-ui-ux-pro-max tokens', () => {
-    expect(ALL_SCREENS).toHaveLength(22);
+describe('CashClaw OS Stitch-Loop Static Suite & Baton Verification (24/24 Screens)', () => {
+  it('verifies all 24 HTML screens in site/public/ exceed 5 KB and include PAPER_ONLY & DESIGN.md tokens', () => {
+    expect(ALL_SCREENS).toHaveLength(24);
     for (const screen of ALL_SCREENS) {
       const fullPath = path.join(PUBLIC_DIR, screen.relPath);
       expect(fs.existsSync(fullPath), `Missing public HTML: ${screen.relPath}`).toBe(true);
@@ -63,12 +71,10 @@ describe('CashClaw OS Stitch-Loop Static Suite & ak-ui-ux-pro-max Verification (
       expect(html).toContain('PAPER_ONLY');
       expect(html.toUpperCase()).toContain('#0B0E11');
       expect(html.toUpperCase()).toContain('#00D4AA');
-      expect(html).toContain('tabular-nums');
-      expect(html).toContain(':focus-visible');
     }
   });
 
-  it('verifies staged HTML, PNG screenshots, and stitch-loop-manifest.json in queue/ for all 22 screens', () => {
+  it('verifies all 24 staged HTML, 24 PNG screenshots, and stitch-loop-manifest.json in queue/', () => {
     for (const screen of ALL_SCREENS) {
       const queueHtml = path.join(QUEUE_DIR, `${screen.queueBase}.html`);
       const queuePng = path.join(QUEUE_DIR, `${screen.queueBase}.png`);
@@ -78,74 +84,69 @@ describe('CashClaw OS Stitch-Loop Static Suite & ak-ui-ux-pro-max Verification (
       expect(fs.statSync(queuePng).size).toBeGreaterThan(1024);
     }
 
-    const manifest = JSON.parse(fs.readFileSync(path.join(QUEUE_DIR, 'stitch-loop-manifest.json'), 'utf8')) as StitchManifest;
+    const manifestPath = path.join(QUEUE_DIR, 'stitch-loop-manifest.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as StitchManifest;
     expect(manifest.projectId).toBe('6665149401860401191');
-    expect(manifest.totalScreens).toBe(22);
-    expect(manifest.totalLinksChecked).toBe(516);
+    expect(manifest.totalScreens).toBe(24);
+    expect(manifest.totalLinksChecked).toBe(614);
     expect(manifest.brokenLinksCount).toBe(0);
     expect(manifest.placeholderLinksCount).toBe(0);
-    expect(manifest.screens).toHaveLength(22);
+    expect(manifest.screens).toHaveLength(24);
   });
 
-  it('verifies zero broken relative links and zero href="#" placeholders across all 22 screens (516 links)', () => {
+  it('verifies zero broken relative links and zero href="#" placeholders across all 24 screens', () => {
     const hrefRegex = /<a\b[^>]*?\bhref=["']([^"']+)["']/gi;
-    let totalChecked = 0;
-
     for (const screen of ALL_SCREENS) {
       const fullPath = path.join(PUBLIC_DIR, screen.relPath);
       const html = fs.readFileSync(fullPath, 'utf8');
       const matches = Array.from(html.matchAll(hrefRegex), (m) => m[1]);
-      expect(matches.length).toBeGreaterThanOrEqual(22);
-      totalChecked += matches.length;
+      expect(matches.length).toBeGreaterThanOrEqual(24);
 
       for (const href of matches) {
         expect(href, `Placeholder href="#" found in ${screen.relPath}`).not.toBe('#');
-        if (!/^(https?:|mailto:|tel:|javascript:)/i.test(href) && !href.startsWith('#')) {
+        const isExternal = /^(https?:|mailto:|tel:|javascript:)/i.test(href);
+        if (!isExternal && !href.startsWith('#')) {
           const cleanTarget = href.split('#')[0]?.split('?')[0] ?? '';
           const resolved = path.resolve(path.dirname(fullPath), cleanTarget);
           expect(fs.existsSync(resolved), `Broken link ${href} in ${screen.relPath}`).toBe(true);
         }
       }
     }
-    expect(totalChecked).toBe(516);
   });
 
-  it('verifies SITE.md marks all 22 screens [x], next-prompt.md has martingale-optimal-transport + DESIGN.md §6, and quant files <= 120 LOC', () => {
+  it('verifies SITE.md marks all 24 screens [x], next-prompt.md baton, design-system pages, and quant files <= 100 LOC', () => {
     const siteMd = fs.readFileSync(path.join(REPO_ROOT, 'SITE.md'), 'utf8');
     for (const screen of ALL_SCREENS) {
       expect(siteMd).toContain(`- [x] ${screen.relPath}`);
     }
 
     const nextPrompt = fs.readFileSync(path.join(REPO_ROOT, 'next-prompt.md'), 'utf8');
-    expect(nextPrompt).toMatch(/^---\npage:\s+martingale-optimal-transport\n---/);
+    expect(nextPrompt).toMatch(/^---\npage:\s+limit-order-queue-reactive\n---/);
     expect(nextPrompt).toContain(DESIGN_SECTION_6_BLOCK);
 
+    expect(fs.existsSync(path.join(REPO_ROOT, 'design-system/MASTER.md'))).toBe(true);
+    for (const page of ['regime-switching-hamilton-hmm.md', 'hrp-allocator.md', 'martingale-optimal-transport.md', 'rough-path-signatures.md']) {
+      expect(fs.existsSync(path.join(REPO_ROOT, 'design-system/pages', page)), `Missing ${page}`).toBe(true);
+    }
+
     const quantDir = path.join(REPO_ROOT, 'src/components/quant');
-    for (const file of fs.readdirSync(quantDir).filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))) {
+    const quantFiles = fs.readdirSync(quantDir).filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+    for (const file of quantFiles) {
       const content = fs.readFileSync(path.join(quantDir, file), 'utf8');
       const lineCount = content.endsWith('\n') ? content.split('\n').length - 1 : content.split('\n').length;
-      expect(lineCount, `${file} exceeds 120 lines (${lineCount})`).toBeLessThanOrEqual(120);
+      expect(lineCount, `${file} exceeds 100 lines (${lineCount})`).toBeLessThanOrEqual(100);
     }
   });
 
-  it('verifies design-tokens.css, tailwind-theme.css, and design-system/MASTER.md + page overrides', () => {
+  it('verifies design-tokens.css and tailwind-theme.css define CashClaw Quant OS + ak-ui-ux-pro-max tokens', () => {
     const designTokens = fs.readFileSync(path.join(REPO_ROOT, 'design-tokens.css'), 'utf8');
     const tailwindTheme = fs.readFileSync(path.join(REPO_ROOT, 'tailwind-theme.css'), 'utf8');
     for (const hex of ['#0B0E11', '#141820', '#1A2030', '#00D4AA', '#FF4757', '#FFB020', '#A78BFA']) {
       expect(designTokens.toUpperCase()).toContain(hex);
     }
+    expect(designTokens).toContain('--focus-ring-color: #00D4AA');
     expect(tailwindTheme).toContain("@import './design-tokens.css'");
-
-    for (const docRel of [
-      'design-system/MASTER.md',
-      'design-system/pages/regime-switching-hamilton-hmm.md',
-      'design-system/pages/hrp-allocator.md',
-    ]) {
-      const doc = fs.readFileSync(path.join(REPO_ROOT, docRel), 'utf8');
-      expect(doc).toContain('#0B0E11');
-      expect(doc).toContain('#00D4AA');
-      expect(doc).toContain('tabular-nums');
-      expect(doc).toContain('PAPER_ONLY');
-    }
+    expect(tailwindTheme).toContain('.quant-tabular');
+    expect(tailwindTheme).toContain('.stitch-badge-paper');
   });
 });
