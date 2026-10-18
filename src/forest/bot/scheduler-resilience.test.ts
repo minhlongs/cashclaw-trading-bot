@@ -115,10 +115,8 @@ describe('BotScheduler — error resilience, auto-restart & rate limits', () => 
         getRunningBots: vi.fn().mockResolvedValue([bot]),
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
-
       const scheduler = await createScheduler();
       const report = await scheduler.tick();
-
       expect(report.errors[0].message).toBe('string error');
     });
   });
@@ -163,16 +161,11 @@ describe('BotScheduler — error resilience, auto-restart & rate limits', () => 
         getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
       });
       mockD1Run.mockRejectedValue(new Error('D1 timeout'));
-
       const scheduler = await createScheduler();
       const report = await scheduler.tick();
-
       expect(report.halted).toBe(false);
       expect(report.botsEvaluated).toBe(1);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('D1 persist failed'),
-        expect.objectContaining({ action: 'persistBot' }),
-      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('D1 persist failed'), expect.objectContaining({ action: 'persistBot' }));
     });
 
     it('tracks rate-limit usage per exchange and clears between ticks', async () => {

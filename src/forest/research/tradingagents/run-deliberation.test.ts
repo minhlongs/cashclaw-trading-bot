@@ -76,12 +76,9 @@ describe('runDeliberation', () => {
   });
 
   it('replay determinism: two runs produce byte-identical reports', async () => {
-    const r1 = await runDeliberation(makeConfig());
-    const r2 = await runDeliberation(makeConfig());
+    const [r1, r2] = await Promise.all([runDeliberation(makeConfig()), runDeliberation(makeConfig())]);
     expect(r1.ok && r2.ok).toBe(true);
-    if (r1.ok && r2.ok) {
-      expect(canonicalize(r1.report)).toBe(canonicalize(r2.report));
-    }
+    if (r1.ok && r2.ok) expect(canonicalize(r1.report)).toBe(canonicalize(r2.report));
   });
 
   it('decision log is produced and valid', async () => {
@@ -100,8 +97,7 @@ describe('runDeliberation', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       const { totals, stageResults } = result.report;
-      const bucketSum = totals.completed + totals.failed + totals.skipped + totals.rejected;
-      expect(bucketSum).toBe(stageResults.length);
+      expect(totals.completed + totals.failed + totals.skipped + totals.rejected).toBe(stageResults.length);
       expect(totals.total).toBe(stageResults.length);
     }
   });
@@ -109,10 +105,8 @@ describe('runDeliberation', () => {
 
 function makeUnparseableRiskProvider(): LlmProvider {
   return {
-    providerId: 'Anthropic',
-    displayName: 'Unparseable-Risk (TEST)',
-    models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' },
-    isConfigured: true,
+    providerId: 'Anthropic', displayName: 'Unparseable-Risk (TEST)',
+    models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' }, isConfigured: true,
     async call(input: LlmProviderInput): Promise<LlmProviderResult> {
       const role = detectRole(input.systemPrompt);
       if (role === 'risk-advisor') {
@@ -177,14 +171,10 @@ describe('runDeliberation — failure and resume paths', () => {
     const result = await runDeliberation({ ...makeConfig(), router: routerResult.router });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      const skipped = result.report.stageResults.find(
-        (s) => s.stage === 'cashclaw-validation' && s.outcome === 'skipped',
-      );
+      const skipped = result.report.stageResults.find((s) => s.stage === 'cashclaw-validation' && s.outcome === 'skipped');
       expect(skipped).toBeDefined();
       expect(skipped?.reasons[0]).toContain('no parseable risk scenarios');
-      const humanSkipped = result.report.stageResults.find(
-        (s) => s.stage === 'human-decision' && s.outcome === 'skipped',
-      );
+      const humanSkipped = result.report.stageResults.find((s) => s.stage === 'human-decision' && s.outcome === 'skipped');
       expect(humanSkipped).toBeDefined();
     }
   });
@@ -195,16 +185,12 @@ describe('runDeliberation — failure and resume paths', () => {
     const resumed = await runDeliberation({ ...makeConfig(), initialDecisionLog: seed.decisionLog });
     expect(resumed.ok).toBe(true);
     if (!resumed.ok) return;
-    const seedEntries = JSON.parse(seed.decisionLog).entries as unknown[];
-    const resumedEntries = JSON.parse(resumed.decisionLog).entries as unknown[];
-    expect(resumedEntries.length).toBeGreaterThan(seedEntries.length);
+    expect((JSON.parse(resumed.decisionLog).entries as unknown[]).length).toBeGreaterThan((JSON.parse(seed.decisionLog).entries as unknown[]).length);
   });
 
   it('records a resume failure when the decision log JSON is invalid', async () => {
     const result = await runDeliberation({ ...makeConfig(), initialDecisionLog: 'not-json' });
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.reasons.some((r: string) => r.startsWith('decision-log resume:'))).toBe(true);
-    }
+    if (!result.ok) expect(result.reasons.some((r: string) => r.startsWith('decision-log resume:'))).toBe(true);
   });
 });

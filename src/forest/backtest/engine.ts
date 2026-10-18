@@ -10,18 +10,9 @@ import type { BacktestResult, RunBacktestOptions } from './types';
 import { PaperExchange } from './paper-exchange';
 import { buildTradesFromFills, buildEquity, computeSharpe } from './metrics';
 
-// Re-export all public types
 export type { BacktestTrade, BacktestEquityPoint, BacktestResult, RunBacktestOptions } from './types';
 
-// ──────────────────────────────────────────────
-// Main entry
-// ──────────────────────────────────────────────
-
-/**
- * Run a deterministic backtest over historical OHLCV candles.
- * Strategy callbacks bridge order requests to the PaperExchange adapter;
- * fills are accumulated then converted to trades and equity curve post-run.
- */
+/** Run a deterministic backtest over historical OHLCV candles. */
 export function runBacktest(opts: RunBacktestOptions): BacktestResult {
   const { config, candles, feePct = 0.1, slippagePct = 0.05, initialCapital, botId } = opts;
   const capital = initialCapital ?? config.capital;

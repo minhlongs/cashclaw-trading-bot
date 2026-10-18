@@ -60,12 +60,7 @@ function collectRecognizedOperators(text: string): readonly SupportedOperator[] 
   return SUPPORTED_OPERATORS.filter((op) => recognized.has(op));
 }
 
-/**
- * Normalize a raw formula_latex string into a canonical classification.
- * Fail-closed: placeholder/prose → FORMULA_UNPARSEABLE; conditionals →
- * UNSUPPORTED_EXPRESSION_FORM:conditional; unknown call tokens →
- * UNSUPPORTED_OPERATOR:<TOKEN>; forward references → NON_CAUSAL_FORWARD_REFERENCE.
- */
+/** Normalize a raw formula_latex string into a canonical classification (fail-closed). */
 export function normalizeFormula(raw: string): NormalizeFormulaResult {
   const { text: stripped, stripped: latexStripped } = stripLatex(raw);
   const collapsed = collapseWhitespace(stripped);

@@ -11,22 +11,14 @@ import { filterQualified, HANDLERS } from './optimizer-filter';
 /** Returns a sizing multiplier (0–1.5) for the given regime. */
 export function computeRegimeMultiplier(regime: RegimeLabel): number {
   switch (regime) {
-    case 'TREND_UP':
-      return 1.2;
-    case 'TREND_DOWN':
-      return 0.8;
-    case 'RANGE':
-      return 1.0;
-    case 'LOW_VOLATILITY':
-      return 1.1;
-    case 'HIGH_VOLATILITY':
-      return 0.6;
-    case 'SHOCK':
-      return 0.3;
+    case 'TREND_UP': return 1.2;
+    case 'TREND_DOWN': return 0.8;
+    case 'RANGE': return 1.0;
+    case 'LOW_VOLATILITY': return 1.1;
+    case 'HIGH_VOLATILITY': return 0.6;
+    case 'SHOCK': return 0.3;
     case 'UNKNOWN':
-      return 0.5;
-    default:
-      return 0.5;
+    default: return 0.5;
   }
 }
 

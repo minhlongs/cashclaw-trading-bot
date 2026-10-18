@@ -52,10 +52,7 @@ function knownAfterJob(known: CounterKnownSets, job: ResearchQueueJob): CounterK
 
 describe('emptyCounters', () => {
   it('returns zeroed counters', () => {
-    const c = emptyCounters();
-    expect(c).toEqual({
-      hypothesesTested: 0, configurations: 0, datasets: 0, regimes: 0, assets: 0, oosPasses: 0,
-    });
+    expect(emptyCounters()).toEqual({ hypothesesTested: 0, configurations: 0, datasets: 0, regimes: 0, assets: 0, oosPasses: 0 });
   });
 });
 
@@ -66,8 +63,7 @@ describe('incrementForJob', () => {
       universe: makeUniverse(['BTCUSDT', 'ETHUSDT']),
       result: { oosPassCount: 1, oosTotalCount: 3, aggregatePnlUsd: 50, summary: 'pass' },
     });
-    const c = incrementForJob(emptyCounters(), job);
-    expect(c).toEqual({
+    expect(incrementForJob(emptyCounters(), job)).toEqual({
       hypothesesTested: 1, configurations: 1, datasets: 1, regimes: 1, assets: 2, oosPasses: 1,
     });
   });
@@ -76,8 +72,7 @@ describe('incrementForJob', () => {
     const job1 = makeQueueJob({ hypothesis: 'H1', configHash: 'cfg1' });
     const job2 = makeQueueJob({ hypothesis: 'H1', configHash: 'cfg2', id: 'job-2' });
     const known = emptyKnownSets();
-    const c1 = incrementForJob(emptyCounters(), job1, known);
-    const c2 = incrementForJob(c1, job2, knownAfterJob(known, job1));
+    const c2 = incrementForJob(incrementForJob(emptyCounters(), job1, known), job2, knownAfterJob(known, job1));
     expect(c2.hypothesesTested).toBe(1);
     expect(c2.configurations).toBe(2);
   });
@@ -86,8 +81,7 @@ describe('incrementForJob', () => {
     const job1 = makeQueueJob({ hypothesis: 'H1', configHash: 'cfg1' });
     const job2 = makeQueueJob({ hypothesis: 'H2', configHash: 'cfg1', id: 'job-2' });
     const known = emptyKnownSets();
-    const c1 = incrementForJob(emptyCounters(), job1, known);
-    const c2 = incrementForJob(c1, job2, knownAfterJob(known, job1));
+    const c2 = incrementForJob(incrementForJob(emptyCounters(), job1, known), job2, knownAfterJob(known, job1));
     expect(c2.hypothesesTested).toBe(2);
     expect(c2.configurations).toBe(1);
   });
@@ -96,8 +90,7 @@ describe('incrementForJob', () => {
     const job1 = makeQueueJob({ dataset: 'ds1', configHash: 'cfg1' });
     const job2 = makeQueueJob({ dataset: 'ds1', configHash: 'cfg2', id: 'job-2' });
     const known = emptyKnownSets();
-    const c1 = incrementForJob(emptyCounters(), job1, known);
-    const c2 = incrementForJob(c1, job2, knownAfterJob(known, job1));
+    const c2 = incrementForJob(incrementForJob(emptyCounters(), job1, known), job2, knownAfterJob(known, job1));
     expect(c2.datasets).toBe(1);
   });
 
@@ -105,8 +98,7 @@ describe('incrementForJob', () => {
     const job1 = makeQueueJob({ regime: RegimeLabel.RANGE, configHash: 'cfg1' });
     const job2 = makeQueueJob({ regime: RegimeLabel.RANGE, configHash: 'cfg2', id: 'job-2' });
     const known = emptyKnownSets();
-    const c1 = incrementForJob(emptyCounters(), job1, known);
-    const c2 = incrementForJob(c1, job2, knownAfterJob(known, job1));
+    const c2 = incrementForJob(incrementForJob(emptyCounters(), job1, known), job2, knownAfterJob(known, job1));
     expect(c2.regimes).toBe(1);
   });
 
@@ -114,8 +106,7 @@ describe('incrementForJob', () => {
     const job1 = makeQueueJob({ universe: makeUniverse(['BTCUSDT']), configHash: 'cfg1' });
     const job2 = makeQueueJob({ universe: makeUniverse(['ETHUSDT']), configHash: 'cfg2', id: 'job-2' });
     const known = emptyKnownSets();
-    const c1 = incrementForJob(emptyCounters(), job1, known);
-    const c2 = incrementForJob(c1, job2, knownAfterJob(known, job1));
+    const c2 = incrementForJob(incrementForJob(emptyCounters(), job1, known), job2, knownAfterJob(known, job1));
     expect(c2.assets).toBe(2);
   });
 

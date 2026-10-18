@@ -1,19 +1,13 @@
 // Arm evaluation + primary-arm battery for the real-data pairs verdict.
-// Pure orchestration of existing primitives (walk-forward driver, adapters,
-// robustness, ablation, survival gates) — no second engine, no I/O here.
+// Pure orchestration of existing primitives — no second engine, no I/O here.
 
 import type { UniversePanel } from '@/tree/alpha/relative-value';
 import type { Candle } from '@/forest/backtest/ohlcv';
-import { runSurvivalGate } from '@/forest/alpha/gate/survival-gate';
-import type { SurvivalGateResult } from '@/forest/alpha/gate/survival-gate';
+import { runSurvivalGate, type SurvivalGateResult } from '@/forest/alpha/gate/survival-gate';
 import { evaluateSurvival } from '@/forest/alpha/multiple-testing/evaluate';
 import type { SurvivalVerdict } from '@/forest/alpha/multiple-testing/types';
-import {
-  assembleSurvivalInput, oosSpan, runBenchmarks,
-  runRvAblation, runRvRobustness, toEvaluationReport,
-} from '@/forest/alpha/relative-value-eval';
+import { assembleSurvivalInput, oosSpan, runBenchmarks, runRvAblation, runRvRobustness, toEvaluationReport, type RVWalkForwardResult } from '@/forest/alpha/relative-value-eval';
 import { runRVWalkForward } from '@/forest/alpha/relative-value-eval/walk-forward';
-import type { RVWalkForwardResult } from '@/forest/alpha/relative-value-eval';
 import { ADAPTER, WINDOW_CONFIG, type ArmDef } from './rv-pairs-verdict-protocol';
 import { writeArtifact } from './rv-pairs-verdict-artifacts';
 
@@ -25,13 +19,9 @@ export function runArm(def: ArmDef, universe: UniversePanel): RVWalkForwardResul
 }
 
 export interface ArmOutcome {
-  readonly id: string;
-  readonly expectancy: number;
-  readonly periods: number;
-  readonly completedTrades: number;
-  readonly selectedPairCount: number;
-  readonly gateStatus: string;
-  readonly gateReason: string;
+  readonly id: string; readonly expectancy: number; readonly periods: number;
+  readonly completedTrades: number; readonly selectedPairCount: number;
+  readonly gateStatus: string; readonly gateReason: string;
 }
 
 export function summarizeArm(id: string, result: RVWalkForwardResult): ArmOutcome {
@@ -53,11 +43,7 @@ export interface PrimaryEvaluation {
 }
 
 /** Full battery on PRIMARY arm M4: robustness → ablation → assembly → gates. */
-export function evaluatePrimaryM4(
-  m4: RVWalkForwardResult,
-  m4Def: ArmDef,
-  universe: UniversePanel,
-): PrimaryEvaluation {
+export function evaluatePrimaryM4(m4: RVWalkForwardResult, m4Def: ArmDef, universe: UniversePanel): PrimaryEvaluation {
   const robustness = runRvRobustness({
     universe, windowConfig: WINDOW_CONFIG, mode: 'rolling',
     selectionConfig: m4Def.selection, baseSimConfig: stripArmKnobs(m4Def.sim),
@@ -86,13 +72,9 @@ export function evaluatePrimaryM4(
   return { survival, gate };
 }
 
-/** Assemble + evaluate the multiple-testing battery; falsify on assembly
- * failure rather than throwing (honest KILLED, artifacts still written). */
+/** Assemble + evaluate the multiple-testing battery; falsify on assembly failure rather than throwing. */
 function runSurvivalBattery(
-  m4: RVWalkForwardResult,
-  m4Def: ArmDef,
-  universe: UniversePanel,
-  configMatrix: readonly (readonly number[])[],
+  m4: RVWalkForwardResult, m4Def: ArmDef, universe: UniversePanel, configMatrix: readonly (readonly number[])[],
 ): SurvivalVerdict {
   try {
     const crossAssetReports = m4.perPairWindows
@@ -111,15 +93,11 @@ function runSurvivalBattery(
     );
     return evaluateSurvival(input);
   } catch (err) {
-    return {
-      verdict: 'falsified',
-      reasons: [`survival_input: ${err instanceof Error ? err.message : String(err)}`],
-    };
+    return { verdict: 'falsified', reasons: [`survival_input: ${err instanceof Error ? err.message : String(err)}`] };
   }
 }
 
-/** Robustness grid varies entryZ/hedgeWindow/stressMode itself — the base
- * sim config must not carry M4's entry filter or frozen-β knob. */
+/** Robustness grid varies entryZ/hedgeWindow/stressMode itself — strip M4 entry filter & frozen-β knob. */
 function stripArmKnobs(sim: ArmDef['sim']): ArmDef['sim'] {
   return { ...sim, hedgeMode: undefined, entryFilter: undefined };
 }

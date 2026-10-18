@@ -104,19 +104,10 @@ describe('BotInstance branches and accessors', () => {
 
   it('start uses exchangeOrchestrator when available and handles ok=true', async () => {
     const mockOrchestrator: ExchangeOrchestrator = {
-      fetchTicker: vi.fn().mockResolvedValue({
-        ok: true,
-        data: mockTicker({ last: 55000 }),
-      }),
+      fetchTicker: vi.fn().mockResolvedValue({ ok: true, data: mockTicker({ last: 55000 }) }),
     } as unknown as ExchangeOrchestrator;
 
-    const bot = new BotInstance(
-      BOT_ID,
-      botConfig(),
-      { exchange, killswitch, telemetry, exchangeOrchestrator: mockOrchestrator },
-      callbacks,
-    );
-
+    const bot = new BotInstance(BOT_ID, botConfig(), { exchange, killswitch, telemetry, exchangeOrchestrator: mockOrchestrator }, callbacks);
     await bot.start();
     expect(mockOrchestrator.fetchTicker).toHaveBeenCalledWith('paper', SYMBOL);
     expect(bot.getSnapshot().status).toBe('running');
@@ -124,19 +115,10 @@ describe('BotInstance branches and accessors', () => {
 
   it('start fails when exchangeOrchestrator returns ok=false', async () => {
     const mockOrchestrator: ExchangeOrchestrator = {
-      fetchTicker: vi.fn().mockResolvedValue({
-        ok: false,
-        error: 'Failed to fetch',
-      }),
+      fetchTicker: vi.fn().mockResolvedValue({ ok: false, error: 'Failed to fetch' }),
     } as unknown as ExchangeOrchestrator;
 
-    const bot = new BotInstance(
-      BOT_ID,
-      botConfig(),
-      { exchange, killswitch, telemetry, exchangeOrchestrator: mockOrchestrator },
-      callbacks,
-    );
-
+    const bot = new BotInstance(BOT_ID, botConfig(), { exchange, killswitch, telemetry, exchangeOrchestrator: mockOrchestrator }, callbacks);
     await bot.start();
     expect(bot.getSnapshot().status).toBe('error');
     expect(callbacks.onError).toHaveBeenCalledWith(

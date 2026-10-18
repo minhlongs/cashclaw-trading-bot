@@ -11,7 +11,6 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
-
   afterEach(() => {
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();
@@ -25,7 +24,6 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(parsed.symbol).toBe('BTC/USDT');
       expect(parsed.help).toBe(false);
     });
-
     it('parses flags and commands properly', () => {
       const parsed = parseArgs(['node', 'cashclaw.js', 'quickstart', '--json', '--symbol', 'ETH/USDT', '--name', 'CustomBot']);
       expect(parsed.command).toBe('quickstart');
@@ -33,7 +31,6 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(parsed.symbol).toBe('ETH/USDT');
       expect(parsed.name).toBe('CustomBot');
     });
-
     it('parses help and version short flags', () => {
       expect(parseArgs(['node', 'cashclaw.js', '-h']).help).toBe(true);
       expect(parseArgs(['node', 'cashclaw.js', '-v']).version).toBe(true);
@@ -49,7 +46,6 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(sim.totalOrders).toBeGreaterThan(0);
       expect(sim.winRatePct).toBeGreaterThan(0);
     });
-
     it('calculates quantitative diagnostics', () => {
       const ev = runQuantitativeEval('BTC/USDT');
       expect(ev.symbol).toBe('BTC/USDT');
@@ -62,9 +58,10 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(typeof ev.roughPathLevyArea12).toBe('number');
       expect(ev.avellanedaOptimalSpreadBps).toBeGreaterThan(0);
       expect(ev.kalmanHalfLifeBars).toBeGreaterThan(0);
+      expect(ev.vpinToxicityScore).toBeGreaterThan(0);
+      expect(ev.fundingBasisAprPct).toBeGreaterThan(0);
       expect(ev.regime).toBeDefined();
     });
-
     it('generates valid cloud sync bundle with verified sha256 checksum', () => {
       const bundle = generateSyncBundle('GridBot', 'AVAX/USDT');
       expect(bundle.schemaVersion).toBe('1.0');
@@ -77,42 +74,31 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
 
   describe('CLI main dispatch', () => {
     it('outputs version on -v', async () => {
-      const code = await main(['node', 'cashclaw.js', '-v']);
-      expect(code).toBe(0);
+      expect(await main(['node', 'cashclaw.js', '-v'])).toBe(0);
       expect(consoleLogSpy).toHaveBeenCalledWith(`cashclaw v${VERSION}`);
     });
-
     it('outputs help on --help or missing command', async () => {
-      const code = await main(['node', 'cashclaw.js', '--help']);
-      expect(code).toBe(0);
+      expect(await main(['node', 'cashclaw.js', '--help'])).toBe(0);
       expect(consoleLogSpy).toHaveBeenCalled();
     });
-
     it('executes quickstart with JSON output', async () => {
-      const code = await main(['node', 'cashclaw.js', 'quickstart', '--json']);
-      expect(code).toBe(0);
+      expect(await main(['node', 'cashclaw.js', 'quickstart', '--json'])).toBe(0);
       const output = JSON.parse(String(consoleLogSpy.mock.calls[0][0]));
       expect(output.safetyMode).toBe('PAPER_ONLY');
       expect(output.totalOrders).toBeGreaterThan(0);
     });
-
     it('executes eval with JSON output', async () => {
-      const code = await main(['node', 'cashclaw.js', 'eval', '--symbol', 'DOGE/USDT', '--json']);
-      expect(code).toBe(0);
+      expect(await main(['node', 'cashclaw.js', 'eval', '--symbol', 'DOGE/USDT', '--json'])).toBe(0);
       const output = JSON.parse(String(consoleLogSpy.mock.calls[0][0]));
       expect(output.symbol).toBe('DOGE/USDT');
       expect(output.garmanKlassVolAnnualized).toBeGreaterThan(0);
     });
-
     it('executes export-sync with formatted output and cta', async () => {
-      const code = await main(['node', 'cashclaw.js', 'export-sync', '--name', 'MyGrid']);
-      expect(code).toBe(0);
+      expect(await main(['node', 'cashclaw.js', 'export-sync', '--name', 'MyGrid'])).toBe(0);
       expect(consoleLogSpy).toHaveBeenCalled();
     });
-
     it('executes steps audit command', async () => {
-      const code = await main(['node', 'cashclaw.js', 'steps', '--json']);
-      expect(code).toBe(0);
+      expect(await main(['node', 'cashclaw.js', 'steps', '--json'])).toBe(0);
       const output = JSON.parse(String(consoleLogSpy.mock.calls[0][0]));
       expect(output.totalSteps).toBe(25);
       expect(output.apacheSteps).toBe(14);
@@ -120,10 +106,8 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(output.apacheSteps + output.commercialSteps).toBe(25);
       expect(output.status).toBe('ALL_25_STEPS_VERIFIED');
     });
-
     it('returns error code 1 on unknown command', async () => {
-      const code = await main(['node', 'cashclaw.js', 'unknown-cmd']);
-      expect(code).toBe(1);
+      expect(await main(['node', 'cashclaw.js', 'unknown-cmd'])).toBe(1);
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown command'));
     });
   });

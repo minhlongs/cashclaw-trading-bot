@@ -116,9 +116,7 @@ describe('buildTransitionMatrix — causality / no leakage', () => {
     const fullMatrix = buildTransitionMatrix([...prefix, ...future]);
 
     const newPairs: Array<[RegimeLabel, RegimeLabel]> = [[prefix[prefix.length - 1].label, future[0].label]];
-    for (let i = 0; i < future.length - 1; i++) {
-      newPairs.push([future[i].label, future[i + 1].label]);
-    }
+    for (let i = 0; i < future.length - 1; i++) newPairs.push([future[i].label, future[i + 1].label]);
     const expectedDelta = makeZeroCounts();
     for (const [from, to] of newPairs) expectedDelta[idx(from)][idx(to)]++;
 
@@ -147,21 +145,17 @@ describe('buildTransitionMatrix — causality / no leakage', () => {
     const full = FIXTURE;
     const truncated = buildTransitionMatrix(full.slice(0, -1));
     const fullMatrix = buildTransitionMatrix(full);
-
     const lastFrom = idx(full[full.length - 2].label);
     const lastTo = idx(full[full.length - 1].label);
     for (let i = 0; i < REGIME_LABELS.length; i++) {
       for (let j = 0; j < REGIME_LABELS.length; j++) {
-        const delta = fullMatrix.counts[i][j] - truncated.counts[i][j];
-        expect(delta).toBe(i === lastFrom && j === lastTo ? 1 : 0);
+        expect(fullMatrix.counts[i][j] - truncated.counts[i][j]).toBe(i === lastFrom && j === lastTo ? 1 : 0);
       }
     }
   });
 
   it('reversed history gives a DIFFERENT matrix (direction matters)', () => {
-    const forward = buildTransitionMatrix(FIXTURE);
-    const reversed = buildTransitionMatrix([...FIXTURE].reverse());
-    expect(reversed.counts).not.toEqual(forward.counts);
+    expect(buildTransitionMatrix([...FIXTURE].reverse()).counts).not.toEqual(buildTransitionMatrix(FIXTURE).counts);
   });
 });
 
@@ -171,10 +165,7 @@ describe('buildTransitionMatrix — edge cases', () => {
     expect(m.totalTransitions).toBe(0);
     for (const row of m.counts) for (const c of row) expect(c).toBe(0);
     for (const label of REGIME_LABELS) {
-      expect(m.persistence[label]).toBe(0);
-      expect(m.entropy[label]).toBe(0);
-      expect(m.avgDuration[label]).toBe(0);
-      expect(m.hazard[label]).toBe(0);
+      expect([m.persistence[label], m.entropy[label], m.avgDuration[label], m.hazard[label]]).toEqual([0, 0, 0, 0]);
     }
   });
   it('single element: no transitions, no throw', () => {

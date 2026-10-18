@@ -1,25 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import {
-  AUTOMATED_CEILING, getTransition, isTerminalPhase, transitionStrategy, type StrategyPhase,
-} from '@/forest/alpha/gate/promotion-states';
+import { AUTOMATED_CEILING, getTransition, isTerminalPhase, transitionStrategy, type StrategyPhase } from '@/forest/alpha/gate/promotion-states';
 import { runOpaquePromotionGate } from './promotion-gate-fixtures';
-import {
-  createBenchmarkLaggardInput, createHighTurnoverScalperInput, createInstitutionalMomentumInput,
-  createLookaheadLeakerInput, createOverfitStrategyInput, createPassingGateInput, createWindfallStrategyInput,
-} from './promotion-gate-generators';
+import { createBenchmarkLaggardInput, createHighTurnoverScalperInput, createInstitutionalMomentumInput, createLookaheadLeakerInput, createOverfitStrategyInput, createPassingGateInput, createWindfallStrategyInput } from './promotion-gate-generators';
 
 export function registerTier4RealWorldTests(): void {
   describe('Tier 4: Real-World Alpha Evaluation Scenarios (S1-S10)', () => {
     it('S1: Institutional momentum strategy passes all 15 checks and reaches SHADOW eligibility', () => {
-      const input = createInstitutionalMomentumInput();
-      const result = runOpaquePromotionGate(input);
-
+      const result = runOpaquePromotionGate(createInstitutionalMomentumInput());
       expect(result.passed).toBe(true);
       expect(result.verdict).toBe('PASSED');
       expect(result.checks).toHaveLength(15);
       expect(result.failedChecks).toHaveLength(0);
       expect(result.diagnosticReasons).toHaveLength(0);
-
       const checkNames = result.checks.map((c) => c.name);
       for (const name of [
         'min_trades', 'min_net_expectancy', 'min_profit_factor', 'max_drawdown',
@@ -32,9 +24,7 @@ export function registerTier4RealWorldTests(): void {
     });
 
     it('S2: High-turnover scalper fails under conservative fee and extreme slippage stress', () => {
-      const input = createHighTurnoverScalperInput();
-      const result = runOpaquePromotionGate(input);
-
+      const result = runOpaquePromotionGate(createHighTurnoverScalperInput());
       expect(result.passed).toBe(false);
       expect(result.verdict).toBe('KILLED');
       const failedNames = result.failedChecks.map((c) => c.name);
@@ -44,9 +34,7 @@ export function registerTier4RealWorldTests(): void {
     });
 
     it('S3: Overfit curve-fit strategy fails parameter sensitivity and OOS walk-forward consistency', () => {
-      const input = createOverfitStrategyInput();
-      const result = runOpaquePromotionGate(input);
-
+      const result = runOpaquePromotionGate(createOverfitStrategyInput());
       expect(result.passed).toBe(false);
       expect(result.verdict).toBe('KILLED');
       const failedNames = result.failedChecks.map((c) => c.name);
@@ -55,35 +43,26 @@ export function registerTier4RealWorldTests(): void {
     });
 
     it('S4: Windfall profit strategy fails anti-dependency gate on single lucky OOS window', () => {
-      const input = createWindfallStrategyInput();
-      const result = runOpaquePromotionGate(input);
-
+      const result = runOpaquePromotionGate(createWindfallStrategyInput());
       expect(result.passed).toBe(false);
       expect(result.verdict).toBe('KILLED');
-      const failedNames = result.failedChecks.map((c) => c.name);
-      expect(failedNames).toContain('no_single_window_dependency');
+      expect(result.failedChecks.map((c) => c.name)).toContain('no_single_window_dependency');
       expect(result.diagnosticReasons.some((r) => r.includes('no_single_window_dependency'))).toBe(true);
     });
 
     it('S5: Lookahead leaker is caught by mutation invariance and rejected unconditionally', () => {
-      const input = createLookaheadLeakerInput();
-      const result = runOpaquePromotionGate(input);
-
+      const result = runOpaquePromotionGate(createLookaheadLeakerInput());
       expect(result.passed).toBe(false);
       expect(result.verdict).toBe('KILLED');
-      const failedNames = result.failedChecks.map((c) => c.name);
-      expect(failedNames).toContain('leakage_invariance');
+      expect(result.failedChecks.map((c) => c.name)).toContain('leakage_invariance');
       expect(result.diagnosticReasons.some((r) => r.includes('Observed 12 lookahead leakage mutations'))).toBe(true);
     });
 
     it('S6: Benchmark laggard fails Buy & Hold comparison in strong trending market', () => {
-      const input = createBenchmarkLaggardInput();
-      const result = runOpaquePromotionGate(input);
-
+      const result = runOpaquePromotionGate(createBenchmarkLaggardInput());
       expect(result.passed).toBe(false);
       expect(result.verdict).toBe('KILLED');
-      const failedNames = result.failedChecks.map((c) => c.name);
-      expect(failedNames).toContain('baseline_comparison');
+      expect(result.failedChecks.map((c) => c.name)).toContain('baseline_comparison');
       expect(result.diagnosticReasons.some((r) => r.includes('baseline_comparison'))).toBe(true);
     });
 

@@ -1,9 +1,4 @@
-/**
- * Backend handler for bot configuration updates.
- * Validates parameter bounds, enforces anti-IDOR checks and paper mode,
- * persists to D1, and updates runtime BotInstance state.
- */
-
+/** Backend handler for bot configuration updates (bounds validation, anti-IDOR, paper-mode invariant). */
 import { getBotManager, type BotConfig } from '@/tree/bot';
 import { patchBot } from '@/forest/bot/d1-adapter';
 

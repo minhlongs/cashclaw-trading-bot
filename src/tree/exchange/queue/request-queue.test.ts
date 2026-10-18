@@ -60,13 +60,10 @@ describe('RequestQueue', () => {
     it('dequeue respects daily budget', () => {
       const q = makeQueue({ dailyBudget: { binance: 3, bybit: 80, okx: 60 } });
       for (let i = 0; i < 4; i++) q.enqueue(fakeItem({ cost: 1 }));
-
       for (let i = 0; i < 3; i++) {
-        const item = q.dequeue('binance');
-        expect(item).not.toBeNull();
+        expect(q.dequeue('binance')).not.toBeNull();
         q.recordCost('binance', 1);
       }
-
       expect(q.dequeue('binance')).toBeNull();
     });
 
@@ -74,12 +71,8 @@ describe('RequestQueue', () => {
       const q = makeQueue({ dailyBudget: { binance: 2, bybit: 80, okx: 60 } });
       q.enqueue(fakeItem({ cost: 1 }));
       q.enqueue(fakeItem({ cost: 1 }));
-
-      const item1 = q.dequeue('binance')!;
-      q.recordCost('binance', item1.cost);
-      const item2 = q.dequeue('binance')!;
-      q.recordCost('binance', item2.cost);
-
+      q.recordCost('binance', q.dequeue('binance')!.cost);
+      q.recordCost('binance', q.dequeue('binance')!.cost);
       expect(q.dequeue('binance')).toBeNull();
     });
 
@@ -115,7 +108,6 @@ describe('RequestQueue', () => {
     it('processes items up to batch size', async () => {
       const q = makeQueue({ drainBatchSize: 3 });
       for (let i = 0; i < 4; i++) q.enqueue(fakeItem({ cost: 1 }));
-
       const result = await q.drain('binance', async () => true);
       expect(result.processed).toBe(3);
       expect(result.pending).toBe(1);
@@ -125,7 +117,6 @@ describe('RequestQueue', () => {
       const q = makeQueue({ dailyBudget: { binance: 10, bybit: 80, okx: 60 } });
       q.enqueue(fakeItem({ cost: 3 }));
       q.enqueue(fakeItem({ cost: 4 }));
-
       await q.drain('binance', async () => true);
       expect(q.getCostSnapshot().binance.used).toBe(7);
     });
@@ -134,7 +125,6 @@ describe('RequestQueue', () => {
       const q = makeQueue({ drainBatchSize: 5 });
       q.enqueue(fakeItem({ cost: 1, label: 'will-skip' }));
       q.enqueue(fakeItem({ cost: 1, label: 'will-process' }));
-
       const result = await q.drain('binance', async (item) => item.label !== 'will-skip');
       expect(result.processed).toBe(1);
       expect(result.skipped).toBe(1);
@@ -144,7 +134,6 @@ describe('RequestQueue', () => {
     it('stops draining when budget exceeded mid-cycle', async () => {
       const q = makeQueue({ dailyBudget: { binance: 5, bybit: 80, okx: 60 }, drainBatchSize: 10 });
       for (let i = 0; i < 3; i++) q.enqueue(fakeItem({ cost: 3 }));
-
       const result = await q.drain('binance', async () => true);
       expect(result.processed).toBe(2);
       expect(result.skipped).toBe(0);

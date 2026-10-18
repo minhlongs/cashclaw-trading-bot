@@ -51,18 +51,11 @@ describe('BotScheduler — core tick & stats', () => {
     return {
       id: rest.id ?? 'bot-1',
       getStatus: vi.fn().mockReturnValue(rest.status ?? 'running'),
-      getConfig: vi.fn().mockReturnValue({
-        exchange: rest.exchange ?? 'binance',
-        symbol: rest.symbol ?? 'BTC/USDT',
-        capital: rest.capital ?? 1000,
-      }),
+      getConfig: vi.fn().mockReturnValue({ exchange: rest.exchange ?? 'binance', symbol: rest.symbol ?? 'BTC/USDT', capital: rest.capital ?? 1000 }),
       tick: vi.fn().mockResolvedValue(undefined),
       hasStrategy: vi.fn().mockReturnValue(hs ?? true),
       start: vi.fn().mockResolvedValue(undefined),
-      getSnapshot: vi.fn().mockReturnValue({
-        id: rest.id ?? 'bot-1',
-        totalPnl: rest.totalPnl ?? 0,
-      }),
+      getSnapshot: vi.fn().mockReturnValue({ id: rest.id ?? 'bot-1', totalPnl: rest.totalPnl ?? 0 }),
       ...rest,
     };
   }
@@ -99,10 +92,7 @@ describe('BotScheduler — core tick & stats', () => {
     it('returns tickCount incremented and botsEvaluated = 0 when no running bots', async () => {
       const scheduler = await createScheduler();
       const report = await scheduler.tick();
-      expect(report.halted).toBe(false);
-      expect(report.tickCount).toBe(1);
-      expect(report.botsEvaluated).toBe(0);
-      expect(report.errors).toEqual([]);
+      expect(report).toMatchObject({ halted: false, tickCount: 1, botsEvaluated: 0, errors: [] });
     });
 
     it('returns halted = true when killswitch trading is disabled', async () => {

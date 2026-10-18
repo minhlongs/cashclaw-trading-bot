@@ -139,30 +139,19 @@ describe('assessWalkForwardConsistency', () => {
   describe('option validation', () => {
     it('minPositiveFraction < 0 throws', () => {
       const wf = makeWalkForwardResult([makeBacktestResult({ sharpe_ratio: 1.0 })]);
-      expect(() => assessWalkForwardConsistency(wf, { ...baseOptions, minPositiveFraction: -0.1 })).toThrow(
-        'minPositiveFraction must be in [0, 1], got -0.1',
-      );
+      expect(() => assessWalkForwardConsistency(wf, { ...baseOptions, minPositiveFraction: -0.1 })).toThrow('minPositiveFraction must be in [0, 1], got -0.1');
     });
-
     it('minPositiveFraction > 1 throws', () => {
       const wf = makeWalkForwardResult([makeBacktestResult({ sharpe_ratio: 1.0 })]);
-      expect(() => assessWalkForwardConsistency(wf, { ...baseOptions, minPositiveFraction: 1.1 })).toThrow(
-        'minPositiveFraction must be in [0, 1], got 1.1',
-      );
+      expect(() => assessWalkForwardConsistency(wf, { ...baseOptions, minPositiveFraction: 1.1 })).toThrow('minPositiveFraction must be in [0, 1], got 1.1');
     });
-
     it('maxSignFlips < 0 throws', () => {
       const wf = makeWalkForwardResult([makeBacktestResult({ sharpe_ratio: 1.0 })]);
-      expect(() => assessWalkForwardConsistency(wf, { ...baseOptions, maxSignFlips: -1 })).toThrow(
-        'maxSignFlips must be a non-negative integer, got -1',
-      );
+      expect(() => assessWalkForwardConsistency(wf, { ...baseOptions, maxSignFlips: -1 })).toThrow('maxSignFlips must be a non-negative integer, got -1');
     });
-
     it('maxSignFlips non-integer throws', () => {
       const wf = makeWalkForwardResult([makeBacktestResult({ sharpe_ratio: 1.0 })]);
-      expect(() => assessWalkForwardConsistency(wf, { ...baseOptions, maxSignFlips: 1.5 })).toThrow(
-        'maxSignFlips must be a non-negative integer, got 1.5',
-      );
+      expect(() => assessWalkForwardConsistency(wf, { ...baseOptions, maxSignFlips: 1.5 })).toThrow('maxSignFlips must be a non-negative integer, got 1.5');
     });
   });
 

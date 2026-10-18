@@ -104,27 +104,13 @@ describe('parseFormula — backslash residue-strip narrowness', () => {
 });
 
 describe('parseFormula — implicit multiplication matrix', () => {
-  it('number · identifier across whitespace: 5 close', () => {
-    expect(okAst('5 close')).toEqual(bin('*', num(5), field('close', 0)));
-  });
-  it('number · identifier without whitespace: 5close', () => {
-    expect(okAst('5close')).toEqual(bin('*', num(5), field('close', 0)));
-  });
-  it('number · paren-group: 5 (close + open)', () => {
-    expect(okAst('5 (close + open)')).toEqual(bin('*', num(5), bin('+', field('close', 0), field('open', 0))));
-  });
-  it('number · call: 2 ts_mean(close, 3)', () => {
-    expect(okAst('2 ts_mean(close, 3)')).toEqual(bin('*', num(2), call('ts_mean', [field('close', 0), num(3)])));
-  });
-  it('identifier · identifier juxtaposition rejected', () => {
-    expect(errReason('close open')).toBe('EVAL_PARSE_ERROR:juxtaposition');
-  });
-  it('identifier · number juxtaposition rejected', () => {
-    expect(errReason('close 5')).toBe('EVAL_PARSE_ERROR:juxtaposition');
-  });
-  it('number · number juxtaposition rejected', () => {
-    expect(errReason('5 5')).toBe('EVAL_PARSE_ERROR:juxtaposition');
-  });
+  it('number · identifier across whitespace: 5 close', () => expect(okAst('5 close')).toEqual(bin('*', num(5), field('close', 0))));
+  it('number · identifier without whitespace: 5close', () => expect(okAst('5close')).toEqual(bin('*', num(5), field('close', 0))));
+  it('number · paren-group: 5 (close + open)', () => expect(okAst('5 (close + open)')).toEqual(bin('*', num(5), bin('+', field('close', 0), field('open', 0)))));
+  it('number · call: 2 ts_mean(close, 3)', () => expect(okAst('2 ts_mean(close, 3)')).toEqual(bin('*', num(2), call('ts_mean', [field('close', 0), num(3)]))));
+  it('identifier · identifier juxtaposition rejected', () => expect(errReason('close open')).toBe('EVAL_PARSE_ERROR:juxtaposition'));
+  it('identifier · number juxtaposition rejected', () => expect(errReason('close 5')).toBe('EVAL_PARSE_ERROR:juxtaposition'));
+  it('number · number juxtaposition rejected', () => expect(errReason('5 5')).toBe('EVAL_PARSE_ERROR:juxtaposition'));
 });
 
 describe('parseFormula — fail-closed tokens', () => {

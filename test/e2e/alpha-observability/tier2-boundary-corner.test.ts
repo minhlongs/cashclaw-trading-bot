@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AlphaDecisionRecordSchema, FeatureSnapshotHashSchema, computeFeatureSnapshotHashSync } from '@/tree/alpha/observability';
-import {
-  computeAttribution, createSyntheticAlphaDecision, createSyntheticOperationalTelemetry,
-  createSyntheticPortfolioDecision, evaluateTelemetryHealth, generateShadowOrder, simulateShadowFill,
-} from './harness';
+import { computeAttribution, createSyntheticAlphaDecision, createSyntheticOperationalTelemetry, createSyntheticPortfolioDecision, evaluateTelemetryHealth, generateShadowOrder, simulateShadowFill } from './harness';
 
 describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
   describe('F1: Boundary & Invariant Checks', () => {
@@ -28,7 +25,6 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(() => createSyntheticOperationalTelemetry({ dataFreshnessMs: -10 })).toThrow();
     });
   });
-
   describe('F2: Snapshot Hashing Corners', () => {
     it('hashes empty feature object deterministically to 64-char hex', () => {
       const h1 = computeFeatureSnapshotHashSync({});
@@ -41,13 +37,10 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(() => computeFeatureSnapshotHashSync(circular)).not.toThrow();
     });
     it('distinguishes float precision boundaries', () => {
-      const h1 = computeFeatureSnapshotHashSync({ val: 1.0 });
-      const h2 = computeFeatureSnapshotHashSync({ val: 1.000000000000001 });
-      expect(h1).not.toBe(h2);
+      expect(computeFeatureSnapshotHashSync({ val: 1.0 })).not.toBe(computeFeatureSnapshotHashSync({ val: 1.000000000000001 }));
     });
     it('handles deeply nested feature hierarchies (6 levels deep)', () => {
-      const nested = { l1: { l2: { l3: { l4: { l5: { l6: 'deep' } } } } } };
-      expect(computeFeatureSnapshotHashSync(nested)).toMatch(/^[a-f0-9]{64}$/);
+      expect(computeFeatureSnapshotHashSync({ l1: { l2: { l3: { l4: { l5: { l6: 'deep' } } } } } })).toMatch(/^[a-f0-9]{64}$/);
     });
     it('rejects non-hex or malformed FeatureSnapshotHash strings', () => {
       expect(() => FeatureSnapshotHashSchema.parse('not-a-hash')).toThrow();
@@ -81,20 +74,16 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(d3).toBeNull();
     });
   });
-
   describe('F4: Shadow Fill Simulator Boundaries', () => {
     const order = generateShadowOrder({ orderId: 'o-bound', symbol: 'BTC/USDT', deltaW: 0.1, price: 50000, equity: 100000, timestamp: 1000 })!;
     it('handles zero latency execution where fillTimestamp equals decisionTimestamp', () => {
-      const fill = simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 0, stressTier: 'normal' });
-      expect(fill.fillTimestamp).toBe(1000);
+      expect(simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 0, stressTier: 'normal' }).fillTimestamp).toBe(1000);
     });
     it('handles high latency execution preserving causal addition', () => {
-      const fill = simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 60000, stressTier: 'normal' });
-      expect(fill.fillTimestamp).toBe(61000);
+      expect(simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 60000, stressTier: 'normal' }).fillTimestamp).toBe(61000);
     });
     it('computes pure spread/impact slippage when arrival price equals decision price', () => {
-      const fill = simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 10, stressTier: 'normal' });
-      expect(fill.slippageBps).toBe(8);
+      expect(simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 10, stressTier: 'normal' }).slippageBps).toBe(8);
     });
     it('simulates extreme adverse price gap (10% flash shock on buy)', () => {
       const fill = simulateShadowFill({ order, arrivalPrice: 55000, latencyMs: 100, stressTier: 'extreme' });
@@ -107,7 +96,6 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(Number.isFinite(fill.feeAmount)).toBe(true);
     });
   });
-
   describe('F5: Attribution & Diagnostics Boundaries', () => {
     it('freshness drift > 5000ms triggers STALE_DATA and critical status', () => {
       const res = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ dataFreshnessMs: 5001 }));
@@ -115,8 +103,7 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(res.alarms).toContain('STALE_DATA');
     });
     it('exactly 5000ms freshness drift does NOT trigger stale alarm', () => {
-      const res = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ dataFreshnessMs: 5000 }));
-      expect(res.alarms).not.toContain('STALE_DATA');
+      expect(evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ dataFreshnessMs: 5000 })).alarms).not.toContain('STALE_DATA');
     });
     it('circuit breaker degraded or open triggers CIRCUIT_DEGRADED and degraded status', () => {
       const tel = createSyntheticOperationalTelemetry({ providerProvenance: { primaryProvider: 'p1', activeProvider: 'p1', usedFallback: false, fallbackAttempts: 0, circuitState: 'degraded' } });
@@ -131,10 +118,7 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
     });
     it('zero execution drag (realized identical to expected) produces zero ΔEdge', () => {
       const attr = computeAttribution({ expectedReturn: 0.02, expectedCost: 0.005, realizedFillPrice: 50000, exitPrice: 51000, side: 'buy', feeAmount: 50, fillNotional: 10000, expectedSlippageBps: 10, realizedSlippageBps: 10 });
-      expect(attr.deltaSlippageBps).toBe(0);
-      expect(attr.expectedNetReturn).toBe(0.015);
-      expect(attr.realizedNetReturn).toBe(0.015);
-      expect(attr.deltaEdge).toBe(0);
+      expect(attr).toEqual({ expectedNetReturn: 0.015, realizedNetReturn: 0.015, deltaEdge: 0, deltaSlippageBps: 0 });
     });
   });
 });

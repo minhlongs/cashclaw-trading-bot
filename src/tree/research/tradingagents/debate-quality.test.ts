@@ -11,23 +11,18 @@ describe('relativeImprovement', () => {
   it('returns 1 when baseline is 0 and candidate is positive', () => {
     expect(relativeImprovement(0, 0.5)).toBe(1);
   });
-
   it('returns 0 when baseline is 0 and candidate is 0', () => {
     expect(relativeImprovement(0, 0)).toBe(0);
   });
-
   it('returns 0 when baseline is 0 and candidate is negative', () => {
     expect(relativeImprovement(0, -0.5)).toBe(0);
   });
-
   it('computes positive improvement correctly', () => {
     expect(relativeImprovement(0.1, 0.15)).toBeCloseTo(0.5);
   });
-
   it('computes negative improvement correctly', () => {
     expect(relativeImprovement(0.1, 0.05)).toBe(-0.5);
   });
-
   it('handles negative baseline correctly', () => {
     // (-0.05 - (-0.1)) / |-0.1| = 0.05 / 0.1 = 0.5
     expect(relativeImprovement(-0.1, -0.05)).toBe(0.5);

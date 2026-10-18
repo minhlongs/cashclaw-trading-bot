@@ -38,17 +38,11 @@ function rvResult(periods: PairPeriodRecord[]): RVWalkForwardResult {
   return {
     windows: [
       {
-        bounds: {
-          trainStart: 0, trainEnd: 10, validateStart: 10, validateEnd: 12,
-          testStart: 12, testEnd: 22, trainEndTime: T0 + 9 * HOUR, testStartTime: T0 + 12 * HOUR,
-        },
+        bounds: { trainStart: 0, trainEnd: 10, validateStart: 10, validateEnd: 12, testStart: 12, testEnd: 22, trainEndTime: T0 + 9 * HOUR, testStartTime: T0 + 12 * HOUR },
         selectedPairs: [],
       },
       {
-        bounds: {
-          trainStart: 5, trainEnd: 15, validateStart: 15, validateEnd: 17,
-          testStart: 17, testEnd: 27, trainEndTime: T0 + 14 * HOUR, testStartTime: T0 + 17 * HOUR,
-        },
+        bounds: { trainStart: 5, trainEnd: 15, validateStart: 15, validateEnd: 17, testStart: 17, testEnd: 27, trainEndTime: T0 + 14 * HOUR, testStartTime: T0 + 17 * HOUR },
         selectedPairs: [],
       },
     ],
@@ -138,9 +132,7 @@ describe('toWalkForwardShim', () => {
   });
 
   it('leaves sharpe null so the consistency check falls back to PnL', () => {
-    for (const w of shim.windows) {
-      expect(w.testMetrics.sharpe_ratio).toBeNull();
-    }
+    for (const w of shim.windows) expect(w.testMetrics.sharpe_ratio).toBeNull();
     expect(shim.aggregated.summaryStats.degradationRatio).toBe(0);
     expect(shim.aggregated.summaryStats.totalWindows).toBe(2);
   });
@@ -148,12 +140,8 @@ describe('toWalkForwardShim', () => {
   it('fails closed on empty windows or out-of-span periods', () => {
     expect(() => toWalkForwardShim(rvResult([]))).not.toThrow();
     const emptyWindows = rvResult([]);
-    const noWindowResult: RVWalkForwardResult = { ...emptyWindows, windows: [] };
-    expect(() => toWalkForwardShim(noWindowResult)).toThrow(/no windows/);
-
-    const early = [
-      record({ timestamp: T0 + 1 * HOUR, netReturn: 0.01 }),
-    ];
+    expect(() => toWalkForwardShim({ ...emptyWindows, windows: [] })).toThrow(/no windows/);
+    const early = [record({ timestamp: T0 + 1 * HOUR, netReturn: 0.01 })];
     expect(() => toWalkForwardShim(rvResult(early))).toThrow(/precedes every window/);
   });
 });

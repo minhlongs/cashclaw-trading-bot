@@ -1,38 +1,11 @@
 import { evaluateDataQuality } from '../../src/forest/alpha/data-quality-eval/evaluate';
-import {
-  assertDataQualityValid,
-  DataQualityAssertionError,
-  protectSignalGeneration,
-} from '../../src/forest/alpha/data-quality-eval/signal-fence';
-import {
-  AlignmentConfigSchema,
-  CandleSchema,
-  CheckResultSchema,
-  DataQualityAssessmentReportSchema,
-  DataQualityConfigSchema,
-  DataQualityEvalConfigSchema,
-  DataQualityEvalInputSchema,
-  FutureDataConfigSchema,
-  MissingIntervalsConfigSchema,
-  OutageConfigSchema,
-  QualityViolationSchema,
-  SignalGenerationResultSchema,
-  StalenessConfigSchema,
-  ValidationResultSchema,
-  VolumeConfigSchema,
-} from '../../src/forest/alpha/data-quality-eval/schemas';
+import { assertDataQualityValid, DataQualityAssertionError, protectSignalGeneration } from '../../src/forest/alpha/data-quality-eval/signal-fence';
+import { AlignmentConfigSchema, CandleSchema, CheckResultSchema, DataQualityAssessmentReportSchema, DataQualityConfigSchema, DataQualityEvalConfigSchema, DataQualityEvalInputSchema, FutureDataConfigSchema, MissingIntervalsConfigSchema, OutageConfigSchema, QualityViolationSchema, SignalGenerationResultSchema, StalenessConfigSchema, ValidationResultSchema, VolumeConfigSchema } from '../../src/forest/alpha/data-quality-eval/schemas';
 import type { Candle } from '../../src/forest/alpha/data-quality-eval/types';
 
-interface TestRecord {
-  id: string;
-  category: string;
-  name: string;
-  passed: boolean;
-  detail: string;
-}
+interface TestRecord { id: string; category: string; name: string; passed: boolean; detail: string; }
 
 const records: TestRecord[] = [];
-
 function assertTest(id: string, category: string, name: string, actualPassed: boolean, expectedPassed: boolean, detail: string): void {
   const isMatch = actualPassed === expectedPassed;
   records.push({ id, category, name, passed: isMatch, detail });
@@ -41,12 +14,7 @@ function assertTest(id: string, category: string, name: string, actualPassed: bo
 
 function makeSeries(count: number, intervalMs = 60_000, baseTs = 1_700_000_000_000): Candle[] {
   return Array.from({ length: count }, (_, i) => ({
-    timestamp: baseTs + i * intervalMs,
-    open: 100 + (i % 5),
-    high: 110 + (i % 5),
-    low: 95 + (i % 5),
-    close: 105 + (i % 5),
-    volume: 1_000 + i * 15,
+    timestamp: baseTs + i * intervalMs, open: 100 + (i % 5), high: 110 + (i % 5), low: 95 + (i % 5), close: 105 + (i % 5), volume: 1_000 + i * 15,
   }));
 }
 

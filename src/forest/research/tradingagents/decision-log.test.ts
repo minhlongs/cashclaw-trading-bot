@@ -98,8 +98,7 @@ describe('logDeliberationRun', () => {
   it('appends the optional human decision when provided', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1', proposalId: 'prop-1',
-      analystOutputs: [], debateOutputs: [],
+      researchGoalId: 'goal-1', proposalId: 'prop-1', analystOutputs: [], debateOutputs: [],
       researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
       portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
       humanDecision: { final: 'APPROVE_FOR_SHADOW' }, timestamp: NOW,
@@ -112,28 +111,22 @@ describe('logDeliberationRun', () => {
   it('returns a typed failure when no entries were appended', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1', proposalId: 'prop-1',
-      analystOutputs: [], debateOutputs: [],
+      researchGoalId: 'goal-1', proposalId: 'prop-1', analystOutputs: [], debateOutputs: [],
       researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
       portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
       timestamp: '2026-08-26T00:00:00.000Z',
     });
     expect(result.ok).toBe(true);
-    const log = writer.getLog() as DecisionLog;
-    expect(log.entries.length).toBe(4);
+    expect((writer.getLog() as DecisionLog).entries.length).toBe(4);
   });
 
   it('updates the writer internal log after each append (not a detached copy)', async () => {
     const writer = new DecisionLogWriter();
     await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1', proposalId: 'prop-1',
-      analystOutputs: [{ a: 1 }], debateOutputs: [{ b: 2 }],
-      researchSynthesis: { s: 3 }, riskProposal: { r: 4 },
-      portfolioProposal: { p: 5 }, cashclawValidation: { c: 6 },
-      timestamp: NOW,
+      researchGoalId: 'goal-1', proposalId: 'prop-1', analystOutputs: [{ a: 1 }], debateOutputs: [{ b: 2 }],
+      researchSynthesis: { s: 3 }, riskProposal: { r: 4 }, portfolioProposal: { p: 5 }, cashclawValidation: { c: 6 }, timestamp: NOW,
     });
-    const log = JSON.parse(writer.toJSON()) as DecisionLog;
-    expect(log.entries.length).toBe(6);
+    expect((JSON.parse(writer.toJSON()) as DecisionLog).entries.length).toBe(6);
   });
 
   it('verifyDecisionLog on empty log returns ok (empty-log guard)', async () => {
@@ -162,8 +155,7 @@ describe('logDeliberationRun', () => {
   it('returns first append failure (invalid timestamp) before reaching empty-log guard', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1', proposalId: 'prop-1',
-      analystOutputs: [{ claim: 'a1' }], debateOutputs: [{ thesis: 'bull' }],
+      researchGoalId: 'goal-1', proposalId: 'prop-1', analystOutputs: [{ claim: 'a1' }], debateOutputs: [{ thesis: 'bull' }],
       researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
       portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
       timestamp: 'not-a-valid-timestamp',
@@ -171,35 +163,28 @@ describe('logDeliberationRun', () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reasons[0]).toContain('timestamp must be ISO-8601');
-    const log = writer.getLog() as DecisionLog;
-    expect(log.entries.length).toBe(0);
+    expect((writer.getLog() as DecisionLog).entries.length).toBe(0);
   });
 
   it('logDeliberationRun empty-log guard exists but is effectively unreachable in normal operation', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1', proposalId: 'prop-1',
-      analystOutputs: [], debateOutputs: [],
+      researchGoalId: 'goal-1', proposalId: 'prop-1', analystOutputs: [], debateOutputs: [],
       researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
-      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
-      timestamp: NOW,
+      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false }, timestamp: NOW,
     });
     expect(result.ok).toBe(true);
-    const log = writer.getLog() as DecisionLog;
-    expect(log.entries.length).toBe(4);
+    expect((writer.getLog() as DecisionLog).entries.length).toBe(4);
   });
 
   it('covers the empty-log guard by constructing a writer with pre-existing entries and mocking append to succeed', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1', proposalId: 'prop-1',
-      analystOutputs: [], debateOutputs: [],
+      researchGoalId: 'goal-1', proposalId: 'prop-1', analystOutputs: [], debateOutputs: [],
       researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
-      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
-      timestamp: NOW,
+      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false }, timestamp: NOW,
     });
     expect(result.ok).toBe(true);
-    const log = writer.getLog() as DecisionLog;
-    expect(log.entries.length).toBeGreaterThan(0);
+    expect((writer.getLog() as DecisionLog).entries.length).toBeGreaterThan(0);
   });
 });

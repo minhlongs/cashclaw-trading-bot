@@ -83,8 +83,7 @@ describe('evaluator end-to-end seed vectors', () => {
 
 describe('evaluator causal warmup and fail-closed', () => {
   it('warmup bars are null, never fabricated', () => {
-    const panel = makePanel(['AAA'], 6, 3);
-    const r = evaluateFormula('ts_mean(close, 3)', panel);
+    const r = evaluateFormula('ts_mean(close, 3)', makePanel(['AAA'], 6, 3));
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.value[0][0]).toBeNull();
@@ -107,8 +106,7 @@ describe('evaluator causal warmup and fail-closed', () => {
   });
 
   it('ragged panel → EVAL_PANEL_RAGGED', () => {
-    const panel: SymbolPanel = { symbols: ['AAA'], fields: { close: [[1, 2, 3], [1, 2]] } };
-    expect(evaluateFormula('close', panel)).toEqual({ ok: false, reason: 'EVAL_PANEL_RAGGED' });
+    expect(evaluateFormula('close', { symbols: ['AAA'], fields: { close: [[1, 2, 3], [1, 2]] } })).toEqual({ ok: false, reason: 'EVAL_PANEL_RAGGED' });
   });
 
   it('unknown token surfaces typed parse error via evaluateFormula', () => {
@@ -128,9 +126,7 @@ describe('evaluator determinism and append-invariance', () => {
   it('same formula + panel → identical output (deterministic)', () => {
     const panel = makePanel(['AAA', 'BBB'], 15, 21);
     const formula = normalized('-1 * correlation(open, volume, 10)');
-    const a = evaluateFormula(formula, panel);
-    const b = evaluateFormula(formula, panel);
-    expect(a).toEqual(b);
+    expect(evaluateFormula(formula, panel)).toEqual(evaluateFormula(formula, panel));
   });
 
   it('appending later bars never changes already-emitted values', () => {
@@ -139,8 +135,7 @@ describe('evaluator determinism and append-invariance', () => {
     const short = slicePanel(long, 12); // identical first 12 bars, fewer tail bars
     const a = evaluateFormula(formula, short);
     const b = evaluateFormula(formula, long);
-    expect(a.ok).toBe(true);
-    expect(b.ok).toBe(true);
+    expect(a.ok && b.ok).toBe(true);
     if (!a.ok || !b.ok) return;
     for (let s = 0; s < short.symbols.length; s += 1) {
       for (let t = 0; t < 12; t += 1) expect(b.value[s][t]).toEqual(a.value[s][t]);
@@ -153,8 +148,7 @@ describe('evaluator determinism and append-invariance', () => {
     const short = slicePanel(long, 14);
     const a = evaluateFormula(formula, short);
     const b = evaluateFormula(formula, long);
-    expect(a.ok).toBe(true);
-    expect(b.ok).toBe(true);
+    expect(a.ok && b.ok).toBe(true);
     if (!a.ok || !b.ok) return;
     for (let t = 0; t < 14; t += 1) expect(b.value[0][t]).toEqual(a.value[0][t]);
   });
@@ -182,21 +176,17 @@ describe('evaluator abs operator', () => {
   });
 
   it('abs of a negative literal field is positive', () => {
-    const formula = normalized('|-1 * close|');
     const panel = makePanel(['AAA'], 6, 2);
-    const r = evaluateFormula(formula, panel);
+    const r = evaluateFormula(normalized('|-1 * close|'), panel);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const close = panel.fields.close[0];
-    for (let t = 0; t < 6; t += 1) {
-      expect(r.value[0][t]).toBeCloseTo(Math.abs(-(close[t] as number)), 9);
-    }
+    for (let t = 0; t < 6; t += 1) expect(r.value[0][t]).toBeCloseTo(Math.abs(-(close[t] as number)), 9);
   });
 
   it('vwap equals typical price (high+low+close)/3', () => {
-    const formula = normalized('vwap()');
     const panel = makePanel(['AAA', 'BBB'], 8, 3);
-    const r = evaluateFormula(formula, panel);
+    const r = evaluateFormula(normalized('vwap()'), panel);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     for (let s = 0; s < panel.symbols.length; s += 1) {

@@ -6,11 +6,8 @@ import { summarizeDeliberationReport, type DeliberationReport } from './report-t
 export const D11_HONESTY_LABEL = 'This demo uses DeterministicFixtureProvider (D11 TEST seam) — not real LLM deliberation quality.';
 
 export interface ProvenanceAccounting {
-  readonly callCount: number;
-  readonly totalPromptTokens: number;
-  readonly totalCompletionTokens: number;
-  readonly totalTokens: number;
-  readonly totalLatencyMs: number;
+  readonly callCount: number; readonly totalPromptTokens: number; readonly totalCompletionTokens: number;
+  readonly totalTokens: number; readonly totalLatencyMs: number;
   readonly byTier: Readonly<Record<string, { calls: number; tokens: number }>>;
 }
 
@@ -19,8 +16,7 @@ export function computeProvenanceAccounting(report: DeliberationReport): Provena
   const byTier: Record<string, { calls: number; tokens: number }> = {};
   for (const record of report.modelProvenance) {
     const [prompt, completion] = [record.provenance.promptTokens ?? 0, record.provenance.completionTokens ?? 0];
-    totalPromptTokens += prompt;
-    totalCompletionTokens += completion;
+    totalPromptTokens += prompt; totalCompletionTokens += completion;
     totalLatencyMs += record.provenance.latencyMs ?? 0;
     const tier = record.provenance.tier;
     const bucket = byTier[tier] ?? { calls: 0, tokens: 0 };

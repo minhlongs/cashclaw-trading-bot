@@ -22,11 +22,7 @@ export function fundingSignal(f: DerivativeFeatures): { direction: 'long' | 'sho
   return { direction, confidence, reasons };
 }
 
-/**
- * Open interest surge signal.
- * OI growing fast = new money entering trend.
- * OI dropping = positions unwinding.
- */
+/** Open interest surge signal: OI growing fast = new money entering trend; dropping = unwinding. */
 export function oiSignal(f: DerivativeFeatures): { direction: 'long' | 'short' | 'neutral'; confidence: number; reasons: string[] } | null {
   if (f.oiChange === null || f.oiZScore === null) return null;
   const reasons: string[] = [];
@@ -42,15 +38,10 @@ export function oiSignal(f: DerivativeFeatures): { direction: 'long' | 'short' |
     confidence = Math.min(1, Math.abs(f.oiZScore) / 3);
     reasons.push(`OI collapse: ${(f.oiChange * 100).toFixed(1)}%, z=${f.oiZScore.toFixed(2)}`);
   }
-
   return { direction, confidence, reasons };
 }
 
-/**
- * Liquidation cascade signal.
- * Net long liquidations > 0 = forced selling → short bias.
- * Net short liquidations > 0 = forced buying → long bias.
- */
+/** Liquidation cascade signal: net long liquidations > 0 = forced selling → short; short → long. */
 export function liquidationSignal(f: DerivativeFeatures): { direction: 'long' | 'short' | 'neutral'; confidence: number; reasons: string[] } | null {
   if (f.liquidationImbalance === null || f.liquidationZScore === null) return null;
   const reasons: string[] = [];

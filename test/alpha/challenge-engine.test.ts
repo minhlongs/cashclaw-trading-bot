@@ -1,9 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ZodError } from 'zod';
-import {
-  runPromotionGate, type GateCheckName, type PromotionGateInput,
-  type FinancialMetricsInput, type StressMetricsInput, type RobustnessMetricsInput,
-} from '../../src/forest/alpha/gate/index';
+import { runPromotionGate, type GateCheckName, type PromotionGateInput, type FinancialMetricsInput, type StressMetricsInput, type RobustnessMetricsInput } from '../../src/forest/alpha/gate/index';
 
 function createValidCandidate(): PromotionGateInput {
   return {
@@ -22,9 +19,7 @@ function createValidCandidate(): PromotionGateInput {
   };
 }
 
-function candidateWith(overrides: {
-  financial?: Partial<FinancialMetricsInput>; stress?: Partial<StressMetricsInput>; robustness?: Partial<RobustnessMetricsInput>;
-}): PromotionGateInput {
+function candidateWith(overrides: { financial?: Partial<FinancialMetricsInput>; stress?: Partial<StressMetricsInput>; robustness?: Partial<RobustnessMetricsInput> }): PromotionGateInput {
   const base = createValidCandidate();
   return {
     financial: { ...base.financial, ...(overrides.financial ?? {}) },
@@ -41,10 +36,7 @@ const mutations: readonly Mutation[] = [
   { name: 'min_profit_factor', desc: 'PF 1.19 < 1.20', create: () => candidateWith({ financial: { profitFactor: 1.19 } }) },
   { name: 'max_drawdown', desc: 'MDD 0.251 > 0.25', create: () => candidateWith({ financial: { maxDrawdown: 0.251 } }) },
   { name: 'min_sharpe_sortino', desc: 'Sharpe 0.99 < 1.0', create: () => candidateWith({ financial: { sharpe: 0.99 } }) },
-  {
-    name: 'min_regime_coverage', desc: '1/3 regimes profitable (< 50%)',
-    create: () => candidateWith({ financial: { byRegime: { r1: { numTrades: 10, netPnl: 100 }, r2: { numTrades: 10, netPnl: -20 }, r3: { numTrades: 10, netPnl: -30 } } } }),
-  },
+  { name: 'min_regime_coverage', desc: '1/3 regimes profitable (< 50%)', create: () => candidateWith({ financial: { byRegime: { r1: { numTrades: 10, netPnl: 100 }, r2: { numTrades: 10, netPnl: -20 }, r3: { numTrades: 10, netPnl: -30 } } } }) },
   { name: 'fee_stress', desc: 'conservative PnL 0', create: () => candidateWith({ stress: { netPnlConservative: 0 } }) },
   { name: 'slippage_stress', desc: 'extreme PnL 0', create: () => candidateWith({ stress: { netPnlExtreme: 0 } }) },
   { name: 'parameter_robustness', desc: 'spread 0.501 > 0.50', create: () => candidateWith({ robustness: { parameterSpread: 0.501 } }) },
@@ -85,10 +77,7 @@ describe('Adversarial Challenge: Milestone 2 Promotion Gate Engine', () => {
 
   it('candidate failing all 15 checks yields all 15 in failedChecks and diagnostics', () => {
     const failingCandidate: PromotionGateInput = {
-      financial: {
-        numTrades: 10, expectancy: -0.5, profitFactor: 0.9, maxDrawdown: 0.4,
-        sharpe: 0.5, sortino: 0.5, byRegime: { r1: { numTrades: 10, netPnl: -50 } },
-      },
+      financial: { numTrades: 10, expectancy: -0.5, profitFactor: 0.9, maxDrawdown: 0.4, sharpe: 0.5, sortino: 0.5, byRegime: { r1: { numTrades: 10, netPnl: -50 } } },
       stress: { netPnlNormal: -10, netPnlConservative: -20, netPnlAdverse: -30, netPnlExtreme: -50 },
       robustness: {
         parameterSpread: 0.8, crossPeriodPositiveFraction: 0.2, crossAssetPositiveFraction: 0.2,

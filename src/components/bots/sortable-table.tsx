@@ -6,11 +6,8 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 export type SortDir = 'asc' | 'desc' | null;
 
 export interface SortableColumn<T> {
-  key: keyof T;
-  label: string;
-  width?: string;
-  render?: (val: T[keyof T], row: T) => React.ReactNode;
-  sortable?: boolean;
+  key: keyof T; label: string; width?: string;
+  render?: (val: T[keyof T], row: T) => React.ReactNode; sortable?: boolean;
 }
 
 export function SortableTable<T>({ data, columns, emptyMsg, getRowId }: {

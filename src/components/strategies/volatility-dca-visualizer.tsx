@@ -20,7 +20,6 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
     { referencePrice, volatility, volBaseline: 0.02, priceDropStep: 0.025, stepIndex: 0, maxSteps: 5, reboundTarget: 0.04 },
   ), [symbol, currentPrice, referencePrice, volatility]);
   const drawdownPct = ((referencePrice - currentPrice) / referencePrice) * 100;
-
   return (
     <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
@@ -33,7 +32,6 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
           <ShieldCheck size={14} /><span>{t('badgePaperOnly')}</span>
         </div>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
           <h2 className="text-base font-semibold text-[var(--text-primary)] flex items-center gap-2">

@@ -44,15 +44,11 @@ function checkIsolatedZero(candles: readonly Candle[], index: number): QualityVi
   return null;
 }
 
-export function validateVolume(
-  candles: readonly Candle[],
-  config?: VolumeConfig,
-): CheckResult {
+export function validateVolume(candles: readonly Candle[], config?: VolumeConfig): CheckResult {
   const violations: QualityViolation[] = [];
   const allowZero = config?.allowZeroVolume !== false;
   const flagIsolated = config?.flagIsolatedZeroVolume === true;
   const maxConsecutiveZeros = config?.maxConsecutiveZeroVolume;
-
   let zeroStreak = 0;
 
   for (let i = 0; i < candles.length; i++) {
@@ -62,12 +58,9 @@ export function validateVolume(
       violations.push(basicViolation);
       continue;
     }
-
     if (flagIsolated) {
       const isolatedViolation = checkIsolatedZero(candles, i);
-      if (isolatedViolation) {
-        violations.push(isolatedViolation);
-      }
+      if (isolatedViolation) violations.push(isolatedViolation);
     }
 
     if (candle.volume === 0) {

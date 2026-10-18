@@ -9,7 +9,6 @@ export function FdrMultipleTestingGate() {
   const [fdrAlpha, setFdrAlpha] = useState<number>(0.05);
   const [totalTrials, setTotalTrials] = useState<number>(12);
   const [method, setMethod] = useState<GateMethod>('BH_FDR');
-
   const fdrTelemetry = useMemo(() => computeFdrGateTelemetry(fdrAlpha, totalTrials, method), [fdrAlpha, totalTrials, method]);
   const { rows: evaluatedRows, survivedCount } = fdrTelemetry;
 
@@ -45,7 +44,6 @@ export function FdrMultipleTestingGate() {
             </div>
           </div>
         </div>
-
         <div className="lg:col-span-8 flex flex-col gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">

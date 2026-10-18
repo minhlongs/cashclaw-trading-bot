@@ -33,24 +33,19 @@ export class MeanRevStrategy {
     this.callbacks.onLog(`Mean reversion started: BB(${this.config.bbPeriod}, ${this.config.bbStdDev}) + RSI(${this.config.rsiPeriod})`);
   }
 
-  stop(): void {
-    this.running = false;
-  }
+  stop(): void { this.running = false; }
 
   onTicker(ticker: Ticker): void {
-    if (!this.running) return;
+    if (!this.running || ticker.last <= 0) return;
     const price = ticker.last;
-    if (price <= 0) return;
     this.prices.push(price);
     if (ticker.high24h > 0) this.highs.push(ticker.high24h);
     if (ticker.low24h > 0) this.lows.push(ticker.low24h);
     if (ticker.volume24h > 0) this.volumes.push(ticker.volume24h);
     const maxLen = Math.max(this.config.bbPeriod, this.config.rsiPeriod) + 50;
     if (this.prices.length > maxLen) {
-      this.prices = this.prices.slice(-maxLen);
-      this.highs = this.highs.slice(-maxLen);
-      this.lows = this.lows.slice(-maxLen);
-      this.volumes = this.volumes.slice(-maxLen);
+      this.prices = this.prices.slice(-maxLen); this.highs = this.highs.slice(-maxLen);
+      this.lows = this.lows.slice(-maxLen); this.volumes = this.volumes.slice(-maxLen);
     }
     if (this.prices.length < this.config.bbPeriod) return;
     const bb = calculateBB(this.prices, this.config.bbPeriod, this.config.bbStdDev);

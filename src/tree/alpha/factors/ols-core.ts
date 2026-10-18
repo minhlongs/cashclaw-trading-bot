@@ -69,25 +69,20 @@ export function invertMatrix(m: number[][]): number[][] | null {
 
 /** Run OLS: y = alpha + X * beta + epsilon. Returns [alpha, ...betas] and residual variance. */
 export function ols(
-  y: number[],
-  X: number[][],
+  y: number[], X: number[][],
 ): { coefficients: number[]; residualVariance: number; nObs: number } {
-  const n = y.length;
-  const k = X[0]!.length;
+  const n = y.length, k = X[0]!.length;
   const ones = Array.from({ length: n }, () => [1]);
   const design = X.map((row, i) => [...ones[i]!, ...row]);
   const Xt = transpose(design);
   const XtX = matMul(Xt, design);
   const Xty = matVecMul(Xt, y);
   const XtXInv = invertMatrix(XtX);
-  if (!XtXInv) {
-    return { coefficients: [0, ...Array(k).fill(0)], residualVariance: 0, nObs: n };
-  }
+  if (!XtXInv) return { coefficients: [0, ...Array(k).fill(0)], residualVariance: 0, nObs: n };
   const coefficients = matVecMul(XtXInv, Xty);
   const predicted = matVecMul(design, coefficients);
   const residuals = y.map((yi, i) => yi - predicted[i]!);
   const ssRes = residuals.reduce((s, r) => s + r * r, 0);
   const df = n - k - 1;
-  const residualVariance = df > 0 ? ssRes / df : 0;
-  return { coefficients, residualVariance, nObs: n };
+  return { coefficients, residualVariance: df > 0 ? ssRes / df : 0, nObs: n };
 }

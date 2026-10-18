@@ -15,9 +15,7 @@ export function relativeImprovement(baseline: number, candidate: number): number
 }
 
 function verdictForArm(
-  oosImprovement: number,
-  efficiencyImprovement: number,
-  minRelativeImprovement: number,
+  oosImprovement: number, efficiencyImprovement: number, minRelativeImprovement: number,
 ): ArmVerdict['verdict'] {
   const oosImproved = oosImprovement >= minRelativeImprovement;
   const efficiencyImproved = efficiencyImprovement >= minRelativeImprovement;
@@ -30,8 +28,7 @@ function verdictForArm(
 
 /**
  * Overall verdict: PASS only if at least one debate arm passes; DISABLE if
- * every arm is disabled; REDUCE otherwise. Multi-agent is never assumed
- * better — no passing arm means the debate layer earns no keep.
+ * every arm is disabled; REDUCE otherwise.
  */
 export function computeOverallVerdict(armVerdicts: readonly ArmVerdict[]): ArmVerdict['verdict'] {
   if (armVerdicts.length === 0) return 'INCONCLUSIVE';

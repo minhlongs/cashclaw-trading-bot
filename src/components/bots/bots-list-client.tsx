@@ -71,14 +71,10 @@ export default function BotsListClient() {
         <Link href={`/${locale}/bots/new`} className="btn btn-primary"><Plus size={16} />{t('bots.createNew')}</Link>
       </div>
       <div className="flex items-center gap-3">
-        <div className="search-wrap">
-          <Search size={16} className="search-icon" />
-          <input type="text" placeholder={t('common.search')} aria-label={t('common.search')} className="form-input search-input" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-        </div>
+        <div className="search-wrap"><Search size={16} className="search-icon" /><input type="text" placeholder={t('common.search')} aria-label={t('common.search')} className="form-input search-input" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
         <select className="form-input select-auto" aria-label="Filter bots by status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">Tất cả / All</option><option value="paper_test">Paper Test</option>
-          <option value="paused">Tạm dừng / Paused</option><option value="draft">Bản nháp / Draft</option>
-          <option value="error">Lỗi / Error</option>
+          <option value="paused">Tạm dừng / Paused</option><option value="draft">Bản nháp / Draft</option><option value="error">Lỗi / Error</option>
         </select>
         <button className="btn btn-ghost btn-icon" aria-label="Filter"><Filter size={14} /></button>
       </div>

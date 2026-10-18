@@ -10,12 +10,10 @@ describe('CircuitBreaker', () => {
 
   describe('initial state', () => {
     it('starts closed', () => {
-      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      expect(cb.getState()).toBe('closed');
+      expect(new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 }).getState()).toBe('closed');
     });
     it('tracks zero failures on start', () => {
-      const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
-      expect(cb.getFailureCount()).toBe(0);
+      expect(new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 }).getFailureCount()).toBe(0);
     });
   });
 
@@ -59,9 +57,7 @@ describe('CircuitBreaker', () => {
     it('error includes retry delay', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
-      try {
-        await cb.execute(successFn);
-      } catch (e) {
+      try { await cb.execute(successFn); } catch (e) {
         expect(e).toBeInstanceOf(CircuitOpenError);
         expect((e as CircuitOpenError).retryAfterMs).toBeGreaterThan(0);
       }
@@ -163,7 +159,6 @@ describe('CircuitBreaker', () => {
       await cb.execute(() => Promise.reject(err)).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
-
     it('rate_limit trips after 5', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       const err = new Error('429 Too Many Requests');
@@ -172,13 +167,11 @@ describe('CircuitBreaker', () => {
       await cb.execute(() => Promise.reject(err)).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
-
     it('unknown trips after 3', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       for (let i = 0; i < 3; i++) await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
-
     it('different kinds use independent counters', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(() => Promise.reject(new Error('ETIMEDOUT'))).catch(() => {});
@@ -189,7 +182,6 @@ describe('CircuitBreaker', () => {
       await cb.execute(() => Promise.reject(new Error('ENOTFOUND'))).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
-
     it('onStateChange receives kind for same-kind degraded→open', async () => {
       const onChange = vi.fn();
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000, onStateChange: onChange });
@@ -197,7 +189,6 @@ describe('CircuitBreaker', () => {
       expect(onChange).toHaveBeenCalledTimes(1);
       expect(onChange).toHaveBeenLastCalledWith('closed', 'degraded', expect.any(Number), 'timeout');
     });
-
     it('unknown kind uses kind-specific threshold (3)', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       for (let i = 0; i < 3; i++) await cb.execute(failingFn).catch(() => {});

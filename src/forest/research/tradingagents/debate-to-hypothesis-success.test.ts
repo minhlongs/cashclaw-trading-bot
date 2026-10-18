@@ -95,28 +95,12 @@ describe('debateToHypothesis — success & config forwarding', () => {
         toolProvenance: [] as ToolProvenance[],
       },
     });
-
-    vi.doMock('./debate-orchestrator', () => ({
-      runDebateOrchestrator: mockOrchestrator,
-    }));
-
+    vi.doMock('./debate-orchestrator', () => ({ runDebateOrchestrator: mockOrchestrator }));
     vi.doMock('@/tree/research/tradingagents/hypothesis-extraction', () => ({
-      extractHypotheses: vi.fn().mockReturnValue({
-        ok: true,
-        value: {
-          hypothesisA: {} as ResearchHypothesis,
-          hypothesisB: {} as ResearchHypothesis,
-        },
-      }),
+      extractHypotheses: vi.fn().mockReturnValue({ ok: true, value: { hypothesisA: {} as ResearchHypothesis, hypothesisB: {} as ResearchHypothesis } }),
     }));
-
-    vi.doMock('@/tree/research/evidence/lineage', () => ({
-      buildLineage: vi.fn().mockReturnValue({} as ResearchLineage),
-    }));
-
-    vi.doMock('@/tree/research/alpha/compiler', () => ({
-      compile: vi.fn().mockResolvedValue({ ok: true, value: {} as ExperimentSpec }),
-    }));
+    vi.doMock('@/tree/research/evidence/lineage', () => ({ buildLineage: vi.fn().mockReturnValue({} as ResearchLineage) }));
+    vi.doMock('@/tree/research/alpha/compiler', () => ({ compile: vi.fn().mockResolvedValue({ ok: true, value: {} as ExperimentSpec }) }));
 
     const mockRouter = makeMockRouter();
     const { debateToHypothesis: freshDebateToHypothesis } = await import('./debate-to-hypothesis');
@@ -124,11 +108,8 @@ describe('debateToHypothesis — success & config forwarding', () => {
 
     expect(mockOrchestrator).toHaveBeenCalledWith(
       expect.objectContaining({
-        researchGoalId: 'goal-1',
-        proposalId: 'prop-1',
-        maxDebateRounds: 2,
-        nowIso: '2026-08-26T00:00:00.000Z',
-        router: mockRouter,
+        researchGoalId: 'goal-1', proposalId: 'prop-1', maxDebateRounds: 2,
+        nowIso: '2026-08-26T00:00:00.000Z', router: mockRouter,
       }),
     );
   });
@@ -149,28 +130,15 @@ describe('debateToHypothesis — success & config forwarding', () => {
     }));
 
     const mockExtract = vi.fn().mockReturnValue({
-      ok: true,
-      value: { hypothesisA: {} as ResearchHypothesis, hypothesisB: {} as ResearchHypothesis },
+      ok: true, value: { hypothesisA: {} as ResearchHypothesis, hypothesisB: {} as ResearchHypothesis },
     });
-
-    vi.doMock('@/tree/research/tradingagents/hypothesis-extraction', () => ({
-      extractHypotheses: mockExtract,
-    }));
-
-    vi.doMock('@/tree/research/evidence/lineage', () => ({
-      buildLineage: vi.fn().mockReturnValue({} as ResearchLineage),
-    }));
-
-    vi.doMock('@/tree/research/alpha/compiler', () => ({
-      compile: vi.fn().mockResolvedValue({ ok: true, value: {} as ExperimentSpec }),
-    }));
+    vi.doMock('@/tree/research/tradingagents/hypothesis-extraction', () => ({ extractHypotheses: mockExtract }));
+    vi.doMock('@/tree/research/evidence/lineage', () => ({ buildLineage: vi.fn().mockReturnValue({} as ResearchLineage) }));
+    vi.doMock('@/tree/research/alpha/compiler', () => ({ compile: vi.fn().mockResolvedValue({ ok: true, value: {} as ExperimentSpec }) }));
 
     const customConfig = makeConfig({
       universe: { id: 'custom-universe', symbols: ['ETH-USD'], weighting: 'equal' as const, rebalanceRule: 'daily' as const },
-      timeframe: '4h',
-      nowIso: '2026-08-26T12:00:00.000Z',
-      importerVersion: 'custom-2.0',
-      defaultCostMode: 'NORMAL',
+      timeframe: '4h', nowIso: '2026-08-26T12:00:00.000Z', importerVersion: 'custom-2.0', defaultCostMode: 'NORMAL',
     });
 
     const { debateToHypothesis: freshDebateToHypothesis } = await import('./debate-to-hypothesis');
@@ -180,30 +148,17 @@ describe('debateToHypothesis — success & config forwarding', () => {
       expect.objectContaining({
         goalId: 'goal-1',
         bull: expect.objectContaining({
-          role: 'bull',
-          thesis: 'bull',
-          mechanism: 'mech',
-          evidence: ['e'],
-          expectedDirection: 'long',
-          horizon: 10,
-          features: [{ name: 'f', lookback: 10, params: {} }],
+          role: 'bull', thesis: 'bull', mechanism: 'mech', evidence: ['e'],
+          expectedDirection: 'long', horizon: 10, features: [{ name: 'f', lookback: 10, params: {} }],
         }),
         bear: expect.objectContaining({
-          role: 'bear',
-          thesis: 'bear',
-          mechanism: 'mech',
-          evidence: ['e'],
-          expectedDirection: 'short',
-          horizon: 10,
-          features: [{ name: 'f', lookback: 10, params: {} }],
+          role: 'bear', thesis: 'bear', mechanism: 'mech', evidence: ['e'],
+          expectedDirection: 'short', horizon: 10, features: [{ name: 'f', lookback: 10, params: {} }],
         }),
       }),
       expect.objectContaining({
         universe: { id: 'custom-universe', symbols: ['ETH-USD'], weighting: 'equal', rebalanceRule: 'daily' },
-        timeframe: '4h',
-        nowIso: '2026-08-26T12:00:00.000Z',
-        importerVersion: 'custom-2.0',
-        defaultCostMode: 'NORMAL',
+        timeframe: '4h', nowIso: '2026-08-26T12:00:00.000Z', importerVersion: 'custom-2.0', defaultCostMode: 'NORMAL',
       }),
     );
   });

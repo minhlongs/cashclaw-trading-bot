@@ -11,12 +11,9 @@ export class ExecutionOmsWaterfall {
 
   constructor(config: OmsWaterfallConfig = {}) {
     this.config = {
-      enableDarkMesh: config.enableDarkMesh ?? true,
-      enableUrgencyGuard: config.enableUrgencyGuard ?? true,
-      enableSlicing: config.enableSlicing ?? true,
-      maxAdverseToxicity: config.maxAdverseToxicity ?? 0.7,
-      slicingThresholdQty: config.slicingThresholdQty ?? 5.0,
-      maxSlices: config.maxSlices ?? 5,
+      enableDarkMesh: config.enableDarkMesh ?? true, enableUrgencyGuard: config.enableUrgencyGuard ?? true,
+      enableSlicing: config.enableSlicing ?? true, maxAdverseToxicity: config.maxAdverseToxicity ?? 0.7,
+      slicingThresholdQty: config.slicingThresholdQty ?? 5.0, maxSlices: config.maxSlices ?? 5,
     };
     this.darkMesh = new RfqDarkMeshRouter();
   }

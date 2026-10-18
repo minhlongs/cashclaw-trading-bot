@@ -75,10 +75,7 @@ const CONSISTENT_WF = makeWalkForward([1.0, 1.2, 1.1, 1.3]);
  * OOS window, finishing below the median final-window performance → pbo = 1.
  */
 const HIGH_PBO_MATRIX: readonly (readonly number[])[] = [
-  [2.0, 2.0, -2.0],
-  [1.5, 1.5, -1.0],
-  [0.5, 0.5, 0.5],
-  [0.4, 0.4, 0.4],
+  [2.0, 2.0, -2.0], [1.5, 1.5, -1.0], [0.5, 0.5, 0.5], [0.4, 0.4, 0.4],
 ];
 
 /** IS ranking survives OOS → pbo = 0. */
@@ -126,18 +123,14 @@ describe('evaluateSurvival', () => {
     });
 
     it('strategy indistinguishable from random_entry (edge <= 0) → falsified', () => {
-      const input = makeInput({
-        report: makeReport({ expectancy: 0.001 }),
-        baselineReport: makeReport({ expectancy: 0.001 }),
-      });
+      const input = makeInput({ report: makeReport({ expectancy: 0.001 }), baselineReport: makeReport({ expectancy: 0.001 }) });
       const result = evaluateSurvival(input);
       expect(result.verdict).toBe('falsified');
       expect(result.reasons.some((r) => r.startsWith('random_entry:'))).toBe(true);
     });
 
     it('high-PBO config matrix → falsified', () => {
-      const input = makeInput({ configMatrix: HIGH_PBO_MATRIX });
-      const result = evaluateSurvival(input);
+      const result = evaluateSurvival(makeInput({ configMatrix: HIGH_PBO_MATRIX }));
       expect(result.verdict).toBe('falsified');
       expect(result.reasons.some((r) => r.startsWith('pbo_proxy:'))).toBe(true);
     });
@@ -156,9 +149,7 @@ describe('evaluateSurvival', () => {
     });
 
     it('bootstrap CI containing 0 → falsified', () => {
-      const input = makeInput({
-        tradeReturns: Array.from({ length: 60 }, (_, i) => (i % 2 === 0 ? 0.03 : -0.028)),
-      });
+      const input = makeInput({ tradeReturns: Array.from({ length: 60 }, (_, i) => (i % 2 === 0 ? 0.03 : -0.028)) });
       const result = evaluateSurvival(input);
       expect(result.verdict).toBe('falsified');
       expect(result.reasons.some((r) => r.startsWith('bootstrap_ci:'))).toBe(true);

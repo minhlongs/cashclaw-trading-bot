@@ -1,17 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockAll = vi.fn();
-
-vi.mock('@/lib/db/client', () => ({
-  createServerClient: vi.fn(),
-}));
+vi.mock('@/lib/db/client', () => ({ createServerClient: vi.fn() }));
 
 import { middleware } from './middleware';
 import { createServerClient } from '@/lib/db/client';
 
-function makeReq(method: string, pathname: string, cookies: Record<string, string> = {}) {
+function makeReq(method: string, pathname: string, cookies: Record<string, string> = {}, headers: Record<string, string> = {}) {
   const cookieMap = new Map(Object.entries(cookies).map(([k, v]) => [k, { value: v, name: k }]));
-  return { method, nextUrl: { pathname }, cookies: { get: (name: string) => cookieMap.get(name) }, headers: {} } as any;
+  return { method, nextUrl: { pathname }, cookies: { get: (name: string) => cookieMap.get(name) }, headers } as unknown as Parameters<typeof middleware>[0];
 }
 
 function mockDbSession(userId: string, expiresAt: number) {
@@ -19,23 +16,23 @@ function mockDbSession(userId: string, expiresAt: number) {
     prepare: vi.fn().mockReturnValue({
       bind: vi.fn().mockReturnValue({ all: mockAll.mockResolvedValue({ results: [{ user_id: userId, expires_at: expiresAt }] }) }),
     }),
-  } as any);
+  } as never);
 }
 
 function mockDbEmpty() {
   vi.mocked(createServerClient).mockReturnValue({
     prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnValue({ all: mockAll.mockResolvedValue({ results: [] }) }) }),
-  } as any);
+  } as never);
 }
 
 function mockDbError() {
   vi.mocked(createServerClient).mockReturnValue({
     prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnValue({ all: mockAll.mockRejectedValue(new Error('D1 down')) }) }),
-  } as any);
+  } as never);
 }
 
 function mockDbUnavailable() {
-  vi.mocked(createServerClient).mockReturnValue(null as any);
+  vi.mocked(createServerClient).mockReturnValue(null as never);
 }
 
 beforeEach(() => vi.clearAllMocks());
@@ -191,8 +188,7 @@ describe('middleware', () => {
 
   it('strips client-supplied x-user-id header', async () => {
     mockDbSession('server-user', Date.now() + 86400000);
-    const req = makeReq('POST', '/api/bots', { session_id: 'valid-session' });
-    req.headers = { 'x-user-id': 'spoofed-user' };
+    const req = makeReq('POST', '/api/bots', { session_id: 'valid-session' }, { 'x-user-id': 'spoofed-user' });
     const res = await middleware(req);
     expect(res.status).toBe(200);
     // Response headers should NOT contain client-supplied x-user-id

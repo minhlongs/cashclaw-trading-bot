@@ -1,11 +1,6 @@
 // Multi-Venue Perpetual Funding Rate Basis Arbitrage Engine
-// Computes market-neutral delta-hedged funding yield, fee drag, and liquidation buffers.
-
 import type {
-  VenueFundingQuote,
-  FundingBasisOpportunity,
-  FundingBasisConfig,
-  BasisArbitrageStatus,
+  VenueFundingQuote, FundingBasisOpportunity, FundingBasisConfig, BasisArbitrageStatus,
 } from './funding-basis-types';
 
 export class FundingBasisEngine {

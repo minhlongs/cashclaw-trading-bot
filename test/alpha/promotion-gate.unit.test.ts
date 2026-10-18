@@ -1,13 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import {
-  checkMinTrades, checkMinNetExpectancy, checkMinProfitFactor,
-  checkMaxDrawdown, checkMinSharpeSortino, checkMinRegimeCoverage,
-} from '../../src/forest/alpha/gate/financial-checks';
+import { checkMinTrades, checkMinNetExpectancy, checkMinProfitFactor, checkMaxDrawdown, checkMinSharpeSortino, checkMinRegimeCoverage } from '../../src/forest/alpha/gate/financial-checks';
 import { checkFeeStress, checkSlippageStress } from '../../src/forest/alpha/gate/stress-checks';
-import {
-  checkParameterRobustness, checkCrossPeriodRobustness, checkCrossAssetRobustness,
-  checkLeakageInvariance, checkNoSingleWindowDependency, checkBaselineComparison, checkReproducibleHash,
-} from '../../src/forest/alpha/gate/robustness-checks';
+import { checkParameterRobustness, checkCrossPeriodRobustness, checkCrossAssetRobustness, checkLeakageInvariance, checkNoSingleWindowDependency, checkBaselineComparison, checkReproducibleHash } from '../../src/forest/alpha/gate/robustness-checks';
 import { DEFAULT_PROMOTION_GATE_CONFIG } from '../../src/forest/alpha/gate/types';
 import { PromotionGateConfigSchema, PromotionGateInputSchema } from '../../src/forest/alpha/gate/schemas';
 
@@ -29,9 +23,7 @@ describe('Financial Checks (1-6)', () => {
     for (const v of [0.2501, 1.5, -0.01, Number.NaN]) expect(checkMaxDrawdown(v).passed).toBe(false);
   });
   it('checkMinSharpeSortino tests joint risk-adjusted return hurdle', () => {
-    expect(checkMinSharpeSortino(1.5, 1.8).passed).toBe(true);
-    expect(checkMinSharpeSortino(1.0, 1.2).passed).toBe(true);
-    expect(checkMinSharpeSortino(1.2, Infinity).passed).toBe(true);
+    for (const [s, so] of [[1.5, 1.8], [1.0, 1.2], [1.2, Infinity]] as const) expect(checkMinSharpeSortino(s, so).passed).toBe(true);
     for (const [s, so] of [[1.5, 1.19], [0.99, 1.5], [null, 1.5], [1.5, null], [Number.NaN, 1.5]] as const) {
       expect(checkMinSharpeSortino(s, so).passed).toBe(false);
     }
@@ -48,34 +40,22 @@ describe('Financial Checks (1-6)', () => {
 describe('Stress Checks (7-8)', () => {
   it('checkFeeStress verifies normal and conservative fee stress survival', () => {
     expect(checkFeeStress(100, 50).passed).toBe(true);
-    expect(checkFeeStress(100, 0).passed).toBe(false);
-    expect(checkFeeStress(100, -10).passed).toBe(false);
-    expect(checkFeeStress(-5, 50).passed).toBe(false);
-    expect(checkFeeStress(Number.NaN, 50).passed).toBe(false);
+    for (const [n, c] of [[100, 0], [100, -10], [-5, 50], [Number.NaN, 50]] as const) expect(checkFeeStress(n, c).passed).toBe(false);
   });
   it('checkSlippageStress verifies adverse and extreme 100 bps stress survival', () => {
     expect(checkSlippageStress(50, 10).passed).toBe(true);
-    expect(checkSlippageStress(50, 0).passed).toBe(false);
-    expect(checkSlippageStress(50, -5).passed).toBe(false);
-    expect(checkSlippageStress(-1, 10).passed).toBe(false);
-    expect(checkSlippageStress(50, Number.NaN).passed).toBe(false);
+    for (const [a, e] of [[50, 0], [50, -5], [-1, 10], [50, Number.NaN]] as const) expect(checkSlippageStress(a, e).passed).toBe(false);
   });
 });
 
 describe('Robustness Checks (9-15)', () => {
   it('checkParameterRobustness verifies sensitivity spread ceiling', () => {
-    expect(checkParameterRobustness(0.3).passed).toBe(true);
-    expect(checkParameterRobustness(0.50).passed).toBe(true);
-    expect(checkParameterRobustness(0.501).passed).toBe(false);
-    expect(checkParameterRobustness(-0.1).passed).toBe(false);
-    expect(checkParameterRobustness(Number.NaN).passed).toBe(false);
+    for (const v of [0.3, 0.50]) expect(checkParameterRobustness(v).passed).toBe(true);
+    for (const v of [0.501, -0.1, Number.NaN]) expect(checkParameterRobustness(v).passed).toBe(false);
   });
   it('checkCrossPeriodRobustness verifies OOS walk-forward positive consistency', () => {
-    expect(checkCrossPeriodRobustness(0.80).passed).toBe(true);
-    expect(checkCrossPeriodRobustness(0.60).passed).toBe(true);
-    expect(checkCrossPeriodRobustness(0.599).passed).toBe(false);
-    expect(checkCrossPeriodRobustness(1.2).passed).toBe(false);
-    expect(checkCrossPeriodRobustness(Number.NaN).passed).toBe(false);
+    for (const v of [0.80, 0.60]) expect(checkCrossPeriodRobustness(v).passed).toBe(true);
+    for (const v of [0.599, 1.2, Number.NaN]) expect(checkCrossPeriodRobustness(v).passed).toBe(false);
   });
   it('checkCrossAssetRobustness verifies universality or explicit exemption', () => {
     expect(checkCrossAssetRobustness(0.60, true).passed).toBe(true);
@@ -122,10 +102,7 @@ describe('Schemas and Configurations', () => {
   });
   it('validates PromotionGateInputSchema against strict injection', () => {
     const valid = {
-      financial: {
-        numTrades: 40, expectancy: 1.5, profitFactor: 1.8, maxDrawdown: 0.1, sharpe: 1.5, sortino: 2.0,
-        byRegime: { bull: { numTrades: 40, netPnl: 500 } },
-      },
+      financial: { numTrades: 40, expectancy: 1.5, profitFactor: 1.8, maxDrawdown: 0.1, sharpe: 1.5, sortino: 2.0, byRegime: { bull: { numTrades: 40, netPnl: 500 } } },
       stress: { netPnlNormal: 400, netPnlConservative: 300, netPnlAdverse: 200, netPnlExtreme: 100 },
       robustness: {
         parameterSpread: 0.2, crossPeriodPositiveFraction: 0.8, crossAssetPositiveFraction: 0.7,

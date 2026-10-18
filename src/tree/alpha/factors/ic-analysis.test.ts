@@ -54,11 +54,7 @@ describe('analyzeIc — IC series', () => {
   it('Pearson diverges from Spearman under a monotone outlier', () => {
     // 5 bars → 4 valid rebalances; fwd returns 1%, 2%, 1000%: ranks perfectly
     // aligned (rho=1) but the outlier drags the linear correlation down.
-    const panels = [
-      geometric('A', 5, 0.01),
-      geometric('B', 5, 0.02),
-      geometric('C', 5, 10),
-    ];
+    const panels = [geometric('A', 5, 0.01), geometric('B', 5, 0.02), geometric('C', 5, 10)];
     const scores = constantScores(SYMBOLS, 5, [1, 2, 3]);
     const result = analyzeIc(panels, scores, { horizonBars: 1 });
     expect(result.icSeries[0].rankIc).toBe(1);
@@ -120,12 +116,7 @@ describe('analyzeIc — summary stats', () => {
 
 describe('analyzeIc — quantile spread and turnover', () => {
   it('spread equals meanFwd(top) − meanFwd(bottom) exactly', () => {
-    const panels = [
-      geometric('A', 4, 0.01),
-      geometric('B', 4, 0.02),
-      geometric('C', 4, 0.03),
-      geometric('D', 4, 0.04),
-    ];
+    const panels = [geometric('A', 4, 0.01), geometric('B', 4, 0.02), geometric('C', 4, 0.03), geometric('D', 4, 0.04)];
     const scores = constantScores(['A', 'B', 'C', 'D'], 4, [1, 2, 3, 4]);
     const result = analyzeIc(panels, scores, { horizonBars: 1, quantiles: 2 });
     // top {C,D}: (0.03+0.04)/2; bottom {A,B}: (0.01+0.02)/2 → spread 0.02.
@@ -135,12 +126,7 @@ describe('analyzeIc — quantile spread and turnover', () => {
   it('turnover matches direct computeTurnover on the same long-leg weights', () => {
     // 4 bars → 3 valid rebalances (i=3 is the trailing null).
     const panels = ['A', 'B', 'C', 'D'].map((s) => geometric(s, 4, 0.01));
-    const scores: Record<string, (number | null)[]> = {
-      A: [4, 1, 4, 0],
-      B: [3, 2, 3, 0],
-      C: [2, 3, 2, 0],
-      D: [1, 4, 1, 0],
-    };
+    const scores: Record<string, (number | null)[]> = { A: [4, 1, 4, 0], B: [3, 2, 3, 0], C: [2, 3, 2, 0], D: [1, 4, 1, 0] };
     const result = analyzeIc(panels, scores, { horizonBars: 1, quantiles: 2 });
     // Top bucket rotates {A,B} → {C,D} → {A,B}.
     const wAB = { A: 0.5, B: 0.5 };

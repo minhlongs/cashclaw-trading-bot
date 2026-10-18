@@ -20,11 +20,7 @@ describe('findCointegratedPairs', () => {
     allCandles.set('DOGE', makeCandles(Array.from({ length: 50 }, () => Math.random() * 10)));
 
     const pairs = findCointegratedPairs(allCandles, 50);
-    const btcEth = pairs.find(
-      (p) =>
-        (p.symbol1 === 'BTC' && p.symbol2 === 'ETH') ||
-        (p.symbol1 === 'ETH' && p.symbol2 === 'BTC'),
-    );
+    const btcEth = pairs.find((p) => (p.symbol1 === 'BTC' && p.symbol2 === 'ETH') || (p.symbol1 === 'ETH' && p.symbol2 === 'BTC'));
     expect(btcEth).toBeDefined();
     expect(Math.abs(btcEth!.correlation)).toBeGreaterThan(0.5);
   });
@@ -33,55 +29,45 @@ describe('findCointegratedPairs', () => {
     const allCandles = new Map<string, IndicatorCandle[]>();
     allCandles.set('A', makeCandles(Array.from({ length: 30 }, (_, i) => 100 + (i % 2 === 0 ? 1 : -1))));
     allCandles.set('B', makeCandles(Array.from({ length: 30 }, (_, i) => 100 + (Math.floor(i / 2) % 2 === 0 ? 1 : -1))));
-    const pairs = findCointegratedPairs(allCandles, 30);
-    expect(pairs.length).toBe(0);
+    expect(findCointegratedPairs(allCandles, 30).length).toBe(0);
   });
 
   it('returns empty for an empty universe', () => {
-    const allCandles = new Map<string, IndicatorCandle[]>();
-    const pairs = findCointegratedPairs(allCandles, 50);
-    expect(pairs.length).toBe(0);
+    expect(findCointegratedPairs(new Map<string, IndicatorCandle[]>(), 50).length).toBe(0);
   });
 
   it('returns empty for a single-symbol universe', () => {
-    const allCandles = new Map<string, IndicatorCandle[]>();
-    allCandles.set('A', makeCandles(Array.from({ length: 50 }, (_, i) => i)));
-    const pairs = findCointegratedPairs(allCandles, 50);
-    expect(pairs.length).toBe(0);
+    const allCandles = new Map<string, IndicatorCandle[]>([['A', makeCandles(Array.from({ length: 50 }, (_, i) => i))]]);
+    expect(findCointegratedPairs(allCandles, 50).length).toBe(0);
   });
 
   it('skips pairs with insufficient data', () => {
-    const allCandles = new Map<string, IndicatorCandle[]>();
-    allCandles.set('A', makeCandles(Array.from({ length: 30 }, (_, i) => i))); // needs 50
-    allCandles.set('B', makeCandles(Array.from({ length: 30 }, (_, i) => i)));
-    const pairs = findCointegratedPairs(allCandles, 50);
-    expect(pairs.length).toBe(0);
+    const allCandles = new Map<string, IndicatorCandle[]>([
+      ['A', makeCandles(Array.from({ length: 30 }, (_, i) => i))], // needs 50
+      ['B', makeCandles(Array.from({ length: 30 }, (_, i) => i))],
+    ]);
+    expect(findCointegratedPairs(allCandles, 50).length).toBe(0);
   });
 
   it('skips pairs with low correlation', () => {
     const allCandles = new Map<string, IndicatorCandle[]>();
     // Orthogonal-ish series
-    const a = Array.from({ length: 80 }, (_, i) => 100 + Math.sin(i * 0.5) * 3);
-    const b = Array.from({ length: 80 }, (_, i) => 100 + Math.cos(i * 0.5) * 3);
-    allCandles.set('A', makeCandles(a));
-    allCandles.set('B', makeCandles(b));
-    const pairs = findCointegratedPairs(allCandles, 80);
-    expect(pairs.length).toBe(0);
+    allCandles.set('A', makeCandles(Array.from({ length: 80 }, (_, i) => 100 + Math.sin(i * 0.5) * 3)));
+    allCandles.set('B', makeCandles(Array.from({ length: 80 }, (_, i) => 100 + Math.cos(i * 0.5) * 3)));
+    expect(findCointegratedPairs(allCandles, 80).length).toBe(0);
   });
 
   it('sorts results by absolute correlation descending', () => {
     const base1 = Array.from({ length: 80 }, (_, i) => 100 + i * 0.5 + Math.sin(i * 0.2) * 2);
     const base2 = Array.from({ length: 80 }, (_, i) => 200 + i * 0.25 + Math.sin(i * 0.2) * 4);
-    const allCandles = new Map<string, IndicatorCandle[]>();
-    allCandles.set('A', makeCandles(base1));
-    allCandles.set('B', makeCandles(base2));
-    allCandles.set('C', makeCandles(base1.map((v) => v * 1.5))); // stronger corr with A
-
+    const allCandles = new Map<string, IndicatorCandle[]>([
+      ['A', makeCandles(base1)],
+      ['B', makeCandles(base2)],
+      ['C', makeCandles(base1.map((v) => v * 1.5))], // stronger corr with A
+    ]);
     const pairs = findCointegratedPairs(allCandles, 80);
     for (let i = 1; i < pairs.length; i++) {
-      expect(Math.abs(pairs[i - 1].correlation)).toBeGreaterThanOrEqual(
-        Math.abs(pairs[i].correlation),
-      );
+      expect(Math.abs(pairs[i - 1].correlation)).toBeGreaterThanOrEqual(Math.abs(pairs[i].correlation));
     }
   });
 });

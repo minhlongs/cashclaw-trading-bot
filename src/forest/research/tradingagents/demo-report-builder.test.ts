@@ -75,24 +75,17 @@ describe('computeProvenanceAccounting', () => {
 
   it('handles empty provenance array', () => {
     const accounting = computeProvenanceAccounting(makeReport({ modelProvenance: [] }));
-    expect(accounting.callCount).toBe(0);
-    expect(accounting.totalPromptTokens).toBe(0);
-    expect(accounting.totalCompletionTokens).toBe(0);
-    expect(accounting.totalTokens).toBe(0);
-    expect(accounting.totalLatencyMs).toBe(0);
-    expect(accounting.byTier).toEqual({});
+    expect(accounting).toEqual({
+      callCount: 0, totalPromptTokens: 0, totalCompletionTokens: 0, totalTokens: 0, totalLatencyMs: 0, byTier: {},
+    });
   });
 
   it('handles missing provenance fields (undefined)', () => {
     const report = makeReport({
-      modelProvenance: [
-        makeProvenance({ provenance: { providerId: 'Anthropic', modelId: 'fixture-reasoning', tier: 'REASONING', promptTokens: undefined, completionTokens: undefined, latencyMs: undefined } }),
-      ],
+      modelProvenance: [makeProvenance({ provenance: { providerId: 'Anthropic', modelId: 'fixture-reasoning', tier: 'REASONING', promptTokens: undefined, completionTokens: undefined, latencyMs: undefined } })],
     });
     const accounting = computeProvenanceAccounting(report);
-    expect(accounting.totalPromptTokens).toBe(0);
-    expect(accounting.totalCompletionTokens).toBe(0);
-    expect(accounting.totalLatencyMs).toBe(0);
+    expect([accounting.totalPromptTokens, accounting.totalCompletionTokens, accounting.totalLatencyMs]).toEqual([0, 0, 0]);
   });
 });
 
@@ -134,12 +127,9 @@ describe('buildDemoMarkdown', () => {
   it('includes stage results table with outcomes and reasons', () => {
     const report = makeReport({
       stageResults: [
-        makeStageResult('analyst-output', 'completed'),
-        makeStageResult('debate-output', 'failed'),
-        makeStageResult('research-synthesis', 'skipped'),
-        makeStageResult('risk-proposal', 'rejected'),
-        makeStageResult('portfolio-proposal', 'completed'),
-        makeStageResult('cashclaw-validation', 'completed'),
+        makeStageResult('analyst-output', 'completed'), makeStageResult('debate-output', 'failed'),
+        makeStageResult('research-synthesis', 'skipped'), makeStageResult('risk-proposal', 'rejected'),
+        makeStageResult('portfolio-proposal', 'completed'), makeStageResult('cashclaw-validation', 'completed'),
       ],
       totals: { completed: 3, failed: 1, skipped: 1, rejected: 1, total: 6 },
     });
@@ -153,12 +143,9 @@ describe('buildDemoMarkdown', () => {
   it('includes Σ≡N invariant line', () => {
     const report = makeReport({
       stageResults: [
-        makeStageResult('analyst-output', 'completed'),
-        makeStageResult('debate-output', 'completed'),
-        makeStageResult('research-synthesis', 'completed'),
-        makeStageResult('risk-proposal', 'failed'),
-        makeStageResult('portfolio-proposal', 'skipped'),
-        makeStageResult('cashclaw-validation', 'skipped'),
+        makeStageResult('analyst-output', 'completed'), makeStageResult('debate-output', 'completed'),
+        makeStageResult('research-synthesis', 'completed'), makeStageResult('risk-proposal', 'failed'),
+        makeStageResult('portfolio-proposal', 'skipped'), makeStageResult('cashclaw-validation', 'skipped'),
       ],
       totals: { completed: 3, failed: 1, skipped: 2, rejected: 0, total: 6 },
     });

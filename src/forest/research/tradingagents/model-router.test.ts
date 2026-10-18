@@ -3,18 +3,12 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { ModelRouter, createModelRouter, RoutingError } from './model-router';
-import { createProviderRegistry, type ProviderRegistry } from './provider-adapter';
-import {
-  DeterministicFixtureProvider,
-  makeFixtureProvider,
-  makeFailingFixtureProvider,
-} from './test-fixtures';
+import { createProviderRegistry, type ProviderRegistry, type LlmProviderResult } from './provider-adapter';
+import { DeterministicFixtureProvider, makeFixtureProvider, makeFailingFixtureProvider } from './test-fixtures';
 import type { SupportedProvider } from '@/tree/research/tradingagents';
 
 function registryByIds(ids: readonly SupportedProvider[]): ProviderRegistry {
-  const providers = ids.map((id) =>
-    id === 'Anthropic' ? new DeterministicFixtureProvider() : makeFixtureProvider(id),
-  );
+  const providers = ids.map((id) => (id === 'Anthropic' ? new DeterministicFixtureProvider() : makeFixtureProvider(id)));
   const result = createProviderRegistry(providers);
   if (!result.ok) throw new Error(`registry: ${result.reasons.join('; ')}`);
   return result.registry;
@@ -24,10 +18,7 @@ describe('RoutingError', () => {
   it('carries task and agentRole alongside the message', () => {
     const err = new RoutingError('no route', 'debate', 'bull-researcher');
     expect(err).toBeInstanceOf(Error);
-    expect(err.name).toBe('RoutingError');
-    expect(err.message).toBe('no route');
-    expect(err.task).toBe('debate');
-    expect(err.agentRole).toBe('bull-researcher');
+    expect([err.name, err.message, err.task, err.agentRole]).toEqual(['RoutingError', 'no route', 'debate', 'bull-researcher']);
   });
 });
 
@@ -35,31 +26,24 @@ describe('createModelRouter', () => {
   it('creates a router from a non-empty provider list', () => {
     const result = createModelRouter([new DeterministicFixtureProvider()]);
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.router).toBeInstanceOf(ModelRouter);
+    if (result.ok) expect(result.router).toBeInstanceOf(ModelRouter);
   });
 
   it('rejects a provider list containing an unallowlisted id', () => {
     const bad = {
-      providerId: 'BogusProvider' as never,
-      displayName: 'Bad',
-      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' },
-      isConfigured: true,
-      async call(): Promise<import('./provider-adapter').LlmProviderResult> {
-        throw new Error('never called');
-      },
+      providerId: 'BogusProvider' as never, displayName: 'Bad',
+      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' }, isConfigured: true,
+      async call(): Promise<LlmProviderResult> { throw new Error('never called'); },
     };
     const result = createModelRouter([bad]);
     expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.reasons.some((r) => r.includes('unknown providerId'))).toBe(true);
+    if (!result.ok) expect(result.reasons.some((r) => r.includes('unknown providerId'))).toBe(true);
   });
 
   it('accepts an empty provider list (route fails typed, not silently)', () => {
     const result = createModelRouter([]);
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.router).toBeInstanceOf(ModelRouter);
+    if (result.ok) expect(result.router).toBeInstanceOf(ModelRouter);
   });
 });
 

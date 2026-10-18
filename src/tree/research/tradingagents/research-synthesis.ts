@@ -30,13 +30,7 @@ export interface ResearchSynthesis {
 
 /** Fields that would turn a synthesis into an approval — all forbidden. */
 export const FORBIDDEN_APPROVAL_FIELDS = [
-  'approved',
-  'approve',
-  'approval',
-  'trade',
-  'execute',
-  'order',
-  'goAhead',
+  'approved', 'approve', 'approval', 'trade', 'execute', 'order', 'goAhead',
 ] as const;
 
 const falsifiableAssumptionSchema = z.object({

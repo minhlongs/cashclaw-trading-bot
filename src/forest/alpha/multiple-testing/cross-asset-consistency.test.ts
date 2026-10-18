@@ -132,17 +132,14 @@ describe('assessCrossAssetConsistency', () => {
       const reports = [makeReport({ symbol: 'BTCUSDT', expectancy: 0.05 })];
       expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minPositiveFraction: -0.1 })).toThrow('minPositiveFraction must be in [0, 1], got -0.1');
     });
-
     it('minPositiveFraction > 1 throws', () => {
       const reports = [makeReport({ symbol: 'BTCUSDT', expectancy: 0.05 })];
       expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minPositiveFraction: 1.1 })).toThrow('minPositiveFraction must be in [0, 1], got 1.1');
     });
-
     it('minAssets < 1 throws', () => {
       const reports = [makeReport({ symbol: 'BTCUSDT', expectancy: 0.05 })];
       expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minAssets: 0 })).toThrow('minAssets must be an integer >= 1, got 0');
     });
-
     it('minAssets non-integer throws', () => {
       const reports = [makeReport({ symbol: 'BTCUSDT', expectancy: 0.05 })];
       expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minAssets: 1.5 })).toThrow('minAssets must be an integer >= 1, got 1.5');
@@ -179,9 +176,7 @@ describe('assessCrossAssetConsistency', () => {
         makeReport({ symbol: 'ETHUSDT', expectancy: 0.01 }),
         makeReport({ symbol: 'SOLUSDT', expectancy: 0.02 }),
       ];
-      expect(() => assessCrossAssetConsistency(reports, baseOptions)).toThrow(
-        'Report test-exp has non-finite expectancy',
-      );
+      expect(() => assessCrossAssetConsistency(reports, baseOptions)).toThrow('Report test-exp has non-finite expectancy');
     });
 
     it('minPositiveFraction = 1 requires all assets pass', () => {

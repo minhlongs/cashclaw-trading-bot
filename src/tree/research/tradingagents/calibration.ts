@@ -1,39 +1,17 @@
-// AgentCalibrationScore — per-agent/model/provider calibration metrics
-// (task §H). Pure math only: no I/O, no clock. Fail-closed: building a
-// score from empty or invalid outcomes is rejected, never padded with
-// defaults. Metrics: directional accuracy, thesis survival, calibration
-// error (ECE), Brier score, expected-vs-realized return/volatility,
-// false-positive/false-negative rate, regime-specific accuracy.
-
+// AgentCalibrationScore — per-agent/model/provider calibration metrics (task §H). Pure math only; fail-closed.
 import { RegimeLabel } from '@/tree/regime/types';
 import {
-  calibrationOutcomeSchema,
-  type CalibrationAgentKey,
-  type CalibrationOutcome,
-  type CalibrationResult,
-  type RegimeAccuracy,
+  calibrationOutcomeSchema, type CalibrationAgentKey, type CalibrationOutcome, type CalibrationResult, type RegimeAccuracy,
 } from './calibration-types';
-import {
-  isDirectionCorrect,
-  computeBrierScore,
-  computeCalibrationError,
-} from './calibration-metrics';
+import { isDirectionCorrect, computeBrierScore, computeCalibrationError } from './calibration-metrics';
 
-// Re-export types for backward compatibility
 export type {
-  CalibrationOutcome,
-  CalibrationAgentKey,
-  RegimeAccuracy,
-  AgentCalibrationScore,
-  CalibrationResult,
+  CalibrationOutcome, CalibrationAgentKey, RegimeAccuracy, AgentCalibrationScore, CalibrationResult,
 } from './calibration-types';
 export { ECE_BINS, calibrationOutcomeSchema } from './calibration-types';
 export { isDirectionCorrect, computeBrierScore, computeCalibrationError } from './calibration-metrics';
 
-/**
- * Build an AgentCalibrationScore. Fail-closed: rejects empty outcome lists
- * and any outcome failing validation; collects ALL reasons.
- */
+/** Build an AgentCalibrationScore. Fail-closed: rejects empty outcome lists and invalid outcomes. */
 export function buildAgentCalibrationScore(
   agent: CalibrationAgentKey,
   outcomes: readonly CalibrationOutcome[],

@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  evalMaxDrawdown, evalMinNetExpectancy, evalMinProfitFactor,
-  evalMinRegimeCoverage, evalMinSharpeSortino, evalMinTrades,
-} from './promotion-gate-fixtures';
+import { evalMaxDrawdown, evalMinNetExpectancy, evalMinProfitFactor, evalMinRegimeCoverage, evalMinSharpeSortino, evalMinTrades } from './promotion-gate-fixtures';
 
 export function registerTier1FinancialTests(): void {
   describe('Tier 1: Feature Coverage — Financial & Performance Checks (F1-F6)', () => {
@@ -64,19 +61,14 @@ export function registerTier1FinancialTests(): void {
         expect(evalMinProfitFactor(NaN, 1.2).passed).toBe(false);
       });
     });
-
     describe('F4: maxDrawdown (Tail Risk <= 25%)', () => {
       it('passes when max drawdown is safely below threshold', () => {
         const check = evalMaxDrawdown(0.12, 0.25);
         expect(check.passed).toBe(true);
         expect(check.actual).toBe(0.12);
       });
-      it('passes when max drawdown is exactly at threshold', () => {
-        expect(evalMaxDrawdown(0.25, 0.25).passed).toBe(true);
-      });
-      it('passes when max drawdown is zero', () => {
-        expect(evalMaxDrawdown(0.0, 0.25).passed).toBe(true);
-      });
+      it('passes when max drawdown is exactly at threshold', () => { expect(evalMaxDrawdown(0.25, 0.25).passed).toBe(true); });
+      it('passes when max drawdown is zero', () => { expect(evalMaxDrawdown(0.0, 0.25).passed).toBe(true); });
       it('fails when max drawdown exceeds threshold', () => {
         const check = evalMaxDrawdown(0.32, 0.25);
         expect(check.passed).toBe(false);
@@ -87,26 +79,16 @@ export function registerTier1FinancialTests(): void {
         expect(evalMaxDrawdown(NaN, 0.25).passed).toBe(false);
       });
     });
-
     describe('F5: minSharpeSortino (Risk-Adjusted Efficiency)', () => {
-      it('passes when both Sharpe and Sortino exceed thresholds', () => {
-        expect(evalMinSharpeSortino(1.6, 2.1, 1.0, 1.2).passed).toBe(true);
-      });
-      it('passes when both Sharpe and Sortino match exact thresholds', () => {
-        expect(evalMinSharpeSortino(1.0, 1.2, 1.0, 1.2).passed).toBe(true);
-      });
-      it('fails when Sharpe is below threshold even if Sortino is high', () => {
-        expect(evalMinSharpeSortino(0.85, 2.5, 1.0, 1.2).passed).toBe(false);
-      });
-      it('fails when Sortino is below threshold even if Sharpe is high', () => {
-        expect(evalMinSharpeSortino(1.8, 1.15, 1.0, 1.2).passed).toBe(false);
-      });
+      it('passes when both Sharpe and Sortino exceed thresholds', () => { expect(evalMinSharpeSortino(1.6, 2.1, 1.0, 1.2).passed).toBe(true); });
+      it('passes when both Sharpe and Sortino match exact thresholds', () => { expect(evalMinSharpeSortino(1.0, 1.2, 1.0, 1.2).passed).toBe(true); });
+      it('fails when Sharpe is below threshold even if Sortino is high', () => { expect(evalMinSharpeSortino(0.85, 2.5, 1.0, 1.2).passed).toBe(false); });
+      it('fails when Sortino is below threshold even if Sharpe is high', () => { expect(evalMinSharpeSortino(1.8, 1.15, 1.0, 1.2).passed).toBe(false); });
       it('fails when either Sharpe or Sortino is null or non-finite', () => {
         expect(evalMinSharpeSortino(null, 1.8, 1.0, 1.2).passed).toBe(false);
         expect(evalMinSharpeSortino(1.8, null, 1.0, 1.2).passed).toBe(false);
       });
     });
-
     describe('F6: minRegimeCoverage (Regime Diversity >= 50%)', () => {
       it('passes when all experienced regimes are profitable', () => {
         const check = evalMinRegimeCoverage({ TREND_UP: { numTrades: 50, netPnl: 1000 }, RANGE: { numTrades: 40, netPnl: 500 } }, 0.50);

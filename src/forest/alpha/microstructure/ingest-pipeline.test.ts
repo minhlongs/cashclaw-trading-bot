@@ -4,12 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { FeatureVector } from '@/tree/alpha/microstructure/types';
-import type {
-  DepthSnapshotRecord,
-  IngestLogRecord,
-  MicrostructureStore,
-  TradeBatchRecord,
-} from '../persistence/micro-store-types';
+import type { DepthSnapshotRecord, IngestLogRecord, MicrostructureStore, TradeBatchRecord } from '../persistence/micro-store-types';
 import { runMicroIngest, type MicroIngestDeps } from './ingest-pipeline';
 
 function createFakeStore(prevLastId: number | null = null): MicrostructureStore & {
@@ -79,10 +74,7 @@ describe('runMicroIngest', () => {
 
   it('fetch failure: logs FETCH_FAILED, persists nothing', async () => {
     const store = createFakeStore();
-    const deps = makeDeps({
-      store,
-      fetchDepth: async () => { throw new Error('network timeout'); },
-    });
+    const deps = makeDeps({ store, fetchDepth: async () => { throw new Error('network timeout'); } });
     const report = await runMicroIngest(deps);
 
     const outcome = report.outcomes[0];
@@ -101,10 +93,7 @@ describe('runMicroIngest', () => {
 
   it('trades fetch failure: logs FETCH_FAILED independently', async () => {
     const store = createFakeStore();
-    const deps = makeDeps({
-      store,
-      fetchTrades: async () => { throw new Error('503'); },
-    });
+    const deps = makeDeps({ store, fetchTrades: async () => { throw new Error('503'); } });
     const report = await runMicroIngest(deps);
 
     expect(report.outcomes[0].status).toBe('FETCH_FAILED');
@@ -144,10 +133,7 @@ describe('runMicroIngest', () => {
     // prevLastId=200 but batch starts at id 300 → gap → incomplete
     const store = createFakeStore(200);
     const gapTrades = makeTradeBody(300, 3);
-    const deps = makeDeps({
-      store,
-      fetchTrades: async () => ({ body: gapTrades, latencyMs: 5 }),
-    });
+    const deps = makeDeps({ store, fetchTrades: async () => ({ body: gapTrades, latencyMs: 5 }) });
     const report = await runMicroIngest(deps);
 
     const outcome = report.outcomes[0];
@@ -167,8 +153,7 @@ describe('runMicroIngest', () => {
   it('multi-symbol: one failure does not block others', async () => {
     const store = createFakeStore();
     const deps = makeDeps({
-      store,
-      symbols: ['BTCUSDT', 'ETHUSDT'],
+      store, symbols: ['BTCUSDT', 'ETHUSDT'],
       fetchDepth: async (symbol) => {
         if (symbol === 'ETHUSDT') throw new Error('eth down');
         return { body: VALID_DEPTH_BODY, latencyMs: 10 };
@@ -177,20 +162,15 @@ describe('runMicroIngest', () => {
     const report = await runMicroIngest(deps);
 
     expect(report.outcomes).toHaveLength(2);
-    const btc = report.outcomes.find((o) => o.symbol === 'BTCUSDT');
-    const eth = report.outcomes.find((o) => o.symbol === 'ETHUSDT');
-    expect(btc?.status).toBe('OK');
-    expect(eth?.status).toBe('FETCH_FAILED');
+    expect(report.outcomes.find((o) => o.symbol === 'BTCUSDT')?.status).toBe('OK');
+    expect(report.outcomes.find((o) => o.symbol === 'ETHUSDT')?.status).toBe('FETCH_FAILED');
   });
 
   it('resume-point dedupe: only fresh prints are persisted', async () => {
     // prevLastId=102, batch has ids 100-104 → fresh = 103,104
     const store = createFakeStore(102);
     const overlapping = makeTradeBody(100, 5); // ids 100..104
-    const deps = makeDeps({
-      store,
-      fetchTrades: async () => ({ body: overlapping, latencyMs: 5 }),
-    });
+    const deps = makeDeps({ store, fetchTrades: async () => ({ body: overlapping, latencyMs: 5 }) });
     await runMicroIngest(deps);
 
     // Only 2 fresh prints (103, 104) should be in the batch

@@ -37,11 +37,7 @@ export function MartingaleOptimalTransportWorkbench() {
             {PRESETS.map((item) => (
               <button
                 key={item} type="button" onClick={() => setPreset(item)} aria-pressed={preset === item}
-                className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border ${
-                  preset === item
-                    ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]'
-                    : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'
-                }`}
+                className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border ${preset === item ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}
               >
                 {item}
               </button>

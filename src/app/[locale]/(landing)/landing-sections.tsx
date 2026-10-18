@@ -8,7 +8,6 @@ export { LandingNav, LandingHero, LandingCta, LandingFooter } from './landing-na
 
 export function LandingFeatures({ features }: { features: Feature[] }) {
   const t = useTranslations('landing');
-
   return (
     <section className="landing-section">
       <h2 className="section-title">{t('features.title')}</h2>
@@ -27,7 +26,6 @@ export function LandingFeatures({ features }: { features: Feature[] }) {
 
 export function LandingStats({ stats }: { stats: Stat[] }) {
   const t = useTranslations('landing');
-
   return (
     <section className="landing-section">
       <p className="section-label">{t('stats.label')}</p>
@@ -45,7 +43,6 @@ export function LandingStats({ stats }: { stats: Stat[] }) {
 
 export function LandingSteps({ steps }: { steps: Step[] }) {
   const t = useTranslations('landing');
-
   return (
     <section className="landing-section">
       <h2 className="section-title">{t('steps.title')}</h2>

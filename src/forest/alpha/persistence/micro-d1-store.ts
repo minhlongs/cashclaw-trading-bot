@@ -1,28 +1,17 @@
-// Microstructure Persistence — Cloudflare D1 implementation.
-// INSERT/SELECT only (append-only doctrine, migration 0011). Typed
-// against the inlined D1Database interface (Workers-safe).
-
+// Microstructure Persistence — Cloudflare D1 implementation (append-only INSERT/SELECT, migration 0011).
 import type { D1Database } from '@/lib/db/types';
 import type { FeatureVector } from '@/tree/alpha/microstructure/types';
 import type {
-  DepthSnapshotRecord,
-  IngestLogRecord,
-  MicrostructureStore,
-  TradeBatchRecord,
+  DepthSnapshotRecord, IngestLogRecord, MicrostructureStore, TradeBatchRecord,
 } from './micro-store-types';
 import {
-  queryDepthSeries,
-  queryTradeBatches,
-  queryFeatureVectors,
-  queryLastTradeId,
+  queryDepthSeries, queryTradeBatches, queryFeatureVectors, queryLastTradeId,
 } from './micro-d1-queries';
 
 export class D1MicrostructureStore implements MicrostructureStore {
   private readonly db: D1Database;
 
-  constructor(db: D1Database) {
-    this.db = db;
-  }
+  constructor(db: D1Database) { this.db = db; }
 
   async appendDepthSnapshot(record: DepthSnapshotRecord): Promise<void> {
     await this.db.prepare(

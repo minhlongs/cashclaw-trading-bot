@@ -10,22 +10,16 @@ const mockedFindAllBots = vi.mocked((await import('@/lib/db/repositories')).find
 const mockedGetBotManager = vi.mocked((await import('@/tree/bot')).getBotManager);
 
 function createBotLike() {
-  return {
-    getSnapshot: vi.fn().mockReturnValue({ id: 'existing', status: 'idle' }),
-    patchState: vi.fn(),
-  };
+  return { getSnapshot: vi.fn().mockReturnValue({ id: 'existing', status: 'idle' }), patchState: vi.fn() };
 }
 
 function makeRow(overrides: Record<string, unknown> = {}) {
   return {
     id: 'bot_1', user_id: 'user_1',
-    config_json: JSON.stringify({
-      strategy: 'grid', symbol: 'BTC/USDT', exchange: 'binance', capital: 500, gridSpacingPct: 1, gridLevels: 4,
-    }),
+    config_json: JSON.stringify({ strategy: 'grid', symbol: 'BTC/USDT', exchange: 'binance', capital: 500, gridSpacingPct: 1, gridLevels: 4 }),
     total_trades: 10, started_at: 1000, stopped_at: null, last_error: null,
     last_tick_at: 900, last_order_at: 800, current_drawdown: 0.5, total_pnl: 12,
-    win_count: 4, loss_count: 3, max_drawdown: 1.2,
-    ...overrides,
+    win_count: 4, loss_count: 3, max_drawdown: 1.2, ...overrides,
   };
 }
 
@@ -57,12 +51,10 @@ describe('d1-hydration', () => {
 
       await hydrateFromD1('user_1');
       expect(manager.createBot).toHaveBeenCalledTimes(1);
-      expect(bot.patchState).toHaveBeenCalledWith(
-        expect.objectContaining({
-          totalTrades: 10, startedAt: 1000, totalPnl: 12, winCount: 4, lossCount: 3,
-          maxDrawdown: 1.2, currentDrawdown: 0.5, lastTickAt: 900, lastOrderAt: 800,
-        }),
-      );
+      expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({
+        totalTrades: 10, startedAt: 1000, totalPnl: 12, winCount: 4, lossCount: 3,
+        maxDrawdown: 1.2, currentDrawdown: 0.5, lastTickAt: 900, lastOrderAt: 800,
+      }));
     });
 
     it('calls onError when bot creation throws', async () => {

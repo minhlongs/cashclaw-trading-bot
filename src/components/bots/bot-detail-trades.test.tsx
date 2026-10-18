@@ -102,22 +102,10 @@ describe('BotDetailTrades', () => {
   });
 
   describe('status badges', () => {
-    it('renders open status', () => {
-      render(<BotDetailTrades trades={[OPEN_TRADE]} emptyMsg="empty" />);
-      expect(screen.getByText('open')).toBeInTheDocument();
-    });
-    it('renders filled status', () => {
-      render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
-      expect(screen.getByText('filled')).toBeInTheDocument();
-    });
-    it('renders cancelled status', () => {
-      render(<BotDetailTrades trades={[CANCELLED_TRADE]} emptyMsg="empty" />);
-      expect(screen.getByText('cancelled')).toBeInTheDocument();
-    });
-    it('renders failed status', () => {
-      render(<BotDetailTrades trades={[FAILED_TRADE]} emptyMsg="empty" />);
-      expect(screen.getByText('failed')).toBeInTheDocument();
-    });
+    it('renders open status', () => { render(<BotDetailTrades trades={[OPEN_TRADE]} emptyMsg="empty" />); expect(screen.getByText('open')).toBeInTheDocument(); });
+    it('renders filled status', () => { render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />); expect(screen.getByText('filled')).toBeInTheDocument(); });
+    it('renders cancelled status', () => { render(<BotDetailTrades trades={[CANCELLED_TRADE]} emptyMsg="empty" />); expect(screen.getByText('cancelled')).toBeInTheDocument(); });
+    it('renders failed status', () => { render(<BotDetailTrades trades={[FAILED_TRADE]} emptyMsg="empty" />); expect(screen.getByText('failed')).toBeInTheDocument(); });
     it('applies badge-profit class to filled trades', () => {
       const { container } = render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(container.querySelector('.badge-profit')).toBeInTheDocument();

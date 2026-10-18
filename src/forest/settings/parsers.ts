@@ -53,7 +53,6 @@ export function parseNotification(raw: string | undefined): SettingsData['notifi
     };
   } catch { return { ...DEFAULT_NOTIFICATION }; }
 }
-
 export function parseKillswitchDaily(raw: string | undefined): SettingsData['killswitchDaily'] {
   if (!raw) return { ...DEFAULT_KILLSWITCH_DAILY };
   try {
@@ -66,7 +65,6 @@ export function parseKillswitchDaily(raw: string | undefined): SettingsData['kil
     };
   } catch { return { ...DEFAULT_KILLSWITCH_DAILY }; }
 }
-
 export async function rowToSettingsData(row: SettingsRow): Promise<SettingsData> {
   return {
     exchanges: await parseExchanges(row.exchange_creds_json),
@@ -76,7 +74,6 @@ export async function rowToSettingsData(row: SettingsRow): Promise<SettingsData>
     killswitchDaily: parseKillswitchDaily(row.killswitch_daily_json),
   };
 }
-
 export function validateRiskRanges(input: RiskLimitsInput): string | null {
   if (input.maxDrawdownPct !== undefined && (input.maxDrawdownPct < 1 || input.maxDrawdownPct > 100)) return 'Max drawdown must be between 1-100%';
   if (input.dailyLossLimitPct !== undefined && (input.dailyLossLimitPct < 1 || input.dailyLossLimitPct > 100)) return 'Daily loss limit must be between 1-100%';
@@ -84,7 +81,6 @@ export function validateRiskRanges(input: RiskLimitsInput): string | null {
   if (input.maxOpenOrders !== undefined && (input.maxOpenOrders < 1 || input.maxOpenOrders > 500)) return 'Max open orders must be between 1-500';
   return null;
 }
-
 export function applyRiskOverrides(current: SettingsData, input: RiskLimitsInput): void {
   if (input.maxDrawdownPct !== undefined) current.risk.maxDrawdownPct = input.maxDrawdownPct;
   if (input.dailyLossLimitPct !== undefined) current.risk.dailyLossLimitPct = input.dailyLossLimitPct;

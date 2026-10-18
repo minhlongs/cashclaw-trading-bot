@@ -1,35 +1,8 @@
-import {
-  evaluateDataQuality,
-  protectSignalGeneration,
-  generateDataQualityReport,
-} from '../../src/forest/alpha/data-quality-eval';
-import {
-  validateCandleSeries,
-  type Candle,
-  type DataQualityConfig,
-  type QualityDimension,
-} from '../../src/tree/alpha/data-quality';
-import {
-  BASE_TIMESTAMP,
-  createBaseCandle,
-  generateMonotonicCandles,
-  generateDuplicateSeries,
-  generateGappedSeries,
-  generateCorruptedOHLCSeries,
-  generateVolumeAnomalySeries,
-  generateMultiFeedPairs,
-  generateOutageSeries,
-  generateStaleSeries,
-  generateFutureSeries,
-} from './data-quality-fixtures';
+import { evaluateDataQuality, protectSignalGeneration, generateDataQualityReport } from '../../src/forest/alpha/data-quality-eval';
+import { validateCandleSeries, type Candle, type DataQualityConfig, type QualityDimension } from '../../src/tree/alpha/data-quality';
+import { BASE_TIMESTAMP, createBaseCandle, generateMonotonicCandles, generateDuplicateSeries, generateGappedSeries, generateCorruptedOHLCSeries, generateVolumeAnomalySeries, generateMultiFeedPairs, generateOutageSeries, generateStaleSeries, generateFutureSeries } from './data-quality-fixtures';
 
-interface TestResult {
-  readonly id: string;
-  readonly category: string;
-  readonly description: string;
-  readonly passed: boolean;
-  readonly details: string;
-}
+interface TestResult { readonly id: string; readonly category: string; readonly description: string; readonly passed: boolean; readonly details: string; }
 
 const results: TestResult[] = [];
 const recordTest = (id: string, category: string, description: string, passed: boolean, details: string): void => {
@@ -38,13 +11,9 @@ const recordTest = (id: string, category: string, description: string, passed: b
 const c = (ts: number, overrides?: Partial<Candle>): Candle => createBaseCandle({ timestamp: ts, ...overrides });
 
 interface AdversarialFenceCase {
-  readonly id: string;
-  readonly name: string;
-  readonly series: readonly Candle[];
-  readonly config?: DataQualityConfig;
-  readonly secondary?: readonly Candle[];
-  readonly asOf?: number;
-  readonly expectedDimension: QualityDimension;
+  readonly id: string; readonly name: string; readonly series: readonly Candle[];
+  readonly config?: DataQualityConfig; readonly secondary?: readonly Candle[];
+  readonly asOf?: number; readonly expectedDimension: QualityDimension;
 }
 
 const ADVERSARIAL_FENCE_CASES: readonly AdversarialFenceCase[] = [
@@ -87,12 +56,7 @@ const ADVERSARIAL_FENCE_CASES: readonly AdversarialFenceCase[] = [
   { id: 'FENCE-38', name: 'Empty candle series without asOf', series: [], expectedDimension: 'stale_data' },
 ];
 
-export function runEmpiricalChallengerSuite(): {
-  readonly total: number;
-  readonly passed: number;
-  readonly failed: number;
-  readonly records: readonly TestResult[];
-} {
+export function runEmpiricalChallengerSuite(): { readonly total: number; readonly passed: number; readonly failed: number; readonly records: readonly TestResult[] } {
   for (const tc of ADVERSARIAL_FENCE_CASES) {
     let generatorCalled = false;
     const result = protectSignalGeneration(

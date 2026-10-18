@@ -53,26 +53,13 @@ function createRecordingDb(): {
   return { db, statements };
 }
 
-const BIDS: DepthLevel[] = [
-  { price: 104_063.99, quantity: 0.5 },
-  { price: 104_062.0, quantity: 1.25 },
-];
-const ASKS: DepthLevel[] = [
-  { price: 104_064.5, quantity: 0.75 },
-  { price: 104_066.01, quantity: 2 },
-];
+const BIDS: DepthLevel[] = [{ price: 104_063.99, quantity: 0.5 }, { price: 104_062.0, quantity: 1.25 }];
+const ASKS: DepthLevel[] = [{ price: 104_064.5, quantity: 0.75 }, { price: 104_066.01, quantity: 2 }];
 
 function makeDepthRecord(overrides: Partial<DepthSnapshotRecord> = {}): DepthSnapshotRecord {
   return {
-    pollId: 'poll-1',
-    symbol: 'BTCUSDT',
-    timestamp: 1_000_000,
-    bids: BIDS,
-    asks: ASKS,
-    levels: 2,
-    source: 'binance-rest',
-    createdAt: 1_000_000,
-    ...overrides,
+    pollId: 'poll-1', symbol: 'BTCUSDT', timestamp: 1_000_000,
+    bids: BIDS, asks: ASKS, levels: 2, source: 'binance-rest', createdAt: 1_000_000, ...overrides,
   };
 }
 
@@ -83,44 +70,25 @@ const PRINTS: TradePrint[] = [
 
 function makeTradeBatch(overrides: Partial<TradeBatchRecord> = {}): TradeBatchRecord {
   return {
-    batchId: 'batch-1',
-    pollId: 'poll-1',
-    symbol: 'BTCUSDT',
-    chunkIndex: 0,
-    firstTradeId: PRINTS[0].id,
-    lastTradeId: PRINTS[PRINTS.length - 1].id,
-    prints: PRINTS,
-    complete: true,
-    createdAt: 1_000_000,
-    ...overrides,
+    batchId: 'batch-1', pollId: 'poll-1', symbol: 'BTCUSDT', chunkIndex: 0,
+    firstTradeId: PRINTS[0].id, lastTradeId: PRINTS[PRINTS.length - 1].id,
+    prints: PRINTS, complete: true, createdAt: 1_000_000, ...overrides,
   };
 }
 
 const FEATURES: FeatureVector = {
-  timestamp: 1_000_000,
-  symbol: 'BTCUSDT',
+  timestamp: 1_000_000, symbol: 'BTCUSDT',
   features: {
-    bid_ask_spread: 0.51,
-    order_book_imbalance: null,
-    depth_imbalance: null,
-    trade_imbalance: null,
-    aggressive_volume: null,
-    volume_delta: null,
-    liquidity_shock: null,
-    realized_spread: null,
-    price_impact: null,
+    bid_ask_spread: 0.51, order_book_imbalance: null, depth_imbalance: null,
+    trade_imbalance: null, aggressive_volume: null, volume_delta: null,
+    liquidity_shock: null, realized_spread: null, price_impact: null,
   },
 };
 
 function makeIngestLog(overrides: Partial<IngestLogRecord> = {}): IngestLogRecord {
   return {
-    logId: 'log-1',
-    pollId: 'poll-1',
-    symbol: 'BTCUSDT',
-    status: 'OK',
-    reason: null,
-    createdAt: 1_000_000,
-    ...overrides,
+    logId: 'log-1', pollId: 'poll-1', symbol: 'BTCUSDT', status: 'OK',
+    reason: null, createdAt: 1_000_000, ...overrides,
   };
 }
 

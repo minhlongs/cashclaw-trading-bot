@@ -24,14 +24,12 @@ describe('appendDecisionLogEntry — happy path', () => {
 
   it('chains a second entry onto the first', async () => {
     const r1 = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
-      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1',
-      payload: payload('analyst-output'), timestamp: NOW,
+      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1', payload: payload('analyst-output'), timestamp: NOW,
     });
     expect(r1.ok).toBe(true);
     if (!r1.ok) return;
     const r2 = await appendDecisionLogEntry(r1.log, {
-      kind: 'debate-output', researchGoalId: 'goal-1', proposalId: 'prop-1',
-      payload: payload('debate-output'), timestamp: NOW,
+      kind: 'debate-output', researchGoalId: 'goal-1', proposalId: 'prop-1', payload: payload('debate-output'), timestamp: NOW,
     });
     expect(r2.ok).toBe(true);
     if (!r2.ok) return;
@@ -42,14 +40,12 @@ describe('appendDecisionLogEntry — happy path', () => {
 
   it('never mutates the input log (append-only)', async () => {
     const r1 = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
-      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1',
-      payload: payload('analyst-output'), timestamp: NOW,
+      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1', payload: payload('analyst-output'), timestamp: NOW,
     });
     expect(r1.ok).toBe(true);
     if (!r1.ok) return;
     await appendDecisionLogEntry(r1.log, {
-      kind: 'debate-output', researchGoalId: 'goal-1', proposalId: 'prop-1',
-      payload: payload('debate-output'), timestamp: NOW,
+      kind: 'debate-output', researchGoalId: 'goal-1', proposalId: 'prop-1', payload: payload('debate-output'), timestamp: NOW,
     });
     expect(r1.log.entries).toHaveLength(1);
     expect(r1.log.tailHash).toBe(r1.entry.hash);
@@ -58,8 +54,7 @@ describe('appendDecisionLogEntry — happy path', () => {
   it('accepts every recorded stage (§10)', async () => {
     for (const kind of DECISION_LOG_KINDS) {
       const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
-        kind, researchGoalId: 'goal-1', proposalId: 'prop-1',
-        payload: payload(kind), timestamp: NOW,
+        kind, researchGoalId: 'goal-1', proposalId: 'prop-1', payload: payload(kind), timestamp: NOW,
       });
       expect(result.ok).toBe(true);
     }
@@ -69,8 +64,7 @@ describe('appendDecisionLogEntry — happy path', () => {
 describe('appendDecisionLogEntry — fail-closed', () => {
   it('rejects an unknown kind', async () => {
     const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
-      kind: 'trade' as never, researchGoalId: 'goal-1', proposalId: 'prop-1',
-      payload: payload('trade'), timestamp: NOW,
+      kind: 'trade' as never, researchGoalId: 'goal-1', proposalId: 'prop-1', payload: payload('trade'), timestamp: NOW,
     });
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -79,35 +73,29 @@ describe('appendDecisionLogEntry — fail-closed', () => {
 
   it('rejects empty researchGoalId', async () => {
     const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
-      kind: 'analyst-output', researchGoalId: '', proposalId: 'prop-1',
-      payload: payload('x'), timestamp: NOW,
+      kind: 'analyst-output', researchGoalId: '', proposalId: 'prop-1', payload: payload('x'), timestamp: NOW,
     });
     expect(result.ok).toBe(false);
   });
 
   it('rejects empty proposalId', async () => {
     const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
-      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: '',
-      payload: payload('x'), timestamp: NOW,
+      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: '', payload: payload('x'), timestamp: NOW,
     });
     expect(result.ok).toBe(false);
   });
 
   it('rejects invalid timestamp', async () => {
     const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
-      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1',
-      payload: payload('x'), timestamp: 'not-a-date',
+      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1', payload: payload('x'), timestamp: 'not-a-date',
     });
     expect(result.ok).toBe(false);
   });
 
   it('rejects non-serializable payload (throwing getter)', async () => {
-    const badPayload = {
-      get x() { throw new Error('cannot serialize'); }
-    };
+    const badPayload = { get x() { throw new Error('cannot serialize'); } };
     const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
-      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1',
-      payload: badPayload, timestamp: NOW,
+      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1', payload: badPayload, timestamp: NOW,
     });
     expect(result.ok).toBe(false);
     if (result.ok) return;

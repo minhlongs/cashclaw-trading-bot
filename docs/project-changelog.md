@@ -2,6 +2,19 @@
 
 ## v1 Paper-Trading Platform
 
+### Quad-Cluster Deep Refactor Wave 10 — 2026-10-18
+- **`@cashclaw/quantlib` v1.66.0-open-core Arbitrage/StatArb/Greeks/Toxicity SDK & CLI `eval` Expansion (`src/tree/quantlib/public-sdk.ts`, `bin/lib/commands.js`, `bin/lib/cli-printers.js`)**:
+  - Bumped `QUANTLIB_OSS_VERSION = '1.66.0-open-core'` in `@cashclaw/quantlib` public Apache-2.0 SDK barrel (`src/tree/quantlib/public-sdk.ts`) and exported `FundingBasisEngine`, `estimateJohansenCointegration`, `calculateBlackGreeks`, `initializeVpinState`, and `updateContinuousVpin`.
+  - Extended `bin/lib/commands.js` (`runQuantitativeEval`), `bin/lib/cli-printers.js` (`printEvalReport`), `src/tree/cli/__tests__/paper-cli-report.test.ts`, and `bin/__tests__/cashclaw-cli.test.ts` to surface `vpinToxicityScore` and `fundingBasisAprPct`.
+- **Strict Non-Test Ceiling (`<= 92 LOC` across all of `src/`)**:
+  - Compacted all 62 non-test `.ts`/`.tsx` files in `src/` between `93–94 LOC` down to `<= 92 LOC` (0 non-test files `> 92 LOC` across all 915+ production files in `src/`).
+- **200-LOC Repository Milestone — Strict Test Ceiling (`<= 200 LOC` across all of `src/`)**:
+  - Compacted all 43 test files in `src/` between `201–210 LOC` down to `<= 200 LOC` (0 files `> 200 LOC` across the entire repository, both production and test).
+- **Strict `test/`, `scripts/` & `bin/` Ceiling (`<= 130 LOC`)**:
+  - Compacted all 20 files in `test/`, `scripts/`, and `bin/` between `131–140 LOC` down to `<= 130 LOC` (0 files `> 130 LOC` across `test/`, `scripts/`, and `bin/`).
+- **Verification**:
+  - 720/720 test files (6,003/6,003 tests) passing, `tsc --noEmit` 0 errors, ESLint 0 warnings, OSS package audit clean (3/3 checks passed).
+
 ### Quad-Cluster Deep Refactor Wave 9 — 2026-10-18
 - **`@cashclaw/quantlib` v1.65.0-open-core Multi-Domain SDK & CLI `eval` Expansion (`src/tree/quantlib/public-sdk.ts`, `bin/lib/commands.js`, `bin/lib/cli-printers.js`)**:
   - Bumped `QUANTLIB_OSS_VERSION = '1.65.0-open-core'` in `@cashclaw/quantlib` public Apache-2.0 SDK barrel (`src/tree/quantlib/public-sdk.ts`) and exported `BlackLittermanEngine`, `AvellanedaStoikovEngine`, `computeBouchaudImpact`, and `KalmanCointegrationEngine`.

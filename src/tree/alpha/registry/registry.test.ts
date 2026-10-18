@@ -4,26 +4,14 @@
 // entryConfigHash determinism.
 
 import { describe, it, expect } from 'vitest';
-import {
-  createRegistry,
-  addEntry,
-  falsifyEntry,
-  summarize,
-  toCanonicalJson,
-  entryConfigHash,
-  SEED_FALSIFIED,
-} from './index';
+import { createRegistry, addEntry, falsifyEntry, summarize, toCanonicalJson, entryConfigHash, SEED_FALSIFIED } from './index';
 
 function makeEntry(overrides: Partial<typeof SEED_FALSIFIED[number]> = {}) {
   const id = overrides.id ?? 'test-entry';
   return {
-    ...SEED_FALSIFIED[0],
-    id,
-    hypothesis: overrides.hypothesis ?? `hypothesis for ${id}`,
-    status: 'PROPOSED' as const,
-    falsificationReason: null,
-    result: { oosPassCount: 0, oosTotalCount: 10, aggregatePnlUsd: 0, summary: 'test' },
-    ...overrides,
+    ...SEED_FALSIFIED[0], id, hypothesis: overrides.hypothesis ?? `hypothesis for ${id}`,
+    status: 'PROPOSED' as const, falsificationReason: null,
+    result: { oosPassCount: 0, oosTotalCount: 10, aggregatePnlUsd: 0, summary: 'test' }, ...overrides,
   };
 }
 

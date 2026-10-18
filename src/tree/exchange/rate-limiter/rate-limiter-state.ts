@@ -1,10 +1,6 @@
 // Private state helpers for RateLimiter — bucket refill, backoff, and watchdog encapsulation.
 import {
-  DEFAULT_LIMITS,
-  FALLBACK_LIMIT,
-  type BackoffEntry,
-  type EndpointCategory,
-  type TokenBucket,
+  DEFAULT_LIMITS, FALLBACK_LIMIT, type BackoffEntry, type EndpointCategory, type TokenBucket,
 } from './types';
 import { refillBucket } from './token-bucket';
 import { calculateNextBackoff, calculateRemainingBackoff } from './backoff';
@@ -14,16 +10,11 @@ export type BucketMap = Map<string, TokenBucket>;
 export type BackoffMap = Map<string, BackoffEntry>;
 export type BudgetMap = Map<string, number>;
 
-export function refillBucketInMap(
-  buckets: BucketMap,
-  key: string,
-): TokenBucket {
+export function refillBucketInMap(buckets: BucketMap, key: string): TokenBucket {
   const limit = DEFAULT_LIMITS[key] ?? FALLBACK_LIMIT;
   let bucket = buckets.get(key);
   bucket = refillBucket(bucket, limit, Date.now());
-  if (!buckets.has(key)) {
-    buckets.set(key, bucket);
-  }
+  if (!buckets.has(key)) buckets.set(key, bucket);
   return bucket;
 }
 

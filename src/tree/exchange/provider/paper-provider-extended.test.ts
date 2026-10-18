@@ -5,12 +5,8 @@ import { PaperExchange } from '../paper';
 import type { PaperProviderConfig } from './types';
 
 const makeConfig = (o?: Partial<PaperProviderConfig>): PaperProviderConfig => ({
-  type: 'paper',
-  exchangeId: 'binance',
-  initialBalances: [
-    { currency: 'USDT', total: 10000 },
-    { currency: 'BTC', total: 0.5 },
-  ],
+  type: 'paper', exchangeId: 'binance',
+  initialBalances: [{ currency: 'USDT', total: 10000 }, { currency: 'BTC', total: 0.5 }],
   ...o,
 });
 
@@ -50,18 +46,15 @@ describe('PaperExchangeProvider — extended coverage', () => {
     it('isUnhealthy false when healthy', () => {
       expect(provider.isUnhealthy()).toBe(false);
     });
-
     it('isUnhealthy true when score < 40', () => {
       for (let i = 0; i < 5; i++) provider.recordFailure();
       expect(provider.getHealth().score).toBeLessThan(40);
       expect(provider.isUnhealthy()).toBe(true);
     });
-
     it('isCircuitOpen false initially, getBackoffMs 0', () => {
       expect(provider.isCircuitOpen()).toBe(false);
       expect(provider.getBackoffMs()).toBe(0);
     });
-
     it('getBackoffMs returns positive ms during cooldown', () => {
       provider.recordFailure();
       expect(provider.getBackoffMs()).toBeGreaterThan(0);

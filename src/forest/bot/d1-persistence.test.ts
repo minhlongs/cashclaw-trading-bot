@@ -92,18 +92,12 @@ describe('persistTrade', () => {
     await persistTrade('bot_1', { side: 'buy', entryPrice: 50000, quantity: 0.1, status: 'open' });
     expect(mockInsertTrade).toHaveBeenCalledOnce();
     const row = mockInsertTrade.mock.calls[0][1];
-    expect(row.bot_id).toBe('bot_1');
-    expect(row.side).toBe('buy');
-    expect(row.entry_price).toBe(50000);
-    expect(row.exit_price).toBeNull();
-    expect(row.pnl).toBeNull();
-    expect(row.closed_at).toBeNull();
+    expect(row).toMatchObject({ bot_id: 'bot_1', side: 'buy', entry_price: 50000, exit_price: null, pnl: null, closed_at: null });
   });
   it('sets closed_at and pnl when exitPrice present', async () => {
     await persistTrade('bot_1', { side: 'sell', entryPrice: 50000, exitPrice: 51000, quantity: 0.1, pnl: 100, status: 'filled' });
     const row = mockInsertTrade.mock.calls[0][1];
-    expect(row.exit_price).toBe(51000);
-    expect(row.pnl).toBe(100);
+    expect(row).toMatchObject({ exit_price: 51000, pnl: 100 });
     expect(row.closed_at).toBeTypeOf('number');
   });
   it('no-ops when db is null', async () => {
@@ -166,11 +160,7 @@ describe('persistSnapshot', () => {
     });
     expect(mockInsertCapitalSnapshot).toHaveBeenCalledOnce();
     const row = mockInsertCapitalSnapshot.mock.calls[0][1];
-    expect(row.bot_id).toBe('bot_1');
-    expect(row.total_capital).toBe(12000);
-    expect(row.realized_pnl).toBe(2000);
-    expect(row.unrealized_pnl).toBe(500);
-    expect(row.win_count).toBe(10);
+    expect(row).toMatchObject({ bot_id: 'bot_1', total_capital: 12000, realized_pnl: 2000, unrealized_pnl: 500, win_count: 10 });
   });
   it('defaults unrealizedPnl to 0', async () => {
     await persistSnapshot('bot_1', { totalCapital: 10000, realizedPnl: 0, maxDrawdownPct: 2, winCount: 0, lossCount: 0, totalTrades: 0 });
@@ -189,15 +179,12 @@ describe('persistAudit', () => {
     await persistAudit('user_1', 'bot_1', 'bot.created', { reason: 'manual' });
     expect(mockInsertAudit).toHaveBeenCalledOnce();
     const row = mockInsertAudit.mock.calls[0][1];
-    expect(row.user_id).toBe('user_1');
-    expect(row.bot_id).toBe('bot_1');
-    expect(row.action).toBe('bot.created');
+    expect(row).toMatchObject({ user_id: 'user_1', bot_id: 'bot_1', action: 'bot.created' });
     expect(JSON.parse(row.detail_json)).toEqual({ reason: 'manual' });
   });
   it('uses default empty detail', async () => {
     await persistAudit(null, null, 'system.init');
-    const row = mockInsertAudit.mock.calls[0][1];
-    expect(row.detail_json).toBe('{}');
+    expect(mockInsertAudit.mock.calls[0][1].detail_json).toBe('{}');
   });
   it('no-ops when db is null', async () => {
     const mod = await import('@/lib/db/client');

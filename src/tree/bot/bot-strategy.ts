@@ -81,14 +81,8 @@ export function evaluateChain(params: {
   for (const node of strategyChain) {
     const signal = node.strategy.evaluate(ctx);
     if (signal) {
-      return {
-        symbol: config.symbol,
-        side: signal.side,
-        type: 'market',
-        quantity: signal.qty,
-      };
+      return { symbol: config.symbol, side: signal.side, type: 'market', quantity: signal.qty };
     }
   }
-
   return null;
 }

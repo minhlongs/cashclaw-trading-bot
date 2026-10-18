@@ -2,11 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Palette, Type } from 'lucide-react';
-import {
-  TOKEN_GROUP_FILTERS,
-  filterColorSwatches,
-  type TokenGroup,
-} from './design-system-style-guide-model';
+import { TOKEN_GROUP_FILTERS, filterColorSwatches, type TokenGroup } from './design-system-style-guide-model';
 import { QuantScreenHeader } from './quant-screen-header';
 
 export function DesignSystemStyleGuide() {
@@ -20,7 +16,6 @@ export function DesignSystemStyleGuide() {
         title="CashClaw Quant OS — Design System & Accessibility Style Guide"
         subtitle="Synced with DESIGN.md • Geist Sans + JetBrains Mono • 12px Card / 8px Control / 44px Touch Target"
       />
-
       <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">
@@ -29,10 +24,7 @@ export function DesignSystemStyleGuide() {
           <div className="flex flex-wrap gap-2" role="group" aria-label="Color token group filter">
             {TOKEN_GROUP_FILTERS.map((group) => (
               <button
-                key={group}
-                type="button"
-                onClick={() => setActiveGroup(group)}
-                aria-pressed={activeGroup === group}
+                key={group} type="button" onClick={() => setActiveGroup(group)} aria-pressed={activeGroup === group}
                 className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all ${
                   activeGroup === group ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'
                 }`}

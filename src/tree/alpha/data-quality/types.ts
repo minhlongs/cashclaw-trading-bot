@@ -1,8 +1,4 @@
-/**
- * Pure Tree-layer domain types for OHLCV candle series data quality validation.
- * Zero external or forest dependencies. Deterministic and fail-closed.
- */
-
+/** Pure Tree-layer domain types for OHLCV candle series data quality validation. */
 export interface Candle {
   readonly timestamp: number; // Milliseconds epoch
   readonly open: number;

@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  estimateRollingBetas,
-  scaleWeightsToTargetBeta,
-} from './beta-sizing';
+import { estimateRollingBetas, scaleWeightsToTargetBeta } from './beta-sizing';
 import { inverseBetaTilt } from './beta-tilt';
 import type { AssetReturnSeries } from './types';
 
@@ -20,10 +17,7 @@ const aaa = series('AAA', BENCH.map((b) => 2 * b)); // true beta 2
 const bbb = series('BBB', BENCH.map((b) => 0.5 * b)); // true beta 0.5
 const ccc = series('CCC', BENCH.map((b) => -b)); // true beta -1
 
-function realizedBeta(
-  weights: Readonly<Record<string, number>>,
-  betas: Readonly<Record<string, number | null>>,
-): number {
+function realizedBeta(weights: Readonly<Record<string, number>>, betas: Readonly<Record<string, number | null>>): number {
   return Object.entries(weights).reduce((s, [sym, w]) => s + w * (betas[sym] ?? 0), 0);
 }
 
@@ -44,54 +38,36 @@ describe('estimateRollingBetas', () => {
 
     // Append violent future moves AFTER sizingTime to both series.
     const futureTs = [5, 6, 7, 8, 9, 10, 11, 12];
-    const futureBench = futureTs.map(() => 0.5);
-    const futureAsset = futureTs.map(() => -3.7);
     const benchExtended: AssetReturnSeries = {
-      symbol: 'BENCH',
-      timestamps: [...TS.slice(0, 5), ...futureTs],
-      returns: [...BENCH.slice(0, 5), ...futureBench],
+      symbol: 'BENCH', timestamps: [...TS.slice(0, 5), ...futureTs], returns: [...BENCH.slice(0, 5), ...futureTs.map(() => 0.5)],
     };
     const aaaExtended: AssetReturnSeries = {
-      symbol: 'AAA',
-      timestamps: [...TS.slice(0, 5), ...futureTs],
-      returns: [...BENCH.slice(0, 5).map((b) => 2 * b), ...futureAsset],
+      symbol: 'AAA', timestamps: [...TS.slice(0, 5), ...futureTs], returns: [...BENCH.slice(0, 5).map((b) => 2 * b), ...futureTs.map(() => -3.7)],
     };
 
     const after = estimateRollingBetas([aaaExtended], benchExtended, 100, 3, sizingTime);
     expect(after.AAA).toBe(before.AAA);
-
     // Sanity: without the sizing-time gate the same data yields a different beta.
-    const unguarded = estimateRollingBetas([aaaExtended], benchExtended, 100, 3);
-    expect(unguarded.AAA).not.toBeCloseTo(2, 2);
+    expect(estimateRollingBetas([aaaExtended], benchExtended, 100, 3).AAA).not.toBeCloseTo(2, 2);
   });
 
   it('window keeps only the trailing N aligned observations', () => {
     // First 5 obs beta 1, last 5 obs beta 3; window 5 must see only beta 3.
     const returns = BENCH.map((b, i) => (i < 5 ? b : 3 * b));
-    const betas = estimateRollingBetas([series('AAA', returns)], benchmark, 5, 3);
-    expect(betas.AAA).toBeCloseTo(3, 10);
+    expect(estimateRollingBetas([series('AAA', returns)], benchmark, 5, 3).AAA).toBeCloseTo(3, 10);
   });
 
   it('returns null when fewer than minObs aligned observations', () => {
-    const betas = estimateRollingBetas([aaa], benchmark, 100, 20);
-    expect(betas.AAA).toBeNull();
+    expect(estimateRollingBetas([aaa], benchmark, 100, 20).AAA).toBeNull();
   });
 
   it('returns null when benchmark variance is zero', () => {
-    const flat = series('FLAT', TS.map(() => 0));
-    const betas = estimateRollingBetas([aaa], flat, 100, 3);
-    expect(betas.AAA).toBeNull();
+    expect(estimateRollingBetas([aaa], series('FLAT', TS.map(() => 0)), 100, 3).AAA).toBeNull();
   });
 
   it('skips timestamps missing from the benchmark', () => {
-    // Benchmark only covers even timestamps; odd asset observations are dropped.
-    const sparseBench: AssetReturnSeries = {
-      symbol: 'BENCH',
-      timestamps: [0, 2, 4, 6, 8],
-      returns: [0, 2, 4, 6, 8].map((i) => BENCH[i]!),
-    };
-    const betas = estimateRollingBetas([aaa], sparseBench, 100, 3);
-    expect(betas.AAA).toBeCloseTo(2, 10);
+    const sparseBench: AssetReturnSeries = { symbol: 'BENCH', timestamps: [0, 2, 4, 6, 8], returns: [0, 2, 4, 6, 8].map((i) => BENCH[i]!) };
+    expect(estimateRollingBetas([aaa], sparseBench, 100, 3).AAA).toBeCloseTo(2, 10);
   });
 
   it('rejects invalid window/minObs and misaligned series', () => {

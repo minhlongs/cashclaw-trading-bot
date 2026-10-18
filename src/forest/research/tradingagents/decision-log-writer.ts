@@ -45,16 +45,8 @@ export class DecisionLogWriter {
     payload: unknown,
     timestamp: string,
   ): Promise<AppendResult> {
-    const result = await appendDecisionLogEntry(this.log, {
-      kind,
-      researchGoalId,
-      proposalId,
-      payload,
-      timestamp,
-    });
-    if (result.ok) {
-      this.log = result.log;
-    }
+    const result = await appendDecisionLogEntry(this.log, { kind, researchGoalId, proposalId, payload, timestamp });
+    if (result.ok) this.log = result.log;
     return result;
   }
 

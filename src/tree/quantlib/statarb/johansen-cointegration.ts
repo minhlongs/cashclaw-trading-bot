@@ -1,6 +1,4 @@
-// Multivariate Johansen Cointegration Estimator
-// Analytical eigenvalue extraction for rank testing, cointegrating vector, and OU half-life.
-
+// Multivariate Johansen Cointegration Estimator (rank testing, cointegrating vector, and OU half-life).
 import type { JohansenSeriesInput, JohansenTestResult } from './johansen-types';
 
 const TRACE_95: Record<number, number[]> = { 2: [15.49, 3.84], 3: [29.8, 15.49, 3.84] };
@@ -47,7 +45,6 @@ export function estimateJohansenCointegration(input: JohansenSeriesInput): Johan
       }
     }
   }
-
   const det00 = S00[0][0] * S00[1][1] - S00[0][1] * S00[1][0] || 1e-9;
   const inv00 = [[S00[1][1] / det00, -S00[0][1] / det00], [-S00[1][0] / det00, S00[0][0] / det00]];
   const det11 = S11[0][0] * S11[1][1] - S11[0][1] * S11[1][0] || 1e-9;

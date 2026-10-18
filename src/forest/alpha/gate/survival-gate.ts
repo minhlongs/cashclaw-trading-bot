@@ -9,15 +9,8 @@
 
 import type { EvaluationReport } from '../evaluation/report';
 import {
-  checkDrawdown,
-  checkExpectancy,
-  checkNetPnlAdverse,
-  checkNetPnlAfterFees,
-  checkProfitFactor,
-  checkRegimeCoverage,
-  checkSharpe,
-  checkTradeCount,
-  type GateCheck,
+  checkDrawdown, checkExpectancy, checkNetPnlAdverse, checkNetPnlAfterFees,
+  checkProfitFactor, checkRegimeCoverage, checkSharpe, checkTradeCount, type GateCheck,
 } from './gate-checks';
 
 export type { GateCheck } from './gate-checks';

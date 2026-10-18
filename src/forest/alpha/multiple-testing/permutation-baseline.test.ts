@@ -135,9 +135,7 @@ describe('compareAgainstRandomEntry', () => {
 
   describe('happy path', () => {
     it('strategy beats baseline → passes', () => {
-      const report = makeReport({ expectancy: 0.05 });
-      const baseline = makeReport({ expectancy: 0.01 });
-      const result = compareAgainstRandomEntry(report, baseline, baseOptions);
+      const result = compareAgainstRandomEntry(makeReport({ expectancy: 0.05 }), makeReport({ expectancy: 0.01 }), baseOptions);
       expect(result.passes).toBe(true);
       expect(result.reason).toContain('exceeds random_entry by');
     });
@@ -146,61 +144,45 @@ describe('compareAgainstRandomEntry', () => {
       // compareAgainstRandomEntry uses strict `edge > minEdge`. Equal
       // expectancy yields edge = 0, which is NOT > 0, so an
       // indistinguishable strategy FAILS — never a silent pass.
-      const report = makeReport({ expectancy: 0.02 });
-      const baseline = makeReport({ expectancy: 0.02 });
-      const result = compareAgainstRandomEntry(report, baseline, baseOptions);
+      const result = compareAgainstRandomEntry(makeReport({ expectancy: 0.02 }), makeReport({ expectancy: 0.02 }), baseOptions);
       expect(result.passes).toBe(false);
     });
 
     it('strategy exceeds baseline by minEdge → passes', () => {
-      const report = makeReport({ expectancy: 0.05 });
-      const baseline = makeReport({ expectancy: 0.02 });
-      const result = compareAgainstRandomEntry(report, baseline, { minEdge: 0.02 });
+      const result = compareAgainstRandomEntry(makeReport({ expectancy: 0.05 }), makeReport({ expectancy: 0.02 }), { minEdge: 0.02 });
       expect(result.passes).toBe(true);
     });
   });
 
   describe('fail cases', () => {
     it('strategy worse than baseline → fails', () => {
-      const report = makeReport({ expectancy: 0.01 });
-      const baseline = makeReport({ expectancy: 0.05 });
-      const result = compareAgainstRandomEntry(report, baseline, baseOptions);
+      const result = compareAgainstRandomEntry(makeReport({ expectancy: 0.01 }), makeReport({ expectancy: 0.05 }), baseOptions);
       expect(result.passes).toBe(false);
       expect(result.reason).toContain('edge over random_entry is');
     });
 
     it('strategy matches baseline but minEdge > 0 → fails', () => {
-      const report = makeReport({ expectancy: 0.02 });
-      const baseline = makeReport({ expectancy: 0.02 });
-      const result = compareAgainstRandomEntry(report, baseline, { minEdge: 0.01 });
+      const result = compareAgainstRandomEntry(makeReport({ expectancy: 0.02 }), makeReport({ expectancy: 0.02 }), { minEdge: 0.01 });
       expect(result.passes).toBe(false);
     });
 
     it('strategy barely exceeds baseline but minEdge higher → fails', () => {
-      const report = makeReport({ expectancy: 0.03 });
-      const baseline = makeReport({ expectancy: 0.02 });
-      const result = compareAgainstRandomEntry(report, baseline, { minEdge: 0.02 });
+      const result = compareAgainstRandomEntry(makeReport({ expectancy: 0.03 }), makeReport({ expectancy: 0.02 }), { minEdge: 0.02 });
       expect(result.passes).toBe(false);
     });
   });
 
   describe('fail-closed: invalid inputs throw', () => {
     it('non-finite strategy expectancy throws', () => {
-      const report = makeReport({ expectancy: NaN });
-      const baseline = makeReport({ expectancy: 0.02 });
-      expect(() => compareAgainstRandomEntry(report, baseline, baseOptions)).toThrow('Strategy report expectancy must be finite');
+      expect(() => compareAgainstRandomEntry(makeReport({ expectancy: NaN }), makeReport({ expectancy: 0.02 }), baseOptions)).toThrow('Strategy report expectancy must be finite');
     });
 
     it('non-finite baseline expectancy throws', () => {
-      const report = makeReport({ expectancy: 0.02 });
-      const baseline = makeReport({ expectancy: NaN });
-      expect(() => compareAgainstRandomEntry(report, baseline, baseOptions)).toThrow('Baseline report expectancy must be finite');
+      expect(() => compareAgainstRandomEntry(makeReport({ expectancy: 0.02 }), makeReport({ expectancy: NaN }), baseOptions)).toThrow('Baseline report expectancy must be finite');
     });
 
     it('non-finite minEdge throws', () => {
-      const report = makeReport({ expectancy: 0.02 });
-      const baseline = makeReport({ expectancy: 0.01 });
-      expect(() => compareAgainstRandomEntry(report, baseline, { minEdge: NaN })).toThrow('compareAgainstRandomEntry requires a finite minEdge');
+      expect(() => compareAgainstRandomEntry(makeReport({ expectancy: 0.02 }), makeReport({ expectancy: 0.01 }), { minEdge: NaN })).toThrow('compareAgainstRandomEntry requires a finite minEdge');
     });
   });
 });

@@ -56,10 +56,7 @@ export function legForwardMean(
 
 /** One rebalance date's IC point + gross quantile spread. */
 export function rebalancePoint(
-  timestamp: number,
-  pairs: readonly ScorePair[],
-  minSymbols: number,
-  quantiles: number,
+  timestamp: number, pairs: readonly ScorePair[], minSymbols: number, quantiles: number,
 ): { point: IcPoint; spread: QuantileSpreadPoint } {
   const sufficient = pairs.length >= minSymbols;
   const xs = pairs.map((p) => p.score);
@@ -73,17 +70,12 @@ export function rebalancePoint(
       rankIc: sufficient ? spearman(xs, ys) : null,
       validSymbols: pairs.length,
     },
-    spread: {
-      timestamp,
-      spread: topFwd === null || bottomFwd === null ? null : topFwd - bottomFwd,
-    },
+    spread: { timestamp, spread: topFwd === null || bottomFwd === null ? null : topFwd - bottomFwd },
   };
 }
 
 /** One-sided long-leg turnover between consecutive rebalance weights. */
-export function turnoverSeries(
-  weights: ReadonlyArray<Record<string, number>>,
-): number[] {
+export function turnoverSeries(weights: ReadonlyArray<Record<string, number>>): number[] {
   const out: number[] = [];
   let prev: Record<string, number> = {};
   for (const next of weights) {

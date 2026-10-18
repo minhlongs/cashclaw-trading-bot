@@ -22,23 +22,11 @@ export function PairPriceBadge({ exchange, pair }: PairPriceBadgeProps) {
   const t = useTranslations('botWizard.priceDiscovery');
   const isEnabled = Boolean(exchange && pair);
 
-  const {
-    ticker,
-    provenance,
-    loading,
-    error,
-    isRateLimited,
-    isCircuitOpen,
-  } = useMarketTicker({
-    exchange,
-    symbol: pair,
-    enabled: isEnabled,
-    intervalMs: 15_000,
+  const { ticker, provenance, loading, error, isRateLimited, isCircuitOpen } = useMarketTicker({
+    exchange, symbol: pair, enabled: isEnabled, intervalMs: 15_000,
   });
 
-  if (!isEnabled) {
-    return null;
-  }
+  if (!isEnabled) return null;
 
   if (loading && !ticker) {
     return (
@@ -63,31 +51,19 @@ export function PairPriceBadge({ exchange, pair }: PairPriceBadgeProps) {
     );
   }
 
-  if (!ticker) {
-    return null;
-  }
+  if (!ticker) return null;
 
   return (
     <div className="flex items-center gap-2 flex-wrap mt-1" data-testid="pair-price-badge">
-      <span className="badge badge-profit mono font-semibold">
-        {formatPrice(ticker.last)}
-      </span>
-      {provenance && (
-        <span className="text-secondary mono text-xs">
-          {provenance.latencyMs}ms
-        </span>
-      )}
+      <span className="badge badge-profit mono font-semibold">{formatPrice(ticker.last)}</span>
+      {provenance && <span className="text-secondary mono text-xs">{provenance.latencyMs}ms</span>}
       {isCircuitOpen && (
         <span className="badge badge-warning text-xs flex items-center gap-1">
           <AlertTriangle size={12} />
           {t('circuitActive')}
         </span>
       )}
-      {isRateLimited && (
-        <span className="badge badge-neutral text-xs">
-          {t('rateLimited')}
-        </span>
-      )}
+      {isRateLimited && <span className="badge badge-neutral text-xs">{t('rateLimited')}</span>}
     </div>
   );
 }

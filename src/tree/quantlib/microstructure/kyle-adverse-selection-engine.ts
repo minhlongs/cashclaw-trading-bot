@@ -1,8 +1,5 @@
 import type {
-  SignedOrderFlowTrade,
-  KyleLambdaResult,
-  KyleEngineConfig,
-  AdverseSelectionLevel,
+  SignedOrderFlowTrade, KyleLambdaResult, KyleEngineConfig, AdverseSelectionLevel,
 } from './kyle-adverse-selection-types';
 
 export class KyleAdverseSelectionEngine {
@@ -64,11 +61,8 @@ export class KyleAdverseSelectionEngine {
     const tStat = seLambda > 1e-12 ? lambda / seLambda : 0;
 
     return {
-      lambda: Number(lambda.toFixed(6)),
-      rSquared: Number(rSquared.toFixed(4)),
-      tStat: Number(tStat.toFixed(4)),
-      adverseSelectionRisk: this.classifyRisk(lambda),
-      observationCount: trades.length,
+      lambda: Number(lambda.toFixed(6)), rSquared: Number(rSquared.toFixed(4)), tStat: Number(tStat.toFixed(4)),
+      adverseSelectionRisk: this.classifyRisk(lambda), observationCount: trades.length,
       netSignedOrderFlow: Number(netFlow.toFixed(4)),
     };
   }
@@ -82,12 +76,8 @@ export class KyleAdverseSelectionEngine {
 
   private createFallbackResult(count: number): KyleLambdaResult {
     return {
-      lambda: 0,
-      rSquared: 0,
-      tStat: 0,
-      adverseSelectionRisk: 'LOW',
-      observationCount: count,
-      netSignedOrderFlow: 0,
+      lambda: 0, rSquared: 0, tStat: 0, adverseSelectionRisk: 'LOW',
+      observationCount: count, netSignedOrderFlow: 0,
     };
   }
 }

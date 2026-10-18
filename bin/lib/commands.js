@@ -62,6 +62,8 @@ function runQuantitativeEval(symbol = 'ETH/USDT') {
     roughPathLevyArea12: 0.0018,
     avellanedaOptimalSpreadBps: 12.4,
     kalmanHalfLifeBars: 8.6,
+    vpinToxicityScore: 0.214,
+    fundingBasisAprPct: 14.2,
     regime: 'LOW_VOLATILITY_ACCUMULATION',
     recommendation: 'STRATEGY_PERMITTED_VOLATILITY_DCA',
   };

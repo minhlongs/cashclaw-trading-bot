@@ -8,12 +8,10 @@ import { QuantScreenHeader } from './quant-screen-header';
 export function DeliberationTheater() {
   const [stageFilter, setStageFilter] = useState<'ALL' | DebateStage>('ALL');
   const [riskVetoActive, setRiskVetoActive] = useState<boolean>(false);
-
-  const visibleTurns = useMemo(() => {
-    if (stageFilter === 'ALL') return DEBATE_LOG;
-    return DEBATE_LOG.filter((t) => t.stage === stageFilter);
-  }, [stageFilter]);
-
+  const visibleTurns = useMemo(
+    () => (stageFilter === 'ALL' ? DEBATE_LOG : DEBATE_LOG.filter((t) => t.stage === stageFilter)),
+    [stageFilter],
+  );
   const consensusStatus = riskVetoActive ? 'KILLED_BY_RISK_VETO' : 'PROMOTED_TO_PAPER_SHADOW';
 
   return (
@@ -23,7 +21,6 @@ export function DeliberationTheater() {
         title="Multi-Agent Deliberation Theater (TradingAgents Adapter)"
         subtitle="Bull vs Bear dialectical falsification • Hash-chained decision audit ledger • Zero order surface"
       />
-
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
           <span className="text-xs text-[var(--text-secondary)]">Consensus Confidence</span>

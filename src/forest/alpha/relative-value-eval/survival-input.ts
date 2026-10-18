@@ -1,18 +1,10 @@
 // Assemble the full SurvivalEvaluationInput from relative-value results.
-// ADAPTER, NOT ENGINE: wires existing primitives only — extractRoundTrips
-// for trade returns, runBaseline('random_entry') for the baseline report.
-// The caller supplies configMatrix (Step 9 robustness grid) and
-// crossAssetReports (per-asset arm reports). Pure and deterministic — the
-// random_entry baseline is internally seeded (42).
-
+// ADAPTER, NOT ENGINE: wires extractRoundTrips and runBaseline('random_entry') (seeded 42).
 import type { Candle } from '@/forest/backtest/ohlcv';
 import { runBaseline } from '@/forest/alpha/baselines';
 import type {
-  BootstrapOptions,
-  CrossAssetConsistencyOptions,
-  PermutationOptions,
-  SurvivalEvaluationInput,
-  WalkForwardConsistencyOptions,
+  BootstrapOptions, CrossAssetConsistencyOptions, PermutationOptions,
+  SurvivalEvaluationInput, WalkForwardConsistencyOptions,
 } from '@/forest/alpha/multiple-testing/types';
 import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
 import type { PairPeriodRecord } from '@/tree/alpha/relative-value';

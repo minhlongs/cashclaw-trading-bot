@@ -25,23 +25,12 @@ export class DirectTickerProvider implements TickerProvider {
   private readonly client: BinanceRestClient | OkxRestClient | BybitRestClient;
 
   constructor(config: DirectTickerProviderConfig) {
-    if (
-      config.exchangeId !== 'binance' &&
-      config.exchangeId !== 'okx' &&
-      config.exchangeId !== 'bybit'
-    ) {
+    if (config.exchangeId !== 'binance' && config.exchangeId !== 'okx' && config.exchangeId !== 'bybit') {
       throw new Error(`Unsupported exchange ID: ${String(config.exchangeId)}`);
     }
-
     this.exchangeId = config.exchangeId;
     this.name = `direct:${this.exchangeId}`;
-
-    this.circuitBreaker =
-      config.circuitBreaker ??
-      new CircuitBreaker({
-        cooldownMs: 60_000,
-        halfOpenAfterMs: 30_000,
-      });
+    this.circuitBreaker = config.circuitBreaker ?? new CircuitBreaker({ cooldownMs: 60_000, halfOpenAfterMs: 30_000 });
 
     if (config.client) {
       this.client = config.client;

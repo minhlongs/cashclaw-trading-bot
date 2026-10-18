@@ -44,67 +44,56 @@ describe('validateJobSpec', () => {
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('id must be non-empty');
     });
-
     it('empty hypothesis → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ hypothesis: '' }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('hypothesis must be non-empty');
     });
-
     it('empty rationale → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ rationale: '' }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('rationale must be non-empty');
     });
-
     it('empty dataset → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ dataset: '' }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('dataset must be non-empty');
     });
-
     it('empty generatedBy → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ generatedBy: '' }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('generatedBy must be non-empty');
     });
-
     it('empty features → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ features: [] }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('features must be non-empty');
     });
-
     it('empty universe.id → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ universe: { id: '', symbols: ['BTCUSDT'], weighting: 'equal', rebalanceRule: 'none' } }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('universe.id must be non-empty');
     });
-
     it('empty universe.symbols → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ universe: { id: 'u', symbols: [], weighting: 'equal', rebalanceRule: 'none' } }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('universe.symbols must be non-empty');
     });
-
     it('non-finite timestamp → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ timestamp: NaN }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('timestamp must be a finite number');
     });
-
     it('negative feeBps → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ costs: { feeBps: -1, impactBps: 5 } }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('costs.feeBps must be a finite non-negative number');
     });
-
     it('negative impactBps → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ costs: { feeBps: 10, impactBps: -1 } }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('costs.impactBps must be a finite non-negative number');
     });
-
     it('negative slippageBps → ok:false with reason', () => {
       const result = validateJobSpec(makeSpec({ slippage: { slippageBps: -1 } }), []);
       expect(result.ok).toBe(false);

@@ -30,9 +30,7 @@ export class BotManagerFactory implements BotFactoryDelegate {
     const modeKey = `${mode}:${exchangeId}`;
     let exchange = this.exchanges.get(modeKey);
     if (!exchange) {
-      if (mode !== 'paper') {
-        throw new Error('Live trading not available — this system is paper/backtest only. See docs/DEPLOYMENT-SAFETY.md');
-      }
+      if (mode !== 'paper') throw new Error('Live trading not available — this system is paper/backtest only. See docs/DEPLOYMENT-SAFETY.md');
       const raw = Object.assign(createPaperAdapter(capital), { id: exchangeId, name: `${exchangeId}-paper` });
       let queue = this.queues.get(exchangeId);
       if (!queue) { queue = new RequestQueue(); this.queues.set(exchangeId, queue); }
@@ -71,9 +69,7 @@ export class BotManagerFactory implements BotFactoryDelegate {
       }),
     );
     this.cache.cacheBot(bot, effectiveUserId);
-    if (effectiveUserId) {
-      persistNewBot({ botId: req.id, userId: effectiveUserId, config: req.config, capital: req.config.capital, onLog: this.deps.onLog, onError: this.deps.onError });
-    }
+    if (effectiveUserId) persistNewBot({ botId: req.id, userId: effectiveUserId, config: req.config, capital: req.config.capital, onLog: this.deps.onLog, onError: this.deps.onError });
     this.deps.onLog(`Bot ${req.id} created (${req.config.strategy}, ${req.config.symbol}, ${req.mode})`);
     return bot;
   }

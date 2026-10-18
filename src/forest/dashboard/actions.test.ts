@@ -39,26 +39,17 @@ const mockManager = {
   resumeBot: vi.fn(),
 };
 
-vi.mock('@/tree/bot', () => {
-  const reset = () => {
-    mockBot = makeMockBot();
-  };
-  return {
-    getBotManager: (_deps?: unknown) => mockManager,
-    resetBotManager: reset,
-  };
-});
+vi.mock('@/tree/bot', () => ({
+  getBotManager: (_deps?: unknown) => mockManager,
+  resetBotManager: () => { mockBot = makeMockBot(); },
+}));
 
 const mockListBots = vi.fn<() => Promise<BotSummary[]>>();
 vi.mock('@/forest/bot/d1-adapter', () => ({
-  BotQueryService: vi.fn().mockImplementation(() => ({
-    listBots: mockListBots,
-  })),
+  BotQueryService: vi.fn().mockImplementation(() => ({ listBots: mockListBots })),
 }));
 
-vi.mock('@/lib/db/client', () => ({
-  createServerClient: () => null, // local dev — skip D1
-}));
+vi.mock('@/lib/db/client', () => ({ createServerClient: () => null }));
 
 function mockSummary(overrides: Partial<BotSummary> = {}): BotSummary {
   return {

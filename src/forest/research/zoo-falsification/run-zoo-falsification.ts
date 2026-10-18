@@ -69,9 +69,7 @@ export async function runZooFalsification(
   const registeredById = new Map(imported.registered.map((r) => [r.hypothesis.id, r]));
   const rows: ZooFalsificationRow[] = [];
   for (const result of imported.results as readonly PerAlphaResult[]) {
-    const registered = result.hypothesisId === undefined
-      ? undefined
-      : registeredById.get(result.hypothesisId);
+    const registered = result.hypothesisId === undefined ? undefined : registeredById.get(result.hypothesisId);
     if (registered === undefined) {
       rows.push({
         sourceAlphaId: result.sourceAlphaId,

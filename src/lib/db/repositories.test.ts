@@ -75,14 +75,12 @@ describe('findBotsByUser', () => {
   it('returns bots for user', async () => {
     mockAll.mockResolvedValue({ results: [{ id: 'b1' }], meta: { duration: 1 } });
     const { findBotsByUser } = await import('./repo-users-bots');
-    const result = await findBotsByUser(mockDb, 'u1');
-    expect(result).toHaveLength(1);
+    expect(await findBotsByUser(mockDb, 'u1')).toHaveLength(1);
   });
 
   it('returns empty array when none found', async () => {
     const { findBotsByUser } = await import('./repo-users-bots');
-    const result = await findBotsByUser(mockDb, 'u1');
-    expect(result).toEqual([]);
+    expect(await findBotsByUser(mockDb, 'u1')).toEqual([]);
   });
 });
 
@@ -90,14 +88,12 @@ describe('findBotById', () => {
   it('returns bot when found', async () => {
     mockFirst.mockResolvedValue({ id: 'b1', name: 'Bot' });
     const { findBotById } = await import('./repo-users-bots');
-    const result = await findBotById(mockDb, 'b1');
-    expect(result?.id).toBe('b1');
+    expect((await findBotById(mockDb, 'b1'))?.id).toBe('b1');
   });
 
   it('returns null when not found', async () => {
     const { findBotById } = await import('./repo-users-bots');
-    const result = await findBotById(mockDb, 'nonexistent');
-    expect(result).toBeNull();
+    expect(await findBotById(mockDb, 'nonexistent')).toBeNull();
   });
 });
 
@@ -129,10 +125,9 @@ describe('upsertSettings', () => {
   it('calls run with settings data', async () => {
     const { upsertSettings } = await import('./repositories');
     await upsertSettings(mockDb, {
-      id: 's1', user_id: 'u1', exchange_creds_json: '{}',
-      risk_limits_json: '{}', notification_json: '{}', killswitch_daily_json: '{}', killswitch_enabled: 0,
-      killswitch_reason: null, killswitch_triggered_at: null,
-      updated_at: 1000,
+      id: 's1', user_id: 'u1', exchange_creds_json: '{}', risk_limits_json: '{}',
+      notification_json: '{}', killswitch_daily_json: '{}', killswitch_enabled: 0,
+      killswitch_reason: null, killswitch_triggered_at: null, updated_at: 1000,
     });
     expect(mockRun).toHaveBeenCalledOnce();
   });
@@ -142,9 +137,8 @@ describe('insertTrade', () => {
   it('calls run with trade data', async () => {
     const { insertTrade } = await import('./repo-trades-credentials');
     await insertTrade(mockDb, {
-      id: 't1', bot_id: 'b1', pair: 'BTC/USDT', side: 'buy',
-      entry_price: 50000, exit_price: null, quantity: 0.1,
-      pnl: null, fee: 5, status: 'open', exchange_order_id: null,
+      id: 't1', bot_id: 'b1', pair: 'BTC/USDT', side: 'buy', entry_price: 50000, exit_price: null,
+      quantity: 0.1, pnl: null, fee: 5, status: 'open', exchange_order_id: null,
       error_message: null, opened_at: 1000, closed_at: null, created_at: 1000,
     });
     expect(mockRun).toHaveBeenCalledOnce();
@@ -155,14 +149,12 @@ describe('findTradesByBot', () => {
   it('returns trades for bot', async () => {
     mockAll.mockResolvedValue({ results: [{ id: 't1' }], meta: { duration: 1 } });
     const { findTradesByBot } = await import('./repo-trades-credentials');
-    const result = await findTradesByBot(mockDb, 'b1');
-    expect(result).toHaveLength(1);
+    expect(await findTradesByBot(mockDb, 'b1')).toHaveLength(1);
   });
 
   it('returns empty array when none found', async () => {
     const { findTradesByBot } = await import('./repo-trades-credentials');
-    const result = await findTradesByBot(mockDb, 'b1');
-    expect(result).toEqual([]);
+    expect(await findTradesByBot(mockDb, 'b1')).toEqual([]);
   });
 });
 

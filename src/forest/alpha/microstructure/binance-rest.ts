@@ -1,29 +1,16 @@
-// Binance REST microstructure fetchers — pure Workers-compatible fetch().
-// Returns the RAW unparsed body; parsing happens in tree-layer parse.ts so
-// that bad payloads take the fail-closed audit path instead of throwing here.
-// Rate limiting + 429 backoff + bounded retries follow data-fetcher.ts.
-
+// Binance REST microstructure fetchers — pure Workers-compatible fetch() with rate-limiting and 429 backoff.
 import { rateLimiter } from '@/tree/exchange/rate-limiter';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('microstructure-fetch');
-
 const DEFAULT_BASE_URL = 'https://api.binance.com';
 const MAX_RETRIES = 3;
 const MAX_BACKOFF_MS = 30_000;
 const DEPTH_LIMIT = 20;
 const AGG_TRADES_LIMIT = 1000;
 
-/** Raw HTTP outcome for one REST call — body stays untrusted (`unknown`). */
-export interface RawFetchResult {
-  readonly body: unknown;
-  readonly latencyMs: number;
-}
-
-export interface FetchDepthParams {
-  readonly symbol: string;
-  readonly baseUrl?: string;
-}
+export interface RawFetchResult { readonly body: unknown; readonly latencyMs: number }
+export interface FetchDepthParams { readonly symbol: string; readonly baseUrl?: string }
 
 /** GET /api/v3/depth?symbol=X&limit=20 — current order-book snapshot. */
 export async function fetchDepth(params: FetchDepthParams): Promise<RawFetchResult> {

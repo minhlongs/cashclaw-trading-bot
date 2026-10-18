@@ -64,18 +64,10 @@ export function o2Panels(): SymbolPanel[] {
 
 export function entry(id: string, formula: string, decay = 5): Record<string, unknown> {
   return {
-    id,
-    nickname: id,
-    theme: ['volume'],
-    formula_latex: formula,
-    columns_required: ['open', 'volume'],
-    extras_required: [],
-    requires_sector: false,
-    universe: ['crypto'],
-    frequency: ['1d'],
-    decay_horizon: decay,
-    min_warmup_bars: 5,
-    notes: 'fixture',
+    id, nickname: id, theme: ['volume'], formula_latex: formula,
+    columns_required: ['open', 'volume'], extras_required: [],
+    requires_sector: false, universe: ['crypto'], frequency: ['1d'],
+    decay_horizon: decay, min_warmup_bars: 5, notes: 'fixture',
   };
 }
 

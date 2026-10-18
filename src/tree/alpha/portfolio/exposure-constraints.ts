@@ -72,8 +72,7 @@ export function applyTurnoverConstraint(
   maxTurnover: number,
 ): OverlayResult {
   let totalDelta = 0;
-  const allIds = new Set([...weights.keys(), ...currentWeights.keys()]);
-  for (const id of allIds) {
+  for (const id of new Set([...weights.keys(), ...currentWeights.keys()])) {
     totalDelta += Math.abs((weights.get(id) ?? 0) - (currentWeights.get(id) ?? 0));
   }
   if (totalDelta <= maxTurnover) return { weights, adjustment: null };
@@ -83,12 +82,11 @@ export function applyTurnoverConstraint(
 }
 
 export function applyDrawdownDeRisk(
-  weights: ReadonlyMap<string, number>,
-  currentDrawdown: number,
-  threshold: number,
-  deRiskFactor: number,
+  weights: ReadonlyMap<string, number>, currentDrawdown: number, threshold: number, deRiskFactor: number,
 ): OverlayResult {
   if (currentDrawdown <= threshold) return { weights, adjustment: null };
-  const scaled = scaleWeights(weights, deRiskFactor);
-  return { weights: scaled, adjustment: `drawdown de-risk: ${fmt(currentDrawdown)} > ${fmt(threshold)}, factor ${fmt(deRiskFactor)}` };
+  return {
+    weights: scaleWeights(weights, deRiskFactor),
+    adjustment: `drawdown de-risk: ${fmt(currentDrawdown)} > ${fmt(threshold)}, factor ${fmt(deRiskFactor)}`,
+  };
 }

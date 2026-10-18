@@ -1,27 +1,17 @@
-// AlphaProvenance — provenance record for an alpha imported from an
-// external zoo (Vibe-Trading). Pure module: the only async operation is
-// WebCrypto crypto.subtle SHA-256 (Cloudflare Workers-compatible; no
-// Node-only crypto import). Fail-closed validation.
+// AlphaProvenance — provenance record for an alpha imported from an external zoo (Vibe-Trading).
+// Pure module: uses WebCrypto crypto.subtle SHA-256 (Workers-compatible). Fail-closed validation.
 
 import { canonicalize } from '@/lib/canonical-json';
 
 /** Provenance of an imported alpha (spec §7). */
 export interface AlphaProvenance {
-  /** Zoo/system the alpha was imported from (e.g. 'vibe-trading-zoo'). */
   readonly sourceZoo: string;
-  /** Alpha identifier inside the source zoo. */
   readonly sourceAlphaId: string;
-  /** Repository URL or slug the alpha definition came from. */
   readonly sourceRepository: string;
-  /** Version tag/commit in the source repo; null when unversioned. */
   readonly sourceVersion: string | null;
-  /** SHA-256 hex of the canonical formula string. */
   readonly formulaHash: string;
-  /** ISO-8601 timestamp of import. */
   readonly importTimestamp: string;
-  /** Version identifier of the importer that produced this record. */
   readonly importerVersion: string;
-  /** Canonical JSON representation of the normalized formula payload. */
   readonly normalizedRepresentation: string;
 }
 

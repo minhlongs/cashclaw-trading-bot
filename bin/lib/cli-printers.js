@@ -72,6 +72,8 @@ function printEvalReport(version, symbol, result) {
     { label: 'Rough Path Levy Area', value: `${result.roughPathLevyArea12}` },
     { label: 'Avellaneda Opt Spread', value: `${result.avellanedaOptimalSpreadBps} bps` },
     { label: 'Kalman Half-Life', value: `${result.kalmanHalfLifeBars} bars` },
+    { label: 'VPIN Toxicity Score', value: `${result.vpinToxicityScore}` },
+    { label: 'Funding Basis APR', value: `${result.fundingBasisAprPct}%` },
     { label: 'Market Regime', value: result.regime },
     { label: 'Execution Recommendation', value: result.recommendation },
   ]));

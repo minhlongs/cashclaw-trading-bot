@@ -1,22 +1,11 @@
-// DecisionProposal Zod schemas + canonical interfaces (task §A). Pure types +
-// validation; no I/O, no LLM, no order surface. Fail-closed: parseDecisionProposal
-// (see decision-contract.ts) collects ALL Zod issues and never returns a
-// partial object.
-
+// DecisionProposal Zod schemas + canonical interfaces (task §A). Pure types + validation; fail-closed.
 import { z } from 'zod';
 import { type AgentProvenance, PROPOSAL_DIRECTIONS, type ModelProvenance } from './types';
 
 const isoDateTime = z.string().datetime({ offset: true });
 
-/** One evidence item backing a proposal (claim + source). */
 export interface EvidenceItem { readonly claim: string; readonly source: string }
-
-/** One data provenance record: where a piece of input data came from. */
-export interface DataProvenanceItem {
-  readonly dataset: string;
-  readonly provider: string;
-  readonly timestamp: string;
-}
+export interface DataProvenanceItem { readonly dataset: string; readonly provider: string; readonly timestamp: string }
 
 /** Canonical decision proposal (task §A). Exactly 20 fields, all Zod-validated. */
 export interface DecisionProposal {

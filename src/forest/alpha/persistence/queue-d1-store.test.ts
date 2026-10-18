@@ -11,20 +11,10 @@ import { createD1QueueStore } from './queue-d1-store';
 import type { CounterSnapshot, QueueEventRecord } from './queue-store-types';
 
 // ── Recording D1 stub ────────────────────────────────────
+interface RecordedStatement { readonly sql: string; readonly values: readonly unknown[] }
+interface StubAllResult { readonly results: readonly Record<string, unknown>[] }
 
-interface RecordedStatement {
-  readonly sql: string;
-  readonly values: readonly unknown[];
-}
-
-interface StubAllResult {
-  readonly results: readonly Record<string, unknown>[];
-}
-
-function createRecordingDb(allResult: StubAllResult = { results: [] }): {
-  db: D1Database;
-  statements: RecordedStatement[];
-} {
+function createRecordingDb(allResult: StubAllResult = { results: [] }): { db: D1Database; statements: RecordedStatement[] } {
   const statements: RecordedStatement[] = [];
   const makeStatement = (sql: string): D1PreparedStatement => {
     let values: unknown[] = [];
@@ -32,22 +22,14 @@ function createRecordingDb(allResult: StubAllResult = { results: [] }): {
       bind(...bound: unknown[]): D1PreparedStatement { values = bound; return statement; },
       first: async () => null,
       firstRow: async () => null,
-      all: async <T>() => {
-        statements.push({ sql, values });
-        return { results: [...allResult.results] as T[], meta: { duration: 0 } };
-      },
-      run: async () => {
-        statements.push({ sql, values });
-        return { meta: { changes: 1, last_row_id: 1, duration: 0 } };
-      },
+      all: async <T>() => { statements.push({ sql, values }); return { results: [...allResult.results] as T[], meta: { duration: 0 } }; },
+      run: async () => { statements.push({ sql, values }); return { meta: { changes: 1, last_row_id: 1, duration: 0 } }; },
     };
     return statement;
   };
   const db: D1Database = {
-    prepare: (sql: string) => makeStatement(sql),
-    batch: async () => [],
-    exec: async () => ({ count: 0, duration: 0 }),
-    dump: async () => '',
+    prepare: (sql: string) => makeStatement(sql), batch: async () => [],
+    exec: async () => ({ count: 0, duration: 0 }), dump: async () => '',
   };
   return { db, statements };
 }

@@ -7,12 +7,6 @@ import type { GridStrategyCallbacks } from '@/tree/bot/strategies/grid';
 import type { MeanRevStrategyCallbacks } from '@/tree/bot/strategies/mean-reversion';
 import type { VolatilityDcaCallbacks } from '@/tree/bot/strategies/volatility-dca';
 
-// ──────────────────────────────────────────────
-// Paper Exchange Adapter
-// Every fill is recorded in a log (sequence of buys/sells with price/qty/ts).
-// Post-run, consecutive buy+sell pairs become BacktestTrade entries.
-// ──────────────────────────────────────────────
-
 /** @internal Fill record kept by the paper exchange. */
 export interface Fill {
   candleIndex: number;
@@ -37,9 +31,7 @@ export class PaperExchange implements GridStrategyCallbacks, MeanRevStrategyCall
   private _candleIdx = 0;
 
   constructor(capital: number, feePct: number, slipPct: number) {
-    this.capital = capital;
-    this.feePct = feePct;
-    this.slipPct = slipPct;
+    this.capital = capital; this.feePct = feePct; this.slipPct = slipPct;
   }
 
   setTimestamp(ts: number): void { this._candleTs = ts; }

@@ -109,26 +109,22 @@ describe('quantFunctions.grid — hold signal', () => {
 describe('quantFunctions.mean_reversion — invalid inputs', () => {
   it('returns hold with no_fair_value reason when fairValue is undefined', () => {
     const result = quantFunctions.mean_reversion(ctx);
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('no_fair_value');
+    expect(result.signal).toBe('hold'); expect(result.meta.reason).toBe('no_fair_value');
   });
   it('returns hold with no_fair_value reason when fairValue is 0', () => {
     const result = quantFunctions.mean_reversion(ctx, { fairValue: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('no_fair_value');
+    expect(result.signal).toBe('hold'); expect(result.meta.reason).toBe('no_fair_value');
   });
   it('returns hold when lastPrice is 0', () => {
     const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: 0 }, { fairValue: 50000 });
-    expect(result.signal).toBe('hold');
-    expect(result.confidence).toBe(0);
+    expect(result.signal).toBe('hold'); expect(result.confidence).toBe(0);
   });
   it('returns hold when lastPrice is negative', () => {
     expect(quantFunctions.mean_reversion({ ...ctx, lastPrice: -1 }, { fairValue: 50000 }).signal).toBe('hold');
   });
   it('returns hold when threshold is 0', () => {
     const result = quantFunctions.mean_reversion(ctx, { fairValue: 50000, threshold: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('invalid_threshold');
+    expect(result.signal).toBe('hold'); expect(result.meta.reason).toBe('invalid_threshold');
   });
 });
 
@@ -140,11 +136,9 @@ describe('quantFunctions.mean_reversion — buy signal', () => {
     expect(result.meta.strategy).toBe('mean_reversion');
     expect(result.meta.deviation).toBeLessThan(0);
   });
-
   it('buy confidence scales with deviation up to maxConf', () => {
     const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: 48500 }, { fairValue: 50000, threshold: 0.015, maxConf: 0.8 });
-    expect(result.signal).toBe('buy');
-    expect(result.confidence).toBeLessThanOrEqual(0.8);
+    expect(result.signal).toBe('buy'); expect(result.confidence).toBeLessThanOrEqual(0.8);
   });
 });
 
@@ -155,11 +149,9 @@ describe('quantFunctions.mean_reversion — sell signal', () => {
     expect(result.confidence).toBeGreaterThan(0);
     expect(result.meta.deviation).toBeGreaterThan(0);
   });
-
   it('sell confidence is capped at maxConf', () => {
     const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: 55000 }, { fairValue: 50000, threshold: 0.015, maxConf: 0.75 });
-    expect(result.signal).toBe('sell');
-    expect(result.confidence).toBeLessThanOrEqual(0.75);
+    expect(result.signal).toBe('sell'); expect(result.confidence).toBeLessThanOrEqual(0.75);
   });
 });
 

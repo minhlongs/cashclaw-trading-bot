@@ -2,11 +2,7 @@
 
 import type { IndicatorCandle } from '../indicator-types';
 import type {
-  PairStats,
-  PairSignal,
-  GeneratePairSignalsOptions,
-  MultiPairScanConfig,
-  MultiPairScanResult,
+  PairStats, PairSignal, GeneratePairSignalsOptions, MultiPairScanConfig, MultiPairScanResult,
 } from './types';
 import { computeSpreadStatistics } from './compute';
 import { causalSlice } from './pairs-utils';
@@ -34,24 +30,15 @@ export function generatePairSignals(
 
     const c1Slice = causalSlice(c1, asOfTime, lookback);
     const c2Slice = causalSlice(c2, asOfTime, lookback);
-    if (lookback !== undefined && (c1Slice.length < lookback || c2Slice.length < lookback)) {
-      continue;
-    }
+    if (lookback !== undefined && (c1Slice.length < lookback || c2Slice.length < lookback)) continue;
     if (c1Slice.length < 3 || c2Slice.length < 3) continue;
 
     const { zScore } = computeSpreadStatistics(c1Slice, c2Slice, c1Slice.length);
-
     if (Math.abs(zScore) < threshold) continue;
 
     const direction = zScore > 0 ? 'short_spread' : 'long_spread';
     const confidence = Math.min(1, Math.abs(zScore) / 4);
-
-    signals.push({
-      pair: [pair.symbol1, pair.symbol2],
-      direction,
-      zScore,
-      confidence,
-    });
+    signals.push({ pair: [pair.symbol1, pair.symbol2], direction, zScore, confidence });
   }
 
   signals.sort((a, b) => b.confidence - a.confidence);

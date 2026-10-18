@@ -77,11 +77,7 @@ describe('evaluateCrossSectional — beta-aware sizing', () => {
   const SNAP_TIMES = [10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000];
   const ALL_TIMES = [...WARMUP, ...SNAP_TIMES];
 
-  function buildBetaWorld(): {
-    snapshots: CrossSectionalSnapshot[];
-    panel: AssetReturnSeries[];
-    benchmark: AssetReturnSeries;
-  } {
+  function buildBetaWorld() {
     const snapshots = SNAP_TIMES.map((t) => ({
       timestamp: t, universeId: UNIVERSE.id,
       assets: rankAssets({ AAA: 5, BBB: 4, CCC: 3, DDD: 2, EEE: 1 }),
@@ -97,16 +93,13 @@ describe('evaluateCrossSectional — beta-aware sizing', () => {
     return { snapshots, panel, benchmark };
   }
 
-  function evalConfig(targetBeta: number): CrossSectionalEvalConfig {
-    return { ...BASE_EVAL_CONFIG, targetBeta, betaWindow: 20, betaMinObs: 6 };
-  }
+  const evalConfig = (targetBeta: number): CrossSectionalEvalConfig => ({
+    ...BASE_EVAL_CONFIG, targetBeta, betaWindow: 20, betaMinObs: 6,
+  });
 
   it('scales every rebalance toward targetBeta and reports realized betas at target', () => {
     const { snapshots, panel, benchmark } = buildBetaWorld();
-    const result = evaluateCrossSectional(UNIVERSE, snapshots, panel, {
-      ...evalConfig(0.5),
-      benchmarkReturns: benchmark,
-    });
+    const result = evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...evalConfig(0.5), benchmarkReturns: benchmark });
 
     expect(result.sizing).toEqual({ betaApplied: true });
     expect(result.sim.periods).toHaveLength(9);
@@ -130,9 +123,7 @@ describe('evaluateCrossSectional — beta-aware sizing', () => {
     });
 
     const result = evaluateCrossSectional(UNIVERSE, snapshots, panel.map(coldStart), {
-      ...evalConfig(0.5),
-      betaMinObs: undefined,
-      benchmarkReturns: coldStart(benchmark),
+      ...evalConfig(0.5), betaMinObs: undefined, benchmarkReturns: coldStart(benchmark),
     });
 
     expect(result.sizing.betaApplied).toBe(false);

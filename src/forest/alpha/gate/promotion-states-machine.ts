@@ -1,10 +1,7 @@
 // Strategy Promotion State Machine — transition table and pure transition logic.
 
 import type {
-  StrategyPhase,
-  TransitionTrigger,
-  TransitionResult,
-  GateResultInput,
+  StrategyPhase, TransitionTrigger, TransitionResult, GateResultInput,
 } from './promotion-states-types';
 
 // ── Transition table ───────────────────────────────────────────────────────────
@@ -31,10 +28,7 @@ export function isTerminalPhase(phase: StrategyPhase): boolean {
 }
 
 /** True when `trigger` moves `phase` to a different state. */
-export function canTransition(
-  phase: StrategyPhase,
-  trigger: TransitionTrigger,
-): boolean {
+export function canTransition(phase: StrategyPhase, trigger: TransitionTrigger): boolean {
   return getTransition(phase, trigger) !== null;
 }
 

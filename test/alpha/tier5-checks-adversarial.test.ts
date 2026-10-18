@@ -1,17 +1,7 @@
-/**
- * Tier 5 Adversarial Coverage Hardening Test Suite.
- * Exhaustively stress-tests edge-cases and boundary conditions in promotion gate checks.
- */
 import { describe, expect, it } from 'vitest';
-import {
-  checkMinTrades, checkMinNetExpectancy, checkMinProfitFactor,
-  checkMaxDrawdown, checkMinSharpeSortino, checkMinRegimeCoverage,
-} from '@/forest/alpha/gate/financial-checks';
+import { checkMinTrades, checkMinNetExpectancy, checkMinProfitFactor, checkMaxDrawdown, checkMinSharpeSortino, checkMinRegimeCoverage } from '@/forest/alpha/gate/financial-checks';
 import { checkFeeStress, checkSlippageStress } from '@/forest/alpha/gate/stress-checks';
-import {
-  checkParameterRobustness, checkCrossPeriodRobustness, checkCrossAssetRobustness,
-  checkLeakageInvariance, checkNoSingleWindowDependency, checkBaselineComparison, checkReproducibleHash,
-} from '@/forest/alpha/gate/robustness-checks';
+import { checkParameterRobustness, checkCrossPeriodRobustness, checkCrossAssetRobustness, checkLeakageInvariance, checkNoSingleWindowDependency, checkBaselineComparison, checkReproducibleHash } from '@/forest/alpha/gate/robustness-checks';
 import type { RegimePerformance, BenchmarkMetrics, CandidateBaselineMetrics } from '@/forest/alpha/gate/types';
 
 describe('Tier 5 Adversarial: Financial Checks Edge Cases', () => {
@@ -64,18 +54,11 @@ describe('Tier 5 Adversarial: Financial Checks Edge Cases', () => {
 
 describe('Tier 5 Adversarial: Stress Checks Edge Cases', () => {
   it('covers feeStress non-finite values and asymmetric failures', () => {
-    expect(checkFeeStress(NaN, 50).passed).toBe(false);
-    expect(checkFeeStress(50, Infinity).passed).toBe(false);
-    expect(checkFeeStress(-10, 50).passed).toBe(false);
-    expect(checkFeeStress(50, -10).passed).toBe(false);
+    for (const [n, c] of [[NaN, 50], [50, Infinity], [-10, 50], [50, -10]] as const) expect(checkFeeStress(n, c).passed).toBe(false);
     expect(checkFeeStress(NaN, NaN).actual).toBeNull();
   });
-
   it('covers slippageStress non-finite values and asymmetric failures', () => {
-    expect(checkSlippageStress(NaN, 50).passed).toBe(false);
-    expect(checkSlippageStress(50, -Infinity).passed).toBe(false);
-    expect(checkSlippageStress(-5, 20).passed).toBe(false);
-    expect(checkSlippageStress(20, -5).passed).toBe(false);
+    for (const [a, e] of [[NaN, 50], [50, -Infinity], [-5, 20], [20, -5]] as const) expect(checkSlippageStress(a, e).passed).toBe(false);
     expect(checkSlippageStress(NaN, NaN).actual).toBeNull();
   });
 });
@@ -95,9 +78,7 @@ describe('Tier 5 Adversarial: Robustness Checks Edge Cases', () => {
     const exempt = checkCrossAssetRobustness(null, false);
     expect(exempt.passed).toBe(true);
     expect(exempt.actual).toBeNull();
-    for (const v of [undefined, null, NaN, 1.5, 0.2]) {
-      expect(checkCrossAssetRobustness(v, true).passed).toBe(false);
-    }
+    for (const v of [undefined, null, NaN, 1.5, 0.2]) expect(checkCrossAssetRobustness(v, true).passed).toBe(false);
   });
   it('covers leakageInvariance non-integer and non-finite counts', () => {
     expect(checkLeakageInvariance(1.5).passed).toBe(false);

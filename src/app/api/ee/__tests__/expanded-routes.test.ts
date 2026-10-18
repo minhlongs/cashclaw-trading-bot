@@ -11,11 +11,7 @@ import { cronSchedulerCoordinator } from '@/worker-cron';
 import { defaultCloudSchedulerCoordinator } from '@/ee/scheduler/cloud-scheduler-coordinator';
 
 function postJson(url: string, body: unknown): Request {
-  return new Request(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  return new Request(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 }
 
 describe('Expanded Cloud SaaS EE API Routes', () => {
@@ -39,46 +35,32 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(resGet.status).toBe(200);
     expect(dataGet.account.balanceCredits).toBe(10_000);
 
-    const resInvalidTier = await creditsGet(
-      new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=INVALID_TIER'),
-    );
+    const resInvalidTier = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=INVALID_TIER'));
     expect(resInvalidTier.status).toBe(400);
 
     const resPost = await creditsPost(
       postJson('http://localhost/api/ee/credits', {
-        workspaceId: 'ws_123',
-        tier: 'premium',
-        modelTier: 'REASONING',
-        promptTokens: 1500,
-        completionTokens: 500,
+        workspaceId: 'ws_123', tier: 'premium', modelTier: 'REASONING', promptTokens: 1500, completionTokens: 500,
       }),
     );
     const dataPost = (await resPost.json()) as {
-      ok: boolean;
-      costCredits: number;
-      account: { balanceCredits: number; consumedCredits: number };
+      ok: boolean; costCredits: number; account: { balanceCredits: number; consumedCredits: number };
     };
     expect(resPost.status).toBe(200);
     expect(dataPost.costCredits).toBe(8);
     expect(dataPost.account.balanceCredits).toBe(9_992);
     expect(dataPost.account.consumedCredits).toBe(8);
 
-    const resGetAfter = await creditsGet(
-      new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=PREMIUM'),
-    );
+    const resGetAfter = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=PREMIUM'));
     const dataGetAfter = (await resGetAfter.json()) as {
-      ok: boolean;
-      account: { balanceCredits: number; consumedCredits: number };
+      ok: boolean; account: { balanceCredits: number; consumedCredits: number };
     };
     expect(dataGetAfter.account.balanceCredits).toBe(9_992);
     expect(dataGetAfter.account.consumedCredits).toBe(8);
 
-    const resUpgraded = await creditsGet(
-      new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=ENTERPRISE'),
-    );
+    const resUpgraded = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=ENTERPRISE'));
     const dataUpgraded = (await resUpgraded.json()) as {
-      ok: boolean;
-      account: { tier: string; balanceCredits: number; consumedCredits: number };
+      ok: boolean; account: { tier: string; balanceCredits: number; consumedCredits: number };
     };
     expect(dataUpgraded.account.tier).toBe('ENTERPRISE');
     expect(dataUpgraded.account.balanceCredits).toBe(49_992);
@@ -87,14 +69,8 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
 
   it('POST /api/ee/alerts handles alert signing, deduplication, and unconditional WEBHOOK tier gating', async () => {
     const payload = {
-      eventId: 'evt_001',
-      workspaceId: 'ws_abc',
-      botId: 'bot_vol_1',
-      channel: 'WEBHOOK',
-      message: 'Grid rebalance complete',
-      signingSecret: 'ultra-secure-hmac-secret-12345',
-      timestampMs: 1700000000000,
-      tier: 'PREMIUM',
+      eventId: 'evt_001', workspaceId: 'ws_abc', botId: 'bot_vol_1', channel: 'WEBHOOK',
+      message: 'Grid rebalance complete', signingSecret: 'ultra-secure-hmac-secret-12345', timestampMs: 1700000000000, tier: 'PREMIUM',
     };
 
     const res1 = await alertsPost(postJson('http://localhost/api/ee/alerts', payload));
@@ -109,22 +85,13 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(data2.suppressed).toBe(true);
 
     const resBlocked = await alertsPost(
-      postJson('http://localhost/api/ee/alerts', {
-        ...payload,
-        eventId: 'evt_gated_01',
-        workspaceId: 'ws_basic_alerts',
-        tier: 'BASIC',
-      }),
+      postJson('http://localhost/api/ee/alerts', { ...payload, eventId: 'evt_gated_01', workspaceId: 'ws_basic_alerts', tier: 'BASIC' }),
     );
     expect(resBlocked.status).toBe(402);
 
     const resTelegramBasic = await alertsPost(
       postJson('http://localhost/api/ee/alerts', {
-        ...payload,
-        eventId: 'evt_telegram_basic',
-        workspaceId: 'ws_basic_alerts',
-        channel: 'TELEGRAM',
-        tier: 'BASIC',
+        ...payload, eventId: 'evt_telegram_basic', workspaceId: 'ws_basic_alerts', channel: 'TELEGRAM', tier: 'BASIC',
       }),
     );
     expect(resTelegramBasic.status).toBe(200);

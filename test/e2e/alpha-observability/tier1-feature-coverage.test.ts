@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RegimeLabel } from '@/tree/regime/types';
 import { computeFeatureSnapshotHash, computeFeatureSnapshotHashSync } from '@/tree/alpha/observability';
-import {
-  computeAttribution, createSyntheticAlphaDecision, createSyntheticOperationalTelemetry,
-  createSyntheticPortfolioDecision, evaluateTelemetryHealth, generateShadowOrder, simulateShadowFill,
-} from './harness';
+import { computeAttribution, createSyntheticAlphaDecision, createSyntheticOperationalTelemetry, createSyntheticPortfolioDecision, evaluateTelemetryHealth, generateShadowOrder, simulateShadowFill } from './harness';
 
 describe('Tier 1: Feature Coverage (F1-F5)', () => {
   describe('F1: Telemetry Contracts', () => {
@@ -44,17 +41,9 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(hash).toMatch(/^[a-f0-9]{64}$/);
       expect(hash).toBe(computeFeatureSnapshotHashSync({ rsi: 50, vol: 0.02 }));
     });
-    it('guarantees key ordering invariance for arbitrary unordered object keys', () => {
-      const h1 = computeFeatureSnapshotHashSync({ a: 1, b: 2, c: { d: 3, e: 4 } });
-      const h2 = computeFeatureSnapshotHashSync({ c: { e: 4, d: 3 }, b: 2, a: 1 });
-      expect(h1).toBe(h2);
-    });
-    it('omits undefined properties consistently with canonical JSON specification', () => {
-      expect(computeFeatureSnapshotHashSync({ a: 1, b: undefined })).toBe(computeFeatureSnapshotHashSync({ a: 1 }));
-    });
-    it('preserves array element ordering sensitivity', () => {
-      expect(computeFeatureSnapshotHashSync({ arr: [1, 2, 3] })).not.toBe(computeFeatureSnapshotHashSync({ arr: [3, 2, 1] }));
-    });
+    it('guarantees key ordering invariance for arbitrary unordered object keys', () => { expect(computeFeatureSnapshotHashSync({ a: 1, b: 2, c: { d: 3, e: 4 } })).toBe(computeFeatureSnapshotHashSync({ c: { e: 4, d: 3 }, b: 2, a: 1 })); });
+    it('omits undefined properties consistently with canonical JSON specification', () => { expect(computeFeatureSnapshotHashSync({ a: 1, b: undefined })).toBe(computeFeatureSnapshotHashSync({ a: 1 })); });
+    it('preserves array element ordering sensitivity', () => { expect(computeFeatureSnapshotHashSync({ arr: [1, 2, 3] })).not.toBe(computeFeatureSnapshotHashSync({ arr: [3, 2, 1] })); });
     it('ensures parity between synchronous and asynchronous hashing functions', async () => {
       const payload = { signal: 0.75, horizon: '1h', factors: ['mom', 'rev'] };
       expect(computeFeatureSnapshotHashSync(payload)).toBe(await computeFeatureSnapshotHash(payload));
@@ -110,8 +99,7 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(fill.feeAmount).toBe(15.1275);
     });
     it('enforces causal timestamp ordering (fillTimestamp = decisionTimestamp + latencyMs)', () => {
-      const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 150, stressTier: 'normal' });
-      expect(fill.fillTimestamp).toBe(baseOrder.decisionTimestamp + 150);
+      expect(simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 150, stressTier: 'normal' }).fillTimestamp).toBe(baseOrder.decisionTimestamp + 150);
     });
   });
   describe('F5: Expected vs. Realized Edge & Slippage Attribution', () => {
@@ -128,8 +116,7 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(attr.deltaSlippageBps).toBe(5.5);
     });
     it('evaluates healthy operational state and detects data staleness', () => {
-      const health = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ decisionLatencyMs: 30, dataFreshnessMs: 150 }));
-      expect(health).toEqual({ status: 'healthy', alarms: [] });
+      expect(evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ decisionLatencyMs: 30, dataFreshnessMs: 150 }))).toEqual({ status: 'healthy', alarms: [] });
       const stale = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ dataFreshnessMs: 5500 }));
       expect(stale.status).toBe('critical');
       expect(stale.alarms).toContain('STALE_DATA');

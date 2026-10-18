@@ -1,11 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { describe, it, expect, expectTypeOf } from 'vitest';
-import {
-  type StrategyPhase, type TransitionTrigger, type AutomatedCeiling,
-  type AutomatedProgressionPhase, type AutomatedTransitionTarget, type PhaseAfterGatePassed,
-  AUTOMATED_CEILING, isTerminalPhase, canTransition, getTransition, transitionStrategy, gateResultToTrigger,
-} from '../../src/forest/alpha/gate/promotion-states';
+import { type StrategyPhase, type TransitionTrigger, type AutomatedCeiling, type AutomatedProgressionPhase, type AutomatedTransitionTarget, type PhaseAfterGatePassed, AUTOMATED_CEILING, isTerminalPhase, canTransition, getTransition, transitionStrategy, gateResultToTrigger } from '../../src/forest/alpha/gate/promotion-states';
 import type { PromotionGateResult } from '../../src/forest/alpha/gate/types';
 
 const GATE_DIR = path.resolve(__dirname, '../../src/forest/alpha/gate');
@@ -13,9 +9,8 @@ const TREE_DIR = path.resolve(__dirname, '../../src/tree');
 
 function getTsSourceFiles(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
   const files: string[] = [];
-  for (const entry of entries) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory() && entry.name !== '__tests__') files.push(...getTsSourceFiles(full));
     else if (entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts')) files.push(full);
@@ -23,13 +18,9 @@ function getTsSourceFiles(dir: string): string[] {
   return files;
 }
 
-const ALL_PHASES: readonly StrategyPhase[] = [
-  'RESEARCH', 'BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW', 'MANUAL_APPROVAL', 'LIVE', 'KILLED',
-];
+const ALL_PHASES: readonly StrategyPhase[] = ['RESEARCH', 'BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW', 'MANUAL_APPROVAL', 'LIVE', 'KILLED'];
 const TRIGGERS: readonly TransitionTrigger[] = [
-  { type: 'gate_passed' }, { type: 'gate_failed' },
-  { type: 'manual_approval', approved: true }, { type: 'manual_approval', approved: false },
-  { type: 'promote' }, { type: 'demote' },
+  { type: 'gate_passed' }, { type: 'gate_failed' }, { type: 'manual_approval', approved: true }, { type: 'manual_approval', approved: false }, { type: 'promote' }, { type: 'demote' },
 ];
 
 describe('Promotion State Machine Safety Hardening', () => {
@@ -60,9 +51,8 @@ describe('Promotion State Machine Safety Hardening', () => {
       expect(() => transitionStrategy('SHADOW', passed)).toThrow(/Invalid transition: SHADOW \+ gate_passed/);
     });
     it('proves zero automated paths to LIVE or MANUAL_APPROVAL from any phase', () => {
-      const passed: TransitionTrigger = { type: 'gate_passed' };
       for (const p of ALL_PHASES) {
-        const next = getTransition(p, passed);
+        const next = getTransition(p, { type: 'gate_passed' });
         expect(next).not.toBe('LIVE');
         expect(next).not.toBe('MANUAL_APPROVAL');
       }
@@ -106,19 +96,15 @@ describe('Promotion State Machine Safety Hardening', () => {
     });
   });
   describe('Static Isolation & Tree Layer Purity', () => {
-    const FORBIDDEN_TOKENS = [
-      'ccxt', 'tree/exchange', 'land/exchange-orchestration', 'OrderProvider', 'ExchangeOrchestrator',
-      'BotOrderExecutor', 'LiveExchangeAdapter', 'placeOrder', 'executeLive', 'tree/order', 'tree/wallet', 'land/wallet',
-    ];
+    const FORBIDDEN_TOKENS = ['ccxt', 'tree/exchange', 'land/exchange-orchestration', 'OrderProvider', 'ExchangeOrchestrator', 'BotOrderExecutor', 'LiveExchangeAdapter', 'placeOrder', 'executeLive', 'tree/order', 'tree/wallet', 'land/wallet'];
     it('verifies gate source files contain zero live exchange or execution adapters', () => {
       const gateFiles = getTsSourceFiles(GATE_DIR);
       expect(gateFiles.length).toBeGreaterThanOrEqual(5);
       for (const file of gateFiles) {
         const content = fs.readFileSync(file, 'utf-8');
-        const rel = path.relative(GATE_DIR, file);
         for (const token of FORBIDDEN_TOKENS) {
           const regex = token.includes('/') ? new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) : new RegExp(`\\b${token}\\b`);
-          expect(content.match(regex), `Forbidden token '${token}' in ${rel}`).toBeNull();
+          expect(content.match(regex), `Forbidden token '${token}' in ${path.relative(GATE_DIR, file)}`).toBeNull();
         }
       }
     });
@@ -127,12 +113,10 @@ describe('Promotion State Machine Safety Hardening', () => {
       expect(treeFiles.length).toBeGreaterThanOrEqual(20);
       for (const file of treeFiles) {
         const content = fs.readFileSync(file, 'utf-8');
-        const rel = path.relative(TREE_DIR, file);
-        expect(/from\s+['"][^'"]*(?:forest\/alpha\/gate|promotion-states|survival-gate)/.test(content), `Tree file ${rel} illegally imports gate`).toBe(false);
+        expect(/from\s+['"][^'"]*(?:forest\/alpha\/gate|promotion-states|survival-gate)/.test(content), `Tree file ${path.relative(TREE_DIR, file)} illegally imports gate`).toBe(false);
       }
       for (const file of getTsSourceFiles(path.resolve(TREE_DIR, 'alpha/observability'))) {
-        const content = fs.readFileSync(file, 'utf-8');
-        expect(/from\s+['"][^'"]*(?:src\/forest|@\/forest)/.test(content), `Observability ${path.relative(TREE_DIR, file)} imports forest`).toBe(false);
+        expect(/from\s+['"][^'"]*(?:src\/forest|@\/forest)/.test(fs.readFileSync(file, 'utf-8')), `Observability ${path.relative(TREE_DIR, file)} imports forest`).toBe(false);
       }
     });
   });

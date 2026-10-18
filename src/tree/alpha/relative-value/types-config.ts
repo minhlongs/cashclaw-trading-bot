@@ -71,23 +71,13 @@ export interface PairSimConfig {
    * Hedge-ratio policy: 'rolling' (default) re-estimates β(t) from strictly
    * prior data at every timestamp; 'frozen' estimates β ONCE at the first
    * timestamp with strictly-prior data and holds it constant afterwards.
-   * Optional — omit for current behavior.
    */
   readonly hedgeMode?: 'rolling' | 'frozen';
-  /**
-   * In-simulator tradability gate toggle. Default TRUE (fail-closed
-   * preserved); false skips gate runs entirely (trail records 'skipped').
-   */
+  /** In-simulator tradability gate toggle. Default TRUE (fail-closed preserved). */
   readonly inSimTradabilityGate?: boolean;
-  /**
-   * Pure causal entry filter: entries (FLAT → position) are suppressed when
-   * this returns false at the decision timestamp. Exits are NEVER blocked.
-   */
+  /** Pure causal entry filter: entries suppressed when false; exits NEVER blocked. */
   readonly entryFilter?: (timestamp: number) => boolean;
 }
 
-/**
- * Position state machine states. Three states: flat, long the spread
- * (long B / short β·A), short the spread (short B / long β·A).
- */
+/** Position state machine states: flat, long_spread (long B / short β·A), short_spread. */
 export type PairPositionState = 'flat' | 'long_spread' | 'short_spread';

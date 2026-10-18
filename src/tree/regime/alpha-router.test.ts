@@ -14,14 +14,8 @@ import type { AlphaSignal } from '../alpha/types';
 
 function makeSignal(overrides: Partial<AlphaSignal> = {}): AlphaSignal {
   return {
-    name: 'test-alpha',
-    source: 'indicator',
-    direction: 'buy',
-    confidence: 0.5,
-    timestamp: 0,
-    features: { features: [], computedAt: 0, symbol: 'BTC/USDT', lookback: 1 },
-    metadata: {},
-    ...overrides,
+    name: 'test-alpha', source: 'indicator', direction: 'buy', confidence: 0.5, timestamp: 0,
+    features: { features: [], computedAt: 0, symbol: 'BTC/USDT', lookback: 1 }, metadata: {}, ...overrides,
   };
 }
 
@@ -176,19 +170,9 @@ describe('routeAlphas', () => {
   });
 
   it('hold direction is never preferred by any regime with explicit prefs', () => {
-    // 'hold' is not in any REGIME_DIRECTION_PREFS, so it is filtered out
-    // under every regime except UNKNOWN.
     const signals = [makeSignal({ direction: 'hold', confidence: 1 })];
-    for (const regime of [
-      RegimeLabel.TREND_UP,
-      RegimeLabel.TREND_DOWN,
-      RegimeLabel.RANGE,
-      RegimeLabel.HIGH_VOLATILITY,
-      RegimeLabel.LOW_VOLATILITY,
-    ]) {
-      expect(routeAlphas(regime, signals)).toEqual([]);
-    }
-    // But UNKNOWN passes it through
+    const regimes = [RegimeLabel.TREND_UP, RegimeLabel.TREND_DOWN, RegimeLabel.RANGE, RegimeLabel.HIGH_VOLATILITY, RegimeLabel.LOW_VOLATILITY];
+    for (const regime of regimes) expect(routeAlphas(regime, signals)).toEqual([]);
     expect(routeAlphas(RegimeLabel.UNKNOWN, signals)).toHaveLength(1);
   });
 

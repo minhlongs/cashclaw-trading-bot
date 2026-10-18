@@ -9,25 +9,15 @@ import {
 } from './saas-entitlement-d1';
 
 export interface IpnActivationRecord {
-  readonly paymentId: string;
-  readonly workspaceId: string;
-  readonly ownerUserId?: string;
-  readonly targetTier: SaasTier;
-  readonly paymentStatus: string;
-  readonly payAmount: number;
-  readonly payCurrency: string;
-  readonly processedAtMs?: number;
+  readonly paymentId: string; readonly workspaceId: string; readonly ownerUserId?: string;
+  readonly targetTier: SaasTier; readonly paymentStatus: string; readonly payAmount: number;
+  readonly payCurrency: string; readonly processedAtMs?: number;
 }
 
 export interface WorkspaceEntitlementRow {
-  readonly workspaceId: string;
-  readonly ownerUserId: string;
-  readonly tier: SaasTier;
-  readonly maxRunningBots: number;
-  readonly maxWalkForwardWindows: number;
-  readonly monthlyLlmCredits: number;
-  readonly managedLlmPoolEnabled: boolean;
-  readonly updatedAtMs: number;
+  readonly workspaceId: string; readonly ownerUserId: string; readonly tier: SaasTier;
+  readonly maxRunningBots: number; readonly maxWalkForwardWindows: number;
+  readonly monthlyLlmCredits: number; readonly managedLlmPoolEnabled: boolean; readonly updatedAtMs: number;
 }
 
 export class SaasEntitlementStore {

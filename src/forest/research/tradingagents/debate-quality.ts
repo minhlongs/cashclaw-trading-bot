@@ -1,31 +1,12 @@
 // Debate Quality Harness — compares deliberation arms (task §J):
-//   A = single analyst, B = bull-bear debate,
-//   C = debate + research manager, D = debate + CashClaw validation.
-// Forest orchestration over tree-layer pure math (compareDebateArms).
-// Runs all arms on identical fixtures and reports OOS-evidence delta +
-// token-cost delta per arm. Binding rule: if an arm adds no measurable
-// OOS evidence or research efficiency, emit REDUCE/DISABLE recommendation.
-// Multi-agent is never assumed better.
-
+// A = single analyst, B = bull-bear debate, C = debate + research manager, D = debate + CashClaw validation.
 import {
-  compareDebateArms,
-  DEFAULT_DEBATE_QUALITY_CONFIG,
-  type DebateArm,
-  type DebateArmMetrics,
-  type DebateQualityConfig,
-  type DebateQualityReport,
+  compareDebateArms, DEFAULT_DEBATE_QUALITY_CONFIG,
+  type DebateArm, type DebateArmMetrics, type DebateQualityConfig, type DebateQualityReport,
 } from '@/tree/research/tradingagents/debate-quality';
-import {
-  computeArmMetrics,
-  type ArmEvaluationInput,
-  type ComputedArmMetrics,
-} from './debate-quality-metrics';
+import { computeArmMetrics, type ArmEvaluationInput, type ComputedArmMetrics } from './debate-quality-metrics';
 
-export {
-  computeArmMetrics,
-  type ArmEvaluationInput,
-  type ComputedArmMetrics,
-} from './debate-quality-metrics';
+export { computeArmMetrics, type ArmEvaluationInput, type ComputedArmMetrics } from './debate-quality-metrics';
 
 /** Compare debate arms from evaluation inputs. */
 export function evaluateDebateQuality(

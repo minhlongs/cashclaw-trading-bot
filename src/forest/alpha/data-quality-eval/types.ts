@@ -1,39 +1,14 @@
-/**
- * Forest Alpha Data Quality Evaluation Seam Types.
- * Composes Tree-layer data quality domain types with evaluation reports,
- * strict schemas, and fail-closed signal generation fence contracts.
- */
-
+/** Forest Alpha Data Quality Evaluation Seam Types (fail-closed signal generation fence contracts). */
 import type {
-  AlignmentConfig,
-  Candle,
-  CheckResult,
-  DataQualityConfig,
-  FutureDataConfig,
-  MissingIntervalsConfig,
-  OutageConfig,
-  QualityDimension,
-  QualityStatus,
-  QualityViolation,
-  StalenessConfig,
-  ValidationResult,
-  VolumeConfig,
+  AlignmentConfig, Candle, CheckResult, DataQualityConfig, FutureDataConfig,
+  MissingIntervalsConfig, OutageConfig, QualityDimension, QualityStatus,
+  QualityViolation, StalenessConfig, ValidationResult, VolumeConfig,
 } from '@/tree/alpha/data-quality';
 
 export type {
-  AlignmentConfig,
-  Candle,
-  CheckResult,
-  DataQualityConfig,
-  FutureDataConfig,
-  MissingIntervalsConfig,
-  OutageConfig,
-  QualityDimension,
-  QualityStatus,
-  QualityViolation,
-  StalenessConfig,
-  ValidationResult,
-  VolumeConfig,
+  AlignmentConfig, Candle, CheckResult, DataQualityConfig, FutureDataConfig,
+  MissingIntervalsConfig, OutageConfig, QualityDimension, QualityStatus,
+  QualityViolation, StalenessConfig, ValidationResult, VolumeConfig,
 };
 
 /**

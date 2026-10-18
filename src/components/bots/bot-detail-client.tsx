@@ -77,7 +77,6 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
       )}
 
       <BotDetailKpi bot={bot} />
-
       <div className="tabs">
         {TABS.map((tabItem) => (
           <button key={tabItem.value} type="button" className={`tab ${tab === tabItem.value ? 'active' : ''}`} onClick={() => setTab(tabItem.value)}>
@@ -85,7 +84,6 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
           </button>
         ))}
       </div>
-
       {tab === 'overview' && <BotDetailOverview bot={{ ...bot, botStatus: currentStatus }} />}
       {tab === 'trades' && <BotDetailTrades trades={trades} emptyMsg="No trades yet" />}
       {tab === 'config' && <BotDetailConfig config={config} botId={bot.id} onConfigSaved={setConfig} />}

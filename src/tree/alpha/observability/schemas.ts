@@ -56,38 +56,32 @@ export const ProviderProvenanceSchema = z
   })
   .strict();
 
-export const OperationalTelemetrySchema = z
-  .object({
-    decisionLatencyMs: z.number().finite().nonnegative(),
-    dataFreshnessMs: z.number().finite().nonnegative(),
-    providerProvenance: ProviderProvenanceSchema,
-    timestamp: z.number().int().positive().optional(),
-  })
-  .strict();
+export const OperationalTelemetrySchema = z.object({
+  decisionLatencyMs: z.number().finite().nonnegative(),
+  dataFreshnessMs: z.number().finite().nonnegative(),
+  providerProvenance: ProviderProvenanceSchema,
+  timestamp: z.number().int().positive().optional(),
+}).strict();
 
-export const ShadowOrderSchema = z
-  .object({
-    orderId: z.string().trim().min(1).max(100),
-    symbol: z.string().trim().min(1).max(50),
-    side: ShadowOrderSideSchema,
-    size: z.number().finite().positive(),
-    price: z.number().finite().positive(),
-    targetWeightDelta: z.number().finite(),
-    decisionTimestamp: z.number().int().positive(),
-  })
-  .strict();
+export const ShadowOrderSchema = z.object({
+  orderId: z.string().trim().min(1).max(100),
+  symbol: z.string().trim().min(1).max(50),
+  side: ShadowOrderSideSchema,
+  size: z.number().finite().positive(),
+  price: z.number().finite().positive(),
+  targetWeightDelta: z.number().finite(),
+  decisionTimestamp: z.number().int().positive(),
+}).strict();
 
-export const ShadowFillSchema = z
-  .object({
-    fillId: z.string().trim().min(1).max(100),
-    orderId: z.string().trim().min(1).max(100),
-    symbol: z.string().trim().min(1).max(50),
-    side: ShadowOrderSideSchema,
-    fillPrice: z.number().finite().positive(),
-    fillQuantity: z.number().finite().positive(),
-    fillTimestamp: z.number().int().positive(),
-    feeAmount: z.number().finite().nonnegative(),
-    slippageBps: z.number().finite(),
-    stressTier: CostStressTierSchema,
-  })
-  .strict();
+export const ShadowFillSchema = z.object({
+  fillId: z.string().trim().min(1).max(100),
+  orderId: z.string().trim().min(1).max(100),
+  symbol: z.string().trim().min(1).max(50),
+  side: ShadowOrderSideSchema,
+  fillPrice: z.number().finite().positive(),
+  fillQuantity: z.number().finite().positive(),
+  fillTimestamp: z.number().int().positive(),
+  feeAmount: z.number().finite().nonnegative(),
+  slippageBps: z.number().finite(),
+  stressTier: CostStressTierSchema,
+}).strict();

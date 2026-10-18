@@ -51,10 +51,7 @@ export function BotsTable({ bots, locale, onStatusChange, onError }: BotsTablePr
               return (
                 <tr key={bot.id}>
                   <td>
-                    <Link
-                      href={`/${locale}/bots/${bot.id}`}
-                      className="font-semibold link-accent"
-                    >
+                    <Link href={`/${locale}/bots/${bot.id}`} className="font-semibold link-accent">
                       {bot.name}
                     </Link>
                   </td>
@@ -64,16 +61,9 @@ export function BotsTable({ bots, locale, onStatusChange, onError }: BotsTablePr
                   <td><StatusBadge status={bot.botStatus} /></td>
                   <td className="text-right"><PnlValue value={bot.totalPnl} /></td>
                   <td className="text-right mono">{wr}</td>
-                  <td className="text-right mono text-xs">
-                    ${bot.capitalAllocated.toLocaleString()}
-                  </td>
+                  <td className="text-right mono text-xs">${bot.capitalAllocated.toLocaleString()}</td>
                   <td className="table-actions">
-                    <BotRowActions
-                      bot={bot}
-                      locale={locale}
-                      onStatusChange={onStatusChange}
-                      onError={onError}
-                    />
+                    <BotRowActions bot={bot} locale={locale} onStatusChange={onStatusChange} onError={onError} />
                   </td>
                 </tr>
               );

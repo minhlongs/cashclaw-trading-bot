@@ -1,20 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import {
-  type StrategyPhase, type TransitionTrigger, isTerminalPhase,
-  canTransition, getTransition, transitionStrategy, gateResultToTrigger, AUTOMATED_CEILING,
-} from '../../src/forest/alpha/gate/promotion-states';
+import { type StrategyPhase, type TransitionTrigger, isTerminalPhase, canTransition, getTransition, transitionStrategy, gateResultToTrigger, AUTOMATED_CEILING } from '../../src/forest/alpha/gate/promotion-states';
 
-const ALL_PHASES: readonly StrategyPhase[] = [
-  'RESEARCH', 'BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS',
-  'PAPER', 'SHADOW', 'MANUAL_APPROVAL', 'LIVE', 'KILLED',
-];
-
+const ALL_PHASES: readonly StrategyPhase[] = ['RESEARCH', 'BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW', 'MANUAL_APPROVAL', 'LIVE', 'KILLED'];
 const STANDARD_TRIGGERS: readonly TransitionTrigger[] = [
-  { type: 'gate_passed' }, { type: 'gate_failed' },
-  { type: 'manual_approval', approved: true }, { type: 'manual_approval', approved: false },
-  { type: 'promote' }, { type: 'demote' },
+  { type: 'gate_passed' }, { type: 'gate_failed' }, { type: 'manual_approval', approved: true }, { type: 'manual_approval', approved: false }, { type: 'promote' }, { type: 'demote' },
 ];
-
 const ADVERSARIAL_TRIGGERS: readonly TransitionTrigger[] = [
   ...STANDARD_TRIGGERS,
   { type: 'auto_promote' } as unknown as TransitionTrigger,
@@ -30,8 +20,7 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
       let current: StrategyPhase = 'RESEARCH';
       const path: StrategyPhase[] = [current];
       while (canTransition(current, { type: 'gate_passed' })) {
-        const res = transitionStrategy(current, { type: 'gate_passed' });
-        current = res.to;
+        current = transitionStrategy(current, { type: 'gate_passed' }).to;
         path.push(current);
       }
       expect(path).toEqual(['RESEARCH', 'BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW']);
@@ -57,9 +46,7 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
 
   describe('Challenge 2: Verify no automated trigger from SHADOW reaches MANUAL_APPROVAL, PAPER_CANDIDATE, or LIVE', () => {
     it('proves automated triggers cannot transition SHADOW to MANUAL_APPROVAL, PAPER_CANDIDATE, or LIVE', () => {
-      const automatedTriggers: TransitionTrigger[] = [
-        { type: 'gate_passed' }, { type: 'gate_failed' }, { type: 'auto_promote' } as unknown as TransitionTrigger,
-      ];
+      const automatedTriggers: TransitionTrigger[] = [{ type: 'gate_passed' }, { type: 'gate_failed' }, { type: 'auto_promote' } as unknown as TransitionTrigger];
       for (const trigger of automatedTriggers) {
         const next = getTransition('SHADOW', trigger);
         expect(next).not.toBe('MANUAL_APPROVAL');
@@ -127,10 +114,7 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
 
   describe('Challenge 6: Adversarial Fail-Closed gateResultToTrigger', () => {
     it('fails closed on unknown or malicious verdict/status payloads', () => {
-      const malformedInputs = [
-        'LIVE', 'APPROVED', 'UNKNOWN', 'paper_candidate',
-        { verdict: 'LIVE' }, { verdict: 'MANUAL_APPROVAL' }, { status: 'LIVE' }, { status: 'SHADOW' }, {},
-      ];
+      const malformedInputs = ['LIVE', 'APPROVED', 'UNKNOWN', 'paper_candidate', { verdict: 'LIVE' }, { verdict: 'MANUAL_APPROVAL' }, { status: 'LIVE' }, { status: 'SHADOW' }, {}];
       for (const input of malformedInputs) {
         expect(gateResultToTrigger(input as unknown as Parameters<typeof gateResultToTrigger>[0])).toEqual({ type: 'gate_failed' });
       }

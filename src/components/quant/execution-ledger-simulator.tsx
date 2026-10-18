@@ -20,12 +20,11 @@ export function ExecutionLedgerSimulator() {
   const impactBps = Number((stressCfg.marketImpactPct * 10000 * depthMultiplier).toFixed(1));
 
   const ledgerRows = useMemo(
-    () =>
-      PAPER_FILLS.map((fill) => {
-        const effectiveSlipBps = Number((fill.baseSlipBps * depthMultiplier + impactBps).toFixed(1));
-        const totalCostUsd = Number(((fill.notionalUsd * (feeBps + effectiveSlipBps)) / 10000).toFixed(2));
-        return { ...fill, effectiveSlipBps, totalCostUsd };
-      }),
+    () => PAPER_FILLS.map((fill) => {
+      const effectiveSlipBps = Number((fill.baseSlipBps * depthMultiplier + impactBps).toFixed(1));
+      const totalCostUsd = Number(((fill.notionalUsd * (feeBps + effectiveSlipBps)) / 10000).toFixed(2));
+      return { ...fill, effectiveSlipBps, totalCostUsd };
+    }),
     [depthMultiplier, feeBps, impactBps],
   );
 

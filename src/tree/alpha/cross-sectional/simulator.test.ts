@@ -151,25 +151,17 @@ describe('runCrossSectionalSim — fail-closed edge cases', () => {
 
   it('throws when a snapshot symbol is missing from the return panel', () => {
     const partial = RETURNS.filter((s) => s.symbol !== 'C');
-    expect(() => runCrossSectionalSim(UNIVERSE, SNAPSHOTS, partial, CONFIG)).toThrow(
-      /missing from return panel/,
-    );
+    expect(() => runCrossSectionalSim(UNIVERSE, SNAPSHOTS, partial, CONFIG)).toThrow(/missing from return panel/);
   });
 
   it('throws on universeId mismatch', () => {
     const other = createUniverse('other', ['A', 'B', 'C']);
-    expect(() => runCrossSectionalSim(other, SNAPSHOTS, RETURNS, CONFIG)).toThrow(
-      /universeId/,
-    );
+    expect(() => runCrossSectionalSim(other, SNAPSHOTS, RETURNS, CONFIG)).toThrow(/universeId/);
   });
 
   it('throws on invalid config', () => {
-    expect(() =>
-      runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, { ...CONFIG, topN: -1 }),
-    ).toThrow(/topN/);
-    expect(() =>
-      runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, { ...CONFIG, costBps: -5 }),
-    ).toThrow(/costBps/);
+    expect(() => runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, { ...CONFIG, topN: -1 })).toThrow(/topN/);
+    expect(() => runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, { ...CONFIG, costBps: -5 })).toThrow(/costBps/);
   });
 
   it('warns (never forward-fills) when a held symbol misses one period return', () => {

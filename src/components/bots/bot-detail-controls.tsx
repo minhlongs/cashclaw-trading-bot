@@ -20,19 +20,10 @@ export interface ControlButtonProps {
 }
 
 export function ControlButton({
-  onClick,
-  icon: Icon,
-  label,
-  disabled = false,
-  loading = false,
+  onClick, icon: Icon, label, disabled = false, loading = false,
 }: ControlButtonProps) {
   return (
-    <button
-      type="button"
-      className="btn btn-ghost flex items-center gap-2"
-      onClick={onClick}
-      disabled={disabled}
-    >
+    <button type="button" className="btn btn-ghost flex items-center gap-2" onClick={onClick} disabled={disabled}>
       {loading ? <Loader2 size={16} className="animate-spin" /> : <Icon size={16} />}
       {label}
     </button>

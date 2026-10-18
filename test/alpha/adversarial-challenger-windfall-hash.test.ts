@@ -13,19 +13,16 @@ describe('Adversarial Challenge: Checks 13-15 Empirical Stress Suite', () => {
       expect(checkNoSingleWindowDependency([-500], 0.50).passed).toBe(false);
       expect(checkNoSingleWindowDependency([0], 0.50).passed).toBe(false);
     });
-
     it('passes when max window contributes exactly 50.0% [500, 500]', () => {
       const res = checkNoSingleWindowDependency([500, 500], 0.50);
       expect(res.passed).toBe(true);
       expect(res.actual).toBe(0.50);
     });
-
     it('fails when max window contributes 50.1% [501, 499]', () => {
       const res = checkNoSingleWindowDependency([501, 499], 0.50);
       expect(res.passed).toBe(false);
       expect(res.actual).toBe(0.501);
     });
-
     it('passes when max window contributes 49.9% [499, 251, 250]', () => {
       const res = checkNoSingleWindowDependency([499, 251, 250], 0.50);
       expect(res.passed).toBe(true);
@@ -78,14 +75,11 @@ describe('Adversarial Challenge: Checks 13-15 Empirical Stress Suite', () => {
       expect(checkBaselineComparison(cand, bhPass, { sharpe: 0.2, netPnl: 2000 }).passed).toBe(false);
     });
     it('passes with marginal positive alpha 0.0001 over both baselines', () => {
-      const res = checkBaselineComparison({ sharpe: 1.0001, netPnl: 1000.01 }, { sharpe: 1.0, netPnl: 1000 }, { sharpe: 1.0, netPnl: 1000 });
-      expect(res.passed).toBe(true);
+      expect(checkBaselineComparison({ sharpe: 1.0001, netPnl: 1000.01 }, { sharpe: 1.0, netPnl: 1000 }, { sharpe: 1.0, netPnl: 1000 }).passed).toBe(true);
     });
     it('passes when baseline Sharpe is null and candidate Sharpe is positive', () => {
-      const res = checkBaselineComparison({ sharpe: 1.0, netPnl: 1000 }, { sharpe: null, netPnl: 500 }, { sharpe: null, netPnl: 200 });
-      expect(res.passed).toBe(true);
+      expect(checkBaselineComparison({ sharpe: 1.0, netPnl: 1000 }, { sharpe: null, netPnl: 500 }, { sharpe: null, netPnl: 200 }).passed).toBe(true);
     });
-
     it('fails closed on non-finite candidate or baseline metrics', () => {
       expect(checkBaselineComparison({ sharpe: Number.NaN, netPnl: 1000 }, bhPass, rePass).passed).toBe(false);
       expect(checkBaselineComparison({ sharpe: 1.5, netPnl: Number.NaN }, bhPass, rePass).passed).toBe(false);
@@ -103,34 +97,23 @@ describe('Adversarial Challenge: Checks 13-15 Empirical Stress Suite', () => {
       expect(checkReproducibleHash(true).passed).toBe(true);
       expect(checkReproducibleHash(false).passed).toBe(false);
     });
-
     it('fails closed on truthy non-booleans', () => {
-      expect(checkReproducibleHash(1 as unknown as boolean).passed).toBe(false);
-      expect(checkReproducibleHash('true' as unknown as boolean).passed).toBe(false);
-      expect(checkReproducibleHash(null as unknown as boolean).passed).toBe(false);
-      expect(checkReproducibleHash(undefined as unknown as boolean).passed).toBe(false);
+      for (const v of [1, 'true', null, undefined]) expect(checkReproducibleHash(v as unknown as boolean).passed).toBe(false);
     });
-
     it('validates canonical SHA-256 pipeline with casing & whitespace normalization', () => {
       const gitSha = '0123456789abcdef0123456789abcdef01234567';
       const seed = 42;
       const config = { alpha: 'momentum-v1', params: { lookback: 20, threshold: 0.05 } };
-
-      const canonical = canonicalize({ gitSha, seed, config });
-      const expectedHash = createHash('sha256').update(canonical, 'utf8').digest('hex');
+      const expectedHash = createHash('sha256').update(canonicalize({ gitSha, seed, config }), 'utf8').digest('hex');
 
       expect(checkReproducibleHash(expectedHash === expectedHash).passed).toBe(true);
-
       const alteredHash = (expectedHash.startsWith('a') ? 'b' : 'a') + expectedHash.slice(1);
       expect(checkReproducibleHash(alteredHash === expectedHash).passed).toBe(false);
       expect(checkReproducibleHash(expectedHash.toUpperCase().toLowerCase() === expectedHash).passed).toBe(true);
-
-      const paddedHash = `  ${expectedHash}  \n`;
-      expect(checkReproducibleHash(paddedHash.trim().toLowerCase() === expectedHash).passed).toBe(true);
+      expect(checkReproducibleHash(`  ${expectedHash}  \n`.trim().toLowerCase() === expectedHash).passed).toBe(true);
 
       const reorderedConfig = { params: { threshold: 0.05, lookback: 20 }, alpha: 'momentum-v1' };
-      const reorderedCanonical = canonicalize({ gitSha, seed, config: reorderedConfig });
-      const reorderedHash = createHash('sha256').update(reorderedCanonical, 'utf8').digest('hex');
+      const reorderedHash = createHash('sha256').update(canonicalize({ gitSha, seed, config: reorderedConfig }), 'utf8').digest('hex');
       expect(reorderedHash).toBe(expectedHash);
       expect(checkReproducibleHash(reorderedHash === expectedHash).passed).toBe(true);
     });

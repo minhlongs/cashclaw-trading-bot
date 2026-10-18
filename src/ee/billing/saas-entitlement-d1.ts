@@ -53,14 +53,8 @@ export async function upsertD1WorkspaceEntitlement(
          updated_at_ms = excluded.updated_at_ms`,
     )
     .bind(
-      row.workspaceId,
-      row.ownerUserId,
-      row.tier,
-      row.maxRunningBots,
-      row.maxWalkForwardWindows,
-      row.monthlyLlmCredits,
-      row.managedLlmPoolEnabled ? 1 : 0,
-      row.updatedAtMs,
+      row.workspaceId, row.ownerUserId, row.tier, row.maxRunningBots,
+      row.maxWalkForwardWindows, row.monthlyLlmCredits, row.managedLlmPoolEnabled ? 1 : 0, row.updatedAtMs,
     )
     .run();
 }

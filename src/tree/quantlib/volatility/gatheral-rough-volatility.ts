@@ -1,7 +1,4 @@
-import type {
-  RoughVolatilityConfig,
-  RoughVolatilityResult,
-} from './gatheral-rough-volatility-types';
+import type { RoughVolatilityConfig, RoughVolatilityResult } from './gatheral-rough-volatility-types';
 
 export class GatheralRoughVolatilityEngine {
   private readonly config: RoughVolatilityConfig;
@@ -17,12 +14,7 @@ export class GatheralRoughVolatilityEngine {
   estimateHurst(logVolatilities: readonly number[]): RoughVolatilityResult {
     const n = logVolatilities.length;
     if (n < this.config.minObservations) {
-      return {
-        hurstExponent: 0.5,
-        isRoughRegime: false,
-        fitQuality: 0,
-        sampleCount: n,
-      };
+      return { hurstExponent: 0.5, isRoughRegime: false, fitQuality: 0, sampleCount: n };
     }
 
     const maxLag = Math.min(this.config.maxLag, Math.floor(n / 4));

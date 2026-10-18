@@ -25,10 +25,7 @@ export class RequestQueueActions {
     const maxDepth = this.config.maxDepth[exchange] ?? 100;
     if (!this.pool.canEnqueue(exchange, maxDepth)) {
       log.warn('Request rejected: queue full', {
-        exchange,
-        depth: this.pool.getDepth(exchange),
-        maxDepth,
-        priority: item.priority,
+        exchange, depth: this.pool.getDepth(exchange), maxDepth, priority: item.priority,
       });
       return null;
     }

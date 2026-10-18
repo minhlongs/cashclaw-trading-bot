@@ -1,21 +1,13 @@
 // Shared exchange types
-
 export type ExchangeId = 'binance' | 'bybit' | 'okx';
-
 export type Side = 'buy' | 'sell';
 export type OrderType = 'market' | 'limit';
 export type OrderStatus = 'open' | 'filled' | 'partially_filled' | 'cancelled' | 'rejected' | 'expired';
 export type TimeInForce = 'GTC' | 'IOC' | 'FOK';
 
 export interface Ticker {
-  symbol: string;
-  last: number;
-  bid: number;
-  ask: number;
-  high24h: number;
-  low24h: number;
-  volume24h: number;
-  timestamp: number;
+  symbol: string; last: number; bid: number; ask: number;
+  high24h: number; low24h: number; volume24h: number; timestamp: number;
 }
 
 export interface OrderBookLevel { price: number; quantity: number }

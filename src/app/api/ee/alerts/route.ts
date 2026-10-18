@@ -5,10 +5,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
-  CloudAlertDeduplicator,
-  signAlertWebhookPayload,
-  type CloudAlertEvent,
-  type SignedWebhookEnvelope,
+  CloudAlertDeduplicator, signAlertWebhookPayload, type CloudAlertEvent, type SignedWebhookEnvelope,
 } from '@/ee/alerts/cloud-alert-dispatcher';
 import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
 import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
@@ -43,19 +40,14 @@ export async function POST(req: Request) {
       explicitTier: parsed.data.tier,
     });
     if (tierContext.invalidExplicitTier) {
-      return NextResponse.json(
-        { ok: false, error: `Invalid tier: ${tierContext.invalidExplicitTier}` },
-        { status: 400 },
-      );
+      return NextResponse.json({ ok: false, error: `Invalid tier: ${tierContext.invalidExplicitTier}` }, { status: 400 });
     }
 
     const entitlements = getEntitlementsForTier(tierContext.tier);
     if (parsed.data.channel === 'WEBHOOK' && !entitlements.customWebhookAlertsAllowed) {
       return NextResponse.json(
         {
-          ok: false,
-          code: 'QUOTA_EXCEEDED',
-          tier: tierContext.tier,
+          ok: false, code: 'QUOTA_EXCEEDED', tier: tierContext.tier,
           error: `Custom webhook alerts require PREMIUM or higher (current tier: ${tierContext.tier})`,
         },
         { status: 402 },
@@ -63,12 +55,8 @@ export async function POST(req: Request) {
     }
 
     const event: CloudAlertEvent = {
-      eventId: parsed.data.eventId,
-      workspaceId: parsed.data.workspaceId,
-      botId: parsed.data.botId,
-      channel: parsed.data.channel,
-      message: parsed.data.message,
-      timestampMs: parsed.data.timestampMs,
+      eventId: parsed.data.eventId, workspaceId: parsed.data.workspaceId, botId: parsed.data.botId,
+      channel: parsed.data.channel, message: parsed.data.message, timestampMs: parsed.data.timestampMs,
     };
 
     const shouldSend = defaultAlertDeduplicator.shouldDispatch(event, parsed.data.cooldownMs ?? 60_000);

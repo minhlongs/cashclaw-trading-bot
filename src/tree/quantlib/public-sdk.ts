@@ -1,7 +1,7 @@
 // Public Apache-2.0 SDK Barrel for @cashclaw/quantlib (Step 6)
 // Pure zero-I/O quantitative estimators & strategy primitives.
 
-export const QUANTLIB_OSS_VERSION = '1.65.0-open-core' as const;
+export const QUANTLIB_OSS_VERSION = '1.66.0-open-core' as const;
 export const QUANTLIB_LICENSE = 'Apache-2.0' as const;
 
 export {
@@ -79,3 +79,7 @@ export { BlackLittermanEngine } from './portfolio/black-litterman-engine';
 export { AvellanedaStoikovEngine } from './marketmaking/avellaneda-stoikov-engine';
 export { computeBouchaudImpact } from './impact/bouchaud-propagator-engine';
 export { KalmanCointegrationEngine } from './kalman/kalman-cointegration-engine';
+export { FundingBasisEngine } from './arbitrage/funding-basis-engine';
+export { estimateJohansenCointegration } from './statarb/johansen-cointegration';
+export { calculateBlackGreeks } from './greeks/synthetic-greeks-engine';
+export { initializeVpinState, updateContinuousVpin } from './toxicity/continuous-vpin-streamer';

@@ -140,10 +140,7 @@ describe('runSurvivalGate', () => {
   it('adverse check can be tuned independently of the normal-stress check', () => {
     // netPnl 10, slippage 20 → adverse = -10. Tightening the adverse threshold
     // to -20 lets it pass while the normal-stress check still passes.
-    const result = runSurvivalGate(
-      makeReport({ netPnl: 10, slippage: 20 }),
-      { minNetPnlAdverse: -20 },
-    );
+    const result = runSurvivalGate(makeReport({ netPnl: 10, slippage: 20 }), { minNetPnlAdverse: -20 });
     expect(result.status).toBe('PAPER_CANDIDATE');
     expect(result.checks.find((c) => c.name === 'min_net_pnl_adverse')!.passed).toBe(true);
   });
@@ -173,13 +170,7 @@ describe('runSurvivalGate', () => {
   it('passes when most observed regimes trade', () => {
     // 5 of 7 regimes trade → 71% coverage, above default 0.5.
     const byRegime = makeReport().byRegime;
-    for (const regime of [
-      RegimeLabel.TREND_UP,
-      RegimeLabel.TREND_DOWN,
-      RegimeLabel.RANGE,
-      RegimeLabel.HIGH_VOLATILITY,
-      RegimeLabel.LOW_VOLATILITY,
-    ]) {
+    for (const regime of [RegimeLabel.TREND_UP, RegimeLabel.TREND_DOWN, RegimeLabel.RANGE, RegimeLabel.HIGH_VOLATILITY, RegimeLabel.LOW_VOLATILITY]) {
       byRegime[regime] = { numTrades: 10, netPnl: 100 };
     }
     const result = runSurvivalGate(makeReport({ byRegime }));
