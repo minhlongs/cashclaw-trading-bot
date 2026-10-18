@@ -64,3 +64,13 @@ export {
   computeHrpRecursiveBisection,
   type HrpAllocatorParams, type HrpAssetAllocation, type HrpAllocationResult,
 } from './portfolio/hrp-recursive-bisection';
+
+export {
+  computeDupireMartingaleSurface,
+  type DupireMotParams, type DupireStrikeNode, type DupireMotSurfaceResult,
+} from './volatility/dupire-martingale-transport';
+
+export {
+  computeRoughPathLevySignature,
+  type RoughPathLeadLagVerdict, type RoughPathLevyParams, type RoughPathSignatureStep, type RoughPathSignatureResult,
+} from './signatures/rough-path-levy-area';

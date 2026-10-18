@@ -1,36 +1,15 @@
-// Research Queue — Types
-// Lifecycle record for every alpha research job. Pure domain types:
-// no I/O, no runtime dependencies, no forest imports (layer contract).
-
+// Research Queue — Types (pure domain types, no I/O).
 import type { RegimeLabel } from '@/tree/regime/types';
 import type { Universe } from '@/tree/alpha/universe/types';
-import type {
-  ResearchCosts,
-  ResearchResult,
-  ResearchSlippage,
-} from '@/tree/alpha/registry/types';
+import type { ResearchCosts, ResearchResult, ResearchSlippage } from '@/tree/alpha/registry/types';
 
 /** Lifecycle state of a research queue job. */
-export type QueueState =
-  | 'PROPOSED'
-  | 'VALIDATING'
-  | 'RUNNING'
-  | 'EVALUATED'
-  | 'SURVIVED'
-  | 'FALSIFIED'
-  | 'ARCHIVED';
+export type QueueState = 'PROPOSED' | 'VALIDATING' | 'RUNNING' | 'EVALUATED' | 'SURVIVED' | 'FALSIFIED' | 'ARCHIVED';
 
 /** Events that move a job through the queue lifecycle. */
 export type QueueTrigger =
-  | 'validate'
-  | 'withdraw'
-  | 'validation_passed'
-  | 'validation_failed'
-  | 'evaluation_complete'
-  | 'run_failed'
-  | 'survived'
-  | 'falsified'
-  | 'archive';
+  | 'validate' | 'withdraw' | 'validation_passed' | 'validation_failed'
+  | 'evaluation_complete' | 'run_failed' | 'survived' | 'falsified' | 'archive';
 
 /** One applied transition (audit record shape). */
 export interface TransitionRecord {

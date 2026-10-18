@@ -19,16 +19,13 @@ export interface BotFactoryDeps {
   userId?: string;
   getOrchestrator?: () => ExchangeOrchestrator | null;
 }
-
 export class BotManagerFactory implements BotFactoryDelegate {
   private exchanges = new Map<string, ExchangeAdapter>();
   readonly queues = new Map<string, RequestQueue>();
-
   constructor(
     private cache: BotManagerCache, private killswitch: Killswitch,
     private deps: BotFactoryDeps, private emitTelemetry: (type: TradeEventType, details: Record<string, unknown>) => void,
   ) {}
-
   private getOrCreateQueuedExchange(exchangeId: ExchangeId, mode: 'paper' | 'live', capital: number): ExchangeAdapter {
     const modeKey = `${mode}:${exchangeId}`;
     let exchange = this.exchanges.get(modeKey);
@@ -36,13 +33,9 @@ export class BotManagerFactory implements BotFactoryDelegate {
       if (mode !== 'paper') {
         throw new Error('Live trading not available — this system is paper/backtest only. See docs/DEPLOYMENT-SAFETY.md');
       }
-      const paperRaw = createPaperAdapter(capital);
-      const raw = Object.assign(paperRaw, { id: exchangeId, name: `${exchangeId}-paper` });
+      const raw = Object.assign(createPaperAdapter(capital), { id: exchangeId, name: `${exchangeId}-paper` });
       let queue = this.queues.get(exchangeId);
-      if (!queue) {
-        queue = new RequestQueue();
-        this.queues.set(exchangeId, queue);
-      }
+      if (!queue) { queue = new RequestQueue(); this.queues.set(exchangeId, queue); }
       exchange = new QueuedExchangeAdapter({ inner: raw, queue });
       this.exchanges.set(modeKey, exchange);
     }

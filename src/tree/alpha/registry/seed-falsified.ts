@@ -1,40 +1,22 @@
-// Research Registry — seed entries for the 30 falsified hypothesis classes.
-// Source of truth: docs/falsification-report.md (campaign final, 2026-08-18).
-// These are CLASS-LEVEL seeds: per-config granularity is not reconstructable
-// from the markdown report, so gitCommit/seed are null and reproducibility is
-// 'class-level'. Campaign-wide facts: SOLUSDT/ETHUSDT/BTCUSDT, walk-forward
-// 6 windows (548d train / 182d test / 182d step, 2020-2024), conservative
-// cost model = 10 bps fee + 7 bps slippage + 10 bps impact (27 bps round-trip).
-
+// Research Registry — seed entries for the 30 falsified hypothesis classes (docs/falsification-report.md).
 import type { ResearchEntry } from './types';
 
 interface SeedSpec {
-  readonly id: string;
-  readonly hypothesis: string;
-  readonly featureSet: readonly string[];
-  readonly reason: string;
-  readonly oosPassCount: number;
-  readonly oosTotalCount: number;
-  readonly aggregatePnlUsd: number;
-  readonly summary: string;
-  readonly extraSources?: readonly string[];
+  readonly id: string; readonly hypothesis: string; readonly featureSet: readonly string[];
+  readonly reason: string; readonly oosPassCount: number; readonly oosTotalCount: number;
+  readonly aggregatePnlUsd: number; readonly summary: string; readonly extraSources?: readonly string[];
 }
 
 const BASE_SOURCES: readonly string[] = ['binance-ohlcv'];
 const DERIV_SOURCES: readonly string[] = ['binance-ohlcv', 'binance-funding-rate'];
 
 const CAMPAIGN_DEFAULTS = {
-  dataSources: BASE_SOURCES,
-  regime: 'all',
+  dataSources: BASE_SOURCES, regime: 'all',
   trainPeriod: { start: '2020-08-11', end: '2024-08-11' },
   validationPeriod: { start: '2020-08-11', end: '2024-08-11' },
   oosPeriod: { start: '2022-04-01', end: '2025-04-01' },
-  costs: { feeBps: 10, impactBps: 10 },
-  slippage: { slippageBps: 7 },
-  seed: null,
-  gitCommit: null,
-  status: 'FALSIFIED',
-  reproducibility: 'class-level',
+  costs: { feeBps: 10, impactBps: 10 }, slippage: { slippageBps: 7 },
+  seed: null, gitCommit: null, status: 'FALSIFIED', reproducibility: 'class-level',
 } as const;
 
 const SPECS: readonly SeedSpec[] = [

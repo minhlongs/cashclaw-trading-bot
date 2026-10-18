@@ -133,37 +133,19 @@ describe('Tier 5 Adversarial: Robustness Checks Edge Cases', () => {
     const candValid: CandidateBaselineMetrics = { sharpe: 1.5, netPnl: 500 };
     const bh: BenchmarkMetrics = { sharpe: 1.0, netPnl: 200 };
     const re: BenchmarkMetrics = { sharpe: 0.8, netPnl: 100 };
-
-    const invalidCand: CandidateBaselineMetrics = { sharpe: NaN, netPnl: 500 };
-    expect(checkBaselineComparison(invalidCand, bh, re).passed).toBe(false);
-
-    const bhNullSharpe: BenchmarkMetrics = { sharpe: null, netPnl: 200 };
-    const reNullSharpe: BenchmarkMetrics = { sharpe: null, netPnl: 100 };
-    expect(checkBaselineComparison(candValid, bhNullSharpe, reNullSharpe).passed).toBe(true);
-
-    const bhHighPnl: BenchmarkMetrics = { sharpe: 1.0, netPnl: 600 };
-    expect(checkBaselineComparison(candValid, bhHighPnl, re).passed).toBe(false);
-
-    const reHighSharpe: BenchmarkMetrics = { sharpe: 2.0, netPnl: 100 };
-    expect(checkBaselineComparison(candValid, bh, reHighSharpe).passed).toBe(false);
+    expect(checkBaselineComparison({ sharpe: NaN, netPnl: 500 }, bh, re).passed).toBe(false);
+    expect(checkBaselineComparison(candValid, { sharpe: null, netPnl: 200 }, { sharpe: null, netPnl: 100 }).passed).toBe(true);
+    expect(checkBaselineComparison(candValid, { sharpe: 1.0, netPnl: 600 }, re).passed).toBe(false);
+    expect(checkBaselineComparison(candValid, bh, { sharpe: 2.0, netPnl: 100 }).passed).toBe(false);
   });
 
   it('covers reproducibleHash strings, empty objects, and undefined details', () => {
     expect(checkReproducibleHash(true, 'custom detail').detail).toBe('custom detail');
     expect(checkReproducibleHash(false, 'failed detail').detail).toBe('failed detail');
-
-    const passEmptyObj = checkReproducibleHash(true, {});
-    expect(passEmptyObj.detail).toContain('match');
-
-    const failEmptyObj = checkReproducibleHash(false, {});
-    expect(failEmptyObj.detail).toContain('unknown vs computed unknown');
-
-    const failPartial1 = checkReproducibleHash(false, { recordedHash: 'rec1' });
-    expect(failPartial1.detail).toContain('rec1 vs computed unknown');
-
-    const failPartial2 = checkReproducibleHash(false, { expectedHash: 'exp1' });
-    expect(failPartial2.detail).toContain('unknown vs computed exp1');
-
+    expect(checkReproducibleHash(true, {}).detail).toContain('match');
+    expect(checkReproducibleHash(false, {}).detail).toContain('unknown vs computed unknown');
+    expect(checkReproducibleHash(false, { recordedHash: 'rec1' }).detail).toContain('rec1 vs computed unknown');
+    expect(checkReproducibleHash(false, { expectedHash: 'exp1' }).detail).toContain('unknown vs computed exp1');
     expect(checkReproducibleHash(true).detail).toBe('Canonical experiment hash verified');
     expect(checkReproducibleHash(false).detail).toBe('Canonical experiment hash mismatch');
   });

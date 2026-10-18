@@ -129,55 +129,33 @@ describe('CanaryDeployment', () => {
     it('updates weight and returns new state', () => {
       const state = canary.startCanary(config);
       const updated = canary.updateCanaryWeight(state, 50);
-
       expect(updated.weight).toBe(50);
     });
 
     it('throws when no deployment is in progress', () => {
       const fresh = new CanaryDeployment();
       const state = {
-        version: 'v1',
-        weight: 10,
-        isHealthy: true,
-        errorRate: 0,
-        totalRequests: 0,
-        failedRequests: 0,
-        startedAt: new Date().toISOString(),
+        version: 'v1', weight: 10, isHealthy: true, errorRate: 0,
+        totalRequests: 0, failedRequests: 0, startedAt: new Date().toISOString(),
       };
-
-      expect(() => fresh.updateCanaryWeight(state, 50)).toThrow(
-        'No canary deployment in progress',
-      );
+      expect(() => fresh.updateCanaryWeight(state, 50)).toThrow('No canary deployment in progress');
     });
   });
 
   describe('checkCanaryHealth', () => {
     it('returns healthy when error rate is below threshold', () => {
       const state = canary.startCanary(config);
-
       expect(canary.checkCanaryHealth(state)).toBe('healthy');
     });
 
     it('returns degraded when error rate is at 50% of threshold', () => {
       const state = canary.startCanary(config);
-      const degraded: typeof state = {
-        ...state,
-        totalRequests: 100,
-        failedRequests: 3,
-      };
-
-      expect(canary.checkCanaryHealth(degraded)).toBe('degraded');
+      expect(canary.checkCanaryHealth({ ...state, totalRequests: 100, failedRequests: 3 })).toBe('degraded');
     });
 
     it('returns unhealthy when error rate exceeds threshold', () => {
       const state = canary.startCanary(config);
-      const unhealthy: typeof state = {
-        ...state,
-        totalRequests: 100,
-        failedRequests: 10,
-      };
-
-      expect(canary.checkCanaryHealth(unhealthy)).toBe('unhealthy');
+      expect(canary.checkCanaryHealth({ ...state, totalRequests: 100, failedRequests: 10 })).toBe('unhealthy');
     });
   });
 
@@ -185,25 +163,15 @@ describe('CanaryDeployment', () => {
     it('creates a rollback plan for healthy canary', () => {
       const state = canary.startCanary(config);
       state.version = 'v1.0.0';
-
       const plan = canary.promoteCanary(state);
-
       expect(plan.version).toBe('v1.0.0');
       expect(plan.steps).toBeDefined();
     });
 
     it('throws for unhealthy canary', () => {
       const state = canary.startCanary(config);
-      const unhealthy: typeof state = {
-        ...state,
-        isHealthy: false,
-        totalRequests: 100,
-        failedRequests: 10,
-      };
-
-      expect(() => canary.promoteCanary(unhealthy)).toThrow(
-        'Cannot promote unhealthy canary',
-      );
+      const unhealthy: typeof state = { ...state, isHealthy: false, totalRequests: 100, failedRequests: 10 };
+      expect(() => canary.promoteCanary(unhealthy)).toThrow('Cannot promote unhealthy canary');
     });
   });
 
@@ -211,9 +179,7 @@ describe('CanaryDeployment', () => {
     it('returns success with final version', () => {
       const state = canary.startCanary(config);
       state.version = 'v1.0.0';
-
       const result = canary.completeCanary(state);
-
       expect(result.success).toBe(true);
       expect(result.finalVersion).toBe('v1.0.0');
     });
@@ -221,18 +187,10 @@ describe('CanaryDeployment', () => {
     it('throws when no deployment is in progress', () => {
       const fresh = new CanaryDeployment();
       const state = {
-        version: 'v1',
-        weight: 10,
-        isHealthy: true,
-        errorRate: 0,
-        totalRequests: 0,
-        failedRequests: 0,
-        startedAt: new Date().toISOString(),
+        version: 'v1', weight: 10, isHealthy: true, errorRate: 0,
+        totalRequests: 0, failedRequests: 0, startedAt: new Date().toISOString(),
       };
-
-      expect(() => fresh.completeCanary(state)).toThrow(
-        'No canary deployment in progress',
-      );
+      expect(() => fresh.completeCanary(state)).toThrow('No canary deployment in progress');
     });
   });
 });

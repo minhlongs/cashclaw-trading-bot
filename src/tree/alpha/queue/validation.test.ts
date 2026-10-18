@@ -13,42 +13,26 @@ function makeSpec(overrides: Partial<QueueJobSpec> = {}): QueueJobSpec {
   const costs: ResearchCosts = { feeBps: 10, impactBps: 5 };
   const slippage: ResearchSlippage = { slippageBps: 3 };
   return {
-    id: 'queue-0001-funding-fade',
-    hypothesis: 'Funding rate mean reversion on 8h windows',
+    id: 'queue-0001-funding-fade', hypothesis: 'Funding rate mean reversion on 8h windows',
     rationale: 'Negative funding predicts positive returns next period',
-    features: ['funding_rate', 'open_interest'],
-    dataset: 'binance-ohlcv-funding',
-    regime: RegimeLabel.RANGE,
-    universe,
-    costs,
-    slippage,
-    seed: 42,
-    parentHypothesis: null,
-    generatedBy: 'test-generator',
-    timestamp: 1_700_000_000_000,
-    gitSha: 'abc123',
+    features: ['funding_rate', 'open_interest'], dataset: 'binance-ohlcv-funding',
+    regime: RegimeLabel.RANGE, universe, costs, slippage, seed: 42, parentHypothesis: null,
+    generatedBy: 'test-generator', timestamp: 1_700_000_000_000, gitSha: 'abc123',
     ...overrides,
   };
 }
 
 function makeRegistryEntry(overrides: Partial<ResearchEntry> = {}): ResearchEntry {
   return {
-    id: 'funding-fade-class',
-    hypothesis: 'Funding rate mean reversion on 8h windows',
-    dataSources: ['binance-ohlcv', 'funding-rate'],
-    featureSet: ['funding_rate', 'open_interest'],
-    regime: 'RANGE',
-    trainPeriod: { start: '2024-01-01', end: '2024-06-30' },
+    id: 'funding-fade-class', hypothesis: 'Funding rate mean reversion on 8h windows',
+    dataSources: ['binance-ohlcv', 'funding-rate'], featureSet: ['funding_rate', 'open_interest'],
+    regime: 'RANGE', trainPeriod: { start: '2024-01-01', end: '2024-06-30' },
     validationPeriod: { start: '2024-07-01', end: '2024-09-30' },
     oosPeriod: { start: '2024-10-01', end: '2024-12-31' },
-    costs: { feeBps: 10, impactBps: 5 },
-    slippage: { slippageBps: 3 },
-    seed: 42,
-    gitCommit: 'abc123',
+    costs: { feeBps: 10, impactBps: 5 }, slippage: { slippageBps: 3 },
+    seed: 42, gitCommit: 'abc123',
     result: { oosPassCount: 0, oosTotalCount: 5, aggregatePnlUsd: -100, summary: 'falsified' },
-    falsificationReason: 'Bootstrap CI includes 0',
-    status: 'FALSIFIED',
-    reproducibility: 'class-level',
+    falsificationReason: 'Bootstrap CI includes 0', status: 'FALSIFIED', reproducibility: 'class-level',
     ...overrides,
   };
 }

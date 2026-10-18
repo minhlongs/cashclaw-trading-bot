@@ -32,32 +32,18 @@ vi.mock('next-intl', () => {
 
 
 vi.mock('lucide-react', () => {
-  const Icon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg data-testid="icon" {...props} />
-  );
+  const Icon = (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon" {...props} />;
   return { Shield: Icon, Activity: Icon, TrendingDown: Icon, AlertTriangle: Icon };
 });
 
-/* ------------------------------------------------------------------ */
-/*  Fixtures                                                           */
-/* ------------------------------------------------------------------ */
 function makeKillswitch(overrides: Partial<KillswitchResponse> = {}): KillswitchResponse {
   return {
-    enabled: true,
-    halted: false,
-    haltReason: null,
-    haltedAt: null,
-    dailyPnl: 50.25,
-    consecutiveLosses: 1,
-    currentDrawdown: 3.5,
-    timestamp: Date.now(),
+    enabled: true, halted: false, haltReason: null, haltedAt: null,
+    dailyPnl: 50.25, consecutiveLosses: 1, currentDrawdown: 3.5, timestamp: Date.now(),
     ...overrides,
   };
 }
 
-/* ------------------------------------------------------------------ */
-/*  Badge state — halted takes precedence over enabled                 */
-/* ------------------------------------------------------------------ */
 describe('KillswitchCard badge state', () => {
   it('shows "San sang" with badge-profit when enabled and not halted', () => {
     render(<KillswitchCard killswitch={makeKillswitch({ enabled: true, halted: false })} />);
@@ -71,10 +57,7 @@ describe('KillswitchCard badge state', () => {
 
   it('shows "Tat" with badge-neutral when disabled', () => {
     render(<KillswitchCard killswitch={makeKillswitch({ enabled: false, halted: false })} />);
-    // 'Tat' appears twice: the header badge and the "Trang thai" metric row.
-    const badge = screen
-      .getAllByText('Tat')
-      .find((el) => el.className.includes('badge'))!;
+    const badge = screen.getAllByText('Tat').find((el) => el.className.includes('badge'))!;
     expect(badge).toHaveClass('badge-neutral');
   });
 
@@ -84,9 +67,6 @@ describe('KillswitchCard badge state', () => {
   });
 });
 
-/* ------------------------------------------------------------------ */
-/*  Status row                                                         */
-/* ------------------------------------------------------------------ */
 describe('KillswitchCard status row', () => {
   it('renders "Binh thuong" status when enabled and not halted', () => {
     render(<KillswitchCard killswitch={makeKillswitch({ enabled: true, halted: false })} />);
@@ -101,9 +81,7 @@ describe('KillswitchCard status row', () => {
 
   it('renders "Tat" status when disabled', () => {
     render(<KillswitchCard killswitch={makeKillswitch({ enabled: false, halted: false })} />);
-    const statusValue = screen
-      .getAllByText('Tat')
-      .find((el) => el.className.includes('mono'))!;
+    const statusValue = screen.getAllByText('Tat').find((el) => el.className.includes('mono'))!;
     expect(statusValue).toBeInTheDocument();
   });
 });

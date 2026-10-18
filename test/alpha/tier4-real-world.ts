@@ -91,14 +91,7 @@ export function registerTier4RealWorldTests(): void {
       expect(AUTOMATED_CEILING).toBe('SHADOW');
 
       let currentPhase: StrategyPhase = 'RESEARCH';
-      const automatedSteps: readonly StrategyPhase[] = [
-        'BACKTEST',
-        'OOS_PASS',
-        'ROBUSTNESS_PASS',
-        'PAPER',
-        'SHADOW',
-      ];
-
+      const automatedSteps: readonly StrategyPhase[] = ['BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW'];
       for (const expectedNext of automatedSteps) {
         const res = transitionStrategy(currentPhase, { type: 'gate_passed' });
         expect(res.to).toBe(expectedNext);

@@ -177,14 +177,10 @@ describe('logDeliberationRun', () => {
   it('returns first append failure (invalid timestamp) before reaching empty-log guard', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1',
-      proposalId: 'prop-1',
-      analystOutputs: [{ claim: 'a1' }],
-      debateOutputs: [{ thesis: 'bull' }],
-      researchSynthesis: { thesis: 'synth' },
-      riskProposal: { view: 'aggressive' },
-      portfolioProposal: { assets: ['BTC-USD'] },
-      cashclawValidation: { rejected: false },
+      researchGoalId: 'goal-1', proposalId: 'prop-1',
+      analystOutputs: [{ claim: 'a1' }], debateOutputs: [{ thesis: 'bull' }],
+      researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
+      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
       timestamp: 'not-a-valid-timestamp',
     });
     expect(result.ok).toBe(false);
@@ -197,14 +193,10 @@ describe('logDeliberationRun', () => {
   it('logDeliberationRun empty-log guard exists but is effectively unreachable in normal operation', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1',
-      proposalId: 'prop-1',
-      analystOutputs: [],
-      debateOutputs: [],
-      researchSynthesis: { thesis: 'synth' },
-      riskProposal: { view: 'aggressive' },
-      portfolioProposal: { assets: ['BTC-USD'] },
-      cashclawValidation: { rejected: false },
+      researchGoalId: 'goal-1', proposalId: 'prop-1',
+      analystOutputs: [], debateOutputs: [],
+      researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
+      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
       timestamp: NOW,
     });
     expect(result.ok).toBe(true);
@@ -215,14 +207,10 @@ describe('logDeliberationRun', () => {
   it('covers the empty-log guard by constructing a writer with pre-existing entries and mocking append to succeed', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1',
-      proposalId: 'prop-1',
-      analystOutputs: [],
-      debateOutputs: [],
-      researchSynthesis: { thesis: 'synth' },
-      riskProposal: { view: 'aggressive' },
-      portfolioProposal: { assets: ['BTC-USD'] },
-      cashclawValidation: { rejected: false },
+      researchGoalId: 'goal-1', proposalId: 'prop-1',
+      analystOutputs: [], debateOutputs: [],
+      researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
+      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
       timestamp: NOW,
     });
     expect(result.ok).toBe(true);

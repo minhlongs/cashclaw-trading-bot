@@ -10,23 +10,11 @@ import { validatePairTradable } from './validation';
 import { computePairStability } from './stability';
 import { assertPositiveCloses } from './pair-period';
 import {
-  type UniversePanel,
-  type PairSelectionConfig,
-  type PairSelectionDiagnostics,
-  type SelectedPair,
+  type UniversePanel, type PairSelectionConfig, type PairSelectionDiagnostics, type SelectedPair,
 } from './pair-selection-types';
-import {
-  assertUniverse,
-  pairPanel,
-  diagnosticsFor,
-} from './pair-selection-helpers';
+import { assertUniverse, pairPanel, diagnosticsFor } from './pair-selection-helpers';
 
-export {
-  type UniversePanel,
-  type PairSelectionConfig,
-  type PairSelectionDiagnostics,
-  type SelectedPair,
-};
+export { type UniversePanel, type PairSelectionConfig, type PairSelectionDiagnostics, type SelectedPair };
 
 /**
  * Select and rank candidate pairs using ONLY rows with timestamp strictly
@@ -39,15 +27,9 @@ export function selectPairs(
   config: PairSelectionConfig,
 ): SelectedPair[] {
   assertUniverse(universe);
-  if (universe.symbols.length < 2) {
-    throw new Error('selectPairs: universe must contain at least 2 symbols');
-  }
-  if (!Number.isInteger(config.topK) || config.topK <= 0) {
-    throw new Error('selectPairs: topK must be a positive integer');
-  }
-  if (Number.isNaN(asOfTime)) {
-    throw new Error('selectPairs: asOfTime must not be NaN');
-  }
+  if (universe.symbols.length < 2) throw new Error('selectPairs: universe must contain at least 2 symbols');
+  if (!Number.isInteger(config.topK) || config.topK <= 0) throw new Error('selectPairs: topK must be a positive integer');
+  if (Number.isNaN(asOfTime)) throw new Error('selectPairs: asOfTime must not be NaN');
 
   // Causal slice: indices strictly before asOfTime.
   let sliceEnd = 0;

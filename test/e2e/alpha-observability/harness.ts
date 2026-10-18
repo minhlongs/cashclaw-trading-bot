@@ -65,24 +65,14 @@ export function createSyntheticOperationalTelemetry(overrides: Partial<Operation
 }
 
 export function generateShadowOrder(params: {
-  orderId: string;
-  symbol: string;
-  deltaW: number;
-  price: number;
-  equity: number;
-  timestamp: number;
+  orderId: string; symbol: string; deltaW: number; price: number; equity: number; timestamp: number;
 }): ShadowOrder | null {
   if (Math.abs(params.deltaW) < 1e-6 || params.equity <= 0 || params.price <= 0) return null;
   const side: ShadowOrderSide = params.deltaW > 0 ? 'buy' : 'sell';
   const size = Number((Math.abs(params.deltaW) * params.equity).toFixed(4));
   return ShadowOrderSchema.parse({
-    orderId: params.orderId,
-    symbol: params.symbol,
-    side,
-    size,
-    price: params.price,
-    targetWeightDelta: params.deltaW,
-    decisionTimestamp: params.timestamp,
+    orderId: params.orderId, symbol: params.symbol, side, size, price: params.price,
+    targetWeightDelta: params.deltaW, decisionTimestamp: params.timestamp,
   });
 }
 

@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  evalCrossAssetRobustness,
-  evalCrossPeriodRobustness,
-  evalFeeStress,
-  evalParameterRobustness,
-  evalSlippageStress,
+  evalCrossAssetRobustness, evalCrossPeriodRobustness, evalFeeStress,
+  evalParameterRobustness, evalSlippageStress,
 } from './promotion-gate-fixtures';
 
 export function registerTier1StressTests(): void {
@@ -15,23 +12,17 @@ export function registerTier1StressTests(): void {
         expect(check.passed).toBe(true);
         expect(check.actual).toBe(800);
       });
-
       it('fails when Conservative fee net PnL is negative despite positive Normal fee PnL', () => {
-        const check = evalFeeStress(500, -100);
-        expect(check.passed).toBe(false);
+        expect(evalFeeStress(500, -100).passed).toBe(false);
       });
-
       it('fails when Conservative fee net PnL is exactly zero', () => {
         const check = evalFeeStress(1000, 0);
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('vs. > 0');
       });
-
       it('fails when Normal fee net PnL is negative', () => {
-        const check = evalFeeStress(-50, -200);
-        expect(check.passed).toBe(false);
+        expect(evalFeeStress(-50, -200).passed).toBe(false);
       });
-
       it('details string documents both Normal and Conservative net PnL', () => {
         const check = evalFeeStress(1200.5, 950.25);
         expect(check.detail).toContain('NORMAL: 1200.50');

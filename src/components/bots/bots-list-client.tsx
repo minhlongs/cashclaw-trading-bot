@@ -21,8 +21,7 @@ export default function BotsListClient() {
     let cancelled = false;
     const fetchBots = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        setLoading(true); setError(null);
         const res = await fetch('/api/bots');
         const raw = (await res.json()) as { ok?: boolean; data?: BotCardData[] };
         if (!cancelled) {

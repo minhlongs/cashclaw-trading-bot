@@ -26,9 +26,7 @@ export function matMul(a: number[][], b: number[][]): number[][] {
     const row: number[] = [];
     for (let j = 0; j < m; j++) {
       let sum = 0;
-      for (let p = 0; p < k; p++) {
-        sum += a[i]![p]! * b[p]![j]!;
-      }
+      for (let p = 0; p < k; p++) sum += a[i]![p]! * b[p]![j]!;
       row.push(sum);
     }
     result.push(row);
@@ -52,9 +50,7 @@ export function invertMatrix(m: number[][]): number[][] | null {
   for (let col = 0; col < n; col++) {
     let maxRow = col;
     for (let row = col + 1; row < n; row++) {
-      if (Math.abs(aug[row]![col]!) > Math.abs(aug[maxRow]![col]!)) {
-        maxRow = row;
-      }
+      if (Math.abs(aug[row]![col]!) > Math.abs(aug[maxRow]![col]!)) maxRow = row;
     }
     [aug[col], aug[maxRow]] = [aug[maxRow], aug[col]];
     const pivot = aug[col]![col]!;
@@ -63,9 +59,7 @@ export function invertMatrix(m: number[][]): number[][] | null {
     for (let row = 0; row < n; row++) {
       if (row === col) continue;
       const factor = aug[row]![col]!;
-      for (let j = 0; j < 2 * n; j++) {
-        aug[row]![j]! -= factor * aug[col]![j]!;
-      }
+      for (let j = 0; j < 2 * n; j++) aug[row]![j]! -= factor * aug[col]![j]!;
     }
   }
   return aug.map((row) => row.slice(n));

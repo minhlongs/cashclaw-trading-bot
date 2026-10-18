@@ -33,14 +33,8 @@ export interface PortfolioTarget {
   leverageRatio: number;
 }
 
-// ── Optimizer Config ─────────────────────────────────────────────────────────
-
 /** Available optimization methods. */
-export type OptimizerMethod =
-  | 'equal_weight'
-  | 'risk_parity'
-  | 'confidence_weighted'
-  | 'regime_sized';
+export type OptimizerMethod = 'equal_weight' | 'risk_parity' | 'confidence_weighted' | 'regime_sized';
 
 /** Configuration for the portfolio optimizer. */
 export interface OptimizerConfig {

@@ -2,41 +2,23 @@
 // Re-exports all public forest-layer modules for the deliberation engine.
 
 export {
-  buildCalibrationAggregates,
-  computeAgentCalibrationScores,
-  rankUsefulness,
-  computeExpectationGap,
-  aggregateExpectationGapByRegime,
-  type ProvenanceOutcome,
-  type AgentCalibrationAggregate,
-  type ExpectationGap,
-  type RegimeGapSummary,
+  buildCalibrationAggregates, computeAgentCalibrationScores, rankUsefulness,
+  computeExpectationGap, aggregateExpectationGapByRegime,
+  type ProvenanceOutcome, type AgentCalibrationAggregate, type ExpectationGap, type RegimeGapSummary,
 } from './calibration';
 export {
-  computeArmMetrics,
-  evaluateDebateQuality,
-  runDebateQualityComparison,
-  type ArmEvaluationInput,
-  type ComputedArmMetrics,
+  computeArmMetrics, evaluateDebateQuality, runDebateQualityComparison,
+  type ArmEvaluationInput, type ComputedArmMetrics,
 } from './debate-quality';
 export {
-  runDebateOrchestrator,
-  type DebateOrchestratorConfig,
-  type DebateSide,
-  type OrchestratorResult,
+  runDebateOrchestrator, type DebateOrchestratorConfig, type DebateSide, type OrchestratorResult,
 } from './debate-orchestrator';
 export { composeDecisionProposal } from './decision-proposal-composer';
 export {
-  debateToHypothesis,
-  type DebateToHypothesisResult,
-  type DebateToHypothesisOutcome,
-  type DebateToHypothesisConfig,
+  debateToHypothesis, type DebateToHypothesisResult, type DebateToHypothesisOutcome, type DebateToHypothesisConfig,
 } from './debate-to-hypothesis';
 export {
-  DECISION_LOG_KINDS_EXT,
-  DecisionLogWriter,
-  logDeliberationRun,
-  type DecisionLogKindExt,
+  DECISION_LOG_KINDS_EXT, DecisionLogWriter, logDeliberationRun, type DecisionLogKindExt,
 } from './decision-log';
 export {
   generateRiskAdvisory,

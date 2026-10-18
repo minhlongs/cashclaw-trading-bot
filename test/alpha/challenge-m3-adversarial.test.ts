@@ -64,11 +64,8 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
   describe('Challenge 2: Verify no automated trigger from SHADOW reaches MANUAL_APPROVAL, PAPER_CANDIDATE, or LIVE', () => {
     it('proves automated triggers cannot transition SHADOW to MANUAL_APPROVAL, PAPER_CANDIDATE, or LIVE', () => {
       const automatedTriggers: TransitionTrigger[] = [
-        { type: 'gate_passed' },
-        { type: 'gate_failed' },
-        { type: 'auto_promote' } as unknown as TransitionTrigger,
+        { type: 'gate_passed' }, { type: 'gate_failed' }, { type: 'auto_promote' } as unknown as TransitionTrigger,
       ];
-
       for (const trigger of automatedTriggers) {
         const next = getTransition('SHADOW', trigger);
         expect(next).not.toBe('MANUAL_APPROVAL');
@@ -135,17 +132,12 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
 
   describe('Challenge 5: Terminal states KILLED and LIVE reject all triggers', () => {
     it('rejects all triggers on KILLED and LIVE', () => {
-      const terminalStates: StrategyPhase[] = ['KILLED', 'LIVE'];
-
-      for (const terminal of terminalStates) {
+      for (const terminal of ['KILLED', 'LIVE'] as const) {
         expect(isTerminalPhase(terminal)).toBe(true);
-
         for (const trigger of ADVERSARIAL_TRIGGERS) {
           expect(getTransition(terminal, trigger)).toBeNull();
           expect(canTransition(terminal, trigger)).toBe(false);
-          expect(() => transitionStrategy(terminal, trigger)).toThrow(
-            new RegExp(`Invalid transition: ${terminal} \\+ ${trigger.type}`),
-          );
+          expect(() => transitionStrategy(terminal, trigger)).toThrow(new RegExp(`Invalid transition: ${terminal} \\+ ${trigger.type}`));
         }
       }
     });

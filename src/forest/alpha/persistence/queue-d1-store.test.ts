@@ -159,24 +159,13 @@ describe('D1ResearchQueueStore', () => {
       const { db } = createRecordingDb({
         results: [
           {
-            job_id: job.id,
-            hypothesis: job.hypothesis,
-            rationale: job.rationale,
-            features_json: JSON.stringify(job.features),
-            dataset: job.dataset,
-            regime: job.regime,
-            universe_json: JSON.stringify(job.universe),
-            costs_json: JSON.stringify(job.costs),
-            slippage_json: JSON.stringify(job.slippage),
-            seed: job.seed,
-            parent_hypothesis: job.parentHypothesis,
-            generated_by: job.generatedBy,
-            timestamp: job.timestamp,
-            git_sha: job.gitSha,
-            status: job.status,
-            config_hash: job.configHash,
-            result_json: null,
-            created_at: job.timestamp,
+            job_id: job.id, hypothesis: job.hypothesis, rationale: job.rationale,
+            features_json: JSON.stringify(job.features), dataset: job.dataset, regime: job.regime,
+            universe_json: JSON.stringify(job.universe), costs_json: JSON.stringify(job.costs),
+            slippage_json: JSON.stringify(job.slippage), seed: job.seed,
+            parent_hypothesis: job.parentHypothesis, generated_by: job.generatedBy,
+            timestamp: job.timestamp, git_sha: job.gitSha, status: job.status,
+            config_hash: job.configHash, result_json: null, created_at: job.timestamp,
           },
         ],
       });
@@ -203,12 +192,8 @@ describe('D1ResearchQueueStore', () => {
       const { db } = createRecordingDb({
         results: [
           {
-            event_id: event.eventId,
-            job_id: event.jobId,
-            from_status: event.fromStatus,
-            to_status: event.toStatus,
-            trigger: event.trigger,
-            payload_json: event.payloadJson,
+            event_id: event.eventId, job_id: event.jobId, from_status: event.fromStatus,
+            to_status: event.toStatus, trigger: event.trigger, payload_json: event.payloadJson,
             created_at: event.createdAt,
           },
         ],

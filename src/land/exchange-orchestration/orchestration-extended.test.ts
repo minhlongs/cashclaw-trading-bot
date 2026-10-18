@@ -12,19 +12,14 @@ vi.mock('@/lib/logger', () => ({
 
 function mkKillswitch(overrides: Record<string, unknown> = {}) {
   return {
-    isTradingEnabled: vi.fn().mockReturnValue(true),
-    haltReason: null,
-    check: vi.fn(),
-    halt: vi.fn(),
-    resume: vi.fn(),
-    ...overrides,
+    isTradingEnabled: vi.fn().mockReturnValue(true), haltReason: null,
+    check: vi.fn(), halt: vi.fn(), resume: vi.fn(), ...overrides,
   } as unknown as import('@/tree/bot/killswitch').Killswitch;
 }
 
 function mkProvider(overrides: Record<string, unknown> = {}) {
   return {
-    id: 'provider:binance:paper',
-    name: 'binance',
+    id: 'provider:binance:paper', name: 'binance',
     circuitBreaker: { getState: vi.fn().mockReturnValue('closed') },
     healthCheck: vi.fn().mockResolvedValue(true),
     fetchTicker: vi.fn().mockResolvedValue({ symbol: 'BTC/USDT', last: 50000 }),
@@ -35,9 +30,7 @@ function mkProvider(overrides: Record<string, unknown> = {}) {
     fetchBalances: vi.fn().mockResolvedValue([{ currency: 'USDT', free: 1000 }]),
     getHealth: vi.fn().mockReturnValue({ score: 100, failureCount: 0 }),
     isCircuitOpen: vi.fn().mockReturnValue(false),
-    recordFailure: vi.fn(),
-    recordSuccess: vi.fn(),
-    isUnhealthy: vi.fn().mockReturnValue(false),
+    recordFailure: vi.fn(), recordSuccess: vi.fn(), isUnhealthy: vi.fn().mockReturnValue(false),
     getCircuitBreaker: vi.fn().mockReturnValue({ getState: vi.fn().mockReturnValue('closed') }),
     ...overrides,
   };

@@ -57,43 +57,21 @@ export function routeAlphas(
   signals: AlphaSignal[],
   config: AlphaRouterConfig = DEFAULT_CONFIG,
 ): AlphaSignal[] {
-  if (signals.length === 0) return [];
+  if (signals.length === 0 || regime === RegimeLabel.SHOCK) return [];
+  if (regime === RegimeLabel.UNKNOWN) return sortAndSlice(signals, config.topN);
 
-  // SHOCK — no trading at all
-  if (regime === RegimeLabel.SHOCK) return [];
-
-  // UNKNOWN — pass through all signals
-  if (regime === RegimeLabel.UNKNOWN) {
-    return sortAndSlice(signals, config.topN);
-  }
-
-  const directions = config.directionOverrides?.[regime]
-    ?? REGIME_DIRECTION_PREFS[regime]
-    ?? [];
-
-  const confidenceThreshold = config.confidenceOverrides?.[regime]
-    ?? REGIME_CONFIDENCE_THRESHOLDS[regime]
-    ?? 0;
+  const directions = config.directionOverrides?.[regime] ?? REGIME_DIRECTION_PREFS[regime] ?? [];
+  const confidenceThreshold = config.confidenceOverrides?.[regime] ?? REGIME_CONFIDENCE_THRESHOLDS[regime] ?? 0;
 
   const filtered = signals.filter((s) => {
-    // Direction filter — if regime specifies preferred directions, enforce it
-    if (directions.length > 0 && !directions.includes(s.direction)) {
-      return false;
-    }
-    // Confidence filter
-    if (s.confidence < confidenceThreshold) {
-      return false;
-    }
+    if (directions.length > 0 && !directions.includes(s.direction)) return false;
+    if (s.confidence < confidenceThreshold) return false;
     return true;
   });
 
   return sortAndSlice(filtered, config.topN);
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-
 function sortAndSlice(signals: AlphaSignal[], topN: number): AlphaSignal[] {
-  return [...signals]
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, topN);
+  return [...signals].sort((a, b) => b.confidence - a.confidence).slice(0, topN);
 }

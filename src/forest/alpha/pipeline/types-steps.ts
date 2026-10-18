@@ -10,18 +10,9 @@ import type { SurvivalGateResult } from '@/forest/alpha/gate/survival-gate';
 import type { TransitionResult } from '@/forest/alpha/gate/promotion-states';
 
 export type PipelineStep =
-  | 'fetch_data'
-  | 'fetch_derivatives'
-  | 'compute_indicators'
-  | 'detect_regimes'
-  | 'generate_signals'
-  | 'label_events'
-  | 'run_walkforward'
-  | 'compute_costs'
-  | 'evaluate'
-  | 'attribute'
-  | 'compare_baselines'
-  | 'generate_report';
+  | 'fetch_data' | 'fetch_derivatives' | 'compute_indicators' | 'detect_regimes'
+  | 'generate_signals' | 'label_events' | 'run_walkforward' | 'compute_costs'
+  | 'evaluate' | 'attribute' | 'compare_baselines' | 'generate_report';
 
 /** Outcome of a single pipeline step. */
 export interface PipelineStepResult {

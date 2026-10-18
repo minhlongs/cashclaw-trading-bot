@@ -91,34 +91,23 @@ describe('permutationTest', () => {
 
   describe('fail-closed: invalid inputs throw', () => {
     it('returns.length < 2 throws', () => {
-      expect(() => permutationTest([1], [1], mean, baseOptions)).toThrow(
-        'permutationTest requires at least 2 returns, got 1',
-      );
+      expect(() => permutationTest([1], [1], mean, baseOptions)).toThrow('permutationTest requires at least 2 returns, got 1');
     });
 
     it('returns/signals length mismatch throws', () => {
-      expect(() => permutationTest([1, 2], [1], mean, baseOptions)).toThrow(
-        'permutationTest requires aligned arrays: 2 returns vs 1 signals',
-      );
+      expect(() => permutationTest([1, 2], [1], mean, baseOptions)).toThrow('permutationTest requires aligned arrays: 2 returns vs 1 signals');
     });
 
     it('iterations < 1 throws', () => {
-      expect(() => permutationTest([1, 2], [1, 2], mean, { ...baseOptions, iterations: 0 })).toThrow(
-        'permutationTest requires iterations >= 1, got 0',
-      );
+      expect(() => permutationTest([1, 2], [1, 2], mean, { ...baseOptions, iterations: 0 })).toThrow('permutationTest requires iterations >= 1, got 0');
     });
 
     it('non-finite seed throws', () => {
-      expect(() => permutationTest([1, 2], [1, 2], mean, { ...baseOptions, seed: NaN })).toThrow(
-        'permutationTest requires a finite numeric seed',
-      );
+      expect(() => permutationTest([1, 2], [1, 2], mean, { ...baseOptions, seed: NaN })).toThrow('permutationTest requires a finite numeric seed');
     });
 
     it('non-finite statistic result throws', () => {
-      const badStat = () => NaN;
-      expect(() => permutationTest([1, 2], [1, 2], badStat, baseOptions)).toThrow(
-        'permutationTest statistic returned a non-finite value',
-      );
+      expect(() => permutationTest([1, 2], [1, 2], () => NaN, baseOptions)).toThrow('permutationTest statistic returned a non-finite value');
     });
   });
 

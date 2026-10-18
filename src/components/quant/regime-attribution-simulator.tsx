@@ -40,13 +40,10 @@ export function RegimeAttributionSimulator() {
             <label htmlFor="regime-filter-select" className="text-xs font-medium text-[var(--text-secondary)]">Volatility Regime Filter</label>
             <select id="regime-filter-select" value={selectedRegime} onChange={(e) => setSelectedRegime(e.target.value as 'ALL' | RegimeId)} className="min-h-[44px] px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] text-sm font-mono focus:outline-none focus:border-[var(--color-accent)]">
               <option value="ALL">ALL_REGIMES (730 bars)</option>
-              <option value="LOW_VOL_TREND">Filter: LOW_VOL_TREND</option>
-              <option value="HIGH_VOL_BREAKOUT">Filter: HIGH_VOL_BREAKOUT</option>
-              <option value="HIGH_VOL_CHOP">Filter: HIGH_VOL_CHOP</option>
-              <option value="LIQUIDITY_CRISIS">Filter: LIQUIDITY_CRISIS</option>
+              <option value="LOW_VOL_TREND">Filter: LOW_VOL_TREND</option><option value="HIGH_VOL_BREAKOUT">Filter: HIGH_VOL_BREAKOUT</option>
+              <option value="HIGH_VOL_CHOP">Filter: HIGH_VOL_CHOP</option><option value="LIQUIDITY_CRISIS">Filter: LIQUIDITY_CRISIS</option>
             </select>
           </div>
-
           <button type="button" onClick={() => setRecomputeCount((c) => c + 1)} className="min-h-[44px] px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-xs font-mono font-semibold text-[var(--color-accent)] flex items-center justify-center gap-2">
             <RefreshCw size={14} /><span>Re-Compute Engine Telemetry (#{recomputeCount})</span>
           </button>

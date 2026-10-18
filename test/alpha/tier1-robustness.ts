@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  AUTOMATED_CEILING, getTransition, isTerminalPhase, transitionStrategy,
-} from '@/forest/alpha/gate/promotion-states';
+import { AUTOMATED_CEILING, getTransition, isTerminalPhase, transitionStrategy } from '@/forest/alpha/gate/promotion-states';
 import {
   computeCanonicalSha256, evalBaselineComparison, evalLeakageInvariance,
   evalNoSingleWindowDependency, evalReproducibleHash, runOpaquePromotionGate,
@@ -16,19 +14,15 @@ export function registerTier1RobustnessTests(): void {
         expect(check.passed).toBe(true);
         expect(check.actual).toBe(0);
       });
-      it('fails when a single decision is mutated', () => {
+      it('fails when one or more decisions are mutated', () => {
         const check = evalLeakageInvariance(1);
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('Observed 1 lookahead leakage mutations');
-      });
-      it('fails when multiple decisions are mutated', () => {
         expect(evalLeakageInvariance(15).passed).toBe(false);
       });
-      it('fails when mutation count is negative or non-integer', () => {
+      it('fails when mutation count is negative or non-integer and threshold is 0', () => {
         expect(evalLeakageInvariance(-1).passed).toBe(false);
         expect(evalLeakageInvariance(2.5).passed).toBe(false);
-      });
-      it('threshold is strictly 0', () => {
         expect(evalLeakageInvariance(0).threshold).toBe(0);
       });
     });
@@ -87,10 +81,7 @@ export function registerTier1RobustnessTests(): void {
       });
       it('fails when recorded hash does not match computed hash', () => {
         const check = evalReproducibleHash({
-          gitSha: 'abcdef1234567890abcdef1234567890abcdef12',
-          seed: 42,
-          config: { alpha: 'test' },
-          recordedHash: '0'.repeat(64),
+          gitSha: 'abcdef1234567890abcdef1234567890abcdef12', seed: 42, config: { alpha: 'test' }, recordedHash: '0'.repeat(64),
         });
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('Mismatch: recorded');
@@ -100,15 +91,11 @@ export function registerTier1RobustnessTests(): void {
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('Missing git commit SHA');
       });
-      it('is invariant to configuration object key insertion ordering', () => {
+      it('is invariant to configuration object key insertion ordering and case', () => {
         const gitSha = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
         const hashA = computeCanonicalSha256({ gitSha, seed: 10, config: { b: 2, a: 1 } });
         expect(evalReproducibleHash({ gitSha, seed: 10, config: { a: 1, b: 2 }, recordedHash: hashA }).passed).toBe(true);
-      });
-      it('normalizes lowercase hexadecimal comparisons', () => {
-        const gitSha = 'abcdefabcdefabcdefabcdefabcdefabcdefabcd';
-        const hash = computeCanonicalSha256({ gitSha, seed: 1, config: { x: 1 } });
-        expect(evalReproducibleHash({ gitSha, seed: 1, config: { x: 1 }, recordedHash: hash.toUpperCase() }).passed).toBe(true);
+        expect(evalReproducibleHash({ gitSha, seed: 10, config: { a: 1, b: 2 }, recordedHash: hashA.toUpperCase() }).passed).toBe(true);
       });
     });
 

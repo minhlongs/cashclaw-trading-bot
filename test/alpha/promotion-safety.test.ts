@@ -111,12 +111,10 @@ describe('Promotion State Machine Safety Hardening', () => {
       expect(gateResultToTrigger({ status: 'KILLED' })).toEqual({ type: 'gate_failed' });
 
       const mockPassedResult: PromotionGateResult = {
-        passed: true, verdict: 'PASSED', checks: [], failedChecks: [],
-        diagnosticReasons: [], timestamp: Date.now(),
+        passed: true, verdict: 'PASSED', checks: [], failedChecks: [], diagnosticReasons: [], timestamp: Date.now(),
       };
       const mockKilledResult: PromotionGateResult = {
-        passed: false, verdict: 'KILLED', checks: [], failedChecks: [],
-        diagnosticReasons: ['check failed'], timestamp: Date.now(),
+        passed: false, verdict: 'KILLED', checks: [], failedChecks: [], diagnosticReasons: ['check failed'], timestamp: Date.now(),
       };
       expect(gateResultToTrigger(mockPassedResult)).toEqual({ type: 'gate_passed' });
       expect(gateResultToTrigger(mockKilledResult)).toEqual({ type: 'gate_failed' });
@@ -125,10 +123,8 @@ describe('Promotion State Machine Safety Hardening', () => {
 
   describe('Static Isolation & Tree Layer Purity', () => {
     const FORBIDDEN_TOKENS = [
-      'ccxt', 'tree/exchange', 'land/exchange-orchestration',
-      'OrderProvider', 'ExchangeOrchestrator', 'BotOrderExecutor',
-      'LiveExchangeAdapter', 'placeOrder', 'executeLive',
-      'tree/order', 'tree/wallet', 'land/wallet',
+      'ccxt', 'tree/exchange', 'land/exchange-orchestration', 'OrderProvider', 'ExchangeOrchestrator',
+      'BotOrderExecutor', 'LiveExchangeAdapter', 'placeOrder', 'executeLive', 'tree/order', 'tree/wallet', 'land/wallet',
     ];
 
     it('verifies gate source files contain zero live exchange or execution adapters', () => {
@@ -138,10 +134,7 @@ describe('Promotion State Machine Safety Hardening', () => {
         const content = fs.readFileSync(file, 'utf-8');
         const rel = path.relative(GATE_DIR, file);
         for (const token of FORBIDDEN_TOKENS) {
-          const isPath = token.includes('/');
-          const regex = isPath
-            ? new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-            : new RegExp(`\\b${token}\\b`);
+          const regex = token.includes('/') ? new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) : new RegExp(`\\b${token}\\b`);
           expect(content.match(regex), `Forbidden token '${token}' in ${rel}`).toBeNull();
         }
       }

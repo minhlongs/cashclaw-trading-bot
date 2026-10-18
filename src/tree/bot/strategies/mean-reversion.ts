@@ -78,22 +78,16 @@ export class MeanRevStrategy {
   private async enterLong(price: number, bb: BollingerBands, rsi: RSI): Promise<void> {
     const result = await executeEnterLong({ config: this.config, callbacks: this.callbacks, price, bb, rsi });
     if (result.success) {
-      this.position = result.position;
-      this.entryPrice = result.entryPrice;
-      this.lastTradeTime = Date.now();
-      this._tradeCount++;
+      this.position = result.position; this.entryPrice = result.entryPrice;
+      this.lastTradeTime = Date.now(); this._tradeCount++;
     }
   }
 
   private async exitLong(price: number, bb: BollingerBands, rsi: RSI): Promise<void> {
-    const result = await executeExitLong({
-      config: this.config, callbacks: this.callbacks, entryPrice: this.entryPrice, price, bb, rsi,
-    });
+    const result = await executeExitLong({ config: this.config, callbacks: this.callbacks, entryPrice: this.entryPrice, price, bb, rsi });
     if (result.success) {
-      this.position = result.position;
-      this.entryPrice = result.entryPrice;
-      this.lastTradeTime = Date.now();
-      this._tradeCount++;
+      this.position = result.position; this.entryPrice = result.entryPrice;
+      this.lastTradeTime = Date.now(); this._tradeCount++;
     }
   }
 }

@@ -29,9 +29,7 @@ export default function DashboardClient() {
         setLoading(true);
         setError(null);
         const response = await fetch('/api/bots', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          cache: 'no-store',
+          method: 'GET', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, cache: 'no-store',
         });
         if (!response.ok) throw new Error(`Request failed: ${response.status}`);
         const body = (await response.json()) as { ok: boolean; data?: BotCardDataApi[] | null; error?: string | null };

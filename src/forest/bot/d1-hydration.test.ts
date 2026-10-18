@@ -1,18 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@/lib/db/client', () => ({
-  createServerClient: vi.fn(),
-}));
-
-vi.mock('@/lib/db/repositories', () => ({
-  findBotsByUser: vi.fn(),
-  findAllBots: vi.fn(),
-}));
-
-vi.mock('@/tree/bot', () => ({
-  getBotManager: vi.fn(),
-  resetBotManager: vi.fn(),
-}));
+vi.mock('@/lib/db/client', () => ({ createServerClient: vi.fn() }));
+vi.mock('@/lib/db/repositories', () => ({ findBotsByUser: vi.fn(), findAllBots: vi.fn() }));
+vi.mock('@/tree/bot', () => ({ getBotManager: vi.fn(), resetBotManager: vi.fn() }));
 
 const mockedCreateServerClient = vi.mocked((await import('@/lib/db/client')).createServerClient);
 const mockedFindBotsByUser = vi.mocked((await import('@/lib/db/repositories')).findBotsByUser);
@@ -28,22 +18,13 @@ function createBotLike() {
 
 function makeRow(overrides: Record<string, unknown> = {}) {
   return {
-    id: 'bot_1',
-    user_id: 'user_1',
+    id: 'bot_1', user_id: 'user_1',
     config_json: JSON.stringify({
       strategy: 'grid', symbol: 'BTC/USDT', exchange: 'binance', capital: 500, gridSpacingPct: 1, gridLevels: 4,
     }),
-    total_trades: 10,
-    started_at: 1000,
-    stopped_at: null,
-    last_error: null,
-    last_tick_at: 900,
-    last_order_at: 800,
-    current_drawdown: 0.5,
-    total_pnl: 12,
-    win_count: 4,
-    loss_count: 3,
-    max_drawdown: 1.2,
+    total_trades: 10, started_at: 1000, stopped_at: null, last_error: null,
+    last_tick_at: 900, last_order_at: 800, current_drawdown: 0.5, total_pnl: 12,
+    win_count: 4, loss_count: 3, max_drawdown: 1.2,
     ...overrides,
   };
 }

@@ -14,19 +14,16 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(record.confidence).toBe(0.9);
       expect(record.direction).toBe('buy');
     });
-
     it('validates PortfolioDecisionRecord with multi-asset weights and gross/net exposures', () => {
       const port = createSyntheticPortfolioDecision({ targetWeights: { 'BTC/USDT': 0.7, 'ETH/USDT': 0.3 }, grossExposure: 1.0, netExposure: 1.0 });
       expect(port.targetWeights['BTC/USDT']).toBe(0.7);
       expect(port.grossExposure).toBe(1.0);
     });
-
     it('validates OperationalTelemetry with primary provider provenance and zero drift', () => {
       const tel = createSyntheticOperationalTelemetry({ decisionLatencyMs: 25, dataFreshnessMs: 50 });
       expect(tel.decisionLatencyMs).toBe(25);
       expect(tel.providerProvenance.usedFallback).toBe(false);
     });
-
     it('validates ProviderProvenance with circuit state and fallback attempt tracking', () => {
       const tel = createSyntheticOperationalTelemetry({
         providerProvenance: { primaryProvider: 'binance', activeProvider: 'bybit', usedFallback: true, fallbackAttempts: 2, circuitState: 'degraded' },
@@ -34,7 +31,6 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(tel.providerProvenance.usedFallback).toBe(true);
       expect(tel.providerProvenance.fallbackAttempts).toBe(2);
     });
-
     it('validates ShadowFill contract with all 4 stress tiers and exact causality', () => {
       const order = generateShadowOrder({ orderId: 'o-1', symbol: 'BTC/USDT', deltaW: 0.1, price: 50000, equity: 100000, timestamp: 1000 })!;
       for (const tier of ['normal', 'conservative', 'adverse', 'extreme'] as const) {
@@ -75,24 +71,20 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(order.size).toBe(10000);
       expect(order.targetWeightDelta).toBe(0.2);
     });
-
     it('generates sell order when target weight delta is negative', () => {
       const order = generateShadowOrder({ orderId: 'o-sell', symbol: 'ETH/USDT', deltaW: -0.15, price: 3000, equity: 100000, timestamp: 2000 })!;
       expect(order.side).toBe('sell');
       expect(order.size).toBe(15000);
       expect(order.targetWeightDelta).toBe(-0.15);
     });
-
     it('suppresses order generation when weight delta is zero (within epsilon)', () => {
       expect(generateShadowOrder({ orderId: 'o-zero', symbol: 'BTC/USDT', deltaW: 0.0, price: 60000, equity: 100000, timestamp: 1000 })).toBeNull();
     });
-
     it('sets order price strictly to decision benchmark price without lookahead bias', () => {
       const order = generateShadowOrder({ orderId: 'o-p', symbol: 'SOL/USDT', deltaW: 0.05, price: 150.25, equity: 20000, timestamp: 3000 })!;
       expect(order.price).toBe(150.25);
       expect(order.decisionTimestamp).toBe(3000);
     });
-
     it('scales notional size and quantity linearly with portfolio equity', () => {
       const o1 = generateShadowOrder({ orderId: 'o-1', symbol: 'BTC/USDT', deltaW: 0.1, price: 50000, equity: 100000, timestamp: 1000 })!;
       const o2 = generateShadowOrder({ orderId: 'o-2', symbol: 'BTC/USDT', deltaW: 0.1, price: 50000, equity: 200000, timestamp: 1000 })!;
@@ -155,16 +147,13 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(attr.deltaSlippageBps).toBe(5.5);
     });
 
-    it('evaluates healthy operational state when latency and freshness are nominal', () => {
+    it('evaluates healthy operational state and detects data staleness', () => {
       const health = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ decisionLatencyMs: 30, dataFreshnessMs: 150 }));
       expect(health.status).toBe('healthy');
       expect(health.alarms).toHaveLength(0);
-    });
-
-    it('detects data staleness when freshness drift exceeds threshold', () => {
-      const health = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ dataFreshnessMs: 5500 }));
-      expect(health.status).toBe('critical');
-      expect(health.alarms).toContain('STALE_DATA');
+      const stale = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ dataFreshnessMs: 5500 }));
+      expect(stale.status).toBe('critical');
+      expect(stale.alarms).toContain('STALE_DATA');
     });
   });
 });

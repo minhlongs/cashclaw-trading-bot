@@ -4,23 +4,13 @@ import { useTranslations } from 'next-intl';
 import { Layers, ShieldCheck, Activity, Gauge } from 'lucide-react';
 
 interface TerminalWaterfallHudProps {
-  darkMeshNettingPct?: number;
-  urgencyState?: string;
-  sliceCount?: number;
-  routedVolumeUsd?: number;
-  deltaExposure?: number;
-  gammaExposure?: number;
-  vegaExposure?: number;
+  darkMeshNettingPct?: number; urgencyState?: string; sliceCount?: number;
+  routedVolumeUsd?: number; deltaExposure?: number; gammaExposure?: number; vegaExposure?: number;
 }
 
 export function TerminalWaterfallHud({
-  darkMeshNettingPct = 42.5,
-  urgencyState = 'NORMAL',
-  sliceCount = 5,
-  routedVolumeUsd = 125000,
-  deltaExposure = 0.85,
-  gammaExposure = 0.04,
-  vegaExposure = 12.3,
+  darkMeshNettingPct = 42.5, urgencyState = 'NORMAL', sliceCount = 5,
+  routedVolumeUsd = 125000, deltaExposure = 0.85, gammaExposure = 0.04, vegaExposure = 12.3,
 }: TerminalWaterfallHudProps) {
   const t = useTranslations('dashboard.waterfallHud');
 
@@ -29,15 +19,9 @@ export function TerminalWaterfallHud({
       <div className="card-header flex items-center justify-between pb-2">
         <div className="flex items-center gap-2">
           <Layers className="h-5 w-5 text-ai" />
-          <div>
-            <h2 className="text-base font-medium">{t('title')}</h2>
-            <p className="text-xs text-secondary">{t('subtitle')}</p>
-          </div>
+          <div><h2 className="text-base font-medium">{t('title')}</h2><p className="text-xs text-secondary">{t('subtitle')}</p></div>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-profit">
-          <ShieldCheck className="h-4 w-4" />
-          <span>Institutional OMS</span>
-        </div>
+        <div className="flex items-center gap-1.5 text-xs text-profit"><ShieldCheck className="h-4 w-4" /><span>Institutional OMS</span></div>
       </div>
 
       <div className="card-body grid grid-cols-2 gap-4 pt-2 sm:grid-cols-4">

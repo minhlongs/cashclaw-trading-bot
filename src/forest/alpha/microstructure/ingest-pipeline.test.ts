@@ -12,19 +12,14 @@ import type {
 } from '../persistence/micro-store-types';
 import { runMicroIngest, type MicroIngestDeps } from './ingest-pipeline';
 
-// ── Fake in-memory store ─────────────────────────────────────────────────────
-
 function createFakeStore(prevLastId: number | null = null): MicrostructureStore & {
-  depthRows: DepthSnapshotRecord[];
-  tradeBatches: TradeBatchRecord[];
-  vectors: FeatureVector[];
-  logs: IngestLogRecord[];
+  depthRows: DepthSnapshotRecord[]; tradeBatches: TradeBatchRecord[];
+  vectors: FeatureVector[]; logs: IngestLogRecord[];
 } {
   const depthRows: DepthSnapshotRecord[] = [];
   const tradeBatches: TradeBatchRecord[] = [];
   const vectors: FeatureVector[] = [];
   const logs: IngestLogRecord[] = [];
-
   return {
     depthRows, tradeBatches, vectors, logs,
     appendDepthSnapshot: async (r) => { depthRows.push(r); },
@@ -38,10 +33,7 @@ function createFakeStore(prevLastId: number | null = null): MicrostructureStore 
   };
 }
 
-// ── Fixtures ─────────────────────────────────────────────────────────────────
-
 const NOW = 1_700_000_000_000;
-
 const VALID_DEPTH_BODY = {
   lastUpdateId: 42,
   bids: [[104_063.99, 0.5], [104_062.0, 1.25]],
@@ -59,13 +51,9 @@ function makeDeps(overrides: Partial<MicroIngestDeps> = {}): MicroIngestDeps {
     store: createFakeStore(),
     fetchDepth: async () => ({ body: VALID_DEPTH_BODY, latencyMs: 12 }),
     fetchTrades: async () => ({ body: makeTradeBody(100, 5), latencyMs: 8 }),
-    now: () => NOW,
-    symbols: ['BTCUSDT'],
-    ...overrides,
+    now: () => NOW, symbols: ['BTCUSDT'], ...overrides,
   };
 }
-
-// ── Tests ────────────────────────────────────────────────────────────────────
 
 describe('runMicroIngest', () => {
   it('happy path: persists depth, trades, vector, and OK audit log', async () => {
@@ -126,27 +114,18 @@ describe('runMicroIngest', () => {
 
   it('bad depth payload: logs DATA_INVALID, no persistence', async () => {
     const store = createFakeStore();
-    const deps = makeDeps({
-      store,
-      fetchDepth: async () => ({ body: { garbage: true }, latencyMs: 5 }),
-    });
+    const deps = makeDeps({ store, fetchDepth: async () => ({ body: { garbage: true }, latencyMs: 5 }) });
     const report = await runMicroIngest(deps);
-
-    const outcome = report.outcomes[0];
-    expect(outcome.status).toBe('DATA_INVALID');
-    expect(outcome.reason).toContain('depth');
+    expect(report.outcomes[0].status).toBe('DATA_INVALID');
+    expect(report.outcomes[0].reason).toContain('depth');
     expect(store.depthRows).toHaveLength(0);
     expect(store.logs[0].status).toBe('DATA_INVALID');
   });
 
   it('bad trades payload: logs DATA_INVALID, no persistence', async () => {
     const store = createFakeStore();
-    const deps = makeDeps({
-      store,
-      fetchTrades: async () => ({ body: 'not-an-array', latencyMs: 3 }),
-    });
+    const deps = makeDeps({ store, fetchTrades: async () => ({ body: 'not-an-array', latencyMs: 3 }) });
     const report = await runMicroIngest(deps);
-
     expect(report.outcomes[0].status).toBe('DATA_INVALID');
     expect(report.outcomes[0].reason).toContain('trades');
     expect(store.tradeBatches).toHaveLength(0);
@@ -154,17 +133,9 @@ describe('runMicroIngest', () => {
 
   it('crossed book: quality check rejects depth as DATA_INVALID', async () => {
     const store = createFakeStore();
-    const crossedDepth = {
-      lastUpdateId: 1,
-      bids: [[104_065.0, 1.0]],
-      asks: [[104_064.0, 1.0]],
-    };
-    const deps = makeDeps({
-      store,
-      fetchDepth: async () => ({ body: crossedDepth, latencyMs: 5 }),
-    });
+    const crossedDepth = { lastUpdateId: 1, bids: [[104_065.0, 1.0]], asks: [[104_064.0, 1.0]] };
+    const deps = makeDeps({ store, fetchDepth: async () => ({ body: crossedDepth, latencyMs: 5 }) });
     const report = await runMicroIngest(deps);
-
     expect(report.outcomes[0].status).toBe('DATA_INVALID');
     expect(report.outcomes[0].reason).toContain('crossed');
   });

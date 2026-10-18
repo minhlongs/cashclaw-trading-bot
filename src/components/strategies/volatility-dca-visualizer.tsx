@@ -6,9 +6,7 @@ import { Activity, ShieldCheck, Play, ArrowDownRight, ArrowUpRight } from 'lucid
 import { volatilityDca } from '@/tree/quantlib/volatility-dca';
 import { VolatilityDcaWalkForwardTable } from './volatility-dca-walk-forward-table';
 
-export interface VolatilityDcaVisualizerProps {
-  initialPrice?: number;
-}
+export interface VolatilityDcaVisualizerProps { initialPrice?: number; }
 
 export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<VolatilityDcaVisualizerProps>) {
   const t = useTranslations('strategies.volatilityDca');
@@ -47,9 +45,7 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
           <div className="flex flex-col gap-2">
             <label htmlFor="symbol-select" className="text-xs font-medium text-[var(--text-secondary)]">{t('symbolLabel')}</label>
             <select id="symbol-select" value={symbol} onChange={(e) => setSymbol(e.target.value)} className="px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--color-accent)]">
-              <option value="BTC/USDT">BTC/USDT</option>
-              <option value="ETH/USDT">ETH/USDT</option>
-              <option value="SOL/USDT">SOL/USDT</option>
+              <option value="BTC/USDT">BTC/USDT</option><option value="ETH/USDT">ETH/USDT</option><option value="SOL/USDT">SOL/USDT</option>
             </select>
           </div>
           <div className="flex flex-col gap-2">

@@ -24,32 +24,21 @@ export class CostTracker {
   }
 
   /** Record cost units consumed for an exchange */
-  record(exchange: ExchangeId, cost: number): void {
-    const bucket = this.ensureBucket(exchange);
-    bucket.used += cost;
-  }
+  record(exchange: ExchangeId, cost: number): void { this.ensureBucket(exchange).used += cost; }
 
   /** Get remaining budget for an exchange today */
   getRemaining(exchange: ExchangeId): number {
-    const budget = this.config.budget[exchange] ?? 0;
-    const bucket = this.ensureBucket(exchange);
-    return Math.max(0, budget - bucket.used);
+    return Math.max(0, (this.config.budget[exchange] ?? 0) - this.ensureBucket(exchange).used);
   }
 
   /** Get total budget for an exchange */
-  getBudget(exchange: ExchangeId): number {
-    return this.config.budget[exchange] ?? 0;
-  }
+  getBudget(exchange: ExchangeId): number { return this.config.budget[exchange] ?? 0; }
 
   /** Get cost used today for an exchange */
-  getUsed(exchange: ExchangeId): number {
-    return this.ensureBucket(exchange).used;
-  }
+  getUsed(exchange: ExchangeId): number { return this.ensureBucket(exchange).used; }
 
   /** Whether this exchange is over its daily budget */
-  isOverBudget(exchange: ExchangeId): boolean {
-    return this.getRemaining(exchange) <= 0;
-  }
+  isOverBudget(exchange: ExchangeId): boolean { return this.getRemaining(exchange) <= 0; }
 
   /** Get all exchange usage as a snapshot (for dashboard/telemetry) */
   snapshot(): Record<ExchangeId, { budget: number; used: number; remaining: number }> {

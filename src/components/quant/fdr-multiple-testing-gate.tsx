@@ -10,10 +10,7 @@ export function FdrMultipleTestingGate() {
   const [totalTrials, setTotalTrials] = useState<number>(12);
   const [method, setMethod] = useState<GateMethod>('BH_FDR');
 
-  const fdrTelemetry = useMemo(
-    () => computeFdrGateTelemetry(fdrAlpha, totalTrials, method),
-    [fdrAlpha, totalTrials, method],
-  );
+  const fdrTelemetry = useMemo(() => computeFdrGateTelemetry(fdrAlpha, totalTrials, method), [fdrAlpha, totalTrials, method]);
   const { rows: evaluatedRows, survivedCount } = fdrTelemetry;
 
   return (
@@ -36,9 +33,7 @@ export function FdrMultipleTestingGate() {
           <div className="flex flex-col gap-2">
             <label htmlFor="trial-count-select" className="text-xs font-medium text-[var(--text-secondary)]">Cumulative Hypothesis Trials (m)</label>
             <select id="trial-count-select" value={totalTrials} onChange={(e) => setTotalTrials(Number(e.target.value))} className="min-h-[44px] px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] text-sm font-mono focus:outline-none focus:border-[var(--color-accent)]">
-              <option value={12}>m = 12 (Phase 3 Seed Sweep)</option>
-              <option value={36}>m = 36 (Multi-Pair Universe)</option>
-              <option value={64}>m = 64 (Full Combinatorial Zoo)</option>
+              <option value={12}>m = 12 (Phase 3 Seed Sweep)</option><option value={36}>m = 36 (Multi-Pair Universe)</option><option value={64}>m = 64 (Full Combinatorial Zoo)</option>
             </select>
           </div>
           <div className="flex flex-col gap-2">

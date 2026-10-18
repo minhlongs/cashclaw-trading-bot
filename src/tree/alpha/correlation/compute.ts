@@ -18,9 +18,7 @@ export function pearsonCorrelation(x: number[], y: number[]): number {
   if (n < 2) return 0;
   const mx = mean(x.slice(0, n));
   const my = mean(y.slice(0, n));
-  let num = 0;
-  let denX = 0;
-  let denY = 0;
+  let [num, denX, denY] = [0, 0, 0];
   for (let i = 0; i < n; i++) {
     const dx = x[i] - mx;
     const dy = y[i] - my;

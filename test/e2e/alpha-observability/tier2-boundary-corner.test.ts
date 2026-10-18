@@ -92,28 +92,23 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
 
   describe('F4: Shadow Fill Simulator Boundaries', () => {
     const order = generateShadowOrder({ orderId: 'o-bound', symbol: 'BTC/USDT', deltaW: 0.1, price: 50000, equity: 100000, timestamp: 1000 })!;
-
     it('handles zero latency execution where fillTimestamp equals decisionTimestamp', () => {
       const fill = simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 0, stressTier: 'normal' });
       expect(fill.fillTimestamp).toBe(1000);
     });
-
     it('handles high latency execution preserving causal addition', () => {
       const fill = simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 60000, stressTier: 'normal' });
       expect(fill.fillTimestamp).toBe(61000);
     });
-
     it('computes pure spread/impact slippage when arrival price equals decision price', () => {
       const fill = simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 10, stressTier: 'normal' });
-      expect(fill.slippageBps).toBe(8); // (50040 - 50000) / 50000 * 10000 = 8 bps
+      expect(fill.slippageBps).toBe(8);
     });
-
     it('simulates extreme adverse price gap (10% flash shock on buy)', () => {
       const fill = simulateShadowFill({ order, arrivalPrice: 55000, latencyMs: 100, stressTier: 'extreme' });
-      expect(fill.fillPrice).toBe(55467.5); // 55000 * 1.0085
+      expect(fill.fillPrice).toBe(55467.5);
       expect(fill.slippageBps).toBeGreaterThan(1000);
     });
-
     it('validates precision and nonnegativity on fractional fee amounts', () => {
       const fill = simulateShadowFill({ order, arrivalPrice: 50000, latencyMs: 10, stressTier: 'extreme' });
       expect(fill.feeAmount).toBeGreaterThan(0);

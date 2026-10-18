@@ -23,28 +23,20 @@ export function MonitoringClient() {
   const fetchData = useCallback(async () => {
     try {
       setError(null);
-
       const [healthRes, metricsRes, killswitchRes] = await Promise.all([
-        fetch('/api/health'),
-        fetch('/api/metrics'),
-        fetch('/api/killswitch-status'),
+        fetch('/api/health'), fetch('/api/metrics'), fetch('/api/killswitch-status'),
       ]);
-
-      if (!healthRes.ok || !metricsRes.ok || !killswitchRes.ok) {
-        throw new Error(t('endpointError'));
-      }
+      if (!healthRes.ok || !metricsRes.ok || !killswitchRes.ok) throw new Error(t('endpointError'));
 
       const [health, metrics, killswitch] = await Promise.all([
         healthRes.json() as Promise<MonitoringData['health']>,
         metricsRes.json() as Promise<MonitoringData['metrics']>,
         killswitchRes.json() as Promise<MonitoringData['killswitch']>,
       ]);
-
       setData({ health, metrics, killswitch, alerts: [] });
       setLastRefresh(new Date());
     } catch (fetchError) {
-      const msg = fetchError instanceof Error ? fetchError.message : t('loadFailed');
-      setError(msg);
+      setError(fetchError instanceof Error ? fetchError.message : t('loadFailed'));
     } finally {
       if (mountedRef.current) setLoading(false);
     }

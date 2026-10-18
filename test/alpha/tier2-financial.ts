@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  evalMaxDrawdown,
-  evalMinNetExpectancy,
-  evalMinProfitFactor,
-  evalMinRegimeCoverage,
-  evalMinSharpeSortino,
-  evalMinTrades,
+  evalMaxDrawdown, evalMinNetExpectancy, evalMinProfitFactor,
+  evalMinRegimeCoverage, evalMinSharpeSortino, evalMinTrades,
 } from './promotion-gate-fixtures';
 
 export function registerTier2FinancialTests(): void {
@@ -14,19 +10,15 @@ export function registerTier2FinancialTests(): void {
       it('fails at trade count 29 (just below boundary 30)', () => {
         expect(evalMinTrades(29, 30).passed).toBe(false);
       });
-
       it('passes at exact threshold 30', () => {
         expect(evalMinTrades(30, 30).passed).toBe(true);
       });
-
       it('passes at trade count 31 (just above boundary 30)', () => {
         expect(evalMinTrades(31, 30).passed).toBe(true);
       });
-
       it('passes at very large trade count 1,000,000', () => {
         expect(evalMinTrades(1000000, 30).passed).toBe(true);
       });
-
       it('fails when trade count is fractional 29.999', () => {
         expect(evalMinTrades(29.999, 30).passed).toBe(false);
       });

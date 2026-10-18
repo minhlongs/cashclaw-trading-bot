@@ -2,6 +2,19 @@
 
 ## v1 Paper-Trading Platform
 
+### Quad-Cluster Deep Refactor Wave 7 — 2026-10-18
+- **`@cashclaw/quantlib` Public SDK Barrel & CLI `eval` Multi-Engine Expansion (`src/tree/quantlib/public-sdk.ts`, `bin/lib/commands.js`, `bin/lib/cli-printers.js`)**:
+  - Expanded `@cashclaw/quantlib` public Apache-2.0 barrel (`QUANTLIB_OSS_VERSION = '1.63.0-open-core'`) to export all pure zero-I/O quantitative estimators (`runHamiltonMarkovFilter`, `computeHrpRecursiveBisection`, `computeAlmgrenChrissTrajectory`, `HayashiYoshidaEngine`, `computeHawkesIntensity`, `computeOrderBookImbalance`, `GatheralRoughVolatilityEngine`, `runBipowerJumpEstimation`).
+  - Enhanced `cashclaw eval` (`runQuantitativeEval` and `printEvalReport`) to compute and report `hamiltonCrisisProb` (Hamilton 2-state Markov Switching crisis posterior) and `hrpDiversificationRatio` (López de Prado HRP diversification ratio).
+- **Sub-100 LOC Production Ceiling (`<= 98 LOC` across all of `src/`)**:
+  - Compacted all 41 non-test `.ts`/`.tsx` files in `src/` exceeding `98 LOC` down to `<= 98 LOC` (0 non-test files `> 98 LOC` across all 915+ production files in `src/`).
+- **Strict Test Ceiling (`<= 230 LOC` across all of `src/`)**:
+  - Compacted all 20 test files in `src/` between `231–240 LOC` down to `<= 230 LOC` (0 test files `> 230 LOC` across all of `src/`).
+- **Strict `test/`, `scripts/` & `bin/` Ceiling (`<= 160 LOC`)**:
+  - Compacted all 15 files in `test/`, `scripts/`, and `bin/` between `161–170 LOC` down to `<= 160 LOC` (0 files `> 160 LOC` across `test/`, `scripts/`, and `bin/`).
+- **Verification**:
+  - 720/720 test files (6,003/6,003 tests) passing, `tsc --noEmit` 0 errors, ESLint 0 warnings, OSS package audit clean (3/3 checks passed).
+
 ### Quad-Cluster Deep Refactor Wave 6 — 2026-10-18
 - **`CloudSchedulerCoordinator` Expired Lease Pruning & EE Tier Context Unification (`src/ee/scheduler/cloud-scheduler-coordinator.ts`, `src/app/api/ee/scheduler/route.ts`, `src/app/api/ee/alpha-feed/route.ts`, `src/app/api/ee/quotas/route.ts`, `src/app/api/ee/credits/route.ts`)**:
   - Added `pruneExpiredLeases(nowMs)` and optional `workspaceId` filtering (`activeLeaseCount(nowMs, workspaceId?)`) to `CloudSchedulerCoordinator`, preventing unbounded `Map` growth in long-lived worker isolates and supporting `GET /api/ee/scheduler?workspaceId=`.

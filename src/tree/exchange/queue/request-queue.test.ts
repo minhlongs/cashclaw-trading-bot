@@ -5,19 +5,14 @@ import { RequestPriority, DEFAULT_QUEUE_CONFIG, type QueueItem } from './types';
 function makeQueue(overrides?: Partial<typeof DEFAULT_QUEUE_CONFIG>) {
   return new RequestQueue({
     dailyBudget: { binance: 50, bybit: 80, okx: 60 },
-    maxDepth: { binance: 5, bybit: 5, okx: 5 },
-    drainBatchSize: 3,
-    ...overrides,
+    maxDepth: { binance: 5, bybit: 5, okx: 5 }, drainBatchSize: 3, ...overrides,
   });
 }
 
 function fakeItem(overrides: Partial<QueueItem> = {}): Omit<QueueItem, 'id' | 'enqueuedAt'> {
   return {
-    priority: RequestPriority.STRATEGY_EVAL,
-    exchange: 'binance',
-    cost: 1,
-    execute: async () => 'ok',
-    ...overrides,
+    priority: RequestPriority.STRATEGY_EVAL, exchange: 'binance', cost: 1,
+    execute: async () => 'ok', ...overrides,
   };
 }
 

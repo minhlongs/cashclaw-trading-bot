@@ -46,27 +46,14 @@ export async function resolveWorkspaceTierContext(
 
   if (candidateTier) {
     const parsed = SaasTierSchema.safeParse(candidateTier);
-    if (!parsed.success) {
-      return {
-        workspaceId,
-        tier: 'BASIC',
-        invalidExplicitTier: candidateTier,
-      };
-    }
-    return {
-      workspaceId,
-      tier: parsed.data,
-    };
+    if (!parsed.success) return { workspaceId, tier: 'BASIC', invalidExplicitTier: candidateTier };
+    return { workspaceId, tier: parsed.data };
   }
 
   const tier: SaasTier = workspaceId
     ? await defaultSaasEntitlementStore.getWorkspaceTier(workspaceId)
     : 'BASIC';
-
-  return {
-    workspaceId,
-    tier,
-  };
+  return { workspaceId, tier };
 }
 
 /**
@@ -80,17 +67,11 @@ export async function resolveActiveBotCount(
   const rawHeader = req.headers.get('x-cashclaw-active-bots');
   if (rawHeader !== null) {
     const parsed = parseInt(rawHeader, 10);
-    if (!Number.isNaN(parsed)) {
-      return Math.max(0, parsed);
-    }
+    if (!Number.isNaN(parsed)) return Math.max(0, parsed);
   }
-
   if (!loadLiveBots) return 0;
-
   try {
-    const listResult = (await loadLiveBots()) as
-      | { data?: unknown[]; bots?: unknown[] }
-      | undefined;
+    const listResult = (await loadLiveBots()) as { data?: unknown[]; bots?: unknown[] } | undefined;
     if (Array.isArray(listResult?.data)) return listResult.data.length;
     if (Array.isArray(listResult?.bots)) return listResult.bots.length;
   } catch {

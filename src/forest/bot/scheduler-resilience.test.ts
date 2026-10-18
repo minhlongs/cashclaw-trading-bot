@@ -14,34 +14,21 @@ const mockKillswitchInstance = {
 vi.mock('@/tree/bot/killswitch', () => ({ Killswitch: vi.fn().mockImplementation(() => mockKillswitchInstance) }));
 
 const mockProvider = { isCircuitOpen: vi.fn().mockReturnValue(false) };
-const mockOrchestratorInstance = {
-  getProvider: vi.fn().mockReturnValue(mockProvider),
-  registerProvider: vi.fn(),
-};
-vi.mock('@/land/exchange-orchestration', () => ({
-  getExchangeOrchestrator: vi.fn().mockReturnValue(mockOrchestratorInstance),
-}));
+const mockOrchestratorInstance = { getProvider: vi.fn().mockReturnValue(mockProvider), registerProvider: vi.fn() };
+vi.mock('@/land/exchange-orchestration', () => ({ getExchangeOrchestrator: vi.fn().mockReturnValue(mockOrchestratorInstance) }));
 
 const mockD1Run = vi.fn().mockResolvedValue({ success: true });
 const mockD1Bind = vi.fn().mockReturnValue({ run: mockD1Run });
 const mockD1All = vi.fn().mockResolvedValue({ results: [] });
 const mockD1Prepare = vi.fn().mockReturnValue({ bind: mockD1Bind, all: mockD1All });
-vi.mock('@/lib/db/client', () => ({
-  createServerClient: vi.fn().mockReturnValue({ prepare: (...args: unknown[]) => mockD1Prepare(...args) }),
-}));
+vi.mock('@/lib/db/client', () => ({ createServerClient: vi.fn().mockReturnValue({ prepare: (...args: unknown[]) => mockD1Prepare(...args) }) }));
 
 vi.mock('@/tree/telemetry/writer', () => ({
-  TelemetryWriter: vi.fn().mockImplementation(() => ({
-    emit: vi.fn(),
-    flush: vi.fn().mockResolvedValue(undefined),
-  })),
+  TelemetryWriter: vi.fn().mockImplementation(() => ({ emit: vi.fn(), flush: vi.fn().mockResolvedValue(undefined) })),
 }));
 
 const mockFindAllBots = vi.fn().mockResolvedValue([]);
-vi.mock('@/lib/db/repositories', () => ({
-  findBotsByUser: vi.fn(),
-  findAllBots: (...args: unknown[]) => mockFindAllBots(...args),
-}));
+vi.mock('@/lib/db/repositories', () => ({ findBotsByUser: vi.fn(), findAllBots: (...args: unknown[]) => mockFindAllBots(...args) }));
 
 describe('BotScheduler — error resilience, auto-restart & rate limits', () => {
   let tickCount = 0;
@@ -52,17 +39,12 @@ describe('BotScheduler — error resilience, auto-restart & rate limits', () => 
       id: rest.id ?? 'bot-1',
       getStatus: vi.fn().mockReturnValue(rest.status ?? 'running'),
       getConfig: vi.fn().mockReturnValue({
-        exchange: rest.exchange ?? 'binance',
-        symbol: rest.symbol ?? 'BTC/USDT',
-        capital: rest.capital ?? 1000,
+        exchange: rest.exchange ?? 'binance', symbol: rest.symbol ?? 'BTC/USDT', capital: rest.capital ?? 1000,
       }),
       tick: vi.fn().mockResolvedValue(undefined),
       hasStrategy: vi.fn().mockReturnValue(hs ?? true),
       start: vi.fn().mockResolvedValue(undefined),
-      getSnapshot: vi.fn().mockReturnValue({
-        id: rest.id ?? 'bot-1',
-        totalPnl: rest.totalPnl ?? 0,
-      }),
+      getSnapshot: vi.fn().mockReturnValue({ id: rest.id ?? 'bot-1', totalPnl: rest.totalPnl ?? 0 }),
       ...rest,
     };
   }

@@ -26,9 +26,7 @@ function createValidCandidate(): PromotionGateInput {
 }
 
 function candidateWith(overrides: {
-  financial?: Partial<FinancialMetricsInput>;
-  stress?: Partial<StressMetricsInput>;
-  robustness?: Partial<RobustnessMetricsInput>;
+  financial?: Partial<FinancialMetricsInput>; stress?: Partial<StressMetricsInput>; robustness?: Partial<RobustnessMetricsInput>;
 }): PromotionGateInput {
   const base = createValidCandidate();
   return {
@@ -38,11 +36,7 @@ function candidateWith(overrides: {
   };
 }
 
-interface Mutation {
-  name: GateCheckName;
-  desc: string;
-  create: () => PromotionGateInput;
-}
+interface Mutation { name: GateCheckName; desc: string; create: () => PromotionGateInput; }
 
 const mutations: readonly Mutation[] = [
   { name: 'min_trades', desc: 'numTrades 29 < 30', create: () => candidateWith({ financial: { numTrades: 29 } }) },
@@ -51,15 +45,10 @@ const mutations: readonly Mutation[] = [
   { name: 'max_drawdown', desc: 'MDD 0.251 > 0.25', create: () => candidateWith({ financial: { maxDrawdown: 0.251 } }) },
   { name: 'min_sharpe_sortino', desc: 'Sharpe 0.99 < 1.0', create: () => candidateWith({ financial: { sharpe: 0.99 } }) },
   {
-    name: 'min_regime_coverage',
-    desc: '1/3 regimes profitable (< 50%)',
+    name: 'min_regime_coverage', desc: '1/3 regimes profitable (< 50%)',
     create: () => candidateWith({
       financial: {
-        byRegime: {
-          r1: { numTrades: 10, netPnl: 100 },
-          r2: { numTrades: 10, netPnl: -20 },
-          r3: { numTrades: 10, netPnl: -30 },
-        },
+        byRegime: { r1: { numTrades: 10, netPnl: 100 }, r2: { numTrades: 10, netPnl: -20 }, r3: { numTrades: 10, netPnl: -30 } },
       },
     }),
   },

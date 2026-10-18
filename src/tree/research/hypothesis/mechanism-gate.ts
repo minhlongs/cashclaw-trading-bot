@@ -17,29 +17,13 @@ const BLOCKLIST_PATTERNS: readonly RegExp[] = [
 
 /** Causal connectives — one occurrence is sufficient. */
 const CAUSAL_CONNECTIVES: readonly string[] = [
-  'may indicate',
-  'leads to',
-  'causes',
-  'drives',
-  'results in',
-  'due to',
-  'implies',
+  'may indicate', 'leads to', 'causes', 'drives', 'results in', 'due to', 'implies',
 ];
 
 /** Domain tokens — two distinct occurrences are sufficient. */
 const DOMAIN_TOKENS: readonly string[] = [
-  'funding',
-  'open interest',
-  'oi',
-  'liquidation',
-  'volume',
-  'volatility',
-  'spread',
-  'momentum',
-  'reversal',
-  'positioning',
-  'imbalance',
-  'dislocation',
+  'funding', 'open interest', 'oi', 'liquidation', 'volume', 'volatility',
+  'spread', 'momentum', 'reversal', 'positioning', 'imbalance', 'dislocation',
 ];
 
 /** Result of a mechanism-gate check. */

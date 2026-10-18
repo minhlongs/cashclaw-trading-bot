@@ -4,33 +4,19 @@ import type { Candle, CheckResult, MissingIntervalsConfig, QualityViolation } fr
 const DIMENSION = 'missing_intervals';
 const DEFAULT_TOLERANCE_RATIO = 0.1;
 
-/**
- * Infers interval from minimum positive delta between consecutive candles.
- */
 function inferInterval(candles: readonly Candle[]): number | undefined {
   let minDelta = Number.POSITIVE_INFINITY;
   for (let i = 1; i < candles.length; i++) {
     const delta = candles[i].timestamp - candles[i - 1].timestamp;
-    if (delta > 0 && delta < minDelta) {
-      minDelta = delta;
-    }
+    if (delta > 0 && delta < minDelta) minDelta = delta;
   }
   return Number.isFinite(minDelta) ? minDelta : undefined;
 }
 
-/**
- * Resolves expected interval in milliseconds from config or series.
- */
 function resolveIntervalMs(candles: readonly Candle[], config?: MissingIntervalsConfig): number | undefined {
-  if (config?.expectedIntervalMs && config.expectedIntervalMs > 0) {
-    return config.expectedIntervalMs;
-  }
+  if (config?.expectedIntervalMs && config.expectedIntervalMs > 0) return config.expectedIntervalMs;
   if (config?.timeframe) {
-    try {
-      return parseTimeframe(config.timeframe);
-    } catch {
-      return undefined;
-    }
+    try { return parseTimeframe(config.timeframe); } catch { return undefined; }
   }
   return inferInterval(candles);
 }

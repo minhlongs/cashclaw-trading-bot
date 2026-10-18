@@ -1,25 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { IndicatorCandle } from '../indicator-types';
 import type { PairStats } from './types';
-import {
-  findCointegratedPairs,
-  generatePairSignals,
-  filterDiversified,
-} from './pairs';
+import { findCointegratedPairs, generatePairSignals, filterDiversified } from './pairs';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function makeCandles(
-  closes: number[],
-  startTs = 1_000_000,
-): IndicatorCandle[] {
+function makeCandles(closes: number[], startTs = 1_000_000): IndicatorCandle[] {
   return closes.map((close, i) => ({
-    timestamp: startTs + i * 60_000,
-    open: close,
-    high: close,
-    low: close,
-    close,
-    volume: 100,
+    timestamp: startTs + i * 60_000, open: close, high: close, low: close, close, volume: 100,
   }));
 }
 

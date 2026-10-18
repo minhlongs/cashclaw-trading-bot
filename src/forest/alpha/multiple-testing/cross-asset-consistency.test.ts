@@ -8,35 +8,15 @@ import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
 import type { CrossAssetConsistencyOptions } from './types';
 import { RegimeLabel } from '@/tree/regime/types';
 
-// ── Helpers ──────────────────────────────────────────────
 function makeReport(overrides: Partial<EvaluationReport> = {}): EvaluationReport {
   return {
-    experimentId: 'test-exp',
-    symbol: 'BTCUSDT',
-    timeframe: '1h',
-    regime: RegimeLabel.RANGE,
-    totalReturn: 100,
-    netPnl: 100,
-    cagr: 0.5,
-    winRate: 0.55,
-    lossRate: 0.45,
-    profitFactor: 1.5,
-    expectancy: 0.02,
-    sharpe: 1.2,
-    sortino: 1.5,
-    maxDrawdown: 0.1,
-    avgTrade: 0.5,
-    medianTrade: 0.4,
-    numTrades: 200,
-    turnover: 2,
-    fees: 10,
-    slippage: 5,
-    exposure: 0.8,
-    recoveryFactor: 2,
+    experimentId: 'test-exp', symbol: 'BTCUSDT', timeframe: '1h', regime: RegimeLabel.RANGE,
+    totalReturn: 100, netPnl: 100, cagr: 0.5, winRate: 0.55, lossRate: 0.45,
+    profitFactor: 1.5, expectancy: 0.02, sharpe: 1.2, sortino: 1.5, maxDrawdown: 0.1,
+    avgTrade: 0.5, medianTrade: 0.4, numTrades: 200, turnover: 2, fees: 10, slippage: 5,
+    exposure: 0.8, recoveryFactor: 2,
     byRegime: {} as Record<RegimeLabel, Partial<EvaluationReport>>,
-    byMonth: {},
-    byVolBucket: {},
-    byDuration: { short: {}, medium: {}, long: {} },
+    byMonth: {}, byVolBucket: {}, byDuration: { short: {}, medium: {}, long: {} },
     ...overrides,
   };
 }

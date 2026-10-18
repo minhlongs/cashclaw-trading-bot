@@ -102,39 +102,32 @@ describe('evaluator causal warmup and fail-closed', () => {
   });
 
   it('insufficient panel length → EVAL_INSUFFICIENT_PANEL', () => {
-    const panel = makePanel(['AAA'], 3, 5); // len 3 < maxLookback(10)+1
-    const r = evaluateFormula('ts_corr(open, volume, 10)', panel);
-    expect(r).toEqual({ ok: false, reason: 'EVAL_INSUFFICIENT_PANEL' });
+    expect(evaluateFormula('ts_corr(open, volume, 10)', makePanel(['AAA'], 3, 5))).toEqual({ ok: false, reason: 'EVAL_INSUFFICIENT_PANEL' });
   });
 
   it('missing field → EVAL_MISSING_FIELD', () => {
-    const panel = makePanel(['AAA'], 10, 9, ['open', 'close']); // no volume
-    const r = evaluateFormula('ts_corr(open, volume, 5)', panel);
+    const r = evaluateFormula('ts_corr(open, volume, 5)', makePanel(['AAA'], 10, 9, ['open', 'close']));
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe('EVAL_MISSING_FIELD:volume');
   });
 
   it('empty panel → EVAL_EMPTY_PANEL', () => {
-    const r = evaluateFormula('close', { symbols: [], fields: {} });
-    expect(r).toEqual({ ok: false, reason: 'EVAL_EMPTY_PANEL' });
+    expect(evaluateFormula('close', { symbols: [], fields: {} })).toEqual({ ok: false, reason: 'EVAL_EMPTY_PANEL' });
   });
 
   it('ragged panel → EVAL_PANEL_RAGGED', () => {
     const panel: SymbolPanel = { symbols: ['AAA'], fields: { close: [[1, 2, 3], [1, 2]] } };
-    const r = evaluateFormula('close', panel);
-    expect(r).toEqual({ ok: false, reason: 'EVAL_PANEL_RAGGED' });
+    expect(evaluateFormula('close', panel)).toEqual({ ok: false, reason: 'EVAL_PANEL_RAGGED' });
   });
 
   it('unknown token surfaces typed parse error via evaluateFormula', () => {
-    const panel = makePanel(['AAA'], 10, 4);
-    const r = evaluateFormula('sum ts_max(delta(close, 1), 0)', panel);
+    const r = evaluateFormula('sum ts_max(delta(close, 1), 0)', makePanel(['AAA'], 10, 4));
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe('EVAL_UNSUPPORTED_TOKEN:sum');
   });
 
   it('non-causal lag rejected', () => {
-    const panel = makePanel(['AAA'], 10, 4);
-    const r = evaluateFormula('delta(close, -1)', panel);
+    const r = evaluateFormula('delta(close, -1)', makePanel(['AAA'], 10, 4));
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe('NON_CAUSAL_LAG');
   });
@@ -179,8 +172,6 @@ describe('evaluator determinism and append-invariance', () => {
 });
 
 describe('evaluator abs operator', () => {
-  // The abs AST node (parser source: |expr|) applies Math.abs elementwise
-  // and preserves causal nulls — it never fabricates a warmup value.
   it('|delta(close,1)| is non-negative and preserves warmup nulls', () => {
     const formula = normalized('|delta(close, 1)|');
     const panel = makePanel(['AAA', 'BBB'], 12, 5);
@@ -189,7 +180,6 @@ describe('evaluator abs operator', () => {
     if (!r.ok) return;
     const close = panel.fields.close;
     for (let s = 0; s < panel.symbols.length; s += 1) {
-      // t=0 is delta warmup → null, preserved by abs
       expect(r.value[s][0]).toBeNull();
       for (let t = 1; t < 12; t += 1) {
         const v = r.value[s][t];

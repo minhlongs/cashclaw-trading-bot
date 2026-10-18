@@ -65,20 +65,17 @@ export function HrpAllocatorWorkbench() {
             <div className="mt-1 font-mono text-xs font-bold text-[var(--color-ai)]">{hrp.seriatedSymbols.join(' → ')}</div>
           </div>
         </div>
-
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs font-mono">
             <thead>
               <tr className="border-b border-[var(--border-default)] text-[var(--text-secondary)]">
-                <th className="py-2 pr-3">Asset</th>
-                <th className="py-2 pr-3">Quasi-Diag Rank</th>
+                <th className="py-2 pr-3">Asset</th><th className="py-2 pr-3">Quasi-Diag Rank</th>
                 <th className="py-2 pr-3" aria-sort={sortDesc ? 'descending' : 'ascending'}>
                   <button type="button" onClick={() => setSortDesc((v) => !v)} className="underline text-[var(--color-accent)]">
                     HRP Weight ({sortDesc ? '↓' : '↑'})
                   </button>
                 </th>
-                <th className="py-2 pr-3">Inverse-Vol Weight</th>
-                <th className="py-2">Equal Weight (1/N)</th>
+                <th className="py-2 pr-3">Inverse-Vol Weight</th><th className="py-2">Equal Weight (1/N)</th>
               </tr>
             </thead>
             <tbody>

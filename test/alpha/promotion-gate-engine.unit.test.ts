@@ -138,32 +138,10 @@ describe('Conjunctive Promotion Gate Engine (runPromotionGate)', () => {
 
   it('malformed input payloads are rejected fail-closed via Zod schemas', () => {
     const base = createPassingInput();
-
-    expect(() =>
-      runPromotionGate({ ...base, financial: undefined as unknown as typeof base.financial }),
-    ).toThrow(ZodError);
-
-    expect(() =>
-      runPromotionGate({
-        ...base,
-        financial: { ...base.financial, numTrades: 30.5 },
-      }),
-    ).toThrow(ZodError);
-
-    expect(() =>
-      runPromotionGate({
-        ...base,
-        stress: { ...base.stress, netPnlNormal: 'invalid' as unknown as number },
-      }),
-    ).toThrow(ZodError);
-
-    expect(() =>
-      runPromotionGate({
-        ...base,
-        rogueKey: 'injected_bypass',
-      } as unknown as PromotionGateInput),
-    ).toThrow(ZodError);
-
+    expect(() => runPromotionGate({ ...base, financial: undefined as unknown as typeof base.financial })).toThrow(ZodError);
+    expect(() => runPromotionGate({ ...base, financial: { ...base.financial, numTrades: 30.5 } })).toThrow(ZodError);
+    expect(() => runPromotionGate({ ...base, stress: { ...base.stress, netPnlNormal: 'invalid' as unknown as number } })).toThrow(ZodError);
+    expect(() => runPromotionGate({ ...base, rogueKey: 'injected_bypass' } as unknown as PromotionGateInput)).toThrow(ZodError);
     expect(() => runPromotionGate(base, { minTrades: -10 })).toThrow(ZodError);
     expect(() => runPromotionGate(base, { maxDrawdown: 1.5 })).toThrow(ZodError);
   });

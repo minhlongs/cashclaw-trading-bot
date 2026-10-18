@@ -30,12 +30,10 @@ describe('BotDetailTrades', () => {
       render(<BotDetailTrades trades={[]} emptyMsg="No trades yet" />);
       expect(screen.getByText('No trades yet')).toBeInTheDocument();
     });
-
     it('renders custom empty message', () => {
       render(<BotDetailTrades trades={[]} emptyMsg="Chua co giao dich" />);
       expect(screen.getByText('Chua co giao dich')).toBeInTheDocument();
     });
-
     it('shows single empty row with colspan', () => {
       const { container } = render(<BotDetailTrades trades={[]} emptyMsg="No trades yet" />);
       const emptyRow = container.querySelector('td[colspan]');
@@ -68,17 +66,14 @@ describe('BotDetailTrades', () => {
       render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('buy')).toBeInTheDocument();
     });
-
     it('renders sell side text (CSS uppercase)', () => {
       render(<BotDetailTrades trades={[SELL_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('sell')).toBeInTheDocument();
     });
-
     it('renders quantity value', () => {
       render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('0.5')).toBeInTheDocument();
     });
-
     it('renders formatted price with dollar sign', () => {
       render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('$42,000')).toBeInTheDocument();
@@ -108,12 +103,10 @@ describe('BotDetailTrades', () => {
       render(<BotDetailTrades trades={[OPEN_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('—')).toBeInTheDocument();
     });
-
     it('shows dash for null P&L on cancelled trades', () => {
       render(<BotDetailTrades trades={[CANCELLED_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('—')).toBeInTheDocument();
     });
-
     it('shows dash for null P&L on failed trades', () => {
       render(<BotDetailTrades trades={[FAILED_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('—')).toBeInTheDocument();
@@ -211,17 +204,14 @@ describe('BotDetailTrades', () => {
       const { container } = render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(container.querySelectorAll('.text-profit').length).toBeGreaterThanOrEqual(1);
     });
-
     it('has text-loss class in table for sell trade', () => {
       const { container } = render(<BotDetailTrades trades={[SELL_TRADE]} emptyMsg="empty" />);
       expect(container.querySelectorAll('.text-loss').length).toBeGreaterThanOrEqual(1);
     });
-
     it('shows buy with text-profit in side column', () => {
       const { container } = render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(container.querySelector('.text-profit')?.textContent).toContain('buy');
     });
-
     it('shows sell with text-loss in side column', () => {
       const { container } = render(<BotDetailTrades trades={[SELL_TRADE]} emptyMsg="empty" />);
       expect(container.querySelector('.text-loss')?.textContent).toContain('sell');

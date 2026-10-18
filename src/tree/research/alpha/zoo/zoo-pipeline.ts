@@ -7,16 +7,8 @@ import { parseResearchHypothesis } from '../../hypothesis/types';
 import { compile } from '../compiler';
 import { buildNormalizedRepresentation, computeFormulaHash, validateProvenance } from '../provenance';
 
-export interface EnvelopeData {
-  readonly entries: readonly unknown[];
-  readonly sourceRepository: string;
-  readonly sourceVersion: string | null;
-}
-
-export interface PipelineOutput {
-  readonly results: readonly PerAlphaResult[];
-  readonly registered: readonly RegisteredAlpha[];
-}
+export interface EnvelopeData { readonly entries: readonly unknown[]; readonly sourceRepository: string; readonly sourceVersion: string | null; }
+export interface PipelineOutput { readonly results: readonly PerAlphaResult[]; readonly registered: readonly RegisteredAlpha[]; }
 
 export function extractRawEntries(manifest: unknown): readonly unknown[] {
   if (typeof manifest === 'object' && manifest !== null) {
@@ -91,7 +83,6 @@ function pseudoId(raw: unknown, index: number): string {
   }
   return `entries.${index}`;
 }
-
 function collectSupportReasons(entry: AlphaZooEntry): readonly string[] {
   const reasons: string[] = [];
   if (entry.requires_sector) reasons.push('SECTOR_DATA_UNAVAILABLE');

@@ -58,42 +58,25 @@ export function registerProtectedRoutes(app: AppType): void {
   app.use('/api/killswitch/*', authGuard());
   app.use('/api/cron/*', authGuard());
 
-  app.get('/internal/api/bots', async (c) => {
-    const r = await botListHandler();
-    return c.json(r, r.ok ? 200 : 500);
-  });
-  app.get('/internal/api/bots/:id', async (c) => {
-    const r = await botDetailHandler(c.req.param('id'));
-    return c.json(r, r.ok ? 200 : 404);
-  });
+  app.get('/internal/api/bots', async (c) => { const r = await botListHandler(); return c.json(r, r.ok ? 200 : 500); });
+  app.get('/internal/api/bots/:id', async (c) => { const r = await botDetailHandler(c.req.param('id')); return c.json(r, r.ok ? 200 : 404); });
   app.post('/internal/api/bots/:id/:action', async (c) => {
     const action = c.req.param('action');
-    if (!['start', 'stop', 'pause', 'resume'].includes(action ?? '')) {
-      return c.json({ ok: false, error: 'Invalid action' }, 400);
-    }
+    if (!['start', 'stop', 'pause', 'resume'].includes(action ?? '')) return c.json({ ok: false, error: 'Invalid action' }, 400);
     const r = await botControlHandler(c.req.param('id'), action as 'start' | 'stop' | 'pause' | 'resume');
     return c.json(r, r.ok ? 200 : 500);
   });
-
   app.post('/api/killswitch/halt', async (c) => {
     const body = await c.req.parseBody();
     const r = await killswitchHaltHandler(typeof body.reason === 'string' ? body.reason : '');
     return c.json(r, r.ok ? 200 : 400);
   });
-  app.post('/api/killswitch/resume', async (c) => {
-    const r = await killswitchResumeHandler();
-    return c.json(r, r.ok ? 200 : 500);
-  });
-
+  app.post('/api/killswitch/resume', async (c) => { const r = await killswitchResumeHandler(); return c.json(r, r.ok ? 200 : 500); });
   app.get('/api/events', async (c) => {
     const limit = parseInt(c.req.query('limit') ?? '50', 10);
     const r = await eventsHandler(c.req.query('botId') ?? undefined, limit);
     return c.json(r, r.ok ? 200 : 500);
   });
-  app.get('/api/stats/daily', async (c) => {
-    const r = await dailyStatsHandler();
-    return c.json(r, r.ok ? 200 : 500);
-  });
-
+  app.get('/api/stats/daily', async (c) => { const r = await dailyStatsHandler(); return c.json(r, r.ok ? 200 : 500); });
   app.post('/api/cron/eval', async (c) => c.json(await new BotScheduler().tick()));
 }

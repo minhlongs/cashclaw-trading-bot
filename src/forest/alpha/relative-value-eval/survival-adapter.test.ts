@@ -34,32 +34,26 @@ const TRADE_SERIES: PairPeriodRecord[] = [
 
 const OPTIONS = { experimentId: 'exp-rv-1', symbol: 'PAIRS/M4', timeframe: '1d', periodsPerYear: 365 } as const;
 
-/** RV walk-forward fixture: two windows with disjoint OOS spans. */
 function rvResult(periods: PairPeriodRecord[]): RVWalkForwardResult {
   return {
     windows: [
       {
         bounds: {
           trainStart: 0, trainEnd: 10, validateStart: 10, validateEnd: 12,
-          testStart: 12, testEnd: 22, trainEndTime: T0 + 9 * HOUR,
-          testStartTime: T0 + 12 * HOUR,
+          testStart: 12, testEnd: 22, trainEndTime: T0 + 9 * HOUR, testStartTime: T0 + 12 * HOUR,
         },
         selectedPairs: [],
       },
       {
         bounds: {
           trainStart: 5, trainEnd: 15, validateStart: 15, validateEnd: 17,
-          testStart: 17, testEnd: 27, trainEndTime: T0 + 14 * HOUR,
-          testStartTime: T0 + 17 * HOUR,
+          testStart: 17, testEnd: 27, trainEndTime: T0 + 14 * HOUR, testStartTime: T0 + 17 * HOUR,
         },
         selectedPairs: [],
       },
     ],
     perPairWindows: [],
-    stitched: {
-      netReturns: periods.map((p) => p.netReturn),
-      roundTripsSource: periods,
-    },
+    stitched: { netReturns: periods.map((p) => p.netReturn), roundTripsSource: periods },
   };
 }
 

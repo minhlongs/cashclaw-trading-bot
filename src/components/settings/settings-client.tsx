@@ -58,10 +58,8 @@ export function SettingsClient() {
       () => setSettings((p) => ({ ...p, exchanges: { ...p.exchanges, [exchange]: { apiKey, apiSecret, testnet } } })),
       `${exchange} saved!`, `${exchange} save failed`,
     );
-
   const handleNotificationSave = (botToken: string, chatId: string) =>
     post({ type: 'notification', botToken, chatId }, () => setSettings((p) => ({ ...p, notification: { botToken, chatId } })), 'Telegram notifications saved!', 'Notification save failed');
-
   const handleStrategySave = (risk: SettingsData['risk']) =>
     post({ type: 'risk', ...risk }, () => setSettings((p) => ({ ...p, risk })), 'Strategy saved!', 'Save failed');
 
@@ -79,9 +77,7 @@ export function SettingsClient() {
   };
   const handleHalt = () => handleKs('halt', false, 'Trading halted', 'Halt failed');
   const handleResume = () => handleKs('resume', true, 'Trading resumed', 'Resume failed');
-
   if (loading) return <div className="settings-loading"><Loader2 size={32} className="animate-spin text-profit" /></div>;
-
   const isError = saveMessage && (saveMessage.includes('failed') || saveMessage.toLowerCase().includes('error'));
 
   return (

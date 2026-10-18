@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createHash } from 'node:crypto';
 import { canonicalize } from '../../src/lib/canonical-json';
-import {
-  checkNoSingleWindowDependency,
-  checkBaselineComparison,
-  checkReproducibleHash,
-} from '../../src/forest/alpha/gate/robustness-checks';
+import { checkNoSingleWindowDependency, checkBaselineComparison, checkReproducibleHash } from '../../src/forest/alpha/gate/robustness-checks';
 
 describe('Adversarial Challenge: Checks 13-15 Empirical Stress Suite', () => {
   describe('Check 13: noSingleWindowDependency', () => {
@@ -14,7 +10,6 @@ describe('Adversarial Challenge: Checks 13-15 Empirical Stress Suite', () => {
       expect(resProfit.passed).toBe(false);
       expect(resProfit.actual).toBe(1.0);
       expect(resProfit.detail).toContain('(W=1) — fails anti-windfall requirement');
-
       expect(checkNoSingleWindowDependency([-500], 0.50).passed).toBe(false);
       expect(checkNoSingleWindowDependency([0], 0.50).passed).toBe(false);
     });

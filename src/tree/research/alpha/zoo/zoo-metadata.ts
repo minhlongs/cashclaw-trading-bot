@@ -6,28 +6,13 @@
 import { z } from 'zod';
 
 /** Market tags observed across the zoo (verified closed set). */
-export const ZOO_MARKET_TAGS = [
-  'equity_us',
-  'equity_cn',
-  'equity_hk',
-  'equity_in',
-  'equity_kr',
-  'crypto',
-] as const;
+export const ZOO_MARKET_TAGS = ['equity_us', 'equity_cn', 'equity_hk', 'equity_in', 'equity_kr', 'crypto'] as const;
 export type ZooMarketTag = (typeof ZOO_MARKET_TAGS)[number];
 
 /** Research themes observed across the zoo (verified closed set). */
 export const ZOO_THEMES = [
-  'volume',
-  'momentum',
-  'reversal',
-  'volatility',
-  'microstructure',
-  'quality',
-  'liquidity',
-  'value',
-  'growth',
-  'sentiment',
+  'volume', 'momentum', 'reversal', 'volatility', 'microstructure',
+  'quality', 'liquidity', 'value', 'growth', 'sentiment',
 ] as const;
 export type ZooTheme = (typeof ZOO_THEMES)[number];
 

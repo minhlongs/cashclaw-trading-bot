@@ -28,27 +28,14 @@ export function BotWizardClient() {
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
 
-  const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const updateConfig = (key: string, value: number) => {
-    setForm((prev) => ({ ...prev, config: { ...prev.config, [key]: value } }));
-  };
-
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((prev) => ({ ...prev, [key]: value }));
+  const updateConfig = (key: string, value: number) => setForm((prev) => ({ ...prev, config: { ...prev.config, [key]: value } }));
   const setStrategyDefaults = (strategy: 'grid' | 'mean_reversion' | 'volatility_dca') => {
     const defaults = strategy === 'grid' ? GRID_DEFAULTS : strategy === 'mean_reversion' ? MEANREV_DEFAULTS : VOLATILITY_DCA_DEFAULTS;
     setForm((prev) => ({ ...prev, strategy, config: { ...defaults } }));
   };
-
-  const goToNext = () => {
-    const idx = STEPS.indexOf(step);
-    if (idx < STEPS.length - 1) setStep(STEPS[idx + 1]);
-  };
-  const goToPrev = () => {
-    const idx = STEPS.indexOf(step);
-    if (idx > 0) setStep(STEPS[idx - 1]);
-  };
+  const goToNext = () => { const idx = STEPS.indexOf(step); if (idx < STEPS.length - 1) setStep(STEPS[idx + 1]); };
+  const goToPrev = () => { const idx = STEPS.indexOf(step); if (idx > 0) setStep(STEPS[idx - 1]); };
 
   const handleSubmit = async () => {
     setSubmitting(true);

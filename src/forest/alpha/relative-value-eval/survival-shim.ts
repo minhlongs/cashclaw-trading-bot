@@ -1,25 +1,10 @@
 // Walk-forward shim for relative-value results.
 // ADAPTER, NOT ENGINE: reshapes an RVWalkForwardResult into the
 // WalkForwardResult structure consumed by assessWalkForwardConsistency().
-//
-// ONLY the fields that check actually reads carry real values:
-//   - windows[].testMetrics.total_pnl — Σ stitched OOS net returns assigned
-//     to the window (a period belongs to the LATEST window whose
-//     testStartTime <= period timestamp);
-//   - windows[].testMetrics.sharpe_ratio — always null so the check falls
-//     back to total_pnl (per-window spans are too short to annualize);
-//   - aggregated.summaryStats.degradationRatio — 0: no in-sample RV
-//     backtest exists at this seam; the consistency verdict reports but
-//     never gates on it.
-// Every other BacktestResult field is a documented zero/null placeholder —
-// the consistency check never reads them. Pure and deterministic.
 
 import type { BacktestResult } from '@/forest/backtest/types';
 import { RegimeLabel } from '@/tree/regime/types';
-import type {
-  WalkForwardResult,
-  WalkForwardWindow,
-} from '@/forest/backtest/walkforward';
+import type { WalkForwardResult, WalkForwardWindow } from '@/forest/backtest/walkforward';
 import type { RVWalkForwardResult } from './walk-forward';
 
 /** Unconsumed BacktestResult shell carrying only the real test PnL. */

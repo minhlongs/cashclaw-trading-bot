@@ -44,34 +44,16 @@ export function computeSweepPairCorrelations(
       const closesB = cB.slice(0, minLen).map((c) => c.close);
 
       const periodRecords = timestamps.map((ts) => ({
-        timestamp: ts,
-        position: 'flat' as const,
-        hedgeRatio: 1,
-        zScore: 0,
-        weights: { [symA]: 0.5, [symB]: -0.5 },
-        turnover: 0,
-        costPct: 0,
-        grossReturn: 0,
-        netReturn: 0,
-        grossExposure: 1,
-        netExposure: 0,
+        timestamp: ts, position: 'flat' as const, hedgeRatio: 1, zScore: 0,
+        weights: { [symA]: 0.5, [symB]: -0.5 }, turnover: 0, costPct: 0,
+        grossReturn: 0, netReturn: 0, grossExposure: 1, netExposure: 0,
       }));
 
       const rvEvalConfig: RelativeValueEvalConfig = {
-        experimentId: `sweep-rolling-corr-${symA}-${symB}`,
-        timeframe: SWEEP_TIMEFRAME,
-        periodsPerYear: 365,
-        hedgeWindow: 30,
-        zWindow: 30,
-        minObs: 10,
-        entryZ: 2.0,
-        exitZ: 0.5,
-        maxHalfLife: 60,
-        minCorrelation: 0.5,
-        validationWindow: 60,
-        revalidateEvery: 1,
-        minObservations: 30,
-        correlationWindow: 30,
+        experimentId: `sweep-rolling-corr-${symA}-${symB}`, timeframe: SWEEP_TIMEFRAME,
+        periodsPerYear: 365, hedgeWindow: 30, zWindow: 30, minObs: 10,
+        entryZ: 2.0, exitZ: 0.5, maxHalfLife: 60, minCorrelation: 0.5,
+        validationWindow: 60, revalidateEvery: 1, minObservations: 30, correlationWindow: 30,
       };
 
       const corrSeries = computeRollingCorrelationSeries(

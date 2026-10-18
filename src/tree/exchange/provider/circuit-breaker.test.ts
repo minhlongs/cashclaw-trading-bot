@@ -1,22 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CircuitBreaker, CircuitOpenError } from './circuit-breaker';
 
-function failingFn(): Promise<string> {
-  return Promise.reject(new Error('fail'));
-}
-
-function successFn(): Promise<string> {
-  return Promise.resolve('ok');
-}
+const failingFn = (): Promise<string> => Promise.reject(new Error('fail'));
+const successFn = (): Promise<string> => Promise.resolve('ok');
 
 describe('CircuitBreaker', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
 
   describe('initial state', () => {
     it('starts closed', () => {

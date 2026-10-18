@@ -44,16 +44,12 @@ export class HypothesisGenerator {
     this.counter++;
     const preset = REGIME_STRATEGY[regime] ?? REGIME_STRATEGY.UNKNOWN;
     return {
-      id: `h-${slug()}-${this.counter}`,
-      name: `${regime}-specialist #${this.counter}`,
+      id: `h-${slug()}-${this.counter}`, name: `${regime}-specialist #${this.counter}`,
       description: preset.description,
       indicatorSet: preset.indicators.map((name) => ({ indicator: name, lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) })),
-      combineMethod: preset.combiner,
-      regimeFilter: [regime],
+      combineMethod: preset.combiner, regimeFilter: [regime],
       barrierConfig: REGIME_BARRIERS[regime] ?? { ...DEFAULT_BARRIER },
-      optimizerMethod: 'regime_sized',
-      confidence: 0.5,
-      createdAt: new Date().toISOString(),
+      optimizerMethod: 'regime_sized', confidence: 0.5, createdAt: new Date().toISOString(),
     };
   }
 

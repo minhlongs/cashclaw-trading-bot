@@ -10,15 +10,8 @@ import { middleware } from './middleware';
 import { createServerClient } from '@/lib/db/client';
 
 function makeReq(method: string, pathname: string, cookies: Record<string, string> = {}) {
-  const cookieMap = new Map(
-    Object.entries(cookies).map(([k, v]) => [k, { value: v, name: k }])
-  );
-  return {
-    method,
-    nextUrl: { pathname },
-    cookies: { get: (name: string) => cookieMap.get(name) },
-    headers: {},
-  } as any;
+  const cookieMap = new Map(Object.entries(cookies).map(([k, v]) => [k, { value: v, name: k }]));
+  return { method, nextUrl: { pathname }, cookies: { get: (name: string) => cookieMap.get(name) }, headers: {} } as any;
 }
 
 function mockDbSession(userId: string, expiresAt: number) {
@@ -31,17 +24,13 @@ function mockDbSession(userId: string, expiresAt: number) {
 
 function mockDbEmpty() {
   vi.mocked(createServerClient).mockReturnValue({
-    prepare: vi.fn().mockReturnValue({
-      bind: vi.fn().mockReturnValue({ all: mockAll.mockResolvedValue({ results: [] }) }),
-    }),
+    prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnValue({ all: mockAll.mockResolvedValue({ results: [] }) }) }),
   } as any);
 }
 
 function mockDbError() {
   vi.mocked(createServerClient).mockReturnValue({
-    prepare: vi.fn().mockReturnValue({
-      bind: vi.fn().mockReturnValue({ all: mockAll.mockRejectedValue(new Error('D1 down')) }),
-    }),
+    prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnValue({ all: mockAll.mockRejectedValue(new Error('D1 down')) }) }),
   } as any);
 }
 
@@ -49,9 +38,7 @@ function mockDbUnavailable() {
   vi.mocked(createServerClient).mockReturnValue(null as any);
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
+beforeEach(() => vi.clearAllMocks());
 
 describe('middleware', () => {
   /* ── Mutating requests ─────────────────────────────────────── */

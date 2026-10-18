@@ -152,29 +152,21 @@ describe('parseFormula — fail-closed tokens', () => {
     expect(errReason('close ? open')).toBe('EVAL_UNSUPPORTED_TOKEN:?');
     expect(errReason('close = open')).toBe('EVAL_UNSUPPORTED_TOKEN:=');
   });
-  it('leftover tokens fail closed', () => {
+  it('leftover tokens and empty formula fail closed', () => {
     expect(errReason('close )')).toBe('EVAL_UNSUPPORTED_TOKEN:)');
     expect(errReason('close , open')).toBe('EVAL_UNSUPPORTED_TOKEN:,');
-  });
-  it('empty formula fails closed', () => {
     expect(errReason('')).toBe('EVAL_PARSE_ERROR:unexpected-end');
   });
 });
 
 describe('parseFormula — window/lag validation', () => {
-  it('ts_corr n=1 → EVAL_INVALID_WINDOW', () => {
+  it('ts_corr/ts_std/ts_mean invalid window → EVAL_INVALID_WINDOW', () => {
     expect(errReason('ts_corr(open, volume, 1)')).toBe('EVAL_INVALID_WINDOW:ts_corr');
-  });
-  it('ts_std n=1 → EVAL_INVALID_WINDOW', () => {
     expect(errReason('ts_std(close, 1)')).toBe('EVAL_INVALID_WINDOW:ts_std');
-  });
-  it('ts_mean n=0 → EVAL_INVALID_WINDOW', () => {
     expect(errReason('ts_mean(close, 0)')).toBe('EVAL_INVALID_WINDOW:ts_mean');
   });
-  it('delta d=0 → NON_CAUSAL_LAG', () => {
+  it('delta d<=0 → NON_CAUSAL_LAG', () => {
     expect(errReason('delta(close, 0)')).toBe('NON_CAUSAL_LAG');
-  });
-  it('delta d=-1 → NON_CAUSAL_LAG', () => {
     expect(errReason('delta(close, -1)')).toBe('NON_CAUSAL_LAG');
   });
   it('non-literal window argument fails closed', () => {

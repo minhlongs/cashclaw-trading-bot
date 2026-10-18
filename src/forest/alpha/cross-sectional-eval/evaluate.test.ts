@@ -161,42 +161,28 @@ describe('evaluateCrossSectional — validation and error propagation', () => {
   const panel = buildPanel(UNIVERSE.symbols, TIMES);
 
   it('rejects an empty return panel before any computation', () => {
-    expect(() => evaluateCrossSectional(UNIVERSE, snapshots, [], BASE_EVAL_CONFIG)).toThrow(
-      /assetReturnSeries must be non-empty/,
-    );
+    expect(() => evaluateCrossSectional(UNIVERSE, snapshots, [], BASE_EVAL_CONFIG)).toThrow(/assetReturnSeries must be non-empty/);
   });
 
   it('requires benchmarkReturns when targetBeta is non-zero', () => {
-    expect(() =>
-      evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, targetBeta: 0.5 }),
-    ).toThrow(/benchmarkReturns is required/);
+    expect(() => evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, targetBeta: 0.5 })).toThrow(/benchmarkReturns is required/);
   });
 
   it('rejects non-finite targetBeta', () => {
     expect(() =>
-      evaluateCrossSectional(UNIVERSE, snapshots, panel, {
-        ...BASE_EVAL_CONFIG, targetBeta: Number.NaN, benchmarkReturns: panel[0]!,
-      }),
+      evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, targetBeta: Number.NaN, benchmarkReturns: panel[0]! }),
     ).toThrow(/targetBeta must be a finite number/);
   });
 
   it('rejects invalid periodsPerYear, betaWindow, and betaMinObs before computing', () => {
-    expect(() =>
-      evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, periodsPerYear: 0 }),
-    ).toThrow(/periodsPerYear/);
-    expect(() =>
-      evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, betaWindow: 0 }),
-    ).toThrow(/betaWindow/);
-    expect(() =>
-      evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, betaMinObs: -1 }),
-    ).toThrow(/betaMinObs/);
+    expect(() => evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, periodsPerYear: 0 })).toThrow(/periodsPerYear/);
+    expect(() => evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, betaWindow: 0 })).toThrow(/betaWindow/);
+    expect(() => evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, betaMinObs: -1 })).toThrow(/betaMinObs/);
   });
 
   it('rejects regime label arrays whose length differs from the period count', () => {
     expect(() =>
-      evaluateCrossSectional(UNIVERSE, snapshots, panel, {
-        ...BASE_EVAL_CONFIG, regimeLabels: [RegimeLabel.RANGE, RegimeLabel.SHOCK],
-      }),
+      evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, regimeLabels: [RegimeLabel.RANGE, RegimeLabel.SHOCK] }),
     ).toThrow(/regimeLabels length \(2\) must equal period count \(4\)/);
   });
 
@@ -208,9 +194,7 @@ describe('evaluateCrossSectional — validation and error propagation', () => {
   });
 
   it('propagates sim-config validation errors verbatim', () => {
-    expect(() =>
-      evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, topN: -1 }),
-    ).toThrow(/topN must be a non-negative integer/);
+    expect(() => evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, topN: -1 })).toThrow(/topN must be a non-negative integer/);
   });
 
   it('rejects misaligned snapshots (universe mismatch, duplicates, degenerate counts)', () => {

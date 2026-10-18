@@ -39,42 +39,21 @@ export class RoutingError extends Error {
   }
 }
 
-/**
- * Tiered model router. Routes each agent call to the correct tier,
- * selects primary/fallback provider, records full provenance.
- */
 export class ModelRouter {
   private readonly config: ModelRouterConfig;
+  constructor(config: ModelRouterConfig) { this.config = config; }
 
-  constructor(config: ModelRouterConfig) {
-    this.config = config;
-  }
-
-  /**
-   * Route a call to the correct tier and provider.
-   * Returns text + provenance record. Never silently falls back to wrong tier.
-   */
   async route(
-    agentRole: AgentRole,
-    task: DeliberationTask,
-    input: LlmProviderInput,
+    agentRole: AgentRole, task: DeliberationTask, input: LlmProviderInput,
   ): Promise<{ ok: true; value: RoutedCallOutcome } | { ok: false; reasons: readonly string[] }> {
     const cappedInput: LlmProviderInput = {
       ...input,
       maxTokens: Math.min(input.maxTokens ?? this.config.maxTokensCap, this.config.maxTokensCap),
       temperature: input.temperature ?? 0.3,
     };
-
-    return executeRouteCall(
-      agentRole,
-      task,
-      cappedInput,
-      this.config.registry,
-      this.config.defaultTimeoutMs,
-    );
+    return executeRouteCall(agentRole, task, cappedInput, this.config.registry, this.config.defaultTimeoutMs);
   }
 
-  /** Get the provider that would be selected for a tier (for testing/inspection). */
   getSelectedProvider(tier: ModelTier): { primary: LlmProvider | null; fallback: LlmProvider | null } {
     return {
       primary: this.config.registry.getPrimaryForTier(tier),

@@ -4,33 +4,19 @@ export const BASE_TIMESTAMP = 1_700_000_000_000;
 export const DEFAULT_STEP_MS = 60_000;
 
 export function createBaseCandle(overrides?: Partial<Candle>): Candle {
-  return {
-    timestamp: BASE_TIMESTAMP,
-    open: 100,
-    high: 105,
-    low: 95,
-    close: 102,
-    volume: 1000,
-    ...overrides,
-  };
+  return { timestamp: BASE_TIMESTAMP, open: 100, high: 105, low: 95, close: 102, volume: 1000, ...overrides };
 }
 
 export function generateMonotonicCandles(
-  count: number,
-  startTs: number = BASE_TIMESTAMP,
-  stepMs: number = DEFAULT_STEP_MS,
-  basePrice: number = 100,
+  count: number, startTs: number = BASE_TIMESTAMP, stepMs: number = DEFAULT_STEP_MS, basePrice: number = 100,
 ): Candle[] {
   const candles: Candle[] = [];
   for (let i = 0; i < count; i++) {
     const open = basePrice + (i % 5) * 2;
     const close = open + (i % 2 === 0 ? 1.5 : -1.5);
     candles.push({
-      timestamp: startTs + i * stepMs,
-      open,
-      high: Math.max(open, close) + 3.0,
-      low: Math.min(open, close) - 3.0,
-      close,
+      timestamp: startTs + i * stepMs, open,
+      high: Math.max(open, close) + 3.0, low: Math.min(open, close) - 3.0, close,
       volume: 1000 + (i % 7) * 50,
     });
   }

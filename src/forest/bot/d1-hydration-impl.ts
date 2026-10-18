@@ -1,8 +1,4 @@
-/**
- * D1 Hydration — Implementation
- * Loads persistent bots from D1 into BotManager on startup.
- */
-
+// D1 Hydration — Implementation: loads persistent bots from D1 into BotManager on startup.
 import { createServerClient } from '@/lib/db/client';
 import { findBotsByUser, findAllBots } from '@/lib/db/repositories';
 import { getBotManager } from '@/tree/bot';
@@ -15,10 +11,6 @@ type HydratableBot = {
   patchState: (patch: Partial<BotState>) => void;
 };
 
-/**
- * Create a BotInstance from a D1 row, or return null on failure.
- * Extracted helper keeps hydrateFromD1 / loadAllBotsFromD1 lean.
- */
 async function createBotFromRow(
   row: BotHydrateRow & { id: string; config_json: string },
   onError: ErrorHandler | undefined,
@@ -28,8 +20,7 @@ async function createBotFromRow(
   try {
     const config = JSON.parse(row.config_json) as BotConfig;
     const bot = await manager.createBot({
-      id: row.id,
-      config,
+      id: row.id, config,
       exchangeConfig: { apiKey: '', apiSecret: '', testnet: true, sandbox: true, rateLimitMs: 100 },
       mode: 'paper',
     });
