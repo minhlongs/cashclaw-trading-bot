@@ -59,43 +59,21 @@ export function makeResult(overrides: Partial<BacktestResult> = {}): BacktestRes
 }
 
 export const profitData = makeResult({
-  total_pnl: 320.75,
-  win_count: 4,
-  loss_count: 1,
-  win_rate: 80,
+  total_pnl: 320.75, win_count: 4, loss_count: 1, win_rate: 80,
   trades_json: [
     {
-      entryTimestamp: 1700000000000,
-      exitTimestamp: 1700050000000,
-      side: 'buy' as const,
-      entryPrice: 42000,
-      exitPrice: 43000,
-      quantity: 0.1,
-      pnl: 100,
-      fee: 1.5,
-      pnlPct: 2.38,
-      holdingMinutes: 833,
+      entryTimestamp: 1700000000000, exitTimestamp: 1700050000000, side: 'buy' as const,
+      entryPrice: 42000, exitPrice: 43000, quantity: 0.1, pnl: 100, fee: 1.5, pnlPct: 2.38, holdingMinutes: 833,
     },
   ],
 });
 
 export const lossData = makeResult({
-  total_pnl: -85.2,
-  win_count: 1,
-  loss_count: 4,
-  win_rate: 20,
+  total_pnl: -85.2, win_count: 1, loss_count: 4, win_rate: 20,
   trades_json: [
     {
-      entryTimestamp: 1700000000000,
-      exitTimestamp: 1700050000000,
-      side: 'sell' as const,
-      entryPrice: 42000,
-      exitPrice: 42500,
-      quantity: 0.1,
-      pnl: -50,
-      fee: 1.1,
-      pnlPct: -1.19,
-      holdingMinutes: 833,
+      entryTimestamp: 1700000000000, exitTimestamp: 1700050000000, side: 'sell' as const,
+      entryPrice: 42000, exitPrice: 42500, quantity: 0.1, pnl: -50, fee: 1.1, pnlPct: -1.19, holdingMinutes: 833,
     },
   ],
 });

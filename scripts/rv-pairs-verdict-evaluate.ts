@@ -9,29 +9,18 @@ import type { SurvivalGateResult } from '@/forest/alpha/gate/survival-gate';
 import { evaluateSurvival } from '@/forest/alpha/multiple-testing/evaluate';
 import type { SurvivalVerdict } from '@/forest/alpha/multiple-testing/types';
 import {
-  assembleSurvivalInput,
-  oosSpan,
-  runBenchmarks,
-  runRvAblation,
-  runRvRobustness,
-  toEvaluationReport,
+  assembleSurvivalInput, oosSpan, runBenchmarks,
+  runRvAblation, runRvRobustness, toEvaluationReport,
 } from '@/forest/alpha/relative-value-eval';
 import { runRVWalkForward } from '@/forest/alpha/relative-value-eval/walk-forward';
 import type { RVWalkForwardResult } from '@/forest/alpha/relative-value-eval';
-import {
-  ADAPTER,
-  WINDOW_CONFIG,
-  type ArmDef,
-} from './rv-pairs-verdict-protocol';
+import { ADAPTER, WINDOW_CONFIG, type ArmDef } from './rv-pairs-verdict-protocol';
 import { writeArtifact } from './rv-pairs-verdict-artifacts';
 
 export function runArm(def: ArmDef, universe: UniversePanel): RVWalkForwardResult {
   return runRVWalkForward({
-    universe,
-    windowConfig: WINDOW_CONFIG,
-    mode: 'rolling',
-    selectionConfig: def.selection,
-    configFactory: () => def.sim,
+    universe, windowConfig: WINDOW_CONFIG, mode: 'rolling',
+    selectionConfig: def.selection, configFactory: () => def.sim,
   });
 }
 
@@ -45,26 +34,16 @@ export interface ArmOutcome {
   readonly gateReason: string;
 }
 
-export function summarizeArm(
-  id: string,
-  result: RVWalkForwardResult,
-): ArmOutcome {
+export function summarizeArm(id: string, result: RVWalkForwardResult): ArmOutcome {
   const report = toEvaluationReport(result.stitched.roundTripsSource, {
-    ...ADAPTER,
-    experimentId: `rv-${id.toLowerCase()}-oos`,
-    symbol: `PAIRS/${id}`,
+    ...ADAPTER, experimentId: `rv-${id.toLowerCase()}-oos`, symbol: `PAIRS/${id}`,
   });
   const gate = runSurvivalGate(report);
   return {
-    id,
-    expectancy: report.expectancy,
-    periods: result.stitched.netReturns.length,
+    id, expectancy: report.expectancy, periods: result.stitched.netReturns.length,
     completedTrades: report.numTrades,
-    selectedPairCount: result.windows.reduce(
-      (s, w) => s + w.selectedPairs.length, 0,
-    ),
-    gateStatus: gate.status,
-    gateReason: gate.reason,
+    selectedPairCount: result.windows.reduce((s, w) => s + w.selectedPairs.length, 0),
+    gateStatus: gate.status, gateReason: gate.reason,
   };
 }
 
@@ -73,61 +52,35 @@ export interface PrimaryEvaluation {
   readonly gate: SurvivalGateResult;
 }
 
-/** Full battery on PRIMARY arm M4: robustness → ablation → assembly → gates.
- * Fail-closed: if the survival input cannot be assembled (e.g. fewer than 2
- * completed trades), the verdict is falsified with the reason recorded — the
- * script still writes artifacts instead of crashing. */
+/** Full battery on PRIMARY arm M4: robustness → ablation → assembly → gates. */
 export function evaluatePrimaryM4(
   m4: RVWalkForwardResult,
   m4Def: ArmDef,
   universe: UniversePanel,
 ): PrimaryEvaluation {
   const robustness = runRvRobustness({
-    universe,
-    windowConfig: WINDOW_CONFIG,
-    mode: 'rolling',
-    selectionConfig: m4Def.selection,
-    baseSimConfig: stripArmKnobs(m4Def.sim),
+    universe, windowConfig: WINDOW_CONFIG, mode: 'rolling',
+    selectionConfig: m4Def.selection, baseSimConfig: stripArmKnobs(m4Def.sim),
   });
   const ablation = runRvAblation({
-    universe,
-    windowConfig: WINDOW_CONFIG,
-    mode: 'rolling',
-    selectionConfig: m4Def.selection,
-    configFactory: () => m4Def.sim,
+    universe, windowConfig: WINDOW_CONFIG, mode: 'rolling',
+    selectionConfig: m4Def.selection, configFactory: () => m4Def.sim,
   });
   const report = toEvaluationReport(m4.stitched.roundTripsSource, ADAPTER);
   const gate = runSurvivalGate(report);
   const survival = runSurvivalBattery(m4, m4Def, universe, robustness.configMatrix);
   writeArtifact('rv-pairs-m4-survival.json', {
-    survival,
-    gateChecks: gate.checks,
+    survival, gateChecks: gate.checks,
     benchmarks: runBenchmarks(
-      Object.fromEntries(
-        universe.symbols.map((_, i) => [universe.symbols[i], candlesFrom(universe, i)]),
-      ),
+      Object.fromEntries(universe.symbols.map((_, i) => [universe.symbols[i], candlesFrom(universe, i)])),
       oosSpan(m4.stitched.roundTripsSource),
-      {
-        timeframe: ADAPTER.timeframe,
-        stressMode: 'conservative',
-        feePct: 0.0008,
-        slipPct: 0.0003,
-      },
+      { timeframe: ADAPTER.timeframe, stressMode: 'conservative', feePct: 0.0008, slipPct: 0.0003 },
     ).rows,
-    ablation,
-    robustnessSensitivity: robustness.sensitivity,
-    robustnessGridSize: robustness.entries.length,
-    pboMatrixShape: {
-      configs: robustness.configMatrix.length,
-      windows: robustness.configMatrix[0]?.length ?? 0,
-    },
+    ablation, robustnessSensitivity: robustness.sensitivity, robustnessGridSize: robustness.entries.length,
+    pboMatrixShape: { configs: robustness.configMatrix.length, windows: robustness.configMatrix[0]?.length ?? 0 },
     report: {
-      expectancy: report.expectancy,
-      numTrades: report.numTrades,
-      profitFactor: report.profitFactor,
-      sharpe: report.sharpe,
-      maxDrawdownFraction: report.maxDrawdown,
-      totalReturn: report.totalReturn,
+      expectancy: report.expectancy, numTrades: report.numTrades, profitFactor: report.profitFactor,
+      sharpe: report.sharpe, maxDrawdownFraction: report.maxDrawdown, totalReturn: report.totalReturn,
     },
   });
   return { survival, gate };

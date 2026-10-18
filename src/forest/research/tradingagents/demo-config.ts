@@ -37,23 +37,13 @@ const DATA_WINDOW: DataWindow = {
 };
 
 const UNIVERSE: Universe = {
-  id: 'universe-demo',
-  symbols: ['BTC-USD'],
-  weighting: 'equal',
-  rebalanceRule: 'daily',
+  id: 'universe-demo', symbols: ['BTC-USD'], weighting: 'equal', rebalanceRule: 'daily',
 };
 
 const PORTFOLIO_CONFIG: PortfolioConfig = {
-  targetVolatility: 0.15,
-  maxPositionWeight: 0.3,
-  maxGrossExposure: 0.8,
-  maxNetExposure: 0.5,
-  maxCorrelatedExposure: 0.4,
-  correlationBucketThreshold: 0.7,
-  maxBetaExposure: 0.3,
-  maxTurnover: 0.5,
-  drawdownThreshold: 0.1,
-  deRiskFactor: 0.5,
+  targetVolatility: 0.15, maxPositionWeight: 0.3, maxGrossExposure: 0.8, maxNetExposure: 0.5,
+  maxCorrelatedExposure: 0.4, correlationBucketThreshold: 0.7, maxBetaExposure: 0.3,
+  maxTurnover: 0.5, drawdownThreshold: 0.1, deRiskFactor: 0.5,
 };
 
 const RISK_INPUTS: RiskInputs = {

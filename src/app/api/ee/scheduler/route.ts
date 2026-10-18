@@ -13,13 +13,15 @@ const LeaseRequestSchema = z.object({
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const rawNow = url.searchParams.get('nowMs');
+  const workspaceId = url.searchParams.get('workspaceId')?.trim() || undefined;
   const parsedNow = rawNow ? Number(rawNow) : Date.now();
   const nowMs = Number.isFinite(parsedNow) && parsedNow > 0 ? parsedNow : Date.now();
 
   return NextResponse.json({
     ok: true,
     nowMs,
-    activeLeaseCount: defaultCloudSchedulerCoordinator.activeLeaseCount(nowMs),
+    ...(workspaceId ? { workspaceId } : {}),
+    activeLeaseCount: defaultCloudSchedulerCoordinator.activeLeaseCount(nowMs, workspaceId),
   });
 }
 
@@ -37,20 +39,11 @@ export async function POST(req: Request) {
 
     const result = defaultCloudSchedulerCoordinator.acquireTickLease(parsed.data);
     if (!result.ok) {
-      return NextResponse.json(
-        { ok: false, error: result.error },
-        { status: 409 },
-      );
+      return NextResponse.json({ ok: false, error: result.error }, { status: 409 });
     }
 
-    return NextResponse.json({
-      ok: true,
-      lease: result.data,
-    });
+    return NextResponse.json({ ok: true, lease: result.data });
   } catch {
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
   }
 }

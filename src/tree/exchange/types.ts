@@ -18,10 +18,7 @@ export interface Ticker {
   timestamp: number;
 }
 
-export interface OrderBookLevel {
-  price: number;
-  quantity: number;
-}
+export interface OrderBookLevel { price: number; quantity: number }
 
 export interface OrderBook {
   symbol: string;
@@ -30,12 +27,7 @@ export interface OrderBook {
   timestamp: number;
 }
 
-export interface Balance {
-  currency: string;
-  free: number;
-  used: number;
-  total: number;
-}
+export interface Balance { currency: string; free: number; used: number; total: number }
 
 export interface OrderRequest {
   symbol: string;

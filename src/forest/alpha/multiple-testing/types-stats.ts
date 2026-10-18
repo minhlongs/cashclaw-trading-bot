@@ -49,16 +49,10 @@ export interface PermutationOptions {
 }
 
 /** Verdict of the strategy-vs-random-entry comparison. */
-export interface RandomEntryVerdict {
-  readonly passes: boolean;
-  readonly reason: string;
-}
+export interface RandomEntryVerdict { readonly passes: boolean; readonly reason: string }
 
 /** Options for `compareAgainstRandomEntry`. */
-export interface RandomEntryComparisonOptions {
-  /** Minimum expectancy edge over the baseline (same units as expectancy). */
-  readonly minEdge?: number;
-}
+export interface RandomEntryComparisonOptions { readonly minEdge?: number }
 
 /** Options for `assessWalkForwardConsistency`. */
 export interface WalkForwardConsistencyOptions {

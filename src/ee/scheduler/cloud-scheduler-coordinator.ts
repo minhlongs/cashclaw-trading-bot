@@ -24,7 +24,19 @@ export interface AcquireTickInput {
 export class CloudSchedulerCoordinator {
   private readonly leases = new Map<string, BotTickLease>();
 
+  public pruneExpiredLeases(nowMs: number): number {
+    let pruned = 0;
+    for (const [key, lease] of this.leases.entries()) {
+      if (lease.expiresAtMs <= nowMs) {
+        this.leases.delete(key);
+        pruned += 1;
+      }
+    }
+    return pruned;
+  }
+
   public acquireTickLease(input: AcquireTickInput): Result<BotTickLease> {
+    this.pruneExpiredLeases(input.nowMs);
     const leaseDurationMs = input.leaseDurationMs ?? 55_000;
     const epochMinute = Math.floor(input.nowMs / 60_000);
     const leaseKey = `${input.workspaceId}:${input.botId}:${epochMinute}`;
@@ -48,10 +60,11 @@ export class CloudSchedulerCoordinator {
     return ok(lease);
   }
 
-  public activeLeaseCount(nowMs: number): number {
+  public activeLeaseCount(nowMs: number, workspaceId?: string): number {
+    this.pruneExpiredLeases(nowMs);
     let count = 0;
     for (const lease of this.leases.values()) {
-      if (lease.expiresAtMs > nowMs) {
+      if (lease.expiresAtMs > nowMs && (!workspaceId || lease.workspaceId === workspaceId)) {
         count += 1;
       }
     }
@@ -64,4 +77,3 @@ export class CloudSchedulerCoordinator {
 }
 
 export const defaultCloudSchedulerCoordinator = new CloudSchedulerCoordinator();
-

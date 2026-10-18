@@ -62,10 +62,7 @@ export function generatePairSignals(
  * Filter pairs to ensure diversification — reject pairs with too-small spread
  * or insufficient volatility.
  */
-export function filterDiversified(
-  pairs: readonly PairStats[],
-  minSpread = 0.001,
-): PairStats[] {
+export function filterDiversified(pairs: readonly PairStats[], minSpread = 0.001): PairStats[] {
   return pairs.filter((p) => p.spreadStd >= minSpread);
 }
 
@@ -85,21 +82,12 @@ export function scanMultiPairUniverse(
     config.asOfTime,
     config.minCorrelation ?? 0.5,
   );
-
-  const diversifiedPairs = filterDiversified(
-    candidatePairs,
-    config.minSpreadStd ?? 0.001,
-  );
-
+  const diversifiedPairs = filterDiversified(candidatePairs, config.minSpreadStd ?? 0.001);
   const signals = generatePairSignals(diversifiedPairs, allCandles, {
     zScoreThreshold: config.zScoreThreshold ?? 2.0,
     asOfTime: config.asOfTime,
     lookback: config.lookback,
   });
 
-  return {
-    candidatePairs,
-    diversifiedPairs,
-    signals,
-  };
+  return { candidatePairs, diversifiedPairs, signals };
 }

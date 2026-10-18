@@ -13,10 +13,7 @@ import { Tab, ControlAction, TABS, BotDetailActionButtons } from './bot-detail-c
 
 export { type Tab, type ControlAction } from './bot-detail-controls';
 
-export interface BotDetailClientProps {
-  bot: BotDetailData;
-  trades?: TradeRow[];
-}
+export interface BotDetailClientProps { bot: BotDetailData; trades?: TradeRow[] }
 
 export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
   const t = useTranslations('botDetail');

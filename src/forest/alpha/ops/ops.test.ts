@@ -42,40 +42,19 @@ describe('RollbackManager', () => {
   describe('validateRollbackTrigger', () => {
     it('returns true when drawdown exceeds threshold', () => {
       const plan = manager.createRollbackPlan('v1.0.0', 'test');
-      const metrics: SystemMetrics = {
-        drawdownPct: 0.20,
-        lossPct: 0.01,
-        errorRate: 0,
-        totalRequests: 100,
-        failedRequests: 0,
-      };
-
+      const metrics: SystemMetrics = { drawdownPct: 0.20, lossPct: 0.01, errorRate: 0, totalRequests: 100, failedRequests: 0 };
       expect(manager.validateRollbackTrigger(metrics, plan)).toBe(true);
     });
 
     it('returns true when loss exceeds threshold', () => {
       const plan = manager.createRollbackPlan('v1.0.0', 'test');
-      const metrics: SystemMetrics = {
-        drawdownPct: 0.05,
-        lossPct: 0.10,
-        errorRate: 0,
-        totalRequests: 100,
-        failedRequests: 0,
-      };
-
+      const metrics: SystemMetrics = { drawdownPct: 0.05, lossPct: 0.10, errorRate: 0, totalRequests: 100, failedRequests: 0 };
       expect(manager.validateRollbackTrigger(metrics, plan)).toBe(true);
     });
 
     it('returns false when both metrics are within thresholds', () => {
       const plan = manager.createRollbackPlan('v1.0.0', 'test');
-      const metrics: SystemMetrics = {
-        drawdownPct: 0.05,
-        lossPct: 0.01,
-        errorRate: 0,
-        totalRequests: 100,
-        failedRequests: 0,
-      };
-
+      const metrics: SystemMetrics = { drawdownPct: 0.05, lossPct: 0.01, errorRate: 0, totalRequests: 100, failedRequests: 0 };
       expect(manager.validateRollbackTrigger(metrics, plan)).toBe(false);
     });
   });

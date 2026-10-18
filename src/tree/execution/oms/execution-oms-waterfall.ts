@@ -41,18 +41,12 @@ export class ExecutionOmsWaterfall {
 
     if (this.config.enableDarkMesh && inventoryQuotes.length > 0) {
       const rfqRequest: RfqQuoteRequest = {
-        rfqId: order.orderId,
-        botId: order.strategyId,
-        symbol: order.symbol,
-        side: order.side,
-        requestedQuantity: remainingQty,
-        limitPrice: order.limitPrice,
+        rfqId: order.orderId, botId: order.strategyId, symbol: order.symbol,
+        side: order.side, requestedQuantity: remainingQty, limitPrice: order.limitPrice,
       };
-
       const matchRes = this.darkMesh.matchBatch(order.symbol, [rfqRequest, ...inventoryQuotes], midPrice);
       const myFills = matchRes.fills.filter((f) => f.buyRfqId === order.orderId || f.sellRfqId === order.orderId);
       for (const fill of myFills) darkMeshMatched += fill.matchedQuantity;
-
       if (darkMeshMatched > 0) {
         remainingQty -= darkMeshMatched;
         feeSavedUsd = darkMeshMatched * midPrice * 0.001;

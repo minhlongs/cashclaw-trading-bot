@@ -3,11 +3,7 @@
 // execution. Recognition ≠ implementation: unknown tokens are reported,
 // never interpreted (REIMPLEMENT backlog input for Phase 3+).
 
-import {
-  OPERATOR_ALIASES,
-  SUPPORTED_OPERATORS,
-  type SupportedOperator,
-} from './operator-vocabulary-constants';
+import { OPERATOR_ALIASES, SUPPORTED_OPERATORS, type SupportedOperator } from './operator-vocabulary-constants';
 
 /** Successful normalization output. */
 export interface NormalizedFormula {
@@ -71,8 +67,7 @@ function collectRecognizedOperators(text: string): readonly SupportedOperator[] 
  * Normalize a raw formula_latex string into a canonical classification.
  * Fail-closed: placeholder/prose → FORMULA_UNPARSEABLE; conditionals →
  * UNSUPPORTED_EXPRESSION_FORM:conditional; unknown call tokens →
- * UNSUPPORTED_OPERATOR:<TOKEN>; forward references →
- * NON_CAUSAL_FORWARD_REFERENCE. Pure string work — never evaluates.
+ * UNSUPPORTED_OPERATOR:<TOKEN>; forward references → NON_CAUSAL_FORWARD_REFERENCE.
  */
 export function normalizeFormula(raw: string): NormalizeFormulaResult {
   const { text: stripped, stripped: latexStripped } = stripLatex(raw);
@@ -80,9 +75,7 @@ export function normalizeFormula(raw: string): NormalizeFormulaResult {
   if (collapsed === '') return { ok: false, reasons: ['FORMULA_UNPARSEABLE'] };
 
   const reasons: string[] = [];
-  if (CONDITIONAL_PATTERN.test(collapsed)) {
-    reasons.push('UNSUPPORTED_EXPRESSION_FORM:conditional');
-  }
+  if (CONDITIONAL_PATTERN.test(collapsed)) reasons.push('UNSUPPORTED_EXPRESSION_FORM:conditional');
   if (NEGATIVE_LAG_PATTERN.test(collapsed)) reasons.push('NON_CAUSAL_FORWARD_REFERENCE');
   reasons.push(...collectUnknownOperators(collapsed));
 

@@ -1,15 +1,6 @@
+import type { OrderRequest, OrderResult } from '../exchange/types';
 import type {
-  OrderRequest,
-  OrderResult,
-} from '../exchange/types';
-
-import type {
-  BotTrade,
-  BotConfig,
-  StrategyContext,
-  GridBotConfig,
-  MeanRevBotConfig,
-  VolatilityDcaBotConfig,
+  BotTrade, BotConfig, StrategyContext, GridBotConfig, MeanRevBotConfig, VolatilityDcaBotConfig,
 } from './types';
 import { type StrategyChain, buildDefaultChain } from './strategy-chain';
 import { GridStrategy } from './strategies/grid';

@@ -8,12 +8,7 @@ import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-cont
 
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url);
-    const { workspaceId, tier, invalidExplicitTier } = await resolveWorkspaceTierContext(req, {
-      explicitWorkspaceId: url.searchParams.get('workspaceId'),
-      explicitTier: url.searchParams.get('tier'),
-    });
-
+    const { workspaceId, tier, invalidExplicitTier } = await resolveWorkspaceTierContext(req);
     if (invalidExplicitTier) {
       return NextResponse.json(
         { ok: false, error: `Invalid SaaS tier: ${invalidExplicitTier}` },

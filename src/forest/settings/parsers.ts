@@ -56,9 +56,7 @@ export function parseNotification(raw: string | undefined): SettingsData['notifi
       botToken: typeof obj.botToken === 'string' ? obj.botToken : '',
       chatId: typeof obj.chatId === 'string' ? obj.chatId : '',
     };
-  } catch {
-    return { ...DEFAULT_NOTIFICATION };
-  }
+  } catch { return { ...DEFAULT_NOTIFICATION }; }
 }
 
 export function parseKillswitchDaily(raw: string | undefined): SettingsData['killswitchDaily'] {
@@ -71,9 +69,7 @@ export function parseKillswitchDaily(raw: string | undefined): SettingsData['kil
       peakCapital: typeof obj.peakCapital === 'number' ? obj.peakCapital : 0,
       dailyStartTime: typeof obj.dailyStartTime === 'number' ? obj.dailyStartTime : Date.now(),
     };
-  } catch {
-    return { ...DEFAULT_KILLSWITCH_DAILY };
-  }
+  } catch { return { ...DEFAULT_KILLSWITCH_DAILY }; }
 }
 
 export async function rowToSettingsData(row: SettingsRow): Promise<SettingsData> {

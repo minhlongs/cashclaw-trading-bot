@@ -20,10 +20,7 @@ export function computeHawkesLobTelemetry(excitationAlpha = 0.65, decayBeta = 1.
     decayBeta,
   });
   const lob = computeOrderBookImbalance([145, 110, 85, 64, 42], [68, 72, 60, 55, 48]);
-  return {
-    ...hawkes,
-    ...lob,
-  };
+  return { ...hawkes, ...lob };
 }
 
 const ROUGH_LOG_VOLS = [
@@ -36,9 +33,7 @@ const SMOOTH_LOG_VOLS = Array.from({ length: 24 }, (_, i) => -3.5 + i * 0.025);
 
 export function computeRoughVolatilityTelemetry(mode: RoughVolMode = 'ROUGH_BURST') {
   const engine = new GatheralRoughVolatilityEngine({ minObservations: 20, maxLag: 5, roughThreshold: 0.45 });
-  const logVols = mode === 'ROUGH_BURST' ? ROUGH_LOG_VOLS : SMOOTH_LOG_VOLS;
-  const hurst = engine.estimateHurst(logVols);
-
+  const hurst = engine.estimateHurst(mode === 'ROUGH_BURST' ? ROUGH_LOG_VOLS : SMOOTH_LOG_VOLS);
   const returns =
     mode === 'ROUGH_BURST'
       ? [0.004, -0.003, 0.005, -0.002, 0.038, -0.004, 0.003, -0.002, 0.004, -0.003]

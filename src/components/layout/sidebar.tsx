@@ -31,6 +31,8 @@ const NAV_ROUTES = [
   { path: 'rough-volatility-hurst', icon: Zap },
   { path: 'leadlag-hayashi-yoshida', icon: GitBranch },
   { path: 'optimal-execution-almgren-chriss', icon: Layers },
+  { path: 'regime-switching-hamilton-hmm', icon: Activity },
+  { path: 'hrp-allocator', icon: Scale },
   { path: 'style-guide', icon: Palette },
   { path: 'settings', icon: Settings },
 ];
@@ -41,20 +43,12 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  const navItems = NAV_ROUTES.map((item) => ({
-    ...item,
-    href: `/${locale}/${item.path}`,
-  }));
+  const navItems = NAV_ROUTES.map((item) => ({ ...item, href: `/${locale}/${item.path}` }));
 
   return (
-    <aside
-      className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}
-    >
-      {/* Logo */}
+    <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
       <div className={`sidebar-logo-container ${collapsed ? 'sidebar-logo-collapsed' : ''}`}>
-        <div className="sidebar-logo">
-          <Zap size={18} className="sidebar-logo-icon" />
-        </div>
+        <div className="sidebar-logo"><Zap size={18} className="sidebar-logo-icon" /></div>
         {!collapsed && (
           <div>
             <div className="sidebar-title">CashClaw</div>
@@ -63,17 +57,12 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Nav */}
       <nav className="sidebar-nav">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`sidebar-link ${isActive ? 'active' : ''}`}
-            >
+            <Link key={item.href} href={item.href} className={`sidebar-link ${isActive ? 'active' : ''}`}>
               <Icon size={18} className="sidebar-icon" />
               {!collapsed && <span>{t(`nav.${item.path}`)}</span>}
             </Link>
@@ -81,17 +70,11 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Status footer */}
       <div className="sidebar-footer">
         <Activity size={14} className="text-profit sidebar-icon" />
-        {!collapsed && (
-          <span className="sidebar-status-text">
-            {t('common.loading')}
-          </span>
-        )}
+        {!collapsed && <span className="sidebar-status-text">{t('common.loading')}</span>}
       </div>
 
-      {/* Collapse toggle */}
       <button
         className="sidebar-toggle"
         onClick={() => setCollapsed((c) => !c)}

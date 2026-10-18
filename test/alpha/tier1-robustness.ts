@@ -1,17 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  AUTOMATED_CEILING,
-  getTransition,
-  isTerminalPhase,
-  transitionStrategy,
+  AUTOMATED_CEILING, getTransition, isTerminalPhase, transitionStrategy,
 } from '@/forest/alpha/gate/promotion-states';
 import {
-  computeCanonicalSha256,
-  evalBaselineComparison,
-  evalLeakageInvariance,
-  evalNoSingleWindowDependency,
-  evalReproducibleHash,
-  runOpaquePromotionGate,
+  computeCanonicalSha256, evalBaselineComparison, evalLeakageInvariance,
+  evalNoSingleWindowDependency, evalReproducibleHash, runOpaquePromotionGate,
 } from './promotion-gate-fixtures';
 import { createPassingGateInput } from './promotion-gate-generators';
 

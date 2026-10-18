@@ -83,20 +83,13 @@ export function volatilityDca(ctx: QuantLibContext, params?: Record<string, numb
     return {
       signal: 'sell',
       confidence: parseFloat(rawConf.toFixed(4)),
-      meta: {
-        strategy: 'volatility_dca',
-        profitRatio: parseFloat((-drop).toFixed(6)),
-      },
+      meta: { strategy: 'volatility_dca', profitRatio: parseFloat((-drop).toFixed(6)) },
     };
   }
 
   return {
     signal: 'hold',
     confidence: 0,
-    meta: {
-      strategy: 'volatility_dca',
-      drop: parseFloat(drop.toFixed(6)),
-      requiredDrop: parseFloat(requiredDrop.toFixed(6)),
-    },
+    meta: { strategy: 'volatility_dca', drop: parseFloat(drop.toFixed(6)), requiredDrop: parseFloat(requiredDrop.toFixed(6)) },
   };
 }

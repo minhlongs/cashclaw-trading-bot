@@ -1,20 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  AUTOMATED_CEILING,
-  getTransition,
-  isTerminalPhase,
-  transitionStrategy,
-  type StrategyPhase,
+  AUTOMATED_CEILING, getTransition, isTerminalPhase, transitionStrategy, type StrategyPhase,
 } from '@/forest/alpha/gate/promotion-states';
 import { runOpaquePromotionGate } from './promotion-gate-fixtures';
 import {
-  createBenchmarkLaggardInput,
-  createHighTurnoverScalperInput,
-  createInstitutionalMomentumInput,
-  createLookaheadLeakerInput,
-  createOverfitStrategyInput,
-  createPassingGateInput,
-  createWindfallStrategyInput,
+  createBenchmarkLaggardInput, createHighTurnoverScalperInput, createInstitutionalMomentumInput,
+  createLookaheadLeakerInput, createOverfitStrategyInput, createPassingGateInput, createWindfallStrategyInput,
 } from './promotion-gate-generators';
 
 export function registerTier4RealWorldTests(): void {
@@ -30,21 +21,14 @@ export function registerTier4RealWorldTests(): void {
       expect(result.diagnosticReasons).toHaveLength(0);
 
       const checkNames = result.checks.map((c) => c.name);
-      expect(checkNames).toContain('min_trades');
-      expect(checkNames).toContain('min_net_expectancy');
-      expect(checkNames).toContain('min_profit_factor');
-      expect(checkNames).toContain('max_drawdown');
-      expect(checkNames).toContain('min_sharpe_sortino');
-      expect(checkNames).toContain('min_regime_coverage');
-      expect(checkNames).toContain('fee_stress');
-      expect(checkNames).toContain('slippage_stress');
-      expect(checkNames).toContain('parameter_robustness');
-      expect(checkNames).toContain('cross_period_robustness');
-      expect(checkNames).toContain('cross_asset_robustness');
-      expect(checkNames).toContain('leakage_invariance');
-      expect(checkNames).toContain('no_single_window_dependency');
-      expect(checkNames).toContain('baseline_comparison');
-      expect(checkNames).toContain('reproducible_hash');
+      for (const name of [
+        'min_trades', 'min_net_expectancy', 'min_profit_factor', 'max_drawdown',
+        'min_sharpe_sortino', 'min_regime_coverage', 'fee_stress', 'slippage_stress',
+        'parameter_robustness', 'cross_period_robustness', 'cross_asset_robustness',
+        'leakage_invariance', 'no_single_window_dependency', 'baseline_comparison', 'reproducible_hash',
+      ]) {
+        expect(checkNames).toContain(name);
+      }
     });
 
     it('S2: High-turnover scalper fails under conservative fee and extreme slippage stress', () => {

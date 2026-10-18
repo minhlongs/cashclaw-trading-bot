@@ -49,9 +49,7 @@ export function SettingsClient() {
       const result = (await res.json()) as { ok?: boolean; error?: string };
       if (result.ok) { onOk(); setSaveMessage(okMsg); }
       else setSaveMessage(result.error ?? failMsg);
-    } catch {
-      setSaveMessage('Network error');
-    }
+    } catch { setSaveMessage('Network error'); }
   };
 
   const handleExchangeSave = (exchange: string, apiKey: string, apiSecret: string, testnet: boolean) =>
@@ -90,8 +88,7 @@ export function SettingsClient() {
     <div className="settings-container">
       {saveMessage && (
         <div className={`save-message ${isError ? 'error' : ''}`}>
-          {isError ? <AlertTriangle size={16} /> : null}
-          {saveMessage}
+          {isError ? <AlertTriangle size={16} /> : null}{saveMessage}
         </div>
       )}
       <ExchangeSettings exchanges={settings.exchanges} onSave={handleExchangeSave} />

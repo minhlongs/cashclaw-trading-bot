@@ -58,23 +58,16 @@ function botToCard(bot: BotSummary): BotCardData {
 }
 
 function calcKpis(bots: BotSummary[]): DashboardKpis {
-  const now = Date.now();
-  const startOfDay = new Date(now);
+  const startOfDay = new Date(Date.now());
   startOfDay.setHours(0, 0, 0, 0);
 
-  let totalBalance = 0;
-  let todayPnl = 0;
-  let activeBots = 0;
-  let totalTrades = 0;
-  let winCountSum = 0;
+  let totalBalance = 0, todayPnl = 0, activeBots = 0, totalTrades = 0, winCountSum = 0;
 
   for (const bot of bots) {
     totalBalance += bot.config.capital + bot.metrics.totalPnl;
-
     if (bot.metrics.startedAt && bot.metrics.startedAt >= startOfDay.getTime()) {
       todayPnl += bot.metrics.totalPnl;
     }
-
     if (bot.status === 'running') activeBots++;
     totalTrades += bot.metrics.totalTrades;
     winCountSum += bot.metrics.winCount;

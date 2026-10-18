@@ -4,22 +4,13 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
-  checkMinTrades,
-  checkMinNetExpectancy,
-  checkMinProfitFactor,
-  checkMaxDrawdown,
-  checkMinSharpeSortino,
-  checkMinRegimeCoverage,
+  checkMinTrades, checkMinNetExpectancy, checkMinProfitFactor,
+  checkMaxDrawdown, checkMinSharpeSortino, checkMinRegimeCoverage,
 } from '@/forest/alpha/gate/financial-checks';
 import { checkFeeStress, checkSlippageStress } from '@/forest/alpha/gate/stress-checks';
 import {
-  checkParameterRobustness,
-  checkCrossPeriodRobustness,
-  checkCrossAssetRobustness,
-  checkLeakageInvariance,
-  checkNoSingleWindowDependency,
-  checkBaselineComparison,
-  checkReproducibleHash,
+  checkParameterRobustness, checkCrossPeriodRobustness, checkCrossAssetRobustness,
+  checkLeakageInvariance, checkNoSingleWindowDependency, checkBaselineComparison, checkReproducibleHash,
 } from '@/forest/alpha/gate/robustness-checks';
 import type { RegimePerformance, BenchmarkMetrics, CandidateBaselineMetrics } from '@/forest/alpha/gate/types';
 
@@ -64,22 +55,15 @@ describe('Tier 5 Adversarial: Financial Checks Edge Cases', () => {
 
   it('covers minRegimeCoverage optional fields, nullish entries, and empty sets', () => {
     const sparse: Record<string, RegimePerformance | undefined | null> = {
-      bull: undefined,
-      bear: null,
-      sideways: {},
-      reversion: { numTrades: 10 },
-      trend: { numTrades: 5, netPnl: 100 },
+      bull: undefined, bear: null, sideways: {}, reversion: { numTrades: 10 }, trend: { numTrades: 5, netPnl: 100 },
     };
     const res = checkMinRegimeCoverage(sparse, 0.5);
     expect(res.passed).toBe(true);
     expect(res.actual).toBe(0.5);
-
     const empty = checkMinRegimeCoverage({});
     expect(empty.passed).toBe(false);
     expect(empty.actual).toBe(0);
-
-    const nanThresh = checkMinRegimeCoverage({ trend: { numTrades: 5, netPnl: 100 } }, NaN);
-    expect(nanThresh.passed).toBe(false);
+    expect(checkMinRegimeCoverage({ trend: { numTrades: 5, netPnl: 100 } }, NaN).passed).toBe(false);
   });
 });
 
@@ -133,17 +117,13 @@ describe('Tier 5 Adversarial: Robustness Checks Edge Cases', () => {
   });
 
   it('covers noSingleWindowDependency malformed inputs, single window, and non-positive total', () => {
-    const malformed = checkNoSingleWindowDependency([] as readonly number[]);
-    expect(malformed.passed).toBe(false);
-
+    expect(checkNoSingleWindowDependency([] as readonly number[]).passed).toBe(false);
     const nonFinite = checkNoSingleWindowDependency([10, NaN, 20]);
     expect(nonFinite.passed).toBe(false);
     expect(nonFinite.detail).toContain('Non-finite');
-
     const single = checkNoSingleWindowDependency([100]);
     expect(single.passed).toBe(false);
     expect(single.actual).toBe(1.0);
-
     const nonPositive = checkNoSingleWindowDependency([-20, -30]);
     expect(nonPositive.passed).toBe(false);
     expect(nonPositive.detail).toContain('non-positive');

@@ -29,10 +29,7 @@ export function BotDetailConfig({ config, botId, onConfigSaved }: BotDetailConfi
 
   const handleInputChange = (key: string, value: string) => {
     const num = parseFloat(value);
-    setFormValues((prev) => ({
-      ...prev,
-      [key]: Number.isFinite(num) ? num : 0,
-    }));
+    setFormValues((prev) => ({ ...prev, [key]: Number.isFinite(num) ? num : 0 }));
   };
 
   const handleSave = async () => {
@@ -56,16 +53,11 @@ export function BotDetailConfig({ config, botId, onConfigSaved }: BotDetailConfi
         body: JSON.stringify({ config: formValues }),
       });
       const data = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        error?: string;
-        data?: { config?: Record<string, number> };
+        ok?: boolean; error?: string; data?: { config?: Record<string, number> };
       };
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || 'Failed to update configuration');
-      }
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to update configuration');
       setStatus({ type: 'success', message: t('configSaved') });
-      const savedConfig = data.data?.config ?? formValues;
-      onConfigSaved?.(savedConfig);
+      onConfigSaved?.(data.data?.config ?? formValues);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setStatus({ type: 'error', message: t('configSaveFailed', { error: msg }) });

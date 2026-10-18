@@ -10,9 +10,7 @@ export function transpose(m: number[][]): number[][] {
   const result: number[][] = [];
   for (let c = 0; c < cols; c++) {
     const row: number[] = [];
-    for (let r = 0; r < m.length; r++) {
-      row.push(m[r]![c]!);
-    }
+    for (let r = 0; r < m.length; r++) row.push(m[r]![c]!);
     result.push(row);
   }
   return result;

@@ -4,17 +4,16 @@ import {
   defaultCreditLedgerStore,
   type DeliberationModelTier,
 } from '@/ee/deliberation-cloud/llm-credit-ledger';
-import { SaasTierSchema } from '@/ee/tenancy/tenant-policy';
 import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
 
 const QuerySchema = z.object({
   workspaceId: z.string().min(1),
-  tier: SaasTierSchema.optional(),
+  tier: z.string().optional(),
 });
 
 const DebitSchema = z.object({
   workspaceId: z.string().min(1),
-  tier: SaasTierSchema.optional(),
+  tier: z.string().optional(),
   modelTier: z.enum(['FAST', 'REASONING', 'LOCAL']),
   promptTokens: z.number().int().nonnegative(),
   completionTokens: z.number().int().nonnegative(),

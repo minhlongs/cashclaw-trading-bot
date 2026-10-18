@@ -2,6 +2,19 @@
 
 ## v1 Paper-Trading Platform
 
+### Quad-Cluster Deep Refactor Wave 6 — 2026-10-18
+- **`CloudSchedulerCoordinator` Expired Lease Pruning & EE Tier Context Unification (`src/ee/scheduler/cloud-scheduler-coordinator.ts`, `src/app/api/ee/scheduler/route.ts`, `src/app/api/ee/alpha-feed/route.ts`, `src/app/api/ee/quotas/route.ts`, `src/app/api/ee/credits/route.ts`)**:
+  - Added `pruneExpiredLeases(nowMs)` and optional `workspaceId` filtering (`activeLeaseCount(nowMs, workspaceId?)`) to `CloudSchedulerCoordinator`, preventing unbounded `Map` growth in long-lived worker isolates and supporting `GET /api/ee/scheduler?workspaceId=`.
+  - Simplified `GET /api/ee/alpha-feed` and `GET /api/ee/quotas` to delegate directly to `resolveWorkspaceTierContext(req)` without redundant URL parsing, and unified `GET /api/ee/credits` + `POST /api/ee/credits` so case-insensitive `tier` inputs (`?tier=premium` or `{ tier: 'premium' }`) normalize and validate consistently (`HTTP 400` on invalid tier).
+- **100-LOC Production Milestone (`<= 100 LOC` across all of `src/`)**:
+  - Compacted all 51 non-test `.ts`/`.tsx` files in `src/` between `101–105 LOC` down to `<= 100 LOC` so zero non-test files across all 908 production files in `src/` exceed `100 LOC`.
+- **Strict Test Ceiling (`<= 240 LOC` across all of `src/`)**:
+  - Compacted all 15 test files in `src/` exceeding `240 LOC` (`241–258 LOC`) down to `<= 240 LOC` (0 test files `> 240 LOC` across all of `src/`).
+- **Strict `test/` & `scripts/` Ceiling (`<= 170 LOC`)**:
+  - Compacted all 12 files in `test/` and `scripts/` exceeding `170 LOC` (`171–190 LOC`) down to `<= 170 LOC` (0 files `> 170 LOC` across `test/`, `scripts/`, and `bin/`).
+- **Verification**:
+  - 718/718 test files (6,006/6,006 tests) passing, `tsc --noEmit` 0 errors, ESLint 0 warnings, OSS package audit clean (3/3 checks passed).
+
 ### Quad-Cluster Deep Refactor Wave 5 — 2026-10-18
 - **Stateful `CreditLedgerStore` & Unified URL/Header `resolveWorkspaceTierContext` (`src/ee/deliberation-cloud/llm-credit-ledger.ts`, `src/ee/tenancy/workspace-request-context.ts`, `src/app/api/ee/credits/route.ts`, `src/app/api/ee/sync/route.ts`)**:
   - Added `CreditLedgerStore` (`defaultCreditLedgerStore`) persisting workspace credit balances and consumed credits across `GET /api/ee/credits` and `POST /api/ee/credits`, and automatically reconciling monthly allowance deltas when a workspace upgrades its SaaS tier (`BASIC -> PREMIUM -> ENTERPRISE -> MASTER`).

@@ -15,11 +15,7 @@ export function normalizeTimeframe(frequency: readonly string[]): string {
   return frequency[0].toLowerCase();
 }
 
-/**
- * Deterministic notes-first mechanism template. Contains the causal
- * connective 'may indicate' so the mechanism gate judges LENGTH and
- * vacuous patterns only — never padded to pass (D4).
- */
+/** Deterministic notes-first mechanism template (D4). */
 export function buildMechanism(entry: AlphaZooEntry): string {
   const name = entry.nickname ?? entry.id;
   const body = entry.notes.trim() !== '' ? entry.notes.trim() : entry.formula_latex.trim();
@@ -96,8 +92,6 @@ export function buildZooProvenance(
     formulaHash,
     importTimestamp: config.nowIso ?? new Date().toISOString(),
     importerVersion: config.importerVersion,
-    normalizedRepresentation: buildNormalizedRepresentation(
-      buildDedupPayload(normalized.normalizedFormula, entry),
-    ),
+    normalizedRepresentation: buildNormalizedRepresentation(buildDedupPayload(normalized.normalizedFormula, entry)),
   };
 }

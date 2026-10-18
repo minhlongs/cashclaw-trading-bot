@@ -1,19 +1,10 @@
 import { resolveStressConfig, type StressMode } from '@/tree/alpha/cost-stress';
 import { RegimeLabel } from '@/tree/regime/types';
 import {
-  AlphaDecisionRecordSchema,
-  OperationalTelemetrySchema,
-  PortfolioDecisionRecordSchema,
-  ShadowFillSchema,
-  ShadowOrderSchema,
-  computeFeatureSnapshotHashSync,
-  type AlphaDecisionRecord,
-  type CostStressTier,
-  type OperationalTelemetry,
-  type PortfolioDecisionRecord,
-  type ShadowFill,
-  type ShadowOrder,
-  type ShadowOrderSide,
+  AlphaDecisionRecordSchema, OperationalTelemetrySchema, PortfolioDecisionRecordSchema,
+  ShadowFillSchema, ShadowOrderSchema, computeFeatureSnapshotHashSync,
+  type AlphaDecisionRecord, type CostStressTier, type OperationalTelemetry,
+  type PortfolioDecisionRecord, type ShadowFill, type ShadowOrder, type ShadowOrderSide,
 } from '@/tree/alpha/observability';
 
 export interface MockTick {
@@ -46,48 +37,30 @@ export function createMockTickStream(symbol: string, basePrice: number, count: n
 export function createSyntheticAlphaDecision(overrides: Partial<AlphaDecisionRecord> = {}): AlphaDecisionRecord {
   const features = overrides.metadata ?? { rsi: 55, mom: 0.02 };
   return AlphaDecisionRecordSchema.parse({
-    alphaId: 'alpha-mom-v1',
-    direction: 'buy',
-    confidence: 0.85,
-    expectedReturn: 0.015,
-    expectedCost: 0.002,
-    expectedTurnover: 0.25,
-    regime: RegimeLabel.TREND_UP,
-    horizon: '1h',
-    featureDependencies: ['rsi', 'mom'],
+    alphaId: 'alpha-mom-v1', direction: 'buy', confidence: 0.85,
+    expectedReturn: 0.015, expectedCost: 0.002, expectedTurnover: 0.25,
+    regime: RegimeLabel.TREND_UP, horizon: '1h', featureDependencies: ['rsi', 'mom'],
     featureSnapshotHash: computeFeatureSnapshotHashSync(features),
-    timestamp: 1710000000000,
-    symbol: 'BTC/USDT',
-    ...overrides,
+    timestamp: 1710000000000, symbol: 'BTC/USDT', ...overrides,
   });
 }
 
 export function createSyntheticPortfolioDecision(overrides: Partial<PortfolioDecisionRecord> = {}): PortfolioDecisionRecord {
   return PortfolioDecisionRecordSchema.parse({
     targetWeights: { 'BTC/USDT': 0.6, 'ETH/USDT': 0.4 },
-    grossExposure: 1.0,
-    netExposure: 1.0,
-    volTargetingScale: 1.0,
-    activeRiskOverlayAdjustments: [],
-    timestamp: 1710000000000,
-    ...overrides,
+    grossExposure: 1.0, netExposure: 1.0, volTargetingScale: 1.0,
+    activeRiskOverlayAdjustments: [], timestamp: 1710000000000, ...overrides,
   });
 }
 
 export function createSyntheticOperationalTelemetry(overrides: Partial<OperationalTelemetry> = {}): OperationalTelemetry {
   return OperationalTelemetrySchema.parse({
-    decisionLatencyMs: 45,
-    dataFreshnessMs: 120,
+    decisionLatencyMs: 45, dataFreshnessMs: 120,
     providerProvenance: {
-      primaryProvider: 'binance-ws',
-      activeProvider: 'binance-ws',
-      usedFallback: false,
-      fallbackAttempts: 0,
-      providerLatencyMs: 35,
-      circuitState: 'closed',
+      primaryProvider: 'binance-ws', activeProvider: 'binance-ws', usedFallback: false,
+      fallbackAttempts: 0, providerLatencyMs: 35, circuitState: 'closed',
     },
-    timestamp: 1710000000000,
-    ...overrides,
+    timestamp: 1710000000000, ...overrides,
   });
 }
 

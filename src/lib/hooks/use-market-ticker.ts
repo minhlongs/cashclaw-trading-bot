@@ -2,16 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Ticker } from '@/tree/exchange/types';
-import type {
-  TickerProvenance,
-  UseMarketTickerOptions,
-  UseMarketTickerResult,
-} from './use-market-ticker-types';
-import {
-  DEFAULT_POLL_INTERVAL_MS,
-  VALID_EXCHANGES,
-  requestTickerData,
-} from './use-market-ticker-fetch';
+import type { TickerProvenance, UseMarketTickerOptions, UseMarketTickerResult } from './use-market-ticker-types';
+import { DEFAULT_POLL_INTERVAL_MS, VALID_EXCHANGES, requestTickerData } from './use-market-ticker-fetch';
 
 export type {
   TickerProvenance, UseMarketTickerOptions, UseMarketTickerResult, TickerApiResponse, FetchOutcome,

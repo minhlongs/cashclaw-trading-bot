@@ -20,13 +20,8 @@ const UNIVERSE: Universe = {
 };
 
 const BASE_EVAL_CONFIG = {
-  topN: 2,
-  bottomN: 2,
-  minObservations: 2,
-  costBps: 0,
-  experimentId: 'EXP-WIRE',
-  timeframe: '1h',
-  regime: RegimeLabel.RANGE,
+  topN: 2, bottomN: 2, minObservations: 2, costBps: 0,
+  experimentId: 'EXP-WIRE', timeframe: '1h', regime: RegimeLabel.RANGE,
   periodsPerYear: 365 * 24,
 } satisfies CrossSectionalEvalConfig;
 
@@ -43,8 +38,7 @@ function buildRotatingSnapshots(times: readonly number[]): CrossSectionalSnapsho
 
 function buildPanel(symbols: readonly string[], times: readonly number[]): AssetReturnSeries[] {
   return symbols.map((symbol, j) => ({
-    symbol,
-    timestamps: times,
+    symbol, timestamps: times,
     returns: times.map((_, i) => (((i * 7 + j * 13) % 21) - 10) / 500),
   }));
 }
@@ -92,18 +86,15 @@ describe('evaluateCrossSectional — beta-aware sizing', () => {
     benchmark: AssetReturnSeries;
   } {
     const snapshots = SNAP_TIMES.map((t) => ({
-      timestamp: t,
-      universeId: UNIVERSE.id,
+      timestamp: t, universeId: UNIVERSE.id,
       assets: rankAssets({ AAA: 5, BBB: 4, CCC: 3, DDD: 2, EEE: 1 }),
     }));
     const benchmark: AssetReturnSeries = {
-      symbol: 'BENCH',
-      timestamps: ALL_TIMES,
+      symbol: 'BENCH', timestamps: ALL_TIMES,
       returns: ALL_TIMES.map((_, i) => ((i % 7) - 3) / 50),
     };
     const panel = UNIVERSE.symbols.map((symbol) => ({
-      symbol,
-      timestamps: ALL_TIMES,
+      symbol, timestamps: ALL_TIMES,
       returns: ALL_TIMES.map((_, i) => BETAS[symbol]! * benchmark.returns[i]!),
     }));
     return { snapshots, panel, benchmark };

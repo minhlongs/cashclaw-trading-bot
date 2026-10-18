@@ -19,16 +19,11 @@ export interface DebateDebitRequest {
 }
 
 const TIER_MONTHLY_CREDITS: Readonly<Record<SaasTier, number>> = {
-  BASIC: 1_000,
-  PREMIUM: 10_000,
-  ENTERPRISE: 50_000,
-  MASTER: 250_000,
+  BASIC: 1_000, PREMIUM: 10_000, ENTERPRISE: 50_000, MASTER: 250_000,
 };
 
 const MODEL_TIER_MULTIPLIER: Readonly<Record<DeliberationModelTier, number>> = {
-  LOCAL: 0,
-  FAST: 1,
-  REASONING: 4,
+  LOCAL: 0, FAST: 1, REASONING: 4,
 };
 
 export function createCreditAccount(workspaceId: string, tier: SaasTier): CreditAccount {
@@ -49,9 +44,7 @@ export function debitDeliberationCredits(
   }
   const cost = computeDebateCreditCost(req);
   if (account.balanceCredits < cost) {
-    return err(
-      `INSUFFICIENT_LLM_CREDITS: Required ${cost}, available ${account.balanceCredits}. Upgrade tier or switch to BYOK.`,
-    );
+    return err(`INSUFFICIENT_LLM_CREDITS: Required ${cost}, available ${account.balanceCredits}. Upgrade tier or switch to BYOK.`);
   }
   return ok({
     debited: cost,

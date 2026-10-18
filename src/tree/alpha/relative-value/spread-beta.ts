@@ -46,19 +46,11 @@ export function estimateBetaSeries(
   const n = panel.timestamps.length;
   // Index 0 has no strictly-prior data → fail-closed placeholder.
   const betaAt: HedgeRatioResult[] = [
-    {
-      hedgeRatio: null,
-      reason: 'no strictly-prior data at first timestamp',
-    },
+    { hedgeRatio: null, reason: 'no strictly-prior data at first timestamp' },
   ];
   for (let k = 1; k < n; k++) {
     betaAt.push(
-      estimateRollingHedgeRatio(
-        panel,
-        config.hedgeWindow,
-        config.minObs,
-        panel.timestamps[k]!,
-      ),
+      estimateRollingHedgeRatio(panel, config.hedgeWindow, config.minObs, panel.timestamps[k]!),
     );
   }
   return betaAt;
@@ -66,11 +58,7 @@ export function estimateBetaSeries(
 
 /**
  * Frozen-β series (hedgeMode 'frozen'): β is estimated ONCE at the FIRST
- * VALID timestamp (first estimate that succeeds) from strictly-prior closes
- * only, then held constant for every later timestamp. States before that
- * point stay fail-closed with their own reasons. Causality: the single
- * estimate consumes no data at or beyond its estimation point — it is never
- * recomputed or updated afterwards.
+ * VALID timestamp from strictly-prior closes only, then held constant.
  */
 function estimateFrozenBetaSeries(
   panel: PairPanel,
@@ -87,10 +75,7 @@ function estimateFrozenBetaSeries(
   for (let k = 1; k < n; k++) {
     if (anchor === null) {
       const est = estimateRollingHedgeRatio(
-        panel,
-        config.hedgeWindow,
-        config.minObs,
-        panel.timestamps[k]!,
+        panel, config.hedgeWindow, config.minObs, panel.timestamps[k]!,
       );
       if (est.hedgeRatio === null) {
         out.push(est);

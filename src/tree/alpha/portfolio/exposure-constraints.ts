@@ -1,15 +1,11 @@
 /**
  * Complex portfolio risk overlays — correlated buckets, beta exposure,
- * turnover, and drawdown de-risking.
- * Pure functions, no state, no I/O.
+ * turnover, and drawdown de-risking. Pure functions, no state, no I/O.
  */
 
 import { fmt, scaleWeights, scaleWeightsDelta } from './constraint-helpers';
 
-export interface OverlayResult {
-  readonly weights: ReadonlyMap<string, number>;
-  readonly adjustment: string | null;
-}
+export interface OverlayResult { readonly weights: ReadonlyMap<string, number>; readonly adjustment: string | null }
 
 export function applyCorrelatedBucket(
   weights: ReadonlyMap<string, number>,
@@ -29,8 +25,7 @@ export function applyCorrelatedBucket(
     visited.add(id);
     for (const other of ids) {
       if (visited.has(other)) continue;
-      const row = corrMatrix.get(id);
-      const c = row?.get(other);
+      const c = corrMatrix.get(id)?.get(other);
       if (c !== undefined && c >= bucketThreshold) {
         bucket.push(other);
         visited.add(other);

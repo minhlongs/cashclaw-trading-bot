@@ -4,12 +4,7 @@
 
 import { createServerClient } from '@/lib/db/client';
 import type { Trade, TradeEvent } from '@/lib/db/types';
-import {
-  insertTrade,
-  insertTradeEvent,
-  insertCapitalSnapshot,
-  insertAudit,
-} from '@/lib/db/repositories';
+import { insertTrade, insertTradeEvent, insertCapitalSnapshot, insertAudit } from '@/lib/db/repositories';
 import { uid, now } from './d1-persistence-utils';
 
 /** Persist a trade fill to D1. */
@@ -22,20 +17,11 @@ export async function persistTrade(botId: string, trade: {
   if (!db) return;
 
   const row: Omit<Trade, 'created_at'> = {
-    id: `trade_${uid()}`,
-    bot_id: botId,
-    pair: '',
-    side: trade.side,
-    entry_price: trade.entryPrice,
-    exit_price: trade.exitPrice ?? null,
-    quantity: trade.quantity,
-    pnl: trade.pnl ?? null,
-    fee: 0,
-    status: trade.status,
-    exchange_order_id: trade.exchangeOrderId ?? null,
-    error_message: null,
-    opened_at: now(),
-    closed_at: trade.exitPrice !== undefined ? now() : null,
+    id: `trade_${uid()}`, bot_id: botId, pair: '', side: trade.side,
+    entry_price: trade.entryPrice, exit_price: trade.exitPrice ?? null,
+    quantity: trade.quantity, pnl: trade.pnl ?? null, fee: 0, status: trade.status,
+    exchange_order_id: trade.exchangeOrderId ?? null, error_message: null,
+    opened_at: now(), closed_at: trade.exitPrice !== undefined ? now() : null,
   };
 
   await insertTrade(db, row as Trade);

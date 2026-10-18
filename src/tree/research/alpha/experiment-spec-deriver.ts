@@ -27,18 +27,9 @@ export function parseTimeframeToMs(tf: string): number {
 }
 
 /**
- * Derive a BarrierConfig from horizon and timeframe.
- * Default TP/SL/timeout proportional to horizon.
- * Derivation:
- * - takeProfitPct = horizonBars * BARRIER_DERIVATION.tpPerBar
- * - stopLossPct = horizonBars * BARRIER_DERIVATION.slPerBar
- * - maxHoldingMs = horizonBars * timeframeMs * BARRIER_DERIVATION.timeoutMultiplier
- * Where timeframeMs is derived from timeframe string (e.g., '1h' → 3600000ms).
+ * Derive a BarrierConfig from horizon and timeframe (default TP/SL/timeout proportional to horizon).
  */
-export function deriveBarrierConfig(
-  horizonBars: number,
-  timeframe: string,
-): BarrierConfig {
+export function deriveBarrierConfig(horizonBars: number, timeframe: string): BarrierConfig {
   const timeframeMs = parseTimeframeToMs(timeframe);
   return {
     takeProfitPct: horizonBars * BARRIER_DERIVATION.tpPerBar,
@@ -51,8 +42,7 @@ export function deriveBarrierConfig(
 export const MIN_TRAIN_BARS = 200;
 
 /**
- * Derive train/validation/test periods from a DataWindow.
- * Split: 70% train, 15% validation, 15% test (chronological, no shuffle).
+ * Derive train/validation/test periods from a DataWindow (70% train, 15% validation, 15% test).
  * Returns null if window too small for horizon + lookbacks + MIN_TRAIN_BARS.
  */
 export function derivePeriods(
@@ -62,27 +52,17 @@ export function derivePeriods(
 ): { train: ExperimentPeriod; validation: ExperimentPeriod; test: ExperimentPeriod } | null {
   const totalBars = dataWindow.barCount;
   const requiredBars = maxLookback + horizonBars + MIN_TRAIN_BARS;
-
-  if (totalBars < requiredBars) {
-    return null;
-  }
+  if (totalBars < requiredBars) return null;
 
   const trainBars = Math.floor(totalBars * 0.7);
   const validationBars = Math.floor(totalBars * 0.15);
   const testBars = totalBars - trainBars - validationBars;
-
-  if (trainBars < MIN_TRAIN_BARS) {
-    return null;
-  }
+  if (trainBars < MIN_TRAIN_BARS) return null;
 
   const msPerBar = (dataWindow.latestTimestamp - dataWindow.earliestTimestamp) / totalBars;
-
-  const trainEndIdx = trainBars;
-  const validationEndIdx = trainBars + validationBars;
-
   const trainStartTs = dataWindow.earliestTimestamp;
-  const trainEndTs = dataWindow.earliestTimestamp + trainEndIdx * msPerBar;
-  const validationEndTs = dataWindow.earliestTimestamp + validationEndIdx * msPerBar;
+  const trainEndTs = dataWindow.earliestTimestamp + trainBars * msPerBar;
+  const validationEndTs = dataWindow.earliestTimestamp + (trainBars + validationBars) * msPerBar;
   const testEndTs = dataWindow.latestTimestamp;
 
   return {

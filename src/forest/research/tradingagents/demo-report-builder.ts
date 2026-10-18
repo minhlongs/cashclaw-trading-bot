@@ -29,22 +29,15 @@ export function computeProvenanceAccounting(report: DeliberationReport): Provena
     byTier[tier] = { calls: bucket.calls + 1, tokens: bucket.tokens + prompt + completion };
   }
   return {
-    callCount: report.modelProvenance.length,
-    totalPromptTokens,
-    totalCompletionTokens,
-    totalTokens: totalPromptTokens + totalCompletionTokens,
-    totalLatencyMs,
-    byTier,
+    callCount: report.modelProvenance.length, totalPromptTokens, totalCompletionTokens,
+    totalTokens: totalPromptTokens + totalCompletionTokens, totalLatencyMs, byTier,
   };
 }
 
 export function buildDemoJsonPayload(report: DeliberationReport, decisionLog: string): unknown {
   return {
-    honestyLabel: D11_HONESTY_LABEL,
-    summary: summarizeDeliberationReport(report),
-    report,
-    decisionLog: JSON.parse(decisionLog),
-    accounting: computeProvenanceAccounting(report),
+    honestyLabel: D11_HONESTY_LABEL, summary: summarizeDeliberationReport(report),
+    report, decisionLog: JSON.parse(decisionLog), accounting: computeProvenanceAccounting(report),
   };
 }
 

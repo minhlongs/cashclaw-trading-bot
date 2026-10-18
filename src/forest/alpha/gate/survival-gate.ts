@@ -64,29 +64,17 @@ export function runSurvivalGate(
   report: EvaluationReport,
   config: SurvivalGateConfig = {},
 ): SurvivalGateResult {
-  const minTrades = config.minTrades ?? 20;
-  const minExpectancy = config.minExpectancy ?? 0;
-  const minProfitFactor = config.minProfitFactor ?? 1.2;
-  const maxDrawdown = config.maxDrawdown ?? 0.3;
-  const minSharpe = config.minSharpe ?? 0.5;
-  const minRegimeCoverage = config.minRegimeCoverage ?? 0.5;
-  const minNetPnlAfterFees = config.minNetPnlAfterFees ?? 0;
-  const minNetPnlAdverse = config.minNetPnlAdverse ?? 0;
-
-  const checks: GateCheck[] = [];
-
-  checks.push(checkTradeCount(report.numTrades, minTrades));
-  checks.push(checkExpectancy(report.expectancy, minExpectancy));
-  checks.push(checkProfitFactor(report.profitFactor, minProfitFactor));
-  checks.push(checkDrawdown(report.maxDrawdown, maxDrawdown));
-  checks.push(checkSharpe(report.sharpe, minSharpe));
-  checks.push(checkRegimeCoverage(report.byRegime, minRegimeCoverage));
-  checks.push(checkNetPnlAfterFees(report.netPnl, minNetPnlAfterFees));
-  // Adverse stress: apply the recorded slippage cost on top of the normal-stress
-  // net PnL. The report carries a single netPnl (after normal-stress fees) and a
-  // separate slippage field; subtracting it models the adverse scenario without
-  // requiring a second report field.
-  checks.push(checkNetPnlAdverse(report.netPnl - report.slippage, minNetPnlAdverse));
+  const checks: GateCheck[] = [
+    checkTradeCount(report.numTrades, config.minTrades ?? 20),
+    checkExpectancy(report.expectancy, config.minExpectancy ?? 0),
+    checkProfitFactor(report.profitFactor, config.minProfitFactor ?? 1.2),
+    checkDrawdown(report.maxDrawdown, config.maxDrawdown ?? 0.3),
+    checkSharpe(report.sharpe, config.minSharpe ?? 0.5),
+    checkRegimeCoverage(report.byRegime, config.minRegimeCoverage ?? 0.5),
+    checkNetPnlAfterFees(report.netPnl, config.minNetPnlAfterFees ?? 0),
+    // Adverse stress: apply recorded slippage cost on top of normal-stress net PnL.
+    checkNetPnlAdverse(report.netPnl - report.slippage, config.minNetPnlAdverse ?? 0),
+  ];
 
   const failed = checks.filter((c) => !c.passed);
   if (failed.length === 0) {

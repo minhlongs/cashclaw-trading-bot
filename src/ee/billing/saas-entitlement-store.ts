@@ -60,14 +60,10 @@ export class SaasEntitlementStore {
 
     const spec = getEntitlementsForTier(record.targetTier);
     const updatedRow: WorkspaceEntitlementRow = {
-      workspaceId: record.workspaceId,
-      ownerUserId: record.ownerUserId ?? 'system',
-      tier: record.targetTier,
-      maxRunningBots: spec.maxRunningPaperBots,
-      maxWalkForwardWindows: spec.maxWalkForwardWindows,
-      monthlyLlmCredits: spec.monthlyLlmCredits,
-      managedLlmPoolEnabled: spec.managedLlmPoolAllowed,
-      updatedAtMs: nowMs,
+      workspaceId: record.workspaceId, ownerUserId: record.ownerUserId ?? 'system',
+      tier: record.targetTier, maxRunningBots: spec.maxRunningPaperBots,
+      maxWalkForwardWindows: spec.maxWalkForwardWindows, monthlyLlmCredits: spec.monthlyLlmCredits,
+      managedLlmPoolEnabled: spec.managedLlmPoolAllowed, updatedAtMs: nowMs,
     };
     this.workspaceEntitlements.set(record.workspaceId, updatedRow);
     if (this.db) await upsertD1WorkspaceEntitlement(this.db, updatedRow);

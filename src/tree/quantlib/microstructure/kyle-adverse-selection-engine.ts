@@ -17,9 +17,7 @@ export class KyleAdverseSelectionEngine {
   }
 
   estimateLambda(trades: readonly SignedOrderFlowTrade[]): KyleLambdaResult {
-    if (trades.length < this.minObservations) {
-      return this.createFallbackResult(trades.length);
-    }
+    if (trades.length < this.minObservations) return this.createFallbackResult(trades.length);
 
     const n = trades.length - 1;
     const deltaP: number[] = [];
@@ -37,16 +35,11 @@ export class KyleAdverseSelectionEngine {
       netFlow += q;
     }
 
-    if (deltaP.length < this.minObservations - 1) {
-      return this.createFallbackResult(trades.length);
-    }
+    if (deltaP.length < this.minObservations - 1) return this.createFallbackResult(trades.length);
 
     const meanQ = signedQ.reduce((acc, v) => acc + v, 0) / n;
     const meanDp = deltaP.reduce((acc, v) => acc + v, 0) / n;
-
-    let cov = 0;
-    let varQ = 0;
-    let varDp = 0;
+    let cov = 0, varQ = 0, varDp = 0;
 
     for (let i = 0; i < n; i++) {
       const qDiff = signedQ[i]! - meanQ;
@@ -56,22 +49,17 @@ export class KyleAdverseSelectionEngine {
       varDp += dpDiff * dpDiff;
     }
 
-    if (varQ < 1e-12 || varDp < 1e-12) {
-      return this.createFallbackResult(trades.length);
-    }
+    if (varQ < 1e-12 || varDp < 1e-12) return this.createFallbackResult(trades.length);
 
     const lambda = Math.max(0, cov / varQ);
     const rSquared = Math.max(0, Math.min(1, (cov * cov) / (varQ * varDp)));
-
     let sse = 0;
     for (let i = 0; i < n; i++) {
-      const predDp = meanDp + lambda * (signedQ[i]! - meanQ);
-      const residual = deltaP[i]! - predDp;
+      const residual = deltaP[i]! - (meanDp + lambda * (signedQ[i]! - meanQ));
       sse += residual * residual;
     }
 
-    const degreesOfFreedom = Math.max(1, n - 2);
-    const mse = sse / degreesOfFreedom;
+    const mse = sse / Math.max(1, n - 2);
     const seLambda = Math.sqrt(mse / varQ);
     const tStat = seLambda > 1e-12 ? lambda / seLambda : 0;
 

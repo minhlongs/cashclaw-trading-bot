@@ -3,36 +3,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { BotSummary } from '@/forest/bot/d1-adapter';
 import {
-  getDashboardData,
-  getKpis,
-  getBotCards,
-  getRecentEvents,
-  getCapitalSnapshots,
-  botActionStart,
-  botActionStop,
-  botActionPause,
-  botActionResume,
-  killswitchActionHalt,
-  killswitchActionResume,
+  getDashboardData, getKpis, getBotCards, getRecentEvents, getCapitalSnapshots,
+  botActionStart, botActionStop, botActionPause, botActionResume,
+  killswitchActionHalt, killswitchActionResume,
 } from './actions';
 
 // ── Bot stub (lightweight, matches BotInstance surface area) ──
 const makeMockBot = () => ({
   getSnapshot: () => ({
-    id: 'bot-1',
-    status: 'running' as const,
-    totalPnl: 100.5,
-    totalTrades: 10,
-    winCount: 7,
-    lossCount: 3,
-    startedAt: Date.now(),
-    updatedAt: Date.now(),
+    id: 'bot-1', status: 'running' as const, totalPnl: 100.5, totalTrades: 10,
+    winCount: 7, lossCount: 3, startedAt: Date.now(), updatedAt: Date.now(),
   }),
   getConfig: () => ({
-    strategy: 'grid' as const,
-    symbol: 'BTC/USDT',
-    capital: 1000,
-    exchange: 'binance',
+    strategy: 'grid' as const, symbol: 'BTC/USDT', capital: 1000, exchange: 'binance',
   }),
   start: vi.fn().mockResolvedValue(undefined),
   stop: vi.fn(),

@@ -33,16 +33,21 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(dataEnterprise.feed.length).toBe(3);
   });
 
-  it('GET and POST /api/ee/credits persists debits across requests and reconciles tier upgrades', async () => {
-    const resGet = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=PREMIUM'));
+  it('GET and POST /api/ee/credits persists debits, normalizes case-insensitive tier, and reconciles upgrades', async () => {
+    const resGet = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=premium'));
     const dataGet = (await resGet.json()) as { ok: boolean; account: { balanceCredits: number } };
     expect(resGet.status).toBe(200);
     expect(dataGet.account.balanceCredits).toBe(10_000);
 
+    const resInvalidTier = await creditsGet(
+      new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=INVALID_TIER'),
+    );
+    expect(resInvalidTier.status).toBe(400);
+
     const resPost = await creditsPost(
       postJson('http://localhost/api/ee/credits', {
         workspaceId: 'ws_123',
-        tier: 'PREMIUM',
+        tier: 'premium',
         modelTier: 'REASONING',
         promptTokens: 1500,
         completionTokens: 500,
@@ -125,8 +130,9 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(resTelegramBasic.status).toBe(200);
   });
 
-  it('GET and POST /api/ee/scheduler unifies cronSchedulerCoordinator and manages heartbeat leases', async () => {
+  it('GET and POST /api/ee/scheduler unifies cronSchedulerCoordinator, filters by workspaceId, and prunes expired leases', async () => {
     expect(cronSchedulerCoordinator).toBe(defaultCloudSchedulerCoordinator);
+    defaultCloudSchedulerCoordinator.clearLeases();
     const payload = {
       botId: 'bot_sched_1',
       workspaceId: 'ws_xyz',
@@ -145,10 +151,24 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     );
     expect(res2.status).toBe(409);
 
-    const resGet = await schedulerGet(new Request('http://localhost/api/ee/scheduler?nowMs=1700000005000'));
+    const resGet = await schedulerGet(
+      new Request('http://localhost/api/ee/scheduler?nowMs=1700000005000&workspaceId=ws_xyz'),
+    );
     const dataGet = (await resGet.json()) as { ok: boolean; activeLeaseCount: number };
     expect(resGet.status).toBe(200);
-    expect(dataGet.activeLeaseCount).toBeGreaterThanOrEqual(1);
+    expect(dataGet.activeLeaseCount).toBe(1);
+
+    const resOtherWs = await schedulerGet(
+      new Request('http://localhost/api/ee/scheduler?nowMs=1700000005000&workspaceId=ws_other'),
+    );
+    const dataOtherWs = (await resOtherWs.json()) as { ok: boolean; activeLeaseCount: number };
+    expect(dataOtherWs.activeLeaseCount).toBe(0);
+
+    const resExpired = await schedulerGet(
+      new Request('http://localhost/api/ee/scheduler?nowMs=1700000040000&workspaceId=ws_xyz'),
+    );
+    const dataExpired = (await resExpired.json()) as { ok: boolean; activeLeaseCount: number };
+    expect(dataExpired.activeLeaseCount).toBe(0);
   });
 
   it('GET and POST /api/ee/telemetry enforces opt-in policy and summarizes conversion funnel', async () => {

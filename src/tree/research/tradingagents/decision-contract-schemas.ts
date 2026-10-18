@@ -4,19 +4,12 @@
 // partial object.
 
 import { z } from 'zod';
-import {
-  type AgentProvenance,
-  PROPOSAL_DIRECTIONS,
-  type ModelProvenance,
-} from './types';
+import { type AgentProvenance, PROPOSAL_DIRECTIONS, type ModelProvenance } from './types';
 
 const isoDateTime = z.string().datetime({ offset: true });
 
 /** One evidence item backing a proposal (claim + source). */
-export interface EvidenceItem {
-  readonly claim: string;
-  readonly source: string;
-}
+export interface EvidenceItem { readonly claim: string; readonly source: string }
 
 /** One data provenance record: where a piece of input data came from. */
 export interface DataProvenanceItem {

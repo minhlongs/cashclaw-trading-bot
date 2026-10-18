@@ -28,9 +28,7 @@ export function extractRawEntries(manifest: unknown): readonly unknown[] {
 
 export function envelopeFailureResults(rawEntries: readonly unknown[], reasons: readonly string[]): readonly PerAlphaResult[] {
   return rawEntries.map((raw, index) => ({
-    sourceAlphaId: pseudoId(raw, index),
-    outcome: 'validation-error',
-    reasons: [`envelope rejected: ${reasons.join('; ')}`],
+    sourceAlphaId: pseudoId(raw, index), outcome: 'validation-error', reasons: [`envelope rejected: ${reasons.join('; ')}`],
   }));
 }
 
@@ -72,8 +70,7 @@ export async function processEntry(
   if (!compiled.ok) return { sourceAlphaId: entry.id, outcome: 'rejected', reasons: [...compiled.reasons] };
 
   registered.push({ hypothesis: reparsed.value, provenance });
-  const timeframeFolded = entry.frequency[0] !== entry.frequency[0].toLowerCase();
-  const adapted = normalized.value.normalizationsApplied.length > 0 || timeframeFolded;
+  const adapted = normalized.value.normalizationsApplied.length > 0 || entry.frequency[0] !== entry.frequency[0].toLowerCase();
   return { sourceAlphaId: entry.id, outcome: adapted ? 'adapted' : 'imported', reasons: [], hypothesisId: reparsed.value.id };
 }
 

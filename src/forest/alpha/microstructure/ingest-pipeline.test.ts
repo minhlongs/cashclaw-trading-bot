@@ -26,10 +26,7 @@ function createFakeStore(prevLastId: number | null = null): MicrostructureStore 
   const logs: IngestLogRecord[] = [];
 
   return {
-    depthRows,
-    tradeBatches,
-    vectors,
-    logs,
+    depthRows, tradeBatches, vectors, logs,
     appendDepthSnapshot: async (r) => { depthRows.push(r); },
     appendTradeBatch: async (r) => { tradeBatches.push(r); },
     appendFeatureVector: async (v) => { vectors.push(v); },
@@ -47,23 +44,13 @@ const NOW = 1_700_000_000_000;
 
 const VALID_DEPTH_BODY = {
   lastUpdateId: 42,
-  bids: [
-    [104_063.99, 0.5],
-    [104_062.0, 1.25],
-  ],
-  asks: [
-    [104_064.5, 0.75],
-    [104_066.01, 2.0],
-  ],
+  bids: [[104_063.99, 0.5], [104_062.0, 1.25]],
+  asks: [[104_064.5, 0.75], [104_066.01, 2.0]],
 };
 
 function makeTradeBody(startId: number, count: number): unknown[] {
   return Array.from({ length: count }, (_, i) => ({
-    a: startId + i,
-    p: 104_064.0 + i * 0.1,
-    q: 0.01,
-    T: NOW - 5000 + i * 100,
-    m: i % 2 === 0,
+    a: startId + i, p: 104_064.0 + i * 0.1, q: 0.01, T: NOW - 5000 + i * 100, m: i % 2 === 0,
   }));
 }
 

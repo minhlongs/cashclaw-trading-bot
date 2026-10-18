@@ -1,21 +1,6 @@
+import { OP_SIGNATURES, OperatorParseError, literalNumber, type AstNode } from './operator-ast';
 import {
-  OP_SIGNATURES,
-  OperatorParseError,
-  literalNumber,
-  type AstNode,
-} from './operator-ast';
-import {
-  decayLinear,
-  delta,
-  signedPower,
-  tsArgmax,
-  tsArgmin,
-  tsMax,
-  tsMean,
-  tsMin,
-  tsRank,
-  tsStd,
-  type Matrix,
+  decayLinear, delta, signedPower, tsArgmax, tsArgmin, tsMax, tsMean, tsMin, tsRank, tsStd, type Matrix,
 } from './operator-kernels';
 import { safeDiv, tsCorr, tsCov } from './operator-kernels-pair';
 import { rankCross, scaleCross, zscoreCross } from './operator-kernels-cross';

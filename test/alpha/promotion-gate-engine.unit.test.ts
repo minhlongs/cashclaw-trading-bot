@@ -10,30 +10,14 @@ import {
 function createPassingInput(): PromotionGateInput {
   return {
     financial: {
-      numTrades: 45,
-      expectancy: 12.5,
-      profitFactor: 1.75,
-      maxDrawdown: 0.15,
-      sharpe: 1.5,
-      sortino: 1.9,
-      byRegime: {
-        bull: { numTrades: 25, netPnl: 600 },
-        bear: { numTrades: 20, netPnl: 400 },
-      },
+      numTrades: 45, expectancy: 12.5, profitFactor: 1.75, maxDrawdown: 0.15,
+      sharpe: 1.5, sortino: 1.9,
+      byRegime: { bull: { numTrades: 25, netPnl: 600 }, bear: { numTrades: 20, netPnl: 400 } },
     },
-    stress: {
-      netPnlNormal: 500,
-      netPnlConservative: 350,
-      netPnlAdverse: 250,
-      netPnlExtreme: 100,
-    },
+    stress: { netPnlNormal: 500, netPnlConservative: 350, netPnlAdverse: 250, netPnlExtreme: 100 },
     robustness: {
-      parameterSpread: 0.25,
-      crossPeriodPositiveFraction: 0.75,
-      crossAssetPositiveFraction: 0.65,
-      crossAssetApplicable: true,
-      leakageViolations: 0,
-      windowPnls: [300, 300, 200],
+      parameterSpread: 0.25, crossPeriodPositiveFraction: 0.75, crossAssetPositiveFraction: 0.65,
+      crossAssetApplicable: true, leakageViolations: 0, windowPnls: [300, 300, 200],
       baselineCandidate: { sharpe: 1.5, netPnl: 800 },
       baselineBuyHold: { sharpe: 1.0, netPnl: 400 },
       baselineRandomEntry: { sharpe: 0.1, netPnl: 50 },

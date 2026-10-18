@@ -3,11 +3,7 @@
 
 import type { AlphaSignal } from '@/tree/alpha/types';
 import type { RegimeLabel } from '@/tree/regime/types';
-import type {
-  AlphaExecutionConfig,
-  AlphaPosition,
-  AlphaExecutionTelemetry,
-} from './types';
+import type { AlphaExecutionConfig, AlphaPosition, AlphaExecutionTelemetry } from './types';
 import {
   makePosition, applyFill, computePnl, isoNow, isTimedOut,
   buildAlphaPortfolio, totalRealisedPnl, getSignalRejection,
@@ -20,17 +16,9 @@ export class AlphaExecutionEngine {
   private _positions: AlphaPosition[] = [];
   private _telemetry: AlphaExecutionTelemetry[] = [];
 
-  get openPositions(): AlphaPosition[] {
-    return this._positions.filter((p) => !p.closedAt);
-  }
-
-  get allPositions(): AlphaPosition[] {
-    return [...this._positions];
-  }
-
-  get totalRealisedPnl(): number {
-    return totalRealisedPnl(this._positions);
-  }
+  get openPositions(): AlphaPosition[] { return this._positions.filter((p) => !p.closedAt); }
+  get allPositions(): AlphaPosition[] { return [...this._positions]; }
+  get totalRealisedPnl(): number { return totalRealisedPnl(this._positions); }
 
   /** Evaluate a batch of alpha signals, then execute the eligible ones as paper trades. */
   evaluateAndExecute(

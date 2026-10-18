@@ -95,7 +95,5 @@ export function registerProtectedRoutes(app: AppType): void {
     return c.json(r, r.ok ? 200 : 500);
   });
 
-  app.post('/api/cron/eval', async (c) => {
-    return c.json(await new BotScheduler().tick());
-  });
+  app.post('/api/cron/eval', async (c) => c.json(await new BotScheduler().tick()));
 }

@@ -1,72 +1,44 @@
 import { describe, it, expect } from 'vitest';
 import {
-  checkMinTrades,
-  checkMinNetExpectancy,
-  checkMinProfitFactor,
-  checkMaxDrawdown,
-  checkMinSharpeSortino,
-  checkMinRegimeCoverage,
+  checkMinTrades, checkMinNetExpectancy, checkMinProfitFactor,
+  checkMaxDrawdown, checkMinSharpeSortino, checkMinRegimeCoverage,
 } from '../../src/forest/alpha/gate/financial-checks';
 import { checkFeeStress, checkSlippageStress } from '../../src/forest/alpha/gate/stress-checks';
 import {
-  checkParameterRobustness,
-  checkCrossPeriodRobustness,
-  checkCrossAssetRobustness,
-  checkLeakageInvariance,
-  checkNoSingleWindowDependency,
-  checkBaselineComparison,
-  checkReproducibleHash,
+  checkParameterRobustness, checkCrossPeriodRobustness, checkCrossAssetRobustness,
+  checkLeakageInvariance, checkNoSingleWindowDependency, checkBaselineComparison, checkReproducibleHash,
 } from '../../src/forest/alpha/gate/robustness-checks';
 import { DEFAULT_PROMOTION_GATE_CONFIG } from '../../src/forest/alpha/gate/types';
 import { PromotionGateConfigSchema, PromotionGateInputSchema } from '../../src/forest/alpha/gate/schemas';
 
 describe('Financial Checks (1-6)', () => {
   it('checkMinTrades validates trade counts and rejects non-integers/NaN', () => {
-    expect(checkMinTrades(35).passed).toBe(true);
-    expect(checkMinTrades(30).passed).toBe(true);
-    expect(checkMinTrades(29).passed).toBe(false);
-    expect(checkMinTrades(0).passed).toBe(false);
-    expect(checkMinTrades(-5).passed).toBe(false);
-    expect(checkMinTrades(30.5).passed).toBe(false);
-    expect(checkMinTrades(Number.NaN).passed).toBe(false);
+    for (const v of [35, 30]) expect(checkMinTrades(v).passed).toBe(true);
+    for (const v of [29, 0, -5, 30.5, Number.NaN]) expect(checkMinTrades(v).passed).toBe(false);
   });
 
   it('checkMinNetExpectancy enforces strictly positive expectancy', () => {
     expect(checkMinNetExpectancy(0.001).passed).toBe(true);
-    expect(checkMinNetExpectancy(0.0).passed).toBe(false);
-    expect(checkMinNetExpectancy(-0.01).passed).toBe(false);
-    expect(checkMinNetExpectancy(Number.NaN).passed).toBe(false);
+    for (const v of [0.0, -0.01, Number.NaN]) expect(checkMinNetExpectancy(v).passed).toBe(false);
   });
 
   it('checkMinProfitFactor validates profit factor boundaries and Infinity', () => {
-    expect(checkMinProfitFactor(1.5).passed).toBe(true);
-    expect(checkMinProfitFactor(1.2).passed).toBe(true);
-    expect(checkMinProfitFactor(1.199).passed).toBe(false);
-    expect(checkMinProfitFactor(0).passed).toBe(false);
-    expect(checkMinProfitFactor(Infinity).passed).toBe(true);
-    expect(checkMinProfitFactor(-1).passed).toBe(false);
-    expect(checkMinProfitFactor(Number.NaN).passed).toBe(false);
+    for (const v of [1.5, 1.2, Infinity]) expect(checkMinProfitFactor(v).passed).toBe(true);
+    for (const v of [1.199, 0, -1, Number.NaN]) expect(checkMinProfitFactor(v).passed).toBe(false);
   });
 
   it('checkMaxDrawdown verifies peak-to-trough decline ceiling', () => {
-    expect(checkMaxDrawdown(0.15).passed).toBe(true);
-    expect(checkMaxDrawdown(0.25).passed).toBe(true);
-    expect(checkMaxDrawdown(0.2501).passed).toBe(false);
-    expect(checkMaxDrawdown(0.0).passed).toBe(true);
-    expect(checkMaxDrawdown(1.5).passed).toBe(false);
-    expect(checkMaxDrawdown(-0.01).passed).toBe(false);
-    expect(checkMaxDrawdown(Number.NaN).passed).toBe(false);
+    for (const v of [0.15, 0.25, 0.0]) expect(checkMaxDrawdown(v).passed).toBe(true);
+    for (const v of [0.2501, 1.5, -0.01, Number.NaN]) expect(checkMaxDrawdown(v).passed).toBe(false);
   });
 
   it('checkMinSharpeSortino tests joint risk-adjusted return hurdle', () => {
     expect(checkMinSharpeSortino(1.5, 1.8).passed).toBe(true);
     expect(checkMinSharpeSortino(1.0, 1.2).passed).toBe(true);
-    expect(checkMinSharpeSortino(1.5, 1.19).passed).toBe(false);
-    expect(checkMinSharpeSortino(0.99, 1.5).passed).toBe(false);
-    expect(checkMinSharpeSortino(null, 1.5).passed).toBe(false);
-    expect(checkMinSharpeSortino(1.5, null).passed).toBe(false);
     expect(checkMinSharpeSortino(1.2, Infinity).passed).toBe(true);
-    expect(checkMinSharpeSortino(Number.NaN, 1.5).passed).toBe(false);
+    for (const [s, so] of [[1.5, 1.19], [0.99, 1.5], [null, 1.5], [1.5, null], [Number.NaN, 1.5]] as const) {
+      expect(checkMinSharpeSortino(s, so).passed).toBe(false);
+    }
   });
 
   it('checkMinRegimeCoverage evaluates profitable share of traded regimes', () => {

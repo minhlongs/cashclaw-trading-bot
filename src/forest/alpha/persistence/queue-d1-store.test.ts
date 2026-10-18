@@ -63,47 +63,23 @@ function createRecordingDb(allResult: StubAllResult = { results: [] }): {
 function makeJob(overrides: Partial<ResearchQueueJob> = {}): ResearchQueueJob {
   const universe: Universe = { id: 'u1', symbols: ['BTCUSDT'], weighting: 'equal', rebalanceRule: 'none' };
   return {
-    id: 'job-1',
-    hypothesis: 'H1',
-    rationale: 'R1',
-    features: ['f1'],
-    dataset: 'binance-ohlcv',
-    regime: RegimeLabel.RANGE,
-    universe,
-    costs: { feeBps: 10, impactBps: 5 },
-    slippage: { slippageBps: 3 },
-    seed: 42,
-    parentHypothesis: null,
-    generatedBy: 'gen',
-    timestamp: 1_000_000,
-    gitSha: 'abc',
-    status: 'PROPOSED',
-    configHash: 'hash1',
-    result: null,
+    id: 'job-1', hypothesis: 'H1', rationale: 'R1', features: ['f1'], dataset: 'binance-ohlcv',
+    regime: RegimeLabel.RANGE, universe, costs: { feeBps: 10, impactBps: 5 },
+    slippage: { slippageBps: 3 }, seed: 42, parentHypothesis: null, generatedBy: 'gen',
+    timestamp: 1_000_000, gitSha: 'abc', status: 'PROPOSED', configHash: 'hash1', result: null,
     ...overrides,
   };
 }
 
 function makeEvent(overrides: Partial<QueueEventRecord> = {}): QueueEventRecord {
   return {
-    eventId: 'evt-1',
-    jobId: 'job-1',
-    fromStatus: null,
-    toStatus: 'PROPOSED',
-    trigger: 'validate',
-    payloadJson: null,
-    createdAt: 1_000_000,
-    ...overrides,
+    eventId: 'evt-1', jobId: 'job-1', fromStatus: null, toStatus: 'PROPOSED',
+    trigger: 'validate', payloadJson: null, createdAt: 1_000_000, ...overrides,
   };
 }
 
 function makeSnapshot(overrides: Partial<CounterSnapshot> = {}): CounterSnapshot {
-  return {
-    snapshotId: 'snap-1',
-    countersJson: '{"hypothesesTested":1}',
-    createdAt: 1_000_000,
-    ...overrides,
-  };
+  return { snapshotId: 'snap-1', countersJson: '{"hypothesesTested":1}', createdAt: 1_000_000, ...overrides };
 }
 
 // ── Tests ────────────────────────────────────────────────

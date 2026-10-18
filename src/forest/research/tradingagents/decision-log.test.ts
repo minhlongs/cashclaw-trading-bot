@@ -89,14 +89,11 @@ describe('logDeliberationRun', () => {
   it('appends analyst, debate, synthesis, risk, portfolio, and cashclaw in order', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1',
-      proposalId: 'prop-1',
+      researchGoalId: 'goal-1', proposalId: 'prop-1',
       analystOutputs: [{ claim: 'a1' }, { claim: 'a2' }],
       debateOutputs: [{ thesis: 'bull' }, { thesis: 'bear' }],
-      researchSynthesis: { thesis: 'synth' },
-      riskProposal: { view: 'aggressive' },
-      portfolioProposal: { assets: ['BTC-USD'] },
-      cashclawValidation: { rejected: false },
+      researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
+      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
       timestamp: NOW,
     });
     expect(result.ok).toBe(true);
@@ -111,16 +108,11 @@ describe('logDeliberationRun', () => {
   it('appends the optional human decision when provided', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1',
-      proposalId: 'prop-1',
-      analystOutputs: [],
-      debateOutputs: [],
-      researchSynthesis: { thesis: 'synth' },
-      riskProposal: { view: 'aggressive' },
-      portfolioProposal: { assets: ['BTC-USD'] },
-      cashclawValidation: { rejected: false },
-      humanDecision: { final: 'APPROVE_FOR_SHADOW' },
-      timestamp: NOW,
+      researchGoalId: 'goal-1', proposalId: 'prop-1',
+      analystOutputs: [], debateOutputs: [],
+      researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
+      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
+      humanDecision: { final: 'APPROVE_FOR_SHADOW' }, timestamp: NOW,
     });
     expect(result.ok).toBe(true);
     const log = writer.getLog() as DecisionLog;
@@ -130,14 +122,10 @@ describe('logDeliberationRun', () => {
   it('returns a typed failure when no entries were appended', async () => {
     const writer = new DecisionLogWriter();
     const result = await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1',
-      proposalId: 'prop-1',
-      analystOutputs: [],
-      debateOutputs: [],
-      researchSynthesis: { thesis: 'synth' },
-      riskProposal: { view: 'aggressive' },
-      portfolioProposal: { assets: ['BTC-USD'] },
-      cashclawValidation: { rejected: false },
+      researchGoalId: 'goal-1', proposalId: 'prop-1',
+      analystOutputs: [], debateOutputs: [],
+      researchSynthesis: { thesis: 'synth' }, riskProposal: { view: 'aggressive' },
+      portfolioProposal: { assets: ['BTC-USD'] }, cashclawValidation: { rejected: false },
       timestamp: '2026-08-26T00:00:00.000Z',
     });
     expect(result.ok).toBe(true);
@@ -148,14 +136,10 @@ describe('logDeliberationRun', () => {
   it('updates the writer internal log after each append (not a detached copy)', async () => {
     const writer = new DecisionLogWriter();
     await logDeliberationRun(writer, {
-      researchGoalId: 'goal-1',
-      proposalId: 'prop-1',
-      analystOutputs: [{ a: 1 }],
-      debateOutputs: [{ b: 2 }],
-      researchSynthesis: { s: 3 },
-      riskProposal: { r: 4 },
-      portfolioProposal: { p: 5 },
-      cashclawValidation: { c: 6 },
+      researchGoalId: 'goal-1', proposalId: 'prop-1',
+      analystOutputs: [{ a: 1 }], debateOutputs: [{ b: 2 }],
+      researchSynthesis: { s: 3 }, riskProposal: { r: 4 },
+      portfolioProposal: { p: 5 }, cashclawValidation: { c: 6 },
       timestamp: NOW,
     });
     const log = JSON.parse(writer.toJSON()) as DecisionLog;

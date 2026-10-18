@@ -21,9 +21,7 @@ const rng = (seed: number) => {
 };
 
 const makePanel = (
-  symbols: readonly string[],
-  len: number,
-  seed: number,
+  symbols: readonly string[], len: number, seed: number,
   fields: readonly string[] = ['open', 'high', 'low', 'close', 'volume'],
 ): SymbolPanel => {
   const rand = rng(seed);
@@ -51,9 +49,7 @@ const normalized = (raw: string): string => {
 /** Truncate every series in a panel to `len` bars (prefix-preserving slice). */
 const slicePanel = (panel: SymbolPanel, len: number): SymbolPanel => ({
   symbols: panel.symbols,
-  fields: Object.fromEntries(
-    Object.entries(panel.fields).map(([f, m]) => [f, m.map((row) => row.slice(0, len))]),
-  ),
+  fields: Object.fromEntries(Object.entries(panel.fields).map(([f, m]) => [f, m.map((row) => row.slice(0, len))])),
 });
 
 describe('evaluator end-to-end seed vectors', () => {
@@ -124,10 +120,7 @@ describe('evaluator causal warmup and fail-closed', () => {
   });
 
   it('ragged panel → EVAL_PANEL_RAGGED', () => {
-    const panel: SymbolPanel = {
-      symbols: ['AAA'],
-      fields: { close: [[1, 2, 3], [1, 2]] },
-    };
+    const panel: SymbolPanel = { symbols: ['AAA'], fields: { close: [[1, 2, 3], [1, 2]] } };
     const r = evaluateFormula('close', panel);
     expect(r).toEqual({ ok: false, reason: 'EVAL_PANEL_RAGGED' });
   });

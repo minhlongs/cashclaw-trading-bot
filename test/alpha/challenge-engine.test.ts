@@ -1,33 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import { ZodError } from 'zod';
 import {
-  runPromotionGate,
-  type GateCheckName,
-  type PromotionGateInput,
-  type FinancialMetricsInput,
-  type StressMetricsInput,
-  type RobustnessMetricsInput,
+  runPromotionGate, type GateCheckName, type PromotionGateInput,
+  type FinancialMetricsInput, type StressMetricsInput, type RobustnessMetricsInput,
 } from '../../src/forest/alpha/gate/index';
 
 function createValidCandidate(): PromotionGateInput {
   return {
     financial: {
-      numTrades: 50,
-      expectancy: 1.5,
-      profitFactor: 1.8,
-      maxDrawdown: 0.15,
-      sharpe: 1.8,
-      sortino: 2.1,
+      numTrades: 50, expectancy: 1.5, profitFactor: 1.8, maxDrawdown: 0.15,
+      sharpe: 1.8, sortino: 2.1,
       byRegime: { bull: { numTrades: 25, netPnl: 500 }, bear: { numTrades: 25, netPnl: 300 } },
     },
     stress: { netPnlNormal: 400, netPnlConservative: 250, netPnlAdverse: 200, netPnlExtreme: 50 },
     robustness: {
-      parameterSpread: 0.2,
-      crossPeriodPositiveFraction: 0.8,
-      crossAssetPositiveFraction: 0.7,
-      crossAssetApplicable: true,
-      leakageViolations: 0,
-      windowPnls: [100, 100, 100],
+      parameterSpread: 0.2, crossPeriodPositiveFraction: 0.8, crossAssetPositiveFraction: 0.7,
+      crossAssetApplicable: true, leakageViolations: 0, windowPnls: [100, 100, 100],
       baselineCandidate: { sharpe: 1.8, netPnl: 500 },
       baselineBuyHold: { sharpe: 0.8, netPnl: 200 },
       baselineRandomEntry: { sharpe: 0.1, netPnl: 50 },

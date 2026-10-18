@@ -42,17 +42,9 @@ export class PaperExchange implements GridStrategyCallbacks, MeanRevStrategyCall
     this.slipPct = slipPct;
   }
 
-  setTimestamp(ts: number): void {
-    this._candleTs = ts;
-  }
-
-  setCandleIndex(idx: number): void {
-    this._candleIdx = idx;
-  }
-
-  getCapital(): number {
-    return this.capital;
-  }
+  setTimestamp(ts: number): void { this._candleTs = ts; }
+  setCandleIndex(idx: number): void { this._candleIdx = idx; }
+  getCapital(): number { return this.capital; }
 
   // Both strategy classes ultimately call placeOrder for fills.
   // Grid: placeOrder({ side: 'buy'|'sell', price, quantity })

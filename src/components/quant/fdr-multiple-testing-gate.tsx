@@ -14,8 +14,7 @@ export function FdrMultipleTestingGate() {
     () => computeFdrGateTelemetry(fdrAlpha, totalTrials, method),
     [fdrAlpha, totalTrials, method],
   );
-  const evaluatedRows = fdrTelemetry.rows;
-  const survivedCount = fdrTelemetry.survivedCount;
+  const { rows: evaluatedRows, survivedCount } = fdrTelemetry;
 
   return (
     <section aria-label="Multiple-Testing False Discovery Rate Gate" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
@@ -24,7 +23,6 @@ export function FdrMultipleTestingGate() {
         title="Multiple-Testing False Discovery Rate (BH-FDR & DSR) Gate"
         subtitle={`Data-snooping defense • Live computeDeflatedSharpe & E[max_N] = ${fdrTelemetry.expectedMaxSharpe}`}
       />
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">FDR Control & Trial Registry Parameters</h2>
@@ -35,7 +33,6 @@ export function FdrMultipleTestingGate() {
             </div>
             <input id="fdr-alpha-slider" type="range" min={0.01} max={0.1} step={0.01} value={fdrAlpha} onChange={(e) => setFdrAlpha(Number(e.target.value))} className="min-h-[44px] accent-[var(--color-accent)] cursor-pointer" />
           </div>
-
           <div className="flex flex-col gap-2">
             <label htmlFor="trial-count-select" className="text-xs font-medium text-[var(--text-secondary)]">Cumulative Hypothesis Trials (m)</label>
             <select id="trial-count-select" value={totalTrials} onChange={(e) => setTotalTrials(Number(e.target.value))} className="min-h-[44px] px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] text-sm font-mono focus:outline-none focus:border-[var(--color-accent)]">
@@ -44,14 +41,11 @@ export function FdrMultipleTestingGate() {
               <option value={64}>m = 64 (Full Combinatorial Zoo)</option>
             </select>
           </div>
-
           <div className="flex flex-col gap-2">
             <span className="text-xs font-medium text-[var(--text-secondary)]">Correction Procedure</span>
             <div className="grid grid-cols-2 gap-2" role="group" aria-label="Correction procedure selector">
               {(['BH_FDR', 'HOLM_BONFERRONI'] as const).map((m) => (
-                <button key={m} type="button" onClick={() => setMethod(m)} aria-pressed={method === m} className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold border transition-all ${method === m ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}>
-                  {m}
-                </button>
+                <button key={m} type="button" onClick={() => setMethod(m)} aria-pressed={method === m} className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold border transition-all ${method === m ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}>{m}</button>
               ))}
             </div>
           </div>

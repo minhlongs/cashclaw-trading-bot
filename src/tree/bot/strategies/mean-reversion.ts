@@ -87,12 +87,7 @@ export class MeanRevStrategy {
 
   private async exitLong(price: number, bb: BollingerBands, rsi: RSI): Promise<void> {
     const result = await executeExitLong({
-      config: this.config,
-      callbacks: this.callbacks,
-      entryPrice: this.entryPrice,
-      price,
-      bb,
-      rsi,
+      config: this.config, callbacks: this.callbacks, entryPrice: this.entryPrice, price, bb, rsi,
     });
     if (result.success) {
       this.position = result.position;

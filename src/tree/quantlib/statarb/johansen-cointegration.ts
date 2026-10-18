@@ -88,14 +88,8 @@ export function estimateJohansenCointegration(input: JohansenSeriesInput): Johan
   const spread = prices.map((row) => row[0] + beta2 * row[1]);
 
   return {
-    rank,
-    eigenvalues,
-    traceStats,
-    maxEigenStats,
-    traceCriticalValues95: traceCrit,
-    maxEigenCriticalValues95: maxCrit,
-    cointegratingVector,
-    halfLifeBars: computeAr1HalfLife(spread),
-    isCointegrated: rank >= 1,
+    rank, eigenvalues, traceStats, maxEigenStats,
+    traceCriticalValues95: traceCrit, maxEigenCriticalValues95: maxCrit,
+    cointegratingVector, halfLifeBars: computeAr1HalfLife(spread), isCointegrated: rank >= 1,
   };
 }

@@ -78,28 +78,13 @@ export async function verifyAndProcessNowPaymentsIpn(
 
   const data = parsed.data;
   if (processedPaymentIds.has(data.payment_id)) {
-    return ok({
-      activated: false,
-      workspaceId: data.workspace_id,
-      newTier: data.target_tier,
-      idempotentReplay: true,
-    });
+    return ok({ activated: false, workspaceId: data.workspace_id, newTier: data.target_tier, idempotentReplay: true });
   }
 
   if (data.payment_status === 'finished' || data.payment_status === 'confirmed') {
     processedPaymentIds.add(data.payment_id);
-    return ok({
-      activated: true,
-      workspaceId: data.workspace_id,
-      newTier: data.target_tier,
-      idempotentReplay: false,
-    });
+    return ok({ activated: true, workspaceId: data.workspace_id, newTier: data.target_tier, idempotentReplay: false });
   }
 
-  return ok({
-    activated: false,
-    workspaceId: data.workspace_id,
-    newTier: data.target_tier,
-    idempotentReplay: false,
-  });
+  return ok({ activated: false, workspaceId: data.workspace_id, newTier: data.target_tier, idempotentReplay: false });
 }

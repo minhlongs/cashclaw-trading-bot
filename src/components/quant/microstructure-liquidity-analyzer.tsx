@@ -74,12 +74,7 @@ export function MicrostructureLiquidityAnalyzer() {
             <table className="w-full text-left text-xs font-mono" aria-label="Cross-symbol microstructure telemetry">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] text-[var(--text-secondary)]">
-                  <th className="pb-2">Symbol</th>
-                  <th className="pb-2">Mid Price</th>
-                  <th className="pb-2">Spread (bps)</th>
-                  <th className="pb-2">OFI (L1-L5)</th>
-                  <th className="pb-2">VPIN</th>
-                  <th className="pb-2 text-right">Top-5 Depth (USD)</th>
+                  <th className="pb-2">Symbol</th><th className="pb-2">Mid Price</th><th className="pb-2">Spread (bps)</th><th className="pb-2">OFI (L1-L5)</th><th className="pb-2">VPIN</th><th className="pb-2 text-right">Top-5 Depth (USD)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-subtle)]">

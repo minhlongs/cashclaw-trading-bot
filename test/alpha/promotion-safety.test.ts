@@ -2,18 +2,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 import {
-  type StrategyPhase,
-  type TransitionTrigger,
-  type AutomatedCeiling,
-  type AutomatedProgressionPhase,
-  type AutomatedTransitionTarget,
-  type PhaseAfterGatePassed,
-  AUTOMATED_CEILING,
-  isTerminalPhase,
-  canTransition,
-  getTransition,
-  transitionStrategy,
-  gateResultToTrigger,
+  type StrategyPhase, type TransitionTrigger, type AutomatedCeiling,
+  type AutomatedProgressionPhase, type AutomatedTransitionTarget, type PhaseAfterGatePassed,
+  AUTOMATED_CEILING, isTerminalPhase, canTransition, getTransition, transitionStrategy, gateResultToTrigger,
 } from '../../src/forest/alpha/gate/promotion-states';
 import type { PromotionGateResult } from '../../src/forest/alpha/gate/types';
 
@@ -26,11 +17,8 @@ function getTsSourceFiles(dir: string): string[] {
   const files: string[] = [];
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory() && entry.name !== '__tests__') {
-      files.push(...getTsSourceFiles(full));
-    } else if (entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts')) {
-      files.push(full);
-    }
+    if (entry.isDirectory() && entry.name !== '__tests__') files.push(...getTsSourceFiles(full));
+    else if (entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts')) files.push(full);
   }
   return files;
 }
@@ -41,12 +29,9 @@ const ALL_PHASES: readonly StrategyPhase[] = [
 ];
 
 const TRIGGERS: readonly TransitionTrigger[] = [
-  { type: 'gate_passed' },
-  { type: 'gate_failed' },
-  { type: 'manual_approval', approved: true },
-  { type: 'manual_approval', approved: false },
-  { type: 'promote' },
-  { type: 'demote' },
+  { type: 'gate_passed' }, { type: 'gate_failed' },
+  { type: 'manual_approval', approved: true }, { type: 'manual_approval', approved: false },
+  { type: 'promote' }, { type: 'demote' },
 ];
 
 describe('Promotion State Machine Safety Hardening', () => {

@@ -4,17 +4,9 @@ import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-cont
 
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url);
-    const context = await resolveWorkspaceTierContext(req, {
-      explicitWorkspaceId: url.searchParams.get('workspaceId'),
-      explicitTier: url.searchParams.get('tier'),
-    });
-
+    const context = await resolveWorkspaceTierContext(req);
     if (context.invalidExplicitTier) {
-      return NextResponse.json(
-        { ok: false, error: 'Invalid tier specified' },
-        { status: 400 },
-      );
+      return NextResponse.json({ ok: false, error: 'Invalid tier specified' }, { status: 400 });
     }
 
     const entitlements = getEntitlementsForTier(context.tier);
@@ -25,9 +17,6 @@ export async function GET(req: Request) {
       entitlements,
     });
   } catch {
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
   }
 }

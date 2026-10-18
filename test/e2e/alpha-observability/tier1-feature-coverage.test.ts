@@ -2,13 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { RegimeLabel } from '@/tree/regime/types';
 import { computeFeatureSnapshotHash, computeFeatureSnapshotHashSync } from '@/tree/alpha/observability';
 import {
-  computeAttribution,
-  createSyntheticAlphaDecision,
-  createSyntheticOperationalTelemetry,
-  createSyntheticPortfolioDecision,
-  evaluateTelemetryHealth,
-  generateShadowOrder,
-  simulateShadowFill,
+  computeAttribution, createSyntheticAlphaDecision, createSyntheticOperationalTelemetry,
+  createSyntheticPortfolioDecision, evaluateTelemetryHealth, generateShadowOrder, simulateShadowFill,
 } from './harness';
 
 describe('Tier 1: Feature Coverage (F1-F5)', () => {
@@ -56,21 +51,17 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(hash).toMatch(/^[a-f0-9]{64}$/);
       expect(hash).toBe(computeFeatureSnapshotHashSync({ rsi: 50, vol: 0.02 }));
     });
-
     it('guarantees key ordering invariance for arbitrary unordered object keys', () => {
       const h1 = computeFeatureSnapshotHashSync({ a: 1, b: 2, c: { d: 3, e: 4 } });
       const h2 = computeFeatureSnapshotHashSync({ c: { e: 4, d: 3 }, b: 2, a: 1 });
       expect(h1).toBe(h2);
     });
-
     it('omits undefined properties consistently with canonical JSON specification', () => {
       expect(computeFeatureSnapshotHashSync({ a: 1, b: undefined })).toBe(computeFeatureSnapshotHashSync({ a: 1 }));
     });
-
     it('preserves array element ordering sensitivity', () => {
       expect(computeFeatureSnapshotHashSync({ arr: [1, 2, 3] })).not.toBe(computeFeatureSnapshotHashSync({ arr: [3, 2, 1] }));
     });
-
     it('ensures parity between synchronous and asynchronous hashing functions', async () => {
       const payload = { signal: 0.75, horizon: '1h', factors: ['mom', 'rev'] };
       expect(computeFeatureSnapshotHashSync(payload)).toBe(await computeFeatureSnapshotHash(payload));
@@ -111,31 +102,26 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
 
   describe('F4: Shadow Fill Simulator', () => {
     const baseOrder = generateShadowOrder({ orderId: 'o-fill', symbol: 'BTC/USDT', deltaW: 0.1, price: 50000, equity: 100000, timestamp: 1000 })!;
-
     it('simulates normal tier fill with 8 bps fee and 8 bps slippage/impact', () => {
       const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 20, stressTier: 'normal' });
       expect(fill.fillPrice).toBe(50040); // 50000 * 1.0008
       expect(fill.feeAmount).toBe(8.0064); // 50040 * 0.2 * 0.0008
     });
-
     it('simulates conservative tier fill with 10 bps fee and 17 bps slippage/impact', () => {
       const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 20, stressTier: 'conservative' });
       expect(fill.fillPrice).toBe(50085); // 50000 * 1.0017
       expect(fill.feeAmount).toBe(10.017); // 50085 * 0.2 * 0.0010
     });
-
     it('simulates adverse tier fill with 10 bps fee and 40 bps slippage/impact', () => {
       const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 30, stressTier: 'adverse' });
       expect(fill.fillPrice).toBe(50200); // 50000 * 1.0040
       expect(fill.feeAmount).toBe(10.04);
     });
-
     it('simulates extreme tier fill with 15 bps fee and 85 bps slippage/impact', () => {
       const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 50, stressTier: 'extreme' });
       expect(fill.fillPrice).toBe(50425); // 50000 * 1.0085
       expect(fill.feeAmount).toBe(15.1275);
     });
-
     it('enforces causal timestamp ordering (fillTimestamp = decisionTimestamp + latencyMs)', () => {
       const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 150, stressTier: 'normal' });
       expect(fill.fillTimestamp).toBe(baseOrder.decisionTimestamp + 150);

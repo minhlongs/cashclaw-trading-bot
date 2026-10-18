@@ -16,46 +16,23 @@ let seq = 0;
 function record(overrides: Partial<PairPeriodRecord> = {}): PairPeriodRecord {
   seq++;
   return {
-    timestamp: T0 + seq * HOUR,
-    position: 'flat',
-    hedgeRatio: null,
-    zScore: null,
-    weights: {},
-    turnover: 0,
-    costPct: 0,
-    grossReturn: 0,
-    netReturn: 0,
-    grossExposure: 0,
-    netExposure: 0,
-    ...overrides,
+    timestamp: T0 + seq * HOUR, position: 'flat', hedgeRatio: null, zScore: null,
+    weights: {}, turnover: 0, costPct: 0, grossReturn: 0, netReturn: 0,
+    grossExposure: 0, netExposure: 0, ...overrides,
   };
 }
 
 /** One winning round trip (+0.98% compounded) and one losing trip (−3%). */
 const TRADE_SERIES: PairPeriodRecord[] = [
   record({ position: 'flat' }),
-  record({
-    position: 'long_spread', netReturn: 0.02, grossReturn: 0.02,
-    costPct: 0.001, turnover: 0.4, grossExposure: 1, netExposure: 1,
-  }),
-  record({
-    position: 'long_spread', netReturn: -0.01, grossReturn: -0.01,
-    costPct: 0.001, turnover: 0.1, grossExposure: 1, netExposure: 1,
-  }),
+  record({ position: 'long_spread', netReturn: 0.02, grossReturn: 0.02, costPct: 0.001, turnover: 0.4, grossExposure: 1, netExposure: 1 }),
+  record({ position: 'long_spread', netReturn: -0.01, grossReturn: -0.01, costPct: 0.001, turnover: 0.1, grossExposure: 1, netExposure: 1 }),
   record({ position: 'flat' }),
-  record({
-    position: 'short_spread', netReturn: -0.03, grossReturn: -0.03,
-    costPct: 0.002, turnover: 0.5,
-  }),
+  record({ position: 'short_spread', netReturn: -0.03, grossReturn: -0.03, costPct: 0.002, turnover: 0.5 }),
   record({ position: 'flat' }),
 ];
 
-const OPTIONS = {
-  experimentId: 'exp-rv-1',
-  symbol: 'PAIRS/M4',
-  timeframe: '1d',
-  periodsPerYear: 365,
-} as const;
+const OPTIONS = { experimentId: 'exp-rv-1', symbol: 'PAIRS/M4', timeframe: '1d', periodsPerYear: 365 } as const;
 
 /** RV walk-forward fixture: two windows with disjoint OOS spans. */
 function rvResult(periods: PairPeriodRecord[]): RVWalkForwardResult {

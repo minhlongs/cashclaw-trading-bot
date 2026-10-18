@@ -2,16 +2,8 @@
 // Place buy/sell limit orders at regular price intervals around a base price.
 // Profit from oscillations within a range — best in sideways/volatile markets.
 
-import type {
-  GridBotConfig,
-  GridLevel,
-  BotTrade,
-} from '../types';
-import type {
-  Ticker,
-  OrderRequest,
-  OrderResult,
-} from '../../exchange/types';
+import type { GridBotConfig, GridLevel, BotTrade } from '../types';
+import type { Ticker, OrderRequest, OrderResult } from '../../exchange/types';
 import {
   computeGridLevels,
   updateTrailingLevels,

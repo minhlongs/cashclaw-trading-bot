@@ -6,12 +6,7 @@ import { BotDetailClient } from '@/components/bots/bot-detail-client';
 import type { ApiBotDetail, BotDetailData, TradeEventRow, TradeRow } from './page-client-types';
 import { BotDetailEventsTable } from './bot-detail-events-table';
 
-export type {
-  BotDetailData,
-  ApiBotDetail,
-  TradeRow,
-  TradeEventRow,
-} from './page-client-types';
+export type { BotDetailData, ApiBotDetail, TradeRow, TradeEventRow } from './page-client-types';
 
 export default function BotDetailPageClient({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -31,29 +26,17 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
           if (body.ok && body.data) {
             const d = body.data;
             setBot({
-              id: d.id,
-              name: d.name,
-              strategy: d.strategy as BotDetailData['strategy'],
-              pair: d.pair,
-              exchange: d.exchange,
-              botStatus: d.status,
-              totalPnl: d.totalPnl,
-              winCount: d.winCount,
-              lossCount: d.lossCount,
-              capitalAllocated: d.capital,
-              capitalUsed: 0,
-              maxDrawdownPct: d.maxDrawdown,
-              startedAt: d.startedAt,
-              updatedAt: d.lastTickAt ?? d.startedAt ?? Date.now(),
+              id: d.id, name: d.name, strategy: d.strategy as BotDetailData['strategy'],
+              pair: d.pair, exchange: d.exchange, botStatus: d.status,
+              totalPnl: d.totalPnl, winCount: d.winCount, lossCount: d.lossCount,
+              capitalAllocated: d.capital, capitalUsed: 0, maxDrawdownPct: d.maxDrawdown,
+              startedAt: d.startedAt, updatedAt: d.lastTickAt ?? d.startedAt ?? Date.now(),
               config: (d.gridConfig ?? {}) as Record<string, number>,
             });
             setTrades([]);
             if (d.recentEvents && Array.isArray(d.recentEvents)) {
               setTradeEvents(d.recentEvents.map(e => ({
-                id: e.id,
-                eventType: e.eventType,
-                details: e.details,
-                timestamp: e.timestamp,
+                id: e.id, eventType: e.eventType, details: e.details, timestamp: e.timestamp,
               })));
             }
           }

@@ -66,21 +66,13 @@ export class FundingBasisEngine {
     const shortLiqDist = this.calculateLiquidationDistance(shortQuote, true);
     const longLiqDist = this.calculateLiquidationDistance(longQuote, false);
     const minLiquidationDistance = Math.min(shortLiqDist, longLiqDist);
-
     const status = this.resolveStatus(netAnnualYield, minLiquidationDistance);
 
     return {
-      shortVenueId: shortQuote.venueId,
-      longVenueId: longQuote.venueId,
-      symbol: shortQuote.symbol,
-      grossAnnualYield,
-      netAnnualYield,
-      holdingDays: days,
-      takerFeeAnnualDrag,
-      annualBorrowCost: this.config.annualBorrowRate,
-      minLiquidationDistance,
-      status,
-      hurdleRateAnnual: this.config.minHurdleRateAnnual,
+      shortVenueId: shortQuote.venueId, longVenueId: longQuote.venueId, symbol: shortQuote.symbol,
+      grossAnnualYield, netAnnualYield, holdingDays: days,
+      takerFeeAnnualDrag, annualBorrowCost: this.config.annualBorrowRate,
+      minLiquidationDistance, status, hurdleRateAnnual: this.config.minHurdleRateAnnual,
     };
   }
 

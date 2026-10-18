@@ -87,17 +87,9 @@ export function recordPeriod(loop: SimLoopState, args: RecordPeriodArgs): void {
   loop.equity *= 1 + netReturn;
   loop.equityCurve.push(loop.equity);
   loop.periods.push({
-    timestamp: args.timestamp,
-    position: loop.position,
-    hedgeRatio: args.state.hedgeRatio,
-    zScore: args.state.zScore,
-    weights,
-    turnover,
-    costPct,
-    grossReturn,
-    netReturn,
-    grossExposure,
-    netExposure,
+    timestamp: args.timestamp, position: loop.position,
+    hedgeRatio: args.state.hedgeRatio, zScore: args.state.zScore,
+    weights, turnover, costPct, grossReturn, netReturn, grossExposure, netExposure,
   });
   loop.prevWeights = weights;
 }

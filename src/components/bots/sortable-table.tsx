@@ -16,10 +16,7 @@ export interface SortableColumn<T> {
 export function SortableTable<T>({
   data, columns, emptyMsg, getRowId,
 }: {
-  data: T[];
-  columns: SortableColumn<T>[];
-  emptyMsg: string;
-  getRowId: (row: T) => string;
+  data: T[]; columns: SortableColumn<T>[]; emptyMsg: string; getRowId: (row: T) => string;
 }) {
   const [sortKey, setSortKey] = useState<SortDir>(null);
   const [sortCol, setSortCol] = useState<keyof T | null>(null);
@@ -27,8 +24,7 @@ export function SortableTable<T>({
   const sorted = useMemo(() => {
     if (!sortCol || !sortKey) return data;
     return [...data].sort((a, b) => {
-      const aVal = a[sortCol];
-      const bVal = b[sortCol];
+      const aVal = a[sortCol], bVal = b[sortCol];
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortKey === 'asc' ? aVal - bVal : bVal - aVal;
       }

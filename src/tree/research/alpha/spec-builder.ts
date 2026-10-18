@@ -64,21 +64,12 @@ export async function buildSpec(
 
 /** Build the spec body (without specId, seed, compiledAt for hashing). */
 export function buildSpecBody(params: {
-  hypothesisId: string;
-  goalId: string | null;
-  universe: Universe;
-  timeframe: string;
-  horizonBars: number;
-  features: readonly FeatureDeclaration[];
-  transformations: readonly string[];
-  regimeConstraints: readonly RegimeLabel[];
-  expectedDirection: 'long' | 'short' | 'neutral';
-  costMode: StressMode;
-  costConfig: StressConfig;
-  barrierConfig: BarrierConfig;
-  trainPeriod: ExperimentPeriod;
-  validationPeriod: ExperimentPeriod;
-  testPeriod: ExperimentPeriod;
+  hypothesisId: string; goalId: string | null; universe: Universe;
+  timeframe: string; horizonBars: number; features: readonly FeatureDeclaration[];
+  transformations: readonly string[]; regimeConstraints: readonly RegimeLabel[];
+  expectedDirection: 'long' | 'short' | 'neutral'; costMode: StressMode;
+  costConfig: StressConfig; barrierConfig: BarrierConfig;
+  trainPeriod: ExperimentPeriod; validationPeriod: ExperimentPeriod; testPeriod: ExperimentPeriod;
   provenance: AlphaProvenance | null;
 }): Omit<ExperimentSpec, 'specId' | 'seed' | 'compiledAt' | 'compilerVersion'> {
   return {

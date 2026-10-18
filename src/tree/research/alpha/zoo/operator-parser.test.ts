@@ -13,19 +13,10 @@ import type { SupportedDataField } from './zoo-metadata';
 
 const num = (value: number): AstNode => ({ kind: 'number', value });
 const field = (name: SupportedDataField, lag = 0): AstNode => ({ kind: 'field', name, lag });
-const bin = (op: '+' | '-' | '*' | '/', left: AstNode, right: AstNode): AstNode => ({
-  kind: 'binary',
-  op,
-  left,
-  right,
-});
+const bin = (op: '+' | '-' | '*' | '/', left: AstNode, right: AstNode): AstNode => ({ kind: 'binary', op, left, right });
 const un = (operand: AstNode): AstNode => ({ kind: 'unary', operand });
 const abs = (operand: AstNode): AstNode => ({ kind: 'abs', operand });
-const call = (name: SupportedOperator, args: readonly AstNode[]): AstNode => ({
-  kind: 'call',
-  name,
-  args,
-});
+const call = (name: SupportedOperator, args: readonly AstNode[]): AstNode => ({ kind: 'call', name, args });
 
 const okAst = (formula: string): AstNode => {
   const r = parseFormula(formula);
@@ -85,25 +76,15 @@ describe('parseFormula — EXACT seed vectors', () => {
   });
 
   it('vsump normalized string fails closed naming bare token sum', () => {
-    expect(errReason('sum ts_max( Delta v, 0) / sum | Delta v|')).toBe(
-      'EVAL_UNSUPPORTED_TOKEN:sum',
-    );
+    expect(errReason('sum ts_max( Delta v, 0) / sum | Delta v|')).toBe('EVAL_UNSUPPORTED_TOKEN:sum');
   });
 });
 
 describe('parseFormula — subscript-lag grammar', () => {
-  it('close_t → lag 0', () => {
-    expect(okAst('close_t')).toEqual(field('close', 0));
-  });
-  it('close_{t-5} → lag 5', () => {
-    expect(okAst('close_{t-5}')).toEqual(field('close', 5));
-  });
-  it('close_{{t-5}} double braces → lag 5', () => {
-    expect(okAst('close_{{t-5}}')).toEqual(field('close', 5));
-  });
-  it('close_{t+5} → NON_CAUSAL_LAG', () => {
-    expect(errReason('close_{t+5}')).toBe('NON_CAUSAL_LAG');
-  });
+  it('close_t → lag 0', () => expect(okAst('close_t')).toEqual(field('close', 0)));
+  it('close_{t-5} → lag 5', () => expect(okAst('close_{t-5}')).toEqual(field('close', 5)));
+  it('close_{{t-5}} double braces → lag 5', () => expect(okAst('close_{{t-5}}')).toEqual(field('close', 5)));
+  it('close_{t+5} → NON_CAUSAL_LAG', () => expect(errReason('close_{t+5}')).toBe('NON_CAUSAL_LAG'));
   it('bad subscript content fails closed', () => {
     expect(errReason('close_{t*k}')).toBe('EVAL_PARSE_ERROR:subscript');
     expect(errReason('close_{x}')).toBe('EVAL_PARSE_ERROR:subscript');

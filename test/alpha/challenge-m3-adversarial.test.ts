@@ -1,13 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  type StrategyPhase,
-  type TransitionTrigger,
-  isTerminalPhase,
-  canTransition,
-  getTransition,
-  transitionStrategy,
-  gateResultToTrigger,
-  AUTOMATED_CEILING,
+  type StrategyPhase, type TransitionTrigger, isTerminalPhase,
+  canTransition, getTransition, transitionStrategy, gateResultToTrigger, AUTOMATED_CEILING,
 } from '../../src/forest/alpha/gate/promotion-states';
 
 const ALL_PHASES: readonly StrategyPhase[] = [
@@ -16,12 +10,9 @@ const ALL_PHASES: readonly StrategyPhase[] = [
 ];
 
 const STANDARD_TRIGGERS: readonly TransitionTrigger[] = [
-  { type: 'gate_passed' },
-  { type: 'gate_failed' },
-  { type: 'manual_approval', approved: true },
-  { type: 'manual_approval', approved: false },
-  { type: 'promote' },
-  { type: 'demote' },
+  { type: 'gate_passed' }, { type: 'gate_failed' },
+  { type: 'manual_approval', approved: true }, { type: 'manual_approval', approved: false },
+  { type: 'promote' }, { type: 'demote' },
 ];
 
 const ADVERSARIAL_TRIGGERS: readonly TransitionTrigger[] = [
@@ -38,17 +29,13 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
     it('chains gate_passed up to SHADOW and strictly halts at automated ceiling', () => {
       let current: StrategyPhase = 'RESEARCH';
       const path: StrategyPhase[] = [current];
-
       while (canTransition(current, { type: 'gate_passed' })) {
         const res = transitionStrategy(current, { type: 'gate_passed' });
         current = res.to;
         path.push(current);
       }
-
       expect(path).toEqual(['RESEARCH', 'BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW']);
       expect(current).toBe(AUTOMATED_CEILING);
-
-      // Attempting further gate_passed at SHADOW must strictly fail
       expect(getTransition('SHADOW', { type: 'gate_passed' })).toBeNull();
       expect(canTransition('SHADOW', { type: 'gate_passed' })).toBe(false);
       expect(() => transitionStrategy('SHADOW', { type: 'gate_passed' })).toThrow(
@@ -166,19 +153,10 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
 
   describe('Challenge 6: Adversarial Fail-Closed gateResultToTrigger', () => {
     it('fails closed on unknown or malicious verdict/status payloads', () => {
-      // Malicious payloads attempting to inject LIVE or PASSED strings
       const malformedInputs = [
-        'LIVE',
-        'APPROVED',
-        'UNKNOWN',
-        'paper_candidate', // wrong casing
-        { verdict: 'LIVE' },
-        { verdict: 'MANUAL_APPROVAL' },
-        { status: 'LIVE' },
-        { status: 'SHADOW' },
-        {},
+        'LIVE', 'APPROVED', 'UNKNOWN', 'paper_candidate',
+        { verdict: 'LIVE' }, { verdict: 'MANUAL_APPROVAL' }, { status: 'LIVE' }, { status: 'SHADOW' }, {},
       ];
-
       for (const input of malformedInputs) {
         const trigger = gateResultToTrigger(input as unknown as Parameters<typeof gateResultToTrigger>[0]);
         expect(trigger).toEqual({ type: 'gate_failed' });

@@ -5,13 +5,8 @@ import { BotRowActions } from './bot-row-actions';
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    draft: 'badge-neutral',
-    paper_test: 'badge-neutral',
-    live_running: 'badge-running',
-    paused: 'badge-paused',
-    error: 'badge-error',
-    stopped: 'badge-neutral',
-    running: 'badge-running',
+    draft: 'badge-neutral', paper_test: 'badge-neutral', live_running: 'badge-running',
+    paused: 'badge-paused', error: 'badge-error', stopped: 'badge-neutral', running: 'badge-running',
   };
   return <span className={`badge ${map[status] || 'badge-neutral'}`}>{status}</span>;
 }
@@ -19,11 +14,7 @@ function StatusBadge({ status }: { status: string }) {
 function PnlValue({ value }: { value: number }) {
   const cls = value >= 0 ? 'text-profit' : 'text-loss';
   const prefix = value >= 0 ? '+' : '';
-  return (
-    <span className={`mono ${cls}`}>
-      {prefix}{value.toFixed(2)}
-    </span>
-  );
+  return <span className={`mono ${cls}`}>{prefix}{value.toFixed(2)}</span>;
 }
 
 export interface BotsTableProps {

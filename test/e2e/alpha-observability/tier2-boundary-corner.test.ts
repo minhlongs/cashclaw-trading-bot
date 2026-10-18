@@ -1,17 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  AlphaDecisionRecordSchema,
-  FeatureSnapshotHashSchema,
-  computeFeatureSnapshotHashSync,
+  AlphaDecisionRecordSchema, FeatureSnapshotHashSchema, computeFeatureSnapshotHashSync,
 } from '@/tree/alpha/observability';
 import {
-  computeAttribution,
-  createSyntheticAlphaDecision,
-  createSyntheticOperationalTelemetry,
-  createSyntheticPortfolioDecision,
-  evaluateTelemetryHealth,
-  generateShadowOrder,
-  simulateShadowFill,
+  computeAttribution, createSyntheticAlphaDecision, createSyntheticOperationalTelemetry,
+  createSyntheticPortfolioDecision, evaluateTelemetryHealth, generateShadowOrder, simulateShadowFill,
 } from './harness';
 
 describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
@@ -20,22 +13,18 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(() => createSyntheticAlphaDecision({ confidence: 1.05 })).toThrow();
       expect(() => createSyntheticAlphaDecision({ confidence: -0.01 })).toThrow();
     });
-
     it('rejects injected unauthorized trading fields via .strict() enforcement', () => {
       const payload = { ...createSyntheticAlphaDecision(), executeLive: true, sendToExchange: true };
       expect(() => AlphaDecisionRecordSchema.parse(payload)).toThrow();
     });
-
     it('accepts exact boundary values for confidence (0.0 and 1.0)', () => {
       expect(createSyntheticAlphaDecision({ confidence: 0.0 }).confidence).toBe(0);
       expect(createSyntheticAlphaDecision({ confidence: 1.0 }).confidence).toBe(1);
     });
-
     it('accepts 100% net short exposure (-1.0) with valid gross exposure', () => {
       const port = createSyntheticPortfolioDecision({ targetWeights: { 'BTC/USDT': -1.0 }, grossExposure: 1.0, netExposure: -1.0 });
       expect(port.netExposure).toBe(-1.0);
     });
-
     it('rejects negative decision latency or freshness drift in telemetry', () => {
       expect(() => createSyntheticOperationalTelemetry({ decisionLatencyMs: -1 })).toThrow();
       expect(() => createSyntheticOperationalTelemetry({ dataFreshnessMs: -10 })).toThrow();
@@ -48,24 +37,20 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(h1).toMatch(/^[a-f0-9]{64}$/);
       expect(h1).toBe(computeFeatureSnapshotHashSync({}));
     });
-
     it('safely handles circular object references without crashing', () => {
       const circular: Record<string, unknown> = { a: 1 };
       circular.self = circular;
       expect(() => computeFeatureSnapshotHashSync(circular)).not.toThrow();
     });
-
     it('distinguishes float precision boundaries', () => {
       const h1 = computeFeatureSnapshotHashSync({ val: 1.0 });
       const h2 = computeFeatureSnapshotHashSync({ val: 1.000000000000001 });
       expect(h1).not.toBe(h2);
     });
-
     it('handles deeply nested feature hierarchies (6 levels deep)', () => {
       const nested = { l1: { l2: { l3: { l4: { l5: { l6: 'deep' } } } } } };
       expect(computeFeatureSnapshotHashSync(nested)).toMatch(/^[a-f0-9]{64}$/);
     });
-
     it('rejects non-hex or malformed FeatureSnapshotHash strings', () => {
       expect(() => FeatureSnapshotHashSchema.parse('not-a-hash')).toThrow();
       expect(() => FeatureSnapshotHashSchema.parse('Z'.repeat(64))).toThrow();

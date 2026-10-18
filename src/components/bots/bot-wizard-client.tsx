@@ -45,7 +45,6 @@ export function BotWizardClient() {
     const idx = STEPS.indexOf(step);
     if (idx < STEPS.length - 1) setStep(STEPS[idx + 1]);
   };
-
   const goToPrev = () => {
     const idx = STEPS.indexOf(step);
     if (idx > 0) setStep(STEPS[idx - 1]);

@@ -3,30 +3,22 @@
 
 import type { DerivativeFeatures } from './funding';
 
-/**
- * Funding rate extreme signal.
- * Extreme positive funding = crowded longs → fade.
- * Extreme negative funding = crowded shorts → fade.
- */
+/** Funding rate extreme signal: positive funding = crowded longs → fade; negative → fade. */
 export function fundingSignal(f: DerivativeFeatures): { direction: 'long' | 'short' | 'neutral'; confidence: number; reasons: string[] } | null {
   if (f.fundingRate === null || f.fundingRateAvg8h === null) return null;
   const reasons: string[] = [];
   let direction: 'long' | 'short' | 'neutral' = 'neutral';
   let confidence = 0;
 
-  // Positive funding > 0.05% (0.0005) = crowded longs
   if (f.fundingRate > 0.0005 && f.fundingRateSlope !== null && f.fundingRateSlope > 0) {
     direction = 'short';
     confidence = Math.min(1, Math.abs(f.fundingRate) / 0.002);
     reasons.push(`funding=${(f.fundingRate * 100).toFixed(3)}% extreme positive`);
-  }
-  // Negative funding < -0.05% = crowded shorts
-  else if (f.fundingRate < -0.0005 && f.fundingRateSlope !== null && f.fundingRateSlope < 0) {
+  } else if (f.fundingRate < -0.0005 && f.fundingRateSlope !== null && f.fundingRateSlope < 0) {
     direction = 'long';
     confidence = Math.min(1, Math.abs(f.fundingRate) / 0.002);
     reasons.push(`funding=${(f.fundingRate * 100).toFixed(3)}% extreme negative`);
   }
-
   return { direction, confidence, reasons };
 }
 

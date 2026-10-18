@@ -9,44 +9,26 @@ import type { CompositionEvalConfig, CompositionWalkForwardInput } from './types
 
 function alpha(t: number, overrides: Partial<ComposedAlpha> = {}): ComposedAlpha {
   return {
-    alphaId: 'A',
-    direction: 'buy',
-    confidence: 0.8,
-    expectedReturn: 0.10,
-    expectedCost: 0.002,
-    expectedTurnover: 0.5,
-    regime: RegimeLabel.RANGE,
-    horizon: '1d',
-    provenance: 'test',
-    featureDependencies: [],
-    timestamp: t,
+    alphaId: 'A', direction: 'buy', confidence: 0.8, expectedReturn: 0.10,
+    expectedCost: 0.002, expectedTurnover: 0.5, regime: RegimeLabel.RANGE,
+    horizon: '1d', provenance: 'test', featureDependencies: [], timestamp: t,
     ...overrides,
   };
 }
 
 const COMPOSITION_CONFIG: CompositionConfig = {
   weights: {
-    returnWeight: 1.0,
-    costWeight: 1.0,
-    riskPenaltyWeight: 0.05,
-    turnoverPenaltyWeight: 0.02,
-    confidenceWeight: 0.2,
+    returnWeight: 1.0, costWeight: 1.0, riskPenaltyWeight: 0.05,
+    turnoverPenaltyWeight: 0.02, confidenceWeight: 0.2,
   },
   minNetEdge: 0.001,
   maxTurnover: 2.0,
 };
 
 const PORTFOLIO_CONFIG: PortfolioConfig = {
-  targetVolatility: 0.15,
-  maxPositionWeight: 0.50,
-  maxGrossExposure: 1.20,
-  maxNetExposure: 1.00,
-  maxCorrelatedExposure: 0.80,
-  correlationBucketThreshold: 0.90,
-  maxBetaExposure: 0.50,
-  maxTurnover: 1.50,
-  drawdownThreshold: 0.10,
-  deRiskFactor: 0.50,
+  targetVolatility: 0.15, maxPositionWeight: 0.50, maxGrossExposure: 1.20,
+  maxNetExposure: 1.00, maxCorrelatedExposure: 0.80, correlationBucketThreshold: 0.90,
+  maxBetaExposure: 0.50, maxTurnover: 1.50, drawdownThreshold: 0.10, deRiskFactor: 0.50,
 };
 
 function risk(): RiskInputs {
