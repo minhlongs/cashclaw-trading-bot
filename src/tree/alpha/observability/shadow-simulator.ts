@@ -45,16 +45,9 @@ export function simulateShadowFill(
   const fillId = rawFillId.length <= 100 ? rawFillId : rawFillId.slice(0, 100);
 
   return ShadowFillSchema.parse({
-    fillId,
-    orderId: validatedOrder.orderId,
-    symbol: validatedOrder.symbol,
-    side: validatedOrder.side,
-    fillPrice,
-    fillQuantity,
-    fillTimestamp,
-    feeAmount,
-    slippageBps,
-    stressTier: validatedTier,
+    fillId, orderId: validatedOrder.orderId, symbol: validatedOrder.symbol,
+    side: validatedOrder.side, fillPrice, fillQuantity, fillTimestamp,
+    feeAmount, slippageBps, stressTier: validatedTier,
   });
 }
 

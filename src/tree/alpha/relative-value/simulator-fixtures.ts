@@ -27,11 +27,8 @@ export function ouPanel(): PairPanel {
   const closesA = Array.from({ length: N_OU }, (_, i) => 100 + i * 10);
   const closesB = closesA.map((a, i) => 2 * a + OU_DEV_48[i]!);
   return {
-    legA: 'AAA',
-    legB: 'BBB',
+    legA: 'AAA', legB: 'BBB', closesA, closesB,
     timestamps: Array.from({ length: N_OU }, (_, i) => T0_OU + i * 60_000),
-    closesA,
-    closesB,
   };
 }
 
@@ -42,18 +39,9 @@ export const EXIT_IDX = 20;
 /** Baseline simulator config for the OU fixture. */
 export function simConfig(overrides: Partial<PairSimConfig> = {}): PairSimConfig {
   return {
-    hedgeWindow: N_OU,
-    zWindow: 6,
-    minObs: 10,
-    entryZ: 2.0,
-    exitZ: 0.5,
-    maxHalfLife: 50,
-    minCorrelation: 0.0,
-    validationWindow: N_OU,
-    revalidateEvery: 10_000,
-    costBps: 0,
-    stressMode: 'conservative',
-    minObservations: 4,
+    hedgeWindow: N_OU, zWindow: 6, minObs: 10, entryZ: 2.0, exitZ: 0.5,
+    maxHalfLife: 50, minCorrelation: 0.0, validationWindow: N_OU,
+    revalidateEvery: 10_000, costBps: 0, stressMode: 'conservative', minObservations: 4,
     ...overrides,
   };
 }

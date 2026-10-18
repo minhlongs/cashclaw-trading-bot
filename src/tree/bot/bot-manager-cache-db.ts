@@ -66,10 +66,7 @@ export class BotManagerCacheDb {
     if (!row) return null;
     if (effectiveUserId && row.user_id !== effectiveUserId) {
       log.warn('Unauthorized bot access attempt blocked', {
-        action: 'getOrCreateBot',
-        botId: id,
-        ownerId: row.user_id,
-        requestingUser: effectiveUserId,
+        action: 'getOrCreateBot', botId: id, ownerId: row.user_id, requestingUser: effectiveUserId,
       });
       return null;
     }
@@ -77,10 +74,8 @@ export class BotManagerCacheDb {
       const config = JSON.parse(row.config_json) as BotConfig;
       const bot = await this.factory.createBot(
         {
-          id: row.id,
-          config,
+          id: row.id, config, mode: 'paper',
           exchangeConfig: { apiKey: '', apiSecret: '', testnet: true, sandbox: true, rateLimitMs: 100 },
-          mode: 'paper',
         },
         row.user_id,
       );

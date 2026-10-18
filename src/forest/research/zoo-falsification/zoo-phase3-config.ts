@@ -14,23 +14,11 @@ export const ZOO_SEED_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'] as const;
 export const ZOO_SEED_NOW_ISO = '2026-08-26T00:00:00.000Z';
 
 /** All zoo market tags — the seed run maps every one to the crypto universe. */
-const ALL_ZOO_TAGS = [
-  'equity_us',
-  'equity_cn',
-  'equity_hk',
-  'equity_in',
-  'equity_kr',
-  'crypto',
-] as const;
+const ALL_ZOO_TAGS = ['equity_us', 'equity_cn', 'equity_hk', 'equity_in', 'equity_kr', 'crypto'] as const;
 
 /** The cached crypto universe every zoo market tag resolves to. */
 export function buildCryptoUniverse(): Universe {
-  return {
-    id: 'crypto-core',
-    symbols: [...ZOO_SEED_SYMBOLS],
-    weighting: 'equal',
-    rebalanceRule: 'daily',
-  };
+  return { id: 'crypto-core', symbols: [...ZOO_SEED_SYMBOLS], weighting: 'equal', rebalanceRule: 'daily' };
 }
 
 /**

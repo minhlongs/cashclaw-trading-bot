@@ -27,16 +27,7 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
     });
 
     it('parses flags and commands properly', () => {
-      const parsed = parseArgs([
-        'node',
-        'cashclaw.js',
-        'quickstart',
-        '--json',
-        '--symbol',
-        'ETH/USDT',
-        '--name',
-        'CustomBot',
-      ]);
+      const parsed = parseArgs(['node', 'cashclaw.js', 'quickstart', '--json', '--symbol', 'ETH/USDT', '--name', 'CustomBot']);
       expect(parsed.command).toBe('quickstart');
       expect(parsed.json).toBe(true);
       expect(parsed.symbol).toBe('ETH/USDT');
@@ -69,6 +60,8 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(ev.dupireAtmLocalVol).toBeGreaterThan(0);
       expect(ev.motCorridorWidthBps).toBeGreaterThan(0);
       expect(typeof ev.roughPathLevyArea12).toBe('number');
+      expect(ev.avellanedaOptimalSpreadBps).toBeGreaterThan(0);
+      expect(ev.kalmanHalfLifeBars).toBeGreaterThan(0);
       expect(ev.regime).toBeDefined();
     });
 
@@ -77,11 +70,7 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(bundle.schemaVersion).toBe('1.0');
       expect(bundle.safetyMode).toBe('PAPER_ONLY');
       expect(bundle.payload.botName).toBe('GridBot');
-
-      const expectedHash = crypto
-        .createHash('sha256')
-        .update(JSON.stringify(bundle.payload))
-        .digest('hex');
+      const expectedHash = crypto.createHash('sha256').update(JSON.stringify(bundle.payload)).digest('hex');
       expect(bundle.sha256Checksum).toBe(expectedHash);
     });
   });

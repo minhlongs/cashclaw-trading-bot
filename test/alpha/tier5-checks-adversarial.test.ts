@@ -86,31 +86,24 @@ describe('Tier 5 Adversarial: Robustness Checks Edge Cases', () => {
     expect(checkParameterRobustness(0.7).passed).toBe(false);
     expect(checkParameterRobustness(NaN).actual).toBeNull();
   });
-
   it('covers crossPeriodRobustness out-of-range (>1.0), sub-threshold, and non-finite', () => {
     expect(checkCrossPeriodRobustness(1.2).passed).toBe(false);
     expect(checkCrossPeriodRobustness(0.4).passed).toBe(false);
     expect(checkCrossPeriodRobustness(NaN).actual).toBeNull();
   });
-
   it('covers crossAssetRobustness exemptions, missing, and boundary values', () => {
     const exempt = checkCrossAssetRobustness(null, false);
     expect(exempt.passed).toBe(true);
     expect(exempt.actual).toBeNull();
-
-    expect(checkCrossAssetRobustness(undefined, true).passed).toBe(false);
-    expect(checkCrossAssetRobustness(null, true).passed).toBe(false);
-    expect(checkCrossAssetRobustness(NaN, true).passed).toBe(false);
-    expect(checkCrossAssetRobustness(1.5, true).passed).toBe(false);
-    expect(checkCrossAssetRobustness(0.2, true).passed).toBe(false);
+    for (const v of [undefined, null, NaN, 1.5, 0.2]) {
+      expect(checkCrossAssetRobustness(v, true).passed).toBe(false);
+    }
   });
-
   it('covers leakageInvariance non-integer and non-finite counts', () => {
     expect(checkLeakageInvariance(1.5).passed).toBe(false);
     expect(checkLeakageInvariance(NaN).actual).toBeNull();
     expect(checkLeakageInvariance(5).passed).toBe(false);
   });
-
   it('covers noSingleWindowDependency malformed inputs, single window, and non-positive total', () => {
     expect(checkNoSingleWindowDependency([] as readonly number[]).passed).toBe(false);
     const nonFinite = checkNoSingleWindowDependency([10, NaN, 20]);
@@ -123,7 +116,6 @@ describe('Tier 5 Adversarial: Robustness Checks Edge Cases', () => {
     expect(nonPositive.passed).toBe(false);
     expect(nonPositive.detail).toContain('non-positive');
   });
-
   it('covers baselineComparison invalid candidate and baseline variations', () => {
     const candValid: CandidateBaselineMetrics = { sharpe: 1.5, netPnl: 500 };
     const bh: BenchmarkMetrics = { sharpe: 1.0, netPnl: 200 };
@@ -133,7 +125,6 @@ describe('Tier 5 Adversarial: Robustness Checks Edge Cases', () => {
     expect(checkBaselineComparison(candValid, { sharpe: 1.0, netPnl: 600 }, re).passed).toBe(false);
     expect(checkBaselineComparison(candValid, bh, { sharpe: 2.0, netPnl: 100 }).passed).toBe(false);
   });
-
   it('covers reproducibleHash strings, empty objects, and undefined details', () => {
     expect(checkReproducibleHash(true, 'custom detail').detail).toBe('custom detail');
     expect(checkReproducibleHash(false, 'failed detail').detail).toBe('failed detail');

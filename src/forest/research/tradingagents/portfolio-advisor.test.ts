@@ -11,16 +11,9 @@ import { RegimeLabel } from '@/tree/regime/types';
 const NOW = '2026-08-26T00:00:00.000Z';
 
 const BASE_PORTFOLIO_CONFIG: PortfolioConfig = {
-  targetVolatility: 0.15,
-  maxPositionWeight: 0.8,
-  maxGrossExposure: 0.8,
-  maxNetExposure: 0.5,
-  maxCorrelatedExposure: 0.4,
-  correlationBucketThreshold: 0.7,
-  maxBetaExposure: 0.3,
-  maxTurnover: 0.5,
-  drawdownThreshold: 0.1,
-  deRiskFactor: 0.5,
+  targetVolatility: 0.15, maxPositionWeight: 0.8, maxGrossExposure: 0.8, maxNetExposure: 0.5,
+  maxCorrelatedExposure: 0.4, correlationBucketThreshold: 0.7, maxBetaExposure: 0.3,
+  maxTurnover: 0.5, drawdownThreshold: 0.1, deRiskFactor: 0.5,
 };
 
 const BASE_RISK_INPUTS: RiskInputs = {
@@ -31,28 +24,16 @@ const BASE_RISK_INPUTS: RiskInputs = {
 };
 
 const BASE_COMPOSED_ALPHAS: ComposedAlpha[] = [{
-  alphaId: 'alpha-momentum',
-  direction: 'buy',
-  confidence: 0.6,
-  expectedReturn: 0.02,
-  expectedCost: 0.001,
-  expectedTurnover: 0.1,
-  regime: RegimeLabel.TREND_UP,
-  horizon: '20d',
-  provenance: 'deliberation',
-  featureDependencies: ['momentum_20d'],
-  timestamp: Date.parse(NOW),
+  alphaId: 'alpha-momentum', direction: 'buy', confidence: 0.6, expectedReturn: 0.02,
+  expectedCost: 0.001, expectedTurnover: 0.1, regime: RegimeLabel.TREND_UP, horizon: '20d',
+  provenance: 'deliberation', featureDependencies: ['momentum_20d'], timestamp: Date.parse(NOW),
 }];
 
 const BASE_PROPOSAL: PortfolioProposal = {
-  proposalId: 'prop-1',
-  researchGoalId: 'goal-1',
+  proposalId: 'prop-1', researchGoalId: 'goal-1',
   assets: [{ asset: 'alpha-momentum', proposedWeight: 0.3, rationale: 'trend' }],
-  hedge: 'volatility overlay',
-  rebalance: 'weekly',
-  exposure: 0.5,
-  rationale: 'test rationale',
-  createdAt: NOW,
+  hedge: 'volatility overlay', rebalance: 'weekly', exposure: 0.5,
+  rationale: 'test rationale', createdAt: NOW,
 };
 
 const BASE_RISK_ADVISORY: RiskAdvisorySet = {

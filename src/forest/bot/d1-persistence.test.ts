@@ -173,10 +173,7 @@ describe('persistSnapshot', () => {
     expect(row.win_count).toBe(10);
   });
   it('defaults unrealizedPnl to 0', async () => {
-    await persistSnapshot('bot_1', {
-      totalCapital: 10000, realizedPnl: 0, maxDrawdownPct: 2,
-      winCount: 0, lossCount: 0, totalTrades: 0,
-    });
+    await persistSnapshot('bot_1', { totalCapital: 10000, realizedPnl: 0, maxDrawdownPct: 2, winCount: 0, lossCount: 0, totalTrades: 0 });
     expect(mockInsertCapitalSnapshot.mock.calls[0][1].unrealized_pnl).toBe(0);
   });
   it('no-ops when db is null', async () => {

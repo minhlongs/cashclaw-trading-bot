@@ -15,30 +15,17 @@ export const EXCHANGES = [
 export const PAIRS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT', 'XRP/USDT', 'DOGE/USDT'];
 
 export const GRID_DEFAULTS: Record<string, number> = {
-  spacing_pct: 0.5,
-  levels: 10,
-  capital_per_level_pct: 5,
-  max_drawdown_pct: 20,
+  spacing_pct: 0.5, levels: 10, capital_per_level_pct: 5, max_drawdown_pct: 20,
 };
 
 export const MEANREV_DEFAULTS: Record<string, number> = {
-  bb_period: 20,
-  bb_std: 2,
-  rsi_period: 14,
-  rsi_buy: 30,
-  rsi_sell: 70,
-  volume_multiplier: 1.5,
-  position_size_pct: 10,
-  max_drawdown_pct: 20,
+  bb_period: 20, bb_std: 2, rsi_period: 14, rsi_buy: 30, rsi_sell: 70,
+  volume_multiplier: 1.5, position_size_pct: 10, max_drawdown_pct: 20,
 };
 
 export const VOLATILITY_DCA_DEFAULTS: Record<string, number> = {
-  priceDropStep: 1.5,
-  maxSteps: 6,
-  baseOrderSizePct: 10,
-  volatilityWindow: 20,
-  volBaseline: 50,
-  reboundTarget: 1.0,
+  priceDropStep: 1.5, maxSteps: 6, baseOrderSizePct: 10,
+  volatilityWindow: 20, volBaseline: 50, reboundTarget: 1.0,
 };
 
 export const GRID_FIELDS: FieldDef[] = [

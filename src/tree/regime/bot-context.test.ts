@@ -16,14 +16,7 @@ function makeTrendUpCandles(count = 30): Candle[] {
   let price = 1000;
   for (let i = 0; i < count; i++) {
     price += 5 + (i % 3);
-    candles.push({
-      timestamp: 1_700_000_000_000 + i * 3_600_000,
-      open: price - 2,
-      high: price + 3,
-      low: price - 3,
-      close: price,
-      volume: 1000,
-    });
+    candles.push({ timestamp: 1_700_000_000_000 + i * 3_600_000, open: price - 2, high: price + 3, low: price - 3, close: price, volume: 1000 });
   }
   return candles;
 }
@@ -34,14 +27,7 @@ function makeTrendDownCandles(count = 30): Candle[] {
   let price = 5000;
   for (let i = 0; i < count; i++) {
     price -= 5 + (i % 3);
-    candles.push({
-      timestamp: 1_700_000_000_000 + i * 3_600_000,
-      open: price + 2,
-      high: price + 3,
-      low: price - 3,
-      close: price,
-      volume: 1000,
-    });
+    candles.push({ timestamp: 1_700_000_000_000 + i * 3_600_000, open: price + 2, high: price + 3, low: price - 3, close: price, volume: 1000 });
   }
   return candles;
 }
@@ -51,14 +37,7 @@ function makeRangeCandles(count = 30): Candle[] {
   const candles: Candle[] = [];
   for (let i = 0; i < count; i++) {
     const price = 1000 + Math.sin(i * 0.5) * 2;
-    candles.push({
-      timestamp: 1_700_000_000_000 + i * 3_600_000,
-      open: price - 0.5,
-      high: price + 1,
-      low: price - 1,
-      close: price,
-      volume: 1000,
-    });
+    candles.push({ timestamp: 1_700_000_000_000 + i * 3_600_000, open: price - 0.5, high: price + 1, low: price - 1, close: price, volume: 1000 });
   }
   return candles;
 }

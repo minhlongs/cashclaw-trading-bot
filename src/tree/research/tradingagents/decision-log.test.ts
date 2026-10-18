@@ -3,28 +3,16 @@
 // any broken link.
 
 import { describe, expect, it } from 'vitest';
-import {
-  DECISION_LOG_KINDS,
-  EMPTY_DECISION_LOG,
-  appendDecisionLogEntry,
-  computeEntryHash,
-  verifyDecisionLog,
-} from './decision-log';
+import { DECISION_LOG_KINDS, EMPTY_DECISION_LOG, appendDecisionLogEntry, computeEntryHash, verifyDecisionLog } from './decision-log';
 
 const NOW = '2026-08-26T00:00:00.000Z';
 
-function payload(kind: string) {
-  return { kind, note: 'evidence payload' };
-}
+function payload(kind: string) { return { kind, note: 'evidence payload' }; }
 
 describe('appendDecisionLogEntry — happy path', () => {
   it('appends to the empty log and binds a hash chain', async () => {
     const result = await appendDecisionLogEntry(EMPTY_DECISION_LOG, {
-      kind: 'analyst-output',
-      researchGoalId: 'goal-1',
-      proposalId: 'prop-1',
-      payload: payload('analyst-output'),
-      timestamp: NOW,
+      kind: 'analyst-output', researchGoalId: 'goal-1', proposalId: 'prop-1', payload: payload('analyst-output'), timestamp: NOW,
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;

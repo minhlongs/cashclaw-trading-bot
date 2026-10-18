@@ -85,11 +85,8 @@ export function evaluateAlpha(
 
   const walkForward = buildIcWalkForwardShim(chunkMeans(validIcs, 6), 'zoo-ic-shim');
   const { verdict, reasons, checks } = mapVerdict({
-    hypothesisId: hypothesis.id,
-    icValues: validIcs,
-    pooledForwardReturns: pooledFwds,
-    pooledScores,
-    walkForward,
+    hypothesisId: hypothesis.id, icValues: validIcs,
+    pooledForwardReturns: pooledFwds, pooledScores, walkForward,
   });
   return { ...base, verdict, reasons, checks, icStats };
 }

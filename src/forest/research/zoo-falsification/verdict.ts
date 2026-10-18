@@ -4,10 +4,7 @@
 // Pure and deterministic: all randomness seeded via FNV-1a32(hypothesisId).
 
 import {
-  assessWalkForwardConsistency,
-  bootstrapCi,
-  ciExcludesZero,
-  permutationTest,
+  assessWalkForwardConsistency, bootstrapCi, ciExcludesZero, permutationTest,
 } from '@/forest/alpha/multiple-testing';
 import type { WalkForwardResult } from '@/forest/backtest/walkforward';
 import type { ZooCheckResult, ZooVerdict } from './report-types';
@@ -28,8 +25,7 @@ export function deriveSeed(hypothesisId: string): number {
 }
 
 /** Mean statistic shared by bootstrap + permutation checks. */
-const mean = (values: readonly number[]): number =>
-  values.reduce((sum, v) => sum + v, 0) / values.length;
+const mean = (values: readonly number[]): number => values.reduce((sum, v) => sum + v, 0) / values.length;
 
 /** Inputs to the D5 verdict mapping (all evidence pre-computed upstream). */
 export interface VerdictInput {

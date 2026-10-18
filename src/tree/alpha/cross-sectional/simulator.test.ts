@@ -109,13 +109,7 @@ describe('runCrossSectionalSim — determinism', () => {
 
 describe('runCrossSectionalSim — weighter override', () => {
   it('uses marketNeutralWeights when a weighter is supplied', () => {
-    const config: CrossSectionalSimConfig = {
-      topN: 0,
-      bottomN: 0,
-      costBps: 0,
-      minObservations: 2,
-      weighter: marketNeutralWeights,
-    };
+    const config: CrossSectionalSimConfig = { topN: 0, bottomN: 0, costBps: 0, minObservations: 2, weighter: marketNeutralWeights };
     const result = runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, config);
     // 3 assets → top 1 long (+1), bottom 1 short (-1), middle excluded.
     expect(result.periods[0].weights).toEqual({ A: 1, C: -1 });
@@ -134,9 +128,7 @@ describe('runCrossSectionalSim — fail-closed edge cases', () => {
 
   it('throws when below minObservations', () => {
     const config: CrossSectionalSimConfig = { ...CONFIG, minObservations: 5 };
-    expect(() => runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, config)).toThrow(
-      /minObservations/,
-    );
+    expect(() => runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, config)).toThrow(/minObservations/);
   });
 
   it('throws on non-strictly-increasing return timestamps', () => {
@@ -145,9 +137,7 @@ describe('runCrossSectionalSim — fail-closed edge cases', () => {
       { symbol: 'B', timestamps: [100, 200], returns: [0.005, 0.003] },
       { symbol: 'C', timestamps: [100, 200], returns: [-0.01, 0.04] },
     ];
-    expect(() => runCrossSectionalSim(UNIVERSE, SNAPSHOTS, bad, CONFIG)).toThrow(
-      /strictly increasing/,
-    );
+    expect(() => runCrossSectionalSim(UNIVERSE, SNAPSHOTS, bad, CONFIG)).toThrow(/strictly increasing/);
   });
 
   it('throws on timestamps/returns length mismatch', () => {

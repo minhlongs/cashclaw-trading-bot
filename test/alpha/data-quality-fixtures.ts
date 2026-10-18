@@ -62,57 +62,33 @@ export function generateCorruptedOHLCSeries(
   return candles;
 }
 
-export type VolumeAnomalyType =
-  | 'negative'
-  | 'isolated_zero'
-  | 'consecutive_zeros'
-  | 'nan_volume';
+export type VolumeAnomalyType = 'negative' | 'isolated_zero' | 'consecutive_zeros' | 'nan_volume';
 
-export function generateVolumeAnomalySeries(
-  type: VolumeAnomalyType,
-  count: number = 5,
-): Candle[] {
+export function generateVolumeAnomalySeries(type: VolumeAnomalyType, count: number = 5): Candle[] {
   const candles = generateMonotonicCandles(count);
   if (type === 'negative') candles[2] = { ...candles[2], volume: -100 };
   else if (type === 'isolated_zero') candles[2] = { ...candles[2], volume: 0 };
   else if (type === 'consecutive_zeros') {
-    candles[1] = { ...candles[1], volume: 0 };
-    candles[2] = { ...candles[2], volume: 0 };
-    candles[3] = { ...candles[3], volume: 0 };
-  } else if (type === 'nan_volume') {
-    candles[2] = { ...candles[2], volume: Number.NaN };
-  }
+    for (const idx of [1, 2, 3]) candles[idx] = { ...candles[idx], volume: 0 };
+  } else if (type === 'nan_volume') candles[2] = { ...candles[2], volume: Number.NaN };
   return candles;
 }
 
 export function generateMultiFeedPairs(
   count: number,
-  options?: {
-    readonly driftMs?: number;
-    readonly dropSecondaryIndex?: number;
-    readonly secondarySkewMs?: number;
-  },
+  options?: { readonly driftMs?: number; readonly dropSecondaryIndex?: number; readonly secondarySkewMs?: number },
 ): { readonly primary: Candle[]; readonly secondary: Candle[] } {
   const primary = generateMonotonicCandles(count);
   const secondary: Candle[] = [];
   for (let i = 0; i < count; i++) {
     if (options?.dropSecondaryIndex !== undefined && i === options.dropSecondaryIndex) continue;
     const skew = (options?.secondarySkewMs ?? 0) + (options?.driftMs ? i * options.driftMs : 0);
-    secondary.push({
-      ...primary[i],
-      timestamp: primary[i].timestamp + skew,
-      open: primary[i].open + 0.1,
-      close: primary[i].close + 0.1,
-    });
+    secondary.push({ ...primary[i], timestamp: primary[i].timestamp + skew, open: primary[i].open + 0.1, close: primary[i].close + 0.1 });
   }
   return { primary, secondary };
 }
 
-export function generateOutageSeries(
-  count: number,
-  streakLength: number = 3,
-  startIndex: number = 1,
-): Candle[] {
+export function generateOutageSeries(count: number, streakLength: number = 3, startIndex: number = 1): Candle[] {
   const candles = generateMonotonicCandles(count);
   const template = candles[startIndex];
   for (let i = startIndex + 1; i < startIndex + streakLength && i < candles.length; i++) {
@@ -121,22 +97,12 @@ export function generateOutageSeries(
   return candles;
 }
 
-export function generateStaleSeries(
-  count: number,
-  asOf: number,
-  stalenessMs: number,
-  stepMs: number = DEFAULT_STEP_MS,
-): Candle[] {
+export function generateStaleSeries(count: number, asOf: number, stalenessMs: number, stepMs: number = DEFAULT_STEP_MS): Candle[] {
   const latestTs = asOf - stalenessMs;
   return generateMonotonicCandles(count, latestTs - (count - 1) * stepMs, stepMs);
 }
 
-export function generateFutureSeries(
-  count: number,
-  asOf: number,
-  lookaheadMs: number = DEFAULT_STEP_MS,
-  stepMs: number = DEFAULT_STEP_MS,
-): Candle[] {
+export function generateFutureSeries(count: number, asOf: number, lookaheadMs: number = DEFAULT_STEP_MS, stepMs: number = DEFAULT_STEP_MS): Candle[] {
   const latestTs = asOf + lookaheadMs;
   return generateMonotonicCandles(count, latestTs - (count - 1) * stepMs, stepMs);
 }

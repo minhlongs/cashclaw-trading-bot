@@ -7,11 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { evaluateSurvival } from './evaluate';
 import type { EvaluationReport } from '@/forest/alpha/evaluation/report';
 import type { BacktestResult } from '@/forest/backtest/types';
-import type {
-  SummaryStats,
-  WalkForwardResult,
-  WalkForwardWindow,
-} from '@/forest/backtest/walkforward';
+import type { SummaryStats, WalkForwardResult, WalkForwardWindow } from '@/forest/backtest/walkforward';
 import { RegimeLabel } from '@/tree/regime/types';
 import type { SurvivalEvaluationInput } from './types';
 
@@ -41,16 +37,11 @@ function makeBacktestResult(overrides: Partial<BacktestResult> = {}): BacktestRe
 
 function makeWindow(testMetrics: BacktestResult, index: number): WalkForwardWindow {
   return {
-    trainStart: index * 200,
-    trainEnd: index * 200 + 100,
-    validateStart: index * 200 + 100,
-    validateEnd: index * 200 + 150,
-    testStart: index * 200 + 150,
-    testEnd: index * 200 + 200,
-    trainMetrics: makeBacktestResult(),
-    validateMetrics: makeBacktestResult(),
-    testMetrics,
-    regimeAtTestStart: RegimeLabel.RANGE,
+    trainStart: index * 200, trainEnd: index * 200 + 100,
+    validateStart: index * 200 + 100, validateEnd: index * 200 + 150,
+    testStart: index * 200 + 150, testEnd: index * 200 + 200,
+    trainMetrics: makeBacktestResult(), validateMetrics: makeBacktestResult(),
+    testMetrics, regimeAtTestStart: RegimeLabel.RANGE,
   };
 }
 
@@ -62,17 +53,13 @@ function makeWalkForward(sharpes: readonly number[]): WalkForwardResult {
   const avgIn = 1.5;
   const avgOut = sharpes.reduce((sum, s) => sum + s, 0) / n;
   const summaryStats: SummaryStats = {
-    totalWindows: n,
-    avgInSampleSharpe: avgIn,
-    avgOutSampleSharpe: avgOut,
-    degradationRatio: avgOut / avgIn,
-    regimeDiversity: 1,
+    totalWindows: n, avgInSampleSharpe: avgIn, avgOutSampleSharpe: avgOut,
+    degradationRatio: avgOut / avgIn, regimeDiversity: 1,
   };
   return {
     windows,
     aggregated: {
-      inSample: makeBacktestResult(),
-      validation: makeBacktestResult(),
+      inSample: makeBacktestResult(), validation: makeBacktestResult(),
       outOfSample: makeBacktestResult(),
       byRegime: {} as WalkForwardResult['aggregated']['byRegime'],
       summaryStats,

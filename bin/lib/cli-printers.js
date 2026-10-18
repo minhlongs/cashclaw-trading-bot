@@ -70,6 +70,8 @@ function printEvalReport(version, symbol, result) {
     { label: 'Dupire ATM Local Vol', value: `${result.dupireAtmLocalVol}` },
     { label: 'MOT Corridor Width', value: `${result.motCorridorWidthBps} bps` },
     { label: 'Rough Path Levy Area', value: `${result.roughPathLevyArea12}` },
+    { label: 'Avellaneda Opt Spread', value: `${result.avellanedaOptimalSpreadBps} bps` },
+    { label: 'Kalman Half-Life', value: `${result.kalmanHalfLifeBars} bars` },
     { label: 'Market Regime', value: result.regime },
     { label: 'Execution Recommendation', value: result.recommendation },
   ]));

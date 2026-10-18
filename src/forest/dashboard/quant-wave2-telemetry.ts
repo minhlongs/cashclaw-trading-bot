@@ -11,11 +11,7 @@ export type RoughVolMode = 'ROUGH_BURST' | 'SMOOTH_DIFFUSION';
 const ARRIVAL_TIMESTAMPS_MS = [1200, 2400, 3100, 3800, 4200, 4550, 4780, 4910, 4960, 4990] as const;
 
 export function computeHawkesLobTelemetry(excitationAlpha = 0.65, decayBeta = 1.2) {
-  const hawkes = computeHawkesIntensity(ARRIVAL_TIMESTAMPS_MS, 5000, {
-    baselineMu: 1.15,
-    excitationAlpha,
-    decayBeta,
-  });
+  const hawkes = computeHawkesIntensity(ARRIVAL_TIMESTAMPS_MS, 5000, { baselineMu: 1.15, excitationAlpha, decayBeta });
   const lob = computeOrderBookImbalance([145, 110, 85, 64, 42], [68, 72, 60, 55, 48]);
   return { ...hawkes, ...lob };
 }
@@ -38,14 +34,9 @@ export function computeRoughVolatilityTelemetry(mode: RoughVolMode = 'ROUGH_BURS
   const jump = runBipowerJumpEstimation(returns, 0.05);
 
   return {
-    mode,
-    hurstExponent: hurst.hurstExponent,
-    isRoughRegime: hurst.isRoughRegime,
-    fitQuality: hurst.fitQuality,
-    realizedVariance: jump.realizedVariance,
-    bipowerVariation: jump.bipowerVariation,
-    jumpZScore: jump.zScore,
-    hasSignificantJump: jump.hasSignificantJump,
+    mode, hurstExponent: hurst.hurstExponent, isRoughRegime: hurst.isRoughRegime,
+    fitQuality: hurst.fitQuality, realizedVariance: jump.realizedVariance,
+    bipowerVariation: jump.bipowerVariation, jumpZScore: jump.zScore, hasSignificantJump: jump.hasSignificantJump,
   };
 }
 

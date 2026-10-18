@@ -14,41 +14,17 @@ export interface OkxRestConfig extends DirectRestConfig {
   simulated?: boolean;
 }
 
-export interface OkxResponse<T> {
-  code: string;
-  msg: string;
-  data: T[];
-}
-
-export interface OkxServerTime {
-  ts: string;
-}
+export interface OkxResponse<T> { code: string; msg: string; data: T[]; }
+export interface OkxServerTime { ts: string; }
 
 export interface OkxTicker {
-  instType?: string;
-  instId: string;
-  last: string;
-  lastSz?: string;
-  askPx: string;
-  askSz?: string;
-  bidPx: string;
-  bidSz?: string;
-  open24h?: string;
-  high24h: string;
-  low24h: string;
-  volCcy24h: string;
-  vol24h: string;
-  ts: string;
+  instType?: string; instId: string; last: string; lastSz?: string; askPx: string; askSz?: string;
+  bidPx: string; bidSz?: string; open24h?: string; high24h: string; low24h: string;
+  volCcy24h: string; vol24h: string; ts: string;
 }
 
 export interface OkxSystemStatus {
-  state: string;
-  serviceType?: string;
-  system?: string;
-  scheDesc?: string;
-  begin?: string;
-  end?: string;
-  maintType?: string;
+  state: string; serviceType?: string; system?: string; scheDesc?: string; begin?: string; end?: string; maintType?: string;
 }
 
 // Bybit Types

@@ -2,10 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Waypoints } from 'lucide-react';
-import {
-  computeRoughPathSignaturesTelemetry,
-  type SignatureRegimePreset,
-} from '@/forest/dashboard/quant-telemetry-service';
+import { computeRoughPathSignaturesTelemetry, type SignatureRegimePreset } from '@/forest/dashboard/quant-telemetry-service';
 import { QuantScreenHeader } from './quant-screen-header';
 import { QuantUxProMaxBar } from './quant-ux-pro-max-bar';
 
@@ -34,10 +31,7 @@ export function RoughPathSignaturesWorkbench() {
           <div className="flex flex-wrap gap-2" role="group" aria-label="Rough path signature preset selector">
             {PRESETS.map((item) => (
               <button
-                key={item}
-                type="button"
-                onClick={() => setPreset(item)}
-                aria-pressed={preset === item}
+                key={item} type="button" onClick={() => setPreset(item)} aria-pressed={preset === item}
                 className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all duration-150 ease-out ${
                   preset === item
                     ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]'

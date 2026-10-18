@@ -39,16 +39,10 @@ export default function BacktestsClient({ initialBots = [] }: { initialBots?: Bo
       const config = JSON.parse(bot.configJson || '{}');
       const endDate = new Date();
       const startDate = new Date(endDate.getTime() - 90 * 86400000);
-
       const data = await runBacktestAction({
-        botId: bot.id,
-        exchange: config.exchange || 'binance',
-        symbol: config.symbol || 'BTC/USDT',
+        botId: bot.id, exchange: config.exchange || 'binance', symbol: config.symbol || 'BTC/USDT',
         strategy: bot.strategy as 'grid' | 'mean_reversion' | 'volatility_dca',
-        config,
-        startDate,
-        endDate,
-        interval: interval as '1h' | '4h' | '1d',
+        config, startDate, endDate, interval: interval as '1h' | '4h' | '1d',
       });
       if (data.success && data.result) setResult(data.result as BacktestResult);
       else setError(data.error ?? t('failed'));

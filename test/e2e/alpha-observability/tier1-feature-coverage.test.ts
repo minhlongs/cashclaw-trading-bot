@@ -117,9 +117,7 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
   describe('F5: Expected vs. Realized Edge & Slippage Attribution', () => {
     it('computes positive ΔEdge when realized net return exceeds research expectation', () => {
       const attr = computeAttribution({ expectedReturn: 0.01, expectedCost: 0.002, realizedFillPrice: 50000, exitPrice: 50750, side: 'buy', feeAmount: 10, fillNotional: 10000, expectedSlippageBps: 8, realizedSlippageBps: 6 });
-      expect(attr.expectedNetReturn).toBe(0.008);
-      expect(attr.realizedNetReturn).toBe(0.014);
-      expect(attr.deltaEdge).toBe(0.006);
+      expect(attr).toEqual({ expectedNetReturn: 0.008, realizedNetReturn: 0.014, deltaEdge: 0.006, deltaSlippageBps: -2 });
     });
     it('computes negative ΔEdge when execution drag erodes research alpha', () => {
       const attr = computeAttribution({ expectedReturn: 0.01, expectedCost: 0.002, realizedFillPrice: 50000, exitPrice: 50100, side: 'buy', feeAmount: 20, fillNotional: 10000, expectedSlippageBps: 8, realizedSlippageBps: 25 });
@@ -131,8 +129,7 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
     });
     it('evaluates healthy operational state and detects data staleness', () => {
       const health = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ decisionLatencyMs: 30, dataFreshnessMs: 150 }));
-      expect(health.status).toBe('healthy');
-      expect(health.alarms).toHaveLength(0);
+      expect(health).toEqual({ status: 'healthy', alarms: [] });
       const stale = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ dataFreshnessMs: 5500 }));
       expect(stale.status).toBe('critical');
       expect(stale.alarms).toContain('STALE_DATA');

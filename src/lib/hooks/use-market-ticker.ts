@@ -11,10 +11,7 @@ export type {
 export { DEFAULT_POLL_INTERVAL_MS, VALID_EXCHANGES, requestTickerData } from './use-market-ticker-fetch';
 
 export function useMarketTicker({
-  exchange,
-  symbol,
-  intervalMs = DEFAULT_POLL_INTERVAL_MS,
-  enabled = true,
+  exchange, symbol, intervalMs = DEFAULT_POLL_INTERVAL_MS, enabled = true,
 }: UseMarketTickerOptions = {}): UseMarketTickerResult {
   const [ticker, setTicker] = useState<Ticker | null>(null);
   const [provenance, setProvenance] = useState<TickerProvenance | null>(null);
@@ -25,10 +22,7 @@ export function useMarketTicker({
 
   const activeControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef<boolean>(true);
-
-  const isEligible = Boolean(
-    enabled && exchange && symbol && VALID_EXCHANGES.has(exchange.toLowerCase()),
-  );
+  const isEligible = Boolean(enabled && exchange && symbol && VALID_EXCHANGES.has(exchange.toLowerCase()));
 
   const executeFetch = useCallback(async (): Promise<void> => {
     if (!isEligible || !exchange || !symbol) return;

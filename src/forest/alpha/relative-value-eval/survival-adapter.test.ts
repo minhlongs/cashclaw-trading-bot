@@ -57,9 +57,7 @@ function rvResult(periods: PairPeriodRecord[]): RVWalkForwardResult {
   };
 }
 
-function candle(timestamp: number, close: number): Candle {
-  return { timestamp, open: close, high: close, low: close, close, volume: 0 };
-}
+const candle = (timestamp: number, close: number): Candle => ({ timestamp, open: close, high: close, low: close, close, volume: 0 });
 
 describe('toEvaluationReport', () => {
   const report = toEvaluationReport(TRADE_SERIES, OPTIONS);
@@ -202,12 +200,8 @@ describe('assembleSurvivalInput', () => {
   });
 
   it('fails closed when OOS output is too thin for the checks', () => {
-    expect(() =>
-      assembleSurvivalInput(rvResult([]), [], [[]], [], assembly),
-    ).toThrow(/at least 2 OOS periods/);
+    expect(() => assembleSurvivalInput(rvResult([]), [], [[]], [], assembly)).toThrow(/at least 2 OOS periods/);
     const noTrades = [record(), record()];
-    expect(() =>
-      assembleSurvivalInput(rvResult(noTrades), [], [[]], [], assembly),
-    ).toThrow(/at least 2 completed trades/);
+    expect(() => assembleSurvivalInput(rvResult(noTrades), [], [[]], [], assembly)).toThrow(/at least 2 completed trades/);
   });
 });

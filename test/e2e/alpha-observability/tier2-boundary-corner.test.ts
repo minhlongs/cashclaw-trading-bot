@@ -54,11 +54,9 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(() => FeatureSnapshotHashSchema.parse('Z'.repeat(64))).toThrow();
     });
   });
-
   describe('F3: Shadow Order Generation Boundaries', () => {
     it('suppresses microscopic weight delta below epsilon (1e-7) returning null', () => {
-      const order = generateShadowOrder({ orderId: 'o-micro', symbol: 'BTC/USDT', deltaW: 1e-7, price: 50000, equity: 100000, timestamp: 1000 });
-      expect(order).toBeNull();
+      expect(generateShadowOrder({ orderId: 'o-micro', symbol: 'BTC/USDT', deltaW: 1e-7, price: 50000, equity: 100000, timestamp: 1000 })).toBeNull();
     });
     it('handles 100% liquidation delta (-1.0) generating full exit sell order', () => {
       const order = generateShadowOrder({ orderId: 'o-liq', symbol: 'BTC/USDT', deltaW: -1.0, price: 50000, equity: 100000, timestamp: 1000 })!;
@@ -127,18 +125,12 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(res.alarms).toContain('CIRCUIT_DEGRADED');
     });
     it('extreme slippage generates large negative ΔEdge and positive ΔSlippage', () => {
-      const attr = computeAttribution({
-        expectedReturn: 0.005, expectedCost: 0.001, realizedFillPrice: 51000, exitPrice: 50000,
-        side: 'buy', feeAmount: 50, fillNotional: 10000, expectedSlippageBps: 10, realizedSlippageBps: 200,
-      });
+      const attr = computeAttribution({ expectedReturn: 0.005, expectedCost: 0.001, realizedFillPrice: 51000, exitPrice: 50000, side: 'buy', feeAmount: 50, fillNotional: 10000, expectedSlippageBps: 10, realizedSlippageBps: 200 });
       expect(attr.deltaEdge).toBeLessThan(-0.02);
       expect(attr.deltaSlippageBps).toBe(190);
     });
     it('zero execution drag (realized identical to expected) produces zero ΔEdge', () => {
-      const attr = computeAttribution({
-        expectedReturn: 0.02, expectedCost: 0.005, realizedFillPrice: 50000, exitPrice: 51000,
-        side: 'buy', feeAmount: 50, fillNotional: 10000, expectedSlippageBps: 10, realizedSlippageBps: 10,
-      });
+      const attr = computeAttribution({ expectedReturn: 0.02, expectedCost: 0.005, realizedFillPrice: 50000, exitPrice: 51000, side: 'buy', feeAmount: 50, fillNotional: 10000, expectedSlippageBps: 10, realizedSlippageBps: 10 });
       expect(attr.deltaSlippageBps).toBe(0);
       expect(attr.expectedNetReturn).toBe(0.015);
       expect(attr.realizedNetReturn).toBe(0.015);

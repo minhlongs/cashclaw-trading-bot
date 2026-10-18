@@ -1,48 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import {
-  rollingMean,
-  rollingStd,
-  fundingFields,
-  oiFields,
-  liquidationFields,
-  basisFields,
-} from '../funding';
+import { rollingMean, rollingStd, fundingFields, oiFields, liquidationFields, basisFields } from '../funding';
 
 describe('funding.ts — rolling statistics', () => {
   describe('rollingMean', () => {
-    it('returns null when fewer values than window', () => {
-      expect(rollingMean([1, 2], 3)).toBeNull();
-    });
-
-    it('computes mean of last window values', () => {
-      expect(rollingMean([1, 2, 3, 4, 5], 3)).toBe(4);
-    });
-
-    it('handles single value window', () => {
-      expect(rollingMean([10], 1)).toBe(10);
-    });
-
-    it('handles all same values', () => {
-      expect(rollingMean([5, 5, 5, 5], 2)).toBe(5);
-    });
+    it('returns null when fewer values than window', () => { expect(rollingMean([1, 2], 3)).toBeNull(); });
+    it('computes mean of last window values', () => { expect(rollingMean([1, 2, 3, 4, 5], 3)).toBe(4); });
+    it('handles single value window', () => { expect(rollingMean([10], 1)).toBe(10); });
+    it('handles all same values', () => { expect(rollingMean([5, 5, 5, 5], 2)).toBe(5); });
   });
 
   describe('rollingStd', () => {
-    it('returns null when fewer values than window', () => {
-      expect(rollingStd([1, 2], 3)).toBeNull();
-    });
-
-    it('computes std of last window values', () => {
-      expect(rollingStd([1, 2, 4], 2)).toBe(1);
-    });
-
-    it('returns 0 when all values equal', () => {
-      expect(rollingStd([5, 5, 5], 2)).toBe(0);
-    });
-
-    it('handles single value window', () => {
-      expect(rollingStd([10], 1)).toBe(0);
-    });
+    it('returns null when fewer values than window', () => { expect(rollingStd([1, 2], 3)).toBeNull(); });
+    it('computes std of last window values', () => { expect(rollingStd([1, 2, 4], 2)).toBe(1); });
+    it('returns 0 when all values equal', () => { expect(rollingStd([5, 5, 5], 2)).toBe(0); });
+    it('handles single value window', () => { expect(rollingStd([10], 1)).toBe(0); });
   });
 });
 

@@ -8,7 +8,6 @@ import { QuantScreenHeader } from './quant-screen-header';
 export function MicrostructureLiquidityAnalyzer() {
   const [selectedSymbol, setSelectedSymbol] = useState<SymbolKey>('BTC/USDT');
   const [vpinAlertFloor, setVpinAlertFloor] = useState<number>(0.55);
-
   const active = MICROSTRUCTURE_SNAPSHOTS[selectedSymbol];
   const isToxicFlow = active.vpinToxicity >= vpinAlertFloor;
 
@@ -19,7 +18,6 @@ export function MicrostructureLiquidityAnalyzer() {
         title="Microstructure & L2 Liquidity Toxicity Analyzer"
         subtitle="Real-time Order Flow Imbalance (OFI), VPIN toxicity, and TWAP urgency guard"
       />
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">Instrument & Toxicity Fence</h2>
@@ -27,13 +25,10 @@ export function MicrostructureLiquidityAnalyzer() {
             <span className="text-xs font-medium text-[var(--text-secondary)]">Target Orderbook</span>
             <div className="grid grid-cols-3 gap-2" role="group" aria-label="Symbol orderbook selector">
               {(['BTC/USDT', 'ETH/USDT', 'SOL/USDT'] as const).map((sym) => (
-                <button key={sym} type="button" onClick={() => setSelectedSymbol(sym)} aria-pressed={selectedSymbol === sym} className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold border transition-all ${selectedSymbol === sym ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}>
-                  {sym}
-                </button>
+                <button key={sym} type="button" onClick={() => setSelectedSymbol(sym)} aria-pressed={selectedSymbol === sym} className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold border transition-all ${selectedSymbol === sym ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}>{sym}</button>
               ))}
             </div>
           </div>
-
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-xs">
               <label htmlFor="vpin-threshold-slider" className="text-[var(--text-secondary)]">VPIN Toxicity Halt Threshold</label>

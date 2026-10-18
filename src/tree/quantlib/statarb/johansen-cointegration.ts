@@ -75,8 +75,7 @@ export function estimateJohansenCointegration(input: JohansenSeriesInput): Johan
 
   const traceStats = [-N * (Math.log(1 - l1) + Math.log(1 - l2)), -N * Math.log(1 - l2)];
   const maxEigenStats = [-N * Math.log(1 - l1), -N * Math.log(1 - l2)];
-  const traceCrit = TRACE_95[2];
-  const maxCrit = MAX_95[2];
+  const traceCrit = TRACE_95[2], maxCrit = MAX_95[2];
 
   let rank = 0;
   if (traceStats[0] > traceCrit[0] && maxEigenStats[0] > maxCrit[0]) {

@@ -63,13 +63,9 @@ function validateScores(
 ): void {
   for (const panel of panels) {
     const series = scores[panel.symbol];
-    if (series === undefined) {
-      throw new Error(`analyzeIc: no score series for symbol '${panel.symbol}'`);
-    }
+    if (series === undefined) throw new Error(`analyzeIc: no score series for symbol '${panel.symbol}'`);
     if (series.length !== length) {
-      throw new Error(
-        `analyzeIc: score series for '${panel.symbol}' length ${series.length} !== panel length ${length}`,
-      );
+      throw new Error(`analyzeIc: score series for '${panel.symbol}' length ${series.length} !== panel length ${length}`);
     }
   }
 }

@@ -2,6 +2,19 @@
 
 ## v1 Paper-Trading Platform
 
+### Quad-Cluster Deep Refactor Wave 9 — 2026-10-18
+- **`@cashclaw/quantlib` v1.65.0-open-core Multi-Domain SDK & CLI `eval` Expansion (`src/tree/quantlib/public-sdk.ts`, `bin/lib/commands.js`, `bin/lib/cli-printers.js`)**:
+  - Bumped `QUANTLIB_OSS_VERSION = '1.65.0-open-core'` in `@cashclaw/quantlib` public Apache-2.0 SDK barrel (`src/tree/quantlib/public-sdk.ts`) and exported `BlackLittermanEngine`, `AvellanedaStoikovEngine`, `computeBouchaudImpact`, and `KalmanCointegrationEngine`.
+  - Extended `bin/lib/commands.js` (`runQuantitativeEval`), `bin/lib/cli-printers.js` (`printEvalReport`), `src/tree/cli/__tests__/paper-cli-report.test.ts`, and `bin/__tests__/cashclaw-cli.test.ts` to surface `avellanedaOptimalSpreadBps` and `kalmanHalfLifeBars`.
+- **Strict Non-Test Ceiling (`<= 94 LOC` across all of `src/`)**:
+  - Compacted all 58 non-test `.ts`/`.tsx` files in `src/` between `95–96 LOC` down to `<= 94 LOC` (0 non-test files `> 94 LOC` across all 915+ production files in `src/`).
+- **Strict Test Ceiling (`<= 210 LOC` across all of `src/`)**:
+  - Compacted all 39 test files in `src/` between `211–220 LOC` down to `<= 210 LOC` (0 test files `> 210 LOC` across all of `src/`).
+- **Strict `test/`, `scripts/` & `bin/` Ceiling (`<= 140 LOC`)**:
+  - Compacted all 25 files in `test/`, `scripts/`, and `bin/` between `141–150 LOC` down to `<= 140 LOC` (0 files `> 140 LOC` across `test/`, `scripts/`, and `bin/`).
+- **Verification**:
+  - 720/720 test files (6,003/6,003 tests) passing, `tsc --noEmit` 0 errors, ESLint 0 warnings, OSS package audit clean (3/3 checks passed).
+
 ### Quad-Cluster Deep Refactor Wave 8 — 2026-10-18
 - **`@cashclaw/quantlib` v1.64.0-open-core & CLI `eval` / `paper-cli-report` Wave 5 Surface & Signature Expansion (`src/tree/quantlib/public-sdk.ts`, `bin/lib/commands.js`, `bin/lib/cli-printers.js`, `src/tree/cli/paper-cli-report.ts`)**:
   - Bumped `QUANTLIB_OSS_VERSION = '1.64.0-open-core'` in `@cashclaw/quantlib` public Apache-2.0 SDK barrel (`src/tree/quantlib/public-sdk.ts`) and pinned SDK export verification for `computeDupireMartingaleSurface` and `computeRoughPathLevySignature` in `src/tree/cli/__tests__/paper-cli-report.test.ts`.

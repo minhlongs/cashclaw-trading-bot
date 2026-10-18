@@ -3,12 +3,8 @@ import { PaperExchangeProvider } from './paper-provider';
 import type { PaperProviderConfig } from './types';
 
 const makeConfig = (overrides?: Partial<PaperProviderConfig>): PaperProviderConfig => ({
-  type: 'paper',
-  exchangeId: 'binance',
-  initialBalances: [
-    { currency: 'USDT', total: 10000 },
-    { currency: 'BTC', total: 0.5 },
-  ],
+  type: 'paper', exchangeId: 'binance',
+  initialBalances: [{ currency: 'USDT', total: 10000 }, { currency: 'BTC', total: 0.5 }],
   ...overrides,
 });
 
@@ -20,9 +16,7 @@ describe('PaperExchangeProvider', () => {
     provider = new PaperExchangeProvider(makeConfig());
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  afterEach(() => { vi.useRealTimers(); });
 
   it('starts healthy with score 100', () => {
     const health = provider.getHealth();
@@ -123,9 +117,7 @@ describe('PaperExchangeProvider — API wrappers', () => {
     provider = new PaperExchangeProvider(makeConfig());
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  afterEach(() => { vi.useRealTimers(); });
 
   it('fetchTicker delegates to adapter and records success', async () => {
     const ticker = await provider.fetchTicker('binance', 'BTCUSDT');

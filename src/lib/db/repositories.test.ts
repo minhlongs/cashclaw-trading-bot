@@ -36,10 +36,7 @@ describe('findUserById', () => {
 describe('upsertUser', () => {
   it('calls run with user data', async () => {
     const { upsertUser } = await import('./repo-users-bots');
-    await upsertUser(mockDb, {
-      id: 'u1', email: 'test@test.com', display_name: 'Test',
-      locale: 'vi', created_at: 1000, updated_at: 2000,
-    });
+    await upsertUser(mockDb, { id: 'u1', email: 'test@test.com', display_name: 'Test', locale: 'vi', created_at: 1000, updated_at: 2000 });
     expect(mockRun).toHaveBeenCalledOnce();
   });
 });
@@ -48,13 +45,10 @@ describe('insertBot', () => {
   it('calls run with bot data', async () => {
     const { insertBot } = await import('./repo-users-bots');
     await insertBot(mockDb, {
-      id: 'b1', user_id: 'u1', name: 'Bot', strategy: 'grid',
-      pair: 'BTC/USDT', exchange: 'binance', status: 'draft',
-      config_json: '{}', capital_allocated: 1000, capital_used: 0,
-      total_pnl: 0, win_count: 0, loss_count: 0, max_drawdown: 0,
-      total_trades: 0, started_at: null, stopped_at: null,
-      last_error: null, last_tick_at: null, last_order_at: null,
-      current_drawdown: 0, created_at: 1000, updated_at: 2000,
+      id: 'b1', user_id: 'u1', name: 'Bot', strategy: 'grid', pair: 'BTC/USDT', exchange: 'binance',
+      status: 'draft', config_json: '{}', capital_allocated: 1000, capital_used: 0, total_pnl: 0,
+      win_count: 0, loss_count: 0, max_drawdown: 0, total_trades: 0, started_at: null, stopped_at: null,
+      last_error: null, last_tick_at: null, last_order_at: null, current_drawdown: 0, created_at: 1000, updated_at: 2000,
     });
     expect(mockRun).toHaveBeenCalledOnce();
   });
@@ -176,9 +170,8 @@ describe('upsertCredential', () => {
   it('calls run with credential data', async () => {
     const { upsertCredential } = await import('./repo-trades-credentials');
     await upsertCredential(mockDb, {
-      id: 'c1', user_id: 'u1', exchange: 'binance',
-      api_key_encrypted: 'key', api_secret_encrypted: 'secret',
-      is_testnet: 0, created_at: 1000, updated_at: 2000,
+      id: 'c1', user_id: 'u1', exchange: 'binance', api_key_encrypted: 'key',
+      api_secret_encrypted: 'secret', is_testnet: 0, created_at: 1000, updated_at: 2000,
     });
     expect(mockRun).toHaveBeenCalledOnce();
   });
@@ -187,10 +180,7 @@ describe('upsertCredential', () => {
 describe('insertTradeEvent', () => {
   it('calls run with event data', async () => {
     const { insertTradeEvent } = await import('./repo-trades-credentials');
-    await insertTradeEvent(mockDb, {
-      id: 'e1', bot_id: 'b1', event_type: 'order_placed',
-      detail_json: '{}', created_at: 1000,
-    });
+    await insertTradeEvent(mockDb, { id: 'e1', bot_id: 'b1', event_type: 'order_placed', detail_json: '{}', created_at: 1000 });
     expect(mockRun).toHaveBeenCalledOnce();
   });
 });
@@ -199,9 +189,8 @@ describe('insertCapitalSnapshot', () => {
   it('calls run with snapshot data', async () => {
     const { insertCapitalSnapshot } = await import('./repo-trades-credentials');
     await insertCapitalSnapshot(mockDb, {
-      id: 'cs1', bot_id: 'b1', total_capital: 1000,
-      realized_pnl: 0, unrealized_pnl: 0, max_drawdown_pct: 0,
-      win_count: 0, loss_count: 0, total_trades: 0, created_at: 1000,
+      id: 'cs1', bot_id: 'b1', total_capital: 1000, realized_pnl: 0, unrealized_pnl: 0,
+      max_drawdown_pct: 0, win_count: 0, loss_count: 0, total_trades: 0, created_at: 1000,
     });
     expect(mockRun).toHaveBeenCalledOnce();
   });
@@ -210,10 +199,7 @@ describe('insertCapitalSnapshot', () => {
 describe('insertAudit', () => {
   it('calls run with audit entry', async () => {
     const { insertAudit } = await import('./repo-trades-credentials');
-    await insertAudit(mockDb, {
-      id: 'a1', user_id: 'u1', bot_id: 'b1',
-      action: 'bot_created', detail_json: '{}', created_at: 1000,
-    });
+    await insertAudit(mockDb, { id: 'a1', user_id: 'u1', bot_id: 'b1', action: 'bot_created', detail_json: '{}', created_at: 1000 });
     expect(mockRun).toHaveBeenCalledOnce();
   });
 });

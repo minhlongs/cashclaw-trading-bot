@@ -9,31 +9,15 @@ export const BOT_ID = 'bot-test-001';
 
 export function makeMockTicker(overrides: Partial<Ticker> = {}): Ticker {
   return {
-    symbol: SYMBOL,
-    last: 50000,
-    bid: 49950,
-    ask: 50050,
-    high24h: 52000,
-    low24h: 48000,
-    volume24h: 1000,
-    timestamp: Date.now(),
-    ...overrides,
+    symbol: SYMBOL, last: 50000, bid: 49950, ask: 50050, high24h: 52000, low24h: 48000, volume24h: 1000,
+    timestamp: Date.now(), ...overrides,
   };
 }
 
 export function makeMockOrderResult(overrides: Partial<OrderResult> = {}): OrderResult {
   return {
-    id: 'order-001',
-    exchangeId: 'binance',
-    symbol: SYMBOL,
-    side: 'buy',
-    type: 'market',
-    price: 50000,
-    quantity: 0.1,
-    filled: 0.1,
-    status: 'filled',
-    timestamp: Date.now(),
-    ...overrides,
+    id: 'order-001', exchangeId: 'binance', symbol: SYMBOL, side: 'buy', type: 'market',
+    price: 50000, quantity: 0.1, filled: 0.1, status: 'filled', timestamp: Date.now(), ...overrides,
   };
 }
 

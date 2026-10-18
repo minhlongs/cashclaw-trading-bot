@@ -16,6 +16,10 @@ import {
   runBipowerJumpEstimation,
   computeDupireMartingaleSurface,
   computeRoughPathLevySignature,
+  BlackLittermanEngine,
+  AvellanedaStoikovEngine,
+  computeBouchaudImpact,
+  KalmanCointegrationEngine,
 } from '../../quantlib/public-sdk';
 import {
   ALPHA_ZOO_OSS_VERSION,
@@ -45,6 +49,10 @@ describe('Phase 2 (Steps 6-10): Modular Package Extraction & CLI Experience', ()
     expect(typeof runBipowerJumpEstimation).toBe('function');
     expect(typeof computeDupireMartingaleSurface).toBe('function');
     expect(typeof computeRoughPathLevySignature).toBe('function');
+    expect(typeof BlackLittermanEngine).toBe('function');
+    expect(typeof AvellanedaStoikovEngine).toBe('function');
+    expect(typeof computeBouchaudImpact).toBe('function');
+    expect(typeof KalmanCointegrationEngine).toBe('function');
   });
 
   it('Step 7: @cashclaw/alpha-zoo public SDK exports causal operator vocabulary', () => {

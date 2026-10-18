@@ -3,13 +3,9 @@
 
 /** Percentile bootstrap confidence interval for a statistic. */
 export interface BootstrapCiResult {
-  /** Lower percentile bound of the CI. */
   readonly lower: number;
-  /** Point estimate computed on the full sample. */
   readonly point: number;
-  /** Upper percentile bound of the CI. */
   readonly upper: number;
-  /** Number of resamples actually drawn. */
   readonly iterations: number;
 }
 
@@ -18,11 +14,8 @@ export type StatFn = (values: readonly number[]) => number;
 
 /** Options for `bootstrapCi`. */
 export interface BootstrapOptions {
-  /** Number of resamples (must be >= 1). */
   readonly iterations: number;
-  /** Confidence level in (0, 1), e.g. 0.95. */
   readonly confidence: number;
-  /** Explicit PRNG seed (reproducibility requirement). */
   readonly seed: number;
 }
 

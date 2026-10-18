@@ -23,11 +23,7 @@ export interface RVPlannedWindow {
 /** Bars kept before testStart to warm up simulator state from train-tail data. */
 export const WARMUP_BARS = 30;
 
-function sliceUniverse(
-  universe: UniversePanel,
-  startBar: number,
-  endBar: number,
-): UniversePanel {
+function sliceUniverse(universe: UniversePanel, startBar: number, endBar: number): UniversePanel {
   return {
     symbols: universe.symbols,
     timestamps: universe.timestamps.slice(startBar, endBar),
@@ -44,10 +40,7 @@ export function planWindows(
   config: WindowConfig,
   mode: WindowMode,
 ): RVPlannedWindow[] {
-  if (
-    universe.timestamps.length !==
-    (universe.closes[0]?.length ?? -1)
-  ) {
+  if (universe.timestamps.length !== (universe.closes[0]?.length ?? -1)) {
     throw new Error('planWindows: closes rows must match timestamps length');
   }
   for (const row of universe.closes) {
@@ -58,16 +51,12 @@ export function planWindows(
   const totalBars = universe.timestamps.length;
   const minBars = config.trainBars + config.validateBars + config.testBars;
   if (totalBars < minBars) {
-    throw new Error(
-      `planWindows: not enough bars (${totalBars} < ${minBars} train+validate+test)`,
-    );
+    throw new Error(`planWindows: not enough bars (${totalBars} < ${minBars} train+validate+test)`);
   }
   if (config.stepBars <= 0) throw new Error('planWindows: stepBars must be > 0');
 
   const slices = computeSlices(totalBars, config, mode);
-  if (slices.length === 0) {
-    throw new Error('planWindows: no valid windows produced');
-  }
+  if (slices.length === 0) throw new Error('planWindows: no valid windows produced');
 
   return slices.map((s) => {
     // Warmup overlap: the simulated panel keeps up to WARMUP_BARS immediately

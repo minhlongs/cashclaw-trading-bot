@@ -4,10 +4,7 @@
 
 import type { TradePrint } from '@/tree/alpha/microstructure/snapshot-types';
 import type { AggregatedTrades, ValidatedSnapshot } from '@/tree/alpha/microstructure/types';
-import type {
-  DepthSnapshotRecord,
-  TradeBatchRecord,
-} from '../persistence/micro-store-types';
+import type { DepthSnapshotRecord, TradeBatchRecord } from '../persistence/micro-store-types';
 
 /** Max prints per persisted chunk — keeps rows far below D1's 1MB limit. */
 export const MAX_PRINTS_PER_CHUNK = 500;
@@ -22,14 +19,10 @@ export function chunkPrints(prints: readonly TradePrint[]): TradePrint[][] {
 }
 
 /** Notional volume (price × qty) split by aggressor side. */
-export function aggregateNotional(
-  prints: readonly TradePrint[],
-): { buyVolume: number; sellVolume: number } {
-  let buyVolume = 0;
-  let sellVolume = 0;
+export function aggregateNotional(prints: readonly TradePrint[]): { buyVolume: number; sellVolume: number } {
+  let [buyVolume, sellVolume] = [0, 0];
   for (const print of prints) {
     const notional = print.price * print.quantity;
-    // m=true means buyer is the maker → the aggressor was a seller.
     if (print.isBuyerMaker) sellVolume += notional;
     else buyVolume += notional;
   }

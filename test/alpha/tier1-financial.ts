@@ -22,50 +22,38 @@ export function registerTier1FinancialTests(): void {
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('25 trades vs. minimum 30');
       });
-      it('fails when trade count is zero', () => {
-        expect(evalMinTrades(0, 30).passed).toBe(false);
-      });
+      it('fails when trade count is zero', () => { expect(evalMinTrades(0, 30).passed).toBe(false); });
       it('fails when trade count is negative or non-integer', () => {
         expect(evalMinTrades(-5, 30).passed).toBe(false);
         expect(evalMinTrades(35.5, 30).passed).toBe(false);
       });
     });
-
     describe('F2: minNetExpectancy (Cost-Adjusted Edge > 0)', () => {
       it('passes when net expectancy is strongly positive', () => {
         const check = evalMinNetExpectancy(0.015, 0.0);
         expect(check.passed).toBe(true);
         expect(check.actual).toBe(0.015);
       });
-      it('passes when net expectancy is marginally positive', () => {
-        expect(evalMinNetExpectancy(0.0001, 0.0).passed).toBe(true);
-      });
+      it('passes when net expectancy is marginally positive', () => { expect(evalMinNetExpectancy(0.0001, 0.0).passed).toBe(true); });
       it('fails when net expectancy is exactly zero', () => {
         const check = evalMinNetExpectancy(0.0, 0.0);
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('vs. minimum > 0');
       });
-      it('fails when net expectancy is negative', () => {
-        expect(evalMinNetExpectancy(-0.0025, 0.0).passed).toBe(false);
-      });
+      it('fails when net expectancy is negative', () => { expect(evalMinNetExpectancy(-0.0025, 0.0).passed).toBe(false); });
       it('fails when net expectancy is NaN or non-finite', () => {
         expect(evalMinNetExpectancy(NaN, 0.0).passed).toBe(false);
         expect(evalMinNetExpectancy(Infinity, 0.0).passed).toBe(false);
       });
     });
-
     describe('F3: minProfitFactor (PnL Ratio Quality >= 1.2)', () => {
       it('passes when profit factor is well above threshold', () => {
         const check = evalMinProfitFactor(2.5, 1.2);
         expect(check.passed).toBe(true);
         expect(check.actual).toBe(2.5);
       });
-      it('passes when profit factor matches threshold', () => {
-        expect(evalMinProfitFactor(1.2, 1.2).passed).toBe(true);
-      });
-      it('passes when profit factor is infinite due to zero losses', () => {
-        expect(evalMinProfitFactor(Infinity, 1.2).passed).toBe(true);
-      });
+      it('passes when profit factor matches threshold', () => { expect(evalMinProfitFactor(1.2, 1.2).passed).toBe(true); });
+      it('passes when profit factor is infinite due to zero losses', () => { expect(evalMinProfitFactor(Infinity, 1.2).passed).toBe(true); });
       it('fails when profit factor is below threshold', () => {
         const check = evalMinProfitFactor(1.15, 1.2);
         expect(check.passed).toBe(false);

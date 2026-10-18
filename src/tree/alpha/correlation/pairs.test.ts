@@ -115,15 +115,7 @@ describe('generatePairSignals', () => {
     // B is missing — the pair references a symbol not present in allCandles
 
     const pairs: PairStats[] = [
-      {
-        symbol1: 'A',
-        symbol2: 'B',
-        correlation: 0.9,
-        halfLife: 5,
-        spreadMean: 0,
-        spreadStd: 0.05,
-        cointegrationPValue: 0.01,
-      },
+      { symbol1: 'A', symbol2: 'B', correlation: 0.9, halfLife: 5, spreadMean: 0, spreadStd: 0.05, cointegrationPValue: 0.01 },
     ];
     const signals = generatePairSignals(pairs, allCandles, 1.0);
     expect(signals.length).toBe(0);
@@ -145,10 +137,7 @@ describe('generatePairSignals', () => {
   it('uses default zScoreThreshold when not provided', () => {
     const allCandles = new Map<string, IndicatorCandle[]>();
     const vals1 = Array.from({ length: 60 }, (_, i) => 100 + Math.sin(i * 0.1) * 5);
-    const vals2 = Array.from(
-      { length: 60 },
-      (_, i) => 200 + Math.sin(i * 0.1) * 5 + (i > 50 ? 30 : 0),
-    );
+    const vals2 = Array.from({ length: 60 }, (_, i) => 200 + Math.sin(i * 0.1) * 5 + (i > 50 ? 30 : 0));
     allCandles.set('A', makeCandles(vals1));
     allCandles.set('B', makeCandles(vals2));
 
@@ -162,10 +151,7 @@ describe('generatePairSignals', () => {
     const allCandles = new Map<string, IndicatorCandle[]>();
     // Strongly diverging series to produce a large positive z-score
     const vals1 = Array.from({ length: 80 }, (_, i) => 100 + Math.sin(i * 0.1) * 5);
-    const vals2 = Array.from(
-      { length: 80 },
-      (_, i) => 200 + Math.sin(i * 0.1) * 5 + (i > 50 ? 50 : 0),
-    );
+    const vals2 = Array.from({ length: 80 }, (_, i) => 200 + Math.sin(i * 0.1) * 5 + (i > 50 ? 50 : 0));
     allCandles.set('A', makeCandles(vals1));
     allCandles.set('B', makeCandles(vals2));
 

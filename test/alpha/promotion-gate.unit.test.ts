@@ -86,21 +86,15 @@ describe('Robustness Checks (9-15)', () => {
   });
   it('checkLeakageInvariance enforces zero lookahead mutations', () => {
     expect(checkLeakageInvariance(0).passed).toBe(true);
-    expect(checkLeakageInvariance(1).passed).toBe(false);
-    expect(checkLeakageInvariance(-1).passed).toBe(false);
-    expect(checkLeakageInvariance(1.5).passed).toBe(false);
+    for (const v of [1, -1, 1.5]) expect(checkLeakageInvariance(v).passed).toBe(false);
   });
-
   it('checkNoSingleWindowDependency guards against windfall single-window anomalies', () => {
     expect(checkNoSingleWindowDependency([400, 300, 300]).passed).toBe(true); // 40% <= 50%
     expect(checkNoSingleWindowDependency([500, 500]).passed).toBe(true); // 50% <= 50%
-    expect(checkNoSingleWindowDependency([600, 400]).passed).toBe(false); // 60% > 50%
-    expect(checkNoSingleWindowDependency([1000]).passed).toBe(false); // W=1 fails
-    expect(checkNoSingleWindowDependency([-50, -20]).passed).toBe(false); // negative total
-    expect(checkNoSingleWindowDependency([]).passed).toBe(false);
-    expect(checkNoSingleWindowDependency([100, Number.NaN]).passed).toBe(false);
+    for (const w of [[600, 400], [1000], [-50, -20], [], [100, Number.NaN]]) {
+      expect(checkNoSingleWindowDependency(w).passed).toBe(false);
+    }
   });
-
   it('checkBaselineComparison verifies outperformance against Buy&Hold and Random', () => {
     const cand = { sharpe: 1.5, netPnl: 2000 };
     const bh = { sharpe: 1.0, netPnl: 1000 };
@@ -112,7 +106,6 @@ describe('Robustness Checks (9-15)', () => {
     expect(checkBaselineComparison(cand, bh, { sharpe: 0.2, netPnl: 3000 }).passed).toBe(false);
     expect(checkBaselineComparison(cand, { sharpe: null, netPnl: 500 }, re).passed).toBe(true);
   });
-
   it('checkReproducibleHash validates canonical hash match', () => {
     expect(checkReproducibleHash(true, { recordedHash: 'abc', expectedHash: 'abc' }).passed).toBe(true);
     expect(checkReproducibleHash(false, { recordedHash: 'abc', expectedHash: 'xyz' }).passed).toBe(false);
@@ -127,7 +120,6 @@ describe('Schemas and Configurations', () => {
     expect(parsed.minTrades).toBe(30);
     expect(parsed.maxDrawdown).toBe(0.25);
   });
-
   it('validates PromotionGateInputSchema against strict injection', () => {
     const valid = {
       financial: {

@@ -2,35 +2,20 @@
  * Empirical Adversarial Test Harness for Milestone 1 Checks 9-15
  * Challenger: challenger_p9_m1_2
  */
-
 import { createHash } from 'node:crypto';
 import { canonicalize } from '../../src/lib/canonical-json';
 import {
-  checkParameterRobustness,
-  checkCrossPeriodRobustness,
-  checkCrossAssetRobustness,
-  checkLeakageInvariance,
-  checkNoSingleWindowDependency,
-  checkBaselineComparison,
-  checkReproducibleHash,
+  checkParameterRobustness, checkCrossPeriodRobustness, checkCrossAssetRobustness,
+  checkLeakageInvariance, checkNoSingleWindowDependency, checkBaselineComparison, checkReproducibleHash,
 } from '../../src/forest/alpha/gate/robustness-checks';
 
-interface TestResult {
-  name: string;
-  passed: boolean;
-  actual: unknown;
-  expected: boolean;
-  detail: string;
-}
-
+interface TestResult { name: string; passed: boolean; actual: unknown; expected: boolean; detail: string; }
 const results: TestResult[] = [];
 
 function assertCheck(name: string, check: { passed: boolean; detail: string; actual: unknown }, expectedPassed: boolean) {
   const ok = check.passed === expectedPassed;
   results.push({ name, passed: ok, actual: check.passed, expected: expectedPassed, detail: check.detail });
-  if (!ok) {
-    process.stderr.write(`FAIL: ${name} — Expected passed=${expectedPassed}, got passed=${check.passed}. Detail: ${check.detail}\n`);
-  }
+  if (!ok) process.stderr.write(`FAIL: ${name} — Expected passed=${expectedPassed}, got passed=${check.passed}. Detail: ${check.detail}\n`);
 }
 
 assertCheck('Check 9: spread = 0.500 (exact threshold)', checkParameterRobustness(0.500, 0.50), true);

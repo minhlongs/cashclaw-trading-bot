@@ -11,29 +11,25 @@ describe('DecisionLogWriter.fromJSON', () => {
   it('returns a typed failure for invalid JSON', async () => {
     const result = await DecisionLogWriter.fromJSON('not-json');
     expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.reasons[0]).toBe('decision log: invalid JSON');
+    if (!result.ok) expect(result.reasons[0]).toBe('decision log: invalid JSON');
   });
 
   it('returns a typed failure when the shape has no entries array', async () => {
     const result = await DecisionLogWriter.fromJSON('{"foo": "bar"}');
     expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.reasons[0]).toBe('decision log: missing entries array');
+    if (!result.ok) expect(result.reasons[0]).toBe('decision log: missing entries array');
   });
 
   it('returns a typed failure when the object is null', async () => {
     const result = await DecisionLogWriter.fromJSON('null');
     expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.reasons[0]).toBe('decision log: missing entries array');
+    if (!result.ok) expect(result.reasons[0]).toBe('decision log: missing entries array');
   });
 });
 
 describe('DecisionLogWriter', () => {
   it('starts from an empty log when constructed without args', () => {
-    const writer = new DecisionLogWriter();
-    const log = writer.getLog() as DecisionLog;
+    const log = new DecisionLogWriter().getLog() as DecisionLog;
     expect(log.entries).toHaveLength(0);
     expect(log.tailHash).toBeNull();
   });
@@ -48,32 +44,26 @@ describe('DecisionLogWriter', () => {
   });
 
   it('returns a typed failure when append is given an unknown kind', async () => {
-    const writer = new DecisionLogWriter();
-    const appended = await writer.append('bogus-kind' as never, 'goal-1', 'prop-1', { claim: 'x' }, NOW);
+    const appended = await new DecisionLogWriter().append('bogus-kind' as never, 'goal-1', 'prop-1', { claim: 'x' }, NOW);
     expect(appended.ok).toBe(false);
-    if (appended.ok) return;
-    expect(appended.reasons[0]).toBe("decision log: unknown kind 'bogus-kind'");
+    if (!appended.ok) expect(appended.reasons[0]).toBe("decision log: unknown kind 'bogus-kind'");
   });
 
   it('returns a typed failure when append is given an invalid timestamp', async () => {
-    const writer = new DecisionLogWriter();
-    const appended = await writer.append('analyst-output', 'goal-1', 'prop-1', { claim: 'x' }, 'not-a-date');
+    const appended = await new DecisionLogWriter().append('analyst-output', 'goal-1', 'prop-1', { claim: 'x' }, 'not-a-date');
     expect(appended.ok).toBe(false);
-    if (appended.ok) return;
-    expect(appended.reasons.some((r) => r.includes('timestamp must be ISO-8601'))).toBe(true);
+    if (!appended.ok) expect(appended.reasons.some((r) => r.includes('timestamp must be ISO-8601'))).toBe(true);
   });
 
   it('returns a typed failure when append is given an empty researchGoalId', async () => {
-    const writer = new DecisionLogWriter();
-    const appended = await writer.append('analyst-output', '', 'prop-1', { claim: 'x' }, NOW);
+    const appended = await new DecisionLogWriter().append('analyst-output', '', 'prop-1', { claim: 'x' }, NOW);
     expect(appended.ok).toBe(false);
   });
 
   it('verifies a freshly-appended chain', async () => {
     const writer = new DecisionLogWriter();
     await writer.append('analyst-output', 'goal-1', 'prop-1', { claim: 'x' }, NOW);
-    const verified = await writer.verify();
-    expect(verified.ok).toBe(true);
+    expect((await writer.verify()).ok).toBe(true);
   });
 
   it('returns the last appended entry', async () => {
@@ -147,20 +137,16 @@ describe('logDeliberationRun', () => {
   });
 
   it('verifyDecisionLog on empty log returns ok (empty-log guard)', async () => {
-    const writer = new DecisionLogWriter();
-    const result = await writer.verify();
-    expect(result.ok).toBe(true);
+    expect((await new DecisionLogWriter().verify()).ok).toBe(true);
   });
 
   it('DecisionLogWriter.fromJSON rejects a tampered log (verification failure path)', async () => {
     const writer = new DecisionLogWriter();
     await writer.append('analyst-output', 'goal-1', 'prop-1', { claim: 'x' }, NOW);
-    const exported = writer.toJSON();
-    const tamperedJson = exported.replace('"payloadJson":"{\\"claim\\":\\"x\\"}"', '"payloadJson":"{\\"claim\\":\\"tampered\\"}"');
+    const tamperedJson = writer.toJSON().replace('"payloadJson":"{\\"claim\\":\\"x\\"}"', '"payloadJson":"{\\"claim\\":\\"tampered\\"}"');
     const result = await DecisionLogWriter.fromJSON(tamperedJson);
     expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.reasons[0]).toContain('hash mismatch');
+    if (!result.ok) expect(result.reasons[0]).toContain('hash mismatch');
   });
 
   it('DecisionLogWriter.fromJSON accepts a valid exported log', async () => {
@@ -169,9 +155,8 @@ describe('logDeliberationRun', () => {
     const result = await DecisionLogWriter.fromJSON(writer.toJSON());
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const log = result.writer.getLog();
-    expect(log.entries.length).toBe(1);
-    expect(log.entries[0].kind).toBe('analyst-output');
+    expect(result.writer.getLog().entries.length).toBe(1);
+    expect(result.writer.getLog().entries[0].kind).toBe('analyst-output');
   });
 
   it('returns first append failure (invalid timestamp) before reaching empty-log guard', async () => {

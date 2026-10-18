@@ -95,18 +95,14 @@ describe('ExchangeOrchestrator extended', () => {
     orch.registerProvider('binance', mkProvider() as never);
     const result = await orch.fetchBalances('binance');
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.data).toHaveLength(1);
-    }
+    if (result.ok) expect(result.data).toHaveLength(1);
   });
 
   it('fetchBalances reports error on failure', async () => {
     orch.registerProvider('binance', mkProvider({ fetchBalances: vi.fn().mockRejectedValue(new Error('bal')) }) as never);
     const result = await orch.fetchBalances('binance');
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toContain('bal');
-    }
+    if (!result.ok) expect(result.error).toContain('bal');
     expect(onError).toHaveBeenCalledWith(expect.any(Error), 'fetchBalances/binance');
   });
 
@@ -114,23 +110,16 @@ describe('ExchangeOrchestrator extended', () => {
     orch.registerProvider('binance', mkProvider({ placeOrder: vi.fn().mockResolvedValue({ id: 'o2', status: 'filled' }) }) as never);
     const result = await orch.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.data.id).toBe('o2');
-    }
+    if (result.ok) expect(result.data.id).toBe('o2');
   });
 
   it('placeOrder returns err when killswitch disables trading', async () => {
-    const localKs = mkKillswitch({
-      isTradingEnabled: vi.fn().mockReturnValue(false),
-      haltReason: 'daily limit',
-    });
+    const localKs = mkKillswitch({ isTradingEnabled: vi.fn().mockReturnValue(false), haltReason: 'daily limit' });
     const o = new ExchangeOrchestrator({ onError, killswitch: localKs });
     o.registerProvider('binance', mkProvider() as never);
     const result = await o.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toContain('Trading halted by killswitch');
-    }
+    if (!result.ok) expect(result.error).toContain('Trading halted by killswitch');
     expect(onError).toHaveBeenCalled();
     o.destroy();
   });
@@ -139,9 +128,7 @@ describe('ExchangeOrchestrator extended', () => {
     orch.registerProvider('binance', mkProvider({ isCircuitOpen: vi.fn().mockReturnValue(true) }) as never);
     const result = await orch.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toContain('Trading paused');
-    }
+    if (!result.ok) expect(result.error).toContain('Trading paused');
     expect(onError).toHaveBeenCalled();
   });
 
@@ -149,9 +136,7 @@ describe('ExchangeOrchestrator extended', () => {
     orch.registerProvider('binance', mkProvider({ placeOrder: vi.fn().mockRejectedValue(new Error('funds')) }) as never);
     const result = await orch.placeOrder('binance', { symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.1 });
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toContain('funds');
-    }
+    if (!result.ok) expect(result.error).toContain('funds');
     expect(onError).toHaveBeenCalledWith(expect.any(Error), 'placeOrder/BTC/USDT');
   });
 
@@ -161,9 +146,7 @@ describe('ExchangeOrchestrator extended', () => {
     o.registerProvider('binance', mkProvider({ fetchTicker: vi.fn().mockRejectedValue(new Error('net')) }) as never);
     const result = await o.fetchTicker('binance', 'BTC/USDT');
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toContain('net');
-    }
+    if (!result.ok) expect(result.error).toContain('net');
     o.destroy();
   });
 

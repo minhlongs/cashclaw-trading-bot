@@ -1,12 +1,7 @@
 // Step execution and position transition handlers for the pair-spread backtest simulator.
 // Pure, deterministic — no I/O, no Math.random/Date.now.
 
-import type {
-  PairPanel,
-  PairPositionState,
-  PairSimConfig,
-  SpreadStateAtTime,
-} from './types';
+import type { PairPanel, PairPositionState, PairSimConfig, SpreadStateAtTime } from './types';
 import { validatePairTradable } from './validation';
 import { nextPosition, POSITION_FLAT } from './entry-exit';
 import { computeTurnover } from '@/tree/alpha/cross-sectional/turnover';
@@ -24,10 +19,7 @@ export interface RecordPeriodArgs {
 }
 
 export function applyGate(
-  loop: SimLoopState,
-  panel: PairPanel,
-  config: PairSimConfig,
-  timestamp: number,
+  loop: SimLoopState, panel: PairPanel, config: PairSimConfig, timestamp: number,
 ): void {
   // Opt-out (inSimTradabilityGate === false, default true): no gate runs;
   // the period stays tradeable and the trail records the skip explicitly.

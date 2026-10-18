@@ -78,9 +78,7 @@ describe('buildTransitionMatrix — hand-computed fixture', () => {
   it('hazard is 1/avgDuration for every regime with data', () => {
     const m = buildTransitionMatrix(FIXTURE);
     for (const label of REGIME_LABELS) {
-      if (m.avgDuration[label] > 0) {
-        expect(m.hazard[label]).toBeCloseTo(1 / m.avgDuration[label], 12);
-      }
+      if (m.avgDuration[label] > 0) expect(m.hazard[label]).toBeCloseTo(1 / m.avgDuration[label], 12);
     }
   });
 });
@@ -105,9 +103,7 @@ describe('buildTransitionMatrix — entropy', () => {
 
   it('skips 0·log(0) — sparse rows do not produce NaN', () => {
     const m = buildTransitionMatrix(makeHistory([U, U, U]));
-    for (const label of REGIME_LABELS) {
-      expect(Number.isNaN(m.entropy[label])).toBe(false);
-    }
+    for (const label of REGIME_LABELS) expect(Number.isNaN(m.entropy[label])).toBe(false);
     expect(m.entropy[U]).toBe(0);
   });
 });
@@ -181,13 +177,11 @@ describe('buildTransitionMatrix — edge cases', () => {
       expect(m.hazard[label]).toBe(0);
     }
   });
-
   it('single element: no transitions, no throw', () => {
     const m = buildTransitionMatrix(makeHistory([U]));
     expect(m.totalTransitions).toBe(0);
     expect(m.avgDuration[U]).toBe(1);
   });
-
   it('determinism: same input produces identical output', () => {
     expect(buildTransitionMatrix(FIXTURE)).toEqual(buildTransitionMatrix(FIXTURE));
   });
@@ -198,18 +192,15 @@ describe('alphaDecayByRegime', () => {
     const series = [{ regime: U, value: 1 }, { regime: U, value: 1 }, { regime: U, value: 1 }];
     expect(alphaDecayByRegime(series)[U]).toBeCloseTo(0, 12);
   });
-
   it('halving metric → decay ln(2) per step', () => {
     const series = [{ regime: U, value: 1 }, { regime: U, value: 0.5 }, { regime: U, value: 0.25 }];
     expect(alphaDecayByRegime(series)[U]).toBeCloseTo(Math.log(2), 12);
   });
-
   it('regimes with fewer than 2 observations → 0', () => {
     const decay = alphaDecayByRegime([{ regime: D, value: 1 }]);
     expect(decay[D]).toBe(0);
     expect(decay[U]).toBe(0);
   });
-
   it('empty series → all zeros, no throw', () => {
     const decay = alphaDecayByRegime([]);
     for (const label of REGIME_LABELS) expect(decay[label]).toBe(0);

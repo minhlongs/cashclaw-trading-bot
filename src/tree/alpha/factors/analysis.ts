@@ -2,11 +2,7 @@
 // Implements single and multi-factor regression via matrix operations.
 
 import { invertMatrix, matMul, ols, transpose } from './ols-core';
-import type {
-  Factor,
-  FactorAnalysisResult,
-  FactorExposure,
-} from './types';
+import type { Factor, FactorAnalysisResult, FactorExposure } from './types';
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -20,24 +16,15 @@ export function computeFactorExposure(
   factorName = 'factor',
 ): FactorExposure {
   const n = Math.min(returns.length, factorValues.length);
-  if (n < 3) {
-    return { factor: factorName, exposure: 0, tStat: 0, significant: false };
-  }
+  if (n < 3) return { factor: factorName, exposure: 0, tStat: 0, significant: false };
   const y = returns.slice(0, n);
   const X = factorValues.slice(0, n).map((v) => [v]);
   const { coefficients, residualVariance } = ols(y, X);
   const beta = coefficients[1]!;
   const XtX = invertMatrix(matMul(transpose(X), X));
-  const se = residualVariance > 0 && XtX
-    ? Math.sqrt(residualVariance * XtX[0]![0]!)
-    : 0;
+  const se = residualVariance > 0 && XtX ? Math.sqrt(residualVariance * XtX[0]![0]!) : 0;
   const tStat = se > 0 ? beta / se : 0;
-  return {
-    factor: factorName,
-    exposure: beta,
-    tStat,
-    significant: Math.abs(tStat) > 2,
-  };
+  return { factor: factorName, exposure: beta, tStat, significant: Math.abs(tStat) > 2 };
 }
 
 /**

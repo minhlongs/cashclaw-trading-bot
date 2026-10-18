@@ -41,19 +41,13 @@ export interface DashboardData {
 // ── Helpers ─────────────────────────────────────────────────────
 function botToCard(bot: BotSummary): BotCardData {
   return {
-    id: bot.id,
-    name: bot.name || bot.id,
+    id: bot.id, name: bot.name || bot.id,
     strategy: bot.strategy as 'grid' | 'mean_reversion' | 'volatility_dca',
-    pair: bot.pair,
-    exchange: bot.config.exchange ?? bot.exchange ?? 'paper',
-    botStatus: bot.status,
-    totalPnl: bot.metrics.totalPnl,
-    winCount: bot.metrics.winCount,
-    lossCount: bot.metrics.lossCount,
-    startedAt: bot.metrics.startedAt,
-    updatedAt: bot.updatedAt,
-    capitalAllocated: bot.config.capital,
-    maxDrawdownPct: bot.metrics.maxDrawdown,
+    pair: bot.pair, exchange: bot.config.exchange ?? bot.exchange ?? 'paper',
+    botStatus: bot.status, totalPnl: bot.metrics.totalPnl,
+    winCount: bot.metrics.winCount, lossCount: bot.metrics.lossCount,
+    startedAt: bot.metrics.startedAt, updatedAt: bot.updatedAt,
+    capitalAllocated: bot.config.capital, maxDrawdownPct: bot.metrics.maxDrawdown,
   };
 }
 

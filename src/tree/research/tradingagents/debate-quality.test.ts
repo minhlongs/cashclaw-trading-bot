@@ -1,18 +1,10 @@
 // Debate quality (tree layer) tests — covers compareDebateArms branches.
 
 import { describe, expect, it } from 'vitest';
-import {
-  compareDebateArms,
-  type DebateArmMetrics,
-  relativeImprovement,
-} from './debate-quality';
+import { compareDebateArms, type DebateArmMetrics, relativeImprovement } from './debate-quality';
 
 const makeArm = (overrides: Partial<DebateArmMetrics> = {}): DebateArmMetrics => ({
-  arm: 'A',
-  sampleCount: 25,
-  oosEvidenceScore: 0.1,
-  researchEfficiency: 0.5,
-  ...overrides,
+  arm: 'A', sampleCount: 25, oosEvidenceScore: 0.1, researchEfficiency: 0.5, ...overrides,
 });
 
 describe('relativeImprovement', () => {

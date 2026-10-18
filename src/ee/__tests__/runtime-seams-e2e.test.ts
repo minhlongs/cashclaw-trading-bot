@@ -69,13 +69,8 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     expect(await customStore.getWorkspaceTier('ws_d1')).toBe('BASIC');
 
     await customStore.recordIpnAndUpgradeTier({
-      paymentId: 'pay_d1_100',
-      workspaceId: 'ws_d1',
-      targetTier: 'ENTERPRISE',
-      paymentStatus: 'finished',
-      payAmount: 99,
-      payCurrency: 'USDT',
-      processedAtMs: 1_760_000_000_000,
+      paymentId: 'pay_d1_100', workspaceId: 'ws_d1', targetTier: 'ENTERPRISE',
+      paymentStatus: 'finished', payAmount: 99, payCurrency: 'USDT', processedAtMs: 1_760_000_000_000,
     });
     expect(await customStore.hasProcessedPayment('pay_d1_100')).toBe(true);
     expect(await customStore.getWorkspaceTier('ws_d1')).toBe('ENTERPRISE');
@@ -83,35 +78,24 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
 
     defaultSaasEntitlementStore.setDatabase(db);
     const payload = {
-      payment_id: 'pay_http_200',
-      payment_status: 'finished',
-      order_id: 'ord_200',
-      workspace_id: 'ws_live_tenant',
-      target_tier: 'ENTERPRISE',
-      pay_amount: 99,
-      pay_currency: 'USDT',
+      payment_id: 'pay_http_200', payment_status: 'finished', order_id: 'ord_200',
+      workspace_id: 'ws_live_tenant', target_tier: 'ENTERPRISE', pay_amount: 99, pay_currency: 'USDT',
     };
     const secret = process.env.NOWPAYMENTS_IPN_SECRET || 'test_ipn_secret';
     const sig = await computeNowPaymentsHmacSha512(canonicalizeNowPaymentsJson(payload), secret);
 
     const ipnRes = await postNowPaymentsIpn(
       new Request('http://localhost/api/ee/billing/nowpayments-ipn', {
-        method: 'POST',
-        headers: { 'x-nowpayments-sig': sig },
-        body: JSON.stringify(payload),
+        method: 'POST', headers: { 'x-nowpayments-sig': sig }, body: JSON.stringify(payload),
       }),
     );
     expect(ipnRes.status).toBe(200);
 
-    const getRes = await getIpnEntitlement(
-      new Request('http://localhost/api/ee/billing/nowpayments-ipn?workspaceId=ws_live_tenant'),
-    );
+    const getRes = await getIpnEntitlement(new Request('http://localhost/api/ee/billing/nowpayments-ipn?workspaceId=ws_live_tenant'));
     const getBody = (await getRes.json()) as { entitlement: { tier: string } };
     expect(getBody.entitlement.tier).toBe('ENTERPRISE');
 
-    const creditsRes = await getCredits(
-      new Request('http://localhost/api/ee/credits?workspaceId=ws_live_tenant'),
-    );
+    const creditsRes = await getCredits(new Request('http://localhost/api/ee/credits?workspaceId=ws_live_tenant'));
     const creditsBody = (await creditsRes.json()) as { account: { tier: string; balanceCredits: number } };
     expect(creditsBody.account.tier).toBe('ENTERPRISE');
     expect(creditsBody.account.balanceCredits).toBe(50_000);
@@ -119,14 +103,8 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     // POST /api/ee/credits without explicit tier should inherit ENTERPRISE from IPN store
     const debitRes = await postCredits(
       new Request('http://localhost/api/ee/credits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspaceId: 'ws_live_tenant',
-          modelTier: 'REASONING',
-          promptTokens: 500,
-          completionTokens: 500,
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspaceId: 'ws_live_tenant', modelTier: 'REASONING', promptTokens: 500, completionTokens: 500 }),
       }),
     );
     expect(debitRes.status).toBe(200);

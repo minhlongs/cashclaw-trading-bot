@@ -25,23 +25,15 @@ function getTsFiles(dir: string, includeTests: boolean = false): string[] {
 }
 
 const FORBIDDEN_EXECUTION_IDENTIFIERS = [
-  'OrderProvider',
-  'ExchangeOrchestrator',
-  'BotOrderExecutor',
-  'LiveExchangeAdapter',
-  'PaperExchangeAdapter',
-  'placeOrder',
-  'cancelOrder',
-  'executeLive',
-  'submitOrder',
-  'transitionStrategy',
+  'OrderProvider', 'ExchangeOrchestrator', 'BotOrderExecutor', 'LiveExchangeAdapter', 'PaperExchangeAdapter',
+  'placeOrder', 'cancelOrder', 'executeLive', 'submitOrder', 'transitionStrategy',
 ];
 
-const FORBIDDEN_EXECUTION_IMPORTS = [
-  '@/tree/exchange',
-  '@/land/exchange-orchestration',
-  '@/tree/bot',
-  'ccxt',
+const FORBIDDEN_EXECUTION_IMPORTS = ['@/tree/exchange', '@/land/exchange-orchestration', '@/tree/bot', 'ccxt'];
+
+const SUITE_FILES = [
+  'data-quality-fixtures.ts', 'tier1-feature-coverage.ts', 'tier2-boundary-corners.ts',
+  'tier3-pairwise-combinations.ts', 'tier4-real-world-scenarios.ts', 'data-quality.e2e.test.ts',
 ];
 
 describe('Phase 10: Data Quality Safety, Layer Purity & Architecture Invariants', () => {
@@ -91,16 +83,7 @@ describe('Phase 10: Data Quality Safety, Layer Purity & Architecture Invariants'
   });
 
   it('verifies all Phase 10 test suite files in test/alpha/ are strictly <= 200 lines', () => {
-    const testFiles = [
-      'data-quality-fixtures.ts',
-      'tier1-feature-coverage.ts',
-      'tier2-boundary-corners.ts',
-      'tier3-pairwise-combinations.ts',
-      'tier4-real-world-scenarios.ts',
-      'data-quality-safety.test.ts',
-      'data-quality.e2e.test.ts',
-    ].map((f) => path.join(TEST_DIR, f));
-
+    const testFiles = [...SUITE_FILES, 'data-quality-safety.test.ts'].map((f) => path.join(TEST_DIR, f));
     for (const file of testFiles) {
       if (fs.existsSync(file)) {
         const lines = fs.readFileSync(file, 'utf-8').split('\n').length;
@@ -111,16 +94,7 @@ describe('Phase 10: Data Quality Safety, Layer Purity & Architecture Invariants'
   });
 
   it('verifies zero console.log statements across all data quality source and test files', () => {
-    const targetFiles = [
-      ...getTsFiles(TREE_DQ_DIR),
-      ...getTsFiles(FOREST_DQ_DIR),
-      path.join(TEST_DIR, 'data-quality-fixtures.ts'),
-      path.join(TEST_DIR, 'tier1-feature-coverage.ts'),
-      path.join(TEST_DIR, 'tier2-boundary-corners.ts'),
-      path.join(TEST_DIR, 'tier3-pairwise-combinations.ts'),
-      path.join(TEST_DIR, 'tier4-real-world-scenarios.ts'),
-      path.join(TEST_DIR, 'data-quality.e2e.test.ts'),
-    ];
+    const targetFiles = [...getTsFiles(TREE_DQ_DIR), ...getTsFiles(FOREST_DQ_DIR), ...SUITE_FILES.map((f) => path.join(TEST_DIR, f))];
     for (const file of targetFiles) {
       if (fs.existsSync(file)) {
         const content = fs.readFileSync(file, 'utf-8');
@@ -131,15 +105,7 @@ describe('Phase 10: Data Quality Safety, Layer Purity & Architecture Invariants'
   });
 
   it('verifies zero ambient randomness (Math.random) in fixtures and test suite', () => {
-    const testFiles = [
-      path.join(TEST_DIR, 'data-quality-fixtures.ts'),
-      path.join(TEST_DIR, 'tier1-feature-coverage.ts'),
-      path.join(TEST_DIR, 'tier2-boundary-corners.ts'),
-      path.join(TEST_DIR, 'tier3-pairwise-combinations.ts'),
-      path.join(TEST_DIR, 'tier4-real-world-scenarios.ts'),
-      path.join(TEST_DIR, 'data-quality.e2e.test.ts'),
-    ];
-    for (const file of testFiles) {
+    for (const file of SUITE_FILES.map((f) => path.join(TEST_DIR, f))) {
       if (fs.existsSync(file)) {
         const content = fs.readFileSync(file, 'utf-8');
         const rel = path.basename(file);

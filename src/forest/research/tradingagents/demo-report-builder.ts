@@ -3,8 +3,7 @@
 
 import { summarizeDeliberationReport, type DeliberationReport } from './report-types';
 
-export const D11_HONESTY_LABEL =
-  'This demo uses DeterministicFixtureProvider (D11 TEST seam) — not real LLM deliberation quality.';
+export const D11_HONESTY_LABEL = 'This demo uses DeterministicFixtureProvider (D11 TEST seam) — not real LLM deliberation quality.';
 
 export interface ProvenanceAccounting {
   readonly callCount: number;
@@ -19,8 +18,7 @@ export function computeProvenanceAccounting(report: DeliberationReport): Provena
   let totalPromptTokens = 0, totalCompletionTokens = 0, totalLatencyMs = 0;
   const byTier: Record<string, { calls: number; tokens: number }> = {};
   for (const record of report.modelProvenance) {
-    const prompt = record.provenance.promptTokens ?? 0;
-    const completion = record.provenance.completionTokens ?? 0;
+    const [prompt, completion] = [record.provenance.promptTokens ?? 0, record.provenance.completionTokens ?? 0];
     totalPromptTokens += prompt;
     totalCompletionTokens += completion;
     totalLatencyMs += record.provenance.latencyMs ?? 0;

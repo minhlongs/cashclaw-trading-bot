@@ -93,26 +93,23 @@ describe('Promotion State Machine Safety Hardening', () => {
       }
     });
     it('handles strengthened gateResultToTrigger inputs correctly', () => {
-      expect(gateResultToTrigger('PASSED')).toEqual({ type: 'gate_passed' });
-      expect(gateResultToTrigger('PAPER_CANDIDATE')).toEqual({ type: 'gate_passed' });
-      expect(gateResultToTrigger('KILLED')).toEqual({ type: 'gate_failed' });
-      expect(gateResultToTrigger({ verdict: 'PASSED' })).toEqual({ type: 'gate_passed' });
-      expect(gateResultToTrigger({ verdict: 'KILLED' })).toEqual({ type: 'gate_failed' });
-      expect(gateResultToTrigger({ status: 'PAPER_CANDIDATE' })).toEqual({ type: 'gate_passed' });
-      expect(gateResultToTrigger({ status: 'KILLED' })).toEqual({ type: 'gate_failed' });
+      for (const p of ['PASSED', 'PAPER_CANDIDATE', { verdict: 'PASSED' }, { status: 'PAPER_CANDIDATE' }] as const) {
+        expect(gateResultToTrigger(p)).toEqual({ type: 'gate_passed' });
+      }
+      for (const f of ['KILLED', { verdict: 'KILLED' }, { status: 'KILLED' }] as const) {
+        expect(gateResultToTrigger(f)).toEqual({ type: 'gate_failed' });
+      }
       const mockPassedResult: PromotionGateResult = { passed: true, verdict: 'PASSED', checks: [], failedChecks: [], diagnosticReasons: [], timestamp: Date.now() };
       const mockKilledResult: PromotionGateResult = { passed: false, verdict: 'KILLED', checks: [], failedChecks: [], diagnosticReasons: ['check failed'], timestamp: Date.now() };
       expect(gateResultToTrigger(mockPassedResult)).toEqual({ type: 'gate_passed' });
       expect(gateResultToTrigger(mockKilledResult)).toEqual({ type: 'gate_failed' });
     });
   });
-
   describe('Static Isolation & Tree Layer Purity', () => {
     const FORBIDDEN_TOKENS = [
       'ccxt', 'tree/exchange', 'land/exchange-orchestration', 'OrderProvider', 'ExchangeOrchestrator',
       'BotOrderExecutor', 'LiveExchangeAdapter', 'placeOrder', 'executeLive', 'tree/order', 'tree/wallet', 'land/wallet',
     ];
-
     it('verifies gate source files contain zero live exchange or execution adapters', () => {
       const gateFiles = getTsSourceFiles(GATE_DIR);
       expect(gateFiles.length).toBeGreaterThanOrEqual(5);
@@ -125,21 +122,17 @@ describe('Promotion State Machine Safety Hardening', () => {
         }
       }
     });
-
     it('verifies Tree layer purity: zero imports of forest alpha gate from tree', () => {
       const treeFiles = getTsSourceFiles(TREE_DIR);
       expect(treeFiles.length).toBeGreaterThanOrEqual(20);
       for (const file of treeFiles) {
         const content = fs.readFileSync(file, 'utf-8');
         const rel = path.relative(TREE_DIR, file);
-        const hasGate = /from\s+['"][^'"]*(?:forest\/alpha\/gate|promotion-states|survival-gate)/.test(content);
-        expect(hasGate, `Tree file ${rel} illegally imports gate`).toBe(false);
+        expect(/from\s+['"][^'"]*(?:forest\/alpha\/gate|promotion-states|survival-gate)/.test(content), `Tree file ${rel} illegally imports gate`).toBe(false);
       }
-      const obsDir = path.resolve(TREE_DIR, 'alpha/observability');
-      for (const file of getTsSourceFiles(obsDir)) {
+      for (const file of getTsSourceFiles(path.resolve(TREE_DIR, 'alpha/observability'))) {
         const content = fs.readFileSync(file, 'utf-8');
-        const rel = path.relative(TREE_DIR, file);
-        expect(/from\s+['"][^'"]*(?:src\/forest|@\/forest)/.test(content), `Observability ${rel} imports forest`).toBe(false);
+        expect(/from\s+['"][^'"]*(?:src\/forest|@\/forest)/.test(content), `Observability ${path.relative(TREE_DIR, file)} imports forest`).toBe(false);
       }
     });
   });

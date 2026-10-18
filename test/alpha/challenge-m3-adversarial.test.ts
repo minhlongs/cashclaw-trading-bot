@@ -94,28 +94,20 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
     it('kills candidate when manual_approval has approved: false from SHADOW', () => {
       const rejectTrigger: TransitionTrigger = { type: 'manual_approval', approved: false };
       expect(getTransition('SHADOW', rejectTrigger)).toBe('KILLED');
-      const res = transitionStrategy('SHADOW', rejectTrigger);
-      expect(res.to).toBe('KILLED');
+      expect(transitionStrategy('SHADOW', rejectTrigger).to).toBe('KILLED');
     });
-
     it('rejects manual_approval (approved: false or true) applied directly on MANUAL_APPROVAL', () => {
       const approvedTrigger: TransitionTrigger = { type: 'manual_approval', approved: true };
       const rejectTrigger: TransitionTrigger = { type: 'manual_approval', approved: false };
-
       expect(getTransition('MANUAL_APPROVAL', approvedTrigger)).toBeNull();
       expect(getTransition('MANUAL_APPROVAL', rejectTrigger)).toBeNull();
       expect(() => transitionStrategy('MANUAL_APPROVAL', approvedTrigger)).toThrow();
       expect(() => transitionStrategy('MANUAL_APPROVAL', rejectTrigger)).toThrow();
     });
-
     it('proves MANUAL_APPROVAL cannot reach LIVE without explicit promote trigger', () => {
-      const nonPromoteTriggers = ADVERSARIAL_TRIGGERS.filter((t) => t.type !== 'promote');
-      for (const trigger of nonPromoteTriggers) {
-        const next = getTransition('MANUAL_APPROVAL', trigger);
-        expect(next).not.toBe('LIVE');
+      for (const trigger of ADVERSARIAL_TRIGGERS.filter((t) => t.type !== 'promote')) {
+        expect(getTransition('MANUAL_APPROVAL', trigger)).not.toBe('LIVE');
       }
-
-      // Only promote reaches LIVE
       expect(getTransition('MANUAL_APPROVAL', { type: 'promote' })).toBe('LIVE');
     });
   });
@@ -140,8 +132,7 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
         { verdict: 'LIVE' }, { verdict: 'MANUAL_APPROVAL' }, { status: 'LIVE' }, { status: 'SHADOW' }, {},
       ];
       for (const input of malformedInputs) {
-        const trigger = gateResultToTrigger(input as unknown as Parameters<typeof gateResultToTrigger>[0]);
-        expect(trigger).toEqual({ type: 'gate_failed' });
+        expect(gateResultToTrigger(input as unknown as Parameters<typeof gateResultToTrigger>[0])).toEqual({ type: 'gate_failed' });
       }
     });
   });

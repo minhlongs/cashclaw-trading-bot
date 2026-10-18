@@ -89,28 +89,18 @@ export function registerTier4RealWorldTests(): void {
 
     it('S7: State machine strictly caps automated progression at SHADOW and rejects automated LIVE', () => {
       expect(AUTOMATED_CEILING).toBe('SHADOW');
-
       let currentPhase: StrategyPhase = 'RESEARCH';
-      const automatedSteps: readonly StrategyPhase[] = ['BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW'];
-      for (const expectedNext of automatedSteps) {
-        const res = transitionStrategy(currentPhase, { type: 'gate_passed' });
-        expect(res.to).toBe(expectedNext);
-        currentPhase = res.to;
+      for (const expectedNext of ['BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW'] as const) {
+        currentPhase = transitionStrategy(currentPhase, { type: 'gate_passed' }).to;
+        expect(currentPhase).toBe(expectedNext);
       }
       expect(currentPhase).toBe('SHADOW');
-
       expect(getTransition('SHADOW', { type: 'gate_passed' })).toBeNull();
       expect(() => transitionStrategy('SHADOW', { type: 'gate_passed' })).toThrow(/Invalid transition: SHADOW \+ gate_passed/);
-
       expect(getTransition('SHADOW', { type: 'promote' })).toBeNull();
       expect(() => transitionStrategy('SHADOW', { type: 'promote' })).toThrow(/Invalid transition: SHADOW \+ promote/);
-
-      const toApproval = transitionStrategy('SHADOW', { type: 'manual_approval', approved: true });
-      expect(toApproval.to).toBe('MANUAL_APPROVAL');
-
-      const toLive = transitionStrategy('MANUAL_APPROVAL', { type: 'promote' });
-      expect(toLive.to).toBe('LIVE');
-
+      expect(transitionStrategy('SHADOW', { type: 'manual_approval', approved: true }).to).toBe('MANUAL_APPROVAL');
+      expect(transitionStrategy('MANUAL_APPROVAL', { type: 'promote' }).to).toBe('LIVE');
       expect(isTerminalPhase('LIVE')).toBe(true);
       expect(getTransition('LIVE', { type: 'promote' })).toBeNull();
       expect(getTransition('LIVE', { type: 'gate_passed' })).toBeNull();

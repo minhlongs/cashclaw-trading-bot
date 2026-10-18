@@ -2,11 +2,7 @@
 
 import type { Order as CCXTOrder, Ticker as CCXTTicker, OrderBook as CCXTOrderBook, Balances as CCXTBalances } from 'ccxt';
 import type {
-  CCXTTickerResult,
-  CCXTOrderBookResult,
-  CCXTBalanceResult,
-  CCXTOrderResult,
-  CCXTOrderRequest,
+  CCXTTickerResult, CCXTOrderBookResult, CCXTBalanceResult, CCXTOrderResult, CCXTOrderRequest,
 } from './client-types';
 
 const STATUS_MAP: Record<string, string> = {
@@ -20,13 +16,8 @@ export function mapCCXTStatus(rawStatus?: string): string {
 
 export function mapCCXTTicker(ticker: CCXTTicker, symbol: string): CCXTTickerResult {
   return {
-    symbol,
-    last: ticker.last ?? 0,
-    bid: ticker.bid ?? 0,
-    ask: ticker.ask ?? 0,
-    high24h: ticker.high ?? 0,
-    low24h: ticker.low ?? 0,
-    volume24h: ticker.baseVolume ?? 0,
+    symbol, last: ticker.last ?? 0, bid: ticker.bid ?? 0, ask: ticker.ask ?? 0,
+    high24h: ticker.high ?? 0, low24h: ticker.low ?? 0, volume24h: ticker.baseVolume ?? 0,
     timestamp: ticker.timestamp ?? Date.now(),
   };
 }

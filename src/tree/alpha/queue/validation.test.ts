@@ -127,15 +127,12 @@ describe('validateJobSpec', () => {
       expect(result.ok).toBe(true);
       expect(result.reasons).toHaveLength(0);
     });
-
     it('seed can be null', () => {
       expect(validateJobSpec(makeSpec({ seed: null }), []).ok).toBe(true);
     });
-
     it('parentHypothesis can be null', () => {
       expect(validateJobSpec(makeSpec({ parentHypothesis: null }), []).ok).toBe(true);
     });
-
     it('gitSha can be null', () => {
       expect(validateJobSpec(makeSpec({ gitSha: null }), []).ok).toBe(true);
     });
@@ -147,13 +144,11 @@ describe('validateJobSpec', () => {
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain("re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses");
     });
-
     it('hypothesis matching non-falsified registry entry → ok:false with duplicate reason', () => {
       const result = validateJobSpec(makeSpec(), [makeRegistryEntry({ status: 'SURVIVED' })]);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain("duplicates existing registry entry 'funding-fade-class' (status SURVIVED)");
     });
-
     it('case-insensitive hypothesis matching', () => {
       const entry = makeRegistryEntry({ status: 'FALSIFIED' });
       const spec = makeSpec({ hypothesis: 'FUNDING RATE MEAN REVERSION ON 8H WINDOWS' });
@@ -161,20 +156,17 @@ describe('validateJobSpec', () => {
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain("re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses");
     });
-
     it('hypothesis with different casing in registry still matches', () => {
       const entry = makeRegistryEntry({ hypothesis: 'FUNDING RATE MEAN REVERSION ON 8H WINDOWS', status: 'FALSIFIED' });
       const result = validateJobSpec(makeSpec(), [entry]);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain("re-tests falsified hypothesis class 'funding-fade-class' — do not retest dead hypotheses");
     });
-
     it('different hypothesis passes registry check', () => {
       const entry = makeRegistryEntry({ status: 'FALSIFIED' });
       const spec = makeSpec({ hypothesis: 'Momentum on 4h windows' });
       expect(validateJobSpec(spec, [entry]).ok).toBe(true);
     });
-
     it('multiple registry entries — one falsified match fails', () => {
       const entries = [
         makeRegistryEntry({ id: 'entry-1', hypothesis: 'Different hypothesis', status: 'SURVIVED' }),
@@ -184,19 +176,16 @@ describe('validateJobSpec', () => {
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain("re-tests falsified hypothesis class 'entry-2' — do not retest dead hypotheses");
     });
-
     it('PROPOSED registry entry → duplicate reason (not re-test)', () => {
       const result = validateJobSpec(makeSpec(), [makeRegistryEntry({ status: 'PROPOSED' })]);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain("duplicates existing registry entry 'funding-fade-class' (status PROPOSED)");
     });
-
     it('RUNNING registry entry → duplicate reason', () => {
       const result = validateJobSpec(makeSpec(), [makeRegistryEntry({ status: 'RUNNING' })]);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain("duplicates existing registry entry 'funding-fade-class' (status RUNNING)");
     });
-
     it('ARCHIVED registry entry → duplicate reason', () => {
       const result = validateJobSpec(makeSpec(), [makeRegistryEntry({ status: 'ARCHIVED' })]);
       expect(result.ok).toBe(false);

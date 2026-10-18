@@ -58,10 +58,7 @@ const mkCtx = (o: Partial<TickContext> = {}): TickContext => ({
 
 describe('tick', () => {
   it('returns lastTickPrice when status is not running', async () => {
-    const ctx = mkCtx({
-      lastTickPrice: 55555,
-      state: mkState({ status: 'paused' }),
-    });
+    const ctx = mkCtx({ lastTickPrice: 55555, state: mkState({ status: 'paused' }) });
     const result = await tick(ctx);
     expect(result.lastTickPrice).toBe(55555);
   });
@@ -69,16 +66,8 @@ describe('tick', () => {
   it('calls pause and logs when killswitch disables trading', async () => {
     const callbacks = mkCallbacks();
     const pause = vi.fn();
-    const killswitch = mkKs({
-      isTradingEnabled: vi.fn().mockReturnValue(false),
-      haltReason: 'Daily loss limit',
-    });
-    const ctx = mkCtx({
-      lastTickPrice: 44444,
-      callbacks,
-      pause,
-      deps: { exchange: mkExchange(), killswitch },
-    });
+    const killswitch = mkKs({ isTradingEnabled: vi.fn().mockReturnValue(false), haltReason: 'Daily loss limit' });
+    const ctx = mkCtx({ lastTickPrice: 44444, callbacks, pause, deps: { exchange: mkExchange(), killswitch } });
     const result = await tick(ctx);
     expect(result.lastTickPrice).toBe(44444);
     expect(pause).toHaveBeenCalled();
@@ -90,11 +79,7 @@ describe('tick', () => {
     const exchange = mkExchange({ fetchTicker: vi.fn().mockResolvedValue(ticker) });
     const emitTelemetry = vi.fn();
     const emitState = vi.fn();
-    const ctx = mkCtx({
-      deps: { exchange, killswitch: mkKs() },
-      emitTelemetry,
-      emitState,
-    });
+    const ctx = mkCtx({ deps: { exchange, killswitch: mkKs() }, emitTelemetry, emitState });
     const result = await tick(ctx);
     expect(result.lastTickPrice).toBe(52000);
     expect(ctx.state.lastTickAt).toBeGreaterThan(0);
@@ -103,48 +88,27 @@ describe('tick', () => {
   });
 
   it('returns lastTickPrice unchanged when price is zero', async () => {
-    const exchange = mkExchange({
-      fetchTicker: vi.fn().mockResolvedValue(mkTicker({ last: 0 })),
-    });
-    const ctx = mkCtx({
-      lastTickPrice: 30000,
-      deps: { exchange, killswitch: mkKs() },
-    });
+    const exchange = mkExchange({ fetchTicker: vi.fn().mockResolvedValue(mkTicker({ last: 0 })) });
+    const ctx = mkCtx({ lastTickPrice: 30000, deps: { exchange, killswitch: mkKs() } });
     const result = await tick(ctx);
     expect(result.lastTickPrice).toBe(30000);
   });
 
   it('catches fetchTicker errors and reports via onError', async () => {
-    const exchange = mkExchange({
-      fetchTicker: vi.fn().mockRejectedValue(new Error('Network timeout')),
-    });
+    const exchange = mkExchange({ fetchTicker: vi.fn().mockRejectedValue(new Error('Network timeout')) });
     const callbacks = mkCallbacks();
-    const ctx = mkCtx({
-      deps: { exchange, killswitch: mkKs() },
-      callbacks,
-    });
+    const ctx = mkCtx({ deps: { exchange, killswitch: mkKs() }, callbacks });
     const result = await tick(ctx);
     expect(result.lastTickPrice).toBeNull();
-    expect(callbacks.onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Network timeout' }),
-      'bot.tick',
-    );
+    expect(callbacks.onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Network timeout' }), 'bot.tick');
   });
 
   it('handles non-Error thrown from fetchTicker', async () => {
-    const exchange = mkExchange({
-      fetchTicker: vi.fn().mockRejectedValue('string error'),
-    });
+    const exchange = mkExchange({ fetchTicker: vi.fn().mockRejectedValue('string error') });
     const callbacks = mkCallbacks();
-    const ctx = mkCtx({
-      deps: { exchange, killswitch: mkKs() },
-      callbacks,
-    });
+    const ctx = mkCtx({ deps: { exchange, killswitch: mkKs() }, callbacks });
     await tick(ctx);
-    expect(callbacks.onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'string error' }),
-      'bot.tick',
-    );
+    expect(callbacks.onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'string error' }), 'bot.tick');
   });
 
   it('calls strategy.onTicker when strategy is present', async () => {
@@ -152,32 +116,21 @@ describe('tick', () => {
     const strategy = { onTicker } as never;
     const ticker = mkTicker();
     const exchange = mkExchange({ fetchTicker: vi.fn().mockResolvedValue(ticker) });
-    const ctx = mkCtx({
-      strategy,
-      deps: { exchange, killswitch: mkKs() },
-    });
+    const ctx = mkCtx({ strategy, deps: { exchange, killswitch: mkKs() } });
     await tick(ctx);
     expect(onTicker).toHaveBeenCalledWith(ticker);
   });
 
   it('does not call strategy.onTicker when strategy is null', async () => {
     const exchange = mkExchange();
-    const ctx = mkCtx({
-      strategy: null,
-      deps: { exchange, killswitch: mkKs() },
-    });
+    const ctx = mkCtx({ strategy: null, deps: { exchange, killswitch: mkKs() } });
     const result = await tick(ctx);
     expect(result.lastTickPrice).toBe(50000);
   });
 
   it('returns null lastTickPrice on outer error when initial value is null', async () => {
-    const exchange = mkExchange({
-      fetchTicker: vi.fn().mockRejectedValue(new Error('fatal')),
-    });
-    const ctx = mkCtx({
-      lastTickPrice: null,
-      deps: { exchange, killswitch: mkKs() },
-    });
+    const exchange = mkExchange({ fetchTicker: vi.fn().mockRejectedValue(new Error('fatal')) });
+    const ctx = mkCtx({ lastTickPrice: null, deps: { exchange, killswitch: mkKs() } });
     const result = await tick(ctx);
     expect(result.lastTickPrice).toBeNull();
   });

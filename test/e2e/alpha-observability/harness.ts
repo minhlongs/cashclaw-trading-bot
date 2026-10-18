@@ -81,38 +81,25 @@ export function simulateShadowFill(params: {
 }): ShadowFill {
   const stress = resolveStressConfig(params.stressTier as StressMode);
   const totalSlip = stress.slipPct + stress.marketImpactPct;
-  const fillPrice = params.order.side === 'buy'
-    ? params.arrivalPrice * (1 + totalSlip)
-    : params.arrivalPrice * (1 - totalSlip);
+  const fillPrice = params.order.side === 'buy' ? params.arrivalPrice * (1 + totalSlip) : params.arrivalPrice * (1 - totalSlip);
   const fillQuantity = params.order.size / params.order.price;
   const feeAmount = fillPrice * fillQuantity * stress.feePct;
   const sideFactor = params.order.side === 'buy' ? 1 : -1;
   const slippageBps = ((sideFactor * (fillPrice - params.order.price)) / params.order.price) * 10000;
 
   return ShadowFillSchema.parse({
-    fillId: params.fillId ?? `fill-${params.order.orderId}`,
-    orderId: params.order.orderId,
-    symbol: params.order.symbol,
-    side: params.order.side,
-    fillPrice: Number(fillPrice.toFixed(4)),
-    fillQuantity: Number(fillQuantity.toFixed(6)),
+    fillId: params.fillId ?? `fill-${params.order.orderId}`, orderId: params.order.orderId,
+    symbol: params.order.symbol, side: params.order.side,
+    fillPrice: Number(fillPrice.toFixed(4)), fillQuantity: Number(fillQuantity.toFixed(6)),
     fillTimestamp: params.order.decisionTimestamp + params.latencyMs,
-    feeAmount: Number(feeAmount.toFixed(4)),
-    slippageBps: Number(slippageBps.toFixed(2)),
+    feeAmount: Number(feeAmount.toFixed(4)), slippageBps: Number(slippageBps.toFixed(2)),
     stressTier: params.stressTier,
   });
 }
 
 export function computeAttribution(params: {
-  expectedReturn: number;
-  expectedCost: number;
-  realizedFillPrice: number;
-  exitPrice: number;
-  side: ShadowOrderSide;
-  feeAmount: number;
-  fillNotional: number;
-  expectedSlippageBps: number;
-  realizedSlippageBps: number;
+  expectedReturn: number; expectedCost: number; realizedFillPrice: number; exitPrice: number;
+  side: ShadowOrderSide; feeAmount: number; fillNotional: number; expectedSlippageBps: number; realizedSlippageBps: number;
 }): AttributionResult {
   const expectedNetReturn = params.expectedReturn - params.expectedCost;
   const grossReturn = params.side === 'buy'
@@ -135,13 +122,7 @@ export function evaluateTelemetryHealth(telemetry: OperationalTelemetry): Teleme
   if (telemetry.providerProvenance.usedFallback) alarms.push('PROVIDER_FALLBACK');
   const circuit = telemetry.providerProvenance.circuitState;
   if (circuit === 'degraded' || circuit === 'open') alarms.push('CIRCUIT_DEGRADED');
-
   const status: 'healthy' | 'degraded' | 'critical' =
-    alarms.includes('STALE_DATA') || alarms.includes('HIGH_LATENCY')
-      ? 'critical'
-      : alarms.length > 0
-        ? 'degraded'
-        : 'healthy';
-
+    alarms.includes('STALE_DATA') || alarms.includes('HIGH_LATENCY') ? 'critical' : alarms.length > 0 ? 'degraded' : 'healthy';
   return { status, alarms };
 }

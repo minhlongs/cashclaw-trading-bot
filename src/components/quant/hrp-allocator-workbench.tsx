@@ -29,7 +29,6 @@ export function HrpAllocatorWorkbench() {
         subtitle="Tree-Clustering Distance d_ij = sqrt(0.5*(1-ρ_ij)) • Quasi-Diagonalization & Recursive Bisection"
       />
       <QuantUxProMaxBar screenId="hrp-allocator" telemetryPayload={hrp} />
-
       <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">Correlation Structure &amp; Shrinkage Regime Selector</h2>
@@ -42,13 +41,10 @@ export function HrpAllocatorWorkbench() {
                     ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]'
                     : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'
                 }`}
-              >
-                {item}
-              </button>
+              >{item}</button>
             ))}
           </div>
         </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)]">
             <span className="text-xs text-[var(--text-secondary)]">Portfolio Annualized Vol</span>

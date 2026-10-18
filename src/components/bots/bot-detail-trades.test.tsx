@@ -42,9 +42,7 @@ describe('BotDetailTrades', () => {
   describe('column headers', () => {
     it('renders all 7 column headers', () => {
       render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
-      for (const h of ['ID', 'Side', 'Price', 'Qty', 'P&L', 'Status', 'Time']) {
-        expect(screen.getByText(h)).toBeInTheDocument();
-      }
+      for (const h of ['ID', 'Side', 'Price', 'Qty', 'P&L', 'Status', 'Time']) expect(screen.getByText(h)).toBeInTheDocument();
     });
   });
 
@@ -135,7 +133,6 @@ describe('BotDetailTrades', () => {
       expect(within(rows[1]).getByText('buy')).toBeInTheDocument();
       expect(within(rows[2]).getByText('sell')).toBeInTheDocument();
     });
-
     it('sorts by side descending on second click', async () => {
       const user = userEvent.setup();
       render(<BotDetailTrades trades={[BUY_TRADE, SELL_TRADE]} emptyMsg="empty" />);
@@ -145,7 +142,6 @@ describe('BotDetailTrades', () => {
       expect(within(rows[1]).getByText('sell')).toBeInTheDocument();
       expect(within(rows[2]).getByText('buy')).toBeInTheDocument();
     });
-
     it('resets sort on third click back to original order', async () => {
       const user = userEvent.setup();
       render(<BotDetailTrades trades={[SELL_TRADE, BUY_TRADE]} emptyMsg="empty" />);
@@ -156,7 +152,6 @@ describe('BotDetailTrades', () => {
       expect(within(rows[1]).getByText('sell')).toBeInTheDocument();
       expect(within(rows[2]).getByText('buy')).toBeInTheDocument();
     });
-
     it('sorts by P&L column numerically', async () => {
       const user = userEvent.setup();
       const profit = makeTrade({ id: 'p', pnl: 100, status: 'filled' });
@@ -167,7 +162,6 @@ describe('BotDetailTrades', () => {
       expect(within(rows[1]).getAllByRole('cell')[4].textContent).toContain('50');
       expect(within(rows[2]).getAllByRole('cell')[4].textContent).toContain('100');
     });
-
     it('resets to original order when clicking different sort column', async () => {
       const user = userEvent.setup();
       render(<BotDetailTrades trades={[SELL_TRADE, BUY_TRADE]} emptyMsg="empty" />);
@@ -180,7 +174,6 @@ describe('BotDetailTrades', () => {
       expect(within(rows[1]).getByText('sell')).toBeInTheDocument();
       expect(within(rows[2]).getByText('buy')).toBeInTheDocument();
     });
-
     it('shows sort indicator icon after sorting', async () => {
       const user = userEvent.setup();
       render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);

@@ -11,11 +11,7 @@ import type { StressMode, StressConfig } from '@/tree/alpha/cost-stress';
 import type { BarrierConfig } from '@/tree/alpha/labeling';
 import type { AlphaProvenance } from './provenance';
 import {
-  type ExperimentPeriod,
-  type ExperimentSpec,
-  type CompileResult,
-  type DataWindow,
-  deriveSeedFromSpecId,
+  type ExperimentPeriod, type ExperimentSpec, type CompileResult, type DataWindow, deriveSeedFromSpecId,
 } from './experiment-spec';
 
 /** Context supplied to compiler (caller provides data window + optional goal/provenance). */

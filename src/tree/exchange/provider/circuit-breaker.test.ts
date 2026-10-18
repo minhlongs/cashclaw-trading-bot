@@ -90,7 +90,6 @@ describe('CircuitBreaker', () => {
       vi.advanceTimersByTime(7001);
       expect(cb.getState()).toBe('half_open');
     });
-
     it('half_open success closes circuit', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
@@ -99,7 +98,6 @@ describe('CircuitBreaker', () => {
       expect(await cb.execute(successFn)).toBe('ok');
       expect(cb.getState()).toBe('closed');
     });
-
     it('half_open failure reopens', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
@@ -108,7 +106,6 @@ describe('CircuitBreaker', () => {
       await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('open');
     });
-
     it('blocks opens before cooldown elapses', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
@@ -135,23 +132,18 @@ describe('CircuitBreaker', () => {
       await cb.execute(failingFn).catch(() => {});
       await cb.execute(failingFn).catch(() => {});
       expect(onChange).not.toHaveBeenCalled();
-
       await cb.execute(failingFn).catch(() => {});
       expect(onChange).toHaveBeenCalledTimes(1);
       expect(onChange).toHaveBeenLastCalledWith('closed', 'degraded', expect.any(Number), 'unknown');
-
       await cb.execute(failingFn).catch(() => {});
       expect(onChange).toHaveBeenLastCalledWith('degraded', 'open', expect.any(Number), 'unknown');
-
       vi.advanceTimersByTime(7001);
       cb.getState();
       expect(onChange).toHaveBeenLastCalledWith('open', 'half_open', expect.any(Number), undefined);
-
       await cb.execute(successFn);
       expect(onChange).toHaveBeenLastCalledWith('half_open', 'closed', expect.any(Number), undefined);
       expect(onChange).toHaveBeenCalledTimes(4);
     });
-
     it('does not fire when state does not change', async () => {
       const onChange = vi.fn();
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000, onStateChange: onChange });

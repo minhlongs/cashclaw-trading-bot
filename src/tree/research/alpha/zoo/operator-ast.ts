@@ -15,10 +15,7 @@ export type AstNode =
   | { readonly kind: 'abs'; readonly operand: AstNode }
   | { readonly kind: 'call'; readonly name: SupportedOperator; readonly args: readonly AstNode[] };
 
-export interface ParsedFormula {
-  readonly ast: AstNode;
-  readonly maxLookback: number;
-}
+export interface ParsedFormula { readonly ast: AstNode; readonly maxLookback: number; }
 
 export type ParseFormulaResult =
   | { readonly ok: true; readonly value: ParsedFormula }
@@ -30,10 +27,7 @@ export type ParamSpec =
   | { readonly kind: 'lag'; readonly min: number }
   | { readonly kind: 'numeric'; readonly optional?: boolean };
 
-export interface OpSignature {
-  readonly series: number;
-  readonly params: readonly ParamSpec[];
-}
+export interface OpSignature { readonly series: number; readonly params: readonly ParamSpec[]; }
 
 /** Call signatures for the frozen 17-op vocabulary (D2 minimums). */
 export const OP_SIGNATURES: Readonly<Record<SupportedOperator, OpSignature>> = {

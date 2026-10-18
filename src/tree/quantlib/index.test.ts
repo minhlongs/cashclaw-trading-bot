@@ -16,29 +16,23 @@ describe('quantFunctions.noop', () => {
 describe('quantFunctions.grid — invalid inputs', () => {
   it('returns hold when lastPrice is 0', () => {
     const result = quantFunctions.grid({ ...ctx, lastPrice: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.confidence).toBe(0);
-    expect(result.meta.reason).toBe('invalid_price');
+    expect(result.signal).toBe('hold'); expect(result.confidence).toBe(0); expect(result.meta.reason).toBe('invalid_price');
   });
   it('returns hold when lastPrice is negative', () => {
     const result = quantFunctions.grid({ ...ctx, lastPrice: -1 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('invalid_price');
+    expect(result.signal).toBe('hold'); expect(result.meta.reason).toBe('invalid_price');
   });
   it('returns hold when gridSpacing is 0', () => {
     const result = quantFunctions.grid(ctx, { gridSpacing: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('invalid_params');
+    expect(result.signal).toBe('hold'); expect(result.meta.reason).toBe('invalid_params');
   });
   it('returns hold when levels is 0', () => {
     const result = quantFunctions.grid(ctx, { levels: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('invalid_params');
+    expect(result.signal).toBe('hold'); expect(result.meta.reason).toBe('invalid_params');
   });
   it('returns hold when tolerance is 0', () => {
     const result = quantFunctions.grid(ctx, { tolerance: 0 });
-    expect(result.signal).toBe('hold');
-    expect(result.meta.reason).toBe('invalid_params');
+    expect(result.signal).toBe('hold'); expect(result.meta.reason).toBe('invalid_params');
   });
 });
 
@@ -118,24 +112,19 @@ describe('quantFunctions.mean_reversion — invalid inputs', () => {
     expect(result.signal).toBe('hold');
     expect(result.meta.reason).toBe('no_fair_value');
   });
-
   it('returns hold with no_fair_value reason when fairValue is 0', () => {
     const result = quantFunctions.mean_reversion(ctx, { fairValue: 0 });
     expect(result.signal).toBe('hold');
     expect(result.meta.reason).toBe('no_fair_value');
   });
-
   it('returns hold when lastPrice is 0', () => {
     const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: 0 }, { fairValue: 50000 });
     expect(result.signal).toBe('hold');
     expect(result.confidence).toBe(0);
   });
-
   it('returns hold when lastPrice is negative', () => {
-    const result = quantFunctions.mean_reversion({ ...ctx, lastPrice: -1 }, { fairValue: 50000 });
-    expect(result.signal).toBe('hold');
+    expect(quantFunctions.mean_reversion({ ...ctx, lastPrice: -1 }, { fairValue: 50000 }).signal).toBe('hold');
   });
-
   it('returns hold when threshold is 0', () => {
     const result = quantFunctions.mean_reversion(ctx, { fairValue: 50000, threshold: 0 });
     expect(result.signal).toBe('hold');

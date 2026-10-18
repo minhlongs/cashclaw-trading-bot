@@ -86,49 +86,26 @@ describe('KillswitchCard status row', () => {
   });
 });
 
-/* ------------------------------------------------------------------ */
-/*  Halt reason — conditional block                                    */
-/* ------------------------------------------------------------------ */
 describe('KillswitchCard halt reason', () => {
   it('renders halt reason when halted with a reason', () => {
-    const { container } = render(
-      <KillswitchCard
-        killswitch={makeKillswitch({ halted: true, haltReason: 'Too many losses' })}
-      />,
-    );
+    const { container } = render(<KillswitchCard killswitch={makeKillswitch({ halted: true, haltReason: 'Too many losses' })} />);
     expect(container.textContent).toContain('Ly do: Too many losses');
   });
 
   it('does not render halt reason when not halted', () => {
-    const { container } = render(
-      <KillswitchCard
-        killswitch={makeKillswitch({ halted: false, haltReason: 'stale reason' })}
-      />,
-    );
+    const { container } = render(<KillswitchCard killswitch={makeKillswitch({ halted: false, haltReason: 'stale reason' })} />);
     expect(container.textContent).not.toContain('Ly do:');
   });
 
   it('does not render halt reason when halted but reason is null', () => {
-    const { container } = render(
-      <KillswitchCard killswitch={makeKillswitch({ halted: true, haltReason: null })} />,
-    );
+    const { container } = render(<KillswitchCard killswitch={makeKillswitch({ halted: true, haltReason: null })} />);
     expect(container.textContent).not.toContain('Ly do:');
   });
 });
 
-/* ------------------------------------------------------------------ */
-/*  Halted-at timestamp — conditional block                            */
-/* ------------------------------------------------------------------ */
 describe('KillswitchCard halted-at timestamp', () => {
   it('renders the halt time when halted with haltedAt set', () => {
-    render(
-      <KillswitchCard
-        killswitch={makeKillswitch({
-          halted: true,
-          haltedAt: new Date('2026-08-15T14:30:45Z').getTime(),
-        })}
-      />,
-    );
+    render(<KillswitchCard killswitch={makeKillswitch({ halted: true, haltedAt: new Date('2026-08-15T14:30:45Z').getTime() })} />);
     expect(screen.getByText('Thoi gian kich hoat')).toBeInTheDocument();
   });
 
@@ -138,18 +115,11 @@ describe('KillswitchCard halted-at timestamp', () => {
   });
 
   it('omits the halt time when not halted even if haltedAt is set', () => {
-    render(
-      <KillswitchCard
-        killswitch={makeKillswitch({ halted: false, haltedAt: Date.now() })}
-      />,
-    );
+    render(<KillswitchCard killswitch={makeKillswitch({ halted: false, haltedAt: Date.now() })} />);
     expect(screen.queryByText('Thoi gian kich hoat')).not.toBeInTheDocument();
   });
 });
 
-/* ------------------------------------------------------------------ */
-/*  Metrics                                                            */
-/* ------------------------------------------------------------------ */
 describe('KillswitchCard metrics', () => {
   it('renders positive daily PnL with a plus sign', () => {
     render(<KillswitchCard killswitch={makeKillswitch({ dailyPnl: 50.25 })} />);

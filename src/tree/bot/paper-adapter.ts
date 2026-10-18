@@ -1,18 +1,8 @@
 // In-memory paper exchange adapter factory
 
-import type {
-  ExchangeAdapter,
-  ExchangeId,
-  OrderRequest,
-  OrderResult,
-  Ticker,
-  OrderBook,
-  Balance,
-} from '../exchange/types';
+import type { ExchangeAdapter, ExchangeId, OrderRequest, OrderResult, Ticker, OrderBook, Balance } from '../exchange/types';
 
-export interface PaperAdapterOptions {
-  tickerFetcher?: (symbol: string) => Promise<Ticker>;
-}
+export interface PaperAdapterOptions { tickerFetcher?: (symbol: string) => Promise<Ticker>; }
 
 export function createPaperAdapter(capital: number, options?: PaperAdapterOptions): ExchangeAdapter {
   const balances = new Map<string, { free: number; used: number }>();

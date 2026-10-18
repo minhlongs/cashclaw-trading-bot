@@ -61,10 +61,7 @@ export function buildZooHypothesis(
 }
 
 /** Canonical dedup payload (D1): formula + window params, NOT raw text. */
-export function buildDedupPayload(
-  normalizedFormula: string,
-  entry: AlphaZooEntry,
-): Record<string, number | string> {
+export function buildDedupPayload(normalizedFormula: string, entry: AlphaZooEntry): Record<string, number | string> {
   return {
     formula: normalizedFormula,
     warmupBars: entry.min_warmup_bars,

@@ -4,15 +4,7 @@ import type { AgentRole, DeliberationTask, ModelTier, SupportedProvider } from '
 import type { LlmProvider, ProviderRegistry } from './provider-adapter-types';
 
 const SUPPORTED_PROVIDERS: readonly SupportedProvider[] = [
-  'Anthropic',
-  'OpenAI',
-  'Gemini',
-  'DeepSeek',
-  'Qwen',
-  'GLM',
-  'MiniMax',
-  'OpenRouter',
-  'Ollama/local',
+  'Anthropic', 'OpenAI', 'Gemini', 'DeepSeek', 'Qwen', 'GLM', 'MiniMax', 'OpenRouter', 'Ollama/local',
 ];
 
 /** Error when no provider is available for a tier. */

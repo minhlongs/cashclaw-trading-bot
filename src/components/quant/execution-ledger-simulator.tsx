@@ -19,13 +19,15 @@ export function ExecutionLedgerSimulator() {
   const feeBps = Number((stressCfg.feePct * 10000).toFixed(1));
   const impactBps = Number((stressCfg.marketImpactPct * 10000 * depthMultiplier).toFixed(1));
 
-  const ledgerRows = useMemo(() => {
-    return PAPER_FILLS.map((fill) => {
-      const effectiveSlipBps = Number((fill.baseSlipBps * depthMultiplier + impactBps).toFixed(1));
-      const totalCostUsd = Number(((fill.notionalUsd * (feeBps + effectiveSlipBps)) / 10000).toFixed(2));
-      return { ...fill, effectiveSlipBps, totalCostUsd };
-    });
-  }, [depthMultiplier, feeBps, impactBps]);
+  const ledgerRows = useMemo(
+    () =>
+      PAPER_FILLS.map((fill) => {
+        const effectiveSlipBps = Number((fill.baseSlipBps * depthMultiplier + impactBps).toFixed(1));
+        const totalCostUsd = Number(((fill.notionalUsd * (feeBps + effectiveSlipBps)) / 10000).toFixed(2));
+        return { ...fill, effectiveSlipBps, totalCostUsd };
+      }),
+    [depthMultiplier, feeBps, impactBps],
+  );
 
   return (
     <section aria-label="Real-Time Paper Execution Ledger and Slippage Stress Simulator" className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
@@ -34,7 +36,6 @@ export function ExecutionLedgerSimulator() {
         title="Paper Execution Ledger & Slippage Stress Simulator"
         subtitle="Wired to resolveStressConfig (src/tree/alpha/cost-stress) • Zero live exchange orders"
       />
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 flex flex-col gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">Friction & Orderbook Depth Controls</h2>
@@ -42,13 +43,10 @@ export function ExecutionLedgerSimulator() {
             <span className="text-xs text-[var(--text-secondary)]">Exchange Fee & Impact Regime</span>
             <div className="grid grid-cols-2 gap-2" role="group" aria-label="Fee stress regime selector">
               {(['normal', 'conservative', 'adverse', 'extreme'] as const).map((mode) => (
-                <button key={mode} type="button" onClick={() => setStressMode(mode)} aria-pressed={stressMode === mode} className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold uppercase border transition-all duration-150 ease-out ${stressMode === mode ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}>
-                  {mode}
-                </button>
+                <button key={mode} type="button" onClick={() => setStressMode(mode)} aria-pressed={stressMode === mode} className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-mono font-semibold uppercase border transition-all duration-150 ease-out ${stressMode === mode ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}>{mode}</button>
               ))}
             </div>
           </div>
-
           <div className="flex flex-col gap-2">
             <label htmlFor="depth-mult-select" className="text-xs text-[var(--text-secondary)]">Orderbook Depth Slippage Multiplier</label>
             <select id="depth-mult-select" value={depthMultiplier} onChange={(e) => setDepthMultiplier(Number(e.target.value))} className="min-h-[44px] px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] text-sm font-mono">

@@ -155,10 +155,7 @@ describe('RequestQueue', () => {
       const q = makeQueue({ drainBatchSize: 5 });
       q.enqueue(fakeItem({ cost: 1 }));
       q.enqueue(fakeItem({ cost: 1 }));
-
-      const result = await q.drain('binance', async () => {
-        throw new Error('API timeout');
-      });
+      const result = await q.drain('binance', async () => { throw new Error('API timeout'); });
       expect(result.processed).toBe(0);
       expect(result.skipped).toBe(2);
       expect(result.pending).toBe(0);
@@ -173,7 +170,6 @@ describe('RequestQueue', () => {
       expect(q.remove('binance', id!)).toBe(true);
       expect(q.getDepth('binance')).toBe(0);
     });
-
     it('returns false for unknown ID', () => {
       const q = makeQueue();
       expect(q.remove('binance', 'nonexistent')).toBe(false);
@@ -185,7 +181,6 @@ describe('RequestQueue', () => {
       const q = makeQueue();
       q.enqueue(fakeItem({ label: 'a' }));
       q.enqueue(fakeItem({ label: 'b' }));
-
       expect(q.peek('binance', 2)).toHaveLength(2);
       expect(q.getDepth('binance')).toBe(2);
     });
@@ -196,7 +191,6 @@ describe('RequestQueue', () => {
       const q = makeQueue();
       q.enqueue(fakeItem({ exchange: 'binance' }));
       q.enqueue(fakeItem({ exchange: 'bybit' }));
-
       q.clear();
       expect(q.getDepth('binance')).toBe(0);
       expect(q.getDepth('bybit')).toBe(0);
@@ -209,7 +203,6 @@ describe('RequestQueue', () => {
       q.enqueue(fakeItem({ exchange: 'binance' }));
       q.enqueue(fakeItem({ exchange: 'bybit' }));
       q.enqueue(fakeItem({ exchange: 'bybit' }));
-
       expect(q.getTotalDepth()).toBe(3);
     });
   });

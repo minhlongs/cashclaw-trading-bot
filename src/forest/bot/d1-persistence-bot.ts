@@ -4,12 +4,7 @@
 
 import { createServerClient } from '@/lib/db/client';
 import type { Bot, ApiCredential } from '@/lib/db/types';
-import {
-  insertBot,
-  updateBot,
-  deleteBot,
-  upsertCredential,
-} from '@/lib/db/repositories';
+import { insertBot, updateBot, deleteBot, upsertCredential } from '@/lib/db/repositories';
 import type { BotConfig, GridBotConfig, MeanRevBotConfig } from '@/tree/bot/types';
 import { uid, now } from './d1-persistence-utils';
 
@@ -19,27 +14,13 @@ function botToRow(bot: {
 }): Omit<Bot, 'created_at' | 'updated_at'> {
   const cfg = bot.config as GridBotConfig | MeanRevBotConfig;
   return {
-    id: bot.id,
-    user_id: bot.user_id,
-    name: bot.name || bot.id,
-    strategy: bot.strategy as Bot['strategy'],
-    pair: bot.pair,
-    exchange: bot.exchange as Bot['exchange'],
-    status: 'draft',
-    config_json: JSON.stringify(cfg),
-    capital_allocated: bot.capital,
-    capital_used: 0,
-    total_pnl: 0,
-    win_count: 0,
-    loss_count: 0,
-    max_drawdown: 0,
-    total_trades: 0,
-    started_at: null,
-    stopped_at: null,
-    last_error: null,
-    last_tick_at: null,
-    last_order_at: null,
-    current_drawdown: 0,
+    id: bot.id, user_id: bot.user_id, name: bot.name || bot.id,
+    strategy: bot.strategy as Bot['strategy'], pair: bot.pair,
+    exchange: bot.exchange as Bot['exchange'], status: 'draft',
+    config_json: JSON.stringify(cfg), capital_allocated: bot.capital,
+    capital_used: 0, total_pnl: 0, win_count: 0, loss_count: 0,
+    max_drawdown: 0, total_trades: 0, started_at: null, stopped_at: null,
+    last_error: null, last_tick_at: null, last_order_at: null, current_drawdown: 0,
   };
 }
 

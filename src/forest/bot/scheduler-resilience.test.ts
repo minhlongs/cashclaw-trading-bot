@@ -126,28 +126,18 @@ describe('BotScheduler — error resilience, auto-restart & rate limits', () => 
   describe('auto-restart after cold-start hydration', () => {
     it('starts running bots that have no strategy instance', async () => {
       const bot = makeMockBot({ id: 'b1', hasStrategy: false });
-      mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockResolvedValue([bot]),
-        getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
-      });
-
+      mockGetBotManager.mockReturnValue({ getRunningBots: vi.fn().mockResolvedValue([bot]), getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance) });
       const scheduler = await createScheduler();
       await scheduler.tick();
-
       expect(bot.start).toHaveBeenCalledTimes(1);
       expect(bot.tick).toHaveBeenCalledTimes(1);
     });
 
     it('does not start bots that already have a strategy', async () => {
       const bot = makeMockBot({ id: 'b1', hasStrategy: true });
-      mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockResolvedValue([bot]),
-        getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
-      });
-
+      mockGetBotManager.mockReturnValue({ getRunningBots: vi.fn().mockResolvedValue([bot]), getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance) });
       const scheduler = await createScheduler();
       await scheduler.tick();
-
       expect(bot.start).not.toHaveBeenCalled();
       expect(bot.tick).toHaveBeenCalledTimes(1);
     });
@@ -155,14 +145,9 @@ describe('BotScheduler — error resilience, auto-restart & rate limits', () => 
     it('reports auto-restart failures without blocking the tick', async () => {
       const bot = makeMockBot({ id: 'b1', hasStrategy: false });
       bot.start.mockRejectedValue(new Error('ticker fetch failed'));
-      mockGetBotManager.mockReturnValue({
-        getRunningBots: vi.fn().mockResolvedValue([bot]),
-        getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance),
-      });
-
+      mockGetBotManager.mockReturnValue({ getRunningBots: vi.fn().mockResolvedValue([bot]), getKillswitch: vi.fn().mockReturnValue(mockKillswitchInstance) });
       const scheduler = await createScheduler();
       const report = await scheduler.tick();
-
       expect(bot.start).toHaveBeenCalledTimes(1);
       expect(report.errors).toHaveLength(1);
       expect(report.errors[0].botId).toBe('b1');

@@ -66,12 +66,7 @@ CREATE TABLE IF NOT EXISTS api_credentials (
 CREATE TABLE IF NOT EXISTS trade_events (
   id TEXT PRIMARY KEY,
   bot_id TEXT NOT NULL,
-  event_type TEXT NOT NULL CHECK (
-    event_type IN (
-      'tick', 'fill', 'signal', 'error', 'halt', 'resume',
-      'start', 'stop', 'pause', 'config_change', 'rebalance', 'metric_snapshot'
-    )
-  ),
+  event_type TEXT NOT NULL CHECK (event_type IN ('tick', 'fill', 'signal', 'error', 'halt', 'resume', 'start', 'stop', 'pause', 'config_change', 'rebalance', 'metric_snapshot')),
   detail_json TEXT,
   created_at INTEGER NOT NULL
 )`,

@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { extractRoundTrips } from './round-trips';
 import { buildRelativeValueReport, FUNDING_NOTE } from './report';
 import type { PairPeriodRecord } from '@/tree/alpha/relative-value';
-import type {
-  RelativeValueEvalConfig,
-  RelativeValueReportOptions,
-} from './types';
+import type { RelativeValueEvalConfig, RelativeValueReportOptions } from './types';
 import { RegimeLabel } from '@/tree/regime/types';
 
 // ── Fixtures ───────────────────────────────────────────────────────────────
@@ -14,17 +11,8 @@ let seq = 0;
 function record(overrides: Partial<PairPeriodRecord> = {}): PairPeriodRecord {
   seq++;
   return {
-    timestamp: 1_700_000_000_000 + seq * 60_000,
-    position: 'flat',
-    hedgeRatio: null,
-    zScore: null,
-    weights: {},
-    turnover: 0,
-    costPct: 0,
-    grossReturn: 0,
-    netReturn: 0,
-    grossExposure: 0,
-    netExposure: 0,
+    timestamp: 1_700_000_000_000 + seq * 60_000, position: 'flat', hedgeRatio: null, zScore: null,
+    weights: {}, turnover: 0, costPct: 0, grossReturn: 0, netReturn: 0, grossExposure: 0, netExposure: 0,
     ...overrides,
   };
 }
@@ -40,20 +28,9 @@ const TRADE_SERIES: PairPeriodRecord[] = [
 
 function evalConfig(overrides: Partial<RelativeValueEvalConfig> = {}): RelativeValueEvalConfig {
   return {
-    hedgeWindow: 30,
-    zWindow: 5,
-    minObs: 10,
-    entryZ: 2,
-    exitZ: 0.5,
-    maxHalfLife: 50,
-    minCorrelation: 0,
-    validationWindow: 30,
-    revalidateEvery: 10,
-    stressMode: 'conservative',
-    minObservations: 4,
-    experimentId: 'exp-1',
-    timeframe: '1h',
-    periodsPerYear: 8760,
+    hedgeWindow: 30, zWindow: 5, minObs: 10, entryZ: 2, exitZ: 0.5, maxHalfLife: 50, minCorrelation: 0,
+    validationWindow: 30, revalidateEvery: 10, stressMode: 'conservative', minObservations: 4,
+    experimentId: 'exp-1', timeframe: '1h', periodsPerYear: 8760,
     ...overrides,
   };
 }

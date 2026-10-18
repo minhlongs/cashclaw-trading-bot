@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-
 import { StrategyVisualizerCard } from './strategy-visualizer-card';
 import { MarketWatchCard } from './market-watch-card';
 import { TerminalQuickActions } from './terminal-quick-actions';
@@ -16,8 +15,7 @@ import { DashboardTopKpiCards, DashboardPerformanceGrid } from './dashboard-kpi-
 import { mapBotsPayloadToDashboardData, type BotCardDataApi, type DashboardData } from './dashboard-data-mapper';
 
 export default function DashboardClient() {
-  const t = useTranslations('dashboard');
-  const locale = useLocale();
+  const t = useTranslations('dashboard'), locale = useLocale();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,9 +25,7 @@ export default function DashboardClient() {
     async function load() {
       try {
         setLoading(true); setError(null);
-        const response = await fetch('/api/bots', {
-          method: 'GET', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, cache: 'no-store',
-        });
+        const response = await fetch('/api/bots', { method: 'GET', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, cache: 'no-store' });
         if (!response.ok) throw new Error(`Request failed: ${response.status}`);
         const body = (await response.json()) as { ok: boolean; data?: BotCardDataApi[] | null; error?: string | null };
         if (!body.ok || !Array.isArray(body.data)) throw new Error(body.error ?? 'Unable to load bots.');

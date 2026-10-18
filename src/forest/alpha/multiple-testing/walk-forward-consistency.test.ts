@@ -33,31 +33,21 @@ function makeWalkForwardResult(
 ): WalkForwardResult {
   const windows: WalkForwardWindow[] = testMetrics.map((tm, i) =>
     makeWalkForwardWindow({
-      testMetrics: tm,
-      trainStart: i * 200, trainEnd: i * 200 + 100,
-      validateStart: i * 200 + 100, validateEnd: i * 200 + 150,
-      testStart: i * 200 + 150, testEnd: i * 200 + 200,
+      testMetrics: tm, trainStart: i * 200, trainEnd: i * 200 + 100,
+      validateStart: i * 200 + 100, validateEnd: i * 200 + 150, testStart: i * 200 + 150, testEnd: i * 200 + 200,
     }),
   );
-
   const n = windows.length;
   const avgInSampleSharpe = windows.reduce((sum, w) => sum + (w.trainMetrics.sharpe_ratio ?? 0), 0) / n;
   const avgOutSampleSharpe = windows.reduce((sum, w) => sum + (w.testMetrics.sharpe_ratio ?? 0), 0) / n;
-
   const summaryStats: SummaryStats = {
-    totalWindows: n,
-    avgInSampleSharpe,
-    avgOutSampleSharpe,
-    degradationRatio: avgInSampleSharpe !== 0 ? avgOutSampleSharpe / avgInSampleSharpe : 0,
-    regimeDiversity: 1,
+    totalWindows: n, avgInSampleSharpe, avgOutSampleSharpe,
+    degradationRatio: avgInSampleSharpe !== 0 ? avgOutSampleSharpe / avgInSampleSharpe : 0, regimeDiversity: 1,
   };
-
   return {
     windows,
     aggregated: {
-      inSample: makeBacktestResult(),
-      validation: makeBacktestResult(),
-      outOfSample: makeBacktestResult(),
+      inSample: makeBacktestResult(), validation: makeBacktestResult(), outOfSample: makeBacktestResult(),
       byRegime: {} as Record<RegimeLabel, Omit<BacktestResult, 'id' | 'bot_id' | 'strategy' | 'pair' | 'exchange'>>,
       summaryStats,
     },

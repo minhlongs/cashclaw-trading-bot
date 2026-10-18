@@ -97,13 +97,9 @@ function runSurvivalBattery(
   try {
     const crossAssetReports = m4.perPairWindows
       .filter((pw) => pw.oosPeriods.length > 0)
-      .map((pw) =>
-        toEvaluationReport(pw.oosPeriods, { ...ADAPTER, symbol: pw.pairLabel }));
+      .map((pw) => toEvaluationReport(pw.oosPeriods, { ...ADAPTER, symbol: pw.pairLabel }));
     const input = assembleSurvivalInput(
-      m4,
-      candlesFrom(universe, 0),
-      configMatrix,
-      crossAssetReports,
+      m4, candlesFrom(universe, 0), configMatrix, crossAssetReports,
       {
         adapterOptions: ADAPTER,
         bootstrap: { iterations: 2000, confidence: 0.95, seed: 42 },
@@ -117,9 +113,7 @@ function runSurvivalBattery(
   } catch (err) {
     return {
       verdict: 'falsified',
-      reasons: [
-        `survival_input: ${err instanceof Error ? err.message : String(err)}`,
-      ],
+      reasons: [`survival_input: ${err instanceof Error ? err.message : String(err)}`],
     };
   }
 }
@@ -132,11 +126,7 @@ function stripArmKnobs(sim: ArmDef['sim']): ArmDef['sim'] {
 
 function candlesFrom(universe: UniversePanel, index: number): Candle[] {
   return universe.timestamps.map((t, i) => ({
-    timestamp: t,
-    open: universe.closes[index]![i]!,
-    high: universe.closes[index]![i]!,
-    low: universe.closes[index]![i]!,
-    close: universe.closes[index]![i]!,
-    volume: 0,
+    timestamp: t, open: universe.closes[index]![i]!, high: universe.closes[index]![i]!,
+    low: universe.closes[index]![i]!, close: universe.closes[index]![i]!, volume: 0,
   }));
 }

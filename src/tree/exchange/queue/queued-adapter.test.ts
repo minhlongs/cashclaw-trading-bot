@@ -130,19 +130,8 @@ describe('QueuedExchangeAdapter', () => {
 
   it('falls back to direct execution when queue is full', async () => {
     const { adapter, inner, queue } = makeAdapter(makeMockAdapter(), 1);
-    // Fill the queue
-    queue.enqueue({
-      priority: RequestPriority.HISTORICAL,
-      exchange: 'binance',
-      cost: 1,
-      execute: async () => {},
-      label: 'filler',
-    });
-
-    // Queue is full — adapter falls back to direct execution
-    const result = await adapter.placeOrder({
-      symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50000, quantity: 0.1,
-    });
+    queue.enqueue({ priority: RequestPriority.HISTORICAL, exchange: 'binance', cost: 1, execute: async () => {}, label: 'filler' });
+    const result = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50000, quantity: 0.1 });
     expect(result.id).toBe('order-1');
     expect(inner.placeOrder).toHaveBeenCalled();
   });
@@ -150,14 +139,7 @@ describe('QueuedExchangeAdapter', () => {
   it('drainQueue processes enqueued items and reports results', async () => {
     const { adapter, queue } = makeAdapter();
     let executed = false;
-    queue.enqueue({
-      priority: RequestPriority.LIVE_TRADE,
-      exchange: 'binance',
-      cost: 1,
-      execute: async () => { executed = true; },
-      label: 'drain-test',
-    });
-
+    queue.enqueue({ priority: RequestPriority.LIVE_TRADE, exchange: 'binance', cost: 1, execute: async () => { executed = true; }, label: 'drain-test' });
     const result = await adapter.drainQueue();
     expect(result.processed).toBe(1);
     expect(result.skipped).toBe(0);
@@ -167,14 +149,7 @@ describe('QueuedExchangeAdapter', () => {
   it('drainQueue skips items whose execute throws', async () => {
     const { adapter, queue } = makeAdapter();
     const throwingExecute = vi.fn().mockRejectedValue(new Error('fail'));
-    queue.enqueue({
-      priority: RequestPriority.LIVE_TRADE,
-      exchange: 'binance',
-      cost: 1,
-      execute: throwingExecute,
-      label: 'fail-test',
-    });
-
+    queue.enqueue({ priority: RequestPriority.LIVE_TRADE, exchange: 'binance', cost: 1, execute: throwingExecute, label: 'fail-test' });
     const result = await adapter.drainQueue();
     expect(result.processed).toBe(0);
     expect(result.skipped).toBe(1);

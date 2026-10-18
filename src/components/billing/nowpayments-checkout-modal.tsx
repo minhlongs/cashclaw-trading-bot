@@ -44,20 +44,14 @@ export function NowpaymentsCheckoutModal({
             </div>
 
             <div className="mb-5">
-              <label className="block text-xs font-semibold mb-2 uppercase tracking-wide meta">
-                Select Crypto Currency
-              </label>
+              <label className="block text-xs font-semibold mb-2 uppercase tracking-wide meta">Select Crypto Currency</label>
               <div className="grid grid-cols-3 gap-2">
                 {(['USDT', 'USDC', 'BTC'] as const).map((curr) => (
                   <button
                     key={curr}
                     type="button"
                     onClick={() => setCurrency(curr)}
-                    className={`py-2 px-3 text-xs font-mono rounded border transition ${
-                      currency === curr
-                        ? 'border-primary bg-primary/10 text-primary font-bold'
-                        : 'border-neutral-200 dark:border-neutral-800'
-                    }`}
+                    className={`py-2 px-3 text-xs font-mono rounded border transition ${currency === curr ? 'border-primary bg-primary/10 text-primary font-bold' : 'border-neutral-200 dark:border-neutral-800'}`}
                   >
                     {curr}
                   </button>

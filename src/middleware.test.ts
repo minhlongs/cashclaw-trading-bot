@@ -141,54 +141,36 @@ describe('middleware', () => {
   });
 
   /* ── Public routes (no auth needed) ────────────────────────── */
-
   it('allows GET /api/health without session', async () => {
-    const res = await middleware(makeReq('GET', '/api/health'));
-    expect(res.status).toBe(200);
+    expect((await middleware(makeReq('GET', '/api/health'))).status).toBe(200);
   });
-
   it('allows GET /api/version without session', async () => {
-    const res = await middleware(makeReq('GET', '/api/version'));
-    expect(res.status).toBe(200);
+    expect((await middleware(makeReq('GET', '/api/version'))).status).toBe(200);
   });
-
   it('allows GET /api/metrics without session', async () => {
-    const res = await middleware(makeReq('GET', '/api/metrics'));
-    expect(res.status).toBe(200);
+    expect((await middleware(makeReq('GET', '/api/metrics'))).status).toBe(200);
   });
-
   it('allows GET /api/killswitch-status without session', async () => {
-    const res = await middleware(makeReq('GET', '/api/killswitch-status'));
-    expect(res.status).toBe(200);
+    expect((await middleware(makeReq('GET', '/api/killswitch-status'))).status).toBe(200);
   });
 
   /* ── Auth routes (always public) ───────────────────────────── */
-
   it('allows POST /api/auth/login without session', async () => {
-    const res = await middleware(makeReq('POST', '/api/auth/login'));
-    expect(res.status).toBe(200);
+    expect((await middleware(makeReq('POST', '/api/auth/login'))).status).toBe(200);
   });
-
   it('allows POST /api/auth/logout without session', async () => {
-    const res = await middleware(makeReq('POST', '/api/auth/logout'));
-    expect(res.status).toBe(200);
+    expect((await middleware(makeReq('POST', '/api/auth/logout'))).status).toBe(200);
   });
-
   it('allows GET /api/auth/me without session', async () => {
-    const res = await middleware(makeReq('GET', '/api/auth/me'));
-    expect(res.status).toBe(200);
+    expect((await middleware(makeReq('GET', '/api/auth/me'))).status).toBe(200);
   });
 
   /* ── Non-API routes ────────────────────────────────────────── */
-
   it('allows dashboard pages without session', async () => {
-    const res = await middleware(makeReq('GET', '/vi/dashboard'));
-    expect(res.status).toBe(200);
+    expect((await middleware(makeReq('GET', '/vi/dashboard'))).status).toBe(200);
   });
-
   it('allows POST to non-API routes without session', async () => {
-    const res = await middleware(makeReq('POST', '/vi/some-page'));
-    expect(res.status).toBe(200);
+    expect((await middleware(makeReq('POST', '/vi/some-page'))).status).toBe(200);
   });
 
   /* ── DB unavailable fallback ────────────────────────────────── */

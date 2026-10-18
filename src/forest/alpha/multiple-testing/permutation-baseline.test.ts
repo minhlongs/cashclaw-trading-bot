@@ -36,16 +36,11 @@ function makeReport(overrides: Partial<EvaluationReport> = {}): EvaluationReport
 }
 
 describe('permutationTest', () => {
-  const baseOptions: PermutationOptions = {
-    iterations: 500,
-    seed: 42,
-  };
+  const baseOptions: PermutationOptions = { iterations: 500, seed: 42 };
 
   describe('happy path', () => {
     it('returns valid PermutationTestResult with pValue in [0, 1]', () => {
-      const returns = makeStrategyReturns(100, 0.02);
-      const signals = makeEntrySignals(100, 0.8);
-      const result = permutationTest(returns, signals, mean, baseOptions);
+      const result = permutationTest(makeStrategyReturns(100, 0.02), makeEntrySignals(100, 0.8), mean, baseOptions);
       expect(result.observed).toBeDefined();
       expect(result.nullMean).toBeDefined();
       expect(result.nullStd).toBeGreaterThanOrEqual(0);
@@ -55,11 +50,7 @@ describe('permutationTest', () => {
     });
 
     it('observed statistic equals mean of aligned series', () => {
-      const returns = [0.01, 0.02, 0.03, 0.04];
-      const signals = [1, -1, 1, -1];
-      // aligned: 0.01*1 + 0.02*(-1) + 0.03*1 + 0.04*(-1) = 0.01 - 0.02 + 0.03 - 0.04 = -0.02
-      // mean = -0.02 / 4 = -0.005
-      const result = permutationTest(returns, signals, mean, { ...baseOptions, iterations: 10 });
+      const result = permutationTest([0.01, 0.02, 0.03, 0.04], [1, -1, 1, -1], mean, { ...baseOptions, iterations: 10 });
       expect(result.observed).toBeCloseTo(-0.005, 6);
     });
   });
@@ -197,25 +188,19 @@ describe('compareAgainstRandomEntry', () => {
     it('non-finite strategy expectancy throws', () => {
       const report = makeReport({ expectancy: NaN });
       const baseline = makeReport({ expectancy: 0.02 });
-      expect(() => compareAgainstRandomEntry(report, baseline, baseOptions)).toThrow(
-        'Strategy report expectancy must be finite',
-      );
+      expect(() => compareAgainstRandomEntry(report, baseline, baseOptions)).toThrow('Strategy report expectancy must be finite');
     });
 
     it('non-finite baseline expectancy throws', () => {
       const report = makeReport({ expectancy: 0.02 });
       const baseline = makeReport({ expectancy: NaN });
-      expect(() => compareAgainstRandomEntry(report, baseline, baseOptions)).toThrow(
-        'Baseline report expectancy must be finite',
-      );
+      expect(() => compareAgainstRandomEntry(report, baseline, baseOptions)).toThrow('Baseline report expectancy must be finite');
     });
 
     it('non-finite minEdge throws', () => {
       const report = makeReport({ expectancy: 0.02 });
       const baseline = makeReport({ expectancy: 0.01 });
-      expect(() => compareAgainstRandomEntry(report, baseline, { minEdge: NaN })).toThrow(
-        'compareAgainstRandomEntry requires a finite minEdge',
-      );
+      expect(() => compareAgainstRandomEntry(report, baseline, { minEdge: NaN })).toThrow('compareAgainstRandomEntry requires a finite minEdge');
     });
   });
 });

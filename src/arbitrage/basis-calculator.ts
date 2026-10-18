@@ -4,33 +4,20 @@ export class BasisCalculator {
     public calculateAmmOutput(pool: AMMPool, amountIn: number, isBaseToQuote: boolean): number {
         const { reserveBase, reserveQuote, feeTier } = pool;
         const amountInWithFee = amountIn * (1 - feeTier);
-        
         if (isBaseToQuote) {
-            const numerator = amountInWithFee * reserveQuote;
-            const denominator = reserveBase + amountInWithFee;
-            return numerator / denominator;
-        } else {
-            const numerator = amountInWithFee * reserveBase;
-            const denominator = reserveQuote + amountInWithFee;
-            return numerator / denominator;
+            return (amountInWithFee * reserveQuote) / (reserveBase + amountInWithFee);
         }
+        return (amountInWithFee * reserveBase) / (reserveQuote + amountInWithFee);
     }
 
     public calculateAmmInput(pool: AMMPool, amountOut: number, isQuoteForBase: boolean): number | null {
         const { reserveBase, reserveQuote, feeTier } = pool;
         if (isQuoteForBase) {
-            // We want amountOut of Base, how much Quote to put in?
             if (amountOut >= reserveBase) return null;
-            const numerator = amountOut * reserveQuote;
-            const denominator = (reserveBase - amountOut) * (1 - feeTier);
-            return numerator / denominator;
-        } else {
-            // We want amountOut of Quote, how much Base to put in?
-            if (amountOut >= reserveQuote) return null;
-            const numerator = amountOut * reserveBase;
-            const denominator = (reserveQuote - amountOut) * (1 - feeTier);
-            return numerator / denominator;
+            return (amountOut * reserveQuote) / ((reserveBase - amountOut) * (1 - feeTier));
         }
+        if (amountOut >= reserveQuote) return null;
+        return (amountOut * reserveBase) / ((reserveQuote - amountOut) * (1 - feeTier));
     }
 
     public findBestOpportunity(

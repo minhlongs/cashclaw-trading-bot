@@ -13,19 +13,13 @@ import type { Candle } from '@/forest/backtest/ohlcv';
 import { computeRegimeContext } from '@/tree/regime/bot-context';
 
 export interface TickContext {
-  id: string;
-  config: BotConfig;
-  deps: BotDependencies;
-  callbacks: BotCallbacks;
-  state: BotState;
+  id: string; config: BotConfig; deps: BotDependencies; callbacks: BotCallbacks; state: BotState;
   strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy | null;
-  strategyChain: StrategyChain | null;
-  lastTickPrice: number | null;
+  strategyChain: StrategyChain | null; lastTickPrice: number | null;
   placeOrder: (req: OrderRequest) => Promise<import('../exchange/types').OrderResult>;
   pause: () => void;
   emitTelemetry: (eventType: TradeEventType, details: Record<string, unknown>) => void;
-  emitState: () => void;
-  recentCandles?: Candle[];
+  emitState: () => void; recentCandles?: Candle[];
 }
 
 export interface TickResult { lastTickPrice: number | null; }

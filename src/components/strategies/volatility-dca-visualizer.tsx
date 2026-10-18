@@ -15,13 +15,10 @@ export function VolatilityDcaVisualizer({ initialPrice = 64250 }: Readonly<Volat
   const [currentPrice, setCurrentPrice] = useState(initialPrice * 0.965);
   const [volatility, setVolatility] = useState(0.038);
 
-  const signalResult = useMemo(
-    () => volatilityDca(
-      { symbol, balance: 10000, lastPrice: currentPrice },
-      { referencePrice, volatility, volBaseline: 0.02, priceDropStep: 0.025, stepIndex: 0, maxSteps: 5, reboundTarget: 0.04 },
-    ),
-    [symbol, currentPrice, referencePrice, volatility],
-  );
+  const signalResult = useMemo(() => volatilityDca(
+    { symbol, balance: 10000, lastPrice: currentPrice },
+    { referencePrice, volatility, volBaseline: 0.02, priceDropStep: 0.025, stepIndex: 0, maxSteps: 5, reboundTarget: 0.04 },
+  ), [symbol, currentPrice, referencePrice, volatility]);
   const drawdownPct = ((referencePrice - currentPrice) / referencePrice) * 100;
 
   return (

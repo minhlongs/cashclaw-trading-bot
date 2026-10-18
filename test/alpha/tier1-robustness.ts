@@ -26,7 +26,6 @@ export function registerTier1RobustnessTests(): void {
         expect(evalLeakageInvariance(0).threshold).toBe(0);
       });
     });
-
     describe('F13: noSingleWindowDependency (Anti-Windfall Luck <= 50%)', () => {
       it('passes when max single window contributes <= 50% across multiple windows', () => {
         const check = evalNoSingleWindowDependency([2000, 2500, 2200, 1800, 2500], 0.50);
@@ -52,11 +51,9 @@ export function registerTier1RobustnessTests(): void {
         expect(evalNoSingleWindowDependency([100, -200, 50], 0.50).passed).toBe(false);
       });
     });
-
     describe('F14: baselineComparison (Outperforms Buy & Hold and Random)', () => {
       it('passes when candidate strictly outperforms both baselines on Sharpe and Net PnL', () => {
-        const check = evalBaselineComparison({ sharpe: 1.8, netPnl: 15000 }, { sharpe: 0.9, netPnl: 8000 }, { sharpe: -0.1, netPnl: -500 });
-        expect(check.passed).toBe(true);
+        expect(evalBaselineComparison({ sharpe: 1.8, netPnl: 15000 }, { sharpe: 0.9, netPnl: 8000 }, { sharpe: -0.1, netPnl: -500 }).passed).toBe(true);
       });
       it('fails when candidate lags Buy & Hold Sharpe ratio despite higher Net PnL', () => {
         expect(evalBaselineComparison({ sharpe: 1.2, netPnl: 20000 }, { sharpe: 1.5, netPnl: 10000 }, { sharpe: 0.1, netPnl: 500 }).passed).toBe(false);
@@ -119,9 +116,7 @@ export function registerTier1RobustnessTests(): void {
       });
       it('generates structured diagnostic reasons for every failure', () => {
         const result = runOpaquePromotionGate(createPassingGateInput({ numTrades: 15, maxDrawdown: 0.40 }));
-        expect(result.diagnosticReasons.length).toBe(2);
-        expect(result.diagnosticReasons[0]).toContain('min_trades');
-        expect(result.diagnosticReasons[1]).toContain('max_drawdown');
+        expect(result.diagnosticReasons).toEqual([expect.stringContaining('min_trades'), expect.stringContaining('max_drawdown')]);
       });
       it('timestamp is populated as a positive epoch number', () => {
         expect(runOpaquePromotionGate(createPassingGateInput()).timestamp).toBeGreaterThan(0);
@@ -136,10 +131,8 @@ export function registerTier1RobustnessTests(): void {
         expect(getTransition('SHADOW', { type: 'manual_approval', approved: false })).toBe('KILLED');
       });
       it('guarantees LIVE and KILLED are terminal sink states', () => {
-        expect(isTerminalPhase('LIVE')).toBe(true);
-        expect(isTerminalPhase('KILLED')).toBe(true);
-        expect(getTransition('LIVE', { type: 'promote' })).toBeNull();
-        expect(getTransition('KILLED', { type: 'gate_passed' })).toBeNull();
+        expect(isTerminalPhase('LIVE') && isTerminalPhase('KILLED')).toBe(true);
+        expect(getTransition('LIVE', { type: 'promote' }) ?? getTransition('KILLED', { type: 'gate_passed' })).toBeNull();
         expect(() => transitionStrategy('LIVE', { type: 'demote' })).toThrow(/Invalid transition/);
       });
     });

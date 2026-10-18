@@ -196,24 +196,11 @@ describe('evaluateCrossSectional — validation and error propagation', () => {
 
   it('rejects misaligned snapshots (universe mismatch, duplicates, degenerate counts)', () => {
     const foreign = snapshots.map((s) => ({ ...s, universeId: 'OTHER' }));
-    expect(() => evaluateCrossSectional(UNIVERSE, foreign, panel, BASE_EVAL_CONFIG)).toThrow(
-      /universeId 'OTHER' does not match universe/,
-    );
+    expect(() => evaluateCrossSectional(UNIVERSE, foreign, panel, BASE_EVAL_CONFIG)).toThrow(/universeId 'OTHER' does not match universe/);
 
-    const duplicated = [
-      snapshots[0]!,
-      { ...snapshots[1]!, timestamp: snapshots[0]!.timestamp },
-      ...snapshots.slice(2),
-    ];
-    expect(() => evaluateCrossSectional(UNIVERSE, duplicated, panel, BASE_EVAL_CONFIG)).toThrow(
-      /strictly increasing/,
-    );
-
-    expect(() => evaluateCrossSectional(UNIVERSE, [snapshots[0]!], panel, BASE_EVAL_CONFIG)).toThrow(
-      /at least 2 snapshots/,
-    );
-    expect(() =>
-      evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, minObservations: 99 }),
-    ).toThrow(/below minObservations 99/);
+    const duplicated = [snapshots[0]!, { ...snapshots[1]!, timestamp: snapshots[0]!.timestamp }, ...snapshots.slice(2)];
+    expect(() => evaluateCrossSectional(UNIVERSE, duplicated, panel, BASE_EVAL_CONFIG)).toThrow(/strictly increasing/);
+    expect(() => evaluateCrossSectional(UNIVERSE, [snapshots[0]!], panel, BASE_EVAL_CONFIG)).toThrow(/at least 2 snapshots/);
+    expect(() => evaluateCrossSectional(UNIVERSE, snapshots, panel, { ...BASE_EVAL_CONFIG, minObservations: 99 })).toThrow(/below minObservations 99/);
   });
 });

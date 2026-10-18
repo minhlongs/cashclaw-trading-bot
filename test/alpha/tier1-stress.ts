@@ -88,26 +88,19 @@ export function registerTier1StressTests(): void {
         expect(check.passed).toBe(true);
         expect(check.actual).toBe(0.80);
       });
-
       it('passes when walk-forward fraction matches exact 60% threshold', () => {
-        const check = evalCrossPeriodRobustness(0.60, 0.60);
-        expect(check.passed).toBe(true);
+        expect(evalCrossPeriodRobustness(0.60, 0.60).passed).toBe(true);
       });
-
       it('fails when walk-forward fraction is below threshold', () => {
         const check = evalCrossPeriodRobustness(0.40, 0.60);
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('40.0% vs. minimum 60%');
       });
-
       it('fails when 0% of OOS windows are positive', () => {
-        const check = evalCrossPeriodRobustness(0.0, 0.60);
-        expect(check.passed).toBe(false);
+        expect(evalCrossPeriodRobustness(0.0, 0.60).passed).toBe(false);
       });
-
       it('fails when positive fraction is NaN or non-finite', () => {
-        const check = evalCrossPeriodRobustness(NaN, 0.60);
-        expect(check.passed).toBe(false);
+        expect(evalCrossPeriodRobustness(NaN, 0.60).passed).toBe(false);
       });
     });
 
@@ -117,28 +110,22 @@ export function registerTier1StressTests(): void {
         expect(check.passed).toBe(true);
         expect(check.actual).toBe(0.75);
       });
-
       it('passes when positive asset fraction matches exact threshold', () => {
-        const check = evalCrossAssetRobustness(0.50, true, 0.50);
-        expect(check.passed).toBe(true);
+        expect(evalCrossAssetRobustness(0.50, true, 0.50).passed).toBe(true);
       });
-
       it('fails when positive asset fraction is below threshold', () => {
         const check = evalCrossAssetRobustness(0.25, true, 0.50);
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('25.0% vs. minimum 50%');
       });
-
       it('passes with exemption when strategy is declared asset-specific', () => {
         const check = evalCrossAssetRobustness(0.0, false, 0.50);
         expect(check.passed).toBe(true);
         expect(check.actual).toBe('exempt');
         expect(check.detail).toContain('Exempted: asset-specific');
       });
-
       it('fails when fraction is NaN and applicable is true', () => {
-        const check = evalCrossAssetRobustness(NaN, true, 0.50);
-        expect(check.passed).toBe(false);
+        expect(evalCrossAssetRobustness(NaN, true, 0.50).passed).toBe(false);
       });
     });
   });

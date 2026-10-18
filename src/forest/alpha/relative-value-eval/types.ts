@@ -15,13 +15,9 @@ export interface RVRegimeSubReport {
 
 /** Trade-level performance metrics over completed round trips. */
 export interface RoundTripMetrics {
-  /** Mean net return per completed trade (0 when no completed trades). */
   readonly expectancyPerTrade: number;
-  /** Gross profit / gross loss over completed trades (0 when undefined). */
   readonly profitFactor: number;
-  /** Winning trades / completed trades (0 when no completed trades). */
   readonly winRate: number;
-  /** Completed round-trip count backing the metrics above. */
   readonly completedTrades: number;
 }
 

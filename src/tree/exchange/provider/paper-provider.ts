@@ -5,9 +5,7 @@ import type { ExchangeId, Ticker, OrderBook, Balance, OrderRequest, OrderResult 
 import { PaperExchange, type MarketDataFetcher } from '../paper';
 import type { ExchangeProvider, PaperProviderConfig, ProviderHealth, ProviderBudget } from './types';
 import { CircuitBreaker } from './circuit-breaker';
-import {
-  createInitialHealth, applyRecordSuccess, applyRecordFailure, isScoreUnhealthy,
-} from './paper-provider-health';
+import { createInitialHealth, applyRecordSuccess, applyRecordFailure, isScoreUnhealthy } from './paper-provider-health';
 import { computeNextBackoff, resolveBackoffMs } from './paper-provider-circuit';
 import {
   fetchTicker as apiFetchTicker, fetchOrderBook as apiFetchOrderBook,
@@ -33,13 +31,11 @@ export class PaperExchangeProvider implements ExchangeProvider {
   constructor(config: PaperProviderConfig) {
     this.config = config;
     this.id = `provider:${config.exchangeId}:${config.type}`;
-
     let tickerFetcher: MarketDataFetcher | undefined = config.tickerFetcher;
     if (!tickerFetcher && config.directTickerProvider) {
       const dtp = config.directTickerProvider;
       tickerFetcher = (_exchangeId: ExchangeId, symbol: string) => dtp.fetchTicker(symbol);
     }
-
     this.adapter = new PaperExchange(config.initialBalances, { tickerFetcher });
     this.health = createInitialHealth();
     this.budget = config.tradingLimits ?? { reqPerMin: 100, reqPerHour: 5000 };

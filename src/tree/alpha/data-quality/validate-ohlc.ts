@@ -6,10 +6,8 @@ const FLOAT_EPSILON = 1e-9;
 function checkPricePositivity(candle: Candle, index: number): QualityViolation | null {
   const { open, high, low, close, timestamp } = candle;
   const nonPositive = [
-    { name: 'open', val: open },
-    { name: 'high', val: high },
-    { name: 'low', val: low },
-    { name: 'close', val: close },
+    { name: 'open', val: open }, { name: 'high', val: high },
+    { name: 'low', val: low }, { name: 'close', val: close },
   ].filter((p) => !Number.isFinite(p.val) || p.val <= 0);
 
   if (nonPositive.length > 0) {
@@ -17,9 +15,7 @@ function checkPricePositivity(candle: Candle, index: number): QualityViolation |
     return {
       dimension: DIMENSION,
       message: `Invalid non-positive or non-finite price at index ${index}: ${invalidFields}`,
-      index,
-      timestamp,
-      details: { index, timestamp, open, high, low, close, invalidFields },
+      index, timestamp, details: { index, timestamp, open, high, low, close, invalidFields },
     };
   }
   return null;

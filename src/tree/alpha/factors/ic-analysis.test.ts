@@ -5,12 +5,8 @@ import type { SymbolPanel } from './panel';
 
 function makePanel(symbol: string, closes: readonly number[]): SymbolPanel {
   return {
-    symbol,
-    timestamps: Array.from({ length: closes.length }, (_, i) => i * 1000),
-    open: closes,
-    high: closes,
-    low: closes,
-    close: closes,
+    symbol, timestamps: Array.from({ length: closes.length }, (_, i) => i * 1000),
+    open: closes, high: closes, low: closes, close: closes,
     volume: Array.from({ length: closes.length }, () => 1),
   };
 }
@@ -20,15 +16,9 @@ function geometric(symbol: string, n: number, rate: number): SymbolPanel {
   return makePanel(symbol, Array.from({ length: n }, (_, i) => 100 * (1 + rate) ** i));
 }
 
-function constantScores(
-  symbols: readonly string[],
-  n: number,
-  values: readonly number[],
-): Record<string, (number | null)[]> {
+function constantScores(symbols: readonly string[], n: number, values: readonly number[]): Record<string, (number | null)[]> {
   const out: Record<string, (number | null)[]> = {};
-  symbols.forEach((s, i) => {
-    out[s] = new Array<number | null>(n).fill(values[i]);
-  });
+  symbols.forEach((s, i) => { out[s] = new Array<number | null>(n).fill(values[i]); });
   return out;
 }
 

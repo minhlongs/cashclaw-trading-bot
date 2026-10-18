@@ -22,11 +22,8 @@ export class ExecutionOmsWaterfall {
   }
 
   processOrder(
-    order: InboundOrder,
-    midPrice: number,
-    inventoryQuotes: readonly RfqQuoteRequest[] = [],
-    marketToxicity = 0.2,
-    venues?: readonly VenueLiquidityProfile[]
+    order: InboundOrder, midPrice: number, inventoryQuotes: readonly RfqQuoteRequest[] = [],
+    marketToxicity = 0.2, venues?: readonly VenueLiquidityProfile[]
   ): OmsWaterfallResult {
     if (order.quantity <= 0 || !Number.isFinite(order.quantity)) {
       return this.buildResult(order, 0, 0, order.quantity, 'REJECTED', 0, [], 'Order quantity must be positive and finite.');

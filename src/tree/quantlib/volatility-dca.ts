@@ -4,12 +4,8 @@
 import type { QuantLibContext, QuantResult } from './index';
 
 interface ResolvedDcaParams {
-  volatility: number;
-  volBaseline: number;
-  priceDropStep: number;
-  stepIndex: number;
-  maxSteps: number;
-  reboundTarget: number;
+  volatility: number; volBaseline: number; priceDropStep: number;
+  stepIndex: number; maxSteps: number; reboundTarget: number;
 }
 
 function resolveDcaParams(params?: Record<string, number>): ResolvedDcaParams {

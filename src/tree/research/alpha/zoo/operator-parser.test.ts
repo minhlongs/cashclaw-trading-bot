@@ -170,12 +170,8 @@ describe('parseFormula — window/lag validation', () => {
   it('optional params accepted: scale(close), scale(close, 2), safe_div(a, b[, eps])', () => {
     expect(okAst('scale(close)')).toEqual(call('scale', [field('close', 0)]));
     expect(okAst('scale(close, 2)')).toEqual(call('scale', [field('close', 0), num(2)]));
-    expect(okAst('safe_div(close, open)')).toEqual(
-      call('safe_div', [field('close', 0), field('open', 0)]),
-    );
-    expect(okAst('safe_div(close, open, 0.001)')).toEqual(
-      call('safe_div', [field('close', 0), field('open', 0), num(0.001)]),
-    );
+    expect(okAst('safe_div(close, open)')).toEqual(call('safe_div', [field('close', 0), field('open', 0)]));
+    expect(okAst('safe_div(close, open, 0.001)')).toEqual(call('safe_div', [field('close', 0), field('open', 0), num(0.001)]));
   });
 });
 
@@ -189,17 +185,11 @@ describe('parseFormula — structure, precedence, maxLookback', () => {
     expect(okAst('vwap()')).toEqual(call('vwap', []));
   });
   it('multiplication binds tighter than addition', () => {
-    expect(okAst('close + open * volume')).toEqual(
-      bin('+', field('close', 0), bin('*', field('open', 0), field('volume', 0))),
-    );
-    expect(okAst('(close + open) * volume')).toEqual(
-      bin('*', bin('+', field('close', 0), field('open', 0)), field('volume', 0)),
-    );
+    expect(okAst('close + open * volume')).toEqual(bin('+', field('close', 0), bin('*', field('open', 0), field('volume', 0))));
+    expect(okAst('(close + open) * volume')).toEqual(bin('*', bin('+', field('close', 0), field('open', 0)), field('volume', 0)));
   });
   it('nested calls parse', () => {
-    expect(okAst('rank(ts_mean(close, 5))')).toEqual(
-      call('rank', [call('ts_mean', [field('close', 0), num(5)])]),
-    );
+    expect(okAst('rank(ts_mean(close, 5))')).toEqual(call('rank', [call('ts_mean', [field('close', 0), num(5)])]));
   });
   it('maxLookback = max over lags and window/lag literals', () => {
     expect(okLookback('-1 * ts_corr(open, volume, 10)')).toBe(10);

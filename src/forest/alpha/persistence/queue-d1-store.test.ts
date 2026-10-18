@@ -26,14 +26,10 @@ function createRecordingDb(allResult: StubAllResult = { results: [] }): {
   statements: RecordedStatement[];
 } {
   const statements: RecordedStatement[] = [];
-
   const makeStatement = (sql: string): D1PreparedStatement => {
     let values: unknown[] = [];
     const statement: D1PreparedStatement = {
-      bind(...bound: unknown[]): D1PreparedStatement {
-        values = bound;
-        return statement;
-      },
+      bind(...bound: unknown[]): D1PreparedStatement { values = bound; return statement; },
       first: async () => null,
       firstRow: async () => null,
       all: async <T>() => {
@@ -47,14 +43,12 @@ function createRecordingDb(allResult: StubAllResult = { results: [] }): {
     };
     return statement;
   };
-
   const db: D1Database = {
     prepare: (sql: string) => makeStatement(sql),
     batch: async () => [],
     exec: async () => ({ count: 0, duration: 0 }),
     dump: async () => '',
   };
-
   return { db, statements };
 }
 
@@ -157,17 +151,15 @@ describe('D1ResearchQueueStore', () => {
     it('maps rows back to ResearchQueueJob domain shape', async () => {
       const job = makeJob();
       const { db } = createRecordingDb({
-        results: [
-          {
-            job_id: job.id, hypothesis: job.hypothesis, rationale: job.rationale,
-            features_json: JSON.stringify(job.features), dataset: job.dataset, regime: job.regime,
-            universe_json: JSON.stringify(job.universe), costs_json: JSON.stringify(job.costs),
-            slippage_json: JSON.stringify(job.slippage), seed: job.seed,
-            parent_hypothesis: job.parentHypothesis, generated_by: job.generatedBy,
-            timestamp: job.timestamp, git_sha: job.gitSha, status: job.status,
-            config_hash: job.configHash, result_json: null, created_at: job.timestamp,
-          },
-        ],
+        results: [{
+          job_id: job.id, hypothesis: job.hypothesis, rationale: job.rationale,
+          features_json: JSON.stringify(job.features), dataset: job.dataset, regime: job.regime,
+          universe_json: JSON.stringify(job.universe), costs_json: JSON.stringify(job.costs),
+          slippage_json: JSON.stringify(job.slippage), seed: job.seed,
+          parent_hypothesis: job.parentHypothesis, generated_by: job.generatedBy,
+          timestamp: job.timestamp, git_sha: job.gitSha, status: job.status,
+          config_hash: job.configHash, result_json: null, created_at: job.timestamp,
+        }],
       });
       const jobs = await createD1QueueStore(db).listJobs();
       expect(jobs).toHaveLength(1);
@@ -190,13 +182,11 @@ describe('D1ResearchQueueStore', () => {
     it('maps rows back to QueueEventRecord domain shape', async () => {
       const event = makeEvent();
       const { db } = createRecordingDb({
-        results: [
-          {
-            event_id: event.eventId, job_id: event.jobId, from_status: event.fromStatus,
-            to_status: event.toStatus, trigger: event.trigger, payload_json: event.payloadJson,
-            created_at: event.createdAt,
-          },
-        ],
+        results: [{
+          event_id: event.eventId, job_id: event.jobId, from_status: event.fromStatus,
+          to_status: event.toStatus, trigger: event.trigger, payload_json: event.payloadJson,
+          created_at: event.createdAt,
+        }],
       });
       const events = await createD1QueueStore(db).loadEvents('job-1');
       expect(events).toHaveLength(1);

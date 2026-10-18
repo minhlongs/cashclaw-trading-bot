@@ -10,10 +10,7 @@ interface BotDetailConfigProps {
   onConfigSaved?: (newConfig: Record<string, number>) => void;
 }
 
-interface SaveStatus {
-  type: 'success' | 'error';
-  message: string;
-}
+interface SaveStatus { type: 'success' | 'error'; message: string; }
 
 export function BotDetailConfig({ config, botId, onConfigSaved }: BotDetailConfigProps) {
   const t = useTranslations('botDetail');
@@ -22,10 +19,7 @@ export function BotDetailConfig({ config, botId, onConfigSaved }: BotDetailConfi
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState<SaveStatus | null>(null);
 
-  if (config !== prevConfig) {
-    setPrevConfig(config);
-    setFormValues(config);
-  }
+  if (config !== prevConfig) { setPrevConfig(config); setFormValues(config); }
 
   const handleInputChange = (key: string, value: string) => {
     const num = parseFloat(value);

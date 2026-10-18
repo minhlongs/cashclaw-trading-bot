@@ -3,28 +3,14 @@
  * @description Evaluates haircut-discounted effective collateral, maintenance margin, and liquidation distances.
  */
 
-import type {
-  AssetBalance,
-  MarginHealthStatus,
-  MarginRouterConfig,
-  PositionNotional,
-  VenueAccountSnapshot,
-  VenueMarginHealth,
-} from './portfolio-margin-types';
+import type { AssetBalance, MarginHealthStatus, MarginRouterConfig, PositionNotional, VenueAccountSnapshot, VenueMarginHealth } from './portfolio-margin-types';
 
 export const DEFAULT_MARGIN_CONFIG: MarginRouterConfig = {
   rebalanceThresholdPct: 0.75,
   criticalThresholdPct: 0.85,
   targetSafeUtilizationPct: 0.55,
   minTransferAmountUsd: 100,
-  assetHaircuts: {
-    USDT: 1.0,
-    USDC: 1.0,
-    USD: 1.0,
-    BTC: 0.9,
-    ETH: 0.85,
-    SOL: 0.7,
-  },
+  assetHaircuts: { USDT: 1.0, USDC: 1.0, USD: 1.0, BTC: 0.9, ETH: 0.85, SOL: 0.7 },
 };
 
 export function calculateEffectiveCollateral(

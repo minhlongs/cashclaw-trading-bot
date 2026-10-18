@@ -38,10 +38,7 @@ export async function middleware(req: NextRequest) {
   // Validate session cookie exists.
   const sessionId = req.cookies.get('session_id')?.value;
   if (!sessionId) {
-    return NextResponse.json(
-      { ok: false, error: 'Authentication required' },
-      { status: 401 }
-    );
+    return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 });
   }
 
   // Strip any client-supplied x-user-id to prevent spoofing
@@ -59,10 +56,7 @@ export async function middleware(req: NextRequest) {
         .all<{ user_id: string; expires_at: number }>();
 
       if (!results.length || results[0].expires_at < now) {
-        return NextResponse.json(
-          { ok: false, error: 'Session expired' },
-          { status: 401 }
-        );
+        return NextResponse.json({ ok: false, error: 'Session expired' }, { status: 401 });
       }
 
       // Set server-verified userId on request (overrides any client value)
@@ -70,27 +64,18 @@ export async function middleware(req: NextRequest) {
       return NextResponse.next({ request: { headers: sanitizedHeaders } });
     } catch {
       // D1 query failed — deny request rather than silently allowing
-      return NextResponse.json(
-        { ok: false, error: 'Session validation failed' },
-        { status: 401 }
-      );
+      return NextResponse.json({ ok: false, error: 'Session validation failed' }, { status: 401 });
     }
   }
 
   // No DB available (local dev only) — accept with valid cookie
   // In production this should never happen; fail-closed.
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json(
-      { ok: false, error: 'Session store unavailable' },
-      { status: 503 }
-    );
+    return NextResponse.json({ ok: false, error: 'Session store unavailable' }, { status: 503 });
   }
   return NextResponse.next();
 }
 
 export const config = {
-  // Match all routes except static assets, images, and Next.js internals.
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)'],
 };

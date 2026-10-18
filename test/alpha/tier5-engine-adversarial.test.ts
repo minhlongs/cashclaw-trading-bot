@@ -111,10 +111,8 @@ describe('Tier 5 Adversarial Hardening: Diagnostics & Uncovered Fallback Branche
 
 describe('Tier 5 Adversarial Hardening: State Machine Edge Invariants', () => {
   it('formats manual_approval boolean diagnostics upon invalid state transition', () => {
-    expect(() => transitionStrategy('RESEARCH', { type: 'manual_approval', approved: true }))
-      .toThrow(/manual_approval\(true\)/);
-    expect(() => transitionStrategy('BACKTEST', { type: 'manual_approval', approved: false }))
-      .toThrow(/manual_approval\(false\)/);
+    expect(() => transitionStrategy('RESEARCH', { type: 'manual_approval', approved: true })).toThrow(/manual_approval\(true\)/);
+    expect(() => transitionStrategy('BACKTEST', { type: 'manual_approval', approved: false })).toThrow(/manual_approval\(false\)/);
     expect(getTransition('SHADOW', { type: 'manual_approval', approved: false })).toBe('KILLED');
   });
 
@@ -132,9 +130,7 @@ describe('Tier 5 Adversarial Hardening: State Machine Edge Invariants', () => {
     const nonTerminals: StrategyPhase[] = [
       'RESEARCH', 'BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW', 'MANUAL_APPROVAL',
     ];
-    for (const phase of nonTerminals) {
-      expect(isTerminalPhase(phase)).toBe(false);
-    }
+    for (const phase of nonTerminals) expect(isTerminalPhase(phase)).toBe(false);
     expect(isTerminalPhase('LIVE')).toBe(true);
     expect(isTerminalPhase('KILLED')).toBe(true);
   });

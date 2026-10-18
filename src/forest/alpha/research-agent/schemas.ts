@@ -4,15 +4,9 @@ import { z } from 'zod';
 
 export { cleanJsonString, parseRawJson } from './schemas-json-parser';
 export {
-  ClusteringCandidateSchema,
-  ClusterHypothesesRequestSchema,
-  HypothesisClusteringRequestSchema,
-  HypothesisClusterSchema,
-  HypothesisClusteringResponseSchema,
-  NextExperimentSpecSchema,
-  RecommendExperimentsRequestSchema,
-  NextExperimentRequestSchema,
-  NextExperimentResponseSchema,
+  ClusteringCandidateSchema, ClusterHypothesesRequestSchema, HypothesisClusteringRequestSchema,
+  HypothesisClusterSchema, HypothesisClusteringResponseSchema, NextExperimentSpecSchema,
+  RecommendExperimentsRequestSchema, NextExperimentRequestSchema, NextExperimentResponseSchema,
 } from './schemas-cluster-experiment';
 
 // ── Capability 1: Hypothesis Generation ───────────────────────────────────────

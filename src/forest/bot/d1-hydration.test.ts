@@ -110,62 +110,51 @@ describe('d1-hydration', () => {
       mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
       mockedCreateServerClient.mockReturnValue({} as never);
       mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'paper_test' })] as never);
-
       await hydrateFromD1('user_1');
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'running' }));
     });
-
     it('maps D1 status live_running to runtime running', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
       mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
       mockedCreateServerClient.mockReturnValue({} as never);
       mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'live_running' })] as never);
-
       await hydrateFromD1('user_1');
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'running' }));
     });
-
     it('maps D1 status paused to runtime paused', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
       mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
       mockedCreateServerClient.mockReturnValue({} as never);
       mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'paused' })] as never);
-
       await hydrateFromD1('user_1');
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'paused' }));
     });
-
     it('maps D1 status stopped to runtime stopped', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
       mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
       mockedCreateServerClient.mockReturnValue({} as never);
       mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'stopped' })] as never);
-
       await hydrateFromD1('user_1');
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'stopped' }));
     });
-
     it('maps D1 status error to runtime error', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
       mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
       mockedCreateServerClient.mockReturnValue({} as never);
       mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'error' })] as never);
-
       await hydrateFromD1('user_1');
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
     });
-
     it('maps D1 status draft to runtime idle', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
       mockedGetBotManager.mockReturnValue({ createBot: vi.fn().mockResolvedValue(bot) } as never);
       mockedCreateServerClient.mockReturnValue({} as never);
       mockedFindBotsByUser.mockResolvedValue([makeRow({ status: 'draft' })] as never);
-
       await hydrateFromD1('user_1');
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({ status: 'idle' }));
     });

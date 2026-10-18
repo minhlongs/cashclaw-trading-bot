@@ -77,7 +77,6 @@ export interface DashboardState {
 }
 
 // ── Input Types for update() ────────────────────────────────────────────────
-
 /** Regime signal fed into the dashboard tracker. */
 export interface RegimeInput {
   readonly label: RegimeLabel;
@@ -87,10 +86,6 @@ export interface RegimeInput {
 
 /** Performance snapshot fed into the dashboard tracker on each tick. */
 export interface PerformanceInput {
-  readonly totalPnl: number;
-  readonly sharpeRatio: number;
-  readonly maxDrawdown: number;
-  readonly winRate: number;
-  readonly tradeCount: number;
-  readonly avgDuration: number;
+  readonly totalPnl: number; readonly sharpeRatio: number; readonly maxDrawdown: number;
+  readonly winRate: number; readonly tradeCount: number; readonly avgDuration: number;
 }

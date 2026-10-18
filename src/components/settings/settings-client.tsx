@@ -34,9 +34,8 @@ export function SettingsClient() {
           const d = (await res.json()) as { ok?: boolean; data?: SettingsData };
           if (d?.ok && d.data && !cancelled) setSettings(d.data);
         }
-      } catch { /* Network error — use safe defaults */ } finally {
-        if (!cancelled) setLoading(false);
-      }
+      } catch { /* Network error — use safe defaults */ }
+      finally { if (!cancelled) setLoading(false); }
     };
     void load();
     return () => { cancelled = true; };
@@ -47,17 +46,12 @@ export function SettingsClient() {
     try {
       const res = await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const result = (await res.json()) as { ok?: boolean; error?: string };
-      if (result.ok) { onOk(); setSaveMessage(okMsg); }
-      else setSaveMessage(result.error ?? failMsg);
+      if (result.ok) { onOk(); setSaveMessage(okMsg); } else setSaveMessage(result.error ?? failMsg);
     } catch { setSaveMessage('Network error'); }
   };
 
   const handleExchangeSave = (exchange: string, apiKey: string, apiSecret: string, testnet: boolean) =>
-    post(
-      { type: 'exchange', exchange, apiKey, apiSecret, testnet },
-      () => setSettings((p) => ({ ...p, exchanges: { ...p.exchanges, [exchange]: { apiKey, apiSecret, testnet } } })),
-      `${exchange} saved!`, `${exchange} save failed`,
-    );
+    post({ type: 'exchange', exchange, apiKey, apiSecret, testnet }, () => setSettings((p) => ({ ...p, exchanges: { ...p.exchanges, [exchange]: { apiKey, apiSecret, testnet } } })), `${exchange} saved!`, `${exchange} save failed`);
   const handleNotificationSave = (botToken: string, chatId: string) =>
     post({ type: 'notification', botToken, chatId }, () => setSettings((p) => ({ ...p, notification: { botToken, chatId } })), 'Telegram notifications saved!', 'Notification save failed');
   const handleStrategySave = (risk: SettingsData['risk']) =>

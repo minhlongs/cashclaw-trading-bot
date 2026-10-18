@@ -71,8 +71,7 @@ describe('Adversarial Challenge: Milestone 2 Promotion Gate Engine', () => {
   describe('Conjunctive Discrimination: 15 single-check failure candidates', () => {
     mutations.forEach(({ name, desc, create }) => {
       it(`Check [${name}]: ${desc} yields KILLED and passed: false`, () => {
-        const candidate = create();
-        const res = runPromotionGate(candidate);
+        const res = runPromotionGate(create());
         expect(res.passed).toBe(false);
         expect(res.verdict).toBe('KILLED');
         expect(res.failedChecks).toHaveLength(1);
@@ -94,8 +93,7 @@ describe('Adversarial Challenge: Milestone 2 Promotion Gate Engine', () => {
       robustness: {
         parameterSpread: 0.8, crossPeriodPositiveFraction: 0.2, crossAssetPositiveFraction: 0.2,
         crossAssetApplicable: true, leakageViolations: 3, windowPnls: [100],
-        baselineCandidate: { sharpe: 0.1, netPnl: 10 },
-        baselineBuyHold: { sharpe: 1.0, netPnl: 100 },
+        baselineCandidate: { sharpe: 0.1, netPnl: 10 }, baselineBuyHold: { sharpe: 1.0, netPnl: 100 },
         baselineRandomEntry: { sharpe: 0.5, netPnl: 50 }, hashMatches: false,
       },
     };
@@ -106,9 +104,7 @@ describe('Adversarial Challenge: Milestone 2 Promotion Gate Engine', () => {
     expect(res.failedChecks).toHaveLength(15);
     expect(res.diagnosticReasons).toHaveLength(15);
     const failedNames = res.failedChecks.map((c) => c.name);
-    for (const m of mutations) {
-      expect(failedNames).toContain(m.name);
-    }
+    for (const m of mutations) expect(failedNames).toContain(m.name);
   });
 
   it('config overrides: tightened and relaxed thresholds behave conjunctive and fail-closed', () => {
@@ -116,13 +112,11 @@ describe('Adversarial Challenge: Milestone 2 Promotion Gate Engine', () => {
     expect(runPromotionGate(base, { minTrades: 60 }).failedChecks[0].name).toBe('min_trades');
     expect(runPromotionGate(base, { maxDrawdown: 0.1 }).failedChecks[0].name).toBe('max_drawdown');
     expect(runPromotionGate(base, { minSharpe: 2.5 }).failedChecks[0].name).toBe('min_sharpe_sortino');
-
     const lowTrades = candidateWith({ financial: { numTrades: 25 } });
     expect(runPromotionGate(lowTrades).passed).toBe(false);
     const rRelaxed = runPromotionGate(lowTrades, { minTrades: 20 });
     expect(rRelaxed.passed).toBe(true);
     expect(rRelaxed.verdict).toBe('PASSED');
-
     expect(() => runPromotionGate(base, { minTrades: 0 })).toThrow(ZodError);
     expect(() => runPromotionGate(base, { minProfitFactor: -1 })).toThrow(ZodError);
     expect(() => runPromotionGate(base, { maxDrawdown: 1.5 })).toThrow(ZodError);
@@ -134,15 +128,9 @@ describe('Adversarial Challenge: Milestone 2 Promotion Gate Engine', () => {
     expect(() => runPromotionGate({} as unknown as PromotionGateInput)).toThrow(ZodError);
     expect(() => runPromotionGate({ ...base, rogue: true } as unknown as PromotionGateInput)).toThrow(ZodError);
     expect(() => runPromotionGate({ ...base, financial: { ...base.financial, numTrades: 50.5 } })).toThrow(ZodError);
-
-    const emptyWin = candidateWith({ robustness: { windowPnls: [] } });
-    expect(runPromotionGate(emptyWin).failedChecks[0].name).toBe('no_single_window_dependency');
-
-    const negWin = candidateWith({ robustness: { windowPnls: [-100, -200] } });
-    expect(runPromotionGate(negWin).failedChecks[0].name).toBe('no_single_window_dependency');
-
-    const exempt = candidateWith({ robustness: { crossAssetApplicable: false, crossAssetPositiveFraction: null } });
-    const rExempt = runPromotionGate(exempt);
+    expect(runPromotionGate(candidateWith({ robustness: { windowPnls: [] } })).failedChecks[0].name).toBe('no_single_window_dependency');
+    expect(runPromotionGate(candidateWith({ robustness: { windowPnls: [-100, -200] } })).failedChecks[0].name).toBe('no_single_window_dependency');
+    const rExempt = runPromotionGate(candidateWith({ robustness: { crossAssetApplicable: false, crossAssetPositiveFraction: null } }));
     expect(rExempt.passed).toBe(true);
     expect(rExempt.checks.find((c) => c.name === 'cross_asset_robustness')?.detail).toContain('Exempted');
   });

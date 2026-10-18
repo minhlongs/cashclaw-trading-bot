@@ -75,18 +75,14 @@ export class HypothesisGenerator {
         indicators[i] = { ...indicators[i]!, lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) };
       }
     }
-
-    // Add new indicator if below max
     if (indicators.length < 5 && Math.random() < rate) {
       const candidates = ALL_INDICATORS.filter((n) => !indicators.some((ind) => ind.indicator === n));
       if (candidates.length > 0) {
         indicators.push({ indicator: pick(candidates), lookback: randomInt(LOOKBACK_RANGE[0], LOOKBACK_RANGE[1]) });
       }
     }
-
     return {
-      ...parent, id, name: `${parent.name}-evolved#${this.counter}`,
-      indicatorSet: indicators,
+      ...parent, id, name: `${parent.name}-evolved#${this.counter}`, indicatorSet: indicators,
       combineMethod: Math.random() < rate ? pick(ALL_COMBINERS) : parent.combineMethod,
       optimizerMethod: Math.random() < rate ? pick(ALL_OPTIMIZERS) : parent.optimizerMethod,
       confidence: parent.confidence, createdAt: new Date().toISOString(),

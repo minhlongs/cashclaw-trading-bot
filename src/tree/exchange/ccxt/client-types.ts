@@ -3,9 +3,7 @@
 
 import type { Exchange as CCXTExchange } from 'ccxt';
 
-/**
- * Configuration for initializing a CCXT exchange connection.
- */
+/** Configuration for initializing a CCXT exchange connection. */
 export interface CCXTConfig {
   exchange: string;
   apiKey?: string;
@@ -14,17 +12,10 @@ export interface CCXTConfig {
   sandbox?: boolean;
 }
 
-/**
- * ccxt namespace contains exchange constructors keyed by capitalized name (e.g. "Binance").
- */
-export type ExchangeConstructors = Record<
-  string,
-  new (config?: Record<string, unknown>) => CCXTExchange
->;
+/** ccxt namespace contains exchange constructors keyed by capitalized name (e.g. "Binance"). */
+export type ExchangeConstructors = Record<string, new (config?: Record<string, unknown>) => CCXTExchange>;
 
-/**
- * Normalized ticker result returned by the CCXT transformer.
- */
+/** Normalized ticker result returned by the CCXT transformer. */
 export interface CCXTTickerResult {
   symbol: string;
   last: number;

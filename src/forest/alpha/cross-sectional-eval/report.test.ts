@@ -8,41 +8,24 @@ import { RegimeLabel } from '@/tree/regime/types';
 
 describe('report', () => {
   const makePeriod = (
-    timestamp: number,
-    netReturn: number,
-    grossReturn: number,
-    turnover: number,
-    costPct: number,
-    weights: Record<string, number> = {},
+    timestamp: number, netReturn: number, grossReturn: number, turnover: number, costPct: number, weights: Record<string, number> = {},
   ): RebalanceRecord => ({
-    timestamp,
-    weights,
-    turnover,
-    costPct,
-    grossReturn,
-    netReturn,
+    timestamp, weights, turnover, costPct, grossReturn, netReturn,
     grossExposure: Object.values(weights).reduce((s, w) => s + Math.abs(w), 0),
     netExposure: Object.values(weights).reduce((s, w) => s + w, 0),
   });
 
   const makeSimResult = (periods: RebalanceRecord[]): CrossSectionalSimResult => ({
     periods,
-    equityCurve: [1, ...periods.map((p, i) => {
-      const eq = periods.slice(0, i + 1).reduce((e, rec) => e * (1 + rec.netReturn), 1);
-      return eq;
-    })],
+    equityCurve: [1, ...periods.map((_, i) => periods.slice(0, i + 1).reduce((e, rec) => e * (1 + rec.netReturn), 1))],
     totalTurnover: periods.reduce((s, p) => s + p.turnover, 0),
     totalCosts: periods.reduce((s, p) => s + p.costPct, 0),
     warnings: [],
   });
 
   const baseConfig = {
-    experimentId: 'EXP-1',
-    symbol: 'UNIVERSE-1',
-    timeframe: '1h',
-    regime: 'TREND_UP' as RegimeLabel,
-    periodsPerYear: 365 * 24, // hourly
-    stressMode: 'conservative' as const,
+    experimentId: 'EXP-1', symbol: 'UNIVERSE-1', timeframe: '1h',
+    regime: 'TREND_UP' as RegimeLabel, periodsPerYear: 365 * 24, stressMode: 'conservative' as const,
   };
 
   it('builds full report with all fields populated', () => {

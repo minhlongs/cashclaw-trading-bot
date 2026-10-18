@@ -17,8 +17,7 @@ export type NormalizeFormulaResult =
 const CALL_PATTERN = /([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
 const ARITHMETIC_PATTERN = /[+\-*/]/;
 const CONDITIONAL_PATTERN = /\?|\bif\s*\(/i;
-const NEGATIVE_LAG_PATTERN =
-  /\b(?:delta|delay|ref|shift)\s*\([^()]*,\s*-\s*\d+(?:\.\d+)?\s*\)/i;
+const NEGATIVE_LAG_PATTERN = /\b(?:delta|delay|ref|shift)\s*\([^()]*,\s*-\s*\d+(?:\.\d+)?\s*\)/i;
 
 /** Strip LaTeX decorations: \mathrm{...}, \text{...}, \,, escaped backslashes. */
 function stripLatex(raw: string): { text: string; stripped: boolean } {

@@ -22,10 +22,7 @@ function makeReport(overrides: Partial<EvaluationReport> = {}): EvaluationReport
 }
 
 describe('assessCrossAssetConsistency', () => {
-  const baseOptions: CrossAssetConsistencyOptions = {
-    minPositiveFraction: 0.5,
-    minAssets: 3,
-  };
+  const baseOptions: CrossAssetConsistencyOptions = { minPositiveFraction: 0.5, minAssets: 3 };
 
   describe('happy path', () => {
     it('all assets pass → consistent:true', () => {
@@ -68,9 +65,7 @@ describe('assessCrossAssetConsistency', () => {
 
   describe('fail-closed: empty input throws', () => {
     it('empty reports array throws', () => {
-      expect(() => assessCrossAssetConsistency([], baseOptions)).toThrow(
-        'assessCrossAssetConsistency requires at least 1 report',
-      );
+      expect(() => assessCrossAssetConsistency([], baseOptions)).toThrow('assessCrossAssetConsistency requires at least 1 report');
     });
   });
 
@@ -80,9 +75,7 @@ describe('assessCrossAssetConsistency', () => {
         makeReport({ symbol: 'BTCUSDT', expectancy: 0.05 }),
         makeReport({ symbol: 'ETHUSDT', expectancy: 0.03 }),
       ];
-      expect(() => assessCrossAssetConsistency(reports, baseOptions)).toThrow(
-        'assessCrossAssetConsistency requires at least 3 reports, got 2',
-      );
+      expect(() => assessCrossAssetConsistency(reports, baseOptions)).toThrow('assessCrossAssetConsistency requires at least 3 reports, got 2');
     });
 
     it('minAssets = 1 with 1 report passes breadth check', () => {
@@ -137,30 +130,22 @@ describe('assessCrossAssetConsistency', () => {
   describe('option validation', () => {
     it('minPositiveFraction < 0 throws', () => {
       const reports = [makeReport({ symbol: 'BTCUSDT', expectancy: 0.05 })];
-      expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minPositiveFraction: -0.1 })).toThrow(
-        'minPositiveFraction must be in [0, 1], got -0.1',
-      );
+      expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minPositiveFraction: -0.1 })).toThrow('minPositiveFraction must be in [0, 1], got -0.1');
     });
 
     it('minPositiveFraction > 1 throws', () => {
       const reports = [makeReport({ symbol: 'BTCUSDT', expectancy: 0.05 })];
-      expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minPositiveFraction: 1.1 })).toThrow(
-        'minPositiveFraction must be in [0, 1], got 1.1',
-      );
+      expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minPositiveFraction: 1.1 })).toThrow('minPositiveFraction must be in [0, 1], got 1.1');
     });
 
     it('minAssets < 1 throws', () => {
       const reports = [makeReport({ symbol: 'BTCUSDT', expectancy: 0.05 })];
-      expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minAssets: 0 })).toThrow(
-        'minAssets must be an integer >= 1, got 0',
-      );
+      expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minAssets: 0 })).toThrow('minAssets must be an integer >= 1, got 0');
     });
 
     it('minAssets non-integer throws', () => {
       const reports = [makeReport({ symbol: 'BTCUSDT', expectancy: 0.05 })];
-      expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minAssets: 1.5 })).toThrow(
-        'minAssets must be an integer >= 1, got 1.5',
-      );
+      expect(() => assessCrossAssetConsistency(reports, { ...baseOptions, minAssets: 1.5 })).toThrow('minAssets must be an integer >= 1, got 1.5');
     });
   });
 

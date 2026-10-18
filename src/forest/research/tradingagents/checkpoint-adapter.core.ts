@@ -19,9 +19,7 @@ export async function serializeCheckpointEnvelope(
   checkpoint: DebateCheckpoint,
 ): Promise<CheckpointAdapterResult<CheckpointEnvelope>> {
   const serialized = await serializeCheckpoint(checkpoint);
-  if (!serialized.ok) {
-    return { ok: false, reasons: serialized.reasons };
-  }
+  if (!serialized.ok) return { ok: false, reasons: serialized.reasons };
 
   const expectedHash = await computeDebateResultHash(checkpoint.debateState);
   if (expectedHash !== checkpoint.resultHash) {
@@ -30,11 +28,7 @@ export async function serializeCheckpointEnvelope(
 
   return {
     ok: true,
-    value: {
-      version: 1,
-      json: serialized.json,
-      resultHash: checkpoint.resultHash,
-    },
+    value: { version: 1, json: serialized.json, resultHash: checkpoint.resultHash },
   };
 }
 

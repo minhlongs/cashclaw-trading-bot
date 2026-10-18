@@ -31,8 +31,7 @@ function seriateQuasiDiagonal(dist: readonly (readonly number[])[]): number[] {
   const order: number[] = [0];
   while (order.length < n) {
     const last = order[order.length - 1]!;
-    let bestNext = 0;
-    let bestDist = Number.POSITIVE_INFINITY;
+    let [bestNext, bestDist] = [0, Number.POSITIVE_INFINITY];
     for (let j = 0; j < n; j++) {
       if (!visited.has(j) && (dist[last]?.[j] ?? 1) < bestDist) {
         bestDist = dist[last]?.[j] ?? 1;
@@ -55,14 +54,12 @@ function computeClusterVariance(cluster: readonly number[], cov: readonly (reado
   }
   return Math.max(1e-10, variance);
 }
-
 export function computeHrpRecursiveBisection(params: HrpAllocatorParams): HrpAllocationResult {
   const n = params.symbols.length;
   const { cov, dist } = buildCovarianceAndDistance(params.volatilities, params.correlationMatrix);
   const order = seriateQuasiDiagonal(dist);
   const rawWeights = Array<number>(n).fill(1);
   const queue: number[][] = [order];
-
   while (queue.length > 0) {
     const cluster = queue.shift()!;
     if (cluster.length <= 1) continue;

@@ -1,9 +1,7 @@
 import type { DataQualityAssessmentReport, QualityViolation } from './types';
 
 function formatTimestamp(timestamp?: number): string {
-  if (timestamp === undefined || !Number.isFinite(timestamp)) {
-    return 'N/A';
-  }
+  if (timestamp === undefined || !Number.isFinite(timestamp)) return 'N/A';
   try {
     return `${timestamp} (${new Date(timestamp).toISOString()})`;
   } catch {
@@ -12,11 +10,7 @@ function formatTimestamp(timestamp?: number): string {
 }
 
 function formatViolationDetails(details: Readonly<Record<string, unknown>>): string[] {
-  const lines: string[] = [];
-  for (const [key, value] of Object.entries(details)) {
-    lines.push(`  - **${key}**: \`${JSON.stringify(value)}\``);
-  }
-  return lines;
+  return Object.entries(details).map(([key, value]) => `  - **${key}**: \`${JSON.stringify(value)}\``);
 }
 
 function formatViolationBlock(violation: QualityViolation, index: number): string[] {

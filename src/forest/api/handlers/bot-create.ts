@@ -18,19 +18,13 @@ export async function botCreateHandler(
 ): Promise<{ ok: boolean; data?: { id: string }; error?: string }> {
   try {
     if (payload.mode === 'live') {
-      return {
-        ok: false,
-        error: 'Live trading not available in v1 — paper mode only',
-      };
+      return { ok: false, error: 'Live trading not available in v1 — paper mode only' };
     }
 
     const cfg = normalizeWizardConfig(payload.config);
     const base = {
-      name: payload.name,
-      symbol: payload.pair,
-      exchange: payload.exchange,
-      mode: 'paper' as const,
-      capital: payload.capital,
+      name: payload.name, symbol: payload.pair, exchange: payload.exchange,
+      mode: 'paper' as const, capital: payload.capital,
       maxDrawdownPct: coerceNum({ config: cfg, key: 'maxDrawdownPct', defaultValue: 10, min: 1, max: 50 }),
     };
 
