@@ -22,6 +22,8 @@
     "rough-volatility-hurst": "Rough Volatility Hurst",
     "leadlag-hayashi-yoshida": "Hayashi-Yoshida Lead-Lag",
     "optimal-execution-almgren-chriss": "Almgren-Chriss Execution",
+    "regime-switching-hamilton-hmm": "Hamilton HMM Filter",
+    "hrp-allocator": "HRP Risk Parity",
     "style-guide": "Style Guide"
   },
   "dashboard": {

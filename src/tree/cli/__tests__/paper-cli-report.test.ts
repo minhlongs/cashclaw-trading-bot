@@ -6,6 +6,14 @@ import {
   GarmanKlassVolatilityEngine,
   LesmondLotEngine,
   volatilityDca,
+  runHamiltonMarkovFilter,
+  computeHrpRecursiveBisection,
+  computeAlmgrenChrissTrajectory,
+  HayashiYoshidaEngine,
+  computeHawkesIntensity,
+  computeOrderBookImbalance,
+  GatheralRoughVolatilityEngine,
+  runBipowerJumpEstimation,
 } from '../../quantlib/public-sdk';
 import {
   ALPHA_ZOO_OSS_VERSION,
@@ -25,6 +33,14 @@ describe('Phase 2 (Steps 6-10): Modular Package Extraction & CLI Experience', ()
     expect(typeof GarmanKlassVolatilityEngine.calculate).toBe('function');
     expect(typeof LesmondLotEngine.calculate).toBe('function');
     expect(typeof volatilityDca).toBe('function');
+    expect(typeof runHamiltonMarkovFilter).toBe('function');
+    expect(typeof computeHrpRecursiveBisection).toBe('function');
+    expect(typeof computeAlmgrenChrissTrajectory).toBe('function');
+    expect(typeof HayashiYoshidaEngine).toBe('function');
+    expect(typeof computeHawkesIntensity).toBe('function');
+    expect(typeof computeOrderBookImbalance).toBe('function');
+    expect(typeof GatheralRoughVolatilityEngine).toBe('function');
+    expect(typeof runBipowerJumpEstimation).toBe('function');
   });
 
   it('Step 7: @cashclaw/alpha-zoo public SDK exports causal operator vocabulary', () => {

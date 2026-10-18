@@ -65,6 +65,8 @@ function printEvalReport(version, symbol, result) {
     { label: 'Corwin-Schultz Spread', value: `${result.corwinSchultzSpreadBps} bps` },
     { label: 'Amihud Illiquidity', value: `${result.amihudIlliquidityRatio} (1e-6 ratio)` },
     { label: 'Roll Effective Spread', value: `${result.rollEffectiveSpreadBps} bps` },
+    { label: 'Hamilton Crisis Prob', value: `${result.hamiltonCrisisProb}` },
+    { label: 'HRP Diversification', value: `${result.hrpDiversificationRatio}x` },
     { label: 'Market Regime', value: result.regime },
     { label: 'Execution Recommendation', value: result.recommendation },
   ]));

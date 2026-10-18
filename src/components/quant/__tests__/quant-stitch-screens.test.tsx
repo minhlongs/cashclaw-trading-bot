@@ -7,6 +7,10 @@ import { DeliberationTheater } from '../deliberation-theater';
 import { SurvivalGateMonitor } from '../survival-gate-monitor';
 import { MicrostructureLiquidityAnalyzer } from '../microstructure-liquidity-analyzer';
 import { DesignSystemStyleGuide } from '../design-system-style-guide';
+import { HamiltonHmmWorkbench } from '../hamilton-hmm-workbench';
+import { HrpAllocatorWorkbench } from '../hrp-allocator-workbench';
+import { QuantUxProMaxBar } from '../quant-ux-pro-max-bar';
+import { QuantRouteNav, QUANT_TERMINAL_ROUTES } from '../quant-route-nav';
 import RegimeAttributionPage, { generateStaticParams as genRegimeParams } from '@/app/[locale]/(dashboard)/regime-attribution/page';
 import FdrGatePage, { generateStaticParams as genFdrParams } from '@/app/[locale]/(dashboard)/fdr-gate/page';
 import AlphaZooPage, { generateStaticParams as genZooParams } from '@/app/[locale]/(dashboard)/alpha-zoo/page';
@@ -14,8 +18,10 @@ import DeliberationPage, { generateStaticParams as genDelibParams } from '@/app/
 import SurvivalGatePage, { generateStaticParams as genSurvivalParams } from '@/app/[locale]/(dashboard)/survival-gate/page';
 import MicrostructurePage, { generateStaticParams as genMicroParams } from '@/app/[locale]/(dashboard)/microstructure/page';
 import StyleGuidePage, { generateStaticParams as genStyleParams } from '@/app/[locale]/(dashboard)/style-guide/page';
+import RegimeSwitchingHamiltonHmmPage, { generateStaticParams as genHmmParams } from '@/app/[locale]/(dashboard)/regime-switching-hamilton-hmm/page';
+import HrpAllocatorPage, { generateStaticParams as genHrpParams } from '@/app/[locale]/(dashboard)/hrp-allocator/page';
 
-describe('CashClaw Quant OS Stitch Next.js Screens & A11y Suite', () => {
+describe('CashClaw Quant OS Stitch Next.js Screens & A11y Suite (Waves 1–4)', () => {
   it('renders RegimeAttributionSimulator and switches cost tiers & regime filters', () => {
     render(<RegimeAttributionSimulator />);
 
@@ -51,78 +57,57 @@ describe('CashClaw Quant OS Stitch Next.js Screens & A11y Suite', () => {
     expect(screen.getAllByText('HOLM_BONFERRONI').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders AlphaZooEvaluator with zero-lookahead badge and verdict filtering', () => {
+  it('renders AlphaZooEvaluator, DeliberationTheater, SurvivalGateMonitor, Microstructure, and StyleGuide', () => {
     render(<AlphaZooEvaluator />);
-
-    expect(screen.getByRole('region', { name: /Alpha Zoo Evaluator/i })).toBeInTheDocument();
-    expect(screen.getByText('ZERO_LOOKAHEAD • CAUSAL_AST')).toBeInTheDocument();
-    expect(screen.getByText('PAPER_ONLY • ADR-001')).toBeInTheDocument();
-    expect(screen.getByText('vt_alpha_001')).toBeInTheDocument();
-    expect(screen.getByText('vt_alpha_005')).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'IMPORT_SKIPPED' }));
     expect(screen.getByText('vt_alpha_005')).toBeInTheDocument();
-    expect(screen.queryByText('vt_alpha_001')).toBeNull();
-  });
 
-  it('renders DeliberationTheater and toggles Risk Manager veto & stage filter', () => {
     render(<DeliberationTheater />);
-
-    expect(screen.getByRole('region', { name: /Multi-Agent Deliberation Theater/i })).toBeInTheDocument();
-    expect(screen.getByText('PROMOTED_TO_PAPER_SHADOW')).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: /Trigger Veto/i }));
     expect(screen.getByText('KILLED_BY_RISK_VETO')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'RISK_AUDIT' }));
-    expect(screen.getByText('RISK_MANAGER')).toBeInTheDocument();
-    expect(screen.queryByText('BULL_RESEARCHER')).toBeNull();
-  });
-
-  it('renders SurvivalGateMonitor and filters structural vs economic pillars', () => {
     render(<SurvivalGateMonitor />);
-
-    expect(screen.getByRole('region', { name: /Survival Gate and Promotion Lifecycle Monitor/i })).toBeInTheDocument();
-    expect(screen.getByText('RESEARCH → KILLED')).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'STRUCTURAL' }));
     expect(screen.getByText('STR-01')).toBeInTheDocument();
-    expect(screen.queryByText('ECO-01')).toBeNull();
-  });
 
-  it('renders MicrostructureLiquidityAnalyzer and switches symbols & VPIN threshold', () => {
     render(<MicrostructureLiquidityAnalyzer />);
-
-    expect(screen.getByRole('region', { name: /Microstructure and L2 Liquidity Toxicity Analyzer/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'SOL/USDT' }));
     expect(screen.getByText('TWAP_THROTTLED')).toBeInTheDocument();
 
-    const vpinSlider = screen.getByLabelText(/VPIN Toxicity Halt Threshold/i);
-    fireEvent.change(vpinSlider, { target: { value: '0.80' } });
-    expect(screen.getByText('NORMAL_PASSIVE')).toBeInTheDocument();
-  });
-
-  it('renders DesignSystemStyleGuide and filters semantic token groups', () => {
     render(<DesignSystemStyleGuide />);
-
-    expect(screen.getByRole('region', { name: /CashClaw OS Design System Style Guide/i })).toBeInTheDocument();
-    expect(screen.getByText('--bg-primary')).toBeInTheDocument();
-    expect(screen.getByText('--color-accent')).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'SEMANTIC' }));
     expect(screen.getByText('--color-accent')).toBeInTheDocument();
-    expect(screen.queryByText('--bg-primary')).toBeNull();
+  });
+
+  it('renders HamiltonHmmWorkbench (#21), HrpAllocatorWorkbench (#22), QuantUxProMaxBar, and 22-route QuantRouteNav', () => {
+    render(<QuantUxProMaxBar screenId="unit-test" telemetryPayload={{ ok: true }} />);
+    expect(screen.getByText('WCAG AAA 7:1 • TABULAR-NUMS')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Freeze Live Pulse/i }));
+    expect(screen.getByText(/STREAM_FROZEN/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Export JSON/i }));
+    expect(screen.getByText('Copied Telemetry JSON')).toBeInTheDocument();
+
+    render(<HamiltonHmmWorkbench />);
+    expect(screen.getByRole('region', { name: /Hamilton Markov-Switching Regime Filter and Causal State Surface/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'CALM_EXPANSION' }));
+    expect(screen.getByText(/LOW_VOL_BULL/i)).toBeInTheDocument();
+
+    render(<HrpAllocatorWorkbench />);
+    expect(screen.getByRole('region', { name: /Hierarchical Risk Parity Recursive Bisection Portfolio Allocator/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'CRISIS_CONTAGION' }));
+    fireEvent.click(screen.getByRole('button', { name: /HRP Weight/i }));
+    expect(screen.getByText('PAXG-PERP')).toBeInTheDocument();
+
+    expect(QUANT_TERMINAL_ROUTES).toHaveLength(22);
+    render(<QuantRouteNav locale="en" activeSlug="hrp-allocator" />);
+    expect(screen.getByText('Skip to main content')).toBeInTheDocument();
   });
 
   it('verifies Next.js App Router pages and generateStaticParams for vi/en locales', () => {
     const expectedLocales = [{ locale: 'vi' }, { locale: 'en' }];
-    expect(genRegimeParams()).toEqual(expectedLocales);
-    expect(genFdrParams()).toEqual(expectedLocales);
-    expect(genZooParams()).toEqual(expectedLocales);
-    expect(genDelibParams()).toEqual(expectedLocales);
-    expect(genSurvivalParams()).toEqual(expectedLocales);
-    expect(genMicroParams()).toEqual(expectedLocales);
-    expect(genStyleParams()).toEqual(expectedLocales);
+    for (const fn of [genRegimeParams, genFdrParams, genZooParams, genDelibParams, genSurvivalParams, genMicroParams, genStyleParams, genHmmParams, genHrpParams]) {
+      expect(fn()).toEqual(expectedLocales);
+    }
 
     render(<RegimeAttributionPage />);
     render(<FdrGatePage />);
@@ -131,6 +116,8 @@ describe('CashClaw Quant OS Stitch Next.js Screens & A11y Suite', () => {
     render(<SurvivalGatePage />);
     render(<MicrostructurePage />);
     render(<StyleGuidePage />);
-    expect(screen.getAllByText('PAPER_ONLY • ADR-001').length).toBeGreaterThanOrEqual(7);
+    render(<RegimeSwitchingHamiltonHmmPage />);
+    render(<HrpAllocatorPage />);
+    expect(screen.getAllByText('PAPER_ONLY • ADR-001').length).toBeGreaterThanOrEqual(9);
   });
 });

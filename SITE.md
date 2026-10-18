@@ -1,7 +1,7 @@
 # CashClaw OS — Quantitative Multi-Page Web Suite
 
 ## Site Vision
-High-fidelity institutional quantitative alpha research and paper trading cockpit for CashClaw OS. High-fidelity brand color matching, dark mode first, and data-dense institutional terminal aesthetic.
+High-fidelity institutional quantitative alpha research and paper trading cockpit for CashClaw OS. High-fidelity brand color matching, dark mode first, and data-dense institutional terminal aesthetic governed by `DESIGN.md` and `design-system/MASTER.md` (`ak-ui-ux-pro-max`).
 
 ## Stitch Project
 - **Project Resource:** `projects/6665149401860401191`
@@ -30,6 +30,8 @@ High-fidelity institutional quantitative alpha research and paper trading cockpi
 - [x] rough-volatility-hurst.html — Gatheral Rough Volatility Hurst Exponent (H < 0.5) & Barndorff-Nielsen Bipower Variation Jump Detector
 - [x] leadlag-hayashi-yoshida.html — Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix
 - [x] optimal-execution-almgren-chriss.html — Almgren-Chriss (2000) Optimal Execution Trajectory (sinh(κ(T-t))/sinh(κT)) & Cont-Kukanov Order Placement Cockpit
+- [x] regime-switching-hamilton-hmm.html — Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface
+- [x] hrp-allocator.html — López de Prado (2016) Hierarchical Risk Parity (HRP) & Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator
 
 ## Roadmap
 1. `index.html` — Cockpit Overview, 4-col KPI row, BTC/USDT candlestick chart, TradingAgents feed (Completed)
@@ -52,8 +54,10 @@ High-fidelity institutional quantitative alpha research and paper trading cockpi
 18. `rough-volatility-hurst.html` — Gatheral Rough Volatility Hurst Exponent (H < 0.5) & Barndorff-Nielsen Bipower Variation Jump Detector (Completed)
 19. `leadlag-hayashi-yoshida.html` — Continuous-Time Asynchronous Lead-Lag Cross-Covariance & Epps-Free Arbitrage Matrix (Completed)
 20. `optimal-execution-almgren-chriss.html` — Almgren-Chriss (2000) Optimal Execution Trajectory (sinh(κ(T-t))/sinh(κT)) & Cont-Kukanov Order Placement Cockpit (Completed)
-21. `regime-switching-hamilton-hmm.html` — Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface (Next)
+21. `regime-switching-hamilton-hmm.html` — Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface (Completed)
+22. `hrp-allocator.html` — López de Prado (2016) Hierarchical Risk Parity (HRP) & Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator (Completed)
+23. `martingale-optimal-transport.html` — Martingale Optimal Transport & Model-Free Dupire Local Volatility Surface Cockpit (Next)
 
 ## Creative Freedom
-- Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface (`regime-switching-hamilton-hmm.html`): 2-state and 3-state ergodic transition matrix $P_{ij}$, causal Hamilton filtered probabilities $\xi_{t|t}$, and Kim smoother retrodiction vs zero-lookahead online regime gating
-- Hierarchical Risk Parity (HRP) & Eigen-Portfolio Factor Allocator (`hrp-allocator.html`): Quasi-diagonalization dendrogram, recursive bisection weights, and shrinkage covariance estimator
+- Martingale Optimal Transport & Model-Free Dupire Local Volatility Surface Cockpit (`martingale-optimal-transport.html`): Breeden-Litzenberger risk-neutral density extraction, calendar/butterfly arbitrage-free SVI smile projection, and Kantorovich martingale dual bounds
+- Signature Methods & Rough Path Lead-Lag Feature Extractor (`rough-path-signatures.html`): Truncated Chen iterated-integral path signatures $S^{(N)}(X)_{s,t}$, Lévy area cross-terms, and reparameterization-invariant trajectory classification

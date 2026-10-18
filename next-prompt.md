@@ -1,5 +1,5 @@
 ---
-page: regime-switching-hamilton-hmm
+page: martingale-optimal-transport
 ---
 
 **DESIGN SYSTEM (REQUIRED):**
@@ -14,13 +14,13 @@ page: regime-switching-hamilton-hmm
 - Geometry: 12px rounded cards, 8px rounded buttons/inputs, 44px minimum interactive height, compact data-dense spacing (16px grid gaps)
 
 **Page request:**
-Design the **Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface** (`regime-switching-hamilton-hmm.html`) for CashClaw OS (`src/forest/regime/` & `src/forest/evaluation/` Causal Hidden Markov Model & Ergodic Transition Engine).
+Design the **Martingale Optimal Transport & Model-Free Dupire Local Volatility Surface Cockpit** (`martingale-optimal-transport.html`) for CashClaw OS (`src/forest/volatility/` & `src/forest/pricing/` Model-Free Arbitrage Bounds & Dupire PDE Calibration Engine).
 Include:
-1. Left sidebar (`240px`) with active state on "Hamilton HMM Filter" and wired links to all 20 CashClaw OS screens (`index.html`, `alpha-zoo.html`, `deliberation-theater.html`, `strategies/volatility-dca.html`, `correlation-matrix.html`, `execution-ledger.html`, `data-quality-gate.html`, `microstructure-liquidity.html`, `survival-gate.html`, `sovereign-enclave.html`, `relative-value-basis.html`, `billing.html`, `regime-attribution.html`, `fdr-multiple-testing-gate.html`, `style-guide.html`, `portfolio-cvar-stress.html`, `orderbook-imbalance-lob.html`, `rough-volatility-hurst.html`, `leadlag-hayashi-yoshida.html`, `optimal-execution-almgren-chriss.html`).
-2. Top header with `Hamilton (1989) Causal Markov-Switching Filter • Zero-Lookahead Filtered State Probabilities ξ_{t|t} • PAPER_ONLY • ADR-001` badge and `Run Baum-Welch / Hamilton Filter` button.
+1. Left sidebar (`240px`) with active state on "Martingale Optimal Transport" and wired links to all 22 CashClaw OS screens (`index.html`, `alpha-zoo.html`, `deliberation-theater.html`, `strategies/volatility-dca.html`, `correlation-matrix.html`, `execution-ledger.html`, `data-quality-gate.html`, `microstructure-liquidity.html`, `survival-gate.html`, `sovereign-enclave.html`, `relative-value-basis.html`, `billing.html`, `regime-attribution.html`, `fdr-multiple-testing-gate.html`, `style-guide.html`, `portfolio-cvar-stress.html`, `orderbook-imbalance-lob.html`, `rough-volatility-hurst.html`, `leadlag-hayashi-yoshida.html`, `optimal-execution-almgren-chriss.html`, `regime-switching-hamilton-hmm.html`, `hrp-allocator.html`).
+2. Top header with `Martingale Optimal Transport (Beiglböck-Henry-Labordère-Penkner) • Dupire Local Volatility σ_loc(K,T) • Static Arbitrage Fence • PAPER_ONLY • ADR-001` badge and `Solve Sinkhorn-Martingale Dual` button.
 3. 3 Telemetry KPI Cards:
-   - Filtered Crisis State Probability ($\xi_{t|t}^{(2)}$): `P(S_t = HIGH_VOL | Ω_t) = 0.842` (`Causal Forward Filter • Zero Kim-Smoother Lookahead`)
-   - Ergodic Regime Persistence ($p_{11} / p_{22}$): `0.964 / 0.892` (`Expected Duration: 27.8 Bars Low-Vol / 9.3 Bars High-Vol`)
-   - Log-Likelihood Ratio vs Single-Regime Gaussian: `2Δℓ = +148.6 (p < 10⁻⁶)` (`Markov Regime-Switching Strongly Favored`)
-4. Markov Transition Probability Matrix ($P_{ij}$) & State-Conditional Emission Parameters ($\mu_k, \sigma_k$, Ergodic Stationary Weights $\pi_k$, Expected Regime Duration $1/(1 - p_{kk})$, and Dynamic Paper Sizing Multiplier).
-5. Interactive Causal Filtered Probability ($\xi_{t|t}$) vs Non-Causal Smoothed Probability ($\xi_{t|T}$) Comparison Inspector demonstrating why CashClaw OS strictly enforces $\xi_{t|t}$ online filtering to prevent lookahead leakage.
+   - Butterfly & Calendar Arbitrage Violations: `0 / 64 STRIKE-TENOR NODES` (`Breeden-Litzenberger ∂²C/∂K² ≥ 0 & ∂w/∂T ≥ 0 Verified`)
+   - Martingale Transport Bounds Width ($\sup \mathbb{E}^\mathbb{Q}[c] - \inf \mathbb{E}^\mathbb{Q}[c]$): `[14.20 bps, 19.85 bps]` (`Model-Free Super/Sub-Replication Corridor`)
+   - Entropic Sinkhorn-Martingale Convergence ($\varepsilon_{\text{mart}}$): `1.42 × 10⁻⁷` (`Dual Potentials φ(S₁), ψ(S₂) & h(S₁)·(S₂ - S₁) Converged in 38 Iterations`)
+4. Multi-Tenor Dupire Local Volatility & SVI Arbitrage-Free Surface Matrix comparing Log-Moneyness $k = \ln(K/F)$, Implied Total Variance $w(k,T)$, Dupire Local Volatility $\sigma_{\text{loc}}(K,T)$, Risk-Neutral Density $q(K) = e^{rT}\frac{\partial^2 C}{\partial K^2}$, MOT Sub/Super-Hedge Bounds, and Surface Fence Status.
+5. Interactive Breeden-Litzenberger Risk-Neutral Density & Kantorovich-Martingale Coupling Simulator across BTC and ETH options/perpetual volatility surfaces.

@@ -2,9 +2,9 @@
   "projectId": "6665149401860401191",
   "projectResource": "projects/6665149401860401191",
   "designSystemAsset": "assets/be7563bf9e4c400f85f92f80d27a5de5",
-  "generatedAt": "2026-10-17T11:49:22.065Z",
-  "totalScreens": 20,
-  "totalLinksChecked": 426,
+  "generatedAt": "2026-10-18T00:11:14.099Z",
+  "totalScreens": 22,
+  "totalLinksChecked": 516,
   "brokenLinksCount": 0,
   "placeholderLinksCount": 0,
   "screens": [
@@ -14,7 +14,7 @@
       "relPath": "index.html",
       "label": "Cockpit Overview",
       "stitchScreenResource": "projects/6665149401860401191/screens/index",
-      "publicBytes": 21215,
+      "publicBytes": 22701,
       "queueHtml": "queue/index.html",
       "queuePng": "queue/index.png"
     },
@@ -24,7 +24,7 @@
       "relPath": "alpha-zoo.html",
       "label": "Alpha Zoo Evaluator",
       "stitchScreenResource": "projects/6665149401860401191/screens/alpha-zoo",
-      "publicBytes": 19805,
+      "publicBytes": 21291,
       "queueHtml": "queue/alpha-zoo.html",
       "queuePng": "queue/alpha-zoo.png"
     },
@@ -34,7 +34,7 @@
       "relPath": "deliberation-theater.html",
       "label": "Deliberation Theater",
       "stitchScreenResource": "projects/6665149401860401191/screens/deliberation-theater",
-      "publicBytes": 19858,
+      "publicBytes": 21344,
       "queueHtml": "queue/deliberation-theater.html",
       "queuePng": "queue/deliberation-theater.png"
     },
@@ -44,7 +44,7 @@
       "relPath": "strategies/volatility-dca.html",
       "label": "Volatility-DCA Bots",
       "stitchScreenResource": "projects/6665149401860401191/screens/volatility-dca",
-      "publicBytes": 19515,
+      "publicBytes": 21007,
       "queueHtml": "queue/volatility-dca.html",
       "queuePng": "queue/volatility-dca.png"
     },
@@ -54,7 +54,7 @@
       "relPath": "correlation-matrix.html",
       "label": "Correlation Matrix",
       "stitchScreenResource": "projects/6665149401860401191/screens/correlation-matrix",
-      "publicBytes": 21959,
+      "publicBytes": 23445,
       "queueHtml": "queue/correlation-matrix.html",
       "queuePng": "queue/correlation-matrix.png"
     },
@@ -64,7 +64,7 @@
       "relPath": "execution-ledger.html",
       "label": "Execution Ledger",
       "stitchScreenResource": "projects/6665149401860401191/screens/execution-ledger",
-      "publicBytes": 20841,
+      "publicBytes": 22327,
       "queueHtml": "queue/execution-ledger.html",
       "queuePng": "queue/execution-ledger.png"
     },
@@ -74,7 +74,7 @@
       "relPath": "data-quality-gate.html",
       "label": "Data Quality Gate",
       "stitchScreenResource": "projects/6665149401860401191/screens/data-quality-gate",
-      "publicBytes": 20318,
+      "publicBytes": 21804,
       "queueHtml": "queue/data-quality-gate.html",
       "queuePng": "queue/data-quality-gate.png"
     },
@@ -84,7 +84,7 @@
       "relPath": "microstructure-liquidity.html",
       "label": "Microstructure Liquidity",
       "stitchScreenResource": "projects/6665149401860401191/screens/microstructure-liquidity",
-      "publicBytes": 19393,
+      "publicBytes": 20879,
       "queueHtml": "queue/microstructure-liquidity.html",
       "queuePng": "queue/microstructure-liquidity.png"
     },
@@ -94,7 +94,7 @@
       "relPath": "survival-gate.html",
       "label": "Survival Gate",
       "stitchScreenResource": "projects/6665149401860401191/screens/survival-gate",
-      "publicBytes": 22586,
+      "publicBytes": 24072,
       "queueHtml": "queue/survival-gate.html",
       "queuePng": "queue/survival-gate.png"
     },
@@ -104,7 +104,7 @@
       "relPath": "sovereign-enclave.html",
       "label": "Sovereign Enclave",
       "stitchScreenResource": "projects/6665149401860401191/screens/sovereign-enclave",
-      "publicBytes": 25124,
+      "publicBytes": 26610,
       "queueHtml": "queue/sovereign-enclave.html",
       "queuePng": "queue/sovereign-enclave.png"
     },
@@ -114,7 +114,7 @@
       "relPath": "relative-value-basis.html",
       "label": "Relative-Value Basis",
       "stitchScreenResource": "projects/6665149401860401191/screens/relative-value-basis",
-      "publicBytes": 27515,
+      "publicBytes": 29001,
       "queueHtml": "queue/relative-value-basis.html",
       "queuePng": "queue/relative-value-basis.png"
     },
@@ -124,7 +124,7 @@
       "relPath": "billing.html",
       "label": "SaaS Billing & Quota",
       "stitchScreenResource": "projects/6665149401860401191/screens/billing",
-      "publicBytes": 19420,
+      "publicBytes": 20906,
       "queueHtml": "queue/billing.html",
       "queuePng": "queue/billing.png"
     },
@@ -134,7 +134,7 @@
       "relPath": "regime-attribution.html",
       "label": "Regime Attribution",
       "stitchScreenResource": "projects/6665149401860401191/screens/ed2c9afb27504e86bdd268390891804e",
-      "publicBytes": 33513,
+      "publicBytes": 34845,
       "queueHtml": "queue/regime-attribution.html",
       "queuePng": "queue/regime-attribution.png"
     },
@@ -144,7 +144,7 @@
       "relPath": "fdr-multiple-testing-gate.html",
       "label": "FDR Multiple-Testing Gate",
       "stitchScreenResource": "projects/6665149401860401191/screens/9c29f01089bf437299bdbd007ece5cd5",
-      "publicBytes": 32408,
+      "publicBytes": 33740,
       "queueHtml": "queue/fdr-multiple-testing-gate.html",
       "queuePng": "queue/fdr-multiple-testing-gate.png"
     },
@@ -154,7 +154,7 @@
       "relPath": "style-guide.html",
       "label": "Style Guide & Tokens",
       "stitchScreenResource": "projects/6665149401860401191/screens/e66e2bcc9f70496495802789c24a5b36",
-      "publicBytes": 26666,
+      "publicBytes": 27998,
       "queueHtml": "queue/style-guide.html",
       "queuePng": "queue/style-guide.png"
     },
@@ -164,7 +164,7 @@
       "relPath": "portfolio-cvar-stress.html",
       "label": "CVaR Tail-Risk Stress",
       "stitchScreenResource": "projects/6665149401860401191/screens/ba2a8615438049aea19867bff9ae00b9",
-      "publicBytes": 30574,
+      "publicBytes": 31906,
       "queueHtml": "queue/portfolio-cvar-stress.html",
       "queuePng": "queue/portfolio-cvar-stress.png"
     },
@@ -174,7 +174,7 @@
       "relPath": "orderbook-imbalance-lob.html",
       "label": "LOB Hawkes Imbalance",
       "stitchScreenResource": "projects/6665149401860401191/screens/315841d3afc441ba8b856d10a9af5f8c",
-      "publicBytes": 29678,
+      "publicBytes": 31010,
       "queueHtml": "queue/orderbook-imbalance-lob.html",
       "queuePng": "queue/orderbook-imbalance-lob.png"
     },
@@ -184,7 +184,7 @@
       "relPath": "rough-volatility-hurst.html",
       "label": "Rough Volatility & Jumps",
       "stitchScreenResource": "projects/6665149401860401191/screens/049696d3e3b3497492b29a7b4c01ef2c",
-      "publicBytes": 29605,
+      "publicBytes": 30937,
       "queueHtml": "queue/rough-volatility-hurst.html",
       "queuePng": "queue/rough-volatility-hurst.png"
     },
@@ -194,7 +194,7 @@
       "relPath": "leadlag-hayashi-yoshida.html",
       "label": "Hayashi-Yoshida Lead-Lag",
       "stitchScreenResource": "projects/6665149401860401191/screens/81cd62e9d41e47b9bfe5e30de2ae3cb9",
-      "publicBytes": 29686,
+      "publicBytes": 31018,
       "queueHtml": "queue/leadlag-hayashi-yoshida.html",
       "queuePng": "queue/leadlag-hayashi-yoshida.png"
     },
@@ -204,9 +204,29 @@
       "relPath": "optimal-execution-almgren-chriss.html",
       "label": "Almgren-Chriss Execution",
       "stitchScreenResource": "projects/6665149401860401191/screens/68e82bf32bc34f99a73847f9ae831780",
-      "publicBytes": 31119,
+      "publicBytes": 32451,
       "queueHtml": "queue/optimal-execution-almgren-chriss.html",
       "queuePng": "queue/optimal-execution-almgren-chriss.png"
+    },
+    {
+      "index": 21,
+      "id": "regime-switching-hamilton-hmm",
+      "relPath": "regime-switching-hamilton-hmm.html",
+      "label": "Hamilton HMM Regime Filter",
+      "stitchScreenResource": "projects/6665149401860401191/screens/f645c3ec56c54f55a20dc85a6120df36",
+      "publicBytes": 38490,
+      "queueHtml": "queue/regime-switching-hamilton-hmm.html",
+      "queuePng": "queue/regime-switching-hamilton-hmm.png"
+    },
+    {
+      "index": 22,
+      "id": "hrp-allocator",
+      "relPath": "hrp-allocator.html",
+      "label": "HRP & Shrinkage Allocator",
+      "stitchScreenResource": "projects/6665149401860401191/screens/cceb313f01b34c4081aa5a6e8a19f16e",
+      "publicBytes": 41693,
+      "queueHtml": "queue/hrp-allocator.html",
+      "queuePng": "queue/hrp-allocator.png"
     }
   ]
 }

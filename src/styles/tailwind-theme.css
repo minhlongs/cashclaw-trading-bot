@@ -1,4 +1,4 @@
-/* CashClaw Quant OS — Tailwind Theme Mapping (stitch-design-system & stitch-animate)
+/* CashClaw Quant OS — Tailwind Theme Mapping (stitch-design-system, stitch-animate & ak-ui-ux-pro-max)
  * Maps DESIGN.md CSS custom properties into Tailwind theme tokens & utility classes.
  */
 
@@ -33,13 +33,69 @@
   --radius-modal: var(--radius-xl);
 }
 
+/* ak-ui-ux-pro-max Tabular Telemetry & Focus Ring Primitives */
+.quant-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.stitch-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.stitch-panel-elevated {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-lg);
+}
+
+.stitch-control {
+  min-height: var(--target-min-height);
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-semibold);
+  transition: all var(--transition-fast);
+}
+
+.stitch-control:focus-visible,
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #00D4AA;
+  outline-offset: 2px;
+}
+
 .stitch-animate-micro {
   transition: transform 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stitch-animate-micro {
+  .stitch-card,
+  .stitch-control,
+  .stitch-animate-micro,
+  * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+.stitch-badge-paper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background-color: rgba(255, 176, 32, 0.15);
+  color: var(--color-warning);
+  border: 1px solid rgba(255, 176, 32, 0.35);
 }

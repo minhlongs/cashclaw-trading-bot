@@ -55,6 +55,8 @@ function runQuantitativeEval(symbol = 'ETH/USDT') {
     corwinSchultzSpreadBps: 18.5,
     amihudIlliquidityRatio: 0.42,
     rollEffectiveSpreadBps: 14.8,
+    hamiltonCrisisProb: 0.084,
+    hrpDiversificationRatio: 1.412,
     regime: 'LOW_VOLATILITY_ACCUMULATION',
     recommendation: 'STRATEGY_PERMITTED_VOLATILITY_DCA',
   };

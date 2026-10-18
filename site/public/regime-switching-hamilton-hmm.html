@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<!-- Stitch Project: projects/6665149401860401191 | Screen: projects/6665149401860401191/screens/f645c3ec56c54f55a20dc85a6120df36 | Design System: assets/be7563bf9e4c400f85f92f80d27a5de5 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashClaw OS — Hamilton (1989) Markov-Switching Regime Filter &amp; Filtered State Probability Surface</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E11;
+      --bg-surface: #141820;
+      --bg-elevated: #1A2030;
+      --bg-hover: #1E2838;
+      --color-accent: #00D4AA;
+      --color-profit: #00D4AA;
+      --color-loss: #FF4757;
+      --color-error: #FF4757;
+      --color-warning: #FFB020;
+      --color-ai: #A78BFA;
+      --text-primary: #E8EAED;
+      --text-secondary: #8B95A5;
+      --text-tertiary: #5A6577;
+      --border-subtle: #1E2530;
+      --border-default: #2A3340;
+    }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono, table td, table th {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    :focus-visible {
+      outline: 2px solid #00D4AA;
+      outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased">
+  <!-- Left Sidebar (240px) -->
+  <aside class="w-60 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 flex-shrink-0">
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center font-bold text-black text-sm">CC</div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-wide">CashClaw OS</span>
+          <span class="text-[10px] text-[var(--color-warning)] font-mono font-semibold">PAPER_ONLY • ADR-001</span>
+        </div>
+      </div>
+
+            <nav class="flex flex-col gap-1.5 text-xs font-medium">
+        <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Cockpit Overview
+        </a>
+        <a href="alpha-zoo.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Alpha Zoo Evaluator
+        </a>
+        <a href="deliberation-theater.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+          Deliberation Theater
+        </a>
+        <a href="strategies/volatility-dca.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Volatility-DCA Bots
+        </a>
+        <a href="correlation-matrix.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Correlation Matrix
+        </a>
+        <a href="execution-ledger.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Execution Ledger
+        </a>
+        <a href="data-quality-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Data Quality Gate
+        </a>
+        <a href="microstructure-liquidity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Microstructure Liquidity
+        </a>
+        <a href="survival-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Survival Gate
+        </a>
+        <a href="sovereign-enclave.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Sovereign Enclave
+        </a>
+        <a href="relative-value-basis.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Relative-Value Basis
+        </a>
+        <a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          SaaS Billing & Quota
+        </a>
+        <a href="regime-attribution.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Regime Attribution
+        </a>
+        <a href="fdr-multiple-testing-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          FDR Multiple-Testing Gate
+        </a>
+        <a href="style-guide.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Style Guide & Tokens
+        </a>
+        <a href="portfolio-cvar-stress.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          CVaR Tail-Risk Stress
+        </a>
+        <a href="orderbook-imbalance-lob.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          LOB Hawkes Imbalance
+        </a>
+        <a href="rough-volatility-hurst.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+          Rough Volatility & Jumps
+        </a>
+        <a href="leadlag-hayashi-yoshida.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+          Hayashi-Yoshida Lead-Lag
+        </a>
+        <a href="optimal-execution-almgren-chriss.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Almgren-Chriss Execution
+        </a>
+        <a href="regime-switching-hamilton-hmm.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Hamilton HMM Regime Filter
+        </a>
+        <a href="hrp-allocator.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+          HRP & Shrinkage Allocator
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs flex flex-col gap-1">
+      <span class="text-[var(--text-secondary)] text-[10px]">Markov Regime Engine</span>
+      <span class="font-mono text-[var(--text-primary)] font-semibold truncate">Hamilton (1989) + Kim (1994)</span>
+      <span class="text-[10px] text-[var(--color-accent)] font-semibold">3-STATE HMM • ZERO-LOOKAHEAD</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Header Bar -->
+    <header class="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-primary)]">
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="font-bold text-base">Hamilton (1989) Markov-Switching Regime Filter &amp; Filtered State Probability Surface</h1>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)] border border-[rgba(0,212,170,0.25)]">
+          Hamilton (1989) Forward Filter • Kim (1994) Backward Smoother • 3-State HMM • PAPER_ONLY • ADR-001
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="regime-attribution.html" class="h-9 px-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-primary)] font-semibold text-xs flex items-center gap-1.5 hover:bg-[var(--bg-hover)] transition-colors">
+          <span>Regime Alpha Attribution</span>
+        </a>
+        <button id="recomputeHmmBtn" onclick="document.getElementById('hmmAuditStamp').textContent = 'HAMILTON-KIM RE-FILTERED • ' + new Date().toISOString().slice(11,19) + ' UTC'" class="h-9 px-4 rounded-lg bg-[var(--color-accent)] text-black font-semibold text-xs flex items-center gap-1.5 hover:brightness-110 transition-all cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span>Run Forward-Backward EM Step</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+      <!-- 3 Telemetry KPI Cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Filtered Expansion Posterior ξ_t|t(S=0)</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)]">LOW-VOL BULL</span>
+          </div>
+          <div class="font-mono text-2xl font-bold text-[var(--color-accent)]">0.784</div>
+          <div class="text-[11px] font-mono text-[var(--text-secondary)]">Expected Sojourn E[D_0]: <span class="text-[var(--text-primary)]">35.7 bars</span> • p_00 = 0.972</div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Filtered Crisis Stress Posterior ξ_t|t(S=2)</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(255,71,87,0.12)] text-[var(--color-loss)]">JUMP-CONTAGION</span>
+          </div>
+          <div class="font-mono text-2xl font-bold text-[var(--text-primary)]">0.042</div>
+          <div class="text-[11px] font-mono text-[var(--text-secondary)]">Survival Trigger: <span class="text-[var(--color-warning)]">ξ_t|t(2) ≥ 0.35</span> • Status: <span class="text-[var(--color-accent)]">CLEAR</span></div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Viterbi Log-Likelihood &amp; BIC Selection</span>
+            <span id="hmmAuditStamp" class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(167,139,250,0.15)] text-[var(--color-ai)]">EM CONVERGED (14 ITER)</span>
+          </div>
+          <div class="font-mono text-2xl font-bold text-[var(--color-ai)]">+1,418.6</div>
+          <div class="text-[11px] font-mono text-[var(--text-secondary)]">ΔBIC(K=3 vs K=2): <span class="text-[var(--color-accent)]">-42.8</span> • Shannon Entropy H_t: <span class="text-[var(--text-primary)]">0.481 bits</span></div>
+        </div>
+      </section>
+
+      <!-- Dual-Panel Analytical Workspace -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left 7 Columns: Stacked Filtered Probability Ribbon + Kim Smoother Overlay -->
+        <div class="lg:col-span-7 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h2 class="text-sm font-bold">Hamilton (1989) Filtered ξ_t|t(k) vs. Kim (1994) Smoothed ξ_t|T(k) State Probability Surface</h2>
+              <p class="text-xs text-[var(--text-secondary)]">Causal real-time filter posterior ribbon stacked over [0, 1] with dashed retrospective Kim smoother &amp; Survival Gate trigger threshold</p>
+            </div>
+            <div class="flex items-center gap-3 text-[11px] font-mono">
+              <span class="flex items-center gap-1.5 text-[var(--color-accent)]"><span class="w-2.5 h-2.5 rounded-sm bg-[#00D4AA] inline-block"></span>S=0 Bull (78.4%)</span>
+              <span class="flex items-center gap-1.5 text-[var(--color-warning)]"><span class="w-2.5 h-2.5 rounded-sm bg-[#FFB020] inline-block"></span>S=1 Neutral (17.4%)</span>
+              <span class="flex items-center gap-1.5 text-[var(--color-loss)]"><span class="w-2.5 h-2.5 rounded-sm bg-[#FF4757] inline-block"></span>S=2 Crisis (4.2%)</span>
+            </div>
+          </div>
+
+          <div class="w-full bg-[var(--bg-primary)] rounded-lg border border-[var(--border-subtle)] p-3">
+            <svg viewBox="0 0 680 280" class="w-full h-64" role="img" aria-label="Hamilton Markov-Switching Filtered State Probability Surface">
+              <defs>
+                <linearGradient id="bullGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#00D4AA" stop-opacity="0.38"/>
+                  <stop offset="100%" stop-color="#00D4AA" stop-opacity="0.10"/>
+                </linearGradient>
+                <linearGradient id="neutralGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#FFB020" stop-opacity="0.35"/>
+                  <stop offset="100%" stop-color="#FFB020" stop-opacity="0.08"/>
+                </linearGradient>
+                <linearGradient id="crisisGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#FF4757" stop-opacity="0.45"/>
+                  <stop offset="100%" stop-color="#FF4757" stop-opacity="0.12"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Horizontal Probability Grid Lines -->
+              <g stroke="#1E2530" stroke-width="1" stroke-dasharray="3 3">
+                <line x1="48" y1="24" x2="656" y2="24"/>
+                <line x1="48" y1="78" x2="656" y2="78"/>
+                <line x1="48" y1="132" x2="656" y2="132"/>
+                <line x1="48" y1="186" x2="656" y2="186"/>
+                <line x1="48" y1="240" x2="656" y2="240"/>
+              </g>
+
+              <!-- Y-Axis Labels -->
+              <g fill="#8B95A5" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="end">
+                <text x="42" y="28">1.00</text>
+                <text x="42" y="82">0.75</text>
+                <text x="42" y="136">0.50</text>
+                <text x="42" y="190">0.25</text>
+                <text x="42" y="244">0.00</text>
+              </g>
+
+              <!-- Survival Gate De-leveraging Threshold Line: ξ_t|t(S=2) = 0.35 (y = 240 - 0.35*216 = 164.4) -->
+              <line x1="48" y1="164" x2="656" y2="164" stroke="#FF4757" stroke-width="1.2" stroke-dasharray="6 4"/>
+              <text x="652" y="159" fill="#FF4757" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="end">SURVIVAL GATE TRIGGER ξ(S=2) ≥ 0.35</text>
+
+              <!-- State 0 (Bull Expansion) Posterior Area -->
+              <path d="M48,240 L48,58 L110,62 L175,70 L240,145 L305,192 L370,158 L435,88 L500,68 L565,64 L656,71 L656,240 Z" fill="url(#bullGrad)"/>
+              <path d="M48,58 L110,62 L175,70 L240,145 L305,192 L370,158 L435,88 L500,68 L565,64 L656,71" fill="none" stroke="#00D4AA" stroke-width="2.2"/>
+
+              <!-- State 1 (High-Vol Neutral) Posterior Curve -->
+              <path d="M48,240 L48,204 L110,198 L175,188 L240,152 L305,168 L370,148 L435,182 L500,196 L565,200 L656,202 L656,240 Z" fill="url(#neutralGrad)"/>
+              <path d="M48,204 L110,198 L175,188 L240,152 L305,168 L370,148 L435,182 L500,196 L565,200 L656,202" fill="none" stroke="#FFB020" stroke-width="1.8"/>
+
+              <!-- State 2 (Crisis / Liquidity Stress) Posterior Curve (spikes at t=305 above 0.35 threshold!) -->
+              <path d="M48,240 L48,232 L110,230 L175,222 L240,183 L305,120 L370,174 L435,218 L500,228 L565,231 L656,231 L656,240 Z" fill="url(#crisisGrad)"/>
+              <path d="M48,232 L110,230 L175,222 L240,183 L305,120 L370,174 L435,218 L500,228 L565,231 L656,231" fill="none" stroke="#FF4757" stroke-width="2.2"/>
+
+              <!-- Kim (1994) Smoothed Bull Posterior ξ_t|T(S=0) Overlay (Amethyst Dashed) -->
+              <path d="M48,54 L110,59 L175,66 L240,150 L305,198 L370,152 L435,82 L500,64 L565,61 L656,71" fill="none" stroke="#A78BFA" stroke-width="1.6" stroke-dasharray="4 3"/>
+
+              <!-- Highlight Crisis Excursion Marker at t = -14h (x=305, y=120 => ξ_t|t(2) = 0.556) -->
+              <circle cx="305" cy="120" r="4.5" fill="#FF4757" stroke="#0B0E11" stroke-width="1.5"/>
+              <rect x="236" y="88" width="138" height="22" rx="4" fill="#1A2030" stroke="#FF4757" stroke-width="1"/>
+              <text x="305" y="103" fill="#E8EAED" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="middle">S=2 Excursion: ξ=0.556</text>
+
+              <!-- Current Real-Time Posterior Marker at t = 0 (x=656, y=71 => ξ_t|t(0) = 0.784) -->
+              <circle cx="656" cy="71" r="4.5" fill="#00D4AA" stroke="#0B0E11" stroke-width="1.5"/>
+
+              <!-- X-Axis Time Labels -->
+              <g fill="#8B95A5" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">
+                <text x="48" y="262">-36h</text>
+                <text x="175" y="262">-24h</text>
+                <text x="305" y="262">-14h (Shock)</text>
+                <text x="435" y="262">-8h</text>
+                <text x="565" y="262">-2h</text>
+                <text x="642" y="262">NOW</text>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Mathematical Formulation Bar -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-1">
+              <span class="text-[10px] text-[var(--text-secondary)] uppercase font-semibold">Hamilton (1989) Forward Recursion</span>
+              <code class="font-mono text-[11px] text-[var(--color-accent)]">ξ_{t|t} = (ξ_{t|t-1} ⊙ η_t) / (1' (ξ_{t|t-1} ⊙ η_t))</code>
+              <span class="text-[11px] text-[var(--text-secondary)]">Zero-lookahead causal filter updated on every 5m bar close</span>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-1">
+              <span class="text-[10px] text-[var(--text-secondary)] uppercase font-semibold">Kim (1994) Backward Smoothing Kernel</span>
+              <code class="font-mono text-[11px] text-[var(--color-ai)]">ξ_{t|T} = ξ_{t|t} ⊙ (P [ξ_{t+1|T} ⊘ ξ_{t+1|t}])</code>
+              <span class="text-[11px] text-[var(--text-secondary)]">Offline retrospective smoother for post-trade regime attribution</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right 5 Columns: 3x3 Stochastic Transition Matrix P & Emission Gaussian Ellipses -->
+        <div class="lg:col-span-5 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4 justify-between">
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-sm font-bold">Ergodic Transition Matrix P = [p_ij] &amp; Sojourn Durations</h2>
+                <p class="text-xs text-[var(--text-secondary)]">Row-stochastic Markov transition probabilities P(S_t = j | S_{t-1} = i) and stationary π*</p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">∑_j p_ij = 1.000</span>
+            </div>
+
+            <!-- 3x3 Transition Matrix Heatmap Grid -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs border-collapse">
+                <thead>
+                  <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)] text-[11px]">
+                    <th class="py-2 px-2.5 text-left">From \ To</th>
+                    <th class="py-2 px-2.5 text-right text-[var(--color-accent)]">S=0 Bull</th>
+                    <th class="py-2 px-2.5 text-right text-[var(--color-warning)]">S=1 Neutral</th>
+                    <th class="py-2 px-2.5 text-right text-[var(--color-loss)]">S=2 Crisis</th>
+                    <th class="py-2 px-2.5 text-right">E[D_k]</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border-subtle)] font-mono">
+                  <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                    <td class="py-2.5 px-2.5 font-semibold text-[var(--color-accent)]">S=0 Expansion</td>
+                    <td class="py-2.5 px-2.5 text-right bg-[rgba(0,212,170,0.16)] font-bold text-[var(--color-accent)]">0.972</td>
+                    <td class="py-2.5 px-2.5 text-right text-[var(--text-primary)]">0.024</td>
+                    <td class="py-2.5 px-2.5 text-right text-[var(--text-secondary)]">0.004</td>
+                    <td class="py-2.5 px-2.5 text-right text-[var(--text-primary)]">35.7b</td>
+                  </tr>
+                  <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                    <td class="py-2.5 px-2.5 font-semibold text-[var(--color-warning)]">S=1 High-Vol</td>
+                    <td class="py-2.5 px-2.5 text-right text-[var(--text-primary)]">0.061</td>
+                    <td class="py-2.5 px-2.5 text-right bg-[rgba(255,176,32,0.16)] font-bold text-[var(--color-warning)]">0.914</td>
+                    <td class="py-2.5 px-2.5 text-right text-[var(--color-loss)]">0.025</td>
+                    <td class="py-2.5 px-2.5 text-right text-[var(--text-primary)]">11.6b</td>
+                  </tr>
+                  <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                    <td class="py-2.5 px-2.5 font-semibold text-[var(--color-loss)]">S=2 Crisis</td>
+                    <td class="py-2.5 px-2.5 text-right text-[var(--text-secondary)]">0.012</td>
+                    <td class="py-2.5 px-2.5 text-right text-[var(--color-warning)]">0.106</td>
+                    <td class="py-2.5 px-2.5 text-right bg-[rgba(255,71,87,0.18)] font-bold text-[var(--color-loss)]">0.882</td>
+                    <td class="py-2.5 px-2.5 text-right text-[var(--text-primary)]">8.5b</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="border-t border-[var(--border-default)] bg-[var(--bg-elevated)] font-mono text-[11px]">
+                    <td class="py-2 px-2.5 font-semibold text-[var(--color-ai)]">Ergodic π*</td>
+                    <td class="py-2 px-2.5 text-right font-bold text-[var(--color-accent)]">0.648</td>
+                    <td class="py-2 px-2.5 text-right font-bold text-[var(--color-warning)]">0.268</td>
+                    <td class="py-2 px-2.5 text-right font-bold text-[var(--color-loss)]">0.084</td>
+                    <td class="py-2 px-2.5 text-right text-[var(--text-secondary)]">1.000</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Regime-Conditional Gaussian Emission Density Contours SVG -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-[var(--text-primary)]">State-Conditional Emission Contours f(r_t | S_t = k)</span>
+              <span class="text-[11px] font-mono text-[var(--text-secondary)]">(μ_k, σ_k) 95% Ellipses</span>
+            </div>
+            <div class="w-full bg-[var(--bg-primary)] rounded-lg border border-[var(--border-subtle)] p-2.5">
+              <svg viewBox="0 0 420 140" class="w-full h-32" role="img" aria-label="State-Conditional Emission Density Ellipses">
+                <line x1="36" y1="115" x2="400" y2="115" stroke="#2A3340" stroke-width="1"/>
+                <line x1="210" y1="14" x2="210" y2="115" stroke="#2A3340" stroke-width="1" stroke-dasharray="3 3"/>
+                <!-- S=0 Bull Narrow High-Drift Density -->
+                <ellipse cx="268" cy="72" rx="42" ry="26" fill="rgba(0,212,170,0.14)" stroke="#00D4AA" stroke-width="1.8"/>
+                <circle cx="268" cy="72" r="3" fill="#00D4AA"/>
+                <text x="268" y="40" fill="#00D4AA" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="middle">S=0 (+34%, σ=18%)</text>
+                <!-- S=1 Neutral Medium-Vol Density -->
+                <ellipse cx="204" cy="68" rx="68" ry="34" fill="rgba(255,176,32,0.10)" stroke="#FFB020" stroke-width="1.5" stroke-dasharray="4 2"/>
+                <circle cx="204" cy="68" r="3" fill="#FFB020"/>
+                <text x="195" y="26" fill="#FFB020" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="middle">S=1 (-4%, σ=41%)</text>
+                <!-- S=2 Crisis Wide Left-Skewed Density -->
+                <ellipse cx="122" cy="60" rx="76" ry="44" fill="rgba(255,71,87,0.12)" stroke="#FF4757" stroke-width="1.8"/>
+                <circle cx="122" cy="60" r="3" fill="#FF4757"/>
+                <text x="115" y="28" fill="#FF4757" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="middle">S=2 (-68%, σ=94%)</text>
+                <!-- Axis caption -->
+                <text x="396" y="132" fill="#8B95A5" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="end">Annualized Drift μ_k vs. Realized Vol σ_k →</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Section: Regime-Conditional Strategy Parameter & Capital Gating Table -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h2 class="text-sm font-bold">Regime-Conditional Strategy Parameter Schedule &amp; Survival Gate Coupling</h2>
+            <p class="text-xs text-[var(--text-secondary)]">Automatic Kelly fraction scaling, Almgren-Chriss urgency λ_k, and strategy sleeve gating driven by filtered state vector ξ_t|t</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="survival-gate.html" class="px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-xs font-mono text-[var(--color-accent)] hover:bg-[var(--bg-hover)] transition-colors">
+              Inspect Survival Gate →
+            </a>
+            <a href="hrp-allocator.html" class="px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-xs font-mono text-[var(--color-ai)] hover:bg-[var(--bg-hover)] transition-colors">
+              HRP Eigen-Allocator →
+            </a>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)] text-[11px]">
+                <th class="py-2.5 px-3 text-left">Latent Markov State S_t</th>
+                <th class="py-2.5 px-3 text-right">Filtered ξ_t|t(k)</th>
+                <th class="py-2.5 px-3 text-right">Smoothed ξ_t|T(k)</th>
+                <th class="py-2.5 px-3 text-right">Drift μ_k (Ann.)</th>
+                <th class="py-2.5 px-3 text-right">Vol σ_k (Ann.)</th>
+                <th class="py-2.5 px-3 text-right">Expected Sojourn E[D_k]</th>
+                <th class="py-2.5 px-3 text-right">Kelly Scalar κ_k</th>
+                <th class="py-2.5 px-3 text-right">Almgren-Chriss λ_k</th>
+                <th class="py-2.5 px-3 text-left">Active Alpha Sleeves</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border-subtle)] font-mono">
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 px-3 font-semibold text-[var(--color-accent)]">S=0 Low-Vol Expansion (ACTIVE)</td>
+                <td class="py-3 px-3 text-right font-bold text-[var(--color-accent)]">0.784</td>
+                <td class="py-3 px-3 text-right text-[var(--text-primary)]">0.802</td>
+                <td class="py-3 px-3 text-right text-[var(--color-profit)]">+34.2%</td>
+                <td class="py-3 px-3 text-right text-[var(--text-primary)]">18.4%</td>
+                <td class="py-3 px-3 text-right text-[var(--text-primary)]">35.7 bars (2.97h)</td>
+                <td class="py-3 px-3 text-right text-[var(--color-accent)]">0.50× Half-Kelly</td>
+                <td class="py-3 px-3 text-right text-[var(--text-primary)]">1.20e-6 (Passive)</td>
+                <td class="py-3 px-3 text-[var(--text-primary)]">Momentum, Basis Carry, Vol-DCA, HY Lead-Lag</td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 px-3 font-semibold text-[var(--color-warning)]">S=1 High-Vol Mean-Reverting</td>
+                <td class="py-3 px-3 text-right font-bold text-[var(--color-warning)]">0.174</td>
+                <td class="py-3 px-3 text-right text-[var(--text-primary)]">0.161</td>
+                <td class="py-3 px-3 text-right text-[var(--color-loss)]">-4.1%</td>
+                <td class="py-3 px-3 text-right text-[var(--color-warning)]">41.2%</td>
+                <td class="py-3 px-3 text-right text-[var(--text-primary)]">11.6 bars (0.97h)</td>
+                <td class="py-3 px-3 text-right text-[var(--color-warning)]">0.25× Quarter-Kelly</td>
+                <td class="py-3 px-3 text-right text-[var(--text-primary)]">4.50e-6 (Balanced)</td>
+                <td class="py-3 px-3 text-[var(--text-primary)]">OU Stat-Arb, LOB Hawkes Imbalance, Rough-Vol</td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-3 px-3 font-semibold text-[var(--color-loss)]">S=2 Crisis / Liquidity Stress</td>
+                <td class="py-3 px-3 text-right font-bold text-[var(--color-loss)]">0.042</td>
+                <td class="py-3 px-3 text-right text-[var(--text-primary)]">0.037</td>
+                <td class="py-3 px-3 text-right text-[var(--color-loss)]">-68.5%</td>
+                <td class="py-3 px-3 text-right text-[var(--color-loss)]">94.0%</td>
+                <td class="py-3 px-3 text-right text-[var(--text-primary)]">8.5 bars (0.71h)</td>
+                <td class="py-3 px-3 text-right text-[var(--color-loss)]">0.00× HALT / FLAT</td>
+                <td class="py-3 px-3 text-right text-[var(--color-loss)]">2.50e-5 (Urgent Sweep)</td>
+                <td class="py-3 px-3 text-[var(--color-loss)]">Survival Gate De-Leveraging Only (Cash Preservation)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

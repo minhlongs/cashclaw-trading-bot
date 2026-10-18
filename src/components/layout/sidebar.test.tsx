@@ -52,6 +52,8 @@ describe('Sidebar', () => {
     { label: 'nav.rough-volatility-hurst', href: '/vi/rough-volatility-hurst' },
     { label: 'nav.leadlag-hayashi-yoshida', href: '/vi/leadlag-hayashi-yoshida' },
     { label: 'nav.optimal-execution-almgren-chriss', href: '/vi/optimal-execution-almgren-chriss' },
+    { label: 'nav.regime-switching-hamilton-hmm', href: '/vi/regime-switching-hamilton-hmm' },
+    { label: 'nav.hrp-allocator', href: '/vi/hrp-allocator' },
     { label: 'nav.style-guide', href: '/vi/style-guide' },
     { label: 'nav.settings', href: '/vi/settings' },
   ];

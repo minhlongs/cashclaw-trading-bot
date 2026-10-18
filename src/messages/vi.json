@@ -22,6 +22,8 @@
     "rough-volatility-hurst": "Biến Động Nhám Hurst",
     "leadlag-hayashi-yoshida": "Độ Trễ Hayashi-Yoshida",
     "optimal-execution-almgren-chriss": "Thực Thi Almgren-Chriss",
+    "regime-switching-hamilton-hmm": "Bộ Lọc Chế Độ Hamilton",
+    "hrp-allocator": "Phân Bổ Vốn HRP",
     "style-guide": "Hệ Thống Thiết Kế"
   },
   "dashboard": {

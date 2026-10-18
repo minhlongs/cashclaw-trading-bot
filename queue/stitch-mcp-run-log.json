@@ -2769,6 +2769,694 @@
         "projectId": "6665149401860401191",
         "sessionId": "5323985997972544281"
       }
+    },
+    {
+      "page": "regime-switching-hamilton-hmm",
+      "title": "Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface",
+      "screenName": "projects/6665149401860401191/screens/f645c3ec56c54f55a20dc85a6120df36",
+      "screenId": "f645c3ec56c54f55a20dc85a6120df36",
+      "htmlDownloaded": true,
+      "pngDownloaded": true,
+      "rawResponse": {
+        "outputComponents": [
+          {
+            "design": {
+              "screens": [
+                {
+                  "designSystem": {
+                    "designSystem": {
+                      "displayName": "CashClaw Quant OS",
+                      "styleGuidelines": "## Brand & Style\n\nThis design system establishes a high-density quantitative research terminal and institutional paper-trading cockpit. The visual atmosphere blends dark obsidian surfaces with precision emerald-teal accents, crisp monospace telemetry, and structured violet indicators for multi-agent LLM deliberation. \n\nThe aesthetic style is a refined hybrid of **Minimalism** and **High-Contrast Data Density**, prioritizing causal signal clarity, zero clutter, and uncompromising focus on trading performance and safety invariants. Every visual element communicates precision, institutional reliability, and rigorous operational control.\n\n## Layout & Spacing\n\nThe layout employs a fixed-to-fluid application shell featuring a collapsible left sidebar (240px expanded, 64px collapsed) alongside a fluid main workspace bounded by a 1440px max-width constraint. \n\nThe spatial rhythm relies on a strict 4px base scale. Layout structures utilize a 4-column KPI summary grid and a 12-column analytical split for deep-dive charts and multi-agent strategy tables, scaling down gracefully to a single column on mobile viewports.\n\n## Elevation & Depth\n\nVisual hierarchy is achieved through **Tonal Layering** combined with subtle **Ambient Shadows** and low-contrast boundaries. \n\nSurfaces step upward from the deep obsidian root canvas (`#0B0E11`) to slate carbon panels (`#141820`) and elevated midnight overlays (`#1A2030`). Depth is reinforced through hairline structural borders (`#1E2530`) and delicate emerald glow accents (`0 0 20px rgba(0, 212, 170, 0.08)`) rather than heavy drop shadows, maintaining an ultra-clean, institutional workspace feel.\n\n## Components\n\n- **Buttons:** Built with a minimum touch target height of 44px, 600 font weight, and 8px rounding. Primary actions use solid Quant Emerald (`#00D4AA`) with dark text; secondary actions rely on slate surfaces with crisp borders.\n- **Cards & Panels:** Framed by 1px solid structural borders (`#1E2530`) over slate carbon backgrounds, complete with internal padding and subtle stacked shadows.\n- **Inputs & Selects:** Feature 44px minimum heights, deep obsidian backgrounds, and high-visibility 2px focus rings in Quant Emerald.\n- **Checkboxes & Radios:** Compact, precise geometry utilizing monochromatic borders that snap instantly to emerald-teal upon selection.\n- **Chips & Badges:** Uppercase monospace labels utilizing tight tracking, reserved strictly for status flags, paper-trading safety warnings, and AI agent deliberation tags.\n- **Data Tables:** High-density telemetry layouts featuring alternating row hover states, pinned header rows, and strict right-alignment for tabular numeric data.",
+                      "theme": {
+                        "bodyFont": "GEIST",
+                        "bodyFontFamily": "Geist",
+                        "colorMode": "DARK",
+                        "colorVariant": "FIDELITY",
+                        "customColor": "#00d4aa",
+                        "designMd": "---\nname: CashClaw Quant OS\ncolors:\n  surface: '#0d1512'\n  surface-dim: '#0d1512'\n  surface-bright: '#333b37'\n  surface-container-lowest: '#08100d'\n  surface-container-low: '#161d1a'\n  surface-container: '#19211e'\n  surface-container-high: '#242c28'\n  surface-container-highest: '#2f3633'\n  on-surface: '#dce4df'\n  on-surface-variant: '#bacac2'\n  inverse-surface: '#dce4df'\n  inverse-on-surface: '#2a322f'\n  outline: '#85948d'\n  outline-variant: '#3b4a44'\n  surface-tint: '#28dfb5'\n  primary: '#46f1c5'\n  on-primary: '#00382b'\n  primary-container: '#00d4aa'\n  on-primary-container: '#005643'\n  inverse-primary: '#006b55'\n  secondary: '#cebdff'\n  on-secondary: '#381385'\n  secondary-container: '#4f319c'\n  on-secondary-container: '#bea8ff'\n  tertiary: '#ffcea6'\n  on-tertiary: '#4c2700'\n  tertiary-container: '#ffa858'\n  on-tertiary-container: '#733e00'\n  error: '#ffb4ab'\n  on-error: '#690005'\n  error-container: '#93000a'\n  on-error-container: '#ffdad6'\n  primary-fixed: '#55fcd0'\n  primary-fixed-dim: '#28dfb5'\n  on-primary-fixed: '#002118'\n  on-primary-fixed-variant: '#00513f'\n  secondary-fixed: '#e8ddff'\n  secondary-fixed-dim: '#cebdff'\n  on-secondary-fixed: '#21005e'\n  on-secondary-fixed-variant: '#4f319c'\n  tertiary-fixed: '#ffdcc1'\n  tertiary-fixed-dim: '#ffb77a'\n  on-tertiary-fixed: '#2e1500'\n  on-tertiary-fixed-variant: '#6c3a00'\n  background: '#0d1512'\n  on-background: '#dce4df'\n  surface-variant: '#2f3633'\n  bg-primary: '#0B0E11'\n  bg-surface: '#141820'\n  bg-elevated: '#1A2030'\n  bg-hover: '#1E2838'\n  color-loss: '#FF4757'\n  color-warning: '#FFB020'\n  text-primary: '#E8EAED'\n  text-secondary: '#8B95A5'\n  text-tertiary: '#5A6577'\n  border-subtle: '#1E2530'\n  border-default: '#2A3340'\ntypography:\n  hero:\n    fontFamily: Geist\n    fontSize: 56px\n    fontWeight: '900'\n    lineHeight: '1.25'\n  headline-lg:\n    fontFamily: Geist\n    fontSize: 40px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-md:\n    fontFamily: Geist\n    fontSize: 28px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-sm:\n    fontFamily: Geist\n    fontSize: 20px\n    fontWeight: '600'\n    lineHeight: '1.25'\n  title-lg:\n    fontFamily: Geist\n    fontSize: 16px\n    fontWeight: '600'\n    lineHeight: '1.5'\n  body-base:\n    fontFamily: Geist\n    fontSize: 14px\n    fontWeight: '400'\n    lineHeight: '1.5'\n  body-sm:\n    fontFamily: Geist\n    fontSize: 13px\n    fontWeight: '500'\n    lineHeight: '1.5'\n  caption:\n    fontFamily: JetBrains Mono\n    fontSize: 11px\n    fontWeight: '600'\n    lineHeight: '1.4'\n    letterSpacing: 0.04em\nrounded:\n  sm: 0.125rem\n  DEFAULT: 0.25rem\n  md: 0.375rem\n  lg: 0.5rem\n  xl: 0.75rem\n  full: 9999px\nspacing:\n  gutter: 16px\n  margin: 24px\n  space-xs: 4px\n  space-sm: 8px\n  space-md: 12px\n  space-lg: 16px\n  space-xl: 24px\n  space-2xl: 32px\n  space-3xl: 48px\n  space-4xl: 64px\n---\n\n# Design System: CashClaw Alpha Research & Paper Trading OS\n\n**Project ID:** `cashclaw-quant-os`\n**Device:** `DESKTOP` (Responsive Tablet & Mobile Fallback)\n**Safety Mode:** `PAPER_ONLY` (ADR-001 Strict Invariant)\n\n## 1. Visual Theme & Atmosphere\n\nHigh-density quantitative research terminal and institutional paper-trading cockpit. The interface blends dark obsidian surfaces with precision emerald-teal accents (`#00D4AA`), crisp monospace telemetry (`JetBrains Mono`), and structured violet indicators (`#A78BFA`) for multi-agent LLM deliberation. Every screen prioritizes causal signal clarity, zero-clutter data density, and explicit paper-mode safety badges.\n\n## 2. Color Palette & Roles\n\n| Semantic Token | Hex / Value | Functional Role |\n|----------------|-------------|-----------------|\n| `--bg-primary` | `#0B0E11` | Deep Obsidian Abyss — root page canvas and primary terminal backdrop |\n| `--bg-surface` | `#141820` | Slate Carbon Panel — cards, sidebar navigation, KPI containers, data tables |\n| `--bg-elevated` | `#1A2030` | Elevated Midnight Surface — modals, dropdowns, active tooltips, drawer overlays |\n| `--bg-hover` | `#1E2838` | Interactive Slate Hover — table row hover, secondary button hover state |\n| `--color-accent` / `--color-profit` | `#00D4AA` | Quant Emerald Teal — primary CTAs, positive PnL, active focus rings, buy signals |\n| `--color-loss` / `--color-error` | `#FF4757` | Crimson Signal Alert — negative PnL, drawdown warnings, sell signals, validation errors |\n| `--color-warning` | `#FFB020` | Amber Regime Caution — volatility spike alerts, quota thresholds, paper-only badges |\n| `--color-ai` | `#A78BFA` | Deliberation Violet — multi-agent LLM reasoning badges, IC/IR research tags |\n| `--text-primary` | `#E8EAED` | Crisp Alabaster — primary headlines, ticker prices, active labels |\n| `--text-secondary` | `#8B95A5` | Muted Steel Gray — table column headers, secondary metadata, axis labels |\n| `--text-tertiary` | `#5A6577` | Dim Slate — disabled states, timestamps, hash checksums |\n| `--border-subtle` | `#1E2530` | Hairline Structural Divider — card borders, grid lines, section separators |\n| `--border-default` | `#2A3340` | Input & Control Border — form controls, inactive tabs, modal frames |\n\n## 3. Typography Rules\n\n- **Primary UI Font (`--font-sans`):** `Geist`, `-apple-system`, `BlinkMacSystemFont`, sans-serif — clean geometric legibility for navigation, labels, and bilingual EN/VI copy.\n- **Quantitative & Telemetry Font (`--font-mono`):** `JetBrains Mono`, `ui-monospace`, monospace — tabular numerals for prices, Sharpe ratios, IC/IR metrics, SHA-256 hashes, and order book depth.\n\n### Type Scale\n- **Hero (`--text-hero`):** `56px` (`900` weight, `1.25` line-height)\n- **Display H1 (`--text-2xl` to `--text-3xl`):** `28px–40px` (`700` weight, `1.25` line-height)\n- **Section Header H2 (`--text-xl`):** `20px` (`600` weight, `1.25` line-height)\n- **Card Title H3 (`--text-lg`):** `16px` (`600` weight, `1.5` line-height)\n- **Body Copy (`--text-base`):** `14px` (`400` weight, `1.5` line-height)\n- **Secondary / Table Cell (`--text-sm`):** `13px` (`500` weight, `1.5` line-height)\n- **Caption / Badge (`--text-xs`):** `11px` (`600` weight, uppercase tracking `0.04em`)\n\n## 4. Component Stylings & Geometry\n\n- **Buttons & Interactive Targets:** Minimum `44px` touch target height, `8px` border radius (`--radius-md`), `600` font weight. Primary buttons use filled Quant Emerald (`#00D4AA`) with dark `#0B0E11` text; secondary buttons use `#1A2030` surface with `#2A3340` border.\n- **Cards & Panels:** `12px` border radius (`--radius-lg`), `1px solid #1E2530` border, `#141820` surface fill, `16px` (`--space-4`) internal padding, subtle elevation (`0 4px 12px rgba(0, 0, 0, 0.25)`).\n- **Modals & Drawers:** `16px` border radius (`--radius-xl`), `#1A2030` elevated surface, `0 8px 24px rgba(0, 0, 0, 0.3)` shadow, emerald glow accent (`0 0 20px rgba(0, 212, 170, 0.08)`).\n- **Inputs & Selects:** `44px` min-height, `8px` radius, `#0B0E11` background, `1px solid #2A3340` border, `2px solid #00D4AA` focus-visible ring with `2px` offset.\n\n## 5. Layout Principles & Motion\n\n- **Application Shell:** Left fixed sidebar (`240px` expanded, `64px` collapsed) + fluid main workspace (`max-width: 1440px`, `24px` padding).\n- **Grid System:** 4-column KPI summary grid (`gap: 16px`), 12-column analytical split for charts and strategy tables, single-column stack below `768px`.\n- **Spacing Scale:** Base `4px` unit (`4px`, `8px`, `12px`, `16px`, `24px`, `32px`, `48px`, `64px`).\n- **Motion System:** Fast micro-interactions (`150ms ease`), standard transitions (`200ms ease`), panel transitions (`300ms ease`), with strict `@media (prefers-reduced-motion: reduce)` reset.\n",
+                        "font": "GEIST",
+                        "headlineFont": "GEIST",
+                        "headlineFontFamily": "Geist",
+                        "labelFont": "JETBRAINS_MONO",
+                        "labelFontFamily": "JetBrains Mono",
+                        "namedColors": {
+                          "background": "#0d1512",
+                          "bg-elevated": "#1A2030",
+                          "bg-hover": "#1E2838",
+                          "bg-primary": "#0B0E11",
+                          "bg-surface": "#141820",
+                          "border-default": "#2A3340",
+                          "border-subtle": "#1E2530",
+                          "color-loss": "#FF4757",
+                          "color-warning": "#FFB020",
+                          "error": "#ffb4ab",
+                          "error_container": "#93000a",
+                          "inverse_on_surface": "#2a322f",
+                          "inverse_primary": "#006b55",
+                          "inverse_surface": "#dce4df",
+                          "on_background": "#dce4df",
+                          "on_error": "#690005",
+                          "on_error_container": "#ffdad6",
+                          "on_primary": "#00382b",
+                          "on_primary_container": "#005643",
+                          "on_primary_fixed": "#002118",
+                          "on_primary_fixed_variant": "#00513f",
+                          "on_secondary": "#381385",
+                          "on_secondary_container": "#bea8ff",
+                          "on_secondary_fixed": "#21005e",
+                          "on_secondary_fixed_variant": "#4f319c",
+                          "on_surface": "#dce4df",
+                          "on_surface_variant": "#bacac2",
+                          "on_tertiary": "#4c2700",
+                          "on_tertiary_container": "#733e00",
+                          "on_tertiary_fixed": "#2e1500",
+                          "on_tertiary_fixed_variant": "#6c3a00",
+                          "outline": "#85948d",
+                          "outline_variant": "#3b4a44",
+                          "primary": "#46f1c5",
+                          "primary_container": "#00d4aa",
+                          "primary_fixed": "#55fcd0",
+                          "primary_fixed_dim": "#28dfb5",
+                          "secondary": "#cebdff",
+                          "secondary_container": "#4f319c",
+                          "secondary_fixed": "#e8ddff",
+                          "secondary_fixed_dim": "#cebdff",
+                          "surface": "#0d1512",
+                          "surface_bright": "#333b37",
+                          "surface_container": "#19211e",
+                          "surface_container_high": "#242c28",
+                          "surface_container_highest": "#2f3633",
+                          "surface_container_low": "#161d1a",
+                          "surface_container_lowest": "#08100d",
+                          "surface_dim": "#0d1512",
+                          "surface_tint": "#28dfb5",
+                          "surface_variant": "#2f3633",
+                          "tertiary": "#ffcea6",
+                          "tertiary_container": "#ffa858",
+                          "tertiary_fixed": "#ffdcc1",
+                          "tertiary_fixed_dim": "#ffb77a",
+                          "text-primary": "#E8EAED",
+                          "text-secondary": "#8B95A5",
+                          "text-tertiary": "#5A6577"
+                        },
+                        "overridePrimaryColor": "#00d4aa",
+                        "overrideSecondaryColor": "#a78bfa",
+                        "roundness": "ROUND_FOUR",
+                        "spacing": {
+                          "gutter": "16px",
+                          "margin": "24px",
+                          "space-2xl": "32px",
+                          "space-3xl": "48px",
+                          "space-4xl": "64px",
+                          "space-lg": "16px",
+                          "space-md": "12px",
+                          "space-sm": "8px",
+                          "space-xl": "24px",
+                          "space-xs": "4px"
+                        },
+                        "spacingScale": 2,
+                        "typography": {
+                          "body-base": {
+                            "fontFamily": "Geist",
+                            "fontSize": "14px",
+                            "fontWeight": "400",
+                            "lineHeight": "1.5"
+                          },
+                          "body-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "13px",
+                            "fontWeight": "500",
+                            "lineHeight": "1.5"
+                          },
+                          "caption": {
+                            "fontFamily": "JetBrains Mono",
+                            "fontSize": "11px",
+                            "fontWeight": "600",
+                            "letterSpacing": "0.04em",
+                            "lineHeight": "1.4"
+                          },
+                          "headline-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "40px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-md": {
+                            "fontFamily": "Geist",
+                            "fontSize": "28px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.25"
+                          },
+                          "hero": {
+                            "fontFamily": "Geist",
+                            "fontSize": "56px",
+                            "fontWeight": "900",
+                            "lineHeight": "1.25"
+                          },
+                          "title-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "16px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.5"
+                          }
+                        }
+                      }
+                    },
+                    "name": "assets/be7563bf9e4c400f85f92f80d27a5de5",
+                    "version": "1"
+                  },
+                  "deviceType": "DESKTOP",
+                  "generatedBy": "figaro_agent",
+                  "height": "3924",
+                  "htmlCode": {
+                    "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzY0NDcyM2MzODA3ZjQzZTk4MGMzNTM4ZDk5ZTZhNmUwEgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NjY1MTQ5NDAxODYwNDAxMTkx&filename=&opi=96797242",
+                    "mimeType": "text/html",
+                    "name": "projects/6665149401860401191/files/6b928308799b4bf1a83f1f2112fe482e"
+                  },
+                  "id": "f645c3ec56c54f55a20dc85a6120df36",
+                  "name": "projects/6665149401860401191/screens/f645c3ec56c54f55a20dc85a6120df36",
+                  "prompt": "Design the high-density quantitative research terminal screen for CashClaw Quant OS: \"Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface\" (regime-switching-hamilton-hmm.html).\n\nVisual Style & Tokens:\n- Dark Mode Institutional Terminal aesthetic. Background: Deep Obsidian Abyss (#0B0E11), Cards: Slate Carbon (#141820), Elevated Midnight Panels (#1A2030).\n- Accent Colors: Quant Emerald Teal (#00D4AA) for causal active states, verified badges, and buy signals; Crimson Alert (#FF4757) for high-volatility crisis regime; Amber Caution (#FFB020) for ADR-001 PAPER_ONLY badges; Deliberation Violet (#A78BFA) for multi-agent LLM consensus.\n- Typography: Geist Sans for UI headers/labels; JetBrains Mono tabular numerals for all telemetry, equations, log-likelihood ratios, matrix values, and SHA-256 hashes.\n- 12px rounded cards, hairline 1px solid #1E2530 borders.\n\nStructure & Components:\n1. Left Sidebar Navigation (fixed 240px w-60):\n   - CashClaw OS branding, ADR-001 PAPER_ONLY badge, Node #QNT-8812.\n   - Navigation links: Cockpit Overview, Regime Attribution, Hamilton HMM Filter (ACTIVE state with teal highlight & border), Alpha Decomposition, Execution Routing, Risk & Invariants, Order Book L3, Volatility Surface, Lead-Lag Matrix, Rough Vol (H<0.5), Testing Gate (BH-FDR), Telemetry Logs, System Settings.\n   - Bottom status: Audit Live: OK 200.0%, System Status ONLINE, Deploy Agent button.\n\n2. Top Navigation Bar:\n   - Breadcrumbs: ROOT / ALPHA RESEARCH / REGIME DECOMPOSITION ENGINE / HAMILTON (1989) HMM FILTER\n   - Title: \"CashClaw // HAMILTON MARKOV-SWITCHING FILTER & FILTERED STATE PROBABILITIES\"\n   - Telemetry strip: \"FILTER: CAUSAL ξ_{t|t}\", \"YZ VOL: 16.18\", \"ZERO-LOOKAHEAD: PASS (#9055)\", \"SLIPPAGE: 1.2 BPS\", \"LATENCY: 42µs\"\n   - Right controls: ADR-001 [PAPER_ONLY] badge, Export Matrix button, primary CTA: \"Run Baum-Welch / Hamilton Filter\" (Quant Emerald), Emergency Halt button (Crimson).\n\n3. Top Invariant Banner:\n   - ADR-001 ZERO LOOKAHEAD ENFORCED: Hamilton (1989) Causal Forward Filter: \\xi_{t|t} = \\frac{ \\xi_{t|t-1} \\odot \\eta_t }{ \\mathbf{1}' (\\xi_{t|t-1} \\odot \\eta_t) }. Kim (1994) full-sample smoothed probabilities \\xi_{t|T} strictly forbidden in live paper execution due to future-information contamination.\n   - Seed Entropy: 0xDEADBEEF42, SHA256 Verification Hash: 0x8f3b2a...7c91, Invariant Guard Status: ACTIVE.\n\n4. 3 Telemetry KPI Summary Cards:\n   - Card 1: Filtered Crisis State Probability (ξ_{t|t}^{(2)})\n     - Value: \"0.842\" in huge JetBrains Mono font with Crimson/Amber warning styling\n     - Subtext: \"P(S_t = HIGH_VOL | Ω_t) • High Volatility Chop Regime Active\"\n     - Tags: [CAUSAL FORWARD FILTER] [ZERO-LOOKAHEAD ENFORCED]\n     - Mini progress bar showing 84.2% crisis regime conviction\n   - Card 2: Ergodic Regime Persistence & Duration\n     - Value: \"p_{11} = 0.964 / p_{22} = 0.892\"\n     - Expected Duration: \"E[D_1] = 27.8 Bars (Low-Vol) | E[D_2] = 9.3 Bars (High-Vol)\"\n     - Stationary Distribution: \"π_1 = 75.0% Low-Vol | π_2 = 25.0% High-Vol\"\n     - Tag: [ERGODIC MARKOV KERNEL]\n   - Card 3: Log-Likelihood Ratio Test vs Single-Regime Gaussian\n     - Value: \"2Δℓ = +148.6\" in Quant Emerald\n     - Subtext: \"p-value < 10⁻⁶ (Wilks Theorem: χ²(3) df = 3) • Single-regime hypothesis rejected\"\n     - AIC/BIC improvement: \"ΔAIC = -142.6 | ΔBIC = -128.4\"\n     - Tag: [REGIME SWITCHING HIGHLY FAVORED]\n\n5. Interactive Causal Filtered Probability (ξ_{t|t}) vs Non-Causal Smoothed Probability (ξ_{t|T}) Inspector:\n   - High-fidelity visual comparison timeline showing time-series bars:\n     - Top chart: Asset Log Returns / Realized Volatility with shaded regime bands\n     - Middle chart: Causal Hamilton Filtered Probability \\xi_{t|t}^{(2)} (Quant Emerald / Solid line, step-by-step causal updates, strictly respecting filtration \\Omega_t) versus Kim Smoothed Probability \\xi_{t|T}^{(2)} (Dim Violet dashed line, utilizes full sample T, exposing hindsight bias).\n     - Annotations pointing out \"Lookahead Gap Δ = \\xi_{t|T} - \\xi_{t|t}\": Notice how smoothed probabilities preemptively switch 3 bars before market crash, which is an illegal lookahead in production paper trading.\n     - Controls: Toggle Filtered (Live-Safe) vs Smoothed (Audit Only), lookback window selector (100 bars, 250 bars, 500 bars), confidence interval bounds.\n\n6. Markov Transition Probability Matrix (P_{ij}) & State-Conditional Emission Table:\n   - Transition Matrix Grid Display:\n     - State 1 (Low-Vol / Trend): P(S_t=1 | S_{t-1}=1) = 0.964, P(S_t=2 | S_{t-1}=1) = 0.036\n     - State 2 (High-Vol / Chop): P(S_t=1 | S_{t-1}=2) = 0.108, P(S_t=2 | S_{t-1}=2) = 0.892\n     - Transition Hazard Rate: λ_{1→2} = 0.036, λ_{2→1} = 0.108\n   - Multi-Regime Parameter Decomposition Table:\n     - Columns: Regime State, Description, Emission Mean μ_k (annualized), Emission Std Dev σ_k (annualized), Stationary Weight π_k, Expected Duration, Dynamic Paper Position Multiplier, Action/Fence.\n     - Row 1: State 1: LOW_VOL_BULL (μ = +24.8%, σ = 11.2%, π = 75.0%, E[D] = 27.8d, Sizing = 1.00x (Full Capital), Action: [ALLOW_PAPER_ALLOCATION])\n     - Row 2: State 2: HIGH_VOL_CRISIS (μ = -18.4%, σ = 46.5%, π = 25.0%, E[D] = 9.3d, Sizing = 0.20x (De-risk 80%), Action: [THROTTLE_80%_FENCE])\n     - Row 3: State 3 (Optional 3-state breakdown / Fat Tail jump): EXTREME_FLASH_CRASH (μ = -64.2%, σ = 88.0%, π = 0.8%, E[D] = 1.2d, Sizing = 0.00x, Action: [HALT_KILL_SWITCH])\n\n7. Multi-Agent Econometric Consensus & ADR-001 Invariant Lock Box:\n   - 2 AI agents:\n     - Agent 1: REGIME_ECONOMETRICIAN (Confidence: 97.8%): \"Hamilton filter confirms \\xi_{t|t}^{(2)} = 0.842 with zero lookahead. Forward transition probability from High-Vol back to Low-Vol is only 10.8%. Recommend sustaining 80% capital throttle.\"\n     - Agent 2: ZERO_LOOKAHEAD_AUDITOR (Confidence: 99.6%): \"Verified strict forward recursive filtering: \\xi_{t|t} calculated using only t \\le T_now information. Kim smoother weights excluded from paper-order route. Invariant checksum 0x8f3b2a locked.\"\n   - Action Button: \"Lock Hamilton Invariant & Commit Dynamic Sizing Rules\" (Full width emerald CTA).\n\n8. Micro-telemetry status footer:\n   - CashClaw OS Kernel 4.19-INST | Latency: 42µs | Slippage Model: 1.2 BPS Fixed | YZ Vol: 16.18 | Zero-Lookahead Audit: PASS (#CYCLE 9055) | ADR-001 [PAPER_ONLY]",
+                  "screenMetadata": {
+                    "agentType": "PRO_AGENT",
+                    "status": "COMPLETE"
+                  },
+                  "screenType": "DESIGN",
+                  "screenshot": {
+                    "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1WafeKX3odlOGJkSikDW4kGjjymUSE2og8hTLdWbgncLsHqQI_e2g-a0o-oIT_6fl1JHNaBzZiokhc6LXeLM2XMUDwLzyJP63sjMBlhQ19nLoljb7JWxRQYUQ1aMBTNMedkNVoIgBY1RfO4mYUxoK7H42L-DnMNv4GvBKwqx9mRH3uTfUCVAKZwUy167f1POb5bhjkSm3D5Akn-6vsG5FTJrZKVrnTnfvZWIvPLkBvspDfIEtkNVLNpcrI",
+                    "name": "projects/6665149401860401191/files/64db2732f44e45d2ae76a71c596788a3"
+                  },
+                  "theme": {
+                    "bodyFont": "GEIST",
+                    "bodyFontFamily": "Geist",
+                    "colorMode": "DARK",
+                    "colorVariant": "FIDELITY",
+                    "customColor": "#00d4aa",
+                    "font": "GEIST",
+                    "headlineFont": "GEIST",
+                    "headlineFontFamily": "Geist",
+                    "labelFont": "JETBRAINS_MONO",
+                    "labelFontFamily": "JetBrains Mono",
+                    "namedColors": {
+                      "background": "#0d1512",
+                      "bg-elevated": "#1A2030",
+                      "bg-hover": "#1E2838",
+                      "bg-primary": "#0B0E11",
+                      "bg-surface": "#141820",
+                      "border-default": "#2A3340",
+                      "border-subtle": "#1E2530",
+                      "color-loss": "#FF4757",
+                      "color-warning": "#FFB020",
+                      "error": "#ffb4ab",
+                      "error_container": "#93000a",
+                      "inverse_on_surface": "#2a322f",
+                      "inverse_primary": "#006b55",
+                      "inverse_surface": "#dce4df",
+                      "on_background": "#dce4df",
+                      "on_error": "#690005",
+                      "on_error_container": "#ffdad6",
+                      "on_primary": "#00382b",
+                      "on_primary_container": "#005643",
+                      "on_primary_fixed": "#002118",
+                      "on_primary_fixed_variant": "#00513f",
+                      "on_secondary": "#381385",
+                      "on_secondary_container": "#bea8ff",
+                      "on_secondary_fixed": "#21005e",
+                      "on_secondary_fixed_variant": "#4f319c",
+                      "on_surface": "#dce4df",
+                      "on_surface_variant": "#bacac2",
+                      "on_tertiary": "#4c2700",
+                      "on_tertiary_container": "#733e00",
+                      "on_tertiary_fixed": "#2e1500",
+                      "on_tertiary_fixed_variant": "#6c3a00",
+                      "outline": "#85948d",
+                      "outline_variant": "#3b4a44",
+                      "primary": "#46f1c5",
+                      "primary_container": "#00d4aa",
+                      "primary_fixed": "#55fcd0",
+                      "primary_fixed_dim": "#28dfb5",
+                      "secondary": "#cebdff",
+                      "secondary_container": "#4f319c",
+                      "secondary_fixed": "#e8ddff",
+                      "secondary_fixed_dim": "#cebdff",
+                      "surface": "#0d1512",
+                      "surface_bright": "#333b37",
+                      "surface_container": "#19211e",
+                      "surface_container_high": "#242c28",
+                      "surface_container_highest": "#2f3633",
+                      "surface_container_low": "#161d1a",
+                      "surface_container_lowest": "#08100d",
+                      "surface_dim": "#0d1512",
+                      "surface_tint": "#28dfb5",
+                      "surface_variant": "#2f3633",
+                      "tertiary": "#ffcea6",
+                      "tertiary_container": "#ffa858",
+                      "tertiary_fixed": "#ffdcc1",
+                      "tertiary_fixed_dim": "#ffb77a",
+                      "text-primary": "#E8EAED",
+                      "text-secondary": "#8B95A5",
+                      "text-tertiary": "#5A6577"
+                    },
+                    "overridePrimaryColor": "#00d4aa",
+                    "overrideSecondaryColor": "#a78bfa",
+                    "roundness": "ROUND_FOUR",
+                    "spacing": {
+                      "gutter": "16px",
+                      "margin": "24px",
+                      "space-2xl": "32px",
+                      "space-3xl": "48px",
+                      "space-4xl": "64px",
+                      "space-lg": "16px",
+                      "space-md": "12px",
+                      "space-sm": "8px",
+                      "space-xl": "24px",
+                      "space-xs": "4px"
+                    },
+                    "spacingScale": 2,
+                    "typography": {
+                      "body-base": {
+                        "fontFamily": "Geist",
+                        "fontSize": "14px",
+                        "fontWeight": "400",
+                        "lineHeight": "1.5"
+                      },
+                      "body-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "13px",
+                        "fontWeight": "500",
+                        "lineHeight": "1.5"
+                      },
+                      "caption": {
+                        "fontFamily": "JetBrains Mono",
+                        "fontSize": "11px",
+                        "fontWeight": "600",
+                        "letterSpacing": "0.04em",
+                        "lineHeight": "1.4"
+                      },
+                      "headline-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "40px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-md": {
+                        "fontFamily": "Geist",
+                        "fontSize": "28px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "20px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.25"
+                      },
+                      "hero": {
+                        "fontFamily": "Geist",
+                        "fontSize": "56px",
+                        "fontWeight": "900",
+                        "lineHeight": "1.25"
+                      },
+                      "title-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "16px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.5"
+                      }
+                    }
+                  },
+                  "title": "Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface",
+                  "width": "3160"
+                }
+              ],
+              "theme": {}
+            }
+          },
+          {
+            "text": "I have designed and implemented the **Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface** (`Hamilton (1989) Markov-Switching Regime Filter & Filtered State Probability Surface`) in full alignment with the **CashClaw Quant OS** design system and the strict ADR-001 zero-lookahead paper trading specifications.\n\n### Key Architectural & Mathematical Features:\n1. **Application Shell & Sidebar Navigation**:\n   - Fixed 240px terminal sidebar with active highlight on **Regime Attribution / Hamilton HMM Filter** (`#00D4AA` accent, elevated active state), complete with node indicators, paper trading badges, and real-time system invariants.\n   - Top quantitative telemetry bar featuring live tracking of causal filter probabilities, Yang-Zhang volatility, slippage (1.2 bps), cycle pass state, and quick triggers (`Run Baum-Welch / Hamilton Filter`, `Export Matrix`, and `Emergency Halt`).\n\n2. **ADR-001 Zero-Lookahead Invariant Header**:\n   - Formal mathematical declaration of Hamilton's causal forward filter:\n     $$\\xi_{t|t} = \\frac{\\xi_{t|t-1} \\odot \\eta_t}{\\mathbf{1}' (\\xi_{t|t-1} \\odot \\eta_t)}$$\n   - Explicit guard fence forbidding Kim (1994) full-sample smoothed probabilities $\\xi_{t|T}$ during live paper order routing to avoid future information leakage.\n   - Cryptographic validation stamp (`SHA-256: 0x8f3b2a...7c91`, `Seed: 0xDEADBEEF42`).\n\n3. **Core Telemetry KPI Summary Cards**:\n   - **Filtered Crisis State Probability ($\\xi_{t|t}^{(2)}$)**: Displaying $0.842$ with dynamic crisis conviction indicators and causal forward filter tags.\n   - **Ergodic Regime Persistence ($p_{11} / p_{22}$)**: $0.964$ / $0.892$ with expected duration breakdown ($27.8$ bars for Low-Vol vs $9.3$ bars for High-Vol) and ergodic stationary measure $\\pi = [75\\%, 25\\%]$.\n   - **Log-Likelihood Ratio Test vs Single Gaussian**: $2\\Delta\\ell = +148.6$ ($p < 10^{-6}$ via Wilks' theorem, $\\chi^2(3)$ df), confirming regime switching over standard Brownian motion.\n\n4. **Causal Filtered ($\\xi_{t|t}$) vs Non-Causal Smoothed ($\\xi_{t|T}$) Inspector**:\n   - Dual-tiered visual time series contrasting the causal online filter (solid emerald line, safe for real-time execution) against the non-causal Kim smoother (dashed line).\n   - Dedicated annotation card explaining the **Lookahead Bias Gap ($\\Delta = 3\\text{ bars}$)** where smoothing creates false anticipatory signals that cannot be executed in live trading.\n   - Controls for lookback horizons (100, 250, 500 bars) and Bayesian decision cuts.\n\n5. **Markov Transition Kernel Matrix ($P_{ij}$) & State-Conditional Emission Policy**:\n   - Transition matrix grid displaying empirical one-step transition probabilities and hazard recovery rates.\n   - Comprehensive multi-state emission policy table detailing emission mean $\\mu_k$, annual volatility $\\sigma_k$, stationary ergodic weights $\\pi_k$, expected duration $E[D]$, and dynamic paper sizing multipliers ($1.00\\times$ for Low-Vol Bull, $0.20\\times$ for High-Vol Crisis, $0.00\\times$ for Flash Crash).\n\n6. **Multi-Agent Econometric Consensus & Safety Fence**:\n   - Dual agent verification cards (`REGIME_ECONOMETRICIAN` and `ZERO_LOOKAHEAD_AUDITOR`) providing unanimity votes on transition persistence and parameter bounds before activating order routing rules."
+          },
+          {
+            "suggestion": "Connect Hamilton filter probabilities to the Almgren-Chriss execution router to auto-scale liquidation half-life"
+          },
+          {
+            "suggestion": "Add Baum-Welch EM convergence logs and parameter estimation diagnostic plots"
+          },
+          {
+            "suggestion": "Export the Hamilton transition kernel and emission matrix to Python/NumPy format"
+          }
+        ],
+        "projectId": "6665149401860401191",
+        "sessionId": "5892263915177815481"
+      }
+    },
+    {
+      "page": "hrp-allocator",
+      "title": "López de Prado (2016) Hierarchical Risk Parity (HRP) & Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator",
+      "screenName": "projects/6665149401860401191/screens/cceb313f01b34c4081aa5a6e8a19f16e",
+      "screenId": "cceb313f01b34c4081aa5a6e8a19f16e",
+      "htmlDownloaded": true,
+      "pngDownloaded": true,
+      "rawResponse": {
+        "outputComponents": [
+          {
+            "design": {
+              "screens": [
+                {
+                  "designSystem": {
+                    "designSystem": {
+                      "displayName": "CashClaw Quant OS",
+                      "styleGuidelines": "## Brand & Style\n\nThis design system establishes a high-density quantitative research terminal and institutional paper-trading cockpit. The visual atmosphere blends dark obsidian surfaces with precision emerald-teal accents, crisp monospace telemetry, and structured violet indicators for multi-agent LLM deliberation. \n\nThe aesthetic style is a refined hybrid of **Minimalism** and **High-Contrast Data Density**, prioritizing causal signal clarity, zero clutter, and uncompromising focus on trading performance and safety invariants. Every visual element communicates precision, institutional reliability, and rigorous operational control.\n\n## Layout & Spacing\n\nThe layout employs a fixed-to-fluid application shell featuring a collapsible left sidebar (240px expanded, 64px collapsed) alongside a fluid main workspace bounded by a 1440px max-width constraint. \n\nThe spatial rhythm relies on a strict 4px base scale. Layout structures utilize a 4-column KPI summary grid and a 12-column analytical split for deep-dive charts and multi-agent strategy tables, scaling down gracefully to a single column on mobile viewports.\n\n## Elevation & Depth\n\nVisual hierarchy is achieved through **Tonal Layering** combined with subtle **Ambient Shadows** and low-contrast boundaries. \n\nSurfaces step upward from the deep obsidian root canvas (`#0B0E11`) to slate carbon panels (`#141820`) and elevated midnight overlays (`#1A2030`). Depth is reinforced through hairline structural borders (`#1E2530`) and delicate emerald glow accents (`0 0 20px rgba(0, 212, 170, 0.08)`) rather than heavy drop shadows, maintaining an ultra-clean, institutional workspace feel.\n\n## Components\n\n- **Buttons:** Built with a minimum touch target height of 44px, 600 font weight, and 8px rounding. Primary actions use solid Quant Emerald (`#00D4AA`) with dark text; secondary actions rely on slate surfaces with crisp borders.\n- **Cards & Panels:** Framed by 1px solid structural borders (`#1E2530`) over slate carbon backgrounds, complete with internal padding and subtle stacked shadows.\n- **Inputs & Selects:** Feature 44px minimum heights, deep obsidian backgrounds, and high-visibility 2px focus rings in Quant Emerald.\n- **Checkboxes & Radios:** Compact, precise geometry utilizing monochromatic borders that snap instantly to emerald-teal upon selection.\n- **Chips & Badges:** Uppercase monospace labels utilizing tight tracking, reserved strictly for status flags, paper-trading safety warnings, and AI agent deliberation tags.\n- **Data Tables:** High-density telemetry layouts featuring alternating row hover states, pinned header rows, and strict right-alignment for tabular numeric data.",
+                      "theme": {
+                        "bodyFont": "GEIST",
+                        "bodyFontFamily": "Geist",
+                        "colorMode": "DARK",
+                        "colorVariant": "FIDELITY",
+                        "customColor": "#00d4aa",
+                        "designMd": "---\nname: CashClaw Quant OS\ncolors:\n  surface: '#0d1512'\n  surface-dim: '#0d1512'\n  surface-bright: '#333b37'\n  surface-container-lowest: '#08100d'\n  surface-container-low: '#161d1a'\n  surface-container: '#19211e'\n  surface-container-high: '#242c28'\n  surface-container-highest: '#2f3633'\n  on-surface: '#dce4df'\n  on-surface-variant: '#bacac2'\n  inverse-surface: '#dce4df'\n  inverse-on-surface: '#2a322f'\n  outline: '#85948d'\n  outline-variant: '#3b4a44'\n  surface-tint: '#28dfb5'\n  primary: '#46f1c5'\n  on-primary: '#00382b'\n  primary-container: '#00d4aa'\n  on-primary-container: '#005643'\n  inverse-primary: '#006b55'\n  secondary: '#cebdff'\n  on-secondary: '#381385'\n  secondary-container: '#4f319c'\n  on-secondary-container: '#bea8ff'\n  tertiary: '#ffcea6'\n  on-tertiary: '#4c2700'\n  tertiary-container: '#ffa858'\n  on-tertiary-container: '#733e00'\n  error: '#ffb4ab'\n  on-error: '#690005'\n  error-container: '#93000a'\n  on-error-container: '#ffdad6'\n  primary-fixed: '#55fcd0'\n  primary-fixed-dim: '#28dfb5'\n  on-primary-fixed: '#002118'\n  on-primary-fixed-variant: '#00513f'\n  secondary-fixed: '#e8ddff'\n  secondary-fixed-dim: '#cebdff'\n  on-secondary-fixed: '#21005e'\n  on-secondary-fixed-variant: '#4f319c'\n  tertiary-fixed: '#ffdcc1'\n  tertiary-fixed-dim: '#ffb77a'\n  on-tertiary-fixed: '#2e1500'\n  on-tertiary-fixed-variant: '#6c3a00'\n  background: '#0d1512'\n  on-background: '#dce4df'\n  surface-variant: '#2f3633'\n  bg-primary: '#0B0E11'\n  bg-surface: '#141820'\n  bg-elevated: '#1A2030'\n  bg-hover: '#1E2838'\n  color-loss: '#FF4757'\n  color-warning: '#FFB020'\n  text-primary: '#E8EAED'\n  text-secondary: '#8B95A5'\n  text-tertiary: '#5A6577'\n  border-subtle: '#1E2530'\n  border-default: '#2A3340'\ntypography:\n  hero:\n    fontFamily: Geist\n    fontSize: 56px\n    fontWeight: '900'\n    lineHeight: '1.25'\n  headline-lg:\n    fontFamily: Geist\n    fontSize: 40px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-md:\n    fontFamily: Geist\n    fontSize: 28px\n    fontWeight: '700'\n    lineHeight: '1.25'\n  headline-sm:\n    fontFamily: Geist\n    fontSize: 20px\n    fontWeight: '600'\n    lineHeight: '1.25'\n  title-lg:\n    fontFamily: Geist\n    fontSize: 16px\n    fontWeight: '600'\n    lineHeight: '1.5'\n  body-base:\n    fontFamily: Geist\n    fontSize: 14px\n    fontWeight: '400'\n    lineHeight: '1.5'\n  body-sm:\n    fontFamily: Geist\n    fontSize: 13px\n    fontWeight: '500'\n    lineHeight: '1.5'\n  caption:\n    fontFamily: JetBrains Mono\n    fontSize: 11px\n    fontWeight: '600'\n    lineHeight: '1.4'\n    letterSpacing: 0.04em\nrounded:\n  sm: 0.125rem\n  DEFAULT: 0.25rem\n  md: 0.375rem\n  lg: 0.5rem\n  xl: 0.75rem\n  full: 9999px\nspacing:\n  gutter: 16px\n  margin: 24px\n  space-xs: 4px\n  space-sm: 8px\n  space-md: 12px\n  space-lg: 16px\n  space-xl: 24px\n  space-2xl: 32px\n  space-3xl: 48px\n  space-4xl: 64px\n---\n\n# Design System: CashClaw Alpha Research & Paper Trading OS\n\n**Project ID:** `cashclaw-quant-os`\n**Device:** `DESKTOP` (Responsive Tablet & Mobile Fallback)\n**Safety Mode:** `PAPER_ONLY` (ADR-001 Strict Invariant)\n\n## 1. Visual Theme & Atmosphere\n\nHigh-density quantitative research terminal and institutional paper-trading cockpit. The interface blends dark obsidian surfaces with precision emerald-teal accents (`#00D4AA`), crisp monospace telemetry (`JetBrains Mono`), and structured violet indicators (`#A78BFA`) for multi-agent LLM deliberation. Every screen prioritizes causal signal clarity, zero-clutter data density, and explicit paper-mode safety badges.\n\n## 2. Color Palette & Roles\n\n| Semantic Token | Hex / Value | Functional Role |\n|----------------|-------------|-----------------|\n| `--bg-primary` | `#0B0E11` | Deep Obsidian Abyss — root page canvas and primary terminal backdrop |\n| `--bg-surface` | `#141820` | Slate Carbon Panel — cards, sidebar navigation, KPI containers, data tables |\n| `--bg-elevated` | `#1A2030` | Elevated Midnight Surface — modals, dropdowns, active tooltips, drawer overlays |\n| `--bg-hover` | `#1E2838` | Interactive Slate Hover — table row hover, secondary button hover state |\n| `--color-accent` / `--color-profit` | `#00D4AA` | Quant Emerald Teal — primary CTAs, positive PnL, active focus rings, buy signals |\n| `--color-loss` / `--color-error` | `#FF4757` | Crimson Signal Alert — negative PnL, drawdown warnings, sell signals, validation errors |\n| `--color-warning` | `#FFB020` | Amber Regime Caution — volatility spike alerts, quota thresholds, paper-only badges |\n| `--color-ai` | `#A78BFA` | Deliberation Violet — multi-agent LLM reasoning badges, IC/IR research tags |\n| `--text-primary` | `#E8EAED` | Crisp Alabaster — primary headlines, ticker prices, active labels |\n| `--text-secondary` | `#8B95A5` | Muted Steel Gray — table column headers, secondary metadata, axis labels |\n| `--text-tertiary` | `#5A6577` | Dim Slate — disabled states, timestamps, hash checksums |\n| `--border-subtle` | `#1E2530` | Hairline Structural Divider — card borders, grid lines, section separators |\n| `--border-default` | `#2A3340` | Input & Control Border — form controls, inactive tabs, modal frames |\n\n## 3. Typography Rules\n\n- **Primary UI Font (`--font-sans`):** `Geist`, `-apple-system`, `BlinkMacSystemFont`, sans-serif — clean geometric legibility for navigation, labels, and bilingual EN/VI copy.\n- **Quantitative & Telemetry Font (`--font-mono`):** `JetBrains Mono`, `ui-monospace`, monospace — tabular numerals for prices, Sharpe ratios, IC/IR metrics, SHA-256 hashes, and order book depth.\n\n### Type Scale\n- **Hero (`--text-hero`):** `56px` (`900` weight, `1.25` line-height)\n- **Display H1 (`--text-2xl` to `--text-3xl`):** `28px–40px` (`700` weight, `1.25` line-height)\n- **Section Header H2 (`--text-xl`):** `20px` (`600` weight, `1.25` line-height)\n- **Card Title H3 (`--text-lg`):** `16px` (`600` weight, `1.5` line-height)\n- **Body Copy (`--text-base`):** `14px` (`400` weight, `1.5` line-height)\n- **Secondary / Table Cell (`--text-sm`):** `13px` (`500` weight, `1.5` line-height)\n- **Caption / Badge (`--text-xs`):** `11px` (`600` weight, uppercase tracking `0.04em`)\n\n## 4. Component Stylings & Geometry\n\n- **Buttons & Interactive Targets:** Minimum `44px` touch target height, `8px` border radius (`--radius-md`), `600` font weight. Primary buttons use filled Quant Emerald (`#00D4AA`) with dark `#0B0E11` text; secondary buttons use `#1A2030` surface with `#2A3340` border.\n- **Cards & Panels:** `12px` border radius (`--radius-lg`), `1px solid #1E2530` border, `#141820` surface fill, `16px` (`--space-4`) internal padding, subtle elevation (`0 4px 12px rgba(0, 0, 0, 0.25)`).\n- **Modals & Drawers:** `16px` border radius (`--radius-xl`), `#1A2030` elevated surface, `0 8px 24px rgba(0, 0, 0, 0.3)` shadow, emerald glow accent (`0 0 20px rgba(0, 212, 170, 0.08)`).\n- **Inputs & Selects:** `44px` min-height, `8px` radius, `#0B0E11` background, `1px solid #2A3340` border, `2px solid #00D4AA` focus-visible ring with `2px` offset.\n\n## 5. Layout Principles & Motion\n\n- **Application Shell:** Left fixed sidebar (`240px` expanded, `64px` collapsed) + fluid main workspace (`max-width: 1440px`, `24px` padding).\n- **Grid System:** 4-column KPI summary grid (`gap: 16px`), 12-column analytical split for charts and strategy tables, single-column stack below `768px`.\n- **Spacing Scale:** Base `4px` unit (`4px`, `8px`, `12px`, `16px`, `24px`, `32px`, `48px`, `64px`).\n- **Motion System:** Fast micro-interactions (`150ms ease`), standard transitions (`200ms ease`), panel transitions (`300ms ease`), with strict `@media (prefers-reduced-motion: reduce)` reset.\n",
+                        "font": "GEIST",
+                        "headlineFont": "GEIST",
+                        "headlineFontFamily": "Geist",
+                        "labelFont": "JETBRAINS_MONO",
+                        "labelFontFamily": "JetBrains Mono",
+                        "namedColors": {
+                          "background": "#0d1512",
+                          "bg-elevated": "#1A2030",
+                          "bg-hover": "#1E2838",
+                          "bg-primary": "#0B0E11",
+                          "bg-surface": "#141820",
+                          "border-default": "#2A3340",
+                          "border-subtle": "#1E2530",
+                          "color-loss": "#FF4757",
+                          "color-warning": "#FFB020",
+                          "error": "#ffb4ab",
+                          "error_container": "#93000a",
+                          "inverse_on_surface": "#2a322f",
+                          "inverse_primary": "#006b55",
+                          "inverse_surface": "#dce4df",
+                          "on_background": "#dce4df",
+                          "on_error": "#690005",
+                          "on_error_container": "#ffdad6",
+                          "on_primary": "#00382b",
+                          "on_primary_container": "#005643",
+                          "on_primary_fixed": "#002118",
+                          "on_primary_fixed_variant": "#00513f",
+                          "on_secondary": "#381385",
+                          "on_secondary_container": "#bea8ff",
+                          "on_secondary_fixed": "#21005e",
+                          "on_secondary_fixed_variant": "#4f319c",
+                          "on_surface": "#dce4df",
+                          "on_surface_variant": "#bacac2",
+                          "on_tertiary": "#4c2700",
+                          "on_tertiary_container": "#733e00",
+                          "on_tertiary_fixed": "#2e1500",
+                          "on_tertiary_fixed_variant": "#6c3a00",
+                          "outline": "#85948d",
+                          "outline_variant": "#3b4a44",
+                          "primary": "#46f1c5",
+                          "primary_container": "#00d4aa",
+                          "primary_fixed": "#55fcd0",
+                          "primary_fixed_dim": "#28dfb5",
+                          "secondary": "#cebdff",
+                          "secondary_container": "#4f319c",
+                          "secondary_fixed": "#e8ddff",
+                          "secondary_fixed_dim": "#cebdff",
+                          "surface": "#0d1512",
+                          "surface_bright": "#333b37",
+                          "surface_container": "#19211e",
+                          "surface_container_high": "#242c28",
+                          "surface_container_highest": "#2f3633",
+                          "surface_container_low": "#161d1a",
+                          "surface_container_lowest": "#08100d",
+                          "surface_dim": "#0d1512",
+                          "surface_tint": "#28dfb5",
+                          "surface_variant": "#2f3633",
+                          "tertiary": "#ffcea6",
+                          "tertiary_container": "#ffa858",
+                          "tertiary_fixed": "#ffdcc1",
+                          "tertiary_fixed_dim": "#ffb77a",
+                          "text-primary": "#E8EAED",
+                          "text-secondary": "#8B95A5",
+                          "text-tertiary": "#5A6577"
+                        },
+                        "overridePrimaryColor": "#00d4aa",
+                        "overrideSecondaryColor": "#a78bfa",
+                        "roundness": "ROUND_FOUR",
+                        "spacing": {
+                          "gutter": "16px",
+                          "margin": "24px",
+                          "space-2xl": "32px",
+                          "space-3xl": "48px",
+                          "space-4xl": "64px",
+                          "space-lg": "16px",
+                          "space-md": "12px",
+                          "space-sm": "8px",
+                          "space-xl": "24px",
+                          "space-xs": "4px"
+                        },
+                        "spacingScale": 2,
+                        "typography": {
+                          "body-base": {
+                            "fontFamily": "Geist",
+                            "fontSize": "14px",
+                            "fontWeight": "400",
+                            "lineHeight": "1.5"
+                          },
+                          "body-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "13px",
+                            "fontWeight": "500",
+                            "lineHeight": "1.5"
+                          },
+                          "caption": {
+                            "fontFamily": "JetBrains Mono",
+                            "fontSize": "11px",
+                            "fontWeight": "600",
+                            "letterSpacing": "0.04em",
+                            "lineHeight": "1.4"
+                          },
+                          "headline-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "40px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-md": {
+                            "fontFamily": "Geist",
+                            "fontSize": "28px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.25"
+                          },
+                          "headline-sm": {
+                            "fontFamily": "Geist",
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.25"
+                          },
+                          "hero": {
+                            "fontFamily": "Geist",
+                            "fontSize": "56px",
+                            "fontWeight": "900",
+                            "lineHeight": "1.25"
+                          },
+                          "title-lg": {
+                            "fontFamily": "Geist",
+                            "fontSize": "16px",
+                            "fontWeight": "600",
+                            "lineHeight": "1.5"
+                          }
+                        }
+                      }
+                    },
+                    "name": "assets/be7563bf9e4c400f85f92f80d27a5de5",
+                    "version": "1"
+                  },
+                  "deviceType": "DESKTOP",
+                  "generatedBy": "figaro_agent",
+                  "height": "4710",
+                  "htmlCode": {
+                    "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sX2JmOTY2ZjkwODYyZjQ1NjlhNzVhZDdiNmJmMWQ1NDk4EgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NjY1MTQ5NDAxODYwNDAxMTkx&filename=&opi=96797242",
+                    "mimeType": "text/html",
+                    "name": "projects/6665149401860401191/files/e6526553c2cb423f8bbf87a083e9f5c8"
+                  },
+                  "id": "cceb313f01b34c4081aa5a6e8a19f16e",
+                  "name": "projects/6665149401860401191/screens/cceb313f01b34c4081aa5a6e8a19f16e",
+                  "prompt": "Design the institutional quantitative desktop terminal screen for 'López de Prado (2016) Hierarchical Risk Parity (HRP) & Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator' (hrp-allocator.html) for CashClaw Quant OS.\n\nDESIGN SPECIFICATIONS:\n- Aesthetic: Deep Obsidian Abyss (#0B0E11), Slate Carbon Panels (#141820), Elevated Midnight Panels (#1A2030), Quant Emerald Teal (#00D4AA), Crimson Alert (#FF4757), Amber Caution (#FFB020), Deliberation Violet (#A78BFA). Monospace JetBrains Mono for all math/telemetry, Geist Sans for headers.\n- Fixed 240px Left Sidebar: Brand 'CashClaw OS', Node #QNT-8812, ADR-001 PAPER_ONLY badge, full navigation list with active item on 'HRP Risk Parity' (or 'Hierarchical Risk Parity'). Footer with Audit Live: OK 200.0%, System Status ONLINE, Deploy Agent button.\n- Top Header Bar:\n  - Title: 'López de Prado (2016) Hierarchical Risk Parity (HRP) • Tree Clustering & Quasi-Diagonalization • Ledoit-Wolf Shrinkage'\n  - Badges: ADR-001 STRICT PAPER_ONLY, ZERO-LOOKAHEAD: PASS (#CYCLE 9074), LATENCY: 38µs, SLIPPAGE: 1.2 BPS, SHRINKAGE δ: 0.284\n  - Primary Action CTA: 'Re-Cluster & Bisect Portfolio' (emerald button with refresh icon), 'Export Weight Vector' button, 'Emergency Halt' crimson button.\n  - Invariant Banner: Invariant ADR-001 (Zero Matrix Inversion Singularity): Quasi-diagonalized correlation tree avoids ill-conditioned inversion of Σ. Ledoit-Wolf optimal shrinkage constant δ* = 0.284 towards constant-correlation target.\n\n- 3 Telemetry KPI Cards:\n  1. Covariance Condition Number κ(Σ) Raw vs Ledoit-Wolf:\n     - Value: '482.4 → 18.6'\n     - Label: Markowitz Matrix Inversion Singularity Neutralized\n     - Subtext: 'Raw Condition Number κ = 482.4 (Ill-conditioned) → Ledoit-Wolf κ_shrunk = 18.6. Spectral condition improved 96.1%. Asymptotic Marchenko-Pastur bulk edge verified.'\n     - Badge: ILL-CONDITIONED NEUTRALIZED (Quant Emerald)\n  2. Out-of-Sample Portfolio Variance Reduction (HRP vs CLA):\n     - Value: '-31.8% OOS Var'\n     - Label: Sharpe +2.14 vs +1.42 Markowitz CLA\n     - Subtext: 'Critical Quadratic Optimizer Instability Eliminated. Out-of-sample realized volatility dropped from 18.4% to 12.5% p.a. Maximum drawdown cut from -24.2% to -11.6%.'\n     - Badge: CLA INSTABILITY BYPASSED\n  3. Effective Number of Bets (ENB / Shannon Entropy):\n     - Value: '3.68 / 4.00 Clusters'\n     - Label: Balanced Recursive Bisection Allocation\n     - Subtext: 'Shannon Entropy H(w) = 1.302 nats. Herfindahl Diversification Index = 0.272. Avoids corner solutions and concentrated weights without synthetic regularization.'\n     - Badge: MAX ENTROPY CLUSTER BISECTION\n\n- Main Content Section (2-Column Analytical Split):\n  Left Column (7 cols):\n  - Interactive Single-Linkage Hierarchical Dendrogram & Quasi-Diagonalized Correlation Heatmap Inspector:\n    - Ultrametric distance formula: d_{i,j} = \\sqrt{0.5 \\cdot (1 - \\rho_{i,j})}.\n    - Visual ASCII/SVG styled tree clustering showing branches merging: Cluster 1 (BTC-USDT & ETH-USDT, d=0.312), Cluster 2 (SOL-USDT & AVAX-USDT, d=0.428), Cluster 3 (DeFi Leg: UNI/AAVE, d=0.380), Cluster 4 (Macro Basis: CEX-DEX funding, d=0.610).\n    - Quasi-diagonalized correlation matrix heatmap with color gradient blocks (emerald for positive correlation, dark slate for low, red for negative).\n    - Ledoit-Wolf Shrinkage Intensity Slider/Telemetry: 'δ* = 0.284 (Optimal Analytical Shrinkage toward Identity/Equal-Corr Target F)'.\n    - Cluster Split Factor α telemetry: \\alpha_1 = 1 - \\frac{V_1}{V_1 + V_2} recursive variance weighting.\n\n  Right Column (5 cols):\n  - Recursive Bisection Tree Trace & Cluster Variance Allocator:\n    - Step-by-step breakdown:\n      - Level 0: Top node (V_root = 0.042)\n      - Level 1 Bisection: Cluster Left (Crypto Layer-1s, w=58.4%) vs Cluster Right (DeFi & Carry Basis, w=41.6%) | Split α = 0.416\n      - Level 2 Bisection: BTC/ETH (w_L1=34.2%) vs Alt-L1s (w_L2=24.2%)\n      - Level 3 Terminal Leaves: Final weights bounded.\n    - Multi-Agent Econometric Deliberation Box:\n      - Agent 1: HRP_PORTFOLIO_ARCHITECT (Confidence 99.1%): 'Single-linkage seriation ordered leaves without matrix inversion. Ledoit-Wolf shrinkage eliminates noise eigenvalues below λ_max = 1.84.'\n      - Agent 2: RISK_INVARIANT_AUDITOR (Confidence 99.6%): 'Zero corner solutions detected. Maximum single asset allocation clamped at 22.4% (BTC-USDT). Out-of-sample stress invariant verified.'\n      - Consensus: STRICT_HRP_ENFORCED (2/2 Unanimous). Button: 'Lock HRP Weights & Route Paper Rebalance'.\n\n- Comprehensive High-Density Telemetry Table:\n  'HRP Recursive Bisection Allocation & Cluster Seriation Matrix':\n  - Columns:\n    - Seriation Order (Leaf Index #)\n    - Asset / Factor Leg (e.g. BTC-USDT, ETH-USDT, SOL-USDT, AVAX-USDT, UNI-USDT, AAVE-USDT, BASIS-CARRY)\n    - Cluster ID (C1, C2, C3, C4)\n    - Ultrametric Distance d_{i,j}\n    - Inverse-Variance Weight (IVP)\n    - Markowitz CLA Weight (Critical Line Algorithm with corner solutions)\n    - HRP Recursive Weight w_i^{HRP}\n    - Delta (HRP vs CLA)\n    - Marginal Risk Contribution (RC %)\n    - Allocation Status & Fence (APPROVED_PAPER / DIVERSIFIED / OVERWEIGHT_CLAMPED)\n  - Dense tabular numbers in JetBrains Mono, aligned, styled with emerald/crimson/violet indicators.\n\n- Bottom Institutional Status Bar:\n  - Node #QNT-8812 ONLINE | Asymptotic Theory: Ledoit-Wolf (2004) & López de Prado (2016) | Shrinkage: Asymptotic Normal | Matrix Singularity: NONE (O(N log N) Tree) | Slippage: 1.2 BPS | Zero-Lookahead Audit: PASS (#CYCLE 9074) | ADR-001 PAPER_ONLY.",
+                  "screenMetadata": {
+                    "agentType": "PRO_AGENT",
+                    "status": "COMPLETE"
+                  },
+                  "screenType": "DESIGN",
+                  "screenshot": {
+                    "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1XxQOxon8zYcfUXYbmul8Y84scGNMPKiAPgpB7W6sF5qUiH_V1OfIe_tkH8flofBeehjJP5BxzRVuSdfM1tZMSYOVDeOotp82oaZvzRDOmnjxqrYXulX1_aWUB2E8J7ul_u4mCIIYC-R0d_OvFL8ilyAh9AbUDmWla-oaAodYB6TH0MVAJ2FIhgKtZEoYaz5aOKX9mkuxcfyx2ZmpPTcGZMLQkshjKD5nQhUfbkhQEhHP0OgtsMygOeKHs",
+                    "name": "projects/6665149401860401191/files/2f99ad86225f46e1bfe68db41f9e37d4"
+                  },
+                  "theme": {
+                    "bodyFont": "GEIST",
+                    "bodyFontFamily": "Geist",
+                    "colorMode": "DARK",
+                    "colorVariant": "FIDELITY",
+                    "customColor": "#00d4aa",
+                    "font": "GEIST",
+                    "headlineFont": "GEIST",
+                    "headlineFontFamily": "Geist",
+                    "labelFont": "JETBRAINS_MONO",
+                    "labelFontFamily": "JetBrains Mono",
+                    "namedColors": {
+                      "background": "#0d1512",
+                      "bg-elevated": "#1A2030",
+                      "bg-hover": "#1E2838",
+                      "bg-primary": "#0B0E11",
+                      "bg-surface": "#141820",
+                      "border-default": "#2A3340",
+                      "border-subtle": "#1E2530",
+                      "color-loss": "#FF4757",
+                      "color-warning": "#FFB020",
+                      "error": "#ffb4ab",
+                      "error_container": "#93000a",
+                      "inverse_on_surface": "#2a322f",
+                      "inverse_primary": "#006b55",
+                      "inverse_surface": "#dce4df",
+                      "on_background": "#dce4df",
+                      "on_error": "#690005",
+                      "on_error_container": "#ffdad6",
+                      "on_primary": "#00382b",
+                      "on_primary_container": "#005643",
+                      "on_primary_fixed": "#002118",
+                      "on_primary_fixed_variant": "#00513f",
+                      "on_secondary": "#381385",
+                      "on_secondary_container": "#bea8ff",
+                      "on_secondary_fixed": "#21005e",
+                      "on_secondary_fixed_variant": "#4f319c",
+                      "on_surface": "#dce4df",
+                      "on_surface_variant": "#bacac2",
+                      "on_tertiary": "#4c2700",
+                      "on_tertiary_container": "#733e00",
+                      "on_tertiary_fixed": "#2e1500",
+                      "on_tertiary_fixed_variant": "#6c3a00",
+                      "outline": "#85948d",
+                      "outline_variant": "#3b4a44",
+                      "primary": "#46f1c5",
+                      "primary_container": "#00d4aa",
+                      "primary_fixed": "#55fcd0",
+                      "primary_fixed_dim": "#28dfb5",
+                      "secondary": "#cebdff",
+                      "secondary_container": "#4f319c",
+                      "secondary_fixed": "#e8ddff",
+                      "secondary_fixed_dim": "#cebdff",
+                      "surface": "#0d1512",
+                      "surface_bright": "#333b37",
+                      "surface_container": "#19211e",
+                      "surface_container_high": "#242c28",
+                      "surface_container_highest": "#2f3633",
+                      "surface_container_low": "#161d1a",
+                      "surface_container_lowest": "#08100d",
+                      "surface_dim": "#0d1512",
+                      "surface_tint": "#28dfb5",
+                      "surface_variant": "#2f3633",
+                      "tertiary": "#ffcea6",
+                      "tertiary_container": "#ffa858",
+                      "tertiary_fixed": "#ffdcc1",
+                      "tertiary_fixed_dim": "#ffb77a",
+                      "text-primary": "#E8EAED",
+                      "text-secondary": "#8B95A5",
+                      "text-tertiary": "#5A6577"
+                    },
+                    "overridePrimaryColor": "#00d4aa",
+                    "overrideSecondaryColor": "#a78bfa",
+                    "roundness": "ROUND_FOUR",
+                    "spacing": {
+                      "gutter": "16px",
+                      "margin": "24px",
+                      "space-2xl": "32px",
+                      "space-3xl": "48px",
+                      "space-4xl": "64px",
+                      "space-lg": "16px",
+                      "space-md": "12px",
+                      "space-sm": "8px",
+                      "space-xl": "24px",
+                      "space-xs": "4px"
+                    },
+                    "spacingScale": 2,
+                    "typography": {
+                      "body-base": {
+                        "fontFamily": "Geist",
+                        "fontSize": "14px",
+                        "fontWeight": "400",
+                        "lineHeight": "1.5"
+                      },
+                      "body-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "13px",
+                        "fontWeight": "500",
+                        "lineHeight": "1.5"
+                      },
+                      "caption": {
+                        "fontFamily": "JetBrains Mono",
+                        "fontSize": "11px",
+                        "fontWeight": "600",
+                        "letterSpacing": "0.04em",
+                        "lineHeight": "1.4"
+                      },
+                      "headline-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "40px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-md": {
+                        "fontFamily": "Geist",
+                        "fontSize": "28px",
+                        "fontWeight": "700",
+                        "lineHeight": "1.25"
+                      },
+                      "headline-sm": {
+                        "fontFamily": "Geist",
+                        "fontSize": "20px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.25"
+                      },
+                      "hero": {
+                        "fontFamily": "Geist",
+                        "fontSize": "56px",
+                        "fontWeight": "900",
+                        "lineHeight": "1.25"
+                      },
+                      "title-lg": {
+                        "fontFamily": "Geist",
+                        "fontSize": "16px",
+                        "fontWeight": "600",
+                        "lineHeight": "1.5"
+                      }
+                    }
+                  },
+                  "title": "López de Prado (2016) Hierarchical Risk Parity (HRP) & Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator",
+                  "width": "2560"
+                }
+              ],
+              "theme": {}
+            }
+          },
+          {
+            "text": "I have designed and implemented the **López de Prado (2016) Hierarchical Risk Parity (HRP) & Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator** screen (`López de Prado (2016) Hierarchical Risk Parity (HRP) & Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator`) for **CashClaw Quant OS**.\n\n### Architecture & Key Highlights:\n1. **Application Shell & Navigation**:\n   - Fixed 240px left terminal sidebar in Deep Obsidian (`#0B0E11`) with active state on **Portfolio Factor Risk / HRP Allocator**.\n   - Preserves institutional system telemetry, health indicators (`Audit Live: OK 200.0%`, `ONLINE`), and ADR-001 paper invariants.\n\n2. **Institutional Header & Invariant Fencing**:\n   - Title: *López de Prado (2016) Hierarchical Risk Parity (HRP) • Tree Clustering & Quasi-Diagonalization • Ledoit-Wolf Shrinkage*.\n   - Live telemetry badges: `ADR-001 STRICT PAPER_ONLY`, `ZERO-LOOKAHEAD: PASS (#CYCLE 9074)`, `LATENCY: 38µs`, `SLIPPAGE: 1.2 BPS`, and `SHRINKAGE δ*: 0.284`.\n   - Invariant Lock Banner highlighting zero matrix inversion singularity via tree bisection and optimal Ledoit-Wolf shrinkage to an equal-correlation target.\n   - Primary action buttons: **Re-Cluster & Bisect Portfolio**, **Export Weight Vector**, and emergency system halts.\n\n3. **3 Core Mathematical Telemetry KPI Cards**:\n   - **Covariance Condition Number $\\kappa(\\Sigma)$**: Displays raw $\\kappa = 482.4$ shrinking to $\\kappa_{\\text{shrunk}} = 18.6$ (96.1% condition improvement, bypassing Markowitz CLA inversion singularity).\n   - **Out-of-Sample Portfolio Variance**: $-31.8\\%$ OOS variance reduction with Sharpe improved to $+2.14$ vs $+1.42$ under traditional CLA.\n   - **Effective Number of Bets (ENB)**: $3.68 / 4.00$ clusters based on Shannon entropy ($H(w) = 1.302$ nats) confirming balanced risk allocation.\n\n4. **Tree Clustering & Quasi-Diagonal Matrix Inspector**:\n   - Interactive single-linkage ultrametric distance dendrogram ($d_{i,j} = \\sqrt{0.5(1 - \\rho_{i,j})}$) with cluster nodes and branch dispersions.\n   - Quasi-diagonalized correlation heatmap matrix with shrinkage intensity telemetry ($\\delta^* = 0.284$).\n   - Hierarchical recursive bisection breakdown trace with variance split factor $\\alpha = 1 - \\frac{V_1}{V_1 + V_2}$.\n\n5. **Multi-Agent Deliberation & Invariant Consensus**:\n   - Dual-agent econometric consensus panel featuring `HRP_PORTFOLIO_ARCHITECT` and `RISK_INVARIANT_AUDITOR`, validating the lack of corner solutions and certifying asymptotic normality before routing paper rebalances.\n\n6. **High-Density Telemetry Seriation Matrix**:\n   - Tabular comparison across factors (`BTC-USDT`, `ETH-USDT`, `SOL-USDT`, `AVAX-USDT`, `UNI-USDT`, `AAVE-USDT`, `BASIS-CARRY`) tracking seriation order, ultrametric distance, IVP weights, CLA weights, HRP weights, variance deltas, and marginal risk contributions."
+          },
+          {
+            "suggestion": "Add an interactive Monte Carlo eigenvalue Marchenko-Pastur distribution chart"
+          },
+          {
+            "suggestion": "Configure custom covariance shrinkage targets (Constant Correlation vs Identity)"
+          },
+          {
+            "suggestion": "Simulate black swan tail-stress correlation breakdown on HRP cluster stability"
+          }
+        ],
+        "projectId": "6665149401860401191",
+        "sessionId": "10256602914091028846"
+      }
     }
   ]
 }

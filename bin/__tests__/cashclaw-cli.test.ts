@@ -64,6 +64,8 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(ev.symbol).toBe('BTC/USDT');
       expect(ev.garmanKlassVolAnnualized).toBeGreaterThan(0);
       expect(ev.corwinSchultzSpreadBps).toBeGreaterThan(0);
+      expect(ev.hamiltonCrisisProb).toBeGreaterThan(0);
+      expect(ev.hrpDiversificationRatio).toBeGreaterThan(1);
       expect(ev.regime).toBeDefined();
     });
 

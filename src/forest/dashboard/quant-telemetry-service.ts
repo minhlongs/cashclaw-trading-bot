@@ -16,6 +16,12 @@ import {
   type LeadLagPairId,
   type ExecutionUrgencyPreset,
 } from './quant-wave3-telemetry';
+import {
+  computeHamiltonHmmTelemetry,
+  computeHrpAllocatorTelemetry,
+  type HamiltonScenarioId,
+  type HrpRegimePreset,
+} from './quant-wave4-telemetry';
 
 export {
   computeHawkesLobTelemetry,
@@ -24,10 +30,14 @@ export {
   computeCorrelationTelemetry,
   computeLeadLagTelemetry,
   computeAlmgrenChrissTelemetry,
+  computeHamiltonHmmTelemetry,
+  computeHrpAllocatorTelemetry,
   type DataFaultMode,
   type RoughVolMode,
   type LeadLagPairId,
   type ExecutionUrgencyPreset,
+  type HamiltonScenarioId,
+  type HrpRegimePreset,
 };
 
 export type CostTierId = 'BASE' | 'ELEVATED' | 'EXTREME';
@@ -75,7 +85,7 @@ export function computeQuantTelemetrySnapshot() {
   return {
     paperOnly: true as const,
     adrInvariant: 'ADR-001' as const,
-    generatedAt: '2026-10-17T11:45:00.000Z',
+    generatedAt: '2026-10-17T23:59:00.000Z',
     regime: computeRegimeAttributionTelemetry('BASE', 'ALL'),
     fdr: computeFdrGateTelemetry(0.05, 12, 'BH_FDR'),
     dataQuality: computeDataQualityTelemetry('NONE'),
@@ -84,5 +94,9 @@ export function computeQuantTelemetrySnapshot() {
     roughVolatility: computeRoughVolatilityTelemetry('ROUGH_BURST'),
     leadLagHayashiYoshida: computeLeadLagTelemetry('BTC_PERP->ETH_SPOT'),
     almgrenChrissExecution: computeAlmgrenChrissTelemetry('BALANCED_AC'),
+    hamiltonHmm: computeHamiltonHmmTelemetry('CRISIS_SHOCK'),
+    hrpAllocator: computeHrpAllocatorTelemetry('BASELINE_CORR'),
   };
 }
+
+export type QuantCockpitTelemetrySnapshot = ReturnType<typeof computeQuantTelemetrySnapshot>;

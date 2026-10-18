@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CashClaw OS // Hierarchical Risk Parity (HRP) &amp; Ledoit-Wolf Shrinkage</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed": "#ffdcc1",
+            "text-primary": "#E8EAED",
+            "on-error": "#690005",
+            "on-surface-variant": "#bacac2",
+            "error-container": "#93000a",
+            "background": "#0d1512",
+            "tertiary-fixed-dim": "#ffb77a",
+            "on-tertiary": "#4c2700",
+            "primary-container": "#00d4aa",
+            "border-subtle": "#1E2530",
+            "on-primary-fixed": "#002118",
+            "inverse-on-surface": "#2a322f",
+            "on-tertiary-fixed": "#2e1500",
+            "on-primary": "#00382b",
+            "on-secondary-container": "#bea8ff",
+            "outline-variant": "#3b4a44",
+            "surface-tint": "#28dfb5",
+            "outline": "#85948d",
+            "bg-surface": "#141820",
+            "secondary": "#cebdff",
+            "primary-fixed": "#55fcd0",
+            "surface-container": "#19211e",
+            "surface": "#0d1512",
+            "secondary-fixed-dim": "#cebdff",
+            "secondary-container": "#4f319c",
+            "on-primary-container": "#005643",
+            "text-tertiary": "#5A6577",
+            "inverse-primary": "#006b55",
+            "surface-dim": "#0d1512",
+            "surface-variant": "#2f3633",
+            "on-error-container": "#ffdad6",
+            "bg-primary": "#0B0E11",
+            "on-primary-fixed-variant": "#00513f",
+            "tertiary": "#ffcea6",
+            "tertiary-container": "#ffa858",
+            "bg-hover": "#1E2838",
+            "on-secondary": "#381385",
+            "primary-fixed-dim": "#28dfb5",
+            "on-tertiary-container": "#733e00",
+            "text-secondary": "#8B95A5",
+            "color-loss": "#FF4757",
+            "on-secondary-fixed": "#21005e",
+            "surface-container-low": "#161d1a",
+            "on-surface": "#dce4df",
+            "on-tertiary-fixed-variant": "#6c3a00",
+            "inverse-surface": "#dce4df",
+            "bg-elevated": "#1A2030",
+            "error": "#ffb4ab",
+            "primary": "#46f1c5",
+            "border-default": "#2A3340",
+            "on-background": "#dce4df",
+            "surface-container-highest": "#2f3633",
+            "color-warning": "#FFB020",
+            "surface-bright": "#333b37",
+            "secondary-fixed": "#e8ddff",
+            "surface-container-lowest": "#08100d",
+            "surface-container-high": "#242c28",
+            "on-secondary-fixed-variant": "#4f319c"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "space-3xl": "48px",
+            "gutter": "16px",
+            "space-4xl": "64px",
+            "space-2xl": "32px",
+            "margin": "24px",
+            "space-xs": "4px",
+            "space-xl": "24px",
+            "space-md": "12px",
+            "space-lg": "16px",
+            "space-sm": "8px"
+          },
+          "fontFamily": {
+            "headline-sm": ["Geist"],
+            "hero": ["Geist"],
+            "headline-md": ["Geist"],
+            "headline-lg": ["Geist"],
+            "caption": ["JetBrains Mono"],
+            "body-base": ["Geist"],
+            "title-lg": ["Geist"],
+            "body-sm": ["Geist"]
+          },
+          "fontSize": {
+            "headline-sm": ["20px", { "lineHeight": "1.25", "fontWeight": "600" }],
+            "hero": ["56px", { "lineHeight": "1.25", "fontWeight": "900" }],
+            "headline-md": ["28px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "headline-lg": ["40px", { "lineHeight": "1.25", "fontWeight": "700" }],
+            "caption": ["11px", { "lineHeight": "1.4", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "body-base": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+            "title-lg": ["16px", { "lineHeight": "1.5", "fontWeight": "600" }],
+            "body-sm": ["13px", { "lineHeight": "1.5", "fontWeight": "500" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      background-color: #0B0E11;
+      color: #E8EAED;
+      font-family: 'Geist', sans-serif;
+      overflow-x: hidden;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0B0E11;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #1E2530;
+      border-radius: 2px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #2A3340;
+    }
+  </style>
+</head>
+<body class="bg-bg-primary text-text-primary antialiased selection:bg-primary-container selection:text-on-primary">
+<!-- ==================== SIDE NAVIGATION (SHARED COMPONENT) ==================== -->
+<aside class="fixed top-0 left-0 h-screen w-60 z-40 bg-bg-primary border-r border-border-subtle flex flex-col justify-between p-space-sm">
+<!-- Header Brand Section -->
+<div class="flex flex-col gap-space-xs pb-space-sm border-b border-border-subtle">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary-container flex items-center justify-center text-bg-primary font-bold font-caption">
+            C
+          </div>
+<span class="font-title-lg text-title-lg font-bold text-text-primary tracking-tight">CashClaw OS</span>
+</div>
+<span class="font-caption text-caption px-1.5 py-0.5 rounded bg-bg-surface text-primary border border-border-subtle font-mono">QNT-8812</span>
+</div>
+<div class="flex items-center justify-between text-text-secondary">
+<span class="font-caption text-caption">Terminal v4.19 Institutional</span>
+<span class="font-caption text-caption px-1 bg-color-warning/10 text-color-warning border border-color-warning/30 rounded">ADR-001 PAPER_ONLY</span>
+</div>
+</div>
+<!-- Navigation Scrollable Links -->
+<div class="flex-1 overflow-y-auto custom-scroll my-space-xs space-y-0.5">
+<!-- 1 Cockpit Overview -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span>Cockpit Overview</span>
+</a>
+<!-- 2 Regime Attribution -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">monitoring</span>
+<span>Regime Attribution</span>
+</a>
+<!-- 3 Alpha Decomposition -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">unfold_more_double</span>
+<span>Alpha Decomposition</span>
+</a>
+<!-- 4 Strategy Orchestration -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">alt_route</span>
+<span>Strategy Orchestration</span>
+</a>
+<!-- 5 Execution Routing -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
+<span>Execution Routing</span>
+</a>
+<!-- 6 Risk & Invariants -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">shield</span>
+<span>Risk &amp; Invariants</span>
+</a>
+<!-- 7 Order Book L3 -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">stacked_bar_chart</span>
+<span>Order Book L3</span>
+</a>
+<!-- 8 Volatility Surface -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">multiline_chart</span>
+<span>Volatility Surface</span>
+</a>
+<!-- 9 LLM Multi-Agent -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+<span>LLM Multi-Agent</span>
+</a>
+<!-- 10 Portfolio Factor Risk (ACTIVE: Closest semantically to HRP / Factor Allocator) -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-primary bg-bg-elevated border-l-2 border-primary font-semibold transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px] text-primary">pie_chart</span>
+<span>Portfolio Factor Risk</span>
+</a>
+<!-- 11 Transaction Cost Model -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">calculate</span>
+<span>Transaction Cost Model</span>
+</a>
+<!-- 12 Zero-Lookahead Audit -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span>Zero-Lookahead Audit</span>
+</a>
+<!-- 13 Telemetry Logs -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span>Telemetry Logs</span>
+</a>
+<!-- 14 Backtest Engine -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span>Backtest Engine</span>
+</a>
+<!-- 15 System Settings -->
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-150 font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span>System Settings</span>
+</a>
+</div>
+<!-- CTA & Footer Section -->
+<div class="pt-space-xs border-t border-border-subtle flex flex-col gap-2">
+<button class="w-full flex items-center justify-center gap-2 bg-primary-container text-on-primary-container hover:brightness-105 active:opacity-90 font-title-lg text-title-lg py-2 px-3 rounded font-semibold transition-all">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+<span>Deploy Agent</span>
+</button>
+<div class="flex items-center justify-between px-2 pt-1 font-caption text-caption text-text-secondary border-t border-border-subtle/50">
+<div class="flex items-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-[14px]">gpp_good</span>
+<span>Audit Live: OK</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary animate-pulse">sensors</span>
+<span>System Status</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- ==================== TOP NAVIGATION BAR (SHARED COMPONENT) ==================== -->
+<header class="fixed top-0 left-0 right-0 h-14 pl-64 pr-space-lg bg-bg-surface border-b border-border-subtle z-30 flex items-center justify-between">
+<!-- Brand / Product Telemetry Info -->
+<div class="flex items-center gap-space-md overflow-hidden">
+<span class="font-title-lg text-title-lg font-bold text-text-primary uppercase tracking-wider whitespace-nowrap">
+        CashClaw // REGIME ATTRIBUTION
+      </span>
+<div class="h-4 w-px bg-border-subtle"></div>
+<div class="hidden xl:flex items-center gap-space-md font-caption text-caption text-text-secondary">
+<span class="text-primary font-mono">VOL: GK 18.42 (NORM)</span>
+<span class="hover:text-text-primary font-mono transition-colors">YZ VOL: 16.18</span>
+<span class="hover:text-text-primary font-mono transition-colors text-primary">ZERO-LOOKAHEAD: PASS</span>
+<span class="hover:text-text-primary font-mono transition-colors">SLIPPAGE: 1.2 BPS</span>
+<span class="hover:text-text-primary font-mono transition-colors text-primary">LATENCY: 42µs</span>
+</div>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-1 border-r border-border-subtle pr-space-sm text-text-secondary">
+<button class="p-1.5 rounded hover:bg-bg-hover hover:text-text-primary transition-colors duration-150" title="Tune Parameters">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="p-1.5 rounded hover:bg-bg-hover hover:text-text-primary transition-colors duration-150 relative" title="Alerts">
+<span class="material-symbols-outlined text-[18px]">notifications_active</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</button>
+<button class="p-1.5 rounded hover:bg-bg-hover hover:text-text-primary transition-colors duration-150" title="Terminal REPL">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+</button>
+<button class="p-1.5 rounded hover:bg-bg-hover hover:text-text-primary transition-colors duration-150" title="Help &amp; Documentation">
+<span class="material-symbols-outlined text-[18px]">help_outline</span>
+</button>
+</div>
+<button class="flex items-center gap-1.5 bg-bg-elevated hover:bg-bg-hover text-text-primary px-3 py-1.5 rounded border border-border-default font-body-sm text-body-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-[16px]">file_download</span>
+<span>Export Matrix</span>
+</button>
+<button class="flex items-center gap-1.5 bg-error-container/80 hover:bg-error-container text-on-error-container px-3 py-1.5 rounded border border-color-loss/40 font-body-sm text-body-sm font-semibold transition-all shadow-[0_0_12px_rgba(255,71,87,0.2)]">
+<span class="material-symbols-outlined text-[16px]">dangerous</span>
+<span>Emergency Halt</span>
+</button>
+<div class="pl-1 border-l border-border-subtle">
+<div class="w-7 h-7 rounded bg-bg-elevated border border-primary/40 flex items-center justify-center font-caption text-caption text-primary" title="Chief Risk Officer Signature Hash: 0x9fA2">
+          CRO
+        </div>
+</div>
+</div>
+</header>
+<!-- ==================== MAIN WORKSPACE ==================== -->
+<main class="pl-64 pt-16 pr-6 pb-12 min-h-screen">
+<div class="max-w-[1440px] mx-auto flex flex-col gap-space-lg">
+<!-- Breadcrumbs & Deep Title Header -->
+<section class="flex flex-col gap-2 pt-2">
+<div class="flex flex-wrap items-center justify-between gap-3">
+<div class="flex flex-col">
+<div class="flex items-center gap-2 font-caption text-caption text-text-tertiary">
+<span>PORTFOLIO_CONSTRUCTION</span>
+<span>/</span>
+<span>COVARIANCE_FILTERING</span>
+<span>/</span>
+<span class="text-primary font-mono">HRP_LEDOIT_WOLF</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-text-primary tracking-tight mt-0.5">
+              López de Prado (2016) Hierarchical Risk Parity (HRP) • Tree Clustering &amp; Quasi-Diagonalization • Ledoit-Wolf Shrinkage
+            </h1>
+</div>
+<!-- Action Cluster -->
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-2 bg-primary-container text-on-primary-container hover:brightness-105 active:opacity-90 px-4 py-2 rounded font-body-sm text-body-sm font-semibold transition-all shadow-[0_0_15px_rgba(0,212,170,0.25)]">
+<span class="material-symbols-outlined text-[18px]">autorenew</span>
+<span>Re-Cluster &amp; Bisect Portfolio</span>
+</button>
+<button class="flex items-center gap-1.5 bg-bg-surface hover:bg-bg-hover text-text-primary px-3 py-2 rounded border border-border-default font-body-sm text-body-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-[18px]">data_object</span>
+<span>Export Weight Vector</span>
+</button>
+</div>
+</div>
+<!-- Telemetry Badges Strip -->
+<div class="flex flex-wrap items-center gap-2 pt-1">
+<span class="px-2 py-0.5 rounded bg-color-warning/10 text-color-warning border border-color-warning/30 font-caption text-caption">
+            ADR-001 STRICT PAPER_ONLY
+          </span>
+<span class="px-2 py-0.5 rounded bg-bg-surface text-primary border border-primary/30 font-caption text-caption flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+            ZERO-LOOKAHEAD: PASS (#CYCLE 9074)
+          </span>
+<span class="px-2 py-0.5 rounded bg-bg-surface text-text-secondary border border-border-subtle font-caption text-caption font-mono">
+            LATENCY: 38µs
+          </span>
+<span class="px-2 py-0.5 rounded bg-bg-surface text-text-secondary border border-border-subtle font-caption text-caption font-mono">
+            SLIPPAGE: 1.2 BPS
+          </span>
+<span class="px-2 py-0.5 rounded bg-secondary-container/30 text-secondary border border-secondary/40 font-caption text-caption font-mono">
+            SHRINKAGE δ*: 0.284
+          </span>
+<span class="px-2 py-0.5 rounded bg-bg-surface text-text-tertiary border border-border-subtle font-caption text-caption">
+            TREE_METRIC: ULTRAMETRIC_SINGLE_LINK
+          </span>
+</div>
+<!-- Invariant Banner -->
+<div class="flex items-start gap-3 p-3 bg-bg-surface border-l-4 border-primary rounded border-r border-t border-b border-border-subtle">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5">verified_user</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-text-primary">
+              Invariant ADR-001 (Zero Matrix Inversion Singularity Active)
+            </span>
+<span class="font-caption text-caption text-text-secondary mt-0.5">
+              Quasi-diagonalized correlation tree avoids ill-conditioned inversion of Σ (<span class="text-primary font-mono">Σ⁻¹ singularity bypassed</span>). Ledoit-Wolf optimal shrinkage constant <span class="text-primary font-mono">δ* = 0.284</span> towards constant-correlation target guarantees positive-definite covariance matrix with zero synthetic regularization.
+            </span>
+</div>
+</div>
+</section>
+<!-- ==================== 3 TELEMETRY KPI CARDS ==================== -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- KPI 1 -->
+<div class="bg-bg-surface border border-border-subtle rounded p-4 flex flex-col justify-between hover:border-border-default transition-all shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+<div class="flex items-start justify-between">
+<span class="font-caption text-caption uppercase text-text-secondary">Covariance Condition Number κ(Σ)</span>
+<span class="font-caption text-caption px-1.5 py-0.5 rounded bg-primary-container/10 text-primary border border-primary/30">
+              ILL-CONDITIONED NEUTRALIZED
+            </span>
+</div>
+<div class="my-3">
+<div class="font-hero text-[34px] leading-tight font-extrabold text-primary font-mono tracking-tight">
+              482.4 → 18.6
+            </div>
+<div class="font-title-lg text-title-lg font-semibold text-text-primary mt-1">
+              Markowitz Matrix Inversion Singularity Neutralized
+            </div>
+</div>
+<p class="font-caption text-caption text-text-secondary leading-relaxed border-t border-border-subtle pt-2">
+            Raw Condition Number κ = 482.4 (Ill-conditioned) → Ledoit-Wolf κ_shrunk = 18.6. Spectral condition improved 96.1%. Asymptotic Marchenko-Pastur bulk edge verified.
+          </p>
+</div>
+<!-- KPI 2 -->
+<div class="bg-bg-surface border border-border-subtle rounded p-4 flex flex-col justify-between hover:border-border-default transition-all shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+<div class="flex items-start justify-between">
+<span class="font-caption text-caption uppercase text-text-secondary">Out-of-Sample Portfolio Variance</span>
+<span class="font-caption text-caption px-1.5 py-0.5 rounded bg-secondary/10 text-secondary border border-secondary/30">
+              CLA INSTABILITY BYPASSED
+            </span>
+</div>
+<div class="my-3">
+<div class="font-hero text-[34px] leading-tight font-extrabold text-secondary font-mono tracking-tight">
+              -31.8% OOS Var
+            </div>
+<div class="font-title-lg text-title-lg font-semibold text-text-primary mt-1">
+              Sharpe +2.14 vs +1.42 Markowitz CLA
+            </div>
+</div>
+<p class="font-caption text-caption text-text-secondary leading-relaxed border-t border-border-subtle pt-2">
+            Critical Quadratic Optimizer Instability Eliminated. Out-of-sample realized volatility dropped from 18.4% to 12.5% p.a. Maximum drawdown cut from -24.2% to -11.6%.
+          </p>
+</div>
+<!-- KPI 3 -->
+<div class="bg-bg-surface border border-border-subtle rounded p-4 flex flex-col justify-between hover:border-border-default transition-all shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+<div class="flex items-start justify-between">
+<span class="font-caption text-caption uppercase text-text-secondary">Effective Number of Bets (ENB)</span>
+<span class="font-caption text-caption px-1.5 py-0.5 rounded bg-primary-container/10 text-primary border border-primary/30">
+              MAX ENTROPY CLUSTER BISECTION
+            </span>
+</div>
+<div class="my-3">
+<div class="font-hero text-[34px] leading-tight font-extrabold text-text-primary font-mono tracking-tight">
+              3.68 / 4.00 <span class="text-sm font-caption text-text-secondary">Clusters</span>
+</div>
+<div class="font-title-lg text-title-lg font-semibold text-text-primary mt-1">
+              Balanced Recursive Bisection Allocation
+            </div>
+</div>
+<p class="font-caption text-caption text-text-secondary leading-relaxed border-t border-border-subtle pt-2">
+            Shannon Entropy H(w) = 1.302 nats. Herfindahl Diversification Index = 0.272. Avoids corner solutions and concentrated weights without synthetic regularization.
+          </p>
+</div>
+</section>
+<!-- ==================== MAIN CONTENT: 2-COLUMN ANALYTICAL SPLIT (7 / 5) ==================== -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
+<!-- LEFT COLUMN: DENDROGRAM & QUASI-DIAGONALIZED MATRIX (7 cols) -->
+<div class="lg:col-span-7 flex flex-col gap-space-md">
+<!-- Card: Single-Linkage Dendrogram Inspector -->
+<div class="bg-bg-surface border border-border-subtle rounded p-4 flex flex-col gap-3">
+<div class="flex items-center justify-between pb-2 border-b border-border-subtle">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">account_tree</span>
+<span class="font-title-lg text-title-lg font-semibold text-text-primary">
+                  Hierarchical Dendrogram &amp; Tree Seriation
+                </span>
+</div>
+<span class="font-caption text-caption font-mono text-primary bg-bg-primary px-2 py-0.5 rounded border border-border-subtle">
+                d_{i,j} = √[0.5 · (1 - ρ_{i,j})]
+              </span>
+</div>
+<!-- Interactive Dendrogram Canvas Container -->
+<div class="bg-bg-primary border border-border-subtle rounded p-3 relative overflow-hidden">
+<div class="flex justify-between items-center text-text-tertiary font-caption text-caption mb-2">
+<span>ULTRAMETRIC TREE TOPOLOGY (SINGLE-LINKAGE DISTANCE D*)</span>
+<span>ROOT DISPERSION: 0.610</span>
+</div>
+<!-- SVG Dendrogram Visualization -->
+<svg class="w-full h-44" fill="none" viewbox="0 0 600 170" xmlns="http://www.w3.org/2000/svg">
+<!-- Grid Lines -->
+<line stroke="#1E2530" stroke-dasharray="2 2" x1="40" x2="560" y1="20" y2="20"></line>
+<line stroke="#1E2530" stroke-dasharray="2 2" x1="40" x2="560" y1="60" y2="60"></line>
+<line stroke="#1E2530" stroke-dasharray="2 2" x1="40" x2="560" y1="100" y2="100"></line>
+<line stroke="#1E2530" stroke-dasharray="2 2" x1="40" x2="560" y1="140" y2="140"></line>
+<!-- Tree Hierarchy Branches -->
+<!-- Root: y=25, merges Cluster 1-2 & Cluster 3-4 at d=0.610 -->
+<path d="M 180 25 L 430 25" stroke="#46f1c5" stroke-width="1.75"></path>
+<line stroke="#46f1c5" stroke-width="2" x1="305" x2="305" y1="10" y2="25"></line>
+<circle cx="305" cy="10" fill="#46f1c5" r="3"></circle>
+<text fill="#8B95A5" font-family="JetBrains Mono" font-size="9" x="315" y="16">Root (d=0.610)</text>
+<!-- Left Super-Cluster: connects C1 (BTC/ETH) & C2 (SOL/AVAX) at d=0.485 -->
+<line stroke="#46f1c5" stroke-width="1.5" x1="180" x2="180" y1="25" y2="55"></line>
+<path d="M 105 55 L 255 55" stroke="#46f1c5" stroke-width="1.5"></path>
+<text fill="#8B95A5" font-family="JetBrains Mono" font-size="9" x="185" y="50">α=0.416</text>
+<!-- Right Super-Cluster: connects C3 (UNI/AAVE) & C4 (BASIS) at d=0.520 -->
+<line stroke="#cebdff" stroke-width="1.5" x1="430" x2="430" y1="25" y2="65"></line>
+<path d="M 370 65 L 490 65" stroke="#cebdff" stroke-width="1.5"></path>
+<text fill="#8B95A5" font-family="JetBrains Mono" font-size="9" x="435" y="60">α=0.584</text>
+<!-- Sub-Branch C1: BTC & ETH at d=0.312 -->
+<line stroke="#46f1c5" stroke-width="1.5" x1="105" x2="105" y1="55" y2="95"></line>
+<path d="M 70 95 L 140 95" stroke="#46f1c5" stroke-width="1.5"></path>
+<line stroke="#46f1c5" stroke-width="1.2" x1="70" x2="70" y1="95" y2="135"></line>
+<line stroke="#46f1c5" stroke-width="1.2" x1="140" x2="140" y1="95" y2="135"></line>
+<!-- Sub-Branch C2: SOL & AVAX at d=0.428 -->
+<line stroke="#46f1c5" stroke-width="1.5" x1="255" x2="255" y1="55" y2="85"></line>
+<path d="M 220 85 L 290 85" stroke="#46f1c5" stroke-width="1.5"></path>
+<line stroke="#46f1c5" stroke-width="1.2" x1="220" x2="220" y1="85" y2="135"></line>
+<line stroke="#46f1c5" stroke-width="1.2" x1="290" x2="290" y1="85" y2="135"></line>
+<!-- Sub-Branch C3: UNI & AAVE at d=0.380 -->
+<line stroke="#cebdff" stroke-width="1.5" x1="370" x2="370" y1="65" y2="90"></line>
+<path d="M 340 90 L 400 90" stroke="#cebdff" stroke-width="1.5"></path>
+<line stroke="#cebdff" stroke-width="1.2" x1="340" x2="340" y1="90" y2="135"></line>
+<line stroke="#cebdff" stroke-width="1.2" x1="400" x2="400" y1="90" y2="135"></line>
+<!-- Leaf C4: Macro Basis -->
+<line stroke="#cebdff" stroke-width="1.2" x1="490" x2="490" y1="65" y2="135"></line>
+<!-- Leaf Node Badges -->
+<rect fill="#141820" height="20" rx="3" stroke="#46f1c5" width="40" x="50" y="137"></rect>
+<text fill="#E8EAED" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="56" y="151">BTC</text>
+<rect fill="#141820" height="20" rx="3" stroke="#46f1c5" width="40" x="120" y="137"></rect>
+<text fill="#E8EAED" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="126" y="151">ETH</text>
+<rect fill="#141820" height="20" rx="3" stroke="#46f1c5" width="40" x="200" y="137"></rect>
+<text fill="#E8EAED" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="206" y="151">SOL</text>
+<rect fill="#141820" height="20" rx="3" stroke="#46f1c5" width="40" x="270" y="137"></rect>
+<text fill="#E8EAED" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="275" y="151">AVAX</text>
+<rect fill="#141820" height="20" rx="3" stroke="#cebdff" width="36" x="325" y="137"></rect>
+<text fill="#E8EAED" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="330" y="151">UNI</text>
+<rect fill="#141820" height="20" rx="3" stroke="#cebdff" width="40" x="382" y="137"></rect>
+<text fill="#E8EAED" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="387" y="151">AAVE</text>
+<rect fill="#141820" height="20" rx="3" stroke="#cebdff" width="55" x="465" y="137"></rect>
+<text fill="#E8EAED" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="471" y="151">BASIS</text>
+</svg>
+</div>
+<!-- Dendrogram Sub-Cluster Labels -->
+<div class="grid grid-cols-4 gap-2 text-center font-caption text-caption">
+<div class="bg-bg-elevated p-1.5 rounded border border-border-subtle">
+<span class="text-primary font-mono block font-bold">Cluster 1 (d=0.312)</span>
+<span class="text-text-secondary text-[10px]">BTC / ETH Tier-1</span>
+</div>
+<div class="bg-bg-elevated p-1.5 rounded border border-border-subtle">
+<span class="text-primary font-mono block font-bold">Cluster 2 (d=0.428)</span>
+<span class="text-text-secondary text-[10px]">SOL / AVAX High-Beta</span>
+</div>
+<div class="bg-bg-elevated p-1.5 rounded border border-border-subtle">
+<span class="text-secondary font-mono block font-bold">Cluster 3 (d=0.380)</span>
+<span class="text-text-secondary text-[10px]">UNI / AAVE Liquidity</span>
+</div>
+<div class="bg-bg-elevated p-1.5 rounded border border-border-subtle">
+<span class="text-secondary font-mono block font-bold">Cluster 4 (d=0.610)</span>
+<span class="text-text-secondary text-[10px]">CEX-DEX Carry Basis</span>
+</div>
+</div>
+</div>
+<!-- Card: Quasi-Diagonalized Heatmap Inspector -->
+<div class="bg-bg-surface border border-border-subtle rounded p-4 flex flex-col gap-3">
+<div class="flex items-center justify-between pb-2 border-b border-border-subtle">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">grid_view</span>
+<span class="font-title-lg text-title-lg font-semibold text-text-primary">
+                  Quasi-Diagonalized Correlation Heatmap (Seriated Σ_shrunk)
+                </span>
+</div>
+<div class="flex items-center gap-2 font-caption text-caption text-text-secondary font-mono">
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-primary rounded-xs inline-block"></span> High ρ (&gt;0.70)</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-bg-elevated border border-border-subtle rounded-xs inline-block"></span> Low ρ</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-color-loss rounded-xs inline-block"></span> Neg ρ (&lt;0.0)</span>
+</div>
+</div>
+<!-- Heatmap Matrix Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-center border-collapse font-caption text-caption font-mono">
+<thead>
+<tr class="text-text-secondary border-b border-border-subtle">
+<th class="p-2 text-left text-text-tertiary">SERIATED</th>
+<th class="p-2">BTC</th>
+<th class="p-2">ETH</th>
+<th class="p-2">SOL</th>
+<th class="p-2">AVAX</th>
+<th class="p-2">UNI</th>
+<th class="p-2">AAVE</th>
+<th class="p-2">BASIS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle/50 text-[10px]">
+<!-- Row 1: BTC -->
+<tr>
+<td class="p-2 text-left font-bold text-text-primary bg-bg-elevated/40">BTC</td>
+<td class="p-2 bg-primary/30 text-primary font-bold">1.00</td>
+<td class="p-2 bg-primary/25 text-primary">0.82</td>
+<td class="p-2 bg-primary/15 text-primary">0.68</td>
+<td class="p-2 bg-primary/10 text-primary">0.61</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.44</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.42</td>
+<td class="p-2 bg-color-loss/20 text-color-loss">-0.08</td>
+</tr>
+<!-- Row 2: ETH -->
+<tr>
+<td class="p-2 text-left font-bold text-text-primary bg-bg-elevated/40">ETH</td>
+<td class="p-2 bg-primary/25 text-primary">0.82</td>
+<td class="p-2 bg-primary/30 text-primary font-bold">1.00</td>
+<td class="p-2 bg-primary/20 text-primary">0.72</td>
+<td class="p-2 bg-primary/15 text-primary">0.65</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.51</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.49</td>
+<td class="p-2 bg-color-loss/15 text-color-loss">-0.05</td>
+</tr>
+<!-- Row 3: SOL -->
+<tr>
+<td class="p-2 text-left font-bold text-text-primary bg-bg-elevated/40">SOL</td>
+<td class="p-2 bg-primary/15 text-primary">0.68</td>
+<td class="p-2 bg-primary/20 text-primary">0.72</td>
+<td class="p-2 bg-primary/30 text-primary font-bold">1.00</td>
+<td class="p-2 bg-primary/25 text-primary">0.78</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.48</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.46</td>
+<td class="p-2 bg-color-loss/10 text-color-loss">-0.02</td>
+</tr>
+<!-- Row 4: AVAX -->
+<tr>
+<td class="p-2 text-left font-bold text-text-primary bg-bg-elevated/40">AVAX</td>
+<td class="p-2 bg-primary/10 text-primary">0.61</td>
+<td class="p-2 bg-primary/15 text-primary">0.65</td>
+<td class="p-2 bg-primary/25 text-primary">0.78</td>
+<td class="p-2 bg-primary/30 text-primary font-bold">1.00</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.41</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.39</td>
+<td class="p-2 bg-color-loss/10 text-color-loss">-0.01</td>
+</tr>
+<!-- Row 5: UNI -->
+<tr>
+<td class="p-2 text-left font-bold text-text-primary bg-bg-elevated/40">UNI</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.44</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.51</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.48</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.41</td>
+<td class="p-2 bg-primary/30 text-primary font-bold">1.00</td>
+<td class="p-2 bg-primary/25 text-primary">0.75</td>
+<td class="p-2 bg-color-loss/20 text-color-loss">-0.11</td>
+</tr>
+<!-- Row 6: AAVE -->
+<tr>
+<td class="p-2 text-left font-bold text-text-primary bg-bg-elevated/40">AAVE</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.42</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.49</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.46</td>
+<td class="p-2 bg-bg-elevated text-text-secondary">0.39</td>
+<td class="p-2 bg-primary/25 text-primary">0.75</td>
+<td class="p-2 bg-primary/30 text-primary font-bold">1.00</td>
+<td class="p-2 bg-color-loss/20 text-color-loss">-0.09</td>
+</tr>
+<!-- Row 7: BASIS -->
+<tr>
+<td class="p-2 text-left font-bold text-text-primary bg-bg-elevated/40">BASIS</td>
+<td class="p-2 bg-color-loss/20 text-color-loss">-0.08</td>
+<td class="p-2 bg-color-loss/15 text-color-loss">-0.05</td>
+<td class="p-2 bg-color-loss/10 text-color-loss">-0.02</td>
+<td class="p-2 bg-color-loss/10 text-color-loss">-0.01</td>
+<td class="p-2 bg-color-loss/20 text-color-loss">-0.11</td>
+<td class="p-2 bg-color-loss/20 text-color-loss">-0.09</td>
+<td class="p-2 bg-primary/30 text-primary font-bold">1.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Shrinkage Telemetry Bar -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-bg-primary rounded border border-border-subtle mt-1 font-caption text-caption">
+<div class="flex items-center gap-2">
+<span class="text-primary font-bold">LEDOIT-WOLF SHRINKAGE INTENSITY:</span>
+<span class="font-mono text-text-primary">δ* = 0.284</span>
+<span class="text-text-secondary">(Target: Equal-Corr Constant F)</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-32 bg-bg-elevated h-2 rounded-full overflow-hidden border border-border-subtle">
+<div class="bg-primary h-full w-[28.4%]"></div>
+</div>
+<span class="font-mono text-primary font-bold">28.4% SHRUNK</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: RECURSIVE BISECTION TREE TRACE & AGENT DELIBERATION (5 cols) -->
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Card: Recursive Bisection Allocator Trace -->
+<div class="bg-bg-surface border border-border-subtle rounded p-4 flex flex-col gap-3">
+<div class="flex items-center justify-between pb-2 border-b border-border-subtle">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">fork_right</span>
+<span class="font-title-lg text-title-lg font-semibold text-text-primary">
+                  Recursive Bisection Tree Trace
+                </span>
+</div>
+<span class="font-caption text-caption font-mono text-secondary">
+                α_1 = 1 - V_1/(V_1 + V_2)
+              </span>
+</div>
+<!-- Step by step visual trace -->
+<div class="flex flex-col gap-2.5 font-caption text-caption">
+<!-- Level 0 -->
+<div class="p-2.5 bg-bg-primary rounded border border-border-subtle flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 rounded bg-bg-elevated text-text-secondary font-mono">L0</span>
+<span class="font-semibold text-text-primary">Top Root Node</span>
+</div>
+<div class="font-mono text-text-secondary">
+                  V_root = <span class="text-text-primary font-bold">0.042</span> | w = 100.0%
+                </div>
+</div>
+<!-- Level 1 Bisection -->
+<div class="p-2.5 bg-bg-primary rounded border border-border-subtle flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 rounded bg-bg-elevated text-primary font-mono font-bold">L1</span>
+<span class="font-semibold text-text-primary">Bisection Split 1</span>
+</div>
+<span class="font-mono text-primary font-bold">α = 0.416</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1">
+<div class="bg-bg-elevated p-2 rounded border border-border-subtle">
+<div class="flex justify-between text-text-secondary text-[10px]">
+<span>CLUSTER LEFT</span>
+<span class="text-primary font-bold font-mono">58.4%</span>
+</div>
+<div class="text-text-primary font-medium mt-0.5">Crypto Layer-1s</div>
+<div class="text-[10px] text-text-tertiary font-mono">V_1 = 0.0384</div>
+</div>
+<div class="bg-bg-elevated p-2 rounded border border-border-subtle">
+<div class="flex justify-between text-text-secondary text-[10px]">
+<span>CLUSTER RIGHT</span>
+<span class="text-secondary font-bold font-mono">41.6%</span>
+</div>
+<div class="text-text-primary font-medium mt-0.5">DeFi &amp; Basis Carry</div>
+<div class="text-[10px] text-text-tertiary font-mono">V_2 = 0.0538</div>
+</div>
+</div>
+</div>
+<!-- Level 2 Bisection -->
+<div class="p-2.5 bg-bg-primary rounded border border-border-subtle flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 rounded bg-bg-elevated text-secondary font-mono font-bold">L2</span>
+<span class="font-semibold text-text-primary">Sub-Cluster Bisection 2</span>
+</div>
+<span class="font-mono text-secondary font-bold">α_L1 = 0.585</span>
+</div>
+<div class="space-y-1.5 mt-1 font-mono text-[10px]">
+<div class="flex items-center justify-between bg-bg-elevated px-2 py-1.5 rounded">
+<span class="text-text-primary">BTC/ETH Sub-Tree (w_L1)</span>
+<span class="text-primary font-bold">34.2%</span>
+</div>
+<div class="flex items-center justify-between bg-bg-elevated px-2 py-1.5 rounded">
+<span class="text-text-primary">SOL/AVAX Sub-Tree (w_L2)</span>
+<span class="text-primary font-bold">24.2%</span>
+</div>
+<div class="flex items-center justify-between bg-bg-elevated px-2 py-1.5 rounded">
+<span class="text-text-primary">UNI/AAVE DeFi Sub-Tree (w_R1)</span>
+<span class="text-secondary font-bold">18.6%</span>
+</div>
+<div class="flex items-center justify-between bg-bg-elevated px-2 py-1.5 rounded">
+<span class="text-text-primary">CEX-DEX Carry Basis (w_R2)</span>
+<span class="text-secondary font-bold">23.0%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card: Multi-Agent Econometric Deliberation Box -->
+<div class="bg-bg-surface border border-border-subtle rounded p-4 flex flex-col gap-3">
+<div class="flex items-center justify-between pb-2 border-b border-border-subtle">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">smart_toy</span>
+<span class="font-title-lg text-title-lg font-semibold text-text-primary">
+                  Multi-Agent Econometric Deliberation
+                </span>
+</div>
+<span class="font-caption text-caption px-2 py-0.5 rounded bg-secondary-container/20 text-secondary border border-secondary/40 font-mono">
+                CONSENSUS: 2/2
+              </span>
+</div>
+<!-- Agent Messages -->
+<div class="flex flex-col gap-2.5 font-caption text-caption">
+<!-- Agent 1 -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-bold text-text-primary font-mono">HRP_PORTFOLIO_ARCHITECT</span>
+</div>
+<span class="text-primary font-mono text-[10px]">Confidence 99.1%</span>
+</div>
+<p class="text-text-secondary leading-relaxed">
+                  "Single-linkage seriation ordered leaves without matrix inversion. Ledoit-Wolf shrinkage eliminates noise eigenvalues below λ_max = 1.84. Tree clustering preserves ultrametric hierarchy."
+                </p>
+</div>
+<!-- Agent 2 -->
+<div class="p-3 bg-bg-primary rounded border border-border-subtle flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-bold text-text-primary font-mono">RISK_INVARIANT_AUDITOR</span>
+</div>
+<span class="text-secondary font-mono text-[10px]">Confidence 99.6%</span>
+</div>
+<p class="text-text-secondary leading-relaxed">
+                  "Zero corner solutions detected. Maximum single asset allocation clamped at 22.4% (BTC-USDT). Out-of-sample stress invariant verified against extreme 5σ volatility jump."
+                </p>
+</div>
+</div>
+<!-- Final Consensus Execution CTA -->
+<div class="pt-2 flex flex-col gap-2">
+<div class="flex items-center justify-between text-[11px] font-caption text-text-secondary px-1">
+<span>GOVERNANCE STATUS</span>
+<span class="text-primary font-bold font-mono">STRICT_HRP_ENFORCED (2/2 Unanimous)</span>
+</div>
+<button class="w-full flex items-center justify-center gap-2 bg-primary-container text-on-primary-container hover:brightness-105 active:opacity-90 py-2.5 px-4 rounded font-body-sm text-body-sm font-semibold transition-all shadow-[0_0_15px_rgba(0,212,170,0.2)]">
+<span class="material-symbols-outlined text-[18px]">lock_clock</span>
+<span>Lock HRP Weights &amp; Route Paper Rebalance</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== COMPREHENSIVE HIGH-DENSITY TELEMETRY TABLE ==================== -->
+<section class="bg-bg-surface border border-border-subtle rounded p-4 flex flex-col gap-3">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border-subtle">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">table_chart</span>
+<span class="font-title-lg text-title-lg font-semibold text-text-primary">
+              HRP Recursive Bisection Allocation &amp; Cluster Seriation Matrix
+            </span>
+</div>
+<div class="flex items-center gap-2 font-caption text-caption text-text-secondary">
+<span>UNIVERSE: N=7 ASSETS</span>
+<span>•</span>
+<span class="text-primary font-mono">SUM(w_i) = 100.0%</span>
+<span>•</span>
+<span class="text-secondary font-mono">REBAL_SLIP: 1.2 BPS</span>
+</div>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto custom-scroll">
+<table class="w-full border-collapse font-caption text-caption font-mono">
+<thead>
+<tr class="text-text-secondary border-b border-border-subtle text-left bg-bg-primary/60">
+<th class="p-2.5">SERIATION #</th>
+<th class="p-2.5">ASSET / FACTOR LEG</th>
+<th class="p-2.5">CLUSTER ID</th>
+<th class="p-2.5 text-right">ULTRAMETRIC d_{i,j}</th>
+<th class="p-2.5 text-right">INVERSE-VAR (IVP)</th>
+<th class="p-2.5 text-right">MARKOWITZ CLA</th>
+<th class="p-2.5 text-right text-primary">HRP WEIGHT w_i</th>
+<th class="p-2.5 text-right">DELTA (vs CLA)</th>
+<th class="p-2.5 text-right">MARGINAL RC</th>
+<th class="p-2.5 text-center">FENCE STATUS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle/40">
+<!-- Asset 1: BTC-USDT -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="p-2.5 text-text-tertiary">#01</td>
+<td class="p-2.5 font-bold text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                  BTC-USDT
+                </td>
+<td class="p-2.5"><span class="px-1.5 py-0.5 bg-bg-elevated rounded border border-border-subtle text-primary">C1</span></td>
+<td class="p-2.5 text-right text-text-secondary">0.312</td>
+<td class="p-2.5 text-right text-text-secondary">19.4%</td>
+<td class="p-2.5 text-right text-color-warning">48.2% (Corner)</td>
+<td class="p-2.5 text-right text-primary font-bold text-[13px]">22.4%</td>
+<td class="p-2.5 text-right text-color-loss">-25.8%</td>
+<td class="p-2.5 text-right text-text-secondary">18.2%</td>
+<td class="p-2.5 text-center">
+<span class="px-2 py-0.5 rounded bg-primary-container/10 text-primary border border-primary/30 text-[10px]">
+                    APPROVED_PAPER
+                  </span>
+</td>
+</tr>
+<!-- Asset 2: ETH-USDT -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="p-2.5 text-text-tertiary">#02</td>
+<td class="p-2.5 font-bold text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                  ETH-USDT
+                </td>
+<td class="p-2.5"><span class="px-1.5 py-0.5 bg-bg-elevated rounded border border-border-subtle text-primary">C1</span></td>
+<td class="p-2.5 text-right text-text-secondary">0.312</td>
+<td class="p-2.5 text-right text-text-secondary">14.8%</td>
+<td class="p-2.5 text-right text-text-secondary">0.0% (Starved)</td>
+<td class="p-2.5 text-right text-primary font-bold text-[13px]">11.8%</td>
+<td class="p-2.5 text-right text-primary">+11.8%</td>
+<td class="p-2.5 text-right text-text-secondary">14.1%</td>
+<td class="p-2.5 text-center">
+<span class="px-2 py-0.5 rounded bg-primary-container/10 text-primary border border-primary/30 text-[10px]">
+                    DIVERSIFIED
+                  </span>
+</td>
+</tr>
+<!-- Asset 3: SOL-USDT -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="p-2.5 text-text-tertiary">#03</td>
+<td class="p-2.5 font-bold text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                  SOL-USDT
+                </td>
+<td class="p-2.5"><span class="px-1.5 py-0.5 bg-bg-elevated rounded border border-border-subtle text-primary">C2</span></td>
+<td class="p-2.5 text-right text-text-secondary">0.428</td>
+<td class="p-2.5 text-right text-text-secondary">11.2%</td>
+<td class="p-2.5 text-right text-text-secondary">0.0% (Starved)</td>
+<td class="p-2.5 text-right text-primary font-bold text-[13px]">13.6%</td>
+<td class="p-2.5 text-right text-primary">+13.6%</td>
+<td class="p-2.5 text-right text-text-secondary">16.4%</td>
+<td class="p-2.5 text-center">
+<span class="px-2 py-0.5 rounded bg-primary-container/10 text-primary border border-primary/30 text-[10px]">
+                    APPROVED_PAPER
+                  </span>
+</td>
+</tr>
+<!-- Asset 4: AVAX-USDT -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="p-2.5 text-text-tertiary">#04</td>
+<td class="p-2.5 font-bold text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                  AVAX-USDT
+                </td>
+<td class="p-2.5"><span class="px-1.5 py-0.5 bg-bg-elevated rounded border border-border-subtle text-primary">C2</span></td>
+<td class="p-2.5 text-right text-text-secondary">0.428</td>
+<td class="p-2.5 text-right text-text-secondary">9.6%</td>
+<td class="p-2.5 text-right text-text-secondary">0.0% (Starved)</td>
+<td class="p-2.5 text-right text-primary font-bold text-[13px]">10.6%</td>
+<td class="p-2.5 text-right text-primary">+10.6%</td>
+<td class="p-2.5 text-right text-text-secondary">12.8%</td>
+<td class="p-2.5 text-center">
+<span class="px-2 py-0.5 rounded bg-primary-container/10 text-primary border border-primary/30 text-[10px]">
+                    DIVERSIFIED
+                  </span>
+</td>
+</tr>
+<!-- Asset 5: UNI-USDT -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="p-2.5 text-text-tertiary">#05</td>
+<td class="p-2.5 font-bold text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                  UNI-USDT
+                </td>
+<td class="p-2.5"><span class="px-1.5 py-0.5 bg-bg-elevated rounded border border-border-subtle text-secondary">C3</span></td>
+<td class="p-2.5 text-right text-text-secondary">0.380</td>
+<td class="p-2.5 text-right text-text-secondary">10.1%</td>
+<td class="p-2.5 text-right text-text-secondary">0.0% (Starved)</td>
+<td class="p-2.5 text-right text-secondary font-bold text-[13px]">9.8%</td>
+<td class="p-2.5 text-right text-primary">+9.8%</td>
+<td class="p-2.5 text-right text-text-secondary">11.2%</td>
+<td class="p-2.5 text-center">
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary border border-secondary/40 text-[10px]">
+                    DIVERSIFIED
+                  </span>
+</td>
+</tr>
+<!-- Asset 6: AAVE-USDT -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="p-2.5 text-text-tertiary">#06</td>
+<td class="p-2.5 font-bold text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                  AAVE-USDT
+                </td>
+<td class="p-2.5"><span class="px-1.5 py-0.5 bg-bg-elevated rounded border border-border-subtle text-secondary">C3</span></td>
+<td class="p-2.5 text-right text-text-secondary">0.380</td>
+<td class="p-2.5 text-right text-text-secondary">8.9%</td>
+<td class="p-2.5 text-right text-text-secondary">0.0% (Starved)</td>
+<td class="p-2.5 text-right text-secondary font-bold text-[13px]">8.8%</td>
+<td class="p-2.5 text-right text-primary">+8.8%</td>
+<td class="p-2.5 text-right text-text-secondary">10.1%</td>
+<td class="p-2.5 text-center">
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary border border-secondary/40 text-[10px]">
+                    DIVERSIFIED
+                  </span>
+</td>
+</tr>
+<!-- Asset 7: BASIS-CARRY -->
+<tr class="hover:bg-bg-hover transition-colors">
+<td class="p-2.5 text-text-tertiary">#07</td>
+<td class="p-2.5 font-bold text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                  BASIS-CARRY (CEX-DEX)
+                </td>
+<td class="p-2.5"><span class="px-1.5 py-0.5 bg-bg-elevated rounded border border-border-subtle text-secondary">C4</span></td>
+<td class="p-2.5 text-right text-text-secondary">0.610</td>
+<td class="p-2.5 text-right text-text-secondary">26.0%</td>
+<td class="p-2.5 text-right text-color-warning">51.8% (Corner)</td>
+<td class="p-2.5 text-right text-secondary font-bold text-[13px]">23.0%</td>
+<td class="p-2.5 text-right text-color-loss">-28.8%</td>
+<td class="p-2.5 text-right text-text-secondary">17.2%</td>
+<td class="p-2.5 text-center">
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary border border-secondary/40 text-[10px]">
+                    OVERWEIGHT_CLAMPED
+                  </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- ==================== BOTTOM INSTITUTIONAL STATUS BAR ==================== -->
+<footer class="bg-bg-surface border border-border-subtle rounded px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 font-caption text-caption text-text-secondary">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-text-primary font-bold font-mono">NODE #QNT-8812 ONLINE</span>
+<span>|</span>
+<span>Asymptotic Theory: Ledoit-Wolf (2004) &amp; López de Prado (2016)</span>
+</div>
+<div class="flex flex-wrap items-center gap-3 font-mono">
+<span>Shrinkage: <strong class="text-text-primary">Asymptotic Normal</strong></span>
+<span>•</span>
+<span>Matrix Singularity: <strong class="text-primary">NONE (O(N log N) Tree)</strong></span>
+<span>•</span>
+<span>Slippage: <strong class="text-text-primary">1.2 BPS</strong></span>
+<span>•</span>
+<span class="text-primary font-bold">Zero-Lookahead: PASS (#CYCLE 9074)</span>
+<span class="px-1.5 py-0.5 bg-color-warning/10 text-color-warning border border-color-warning/30 rounded text-[10px]">
+            ADR-001 PAPER_ONLY
+          </span>
+</div>
+</footer>
+</div>
+</main>
+</body></html>

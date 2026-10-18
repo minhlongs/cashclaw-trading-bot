@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<!-- Stitch Project: projects/6665149401860401191 | Screen: projects/6665149401860401191/screens/cceb313f01b34c4081aa5a6e8a19f16e | Design System: assets/be7563bf9e4c400f85f92f80d27a5de5 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashClaw OS — López de Prado (2016) Hierarchical Risk Parity (HRP) &amp; Ledoit-Wolf Shrinkage Allocator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0B0E11;
+      --bg-surface: #141820;
+      --bg-elevated: #1A2030;
+      --bg-hover: #1E2838;
+      --color-accent: #00D4AA;
+      --color-profit: #00D4AA;
+      --color-loss: #FF4757;
+      --color-error: #FF4757;
+      --color-warning: #FFB020;
+      --color-ai: #A78BFA;
+      --text-primary: #E8EAED;
+      --text-secondary: #8B95A5;
+      --text-tertiary: #5A6577;
+      --border-subtle: #1E2530;
+      --border-default: #2A3340;
+    }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono, table td, table th {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    :focus-visible {
+      outline: 2px solid #00D4AA;
+      outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased">
+  <!-- Left Sidebar (240px) -->
+  <aside class="w-60 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 flex-shrink-0">
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center font-bold text-black text-sm">CC</div>
+        <div class="flex flex-col">
+          <span class="font-bold text-sm tracking-wide">CashClaw OS</span>
+          <span class="text-[10px] text-[var(--color-warning)] font-mono font-semibold">PAPER_ONLY • ADR-001</span>
+        </div>
+      </div>
+
+            <nav class="flex flex-col gap-1.5 text-xs font-medium">
+        <a href="index.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Cockpit Overview
+        </a>
+        <a href="alpha-zoo.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Alpha Zoo Evaluator
+        </a>
+        <a href="deliberation-theater.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+          Deliberation Theater
+        </a>
+        <a href="strategies/volatility-dca.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Volatility-DCA Bots
+        </a>
+        <a href="correlation-matrix.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Correlation Matrix
+        </a>
+        <a href="execution-ledger.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Execution Ledger
+        </a>
+        <a href="data-quality-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Data Quality Gate
+        </a>
+        <a href="microstructure-liquidity.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Microstructure Liquidity
+        </a>
+        <a href="survival-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Survival Gate
+        </a>
+        <a href="sovereign-enclave.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Sovereign Enclave
+        </a>
+        <a href="relative-value-basis.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Relative-Value Basis
+        </a>
+        <a href="billing.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          SaaS Billing & Quota
+        </a>
+        <a href="regime-attribution.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Regime Attribution
+        </a>
+        <a href="fdr-multiple-testing-gate.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          FDR Multiple-Testing Gate
+        </a>
+        <a href="style-guide.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Style Guide & Tokens
+        </a>
+        <a href="portfolio-cvar-stress.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          CVaR Tail-Risk Stress
+        </a>
+        <a href="orderbook-imbalance-lob.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          LOB Hawkes Imbalance
+        </a>
+        <a href="rough-volatility-hurst.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+          Rough Volatility & Jumps
+        </a>
+        <a href="leadlag-hayashi-yoshida.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+          Hayashi-Yoshida Lead-Lag
+        </a>
+        <a href="optimal-execution-almgren-chriss.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Almgren-Chriss Execution
+        </a>
+        <a href="regime-switching-hamilton-hmm.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Hamilton HMM Regime Filter
+        </a>
+        <a href="hrp-allocator.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+          HRP & Shrinkage Allocator
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs flex flex-col gap-1">
+      <span class="text-[var(--text-secondary)] text-[10px]">Eigen-Portfolio Allocator</span>
+      <span class="font-mono text-[var(--text-primary)] font-semibold truncate">López de Prado (2016) HRP</span>
+      <span class="text-[10px] text-[var(--color-accent)] font-semibold">LEDOIT-WOLF • INVERSION-FREE</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Header Bar -->
+    <header class="h-16 border-b border-[var(--border-subtle)] px-6 flex items-center justify-between bg-[var(--bg-primary)]">
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="font-bold text-base">López de Prado (2016) Hierarchical Risk Parity (HRP) &amp; Ledoit-Wolf Shrinkage Eigen-Portfolio Allocator</h1>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)] border border-[rgba(0,212,170,0.25)]">
+          Ultrametric Tree Clustering • Quasi-Diagonalization • Recursive Bisection • Marchenko-Pastur Denoising • PAPER_ONLY
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="correlation-matrix.html" class="h-9 px-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-primary)] font-semibold text-xs flex items-center gap-1.5 hover:bg-[var(--bg-hover)] transition-colors">
+          <span>Correlation Matrix</span>
+        </a>
+        <button id="recomputeHrpBtn" onclick="document.getElementById('hrpAuditStamp').textContent = 'HRP BISECTED • ' + new Date().toISOString().slice(11,19) + ' UTC'" class="h-9 px-4 rounded-lg bg-[var(--color-accent)] text-black font-semibold text-xs flex items-center gap-1.5 hover:brightness-110 transition-all cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+          <span>Re-Bisect HRP Weights</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+      <!-- 3 Telemetry KPI Cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Ledoit-Wolf Shrinkage Intensity δ*</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)]">ORACLE APPROXIMATING</span>
+          </div>
+          <div class="font-mono text-2xl font-bold text-[var(--color-accent)]">0.284</div>
+          <div class="text-[11px] font-mono text-[var(--text-secondary)]">Condition Number κ(Σ): <span class="text-[var(--color-loss)]">412.8</span> → <span class="text-[var(--color-accent)]">18.4</span> (Well-Conditioned)</div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Effective Number of Bets (ENC / Hill N_eff)</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(167,139,250,0.15)] text-[var(--color-ai)]">6.42 / 8.00 SLEEVES</span>
+          </div>
+          <div class="font-mono text-2xl font-bold text-[var(--color-ai)]">6.42</div>
+          <div class="text-[11px] font-mono text-[var(--text-secondary)]">1 / ∑ w_i² Diversification Ratio: <span class="text-[var(--color-accent)]">1.84×</span> vs Markowitz <span class="text-[var(--color-warning)]">2.11</span></div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--text-secondary)]">Out-of-Sample Annualized Portfolio Vol σ_HRP</span>
+            <span id="hrpAuditStamp" class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(0,212,170,0.12)] text-[var(--color-accent)]">∑ w_i = 1.0000</span>
+          </div>
+          <div class="font-mono text-2xl font-bold text-[var(--text-primary)]">9.84%</div>
+          <div class="text-[11px] font-mono text-[var(--text-secondary)]">OOS Variance Reduction vs. Markowitz CLA: <span class="text-[var(--color-accent)]">-31.6%</span></div>
+        </div>
+      </section>
+
+      <!-- Dual-Panel Analytical Workspace -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left 7 Columns: Ward Ultrametric Dendrogram + Quasi-Diagonalized Heatmap -->
+        <div class="lg:col-span-7 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h2 class="text-sm font-bold">Ultrametric Dendrogram d_ij = √(½(1 - ρ_ij)) &amp; Quasi-Diagonalized Correlation Matrix</h2>
+              <p class="text-xs text-[var(--text-secondary)]">Ward linkage hierarchical clustering seriation places correlated strategy sleeves along the block-diagonal prior to recursive bisection</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[var(--bg-elevated)] text-[var(--color-accent)] border border-[var(--border-default)]">COPHENETIC CORR c = 0.941</span>
+          </div>
+
+          <!-- SVG Dendrogram + Leaf Permutation -->
+          <div class="w-full bg-[var(--bg-primary)] rounded-lg border border-[var(--border-subtle)] p-3">
+            <svg viewBox="0 0 680 190" class="w-full h-44" role="img" aria-label="HRP Ward Linkage Dendrogram over 8 Strategy Sleeves">
+              <!-- Distance Scale Grid -->
+              <g stroke="#1E2530" stroke-width="1" stroke-dasharray="3 3">
+                <line x1="48" y1="22" x2="650" y2="22"/>
+                <line x1="48" y1="68" x2="650" y2="68"/>
+                <line x1="48" y1="114" x2="650" y2="114"/>
+              </g>
+              <g fill="#8B95A5" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="end">
+                <text x="42" y="26">d=0.80</text>
+                <text x="42" y="72">d=0.50</text>
+                <text x="42" y="118">d=0.25</text>
+              </g>
+
+              <!-- Root Split (Bisection Level 1: α_1 = 0.412 Left Cluster vs 1-α_1 = 0.588 Right Cluster) -->
+              <path d="M195,52 L195,22 L505,22 L505,46" fill="none" stroke="#A78BFA" stroke-width="2"/>
+              <circle cx="350" cy="22" r="4" fill="#A78BFA"/>
+              <text x="350" y="14" fill="#A78BFA" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="middle">Root Bisection: α₁=0.412 | 1-α₁=0.588</text>
+
+              <!-- Left Macro Branch (Directional / Carry Cluster) -->
+              <path d="M120,92 L120,52 L270,52 L270,88" fill="none" stroke="#00D4AA" stroke-width="1.8"/>
+              <!-- Leaf Pair 1: S1 (BTC Basis) & S2 (ETH Basis) -->
+              <path d="M85,145 L85,92 L155,92 L155,145" fill="none" stroke="#00D4AA" stroke-width="1.6"/>
+              <!-- Leaf Pair 2: S3 (Vol-DCA) & S4 (TF Momentum) -->
+              <path d="M235,145 L235,88 L305,88 L305,145" fill="none" stroke="#00D4AA" stroke-width="1.6"/>
+
+              <!-- Right Macro Branch (Microstructure / Stat-Arb Cluster) -->
+              <path d="M425,84 L425,46 L580,46 L580,78" fill="none" stroke="#FFB020" stroke-width="1.8"/>
+              <!-- Leaf Pair 3: S5 (LOB Hawkes) & S6 (HY Lead-Lag) -->
+              <path d="M385,145 L385,84 L465,84 L465,145" fill="none" stroke="#FFB020" stroke-width="1.6"/>
+              <!-- Leaf Pair 4: S7 (Rough-Vol) & S8 (Avellaneda MM) -->
+              <path d="M540,145 L540,78 L620,78 L620,145" fill="none" stroke="#00D4AA" stroke-width="1.6"/>
+
+              <!-- Leaf Nodes & Ordered Labels L_π -->
+              <g font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="middle">
+                <circle cx="85" cy="145" r="3.5" fill="#00D4AA"/>
+                <text x="85" y="164" fill="#E8EAED">S1:Basis-BTC</text>
+                <text x="85" y="177" fill="#00D4AA">w=14.8%</text>
+
+                <circle cx="155" cy="145" r="3.5" fill="#00D4AA"/>
+                <text x="155" y="164" fill="#E8EAED">S2:Basis-ETH</text>
+                <text x="155" y="177" fill="#00D4AA">w=12.4%</text>
+
+                <circle cx="235" cy="145" r="3.5" fill="#00D4AA"/>
+                <text x="235" y="164" fill="#E8EAED">S3:Vol-DCA</text>
+                <text x="235" y="177" fill="#00D4AA">w=7.6%</text>
+
+                <circle cx="305" cy="145" r="3.5" fill="#00D4AA"/>
+                <text x="305" y="164" fill="#E8EAED">S4:Trend-Mom</text>
+                <text x="305" y="177" fill="#00D4AA">w=6.4%</text>
+
+                <circle cx="385" cy="145" r="3.5" fill="#FFB020"/>
+                <text x="385" y="164" fill="#E8EAED">S5:LOB-Hawkes</text>
+                <text x="385" y="177" fill="#FFB020">w=16.2%</text>
+
+                <circle cx="465" cy="145" r="3.5" fill="#FFB020"/>
+                <text x="465" y="164" fill="#E8EAED">S6:HY-LeadLag</text>
+                <text x="465" y="177" fill="#FFB020">w=14.1%</text>
+
+                <circle cx="540" cy="145" r="3.5" fill="#A78BFA"/>
+                <text x="540" y="164" fill="#E8EAED">S7:Rough-Vol</text>
+                <text x="540" y="177" fill="#A78BFA">w=15.3%</text>
+
+                <circle cx="620" cy="145" r="3.5" fill="#A78BFA"/>
+                <text x="620" y="164" fill="#E8EAED">S8:Avellaneda</text>
+                <text x="620" y="177" fill="#A78BFA">w=13.2%</text>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Quasi-Diagonalized 4x4 Cluster Block Summary Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)] text-[11px]">
+                  <th class="py-2 px-2.5 text-left">Quasi-Diagonal Cluster Block</th>
+                  <th class="py-2 px-2.5 text-right">C1: Basis Carry (S1,S2)</th>
+                  <th class="py-2 px-2.5 text-right">C2: Directional (S3,S4)</th>
+                  <th class="py-2 px-2.5 text-right">C3: Microstructure (S5,S6)</th>
+                  <th class="py-2 px-2.5 text-right">C4: Vol/MM (S7,S8)</th>
+                  <th class="py-2 px-2.5 text-right">Cluster Var V_C</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[var(--border-subtle)] font-mono">
+                <tr>
+                  <td class="py-2 px-2.5 font-semibold text-[var(--color-accent)]">C1: Basis Carry (S1,S2)</td>
+                  <td class="py-2 px-2.5 text-right bg-[rgba(0,212,170,0.16)] font-bold text-[var(--color-accent)]">0.742</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-primary)]">0.318</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-secondary)]">0.084</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-secondary)]">0.052</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-primary)]">0.0118</td>
+                </tr>
+                <tr>
+                  <td class="py-2 px-2.5 font-semibold text-[var(--color-accent)]">C2: Directional (S3,S4)</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-primary)]">0.318</td>
+                  <td class="py-2 px-2.5 text-right bg-[rgba(0,212,170,0.16)] font-bold text-[var(--color-accent)]">0.685</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-secondary)]">0.112</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-secondary)]">-0.041</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-primary)]">0.0231</td>
+                </tr>
+                <tr>
+                  <td class="py-2 px-2.5 font-semibold text-[var(--color-warning)]">C3: Microstructure (S5,S6)</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-secondary)]">0.084</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-secondary)]">0.112</td>
+                  <td class="py-2 px-2.5 text-right bg-[rgba(255,176,32,0.16)] font-bold text-[var(--color-warning)]">0.614</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-primary)]">0.194</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-primary)]">0.0094</td>
+                </tr>
+                <tr>
+                  <td class="py-2 px-2.5 font-semibold text-[var(--color-ai)]">C4: Vol / MM (S7,S8)</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-secondary)]">0.052</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-secondary)]">-0.041</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-primary)]">0.194</td>
+                  <td class="py-2 px-2.5 text-right bg-[rgba(167,139,250,0.16)] font-bold text-[var(--color-ai)]">0.592</td>
+                  <td class="py-2 px-2.5 text-right text-[var(--text-primary)]">0.0102</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right 5 Columns: Marchenko-Pastur Eigenvalue Spectrum & Shrinkage Control -->
+        <div class="lg:col-span-5 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4 justify-between">
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-sm font-bold">Marchenko-Pastur Spectrum &amp; Ledoit-Wolf Shrinkage</h2>
+                <p class="text-xs text-[var(--text-secondary)]">Eigenvalues λ_k inside [λ_-, λ_+] = [0.18, 1.94] are random matrix noise and clipped to constant residual mean</p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[rgba(167,139,250,0.15)] text-[var(--color-ai)]">q = N/T = 0.14</span>
+            </div>
+
+            <!-- SVG Marchenko-Pastur Density & Empirical Eigenvalues -->
+            <div class="w-full bg-[var(--bg-primary)] rounded-lg border border-[var(--border-subtle)] p-3">
+              <svg viewBox="0 0 420 175" class="w-full h-40" role="img" aria-label="Marchenko-Pastur Random Matrix Spectrum vs Empirical Eigenvalues">
+                <line x1="36" y1="145" x2="400" y2="145" stroke="#2A3340" stroke-width="1"/>
+                <!-- MP Bulk Region [λ_-, λ_+] Shaded -->
+                <path d="M52,145 Q84,32 135,76 Q178,118 205,145 Z" fill="rgba(167,139,250,0.18)" stroke="#A78BFA" stroke-width="1.8"/>
+                <line x1="205" y1="22" x2="205" y2="145" stroke="#FF4757" stroke-width="1.3" stroke-dasharray="4 3"/>
+                <text x="200" y="32" fill="#FF4757" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="end">MP Upper Edge λ₊ = 1.94</text>
+
+                <!-- Noise Eigenvalues (λ_3..λ_8) Clipped to Constant Residual -->
+                <g fill="#5A6577">
+                  <rect x="64" y="102" width="12" height="43" rx="2"/>
+                  <rect x="86" y="94" width="12" height="51" rx="2"/>
+                  <rect x="108" y="108" width="12" height="37" rx="2"/>
+                  <rect x="130" y="114" width="12" height="31" rx="2"/>
+                  <rect x="152" y="121" width="12" height="24" rx="2"/>
+                  <rect x="174" y="126" width="12" height="19" rx="2"/>
+                </g>
+                <!-- Denoised Constant Eigenvalue Level -->
+                <line x1="58" y1="110" x2="192" y2="110" stroke="#00D4AA" stroke-width="1.8" stroke-dasharray="3 2"/>
+                <text x="125" y="90" fill="#00D4AA" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">Denoised Bulk λ̄_noise = 0.62</text>
+
+                <!-- Signal Eigenvalues Above λ_+ -->
+                <rect x="262" y="72" width="16" height="73" rx="2" fill="#FFB020"/>
+                <text x="270" y="65" fill="#FFB020" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">λ₂=2.68 (Carry)</text>
+
+                <rect x="352" y="38" width="16" height="107" rx="2" fill="#00D4AA"/>
+                <text x="360" y="30" fill="#00D4AA" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">λ₁=4.12 (Market)</text>
+
+                <!-- Axis Labels -->
+                <text x="52" y="162" fill="#8B95A5" font-family="JetBrains Mono, monospace" font-size="9">λ₋=0.18</text>
+                <text x="205" y="162" fill="#8B95A5" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">λ₊=1.94</text>
+                <text x="395" y="162" fill="#8B95A5" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="end">Eigenvalue λ →</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Equations & Allocator Stability Summary -->
+          <div class="flex flex-col gap-2.5 text-xs">
+            <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-1">
+              <span class="text-[10px] text-[var(--text-secondary)] uppercase font-semibold">Ledoit-Wolf Shrinkage Estimator</span>
+              <code class="font-mono text-[11px] text-[var(--color-accent)]">Σ_LW = (1 - δ*) Σ_sample + δ* F_target   (δ* = 0.284)</code>
+            </div>
+            <div class="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex flex-col gap-1">
+              <span class="text-[10px] text-[var(--text-secondary)] uppercase font-semibold">Recursive Bisection Split Factor</span>
+              <code class="font-mono text-[11px] text-[var(--color-ai)]">α_1 = 1 - V(L_1) / (V(L_1) + V(L_2))   where V(L_k) = w̃_k' Σ_k w̃_k</code>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Section: 8-Sleeve HRP vs. Markowitz CLA vs. Equal-Weight Comparison Table -->
+      <section class="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h2 class="text-sm font-bold">Eigen-Portfolio Weight Allocation: HRP vs. Inverse-Variance (IVP) vs. Unconstrained Markowitz (Σ⁻¹)</h2>
+            <p class="text-xs text-[var(--text-secondary)]">Eliminates Markowitz corner-solution instability caused by small-eigenvalue amplification while enforcing full capital conservation ∑ w_i = 1.0000</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="alpha-zoo.html" class="px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-xs font-mono text-[var(--color-accent)] hover:bg-[var(--bg-hover)] transition-colors">
+              Alpha Zoo Evaluator →
+            </a>
+            <a href="portfolio-cvar-stress.html" class="px-3 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-xs font-mono text-[var(--color-ai)] hover:bg-[var(--bg-hover)] transition-colors">
+              CVaR Stress Test →
+            </a>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-[var(--border-subtle)] text-[var(--text-secondary)] text-[11px]">
+                <th class="py-2.5 px-3 text-left">Quasi-Diagonal Order &amp; Sleeve</th>
+                <th class="py-2.5 px-3 text-left">Cluster Group</th>
+                <th class="py-2.5 px-3 text-right">Realized Vol σ_i</th>
+                <th class="py-2.5 px-3 text-right text-[var(--color-accent)]">HRP Weight w_HRP</th>
+                <th class="py-2.5 px-3 text-right">Inv-Var w_IVP</th>
+                <th class="py-2.5 px-3 text-right text-[var(--color-warning)]">Markowitz w_MV</th>
+                <th class="py-2.5 px-3 text-right">Marginal RiskMRC_i</th>
+                <th class="py-2.5 px-3 text-right">Paper Notional ($1M)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border-subtle)] font-mono">
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-2.5 px-3 font-semibold text-[var(--text-primary)]">S1 • BTC Perp-Spot Basis Carry</td>
+                <td class="py-2.5 px-3 text-[var(--color-accent)]">C1 Carry</td>
+                <td class="py-2.5 px-3 text-right">11.2%</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-accent)]">14.80%</td>
+                <td class="py-2.5 px-3 text-right">16.10%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-warning)]">38.40%</td>
+                <td class="py-2.5 px-3 text-right">12.6%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-profit)]">$148,000</td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-2.5 px-3 font-semibold text-[var(--text-primary)]">S2 • ETH Perp-Spot Basis Carry</td>
+                <td class="py-2.5 px-3 text-[var(--color-accent)]">C1 Carry</td>
+                <td class="py-2.5 px-3 text-right">12.4%</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-accent)]">12.40%</td>
+                <td class="py-2.5 px-3 text-right">13.20%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-loss)]">-18.20%</td>
+                <td class="py-2.5 px-3 text-right">12.1%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-profit)]">$124,000</td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-2.5 px-3 font-semibold text-[var(--text-primary)]">S3 • Volatility-Targeted DCA Bot</td>
+                <td class="py-2.5 px-3 text-[var(--color-accent)]">C2 Directional</td>
+                <td class="py-2.5 px-3 text-right">18.6%</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-accent)]">7.60%</td>
+                <td class="py-2.5 px-3 text-right">8.90%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-warning)]">2.10%</td>
+                <td class="py-2.5 px-3 text-right">11.8%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-profit)]">$76,000</td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-2.5 px-3 font-semibold text-[var(--text-primary)]">S4 • Cross-Sectional Trend Momentum</td>
+                <td class="py-2.5 px-3 text-[var(--color-accent)]">C2 Directional</td>
+                <td class="py-2.5 px-3 text-right">20.4%</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-accent)]">6.40%</td>
+                <td class="py-2.5 px-3 text-right">7.40%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-warning)]">0.00%</td>
+                <td class="py-2.5 px-3 text-right">11.4%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-profit)]">$64,000</td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-2.5 px-3 font-semibold text-[var(--text-primary)]">S5 • LOB Hawkes Orderflow Imbalance</td>
+                <td class="py-2.5 px-3 text-[var(--color-warning)]">C3 Microstructure</td>
+                <td class="py-2.5 px-3 text-right">9.8%</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-accent)]">16.20%</td>
+                <td class="py-2.5 px-3 text-right">15.40%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-warning)]">44.60%</td>
+                <td class="py-2.5 px-3 text-right">13.2%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-profit)]">$162,000</td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-2.5 px-3 font-semibold text-[var(--text-primary)]">S6 • Hayashi-Yoshida Async Lead-Lag</td>
+                <td class="py-2.5 px-3 text-[var(--color-warning)]">C3 Microstructure</td>
+                <td class="py-2.5 px-3 text-right">10.6%</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-accent)]">14.10%</td>
+                <td class="py-2.5 px-3 text-right">13.80%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-loss)]">-11.40%</td>
+                <td class="py-2.5 px-3 text-right">12.9%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-profit)]">$141,000</td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-2.5 px-3 font-semibold text-[var(--text-primary)]">S7 • Rough-Vol Fractional Dispersion</td>
+                <td class="py-2.5 px-3 text-[var(--color-ai)]">C4 Vol / MM</td>
+                <td class="py-2.5 px-3 text-right">10.1%</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-accent)]">15.30%</td>
+                <td class="py-2.5 px-3 text-right">13.10%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-warning)]">29.80%</td>
+                <td class="py-2.5 px-3 text-right">13.1%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-profit)]">$153,000</td>
+              </tr>
+              <tr class="hover:bg-[var(--bg-hover)] transition-colors">
+                <td class="py-2.5 px-3 font-semibold text-[var(--text-primary)]">S8 • Avellaneda-Stoikov Inventory MM</td>
+                <td class="py-2.5 px-3 text-[var(--color-ai)]">C4 Vol / MM</td>
+                <td class="py-2.5 px-3 text-right">11.0%</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-accent)]">13.20%</td>
+                <td class="py-2.5 px-3 text-right">12.10%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-warning)]">14.70%</td>
+                <td class="py-2.5 px-3 text-right">12.9%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-profit)]">$132,000</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="border-t border-[var(--border-default)] bg-[var(--bg-elevated)] font-mono text-[11px]">
+                <td class="py-2.5 px-3 font-bold text-[var(--color-accent)]" colspan="3">PORTFOLIO CONSERVATION &amp; RISK PARITY TOTALS</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-accent)]">100.00%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--text-primary)]">100.00%</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-warning)]">100.00% (L/S)</td>
+                <td class="py-2.5 px-3 text-right text-[var(--color-accent)]">100.0%</td>
+                <td class="py-2.5 px-3 text-right font-bold text-[var(--color-profit)]">$1,000,000</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

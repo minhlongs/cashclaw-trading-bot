@@ -1,4 +1,4 @@
-/* CashClaw Quant OS — Tailwind Theme Mapping (stitch-design-system & stitch-animate)
+/* CashClaw Quant OS — Tailwind Theme Mapping (stitch-design-system, stitch-animate & ak-ui-ux-pro-max)
  * Maps DESIGN.md CSS custom properties into Tailwind theme tokens & utility classes.
  */
 
@@ -33,7 +33,11 @@
   --radius-modal: var(--radius-xl);
 }
 
-/* Stitch Component Geometry, Motion & A11y Primitives */
+/* ak-ui-ux-pro-max Tabular Telemetry & Focus Ring Primitives */
+.quant-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
 .stitch-card {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -58,8 +62,12 @@
   transition: all var(--transition-fast);
 }
 
-.stitch-control:focus-visible {
-  outline: 2px solid var(--color-accent);
+.stitch-control:focus-visible,
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #00D4AA;
   outline-offset: 2px;
 }
 
@@ -70,7 +78,8 @@
 @media (prefers-reduced-motion: reduce) {
   .stitch-card,
   .stitch-control,
-  .stitch-animate-micro {
+  .stitch-animate-micro,
+  * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
