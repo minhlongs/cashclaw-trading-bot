@@ -20,11 +20,7 @@ import { importAlphaZooManifest } from '@/tree/research/alpha/zoo/zoo-adapter';
 import type { ZooAdapterConfig, PerAlphaResult } from '@/tree/research/alpha/zoo/import-report';
 import type { IcAnalysisConfig, SymbolPanel as FactorPanel } from '@/tree/alpha/factors';
 import {
-  assertNoSilentSkips,
-  computeZooTotals,
-  type DeferredCheck,
-  type ZooFalsificationReport,
-  type ZooFalsificationRow,
+  assertNoSilentSkips, computeZooTotals, type DeferredCheck, type ZooFalsificationReport, type ZooFalsificationRow,
 } from './report-types';
 import { toEvalPanel, evaluateAlpha } from './eval-helpers';
 

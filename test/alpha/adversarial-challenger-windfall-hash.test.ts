@@ -31,23 +31,19 @@ describe('Adversarial Challenge: Checks 13-15 Empirical Stress Suite', () => {
       expect(res.passed).toBe(true);
       expect(res.actual).toBe(0.499);
     });
-
     it('fails closed on non-positive total PnL', () => {
       const resNeg = checkNoSingleWindowDependency([-100, -200], 0.50);
       expect(resNeg.passed).toBe(false);
       expect(resNeg.actual).toBeNull();
       expect(resNeg.detail).toContain('non-positive');
-
       expect(checkNoSingleWindowDependency([100, -200], 0.50).passed).toBe(false);
       expect(checkNoSingleWindowDependency([0, 0], 0.50).passed).toBe(false);
     });
-
     it('fails closed on empty array or non-finite elements', () => {
       expect(checkNoSingleWindowDependency([], 0.50).passed).toBe(false);
       expect(checkNoSingleWindowDependency([100, Number.NaN], 0.50).passed).toBe(false);
       expect(checkNoSingleWindowDependency([100, Infinity], 0.50).passed).toBe(false);
     });
-
     it('fails when positive total has single window contributing > 100% [120, -20]', () => {
       const res = checkNoSingleWindowDependency([120, -20], 0.50);
       expect(res.passed).toBe(false);
@@ -66,44 +62,27 @@ describe('Adversarial Challenge: Checks 13-15 Empirical Stress Suite', () => {
       expect(res.actual).toBe(2000);
       expect(res.threshold).toBe('beats_both');
     });
-
     it('fails when candidate beats Random but lags Buy & Hold Sharpe', () => {
-      const res = checkBaselineComparison(cand, { sharpe: 1.6, netPnl: 1000 }, rePass);
-      expect(res.passed).toBe(false);
+      expect(checkBaselineComparison(cand, { sharpe: 1.6, netPnl: 1000 }, rePass).passed).toBe(false);
     });
-
     it('fails when candidate beats Random but lags Buy & Hold Net PnL', () => {
-      const res = checkBaselineComparison(cand, { sharpe: 1.0, netPnl: 2500 }, rePass);
-      expect(res.passed).toBe(false);
+      expect(checkBaselineComparison(cand, { sharpe: 1.0, netPnl: 2500 }, rePass).passed).toBe(false);
     });
-
     it('fails when candidate beats PnL but lags Sharpe', () => {
-      const res = checkBaselineComparison(cand, { sharpe: 1.55, netPnl: 1500 }, rePass);
-      expect(res.passed).toBe(false);
+      expect(checkBaselineComparison(cand, { sharpe: 1.55, netPnl: 1500 }, rePass).passed).toBe(false);
     });
-
     it('fails when candidate ties any baseline metric (strict > required)', () => {
       expect(checkBaselineComparison(cand, { sharpe: 1.5, netPnl: 1000 }, rePass).passed).toBe(false);
       expect(checkBaselineComparison(cand, { sharpe: 1.0, netPnl: 2000 }, rePass).passed).toBe(false);
       expect(checkBaselineComparison(cand, bhPass, { sharpe: 1.5, netPnl: 100 }).passed).toBe(false);
       expect(checkBaselineComparison(cand, bhPass, { sharpe: 0.2, netPnl: 2000 }).passed).toBe(false);
     });
-
     it('passes with marginal positive alpha 0.0001 over both baselines', () => {
-      const res = checkBaselineComparison(
-        { sharpe: 1.0001, netPnl: 1000.01 },
-        { sharpe: 1.0, netPnl: 1000 },
-        { sharpe: 1.0, netPnl: 1000 },
-      );
+      const res = checkBaselineComparison({ sharpe: 1.0001, netPnl: 1000.01 }, { sharpe: 1.0, netPnl: 1000 }, { sharpe: 1.0, netPnl: 1000 });
       expect(res.passed).toBe(true);
     });
-
     it('passes when baseline Sharpe is null and candidate Sharpe is positive', () => {
-      const res = checkBaselineComparison(
-        { sharpe: 1.0, netPnl: 1000 },
-        { sharpe: null, netPnl: 500 },
-        { sharpe: null, netPnl: 200 },
-      );
+      const res = checkBaselineComparison({ sharpe: 1.0, netPnl: 1000 }, { sharpe: null, netPnl: 500 }, { sharpe: null, netPnl: 200 });
       expect(res.passed).toBe(true);
     });
 

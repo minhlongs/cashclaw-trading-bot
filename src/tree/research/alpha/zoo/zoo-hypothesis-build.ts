@@ -1,7 +1,5 @@
-// Deterministic hypothesis assembly (D4) + provenance construction for the
-// zoo adapter. Pure module: no I/O. Every field is derived from the parsed
-// zoo entry + adapter config — no randomness, no wall clock unless the
-// caller injects one via config.nowIso.
+// Deterministic hypothesis assembly (D4) + provenance construction for the zoo adapter.
+// Pure module: no I/O, no randomness, no wall clock unless injected via config.nowIso.
 
 import type { Universe } from '@/tree/alpha/universe/types';
 import { buildNormalizedRepresentation, type AlphaProvenance } from '../provenance';

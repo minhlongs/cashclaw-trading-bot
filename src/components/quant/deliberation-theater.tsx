@@ -57,10 +57,7 @@ export function DeliberationTheater() {
           <div className="flex gap-2" role="group" aria-label="Debate stage filter">
             {(['ALL', 'BULL_VS_BEAR', 'RISK_AUDIT'] as const).map((stage) => (
               <button
-                key={stage}
-                type="button"
-                onClick={() => setStageFilter(stage)}
-                aria-pressed={stageFilter === stage}
+                key={stage} type="button" onClick={() => setStageFilter(stage)} aria-pressed={stageFilter === stage}
                 className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all ${stageFilter === stage ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}
               >
                 {stage}

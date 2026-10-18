@@ -20,25 +20,21 @@ describe('quantFunctions.grid — invalid inputs', () => {
     expect(result.confidence).toBe(0);
     expect(result.meta.reason).toBe('invalid_price');
   });
-
   it('returns hold when lastPrice is negative', () => {
     const result = quantFunctions.grid({ ...ctx, lastPrice: -1 });
     expect(result.signal).toBe('hold');
     expect(result.meta.reason).toBe('invalid_price');
   });
-
   it('returns hold when gridSpacing is 0', () => {
     const result = quantFunctions.grid(ctx, { gridSpacing: 0 });
     expect(result.signal).toBe('hold');
     expect(result.meta.reason).toBe('invalid_params');
   });
-
   it('returns hold when levels is 0', () => {
     const result = quantFunctions.grid(ctx, { levels: 0 });
     expect(result.signal).toBe('hold');
     expect(result.meta.reason).toBe('invalid_params');
   });
-
   it('returns hold when tolerance is 0', () => {
     const result = quantFunctions.grid(ctx, { tolerance: 0 });
     expect(result.signal).toBe('hold');

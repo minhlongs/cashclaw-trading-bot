@@ -77,11 +77,7 @@ export function generateShadowOrder(params: {
 }
 
 export function simulateShadowFill(params: {
-  order: ShadowOrder;
-  arrivalPrice: number;
-  latencyMs: number;
-  stressTier: CostStressTier;
-  fillId?: string;
+  order: ShadowOrder; arrivalPrice: number; latencyMs: number; stressTier: CostStressTier; fillId?: string;
 }): ShadowFill {
   const stress = resolveStressConfig(params.stressTier as StressMode);
   const totalSlip = stress.slipPct + stress.marketImpactPct;

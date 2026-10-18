@@ -5,17 +5,10 @@
 // Pure module: no I/O, no randomness.
 
 /** Three-terminal falsification verdict (D5). */
-export type ZooVerdict =
-  | 'ALIVE_FOR_FURTHER_RESEARCH'
-  | 'FALSIFIED'
-  | 'NOT_EVALUABLE';
+export type ZooVerdict = 'ALIVE_FOR_FURTHER_RESEARCH' | 'FALSIFIED' | 'NOT_EVALUABLE';
 
 /** One statistical check's outcome for an evaluated alpha. */
-export interface ZooCheckResult {
-  readonly check: string;
-  readonly passed: boolean;
-  readonly detail: string;
-}
+export interface ZooCheckResult { readonly check: string; readonly passed: boolean; readonly detail: string; }
 
 /** Per-alpha falsification row. */
 export interface ZooFalsificationRow {

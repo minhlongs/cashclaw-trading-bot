@@ -36,22 +36,18 @@ export function registerTier1StressTests(): void {
         expect(check.passed).toBe(true);
         expect(check.actual).toBe(250);
       });
-
       it('fails when Extreme slippage net PnL is negative despite positive Adverse PnL', () => {
         const check = evalSlippageStress(300, -500);
         expect(check.passed).toBe(false);
       });
-
       it('fails when Extreme slippage net PnL is exactly zero', () => {
         const check = evalSlippageStress(500, 0);
         expect(check.passed).toBe(false);
       });
-
       it('fails when Adverse slippage net PnL is negative', () => {
         const check = evalSlippageStress(-100, -800);
         expect(check.passed).toBe(false);
       });
-
       it('details string documents both Adverse and Extreme net PnL', () => {
         const check = evalSlippageStress(1050.2, 340.5);
         expect(check.detail).toContain('ADVERSE: 1050.20');
@@ -65,23 +61,19 @@ export function registerTier1StressTests(): void {
         expect(check.passed).toBe(true);
         expect(check.actual).toBe(0.22);
       });
-
       it('passes when parameter spread is exactly at threshold', () => {
         const check = evalParameterRobustness(0.50, 0.50);
         expect(check.passed).toBe(true);
       });
-
       it('passes when parameter spread is zero (flat response across grid)', () => {
         const check = evalParameterRobustness(0.0, 0.50);
         expect(check.passed).toBe(true);
       });
-
       it('fails when parameter spread exceeds threshold (curve-fit cliff)', () => {
         const check = evalParameterRobustness(0.68, 0.50);
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('0.6800 vs. maximum 0.5');
       });
-
       it('fails when spread is negative or NaN', () => {
         const checkNeg = evalParameterRobustness(-0.1, 0.50);
         const checkNan = evalParameterRobustness(NaN, 0.50);

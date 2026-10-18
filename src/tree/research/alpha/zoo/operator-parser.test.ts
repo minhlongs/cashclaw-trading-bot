@@ -1,9 +1,4 @@
 // Operator parser — unit tests (Phase 3 Step 1).
-// Covers: EXACT seed vectors (alpha101_006, qlib158_beta5 verbatim normalized
-// strings), residue-strip narrowness, subscript-lag grammar, implicit
-// multiplication accept/reject matrix, fail-closed tokens/windows/lags,
-// maxLookback computation, precedence, determinism.
-
 import { describe, expect, it } from 'vitest';
 import { parseFormula } from './operator-parser';
 import type { AstNode } from './operator-ast';
@@ -59,9 +54,7 @@ describe('parseFormula — EXACT seed vectors', () => {
 
   it('qlib158_beta5 exact normalized string parses as (close_t - close_{t-5}) / (5·close)', () => {
     const beta5 = '(\\close_t - \\close_{{t-5}}) / (5\\ \\close)';
-    expect(okAst(beta5)).toEqual(
-      bin('/', bin('-', field('close', 0), field('close', 5)), bin('*', num(5), field('close', 0))),
-    );
+    expect(okAst(beta5)).toEqual(bin('/', bin('-', field('close', 0), field('close', 5)), bin('*', num(5), field('close', 0))));
     expect(okLookback(beta5)).toBe(5);
   });
 
@@ -118,14 +111,10 @@ describe('parseFormula — implicit multiplication matrix', () => {
     expect(okAst('5close')).toEqual(bin('*', num(5), field('close', 0)));
   });
   it('number · paren-group: 5 (close + open)', () => {
-    expect(okAst('5 (close + open)')).toEqual(
-      bin('*', num(5), bin('+', field('close', 0), field('open', 0))),
-    );
+    expect(okAst('5 (close + open)')).toEqual(bin('*', num(5), bin('+', field('close', 0), field('open', 0))));
   });
   it('number · call: 2 ts_mean(close, 3)', () => {
-    expect(okAst('2 ts_mean(close, 3)')).toEqual(
-      bin('*', num(2), call('ts_mean', [field('close', 0), num(3)])),
-    );
+    expect(okAst('2 ts_mean(close, 3)')).toEqual(bin('*', num(2), call('ts_mean', [field('close', 0), num(3)])));
   });
   it('identifier · identifier juxtaposition rejected', () => {
     expect(errReason('close open')).toBe('EVAL_PARSE_ERROR:juxtaposition');

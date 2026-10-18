@@ -1,7 +1,4 @@
-// Internal IC-analysis helpers + shared types (Phase 3, D4). Pure,
-// deterministic — no I/O, no randomness. Re-exported from ic-analysis.ts;
-// not imported directly by any other module.
-
+// Internal IC-analysis helpers + shared types (Phase 3, D4). Pure, deterministic — no I/O, no randomness.
 import type { SymbolPanel } from './panel';
 import type { ScorePair } from './ic-quantile';
 

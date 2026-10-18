@@ -11,24 +11,15 @@ const BOT_ID = 'branch-bot-001';
 
 function mockTicker(overrides: Partial<Ticker> = {}): Ticker {
   return {
-    symbol: SYMBOL,
-    last: 50000,
-    bid: 49950,
-    ask: 50050,
-    high24h: 51000,
-    low24h: 49000,
-    volume24h: 100,
-    timestamp: Date.now(),
+    symbol: SYMBOL, last: 50000, bid: 49950, ask: 50050,
+    high24h: 51000, low24h: 49000, volume24h: 100, timestamp: Date.now(),
     ...overrides,
   };
 }
 
 function mockExchange(ticker: Ticker | null = mockTicker()): ExchangeAdapter {
   return {
-    id: 'binance',
-    name: 'Binance',
-    isTestnet: true,
-    hasWebSocket: false,
+    id: 'binance', name: 'Binance', isTestnet: true, hasWebSocket: false,
     fetchTicker: vi.fn().mockResolvedValue(ticker),
     placeOrder: vi.fn(),
     fetchBalance: vi.fn().mockResolvedValue({ USDT: 1000 }),
@@ -43,11 +34,8 @@ function mockExchange(ticker: Ticker | null = mockTicker()): ExchangeAdapter {
 function mockKillswitch(): Killswitch {
   return {
     isTradingEnabled: vi.fn().mockReturnValue(true),
-    registerBot: vi.fn(),
-    unregisterBot: vi.fn(),
-    check: vi.fn(),
-    onOrderFilled: vi.fn(),
-    botStates: new Map(),
+    registerBot: vi.fn(), unregisterBot: vi.fn(), check: vi.fn(),
+    onOrderFilled: vi.fn(), botStates: new Map(),
   } as unknown as Killswitch;
 }
 
@@ -57,18 +45,9 @@ function mockTelemetry(): TelemetryWriter {
 
 function botConfig(overrides: Partial<GridBotConfig> = {}): GridBotConfig {
   return {
-    strategy: 'grid',
-    symbol: SYMBOL,
-    exchange: 'binance',
-    mode: 'paper',
-    capital: 1000,
-    maxDrawdownPct: 20,
-    gridSpacingPct: 1,
-    gridLevels: 5,
-    capitalPerLevelPct: 20,
-    takeProfitPct: 2,
-    stopLossPct: 5,
-    rebalanceOnFill: false,
+    strategy: 'grid', symbol: SYMBOL, exchange: 'binance', mode: 'paper',
+    capital: 1000, maxDrawdownPct: 20, gridSpacingPct: 1, gridLevels: 5,
+    capitalPerLevelPct: 20, takeProfitPct: 2, stopLossPct: 5, rebalanceOnFill: false,
     ...overrides,
   };
 }
@@ -84,17 +63,10 @@ describe('BotInstance branches and accessors', () => {
     exchange = mockExchange();
     killswitch = mockKillswitch();
     telemetry = mockTelemetry();
-    callbacks = {
-      onStateChange: vi.fn(),
-      onTrade: vi.fn(),
-      onLog: vi.fn(),
-      onError: vi.fn(),
-    };
+    callbacks = { onStateChange: vi.fn(), onTrade: vi.fn(), onLog: vi.fn(), onError: vi.fn() };
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  afterEach(() => { vi.useRealTimers(); });
 
   it('getConfig returns a copy of the configuration', () => {
     const config = botConfig();

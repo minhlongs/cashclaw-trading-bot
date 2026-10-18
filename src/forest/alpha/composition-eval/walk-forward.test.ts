@@ -32,23 +32,13 @@ const PORTFOLIO_CONFIG: PortfolioConfig = {
 };
 
 function risk(): RiskInputs {
-  return {
-    realizedVolatility: 0.5,
-    correlationMatrix: new Map(),
-    betas: new Map(),
-    currentDrawdown: 0.02,
-  };
+  return { realizedVolatility: 0.5, correlationMatrix: new Map(), betas: new Map(), currentDrawdown: 0.02 };
 }
 
 function evalConfig(overrides: Partial<CompositionEvalConfig> = {}): CompositionEvalConfig {
   return {
-    compositionConfig: COMPOSITION_CONFIG,
-    portfolioConfig: PORTFOLIO_CONFIG,
-    experimentId: 'wf-test',
-    timeframe: '1h',
-    periodsPerYear: 8760,
-    costBps: 10,
-    ...overrides,
+    compositionConfig: COMPOSITION_CONFIG, portfolioConfig: PORTFOLIO_CONFIG,
+    experimentId: 'wf-test', timeframe: '1h', periodsPerYear: 8760, costBps: 10, ...overrides,
   };
 }
 
@@ -72,19 +62,10 @@ function createFixtures(n = 60, returnFn = (_i: number) => 0.01) {
 describe('runCompositionWalkForward', () => {
   it('runs rolling walk-forward and partitions windows', () => {
     const { alphasAtEachT, returnSeriesAtEachT, riskInputsAtEachT, timestamps } = createFixtures(60);
-
     const input: CompositionWalkForwardInput = {
-      alphasAtEachT,
-      returnSeriesAtEachT,
-      riskInputsAtEachT,
-      timestamps,
+      alphasAtEachT, returnSeriesAtEachT, riskInputsAtEachT, timestamps,
       config: evalConfig(),
-      windowConfig: {
-        trainBars: 20,
-        validateBars: 10,
-        testBars: 10,
-        stepBars: 10,
-      },
+      windowConfig: { trainBars: 20, validateBars: 10, testBars: 10, stepBars: 10 },
       mode: 'rolling',
     };
 
@@ -96,12 +77,10 @@ describe('runCompositionWalkForward', () => {
     expect(result.windows[0].bounds.trainEnd).toBe(20);
     expect(result.windows[0].bounds.testStart).toBe(30);
     expect(result.windows[0].bounds.testEnd).toBe(40);
-
     expect(result.windows[1].bounds.trainStart).toBe(10);
     expect(result.windows[1].bounds.trainEnd).toBe(30);
     expect(result.windows[1].bounds.testStart).toBe(40);
     expect(result.windows[1].bounds.testEnd).toBe(50);
-
     expect(result.windows[2].bounds.trainStart).toBe(20);
     expect(result.windows[2].bounds.trainEnd).toBe(40);
     expect(result.windows[2].bounds.testStart).toBe(50);
@@ -116,23 +95,14 @@ describe('runCompositionWalkForward', () => {
 
   it('runs expanding walk-forward where trainStart stays at 0', () => {
     const { alphasAtEachT, returnSeriesAtEachT, riskInputsAtEachT } = createFixtures(50);
-
     const input: CompositionWalkForwardInput = {
-      alphasAtEachT,
-      returnSeriesAtEachT,
-      riskInputsAtEachT,
+      alphasAtEachT, returnSeriesAtEachT, riskInputsAtEachT,
       config: evalConfig(),
-      windowConfig: {
-        trainBars: 15,
-        validateBars: 5,
-        testBars: 10,
-        stepBars: 10,
-      },
+      windowConfig: { trainBars: 15, validateBars: 5, testBars: 10, stepBars: 10 },
       mode: 'expanding',
     };
 
     const result = runCompositionWalkForward(input);
-
     expect(result.windows.length).toBeGreaterThanOrEqual(2);
     for (const w of result.windows) {
       expect(w.bounds.trainStart).toBe(0);
@@ -142,18 +112,10 @@ describe('runCompositionWalkForward', () => {
 
   it('throws when candles count is insufficient for windowConfig', () => {
     const { alphasAtEachT, returnSeriesAtEachT, riskInputsAtEachT } = createFixtures(15);
-
     const input: CompositionWalkForwardInput = {
-      alphasAtEachT,
-      returnSeriesAtEachT,
-      riskInputsAtEachT,
+      alphasAtEachT, returnSeriesAtEachT, riskInputsAtEachT,
       config: evalConfig(),
-      windowConfig: {
-        trainBars: 20,
-        validateBars: 10,
-        testBars: 10,
-        stepBars: 10,
-      },
+      windowConfig: { trainBars: 20, validateBars: 10, testBars: 10, stepBars: 10 },
       mode: 'rolling',
     };
 

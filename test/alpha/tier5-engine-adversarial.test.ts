@@ -1,22 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { ZodError } from 'zod';
 import {
-  runPromotionGate,
-  checkMinRegimeCoverage,
-  checkReproducibleHash,
-  GateCheckNameSchema,
-  GateCheckSchema,
-  PromotionGateConfigSchema,
-  PromotionGateResultSchema,
-  type PromotionGateInput,
+  runPromotionGate, checkMinRegimeCoverage, checkReproducibleHash, GateCheckNameSchema,
+  GateCheckSchema, PromotionGateConfigSchema, PromotionGateResultSchema, type PromotionGateInput,
 } from '../../src/forest/alpha/gate/index';
 import {
-  transitionStrategy,
-  getTransition,
-  isTerminalPhase,
-  gateResultToTrigger,
-  type StrategyPhase,
-  type GateResultInput,
+  transitionStrategy, getTransition, isTerminalPhase, gateResultToTrigger,
+  type StrategyPhase, type GateResultInput,
 } from '../../src/forest/alpha/gate/promotion-states';
 import { runSurvivalGate } from '../../src/forest/alpha/gate/survival-gate';
 import { RegimeLabel } from '../../src/tree/regime/types';

@@ -41,24 +41,13 @@ export function isValidFeatures(f: RegimeFeatures): boolean {
 
 /** Priority-ordered rule evaluation: SHOCK > HIGH_VOL > TREND > LOW_VOL > RANGE */
 export function determineLabel(f: RegimeFeatures, t: Thresholds): RegimeLabel {
-  if (
-    Math.abs(f.volumeAbnormality) > t.volumeAbnormalExtreme &&
-    f.returnDispersion > t.returnDispersionHigh
-  ) {
+  if (Math.abs(f.volumeAbnormality) > t.volumeAbnormalExtreme && f.returnDispersion > t.returnDispersionHigh) {
     return RegimeLabel.SHOCK;
   }
-  if (f.realizedVol > t.realizedVolHigh && f.atr > t.atrHigh) {
-    return RegimeLabel.HIGH_VOLATILITY;
-  }
-  if (f.trendStrength > t.trendStrengthHigh) {
-    return RegimeLabel.TREND_UP;
-  }
-  if (f.trendStrength < -t.trendStrengthHigh) {
-    return RegimeLabel.TREND_DOWN;
-  }
-  if (f.realizedVol < t.realizedVolLow && f.atr < t.atrLow) {
-    return RegimeLabel.LOW_VOLATILITY;
-  }
+  if (f.realizedVol > t.realizedVolHigh && f.atr > t.atrHigh) return RegimeLabel.HIGH_VOLATILITY;
+  if (f.trendStrength > t.trendStrengthHigh) return RegimeLabel.TREND_UP;
+  if (f.trendStrength < -t.trendStrengthHigh) return RegimeLabel.TREND_DOWN;
+  if (f.realizedVol < t.realizedVolLow && f.atr < t.atrLow) return RegimeLabel.LOW_VOLATILITY;
   return RegimeLabel.RANGE;
 }
 

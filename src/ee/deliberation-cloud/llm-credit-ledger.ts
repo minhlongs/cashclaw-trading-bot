@@ -79,19 +79,14 @@ export class CreditLedgerStore {
     return existing;
   }
 
-  debit(
-    req: DebateDebitRequest,
-    tier: SaasTier,
-  ): Result<{ readonly updated: CreditAccount; readonly debited: number }> {
+  debit(req: DebateDebitRequest, tier: SaasTier): Result<{ readonly updated: CreditAccount; readonly debited: number }> {
     const account = this.getOrCreateAccount(req.workspaceId, tier);
     const result = debitDeliberationCredits(account, req);
     if (result.ok) this.accounts.set(req.workspaceId, result.data.updated);
     return result;
   }
 
-  resetMemoryForTesting(): void {
-    this.accounts.clear();
-  }
+  resetMemoryForTesting(): void { this.accounts.clear(); }
 }
 
 export const defaultCreditLedgerStore = new CreditLedgerStore();

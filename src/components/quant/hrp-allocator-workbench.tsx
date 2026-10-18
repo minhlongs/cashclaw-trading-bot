@@ -32,9 +32,7 @@ export function HrpAllocatorWorkbench() {
 
       <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-[var(--text-primary)]">
-            Correlation Structure &amp; Shrinkage Regime Selector
-          </h2>
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Correlation Structure &amp; Shrinkage Regime Selector</h2>
           <div className="flex flex-wrap gap-2" role="group" aria-label="HRP correlation regime selector">
             {PRESETS.map((item) => (
               <button

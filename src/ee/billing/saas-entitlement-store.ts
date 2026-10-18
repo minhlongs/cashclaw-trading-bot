@@ -37,10 +37,7 @@ export class SaasEntitlementStore {
 
   constructor(db?: D1Database) { this.db = db; }
   public setDatabase(db: D1Database | undefined): void { this.db = db; }
-  public resetMemoryForTesting(): void {
-    this.processedPayments.clear();
-    this.workspaceEntitlements.clear();
-  }
+  public resetMemoryForTesting(): void { this.processedPayments.clear(); this.workspaceEntitlements.clear(); }
 
   public async hasProcessedPayment(paymentId: string): Promise<boolean> {
     if (this.processedPayments.has(paymentId)) return true;

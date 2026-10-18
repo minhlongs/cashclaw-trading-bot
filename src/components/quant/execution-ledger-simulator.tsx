@@ -52,13 +52,10 @@ export function ExecutionLedgerSimulator() {
           <div className="flex flex-col gap-2">
             <label htmlFor="depth-mult-select" className="text-xs text-[var(--text-secondary)]">Orderbook Depth Slippage Multiplier</label>
             <select id="depth-mult-select" value={depthMultiplier} onChange={(e) => setDepthMultiplier(Number(e.target.value))} className="min-h-[44px] px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] text-sm font-mono">
-              <option value={1}>1.0x Nominal Depth</option>
-              <option value={1.5}>1.5x Thin Book</option>
-              <option value={2.5}>2.5x Liquidity Vacuum</option>
+              <option value={1}>1.0x Nominal Depth</option><option value={1.5}>1.5x Thin Book</option><option value={2.5}>2.5x Liquidity Vacuum</option>
             </select>
           </div>
         </div>
-
         <div className="lg:col-span-8 flex flex-col gap-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">

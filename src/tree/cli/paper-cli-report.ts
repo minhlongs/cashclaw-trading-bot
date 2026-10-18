@@ -4,6 +4,7 @@
 
 import { CorwinSchultzEngine } from '../quantlib/microstructure/corwin-schultz-engine';
 import { GarmanKlassVolatilityEngine } from '../quantlib/volatility/garman-klass-volatility-engine';
+import { computeRoughPathLevySignature } from '../quantlib/signatures/rough-path-levy-area';
 import { QUICKSTART_DEMO_FIXTURES, type QuickstartSymbolFixture } from './quickstart-fixture';
 
 export interface CliBacktestMetrics {
@@ -12,6 +13,7 @@ export interface CliBacktestMetrics {
   readonly netReturnPct: number;
   readonly annualizedVolatility: number;
   readonly estimatedSpreadBps: number;
+  readonly roughPathLevyArea12: number;
   readonly feeAndSlippageBps: number;
   readonly safetyMode: 'PAPER_ONLY';
 }
@@ -33,6 +35,10 @@ export function evaluateQuickstartFixture(fixture: QuickstartSymbolFixture): Cli
 
   const gk = GarmanKlassVolatilityEngine.calculate({ bars: fixture.bars, annualizationFactor: 365 });
   const cs = CorwinSchultzEngine.calculate({ bars: fixture.bars, clampNegativeSpread: true });
+  const sig = computeRoughPathLevySignature({
+    path1: fixture.bars.map((b) => Math.log(b.close / firstOpen)),
+    path2: fixture.bars.map((b) => Math.log(b.high / b.low)),
+  });
 
   return {
     symbol: fixture.symbol,
@@ -40,6 +46,7 @@ export function evaluateQuickstartFixture(fixture: QuickstartSymbolFixture): Cli
     netReturnPct,
     annualizedVolatility: Number(gk.annualizedVolatility.toFixed(4)),
     estimatedSpreadBps: Number(cs.estimatedSpreadBps.toFixed(2)),
+    roughPathLevyArea12: sig.levyArea12,
     feeAndSlippageBps: totalCostBps,
     safetyMode: 'PAPER_ONLY',
   };

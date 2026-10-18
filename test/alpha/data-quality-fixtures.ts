@@ -23,11 +23,7 @@ export function generateMonotonicCandles(
   return candles;
 }
 
-export function generateDuplicateSeries(
-  count: number,
-  firstIndex: number = 1,
-  secondIndex: number = 2,
-): Candle[] {
+export function generateDuplicateSeries(count: number, firstIndex: number = 1, secondIndex: number = 2): Candle[] {
   const candles = generateMonotonicCandles(count);
   if (candles.length > secondIndex && candles.length > firstIndex) {
     candles[secondIndex] = { ...candles[secondIndex], timestamp: candles[firstIndex].timestamp };
@@ -36,10 +32,7 @@ export function generateDuplicateSeries(
 }
 
 export function generateGappedSeries(
-  count: number,
-  gapIndex: number = 2,
-  gapMultiplier: number = 3,
-  stepMs: number = DEFAULT_STEP_MS,
+  count: number, gapIndex: number = 2, gapMultiplier: number = 3, stepMs: number = DEFAULT_STEP_MS,
 ): Candle[] {
   const candles = generateMonotonicCandles(count, BASE_TIMESTAMP, stepMs);
   const gapOffset = (gapMultiplier - 1) * stepMs;
@@ -50,17 +43,10 @@ export function generateGappedSeries(
 }
 
 export type CorruptedOHLCType =
-  | 'high_lt_low'
-  | 'high_lt_oc'
-  | 'low_gt_oc'
-  | 'negative_price'
-  | 'zero_price'
-  | 'nan_price';
+  | 'high_lt_low' | 'high_lt_oc' | 'low_gt_oc' | 'negative_price' | 'zero_price' | 'nan_price';
 
 export function generateCorruptedOHLCSeries(
-  type: CorruptedOHLCType,
-  targetIndex: number = 2,
-  count: number = 5,
+  type: CorruptedOHLCType, targetIndex: number = 2, count: number = 5,
 ): Candle[] {
   const candles = generateMonotonicCandles(count);
   const target = candles[targetIndex] ?? candles[0];

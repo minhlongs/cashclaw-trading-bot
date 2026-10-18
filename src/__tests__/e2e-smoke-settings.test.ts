@@ -47,11 +47,7 @@ describe('POST /api/settings — exchange credentials', () => {
 
   it('saves exchange credentials with type discriminator', async () => {
     const req = postRequest('/api/settings', {
-      type: 'exchange',
-      exchange: 'binance',
-      apiKey: 'my-api-key',
-      apiSecret: 'my-api-secret',
-      testnet: true,
+      type: 'exchange', exchange: 'binance', apiKey: 'my-api-key', apiSecret: 'my-api-secret', testnet: true,
     });
     const res = await POST(req);
     const json = (await res.json()) as Record<string, unknown>;
@@ -61,34 +57,20 @@ describe('POST /api/settings — exchange credentials', () => {
   });
 
   it('defaults testnet to true when omitted', async () => {
-    const req = postRequest('/api/settings', {
-      type: 'exchange',
-      exchange: 'bybit',
-      apiKey: 'k',
-      apiSecret: 's',
-    });
+    const req = postRequest('/api/settings', { type: 'exchange', exchange: 'bybit', apiKey: 'k', apiSecret: 's' });
     const res = await POST(req);
     expect(res.status).toBe(200);
     expect(mockUpdateExchangeCredentials).toHaveBeenCalledWith('bybit', 'k', 's', true);
   });
 
   it('rejects unknown exchange name', async () => {
-    const req = postRequest('/api/settings', {
-      type: 'exchange',
-      exchange: 'kraken',
-      apiKey: 'k',
-      apiSecret: 's',
-    });
+    const req = postRequest('/api/settings', { type: 'exchange', exchange: 'kraken', apiKey: 'k', apiSecret: 's' });
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
 
   it('rejects body missing type discriminator', async () => {
-    const req = postRequest('/api/settings', {
-      exchange: 'binance',
-      apiKey: 'k',
-      apiSecret: 's',
-    });
+    const req = postRequest('/api/settings', { exchange: 'binance', apiKey: 'k', apiSecret: 's' });
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
@@ -107,11 +89,7 @@ describe('POST /api/settings — risk limits', () => {
 
   it('saves risk limits with type discriminator', async () => {
     const req = postRequest('/api/settings', {
-      type: 'risk',
-      maxDrawdownPct: 20,
-      dailyLossLimitPct: 10,
-      cooldownMinutes: 30,
-      maxOpenOrders: 5,
+      type: 'risk', maxDrawdownPct: 20, dailyLossLimitPct: 10, cooldownMinutes: 30, maxOpenOrders: 5,
     });
     const res = await POST(req);
     const json = (await res.json()) as Record<string, unknown>;
@@ -122,11 +100,7 @@ describe('POST /api/settings — risk limits', () => {
 
   it('rejects risk values outside valid range', async () => {
     const req = postRequest('/api/settings', {
-      type: 'risk',
-      maxDrawdownPct: -5,
-      dailyLossLimitPct: 10,
-      cooldownMinutes: 30,
-      maxOpenOrders: 5,
+      type: 'risk', maxDrawdownPct: -5, dailyLossLimitPct: 10, cooldownMinutes: 30, maxOpenOrders: 5,
     });
     const res = await POST(req);
     expect(res.status).toBe(400);

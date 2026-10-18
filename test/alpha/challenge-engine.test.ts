@@ -8,18 +8,15 @@ import {
 function createValidCandidate(): PromotionGateInput {
   return {
     financial: {
-      numTrades: 50, expectancy: 1.5, profitFactor: 1.8, maxDrawdown: 0.15,
-      sharpe: 1.8, sortino: 2.1,
+      numTrades: 50, expectancy: 1.5, profitFactor: 1.8, maxDrawdown: 0.15, sharpe: 1.8, sortino: 2.1,
       byRegime: { bull: { numTrades: 25, netPnl: 500 }, bear: { numTrades: 25, netPnl: 300 } },
     },
     stress: { netPnlNormal: 400, netPnlConservative: 250, netPnlAdverse: 200, netPnlExtreme: 50 },
     robustness: {
       parameterSpread: 0.2, crossPeriodPositiveFraction: 0.8, crossAssetPositiveFraction: 0.7,
       crossAssetApplicable: true, leakageViolations: 0, windowPnls: [100, 100, 100],
-      baselineCandidate: { sharpe: 1.8, netPnl: 500 },
-      baselineBuyHold: { sharpe: 0.8, netPnl: 200 },
-      baselineRandomEntry: { sharpe: 0.1, netPnl: 50 },
-      hashMatches: true,
+      baselineCandidate: { sharpe: 1.8, netPnl: 500 }, baselineBuyHold: { sharpe: 0.8, netPnl: 200 },
+      baselineRandomEntry: { sharpe: 0.1, netPnl: 50 }, hashMatches: true,
       hashDetails: { recordedHash: 'sha_emp_001', expectedHash: 'sha_emp_001' },
     },
   };
@@ -46,11 +43,7 @@ const mutations: readonly Mutation[] = [
   { name: 'min_sharpe_sortino', desc: 'Sharpe 0.99 < 1.0', create: () => candidateWith({ financial: { sharpe: 0.99 } }) },
   {
     name: 'min_regime_coverage', desc: '1/3 regimes profitable (< 50%)',
-    create: () => candidateWith({
-      financial: {
-        byRegime: { r1: { numTrades: 10, netPnl: 100 }, r2: { numTrades: 10, netPnl: -20 }, r3: { numTrades: 10, netPnl: -30 } },
-      },
-    }),
+    create: () => candidateWith({ financial: { byRegime: { r1: { numTrades: 10, netPnl: 100 }, r2: { numTrades: 10, netPnl: -20 }, r3: { numTrades: 10, netPnl: -30 } } } }),
   },
   { name: 'fee_stress', desc: 'conservative PnL 0', create: () => candidateWith({ stress: { netPnlConservative: 0 } }) },
   { name: 'slippage_stress', desc: 'extreme PnL 0', create: () => candidateWith({ stress: { netPnlExtreme: 0 } }) },

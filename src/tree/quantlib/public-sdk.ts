@@ -1,7 +1,7 @@
 // Public Apache-2.0 SDK Barrel for @cashclaw/quantlib (Step 6)
 // Pure zero-I/O quantitative estimators & strategy primitives.
 
-export const QUANTLIB_OSS_VERSION = '1.63.0-open-core' as const;
+export const QUANTLIB_OSS_VERSION = '1.64.0-open-core' as const;
 export const QUANTLIB_LICENSE = 'Apache-2.0' as const;
 
 export {

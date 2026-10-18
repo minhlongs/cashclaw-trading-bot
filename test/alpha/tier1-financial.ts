@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  evalMaxDrawdown,
-  evalMinNetExpectancy,
-  evalMinProfitFactor,
-  evalMinRegimeCoverage,
-  evalMinSharpeSortino,
-  evalMinTrades,
+  evalMaxDrawdown, evalMinNetExpectancy, evalMinProfitFactor,
+  evalMinRegimeCoverage, evalMinSharpeSortino, evalMinTrades,
 } from './promotion-gate-fixtures';
 
 export function registerTier1FinancialTests(): void {

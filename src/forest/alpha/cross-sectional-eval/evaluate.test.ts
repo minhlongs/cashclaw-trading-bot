@@ -13,10 +13,7 @@ import type { CrossSectionalSnapshot, Universe } from '@/tree/alpha/universe/typ
 import { RegimeLabel } from '@/tree/regime/types';
 
 const UNIVERSE: Universe = {
-  id: 'U-TEST',
-  symbols: ['AAA', 'BBB', 'CCC', 'DDD', 'EEE'],
-  weighting: 'equal',
-  rebalanceRule: 'daily',
+  id: 'U-TEST', symbols: ['AAA', 'BBB', 'CCC', 'DDD', 'EEE'], weighting: 'equal', rebalanceRule: 'daily',
 };
 
 const BASE_EVAL_CONFIG = {

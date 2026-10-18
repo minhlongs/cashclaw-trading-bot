@@ -21,14 +21,12 @@ describe('Tier 5 Adversarial: Financial Checks Edge Cases', () => {
     expect(checkMinTrades(NaN).actual).toBeNull();
     expect(checkMinTrades(Infinity).detail).toContain('Invalid');
   });
-
   it('covers minNetExpectancy non-finite and threshold boundaries', () => {
     expect(checkMinNetExpectancy(NaN).actual).toBeNull();
     expect(checkMinNetExpectancy(Infinity).passed).toBe(false);
     expect(checkMinNetExpectancy(-0.01).passed).toBe(false);
     expect(checkMinNetExpectancy(1.5, 2.0).passed).toBe(false);
   });
-
   it('covers minProfitFactor negative, NaN, and infinite edge values', () => {
     expect(checkMinProfitFactor(-0.5).passed).toBe(false);
     expect(checkMinProfitFactor(NaN).actual).toBeNull();
@@ -37,13 +35,11 @@ describe('Tier 5 Adversarial: Financial Checks Edge Cases', () => {
     expect(inf.passed).toBe(true);
     expect(inf.detail).toContain('Infinity');
   });
-
   it('covers maxDrawdown negative, excess, and non-finite numbers', () => {
     expect(checkMaxDrawdown(-0.05).passed).toBe(false);
     expect(checkMaxDrawdown(0.35).passed).toBe(false);
     expect(checkMaxDrawdown(NaN).actual).toBeNull();
   });
-
   it('covers minSharpeSortino null, non-finite, and infinite values', () => {
     expect(checkMinSharpeSortino(null, 1.5).passed).toBe(false);
     expect(checkMinSharpeSortino(1.5, null).passed).toBe(false);
@@ -52,7 +48,6 @@ describe('Tier 5 Adversarial: Financial Checks Edge Cases', () => {
     expect(checkMinSharpeSortino(1.5, -Infinity).passed).toBe(false);
     expect(checkMinSharpeSortino(NaN, 1.5).actual).toBeNull();
   });
-
   it('covers minRegimeCoverage optional fields, nullish entries, and empty sets', () => {
     const sparse: Record<string, RegimePerformance | undefined | null> = {
       bull: undefined, bear: null, sideways: {}, reversion: { numTrades: 10 }, trend: { numTrades: 5, netPnl: 100 },

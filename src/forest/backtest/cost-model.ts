@@ -79,19 +79,9 @@ export function applyCosts(
   notional: number,
   config: CostConfig,
 ): CostBreakdown {
-  if (notional <= 0) {
-    return { netPnl: grossPnl, fees: 0, slippage: 0, marketImpact: 0 };
-  }
-
+  if (notional <= 0) return { netPnl: grossPnl, fees: 0, slippage: 0, marketImpact: 0 };
   const fees = notional * config.feePct;
   const slippage = notional * config.slipPct;
   const marketImpact = notional * config.marketImpactPct;
-
-  const totalCost = fees + slippage + marketImpact;
-  return {
-    netPnl: grossPnl - totalCost,
-    fees,
-    slippage,
-    marketImpact,
-  };
+  return { netPnl: grossPnl - (fees + slippage + marketImpact), fees, slippage, marketImpact };
 }

@@ -33,17 +33,13 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
         body: JSON.stringify({ action }),
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || t('actionFailed', { error: 'Unknown error' }));
-      }
+      if (!res.ok || !data.ok) throw new Error(data.error || t('actionFailed', { error: 'Unknown error' }));
       if (action === 'resume' || action === 'start') setCurrentStatus('live_running');
       else if (action === 'pause') setCurrentStatus('paused');
       else if (action === 'stop') setCurrentStatus('stopped');
     } catch (err) {
       setActionError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoadingAction(null);
-    }
+    } finally { setLoadingAction(null); }
   }
 
   const resumeAction: ControlAction = currentStatus === 'paused' ? 'resume' : 'start';

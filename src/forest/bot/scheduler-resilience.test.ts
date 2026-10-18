@@ -86,10 +86,7 @@ describe('BotScheduler — error resilience, auto-restart & rate limits', () => 
 
       expect(report.errors).toHaveLength(1);
       expect(report.errors[0]).toEqual({ botId: 'b1', message: 'exchange timeout' });
-      expect(onEvalError).toHaveBeenCalledWith(
-        'b1',
-        expect.objectContaining({ message: 'exchange timeout' }),
-      );
+      expect(onEvalError).toHaveBeenCalledWith('b1', expect.objectContaining({ message: 'exchange timeout' }));
     });
 
     it('continues to next bot after one bot errors', async () => {

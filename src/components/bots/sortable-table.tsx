@@ -13,9 +13,7 @@ export interface SortableColumn<T> {
   sortable?: boolean;
 }
 
-export function SortableTable<T>({
-  data, columns, emptyMsg, getRowId,
-}: {
+export function SortableTable<T>({ data, columns, emptyMsg, getRowId }: {
   data: T[]; columns: SortableColumn<T>[]; emptyMsg: string; getRowId: (row: T) => string;
 }) {
   const [sortKey, setSortKey] = useState<SortDir>(null);
@@ -25,9 +23,7 @@ export function SortableTable<T>({
     if (!sortCol || !sortKey) return data;
     return [...data].sort((a, b) => {
       const aVal = a[sortCol], bVal = b[sortCol];
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return sortKey === 'asc' ? aVal - bVal : bVal - aVal;
-      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') return sortKey === 'asc' ? aVal - bVal : bVal - aVal;
       const cmp = String(aVal ?? '').localeCompare(String(bVal ?? ''));
       return sortKey === 'asc' ? cmp : -cmp;
     });

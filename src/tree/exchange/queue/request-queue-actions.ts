@@ -4,12 +4,7 @@ import type { ExchangeId } from '../types';
 import { CostTracker } from './cost-tracker';
 import { RequestQueuePool } from './request-queue-pool';
 import { drainExchangeQueue } from './request-queue-drain';
-import {
-  RequestPriority,
-  type QueueConfig,
-  type QueueItem,
-  type DrainResult,
-} from './types';
+import { RequestPriority, type QueueConfig, type QueueItem, type DrainResult } from './types';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('request-queue');

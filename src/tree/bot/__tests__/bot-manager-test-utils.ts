@@ -10,17 +10,10 @@ export const mockFindBotsByUser = vi.fn<(...args: unknown[]) => Promise<Bot[]>>(
 
 export function setupMocks() {
   vi.mock('@/lib/logger', () => ({
-    createLogger: vi.fn(() => ({
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
-    })),
+    createLogger: vi.fn(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() })),
   }));
 
-  vi.mock('@/lib/db/client', () => ({
-    createServerClient: vi.fn(),
-  }));
+  vi.mock('@/lib/db/client', () => ({ createServerClient: vi.fn() }));
 
   vi.mock('@/lib/db/repositories', () => ({
     findBotById: (db: unknown, id: string) => mockFindBotById(db, id),

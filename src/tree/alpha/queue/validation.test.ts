@@ -76,19 +76,13 @@ describe('validateJobSpec', () => {
     });
 
     it('empty universe.id → ok:false with reason', () => {
-      const result = validateJobSpec(
-        makeSpec({ universe: { id: '', symbols: ['BTCUSDT'], weighting: 'equal', rebalanceRule: 'none' } }),
-        [],
-      );
+      const result = validateJobSpec(makeSpec({ universe: { id: '', symbols: ['BTCUSDT'], weighting: 'equal', rebalanceRule: 'none' } }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('universe.id must be non-empty');
     });
 
     it('empty universe.symbols → ok:false with reason', () => {
-      const result = validateJobSpec(
-        makeSpec({ universe: { id: 'u', symbols: [], weighting: 'equal', rebalanceRule: 'none' } }),
-        [],
-      );
+      const result = validateJobSpec(makeSpec({ universe: { id: 'u', symbols: [], weighting: 'equal', rebalanceRule: 'none' } }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons).toContain('universe.symbols must be non-empty');
     });
@@ -118,13 +112,10 @@ describe('validateJobSpec', () => {
     });
 
     it('multiple missing fields → all reasons reported', () => {
-      const result = validateJobSpec(
-        makeSpec({
-          id: '', hypothesis: '', rationale: '', dataset: '', generatedBy: '', features: [],
-          universe: { id: '', symbols: [], weighting: 'equal', rebalanceRule: 'none' }, timestamp: NaN,
-        }),
-        [],
-      );
+      const result = validateJobSpec(makeSpec({
+        id: '', hypothesis: '', rationale: '', dataset: '', generatedBy: '', features: [],
+        universe: { id: '', symbols: [], weighting: 'equal', rebalanceRule: 'none' }, timestamp: NaN,
+      }), []);
       expect(result.ok).toBe(false);
       expect(result.reasons.length).toBeGreaterThanOrEqual(8);
     });

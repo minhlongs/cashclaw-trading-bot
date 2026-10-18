@@ -10,9 +10,7 @@ import type { AssetReturnSeries } from '@/tree/alpha/cross-sectional/types';
 
 /** Per-regime OOS sub-report (injected labels; cross-sectional precedent). */
 export interface RVRegimeSubReport {
-  readonly netReturn: number;
-  readonly annualizedSharpe: number | null;
-  readonly turnoverTotal: number;
+  readonly netReturn: number; readonly annualizedSharpe: number | null; readonly turnoverTotal: number;
 }
 
 /** Trade-level performance metrics over completed round trips. */

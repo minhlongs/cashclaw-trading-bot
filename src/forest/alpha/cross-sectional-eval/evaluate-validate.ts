@@ -36,16 +36,10 @@ function checkEvalFields(config: CrossSectionalEvalConfig): void {
   if (!Number.isFinite(config.periodsPerYear) || config.periodsPerYear <= 0) {
     throw new Error('evaluateCrossSectional: periodsPerYear must be a positive finite number');
   }
-  if (
-    config.betaWindow !== undefined &&
-    (!Number.isInteger(config.betaWindow) || config.betaWindow <= 0)
-  ) {
+  if (config.betaWindow !== undefined && (!Number.isInteger(config.betaWindow) || config.betaWindow <= 0)) {
     throw new Error('evaluateCrossSectional: betaWindow must be a positive integer');
   }
-  if (
-    config.betaMinObs !== undefined &&
-    (!Number.isInteger(config.betaMinObs) || config.betaMinObs <= 0)
-  ) {
+  if (config.betaMinObs !== undefined && (!Number.isInteger(config.betaMinObs) || config.betaMinObs <= 0)) {
     throw new Error('evaluateCrossSectional: betaMinObs must be a positive integer');
   }
 }

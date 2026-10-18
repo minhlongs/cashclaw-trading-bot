@@ -4,34 +4,15 @@
 import { transitionJob } from './transitions';
 import { jobConfigHash } from './queue-hash';
 import type {
-  QueueJobSpec,
-  QueueState,
-  QueueSummary,
-  QueueTrigger,
-  ResearchQueue,
-  ResearchQueueJob,
+  QueueJobSpec, QueueState, QueueSummary, QueueTrigger, ResearchQueue, ResearchQueueJob,
 } from './types';
 
 export const QUEUE_STATE_ORDER: readonly QueueState[] = [
-  'PROPOSED',
-  'VALIDATING',
-  'RUNNING',
-  'EVALUATED',
-  'SURVIVED',
-  'FALSIFIED',
-  'ARCHIVED',
+  'PROPOSED', 'VALIDATING', 'RUNNING', 'EVALUATED', 'SURVIVED', 'FALSIFIED', 'ARCHIVED',
 ];
 
 function emptyCounts(): Record<QueueState, number> {
-  return {
-    PROPOSED: 0,
-    VALIDATING: 0,
-    RUNNING: 0,
-    EVALUATED: 0,
-    SURVIVED: 0,
-    FALSIFIED: 0,
-    ARCHIVED: 0,
-  };
+  return { PROPOSED: 0, VALIDATING: 0, RUNNING: 0, EVALUATED: 0, SURVIVED: 0, FALSIFIED: 0, ARCHIVED: 0 };
 }
 
 /** Create an empty queue. */

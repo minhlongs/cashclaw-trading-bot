@@ -10,10 +10,7 @@ function makeQueue(overrides?: Partial<typeof DEFAULT_QUEUE_CONFIG>) {
 }
 
 function fakeItem(overrides: Partial<QueueItem> = {}): Omit<QueueItem, 'id' | 'enqueuedAt'> {
-  return {
-    priority: RequestPriority.STRATEGY_EVAL, exchange: 'binance', cost: 1,
-    execute: async () => 'ok', ...overrides,
-  };
+  return { priority: RequestPriority.STRATEGY_EVAL, exchange: 'binance', cost: 1, execute: async () => 'ok', ...overrides };
 }
 
 describe('RequestQueue', () => {
@@ -26,41 +23,34 @@ describe('RequestQueue', () => {
       expect(item).toBeTruthy();
       expect(item!.id).toBe(id);
     });
-
     it('dequeues null when empty', () => {
       const q = makeQueue();
       expect(q.dequeue('binance')).toBeNull();
     });
-
     it('dequeues in priority order (lower number = first)', () => {
       const q = makeQueue();
       q.enqueue(fakeItem({ priority: RequestPriority.HISTORICAL, label: 'hist' }));
       q.enqueue(fakeItem({ priority: RequestPriority.LIVE_TRADE, label: 'live' }));
       q.enqueue(fakeItem({ priority: RequestPriority.MARKET_DATA, label: 'market' }));
       q.enqueue(fakeItem({ priority: RequestPriority.STRATEGY_EVAL, label: 'strat' }));
-
       expect(q.dequeue('binance')!.label).toBe('live');
       expect(q.dequeue('binance')!.label).toBe('strat');
       expect(q.dequeue('binance')!.label).toBe('market');
       expect(q.dequeue('binance')!.label).toBe('hist');
     });
-
     it('preserves FIFO within same priority', () => {
       const q = makeQueue();
       q.enqueue(fakeItem({ priority: RequestPriority.STRATEGY_EVAL, label: 'first' }));
       q.enqueue(fakeItem({ priority: RequestPriority.STRATEGY_EVAL, label: 'second' }));
       q.enqueue(fakeItem({ priority: RequestPriority.STRATEGY_EVAL, label: 'third' }));
-
       expect(q.dequeue('binance')!.label).toBe('first');
       expect(q.dequeue('binance')!.label).toBe('second');
       expect(q.dequeue('binance')!.label).toBe('third');
     });
-
     it('queues per exchange independently', () => {
       const q = makeQueue();
       q.enqueue(fakeItem({ exchange: 'binance', label: 'b' }));
       q.enqueue(fakeItem({ exchange: 'bybit', label: 'by' }));
-
       expect(q.dequeue('binance')!.label).toBe('b');
       expect(q.dequeue('bybit')!.label).toBe('by');
     });

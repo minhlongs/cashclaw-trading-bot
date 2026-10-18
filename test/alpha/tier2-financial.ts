@@ -28,19 +28,15 @@ export function registerTier2FinancialTests(): void {
       it('fails at exact 0.0 (strict inequality requirement > 0)', () => {
         expect(evalMinNetExpectancy(0.0, 0.0).passed).toBe(false);
       });
-
       it('passes at microscopic positive epsilon 0.000001', () => {
         expect(evalMinNetExpectancy(0.000001, 0.0).passed).toBe(true);
       });
-
       it('fails at microscopic negative epsilon -0.000001', () => {
         expect(evalMinNetExpectancy(-0.000001, 0.0).passed).toBe(false);
       });
-
       it('fails at negative zero -0.0', () => {
         expect(evalMinNetExpectancy(-0.0, 0.0).passed).toBe(false);
       });
-
       it('passes at extreme high expectancy 1000.0', () => {
         expect(evalMinNetExpectancy(1000.0, 0.0).passed).toBe(true);
       });
@@ -50,19 +46,15 @@ export function registerTier2FinancialTests(): void {
       it('fails at 1.199 (just below threshold 1.20)', () => {
         expect(evalMinProfitFactor(1.199, 1.2).passed).toBe(false);
       });
-
       it('passes at exact threshold 1.200', () => {
         expect(evalMinProfitFactor(1.200, 1.2).passed).toBe(true);
       });
-
       it('passes at 1.201 (just above threshold 1.20)', () => {
         expect(evalMinProfitFactor(1.201, 1.2).passed).toBe(true);
       });
-
       it('passes at extreme high profit factor 999.99', () => {
         expect(evalMinProfitFactor(999.99, 1.2).passed).toBe(true);
       });
-
       it('fails at microscopic positive profit factor 0.00001', () => {
         expect(evalMinProfitFactor(0.00001, 1.2).passed).toBe(false);
       });

@@ -41,7 +41,6 @@ export interface RegimeTimelineEntry {
 }
 
 // ── Time Series ─────────────────────────────────────────────────────────────
-
 /** Single point in a rolling time-series feed (Sharpe, PnL, etc.). */
 export interface TimeSeriesPoint {
   readonly timestamp: number;
@@ -50,7 +49,6 @@ export interface TimeSeriesPoint {
 }
 
 // ── Dashboard Summary ───────────────────────────────────────────────────────
-
 /** High-level summary across all experiments visible in the dashboard. */
 export interface DashboardSummary {
   readonly totalExperiments: number;

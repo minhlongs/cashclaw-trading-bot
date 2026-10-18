@@ -1,8 +1,4 @@
-/**
- * Complex portfolio risk overlays — correlated buckets, beta exposure,
- * turnover, and drawdown de-risking. Pure functions, no state, no I/O.
- */
-
+/** Complex portfolio risk overlays — correlated buckets, beta exposure, turnover, and drawdown de-risking. Pure functions, no state, no I/O. */
 import { fmt, scaleWeights, scaleWeightsDelta } from './constraint-helpers';
 
 export interface OverlayResult { readonly weights: ReadonlyMap<string, number>; readonly adjustment: string | null }

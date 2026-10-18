@@ -14,6 +14,8 @@ import {
   computeOrderBookImbalance,
   GatheralRoughVolatilityEngine,
   runBipowerJumpEstimation,
+  computeDupireMartingaleSurface,
+  computeRoughPathLevySignature,
 } from '../../quantlib/public-sdk';
 import {
   ALPHA_ZOO_OSS_VERSION,
@@ -41,6 +43,8 @@ describe('Phase 2 (Steps 6-10): Modular Package Extraction & CLI Experience', ()
     expect(typeof computeOrderBookImbalance).toBe('function');
     expect(typeof GatheralRoughVolatilityEngine).toBe('function');
     expect(typeof runBipowerJumpEstimation).toBe('function');
+    expect(typeof computeDupireMartingaleSurface).toBe('function');
+    expect(typeof computeRoughPathLevySignature).toBe('function');
   });
 
   it('Step 7: @cashclaw/alpha-zoo public SDK exports causal operator vocabulary', () => {
@@ -78,6 +82,7 @@ describe('Phase 2 (Steps 6-10): Modular Package Extraction & CLI Experience', ()
     expect(report.metrics).toHaveLength(3);
     expect(report.metrics[0].safetyMode).toBe('PAPER_ONLY');
     expect(report.metrics[0].feeAndSlippageBps).toBeGreaterThan(0);
+    expect(typeof report.metrics[0].roughPathLevyArea12).toBe('number');
     expect(report.formattedOutput).toContain('Sync in 1 click: https://cloud.cashclaw.io/sync?source=oss-cli');
   });
 });

@@ -33,15 +33,7 @@ export type RiskView = (typeof RISK_VIEWS)[number];
 
 /** Fields that would let an LLM set size or execute — all forbidden. */
 export const FORBIDDEN_SIZING_FIELDS = [
-  'size',
-  'positionSize',
-  'quantity',
-  'leverage',
-  'approved',
-  'execute',
-  'order',
-  'stopLoss',
-  'takeProfit',
+  'size', 'positionSize', 'quantity', 'leverage', 'approved', 'execute', 'order', 'stopLoss', 'takeProfit',
 ] as const;
 
 const riskScenarioSchema = z.object({

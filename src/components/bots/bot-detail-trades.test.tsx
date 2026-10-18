@@ -10,10 +10,7 @@ vi.mock('lucide-react', () => {
 });
 
 function makeTrade(overrides: Partial<TradeRow> = {}): TradeRow {
-  return {
-    id: 't1', side: 'buy', price: 42000, quantity: 0.5, pnl: null, status: 'open', openedAt: 1700000000000,
-    ...overrides,
-  };
+  return { id: 't1', side: 'buy', price: 42000, quantity: 0.5, pnl: null, status: 'open', openedAt: 1700000000000, ...overrides };
 }
 
 const BUY_TRADE = makeTrade({ side: 'buy', pnl: 120.5, status: 'filled' });
@@ -56,12 +53,10 @@ describe('BotDetailTrades', () => {
       render(<BotDetailTrades trades={[BUY_TRADE, SELL_TRADE, CANCELLED_TRADE]} emptyMsg="empty" />);
       expect(screen.getAllByRole('row')).toHaveLength(4);
     });
-
     it('renders trade ID in first cell', () => {
       render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('t1')).toBeInTheDocument();
     });
-
     it('renders buy side text (CSS uppercase)', () => {
       render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('buy')).toBeInTheDocument();
@@ -78,27 +73,22 @@ describe('BotDetailTrades', () => {
       render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('$42,000')).toBeInTheDocument();
     });
-
     it('renders P&L cell with supported class on positive', () => {
       const { container } = render(<BotDetailTrades trades={[BUY_TRADE]} emptyMsg="empty" />);
       expect(container.querySelector('.text-profit')).toBeInTheDocument();
     });
-
     it('renders P&L cell with loss class on negative', () => {
       const { container } = render(<BotDetailTrades trades={[SELL_TRADE]} emptyMsg="empty" />);
       expect(container.querySelector('.text-loss')).toBeInTheDocument();
     });
-
     it('renders P&L cell with profit class when pnl is zero', () => {
       const { container } = render(<BotDetailTrades trades={[ZERO_PNL_TRADE]} emptyMsg="empty" />);
       expect(container.querySelector('.text-profit')).toBeInTheDocument();
     });
-
     it('renders P&L cell with profit class when pnl is very large positive', () => {
       const { container } = render(<BotDetailTrades trades={[LARGE_PNL_TRADE]} emptyMsg="empty" />);
       expect(container.querySelector('.text-profit')).toBeInTheDocument();
     });
-
     it('shows dash for null P&L on open trades', () => {
       render(<BotDetailTrades trades={[OPEN_TRADE]} emptyMsg="empty" />);
       expect(screen.getByText('—')).toBeInTheDocument();

@@ -61,19 +61,14 @@ function candle(timestamp: number, close: number): Candle {
   return { timestamp, open: close, high: close, low: close, close, volume: 0 };
 }
 
-// ── toEvaluationReport ─────────────────────────────────────────────────────
-
 describe('toEvaluationReport', () => {
   const report = toEvaluationReport(TRADE_SERIES, OPTIONS);
   const trips = extractRoundTrips(TRADE_SERIES).roundTrips;
 
   it('maps trade-level fields from completed round trips only', () => {
-    // Trips: (1.02·0.99−1) ≈ +0.98% and −3%.
     expect(report.numTrades).toBe(trips.length);
     expect(report.numTrades).toBe(2);
-    expect(report.expectancy).toBeCloseTo(
-      trips.reduce((s, t) => s + t.netReturn, 0) / 2, 12,
-    );
+    expect(report.expectancy).toBeCloseTo(trips.reduce((s, t) => s + t.netReturn, 0) / 2, 12);
     expect(report.expectancy).toBeLessThan(0);
     expect(report.avgTrade).toBe(report.expectancy);
     expect(report.winRate).toBeCloseTo(0.5, 12);
@@ -85,7 +80,6 @@ describe('toEvaluationReport', () => {
     const totalReturn = TRADE_SERIES.reduce((eq, p) => eq * (1 + p.netReturn), 1) - 1;
     expect(report.totalReturn).toBeCloseTo(totalReturn, 12);
     expect(report.netPnl).toBeCloseTo(totalReturn, 12);
-    // Equity: 1 → 1.02 → 1.0098 → peak 1.0098, trough 1.0098·? — verify vs helper.
     expect(report.maxDrawdown).toBeGreaterThan(0);
     expect(report.maxDrawdown).toBeLessThan(1); // fraction, not percent
     expect(report.turnover).toBeCloseTo(0.4 + 0.1 + 0.5, 12);
@@ -96,7 +90,6 @@ describe('toEvaluationReport', () => {
 
   it('decomposes costs via the stress-mode attribution shares', () => {
     const totalCost = 0.001 + 0.001 + 0.002;
-    // conservative shares: fee 10/27, slip 7/27, impact 10/27
     expect(report.fees).toBeCloseTo(totalCost * (10 / 27), 12);
     expect(report.slippage).toBeCloseTo(totalCost * (7 / 27), 12);
   });
@@ -104,9 +97,7 @@ describe('toEvaluationReport', () => {
   it('maps median trade and recovery factor honestly', () => {
     const tripNets = trips.map((t) => t.netReturn).sort((a, b) => a - b);
     expect(report.medianTrade).toBeCloseTo((tripNets[0]! + tripNets[1]!) / 2, 12);
-    expect(report.recoveryFactor).toBeCloseTo(
-      Math.abs(report.totalReturn / report.maxDrawdown), 9,
-    );
+    expect(report.recoveryFactor).toBeCloseTo(Math.abs(report.totalReturn / report.maxDrawdown), 9);
   });
 
   it('exposes one UNKNOWN regime bucket carrying the trades', () => {
@@ -117,12 +108,8 @@ describe('toEvaluationReport', () => {
 
   it('fails closed on empty OOS input or invalid annualization', () => {
     expect(() => toEvaluationReport([], OPTIONS)).toThrow(/no OOS periods/);
-    expect(() =>
-      toEvaluationReport(TRADE_SERIES, { ...OPTIONS, periodsPerYear: 0 }),
-    ).toThrow(/periodsPerYear/);
-    expect(() =>
-      toEvaluationReport(TRADE_SERIES, { ...OPTIONS, periodsPerYear: NaN }),
-    ).toThrow(/periodsPerYear/);
+    expect(() => toEvaluationReport(TRADE_SERIES, { ...OPTIONS, periodsPerYear: 0 })).toThrow(/periodsPerYear/);
+    expect(() => toEvaluationReport(TRADE_SERIES, { ...OPTIONS, periodsPerYear: NaN })).toThrow(/periodsPerYear/);
   });
 
   it('all-flat series yields zeroed trade metrics without NaN', () => {

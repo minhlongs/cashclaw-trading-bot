@@ -7,11 +7,7 @@
 import { getBotManager, type BotConfig } from '@/tree/bot';
 import { patchBot } from '@/forest/bot/d1-adapter';
 
-interface BoundRule {
-  min: number;
-  max: number;
-  integer?: boolean;
-}
+interface BoundRule { min: number; max: number; integer?: boolean; }
 
 const BOUNDS: Record<string, BoundRule> = {
   gridSpacingPct: { min: 0.1, max: 50 },

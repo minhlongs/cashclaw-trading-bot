@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  AlphaDecisionRecordSchema, FeatureSnapshotHashSchema, computeFeatureSnapshotHashSync,
-} from '@/tree/alpha/observability';
+import { AlphaDecisionRecordSchema, FeatureSnapshotHashSchema, computeFeatureSnapshotHashSync } from '@/tree/alpha/observability';
 import {
   computeAttribution, createSyntheticAlphaDecision, createSyntheticOperationalTelemetry,
   createSyntheticPortfolioDecision, evaluateTelemetryHealth, generateShadowOrder, simulateShadowFill,
@@ -62,24 +60,20 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       const order = generateShadowOrder({ orderId: 'o-micro', symbol: 'BTC/USDT', deltaW: 1e-7, price: 50000, equity: 100000, timestamp: 1000 });
       expect(order).toBeNull();
     });
-
     it('handles 100% liquidation delta (-1.0) generating full exit sell order', () => {
       const order = generateShadowOrder({ orderId: 'o-liq', symbol: 'BTC/USDT', deltaW: -1.0, price: 50000, equity: 100000, timestamp: 1000 })!;
       expect(order.side).toBe('sell');
       expect(order.size).toBe(100000);
     });
-
     it('handles small micro-penny prices with valid quantity precision', () => {
       const order = generateShadowOrder({ orderId: 'o-micro', symbol: 'MEME/USDT', deltaW: 0.1, price: 0.00005, equity: 10000, timestamp: 1000 })!;
       expect(order.size).toBe(1000);
       expect(order.price).toBe(0.00005);
     });
-
     it('rejects negative equity or zero reference prices fail-closed', () => {
       expect(generateShadowOrder({ orderId: 'o-bad', symbol: 'BTC/USDT', deltaW: 0.1, price: 0, equity: 10000, timestamp: 1000 })).toBeNull();
       expect(generateShadowOrder({ orderId: 'o-bad2', symbol: 'BTC/USDT', deltaW: 0.1, price: 100, equity: -5000, timestamp: 1000 })).toBeNull();
     });
-
     it('handles multi-symbol portfolio rebalance with mixed deltas', () => {
       const d1 = generateShadowOrder({ orderId: 'o-b', symbol: 'BTC/USDT', deltaW: 0.5, price: 50000, equity: 100000, timestamp: 1000 });
       const d2 = generateShadowOrder({ orderId: 'o-e', symbol: 'ETH/USDT', deltaW: -0.5, price: 3000, equity: 100000, timestamp: 1000 });
@@ -118,25 +112,20 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
 
   describe('F5: Attribution & Diagnostics Boundaries', () => {
     it('freshness drift > 5000ms triggers STALE_DATA and critical status', () => {
-      const tel = createSyntheticOperationalTelemetry({ dataFreshnessMs: 5001 });
-      const res = evaluateTelemetryHealth(tel);
+      const res = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ dataFreshnessMs: 5001 }));
       expect(res.status).toBe('critical');
       expect(res.alarms).toContain('STALE_DATA');
     });
-
     it('exactly 5000ms freshness drift does NOT trigger stale alarm', () => {
-      const tel = createSyntheticOperationalTelemetry({ dataFreshnessMs: 5000 });
-      const res = evaluateTelemetryHealth(tel);
+      const res = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ dataFreshnessMs: 5000 }));
       expect(res.alarms).not.toContain('STALE_DATA');
     });
-
     it('circuit breaker degraded or open triggers CIRCUIT_DEGRADED and degraded status', () => {
       const tel = createSyntheticOperationalTelemetry({ providerProvenance: { primaryProvider: 'p1', activeProvider: 'p1', usedFallback: false, fallbackAttempts: 0, circuitState: 'degraded' } });
       const res = evaluateTelemetryHealth(tel);
       expect(res.status).toBe('degraded');
       expect(res.alarms).toContain('CIRCUIT_DEGRADED');
     });
-
     it('extreme slippage generates large negative ΔEdge and positive ΔSlippage', () => {
       const attr = computeAttribution({
         expectedReturn: 0.005, expectedCost: 0.001, realizedFillPrice: 51000, exitPrice: 50000,
@@ -145,7 +134,6 @@ describe('Tier 2: Boundary & Corner Cases (F1-F5)', () => {
       expect(attr.deltaEdge).toBeLessThan(-0.02);
       expect(attr.deltaSlippageBps).toBe(190);
     });
-
     it('zero execution drag (realized identical to expected) produces zero ΔEdge', () => {
       const attr = computeAttribution({
         expectedReturn: 0.02, expectedCost: 0.005, realizedFillPrice: 50000, exitPrice: 51000,

@@ -80,9 +80,7 @@ export function registerTier1RobustnessTests(): void {
         expect(evalReproducibleHash({ gitSha, seed: 42, config, recordedHash: expected }).passed).toBe(true);
       });
       it('fails when recorded hash does not match computed hash', () => {
-        const check = evalReproducibleHash({
-          gitSha: 'abcdef1234567890abcdef1234567890abcdef12', seed: 42, config: { alpha: 'test' }, recordedHash: '0'.repeat(64),
-        });
+        const check = evalReproducibleHash({ gitSha: 'abcdef1234567890abcdef1234567890abcdef12', seed: 42, config: { alpha: 'test' }, recordedHash: '0'.repeat(64) });
         expect(check.passed).toBe(false);
         expect(check.detail).toContain('Mismatch: recorded');
       });
@@ -98,7 +96,6 @@ export function registerTier1RobustnessTests(): void {
         expect(evalReproducibleHash({ gitSha, seed: 10, config: { a: 1, b: 2 }, recordedHash: hashA.toUpperCase() }).passed).toBe(true);
       });
     });
-
     describe('F16: Conjunctive Evaluation (15/15 All-or-Nothing)', () => {
       it('returns PASSED when all 15 checks pass', () => {
         const result = runOpaquePromotionGate(createPassingGateInput());
@@ -130,17 +127,10 @@ export function registerTier1RobustnessTests(): void {
         expect(runOpaquePromotionGate(createPassingGateInput()).timestamp).toBeGreaterThan(0);
       });
     });
-
     describe('F17: Safety Capping at SHADOW (Zero Automated LIVE)', () => {
-      it('enforces AUTOMATED_CEILING is strictly SHADOW', () => {
-        expect(AUTOMATED_CEILING).toBe('SHADOW');
-      });
-      it('advances from PAPER to SHADOW on gate_passed', () => {
-        expect(getTransition('PAPER', { type: 'gate_passed' })).toBe('SHADOW');
-      });
-      it('rejects automated gate_passed from SHADOW (returns null)', () => {
-        expect(getTransition('SHADOW', { type: 'gate_passed' })).toBeNull();
-      });
+      it('enforces AUTOMATED_CEILING is strictly SHADOW', () => { expect(AUTOMATED_CEILING).toBe('SHADOW'); });
+      it('advances from PAPER to SHADOW on gate_passed', () => { expect(getTransition('PAPER', { type: 'gate_passed' })).toBe('SHADOW'); });
+      it('rejects automated gate_passed from SHADOW (returns null)', () => { expect(getTransition('SHADOW', { type: 'gate_passed' })).toBeNull(); });
       it('allows transition from SHADOW to MANUAL_APPROVAL only via approved manual_approval', () => {
         expect(getTransition('SHADOW', { type: 'manual_approval', approved: true })).toBe('MANUAL_APPROVAL');
         expect(getTransition('SHADOW', { type: 'manual_approval', approved: false })).toBe('KILLED');

@@ -3,12 +3,14 @@ import { RegimeLabel } from '../../regime/types';
 import type { FeatureSnapshotHash } from './types';
 
 export const FeatureSnapshotHashSchema = z
-  .string()
-  .trim()
+  .string().trim()
   .regex(/^[a-f0-9]{64}$/, 'FeatureSnapshotHash must be a 64-character lowercase hexadecimal SHA-256 string')
   .transform((val) => val as FeatureSnapshotHash);
 
 export const AlphaDecisionDirectionSchema = z.enum(['buy', 'sell', 'hold']);
+export const ProviderCircuitStateSchema = z.enum(['closed', 'open', 'half_open', 'degraded']);
+export const CostStressTierSchema = z.enum(['normal', 'conservative', 'adverse', 'extreme']);
+export const ShadowOrderSideSchema = z.enum(['buy', 'sell']);
 
 export const AlphaDecisionRecordSchema = z
   .object({
@@ -42,8 +44,6 @@ export const PortfolioDecisionRecordSchema = z
   })
   .strict();
 
-export const ProviderCircuitStateSchema = z.enum(['closed', 'open', 'half_open', 'degraded']);
-
 export const ProviderProvenanceSchema = z
   .object({
     primaryProvider: z.string().trim().min(1).max(100),
@@ -64,10 +64,6 @@ export const OperationalTelemetrySchema = z
     timestamp: z.number().int().positive().optional(),
   })
   .strict();
-
-export const CostStressTierSchema = z.enum(['normal', 'conservative', 'adverse', 'extreme']);
-
-export const ShadowOrderSideSchema = z.enum(['buy', 'sell']);
 
 export const ShadowOrderSchema = z
   .object({

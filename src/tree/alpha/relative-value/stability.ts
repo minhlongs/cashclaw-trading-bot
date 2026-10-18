@@ -10,24 +10,11 @@ import { computeSpreadStatistics } from '../correlation/compute';
 import type { PairPanel } from './types';
 import { assertPositiveCloses } from './pair-period';
 import {
-  STABILITY_REASONS,
-  type PairStabilityConfig,
-  type PairStabilityComponents,
-  type PairStabilityResult,
+  STABILITY_REASONS, type PairStabilityConfig, type PairStabilityComponents, type PairStabilityResult,
 } from './stability-types';
-import {
-  candles,
-  crossingRate,
-  gatePassFraction,
-  betaDriftPenalty,
-} from './stability-components';
+import { candles, crossingRate, gatePassFraction, betaDriftPenalty } from './stability-components';
 
-export {
-  STABILITY_REASONS,
-  type PairStabilityConfig,
-  type PairStabilityComponents,
-  type PairStabilityResult,
-};
+export { STABILITY_REASONS, type PairStabilityConfig, type PairStabilityComponents, type PairStabilityResult };
 
 /**
  * Score pair stability as of `windowEndAsOf` using only rows with timestamp

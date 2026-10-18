@@ -44,16 +44,10 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="p-3 rounded text-sm bg-loss" role="alert">
-          {error}
-        </div>
-      )}
+      {error && <div className="p-3 rounded text-sm bg-loss" role="alert">{error}</div>}
 
       <div className="form-group">
-        <label className="form-label" htmlFor="login-email">
-          Email / Email
-        </label>
+        <label className="form-label" htmlFor="login-email">Email / Email</label>
         <input
           id="login-email"
           type="email"
@@ -67,9 +61,7 @@ export default function LoginForm() {
       </div>
 
       <div className="form-group">
-        <label className="form-label" htmlFor="login-passcode">
-          Mật khẩu / Passcode
-        </label>
+        <label className="form-label" htmlFor="login-passcode">Mật khẩu / Passcode</label>
         <input
           id="login-passcode"
           type="password"

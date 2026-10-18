@@ -1,14 +1,7 @@
 /**
- * GET /api/events handler
- * Returns recent trade events from D1.
- *
- * Query params:
- *   botId  — optional filter (single bot)
- *   limit  — max rows (default 50, cap 200)
+ * GET /api/events handler — returns recent trade events from D1 (botId optional, limit default 50 / cap 200).
  */
-
 import { createServerClient } from '@/lib/db/client';
- 
 import type { TradeEvent, TradeEventType } from '@/tree/telemetry';
 import { createLogger } from '@/lib/logger';
 

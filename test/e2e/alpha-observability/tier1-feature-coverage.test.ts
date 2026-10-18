@@ -25,9 +25,7 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(tel.providerProvenance.usedFallback).toBe(false);
     });
     it('validates ProviderProvenance with circuit state and fallback attempt tracking', () => {
-      const tel = createSyntheticOperationalTelemetry({
-        providerProvenance: { primaryProvider: 'binance', activeProvider: 'bybit', usedFallback: true, fallbackAttempts: 2, circuitState: 'degraded' },
-      });
+      const tel = createSyntheticOperationalTelemetry({ providerProvenance: { primaryProvider: 'binance', activeProvider: 'bybit', usedFallback: true, fallbackAttempts: 2, circuitState: 'degraded' } });
       expect(tel.providerProvenance.usedFallback).toBe(true);
       expect(tel.providerProvenance.fallbackAttempts).toBe(2);
     });
@@ -40,7 +38,6 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       }
     });
   });
-
   describe('F2: Feature Snapshot Hashing', () => {
     it('computes deterministic 64-char lowercase hex hash from feature payload', () => {
       const hash = computeFeatureSnapshotHashSync({ rsi: 50, vol: 0.02 });
@@ -63,7 +60,6 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(computeFeatureSnapshotHashSync(payload)).toBe(await computeFeatureSnapshotHash(payload));
     });
   });
-
   describe('F3: Hypothetical Shadow Order Generation', () => {
     it('generates buy order when target weight delta is positive', () => {
       const order = generateShadowOrder({ orderId: 'o-buy', symbol: 'BTC/USDT', deltaW: 0.2, price: 60000, equity: 50000, timestamp: 1000 })!;
@@ -91,27 +87,26 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(o2.size).toBe(o1.size * 2);
     });
   });
-
   describe('F4: Shadow Fill Simulator', () => {
     const baseOrder = generateShadowOrder({ orderId: 'o-fill', symbol: 'BTC/USDT', deltaW: 0.1, price: 50000, equity: 100000, timestamp: 1000 })!;
     it('simulates normal tier fill with 8 bps fee and 8 bps slippage/impact', () => {
       const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 20, stressTier: 'normal' });
-      expect(fill.fillPrice).toBe(50040); // 50000 * 1.0008
-      expect(fill.feeAmount).toBe(8.0064); // 50040 * 0.2 * 0.0008
+      expect(fill.fillPrice).toBe(50040);
+      expect(fill.feeAmount).toBe(8.0064);
     });
     it('simulates conservative tier fill with 10 bps fee and 17 bps slippage/impact', () => {
       const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 20, stressTier: 'conservative' });
-      expect(fill.fillPrice).toBe(50085); // 50000 * 1.0017
-      expect(fill.feeAmount).toBe(10.017); // 50085 * 0.2 * 0.0010
+      expect(fill.fillPrice).toBe(50085);
+      expect(fill.feeAmount).toBe(10.017);
     });
     it('simulates adverse tier fill with 10 bps fee and 40 bps slippage/impact', () => {
       const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 30, stressTier: 'adverse' });
-      expect(fill.fillPrice).toBe(50200); // 50000 * 1.0040
+      expect(fill.fillPrice).toBe(50200);
       expect(fill.feeAmount).toBe(10.04);
     });
     it('simulates extreme tier fill with 15 bps fee and 85 bps slippage/impact', () => {
       const fill = simulateShadowFill({ order: baseOrder, arrivalPrice: 50000, latencyMs: 50, stressTier: 'extreme' });
-      expect(fill.fillPrice).toBe(50425); // 50000 * 1.0085
+      expect(fill.fillPrice).toBe(50425);
       expect(fill.feeAmount).toBe(15.1275);
     });
     it('enforces causal timestamp ordering (fillTimestamp = decisionTimestamp + latencyMs)', () => {
@@ -119,34 +114,21 @@ describe('Tier 1: Feature Coverage (F1-F5)', () => {
       expect(fill.fillTimestamp).toBe(baseOrder.decisionTimestamp + 150);
     });
   });
-
   describe('F5: Expected vs. Realized Edge & Slippage Attribution', () => {
     it('computes positive ΔEdge when realized net return exceeds research expectation', () => {
-      const attr = computeAttribution({
-        expectedReturn: 0.01, expectedCost: 0.002, realizedFillPrice: 50000, exitPrice: 50750,
-        side: 'buy', feeAmount: 10, fillNotional: 10000, expectedSlippageBps: 8, realizedSlippageBps: 6,
-      });
+      const attr = computeAttribution({ expectedReturn: 0.01, expectedCost: 0.002, realizedFillPrice: 50000, exitPrice: 50750, side: 'buy', feeAmount: 10, fillNotional: 10000, expectedSlippageBps: 8, realizedSlippageBps: 6 });
       expect(attr.expectedNetReturn).toBe(0.008);
       expect(attr.realizedNetReturn).toBe(0.014);
       expect(attr.deltaEdge).toBe(0.006);
     });
-
     it('computes negative ΔEdge when execution drag erodes research alpha', () => {
-      const attr = computeAttribution({
-        expectedReturn: 0.01, expectedCost: 0.002, realizedFillPrice: 50000, exitPrice: 50100,
-        side: 'buy', feeAmount: 20, fillNotional: 10000, expectedSlippageBps: 8, realizedSlippageBps: 25,
-      });
+      const attr = computeAttribution({ expectedReturn: 0.01, expectedCost: 0.002, realizedFillPrice: 50000, exitPrice: 50100, side: 'buy', feeAmount: 20, fillNotional: 10000, expectedSlippageBps: 8, realizedSlippageBps: 25 });
       expect(attr.deltaEdge).toBeLessThan(0);
     });
-
     it('computes exact ΔSlippage bps between realized and modeled slippage', () => {
-      const attr = computeAttribution({
-        expectedReturn: 0.01, expectedCost: 0.002, realizedFillPrice: 50000, exitPrice: 50500,
-        side: 'buy', feeAmount: 10, fillNotional: 10000, expectedSlippageBps: 8.5, realizedSlippageBps: 14.0,
-      });
+      const attr = computeAttribution({ expectedReturn: 0.01, expectedCost: 0.002, realizedFillPrice: 50000, exitPrice: 50500, side: 'buy', feeAmount: 10, fillNotional: 10000, expectedSlippageBps: 8.5, realizedSlippageBps: 14.0 });
       expect(attr.deltaSlippageBps).toBe(5.5);
     });
-
     it('evaluates healthy operational state and detects data staleness', () => {
       const health = evaluateTelemetryHealth(createSyntheticOperationalTelemetry({ decisionLatencyMs: 30, dataFreshnessMs: 150 }));
       expect(health.status).toBe('healthy');

@@ -52,15 +52,8 @@ export function AlphaZooEvaluator() {
           <div className="flex flex-wrap gap-2" role="group" aria-label="Alpha Zoo verdict filter">
             {(['ALL', 'FALSIFIED', 'NOT_EVALUABLE', 'IMPORT_SKIPPED'] as const).map((filter) => (
               <button
-                key={filter}
-                type="button"
-                onClick={() => setStatusFilter(filter)}
-                aria-pressed={statusFilter === filter}
-                className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all ${
-                  statusFilter === filter
-                    ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]'
-                    : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'
-                }`}
+                key={filter} type="button" onClick={() => setStatusFilter(filter)} aria-pressed={statusFilter === filter}
+                className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all ${statusFilter === filter ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-default)]'}`}
               >
                 {filter}
               </button>

@@ -27,17 +27,11 @@ const RETURNS: AssetReturnSeries[] = [
   { symbol: 'C', timestamps: [100, 200], returns: [-0.01, 0.04] },
 ];
 
-const CONFIG: CrossSectionalSimConfig = {
-  topN: 1,
-  bottomN: 1,
-  costBps: 10,
-  minObservations: 2,
-};
+const CONFIG: CrossSectionalSimConfig = { topN: 1, bottomN: 1, costBps: 10, minObservations: 2 };
 
 describe('runCrossSectionalSim — hand-computed fixture', () => {
   it('matches hand-computed weights, turnover, gross, net, equity exactly', () => {
     const result = runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, CONFIG);
-
     expect(result.periods).toHaveLength(2);
 
     // Period 0 (t=100): long A, short C.
@@ -74,14 +68,8 @@ describe('runCrossSectionalSim — hand-computed fixture', () => {
 describe('runCrossSectionalSim — causality / leakage invariance', () => {
   it('mutating a future snapshot does not change an earlier period', () => {
     const baseline = runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, CONFIG);
-
-    // Mutate snapshot at index 2 (future relative to period 0 and 1).
     const mutated = SNAPSHOTS.slice();
-    mutated[2] = snapshot(300, [
-      ranked('C', 99, 1),
-      ranked('B', 50, 2),
-      ranked('A', -99, 3),
-    ]);
+    mutated[2] = snapshot(300, [ranked('C', 99, 1), ranked('B', 50, 2), ranked('A', -99, 3)]);
     const after = runCrossSectionalSim(UNIVERSE, mutated, RETURNS, CONFIG);
 
     expect(after.periods[0]).toEqual(baseline.periods[0]);
@@ -90,11 +78,8 @@ describe('runCrossSectionalSim — causality / leakage invariance', () => {
 
   it('shifting snapshots by one index changes results (no off-by-one future use)', () => {
     const baseline = runCrossSectionalSim(UNIVERSE, SNAPSHOTS, RETURNS, CONFIG);
-
-    // Drop the first snapshot: period weights now come from what was index 1.
     const shifted = SNAPSHOTS.slice(1);
     const after = runCrossSectionalSim(UNIVERSE, shifted, RETURNS, CONFIG);
-
     expect(after.periods[0].weights).not.toEqual(baseline.periods[0].weights);
   });
 

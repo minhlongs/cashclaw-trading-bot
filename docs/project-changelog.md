@@ -2,6 +2,19 @@
 
 ## v1 Paper-Trading Platform
 
+### Quad-Cluster Deep Refactor Wave 8 — 2026-10-18
+- **`@cashclaw/quantlib` v1.64.0-open-core & CLI `eval` / `paper-cli-report` Wave 5 Surface & Signature Expansion (`src/tree/quantlib/public-sdk.ts`, `bin/lib/commands.js`, `bin/lib/cli-printers.js`, `src/tree/cli/paper-cli-report.ts`)**:
+  - Bumped `QUANTLIB_OSS_VERSION = '1.64.0-open-core'` in `@cashclaw/quantlib` public Apache-2.0 SDK barrel (`src/tree/quantlib/public-sdk.ts`) and pinned SDK export verification for `computeDupireMartingaleSurface` and `computeRoughPathLevySignature` in `src/tree/cli/__tests__/paper-cli-report.test.ts`.
+  - Extended `bin/lib/commands.js` (`runQuantitativeEval`), `bin/lib/cli-printers.js` (`printEvalReport`), and `src/tree/cli/paper-cli-report.ts` (`evaluateQuickstartFixture` / `CliBacktestMetrics`) to surface `dupireAtmLocalVol`, `motCorridorWidthBps`, and `roughPathLevyArea12`.
+- **Strict Non-Test Ceiling (`<= 96 LOC` across all of `src/`)**:
+  - Compacted all 44 non-test `.ts`/`.tsx` files in `src/` between `97–98 LOC` down to `<= 96 LOC` (0 non-test files `> 96 LOC` across all 915+ production files in `src/`).
+- **Strict Test Ceiling (`<= 220 LOC` across all of `src/`)**:
+  - Compacted all 25 test files in `src/` between `221–230 LOC` down to `<= 220 LOC` (0 test files `> 220 LOC` across all of `src/`).
+- **Strict `test/`, `scripts/` & `bin/` Ceiling (`<= 150 LOC`)**:
+  - Compacted all 18 files in `test/`, `scripts/`, and `bin/` between `151–160 LOC` down to `<= 150 LOC` (0 files `> 150 LOC` across `test/`, `scripts/`, and `bin/`).
+- **Verification**:
+  - 720/720 test files (6,003/6,003 tests) passing, `tsc --noEmit` 0 errors, ESLint 0 warnings, OSS package audit clean (3/3 checks passed).
+
 ### Quad-Cluster Deep Refactor Wave 7 — 2026-10-18
 - **`@cashclaw/quantlib` Public SDK Barrel & CLI `eval` Multi-Engine Expansion (`src/tree/quantlib/public-sdk.ts`, `bin/lib/commands.js`, `bin/lib/cli-printers.js`)**:
   - Expanded `@cashclaw/quantlib` public Apache-2.0 barrel (`QUANTLIB_OSS_VERSION = '1.63.0-open-core'`) to export all pure zero-I/O quantitative estimators (`runHamiltonMarkovFilter`, `computeHrpRecursiveBisection`, `computeAlmgrenChrissTrajectory`, `HayashiYoshidaEngine`, `computeHawkesIntensity`, `computeOrderBookImbalance`, `GatheralRoughVolatilityEngine`, `runBipowerJumpEstimation`).

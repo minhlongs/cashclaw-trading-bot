@@ -1,13 +1,5 @@
-// Demo Report Builder tests — covers computeProvenanceAccounting,
-// buildDemoJsonPayload, and buildDemoMarkdown branches.
-
 import { describe, expect, it } from 'vitest';
-import {
-  computeProvenanceAccounting,
-  buildDemoJsonPayload,
-  buildDemoMarkdown,
-  D11_HONESTY_LABEL,
-} from './demo-report-builder';
+import { computeProvenanceAccounting, buildDemoJsonPayload, buildDemoMarkdown, D11_HONESTY_LABEL } from './demo-report-builder';
 import type { DeliberationReport, StageResult } from './report-types';
 import type { ModelProvenanceRecord } from '@/tree/research/tradingagents/model-provenance';
 import { buildLineage } from '@/tree/research/evidence/lineage';
@@ -15,16 +7,10 @@ import type { DecisionProposal } from '@/tree/research/tradingagents/decision-co
 
 function makeProvenance(overrides: Partial<ModelProvenanceRecord> = {}): ModelProvenanceRecord {
   return {
-    agentRole: 'analyst',
-    task: 'summarization',
+    agentRole: 'analyst', task: 'summarization',
     provenance: {
-      providerId: 'Anthropic',
-      modelId: 'fixture-reasoning',
-      tier: 'REASONING',
-      promptTokens: 100,
-      completionTokens: 50,
-      latencyMs: 10,
-      ...overrides.provenance,
+      providerId: 'Anthropic', modelId: 'fixture-reasoning', tier: 'REASONING',
+      promptTokens: 100, completionTokens: 50, latencyMs: 10, ...overrides.provenance,
     },
     ...overrides,
   };
@@ -36,16 +22,11 @@ function makeStageResult(stage: DeliberationReport['stageResults'][0]['stage'], 
 
 function makeReport(overrides: Partial<DeliberationReport> = {}): DeliberationReport {
   const stageResults: StageResult[] = [
-    makeStageResult('analyst-output'),
-    makeStageResult('debate-output'),
-    makeStageResult('research-synthesis'),
-    makeStageResult('risk-proposal'),
-    makeStageResult('portfolio-proposal'),
-    makeStageResult('cashclaw-validation'),
+    makeStageResult('analyst-output'), makeStageResult('debate-output'), makeStageResult('research-synthesis'),
+    makeStageResult('risk-proposal'), makeStageResult('portfolio-proposal'), makeStageResult('cashclaw-validation'),
   ];
   return {
-    researchGoalId: 'goal-1',
-    proposalId: 'prop-1',
+    researchGoalId: 'goal-1', proposalId: 'prop-1',
     decisionProposal: {
       proposalId: 'prop-1', researchGoalId: 'goal-1', thesis: 'bull thesis', counterThesis: 'bear thesis',
       evidence: [{ claim: 'momentum persists', source: 'OOS backtest' }],
@@ -57,14 +38,11 @@ function makeReport(overrides: Partial<DeliberationReport> = {}): DeliberationRe
       createdAt: '2026-08-26T00:00:00.000Z',
     },
     debateState: { researchGoalId: 'goal-1', proposalId: 'prop-1', rounds: [], status: 'complete' },
-    hypotheses: [],
-    experimentSpecs: [],
-    lineage: buildLineage([]),
+    hypotheses: [], experimentSpecs: [], lineage: buildLineage([]),
     riskAdvisory: { goalId: 'goal-1', proposalId: 'prop-1', advisories: [], summary: '' },
     portfolioResult: {
       portfolioResult: { positions: [], grossExposure: 0, netExposure: 0, totalTurnover: 0, riskAdjustments: [], drawdownDeRisked: false },
-      rejected: false,
-      rejectionReasons: [],
+      rejected: false, rejectionReasons: [],
     },
     modelProvenance: [
       makeProvenance({ agentRole: 'analyst', task: 'summarization', provenance: { providerId: 'Anthropic', modelId: 'fixture-reasoning', tier: 'REASONING', promptTokens: 100, completionTokens: 50, latencyMs: 10 } }),
@@ -72,8 +50,7 @@ function makeReport(overrides: Partial<DeliberationReport> = {}): DeliberationRe
       makeProvenance({ agentRole: 'bear-researcher', task: 'debate', provenance: { providerId: 'Anthropic', modelId: 'fixture-reasoning', tier: 'REASONING', promptTokens: 200, completionTokens: 100, latencyMs: 20 } }),
       makeProvenance({ agentRole: 'risk-advisor', task: 'summarization', provenance: { providerId: 'Anthropic', modelId: 'fixture-fast', tier: 'FAST', promptTokens: 50, completionTokens: 25, latencyMs: 5 } }),
     ],
-    toolProvenance: [],
-    stageResults,
+    toolProvenance: [], stageResults,
     totals: { completed: 6, failed: 0, skipped: 0, rejected: 0, total: 6 },
     createdAt: '2026-08-26T00:00:00.000Z',
     ...overrides,

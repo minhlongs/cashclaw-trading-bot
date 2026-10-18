@@ -4,11 +4,7 @@ import type { AsynchronousTick } from '../../src/tree/quantlib/leadlag/hayashi-y
 import { ContKukanovPlacementEngine } from '../../src/tree/quantlib/microstructure/cont-kukanov-placement-engine';
 import { computeSlippageDiagnostics } from '../../src/forest/alpha/observability-eval/slippage-diagnostics';
 import { computeOperationalDiagnostics } from '../../src/forest/alpha/observability-eval/telemetry-diagnostics';
-import type {
-  OperationalTelemetry,
-  ShadowFill,
-  ShadowOrder,
-} from '../../src/tree/alpha/observability/types';
+import type { OperationalTelemetry, ShadowFill, ShadowOrder } from '../../src/tree/alpha/observability/types';
 
 describe('Triad v18 Apex Suite Cross-Domain E2E Simulation', () => {
   it('orchestrates asynchronous lead-lag detection, Cont-Kukanov order placement, and modular observability', () => {
@@ -16,7 +12,6 @@ describe('Triad v18 Apex Suite Cross-Domain E2E Simulation', () => {
     // Follower mimics Leader with a 200ms delay and irregular tick arrivals
     const ticksX: AsynchronousTick[] = [];
     const ticksY: AsynchronousTick[] = [];
-
     let priceX = 50000;
     let priceY = 3000;
 
@@ -33,11 +28,7 @@ describe('Triad v18 Apex Suite Cross-Domain E2E Simulation', () => {
     }
 
     // 2. Hayashi-Yoshida Continuous-Time Asynchronous Lead-Lag Analysis
-    const hyEngine = new HayashiYoshidaEngine({
-      maxLagMs: 500,
-      lagStepMs: 50,
-      minObservations: 5,
-    });
+    const hyEngine = new HayashiYoshidaEngine({ maxLagMs: 500, lagStepMs: 50, minObservations: 5 });
     const hyResult = hyEngine.computeAsynchronousCrossCorrelation(ticksX, ticksY);
 
     expect(hyResult.allLagMetrics.length).toBeGreaterThan(0);

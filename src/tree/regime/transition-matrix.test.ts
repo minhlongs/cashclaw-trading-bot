@@ -25,14 +25,10 @@ const U = RegimeLabel.TREND_UP;
 const D = RegimeLabel.TREND_DOWN;
 const R = RegimeLabel.RANGE;
 
-function idx(label: RegimeLabel): number {
-  return REGIME_LABELS.indexOf(label);
-}
+function idx(label: RegimeLabel): number { return REGIME_LABELS.indexOf(label); }
 
 function makeZeroCounts(): number[][] {
-  return Array.from({ length: REGIME_LABELS.length }, () =>
-    new Array<number>(REGIME_LABELS.length).fill(0),
-  );
+  return Array.from({ length: REGIME_LABELS.length }, () => new Array<number>(REGIME_LABELS.length).fill(0));
 }
 
 const FIXTURE = makeHistory([U, U, D, R, U, D]);

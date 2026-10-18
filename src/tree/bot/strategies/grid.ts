@@ -4,12 +4,7 @@
 
 import type { GridBotConfig, GridLevel, BotTrade } from '../types';
 import type { Ticker, OrderRequest, OrderResult } from '../../exchange/types';
-import {
-  computeGridLevels,
-  updateTrailingLevels,
-  findTrailingExits,
-  computeDeployedCapital,
-} from './grid-levels';
+import { computeGridLevels, updateTrailingLevels, findTrailingExits, computeDeployedCapital } from './grid-levels';
 import { executeFillLevel, formatCloseLevel } from './grid-actions';
 
 export interface GridStrategyCallbacks {

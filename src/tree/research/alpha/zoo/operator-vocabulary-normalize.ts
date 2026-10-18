@@ -1,7 +1,5 @@
-// Formula normalizer for zoo formula_latex strings.
-// Pure string classification ONLY — no eval, no parser library, no
-// execution. Recognition ≠ implementation: unknown tokens are reported,
-// never interpreted (REIMPLEMENT backlog input for Phase 3+).
+// Formula normalizer for zoo formula_latex strings. Pure string classification ONLY — no eval, no execution.
+// Recognition != implementation: unknown tokens are reported, never interpreted (REIMPLEMENT backlog input).
 
 import { OPERATOR_ALIASES, SUPPORTED_OPERATORS, type SupportedOperator } from './operator-vocabulary-constants';
 

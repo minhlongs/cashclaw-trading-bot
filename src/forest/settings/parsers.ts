@@ -1,13 +1,8 @@
-// Forest layer — Settings parsers and validation
-// Deserializes D1 SettingsRow records with fail-safe fallbacks and risk range validation.
-
+// Forest layer — Settings parsers and validation (deserializes D1 SettingsRow records with fail-safe fallbacks)
 import { decrypt } from '@/lib/crypto';
 import { createLogger } from '@/lib/logger';
 import type { SettingsRow } from '@/lib/db/repositories';
-import {
-  DEFAULT_EXCHANGES, DEFAULT_RISK, DEFAULT_NOTIFICATION, DEFAULT_KILLSWITCH_DAILY,
-  type SettingsData, type RiskLimitsInput,
-} from './types';
+import { DEFAULT_EXCHANGES, DEFAULT_RISK, DEFAULT_NOTIFICATION, DEFAULT_KILLSWITCH_DAILY, type SettingsData, type RiskLimitsInput } from './types';
 
 const log = createLogger('settings-parsers');
 

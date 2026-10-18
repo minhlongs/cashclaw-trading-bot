@@ -5,10 +5,7 @@ import type { RegisteredAlpha } from '@/tree/research/alpha/zoo/zoo-adapter';
 import { parseFormula } from '@/tree/research/alpha/zoo/operator-parser';
 import { evaluateFormula, type SymbolPanel as EvalPanel } from '@/tree/research/alpha/zoo/operator-evaluator';
 import {
-  analyzeIc,
-  buildForwardReturnSeries,
-  materializeVwap,
-  type SymbolPanel as FactorPanel,
+  analyzeIc, buildForwardReturnSeries, materializeVwap, type SymbolPanel as FactorPanel,
 } from '@/tree/alpha/factors';
 import type { ZooFalsificationRow } from './report-types';
 import { mapVerdict } from './verdict';

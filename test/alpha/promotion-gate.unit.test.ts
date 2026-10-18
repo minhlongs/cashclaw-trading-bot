@@ -16,22 +16,18 @@ describe('Financial Checks (1-6)', () => {
     for (const v of [35, 30]) expect(checkMinTrades(v).passed).toBe(true);
     for (const v of [29, 0, -5, 30.5, Number.NaN]) expect(checkMinTrades(v).passed).toBe(false);
   });
-
   it('checkMinNetExpectancy enforces strictly positive expectancy', () => {
     expect(checkMinNetExpectancy(0.001).passed).toBe(true);
     for (const v of [0.0, -0.01, Number.NaN]) expect(checkMinNetExpectancy(v).passed).toBe(false);
   });
-
   it('checkMinProfitFactor validates profit factor boundaries and Infinity', () => {
     for (const v of [1.5, 1.2, Infinity]) expect(checkMinProfitFactor(v).passed).toBe(true);
     for (const v of [1.199, 0, -1, Number.NaN]) expect(checkMinProfitFactor(v).passed).toBe(false);
   });
-
   it('checkMaxDrawdown verifies peak-to-trough decline ceiling', () => {
     for (const v of [0.15, 0.25, 0.0]) expect(checkMaxDrawdown(v).passed).toBe(true);
     for (const v of [0.2501, 1.5, -0.01, Number.NaN]) expect(checkMaxDrawdown(v).passed).toBe(false);
   });
-
   it('checkMinSharpeSortino tests joint risk-adjusted return hurdle', () => {
     expect(checkMinSharpeSortino(1.5, 1.8).passed).toBe(true);
     expect(checkMinSharpeSortino(1.0, 1.2).passed).toBe(true);
@@ -40,7 +36,6 @@ describe('Financial Checks (1-6)', () => {
       expect(checkMinSharpeSortino(s, so).passed).toBe(false);
     }
   });
-
   it('checkMinRegimeCoverage evaluates profitable share of traded regimes', () => {
     const p = { R1: { numTrades: 10, netPnl: 100 }, R2: { numTrades: 5, netPnl: -20 }, R3: { numTrades: 15, netPnl: 50 }, R4: { numTrades: 0, netPnl: 0 } };
     expect(checkMinRegimeCoverage(p).passed).toBe(true); // 2/3 = 66.7% >= 50%
@@ -58,7 +53,6 @@ describe('Stress Checks (7-8)', () => {
     expect(checkFeeStress(-5, 50).passed).toBe(false);
     expect(checkFeeStress(Number.NaN, 50).passed).toBe(false);
   });
-
   it('checkSlippageStress verifies adverse and extreme 100 bps stress survival', () => {
     expect(checkSlippageStress(50, 10).passed).toBe(true);
     expect(checkSlippageStress(50, 0).passed).toBe(false);
@@ -76,7 +70,6 @@ describe('Robustness Checks (9-15)', () => {
     expect(checkParameterRobustness(-0.1).passed).toBe(false);
     expect(checkParameterRobustness(Number.NaN).passed).toBe(false);
   });
-
   it('checkCrossPeriodRobustness verifies OOS walk-forward positive consistency', () => {
     expect(checkCrossPeriodRobustness(0.80).passed).toBe(true);
     expect(checkCrossPeriodRobustness(0.60).passed).toBe(true);
@@ -84,7 +77,6 @@ describe('Robustness Checks (9-15)', () => {
     expect(checkCrossPeriodRobustness(1.2).passed).toBe(false);
     expect(checkCrossPeriodRobustness(Number.NaN).passed).toBe(false);
   });
-
   it('checkCrossAssetRobustness verifies universality or explicit exemption', () => {
     expect(checkCrossAssetRobustness(0.60, true).passed).toBe(true);
     expect(checkCrossAssetRobustness(0.50, true).passed).toBe(true);
@@ -92,7 +84,6 @@ describe('Robustness Checks (9-15)', () => {
     expect(checkCrossAssetRobustness(null, false).passed).toBe(true);
     expect(checkCrossAssetRobustness(null, true).passed).toBe(false);
   });
-
   it('checkLeakageInvariance enforces zero lookahead mutations', () => {
     expect(checkLeakageInvariance(0).passed).toBe(true);
     expect(checkLeakageInvariance(1).passed).toBe(false);
@@ -147,10 +138,8 @@ describe('Schemas and Configurations', () => {
       robustness: {
         parameterSpread: 0.2, crossPeriodPositiveFraction: 0.8, crossAssetPositiveFraction: 0.7,
         crossAssetApplicable: true, leakageViolations: 0, windowPnls: [100, 200, 150],
-        baselineCandidate: { sharpe: 1.5, netPnl: 1000 },
-        baselineBuyHold: { sharpe: 0.8, netPnl: 500 },
-        baselineRandomEntry: { sharpe: 0.1, netPnl: 50 },
-        hashMatches: true,
+        baselineCandidate: { sharpe: 1.5, netPnl: 1000 }, baselineBuyHold: { sharpe: 0.8, netPnl: 500 },
+        baselineRandomEntry: { sharpe: 0.1, netPnl: 50 }, hashMatches: true,
       },
     };
     expect(PromotionGateInputSchema.parse(valid)).toBeDefined();

@@ -28,9 +28,7 @@ export interface TickContext {
   recentCandles?: Candle[];
 }
 
-export interface TickResult {
-  lastTickPrice: number | null;
-}
+export interface TickResult { lastTickPrice: number | null; }
 
 export async function tick(ctx: TickContext): Promise<TickResult> {
   const {

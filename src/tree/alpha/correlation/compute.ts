@@ -32,19 +32,14 @@ export function pearsonCorrelation(x: number[], y: number[]): number {
 
 /** Pearson correlation over aligned candle closes within the lookback window. */
 export function computePairCorrelation(
-  candles1: readonly IndicatorCandle[],
-  candles2: readonly IndicatorCandle[],
-  lookback: number,
+  candles1: readonly IndicatorCandle[], candles2: readonly IndicatorCandle[], lookback: number,
 ): number {
   return pearsonCorrelation(closes(candles1).slice(-lookback), closes(candles2).slice(-lookback));
 }
 
 /** Rolling correlation series over two candle arrays. */
 export function computeRollingCorrelation(
-  candles1: readonly IndicatorCandle[],
-  candles2: readonly IndicatorCandle[],
-  lookback: number,
-  window: number,
+  candles1: readonly IndicatorCandle[], candles2: readonly IndicatorCandle[], lookback: number, window: number,
 ): number[] {
   const s1 = closes(candles1).slice(-lookback);
   const s2 = closes(candles2).slice(-lookback);

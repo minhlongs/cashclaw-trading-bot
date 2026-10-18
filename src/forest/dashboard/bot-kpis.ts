@@ -74,10 +74,7 @@ function calcKpis(bots: BotSummary[]): DashboardKpis {
   }
 
   return {
-    totalBalance,
-    todayPnl,
-    activeBots,
-    totalTrades,
+    totalBalance, todayPnl, activeBots, totalTrades,
     winRate: totalTrades > 0 ? Math.round((winCountSum / totalTrades) * 100) : 0,
   };
 }

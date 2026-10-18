@@ -1,7 +1,4 @@
 // run-deliberation tests — top-level seam: ResearchGoal → DeliberationReport.
-// Full pipeline on DeterministicFixtureProvider (D11 labeled TEST seam).
-// Replay determinism (run twice → byte-identical report).
-
 import { describe, expect, it } from 'vitest';
 import { createModelRouter } from './model-router';
 import { DeterministicFixtureProvider, makeFailingFixtureProvider } from './test-fixtures';
@@ -19,22 +16,17 @@ import type { LlmProvider, LlmProviderInput, LlmProviderResult } from './provide
 const NOW = '2026-08-26T00:00:00.000Z';
 
 const RESEARCH_GOAL: ResearchGoal = {
-  id: 'goal-1',
-  objective: 'Determine whether momentum persists in trending regime',
+  id: 'goal-1', objective: 'Determine whether momentum persists in trending regime',
   universe: { id: 'universe-1', symbols: ['BTC-USD'], weighting: 'equal', rebalanceRule: 'daily' },
   timePeriod: { start: '2026-01-01T00:00:00.000Z', end: '2026-08-26T00:00:00.000Z' },
-  constraints: ['paper only'],
-  evidenceRequirements: ['OOS evidence'],
-  successCriteria: ['directional accuracy > 0.5'],
-  failureCriteria: ['directional accuracy <= 0.5'],
-  createdAt: NOW,
-  createdBy: 'test',
+  constraints: ['paper only'], evidenceRequirements: ['OOS evidence'],
+  successCriteria: ['directional accuracy > 0.5'], failureCriteria: ['directional accuracy <= 0.5'],
+  createdAt: NOW, createdBy: 'test',
 };
 
 const DATA_WINDOW: DataWindow = {
   earliestTimestamp: Date.parse('2026-01-01T00:00:00.000Z'),
-  latestTimestamp: Date.parse('2026-08-26T00:00:00.000Z'),
-  barCount: 1000,
+  latestTimestamp: Date.parse('2026-08-26T00:00:00.000Z'), barCount: 1000,
 };
 
 const UNIVERSE: Universe = { id: 'universe-1', symbols: ['BTC-USD'], weighting: 'equal', rebalanceRule: 'daily' };
@@ -48,8 +40,7 @@ const PORTFOLIO_CONFIG: PortfolioConfig = {
 const RISK_INPUTS: RiskInputs = {
   realizedVolatility: 0.2,
   correlationMatrix: new Map([['BTC-USD', new Map([['BTC-USD', 1.0]])]]),
-  betas: new Map([['BTC-USD', 1.0]]),
-  currentDrawdown: 0.02,
+  betas: new Map([['BTC-USD', 1.0]]), currentDrawdown: 0.02,
 };
 
 const COMPOSED_ALPHAS: ComposedAlpha[] = [{
@@ -63,20 +54,11 @@ function makeConfig(): RunDeliberationConfig {
   const routerResult = createModelRouter([new DeterministicFixtureProvider()]);
   if (!routerResult.ok) throw new Error(`router: ${routerResult.reasons.join('; ')}`);
   return {
-    router: routerResult.router,
-    researchGoal: RESEARCH_GOAL,
-    proposalId: 'prop-1',
-    nowIso: NOW,
-    maxDebateRounds: 1,
-    dataWindow: DATA_WINDOW,
-    universe: UNIVERSE,
-    timeframe: '1d',
-    importerVersion: 'deliberation-adapter@1',
-    defaultCostMode: 'normal' as StressMode,
-    portfolioConfig: PORTFOLIO_CONFIG,
-    riskInputs: RISK_INPUTS,
-    currentWeights: new Map(),
-    composedAlphas: COMPOSED_ALPHAS,
+    router: routerResult.router, researchGoal: RESEARCH_GOAL, proposalId: 'prop-1',
+    nowIso: NOW, maxDebateRounds: 1, dataWindow: DATA_WINDOW, universe: UNIVERSE,
+    timeframe: '1d', importerVersion: 'deliberation-adapter@1',
+    defaultCostMode: 'normal' as StressMode, portfolioConfig: PORTFOLIO_CONFIG,
+    riskInputs: RISK_INPUTS, currentWeights: new Map(), composedAlphas: COMPOSED_ALPHAS,
   };
 }
 

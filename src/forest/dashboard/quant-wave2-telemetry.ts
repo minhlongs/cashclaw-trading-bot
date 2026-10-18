@@ -1,7 +1,4 @@
-import {
-  computeHawkesIntensity,
-  computeOrderBookImbalance,
-} from '@/tree/quantlib/microstructure/hawkes-arrival-kernel';
+import { computeHawkesIntensity, computeOrderBookImbalance } from '@/tree/quantlib/microstructure/hawkes-arrival-kernel';
 import { GatheralRoughVolatilityEngine } from '@/tree/quantlib/volatility/gatheral-rough-volatility';
 import { runBipowerJumpEstimation } from '@/tree/quantlib/volatility/bipower-jump-estimator';
 import { validateCandleSeries } from '@/tree/alpha/data-quality/validator';

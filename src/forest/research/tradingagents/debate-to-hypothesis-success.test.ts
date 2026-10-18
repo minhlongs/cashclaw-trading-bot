@@ -1,4 +1,4 @@
-// Debate-to-Hypothesis success & config forwarding tests (< 250 LOC).
+// Debate-to-Hypothesis success & config forwarding tests.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { debateToHypothesis } from './debate-to-hypothesis';
@@ -12,29 +12,17 @@ import type { ExperimentSpec } from '@/tree/research/alpha/experiment-spec';
 import type { ResearchLineage } from '@/tree/research/evidence/lineage';
 
 function makeMockRouter(): ModelRouter {
-  return {
-    route: vi.fn().mockResolvedValue({ ok: false, reasons: ['not used in this test'] }),
-  } as unknown as ModelRouter;
+  return { route: vi.fn().mockResolvedValue({ ok: false, reasons: ['not used in this test'] }) } as unknown as ModelRouter;
 }
 
 function makeConfig(overrides: Partial<{
-  orchestratorConfig: Partial<DebateOrchestratorConfig>;
-  router: ModelRouter;
-  dataWindow: unknown;
-  universe: unknown;
-  timeframe: string;
-  nowIso: string;
-  importerVersion: string;
-  defaultCostMode: string;
+  orchestratorConfig: Partial<DebateOrchestratorConfig>; router: ModelRouter; dataWindow: unknown;
+  universe: unknown; timeframe: string; nowIso: string; importerVersion: string; defaultCostMode: string;
 }> = {}): Parameters<typeof debateToHypothesis>[0] {
   return {
     orchestratorConfig: {
-      router: overrides.router || makeMockRouter(),
-      maxDebateRounds: 2,
-      researchGoalId: 'goal-1',
-      proposalId: 'prop-1',
-      nowIso: '2026-08-26T00:00:00.000Z',
-      ...overrides.orchestratorConfig,
+      router: overrides.router || makeMockRouter(), maxDebateRounds: 2, researchGoalId: 'goal-1',
+      proposalId: 'prop-1', nowIso: '2026-08-26T00:00:00.000Z', ...overrides.orchestratorConfig,
     },
     router: overrides.router || makeMockRouter(),
     dataWindow: overrides.dataWindow || { start: '2024-01-01', end: '2024-12-31' },
@@ -47,9 +35,7 @@ function makeConfig(overrides: Partial<{
 }
 
 describe('debateToHypothesis — success & config forwarding', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
+  beforeEach(() => { vi.resetModules(); });
 
   it('returns success with all components when everything passes', async () => {
     vi.doMock('./debate-orchestrator', () => ({
@@ -65,7 +51,6 @@ describe('debateToHypothesis — success & config forwarding', () => {
         },
       }),
     }));
-
     vi.doMock('@/tree/research/tradingagents/hypothesis-extraction', () => ({
       extractHypotheses: vi.fn().mockReturnValue({
         ok: true,
@@ -75,11 +60,9 @@ describe('debateToHypothesis — success & config forwarding', () => {
         },
       }),
     }));
-
     vi.doMock('@/tree/research/evidence/lineage', () => ({
       buildLineage: vi.fn().mockReturnValue({ nodes: [], edges: [] } as unknown as ResearchLineage),
     }));
-
     vi.doMock('@/tree/research/alpha/compiler', () => ({
       compile: vi.fn().mockResolvedValue({ ok: true, value: { id: 'spec-1' } as unknown as ExperimentSpec }),
     }));

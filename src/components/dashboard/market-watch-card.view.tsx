@@ -13,18 +13,8 @@ export function MarketWatchCard() {
   const [exchange, setExchange] = useState<SupportedExchange>('binance');
   const [pair, setPair] = useState<string>('BTC/USDT');
 
-  const {
-    ticker,
-    provenance,
-    loading,
-    error,
-    isRateLimited,
-    isCircuitOpen,
-    refetch,
-  } = useMarketTicker({
-    exchange,
-    symbol: pair,
-    intervalMs: 15_000,
+  const { ticker, provenance, loading, error, isRateLimited, isCircuitOpen, refetch } = useMarketTicker({
+    exchange, symbol: pair, intervalMs: 15_000,
   });
 
   const spread = ticker ? Math.max(0, ticker.ask - ticker.bid) : 0;

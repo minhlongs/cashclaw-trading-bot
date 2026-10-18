@@ -26,8 +26,7 @@ export default function DashboardClient() {
     let cancelled = false;
     async function load() {
       try {
-        setLoading(true);
-        setError(null);
+        setLoading(true); setError(null);
         const response = await fetch('/api/bots', {
           method: 'GET', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, cache: 'no-store',
         });

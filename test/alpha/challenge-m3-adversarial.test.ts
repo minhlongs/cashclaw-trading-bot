@@ -38,20 +38,14 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
       expect(current).toBe(AUTOMATED_CEILING);
       expect(getTransition('SHADOW', { type: 'gate_passed' })).toBeNull();
       expect(canTransition('SHADOW', { type: 'gate_passed' })).toBe(false);
-      expect(() => transitionStrategy('SHADOW', { type: 'gate_passed' })).toThrow(
-        /Invalid transition: SHADOW \+ gate_passed — no valid target/,
-      );
+      expect(() => transitionStrategy('SHADOW', { type: 'gate_passed' })).toThrow(/Invalid transition: SHADOW \+ gate_passed — no valid target/);
     });
-
     it('rejects gate_passed from non-existent or alias phase PAPER_TRADING', () => {
       const invalidPhase = 'PAPER_TRADING' as unknown as StrategyPhase;
       expect(getTransition(invalidPhase, { type: 'gate_passed' })).toBeNull();
       expect(canTransition(invalidPhase, { type: 'gate_passed' })).toBe(false);
-      expect(() => transitionStrategy(invalidPhase, { type: 'gate_passed' })).toThrow(
-        /Invalid transition: PAPER_TRADING \+ gate_passed — no valid target/,
-      );
+      expect(() => transitionStrategy(invalidPhase, { type: 'gate_passed' })).toThrow(/Invalid transition: PAPER_TRADING \+ gate_passed — no valid target/);
     });
-
     it('repeatedly blocks gate_passed attempts directly initiated at SHADOW', () => {
       for (let i = 0; i < 10; i++) {
         expect(getTransition('SHADOW', { type: 'gate_passed' })).toBeNull();
@@ -73,7 +67,6 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
         expect(next).not.toBe('LIVE');
       }
     });
-
     it('proves zero triggers of any kind from SHADOW can transition directly to LIVE or PAPER_CANDIDATE', () => {
       for (const trigger of ADVERSARIAL_TRIGGERS) {
         const next = getTransition('SHADOW', trigger);
@@ -87,14 +80,11 @@ describe('Adversarial Challenge: Promotion State Machine & SHADOW Ceiling', () =
     it('proves impossible to jump to LIVE from any non-MANUAL_APPROVAL state under any trigger', () => {
       const nonManualPhases = ALL_PHASES.filter((p) => p !== 'MANUAL_APPROVAL');
       const invalidPhases = ['PAPER_TRADING', 'PAPER_CANDIDATE', 'UNKNOWN_PHASE', ''] as unknown as StrategyPhase[];
-
       for (const phase of [...nonManualPhases, ...invalidPhases]) {
         for (const trigger of ADVERSARIAL_TRIGGERS) {
           const target = getTransition(phase, trigger);
           expect(target).not.toBe('LIVE');
-          if (target === null) {
-            expect(() => transitionStrategy(phase, trigger)).toThrow();
-          }
+          if (target === null) expect(() => transitionStrategy(phase, trigger)).toThrow();
         }
       }
     });

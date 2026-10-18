@@ -1,15 +1,9 @@
 // Provider Adapter tests — registry construction, allowlist validation,
-// duplicate detection, and the three registry accessors (get /
-// getPrimaryForTier / getFallbackForTier). Uses DeterministicFixtureProvider
-// so no keys or network are needed.
+// duplicate detection, and the three registry accessors.
 
 import { describe, expect, it } from 'vitest';
 import { createProviderRegistry, NoProviderAvailableError, ProviderCallFailedError } from './provider-adapter';
-import {
-  DeterministicFixtureProvider,
-  FailingProvider,
-  makeFixtureProvider,
-} from './test-fixtures';
+import { DeterministicFixtureProvider, FailingProvider, makeFixtureProvider } from './test-fixtures';
 
 function configured(provider: { isConfigured: boolean }): boolean {
   return provider.isConfigured;
@@ -25,13 +19,9 @@ describe('createProviderRegistry — construction', () => {
 
   it('rejects an unallowlisted providerId', () => {
     const bad = {
-      providerId: 'BogusProvider' as never,
-      displayName: 'Bad',
-      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' },
-      isConfigured: true,
-      async call() {
-        throw new Error('never called');
-      },
+      providerId: 'BogusProvider' as never, displayName: 'Bad',
+      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' }, isConfigured: true,
+      async call() { throw new Error('never called'); },
     };
     const result = createProviderRegistry([bad]);
     expect(result.ok).toBe(false);
@@ -40,12 +30,7 @@ describe('createProviderRegistry — construction', () => {
   });
 
   it('rejects a duplicate providerId', () => {
-    // DeterministicFixtureProvider hardcodes its id to 'Anthropic', so two
-    // instances register under the same id and trip the duplicate guard.
-    const result = createProviderRegistry([
-      new DeterministicFixtureProvider(),
-      new DeterministicFixtureProvider(),
-    ]);
+    const result = createProviderRegistry([new DeterministicFixtureProvider(), new DeterministicFixtureProvider()]);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reasons.some((r) => r.includes("duplicate providerId 'Anthropic'"))).toBe(true);
@@ -53,19 +38,11 @@ describe('createProviderRegistry — construction', () => {
 
   it('rejects when one provider is unallowlisted and another is a duplicate', () => {
     const bad = {
-      providerId: 'BogusProvider' as never,
-      displayName: 'Bad',
-      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' },
-      isConfigured: true,
-      async call() {
-        throw new Error('never called');
-      },
+      providerId: 'BogusProvider' as never, displayName: 'Bad',
+      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' }, isConfigured: true,
+      async call() { throw new Error('never called'); },
     };
-    const result = createProviderRegistry([
-      new DeterministicFixtureProvider(),
-      bad,
-      new DeterministicFixtureProvider(),
-    ]);
+    const result = createProviderRegistry([new DeterministicFixtureProvider(), bad, new DeterministicFixtureProvider()]);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reasons.some((r) => r.includes('unknown providerId'))).toBe(true);
@@ -102,10 +79,7 @@ describe('ProviderRegistry.get', () => {
 
 describe('ProviderRegistry.getPrimaryForTier', () => {
   it('returns the first configured provider offering the tier', () => {
-    const result = createProviderRegistry([
-      new DeterministicFixtureProvider(),
-      makeFixtureProvider('OpenAI'),
-    ]);
+    const result = createProviderRegistry([new DeterministicFixtureProvider(), makeFixtureProvider('OpenAI')]);
     if (!result.ok) throw new Error('registry');
     const primary = result.registry.getPrimaryForTier('REASONING');
     expect(primary?.providerId).toBe('Anthropic');
@@ -113,13 +87,9 @@ describe('ProviderRegistry.getPrimaryForTier', () => {
 
   it('skips providers that are not configured', () => {
     const unconfigured = {
-      providerId: 'DeepSeek' as const,
-      displayName: 'Unc',
-      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' },
-      isConfigured: false,
-      async call() {
-        throw new Error('never called');
-      },
+      providerId: 'DeepSeek' as const, displayName: 'Unc',
+      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' }, isConfigured: false,
+      async call() { throw new Error('never called'); },
     };
     const configuredProvider = makeFixtureProvider('OpenAI');
     const result = createProviderRegistry([unconfigured, configuredProvider]);
@@ -137,10 +107,7 @@ describe('ProviderRegistry.getPrimaryForTier', () => {
 
 describe('ProviderRegistry.getFallbackForTier', () => {
   it('returns the second configured provider offering the tier', () => {
-    const result = createProviderRegistry([
-      new DeterministicFixtureProvider(),
-      makeFixtureProvider('OpenAI'),
-    ]);
+    const result = createProviderRegistry([new DeterministicFixtureProvider(), makeFixtureProvider('OpenAI')]);
     if (!result.ok) throw new Error('registry');
     const fallback = result.registry.getFallbackForTier('REASONING');
     expect(fallback?.providerId).toBe('OpenAI');
@@ -160,23 +127,13 @@ describe('ProviderRegistry.getFallbackForTier', () => {
 
   it('skips unconfigured providers when selecting fallback', () => {
     const unconfigured = {
-      providerId: 'DeepSeek' as const,
-      displayName: 'Unc',
-      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' },
-      isConfigured: false,
-      async call() {
-        throw new Error('never called');
-      },
+      providerId: 'DeepSeek' as const, displayName: 'Unc',
+      models: { FAST: 'f', REASONING: 'r', LOCAL: 'l' }, isConfigured: false,
+      async call() { throw new Error('never called'); },
     };
-    const result = createProviderRegistry([
-      new DeterministicFixtureProvider(),
-      unconfigured,
-      makeFixtureProvider('OpenAI'),
-    ]);
+    const result = createProviderRegistry([new DeterministicFixtureProvider(), unconfigured, makeFixtureProvider('OpenAI')]);
     if (!result.ok) throw new Error(`registry: ${result.reasons.join('; ')}`);
     const fallback = result.registry.getFallbackForTier('REASONING');
-    // The unconfigured provider in the middle is skipped, so the second
-    // CONFIGURED provider (OpenAI) is the fallback.
     expect(fallback?.providerId).toBe('OpenAI');
   });
 });
@@ -194,8 +151,6 @@ describe('FailingProvider', () => {
   });
 });
 
-// `configured` is a helper above — guard against a future refactor that
-// drops it leaving a dangling reference.
 describe('helpers', () => {
   it('configured reflects isConfigured', () => {
     expect(configured({ isConfigured: true })).toBe(true);

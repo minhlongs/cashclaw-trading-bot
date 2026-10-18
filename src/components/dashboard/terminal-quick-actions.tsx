@@ -65,30 +65,20 @@ export function TerminalQuickActions({ bots, onActionComplete }: TerminalQuickAc
 
         <div className="flex items-center gap-2">
           <button
-            type="button"
-            className="btn btn-secondary text-xs"
+            type="button" className="btn btn-secondary text-xs"
             disabled={loadingAction !== null || pausedBots.length === 0}
             onClick={() => handleBatchAction('resume')}
           >
-            {loadingAction === 'resume' ? (
-              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Play className="mr-1 h-3.5 w-3.5 text-profit" />
-            )}
+            {loadingAction === 'resume' ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-1 h-3.5 w-3.5 text-profit" />}
             {loadingAction === 'resume' ? t('resuming') : t('resumeAll')}
           </button>
 
           <button
-            type="button"
-            className="btn btn-secondary text-xs text-loss"
+            type="button" className="btn btn-secondary text-xs text-loss"
             disabled={loadingAction !== null || activeBots.length === 0}
             onClick={() => handleBatchAction('pause')}
           >
-            {loadingAction === 'pause' ? (
-              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Pause className="mr-1 h-3.5 w-3.5 text-loss" />
-            )}
+            {loadingAction === 'pause' ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Pause className="mr-1 h-3.5 w-3.5 text-loss" />}
             {loadingAction === 'pause' ? t('pausing') : t('pauseAll')}
           </button>
         </div>

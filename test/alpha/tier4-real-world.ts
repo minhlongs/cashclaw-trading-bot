@@ -118,10 +118,7 @@ export function registerTier4RealWorldTests(): void {
     });
 
     it('S8: Multi-asset trend-follower validates cross-asset consistency across 4 correlated pairs', () => {
-      const input = createPassingGateInput({
-        crossAsset: { positiveAssetFraction: 1.0, applicable: true },
-      });
-      const result = runOpaquePromotionGate(input);
+      const result = runOpaquePromotionGate(createPassingGateInput({ crossAsset: { positiveAssetFraction: 1.0, applicable: true } }));
       expect(result.passed).toBe(true);
       const crossAssetCheck = result.checks.find((c) => c.name === 'cross_asset_robustness');
       expect(crossAssetCheck?.passed).toBe(true);
@@ -129,24 +126,14 @@ export function registerTier4RealWorldTests(): void {
     });
 
     it('S9: Volatility-breakout strategy with downside asymmetry fails Sortino check', () => {
-      const input = createPassingGateInput({
-        sharpe: 1.45,
-        sortino: 1.05,
-      });
-      const result = runOpaquePromotionGate(input);
+      const result = runOpaquePromotionGate(createPassingGateInput({ sharpe: 1.45, sortino: 1.05 }));
       expect(result.passed).toBe(false);
       expect(result.verdict).toBe('KILLED');
       expect(result.failedChecks.some((c) => c.name === 'min_sharpe_sortino')).toBe(true);
     });
 
     it('S10: Full post-mortem diagnostic generation when strategy fails multiple stress gates', () => {
-      const input = createPassingGateInput({
-        numTrades: 18,
-        expectancy: -0.001,
-        maxDrawdown: 0.35,
-        leakageViolations: 2,
-      });
-      const result = runOpaquePromotionGate(input);
+      const result = runOpaquePromotionGate(createPassingGateInput({ numTrades: 18, expectancy: -0.001, maxDrawdown: 0.35, leakageViolations: 2 }));
       expect(result.verdict).toBe('KILLED');
       expect(result.failedChecks.length).toBe(4);
       expect(result.diagnosticReasons).toHaveLength(4);

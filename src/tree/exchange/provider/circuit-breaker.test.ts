@@ -13,7 +13,6 @@ describe('CircuitBreaker', () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       expect(cb.getState()).toBe('closed');
     });
-
     it('tracks zero failures on start', () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       expect(cb.getFailureCount()).toBe(0);
@@ -25,7 +24,6 @@ describe('CircuitBreaker', () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       expect(await cb.execute(successFn)).toBe('ok');
     });
-
     it('resets failure count and closes circuit on success', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
@@ -46,7 +44,6 @@ describe('CircuitBreaker', () => {
       await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('degraded');
     });
-
     it('next failure in degraded trips OPEN', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       for (let i = 0; i < 3; i++) await cb.execute(failingFn).catch(() => {});
@@ -54,13 +51,11 @@ describe('CircuitBreaker', () => {
       await cb.execute(failingFn).catch(() => {});
       expect(cb.getState()).toBe('open');
     });
-
     it('blocks calls when open via CircuitOpenError', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
       await expect(cb.execute(successFn)).rejects.toThrow(CircuitOpenError);
     });
-
     it('error includes retry delay', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       for (let i = 0; i < 4; i++) await cb.execute(failingFn).catch(() => {});
@@ -71,7 +66,6 @@ describe('CircuitBreaker', () => {
         expect((e as CircuitOpenError).retryAfterMs).toBeGreaterThan(0);
       }
     });
-
     it('accumulates failure count correctly', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});
@@ -79,7 +73,6 @@ describe('CircuitBreaker', () => {
       await cb.execute(failingFn).catch(() => {});
       expect(cb.getFailureCount()).toBe(2);
     });
-
     it('does not open until threshold (3) reached', async () => {
       const cb = new CircuitBreaker({ cooldownMs: 5000, halfOpenAfterMs: 2000 });
       await cb.execute(failingFn).catch(() => {});

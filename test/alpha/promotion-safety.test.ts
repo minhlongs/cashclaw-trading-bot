@@ -24,10 +24,8 @@ function getTsSourceFiles(dir: string): string[] {
 }
 
 const ALL_PHASES: readonly StrategyPhase[] = [
-  'RESEARCH', 'BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS',
-  'PAPER', 'SHADOW', 'MANUAL_APPROVAL', 'LIVE', 'KILLED',
+  'RESEARCH', 'BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW', 'MANUAL_APPROVAL', 'LIVE', 'KILLED',
 ];
-
 const TRIGGERS: readonly TransitionTrigger[] = [
   { type: 'gate_passed' }, { type: 'gate_failed' },
   { type: 'manual_approval', approved: true }, { type: 'manual_approval', approved: false },
@@ -52,8 +50,7 @@ describe('Promotion State Machine Safety Hardening', () => {
     it('caps gate_passed progression strictly at SHADOW', () => {
       const passed: TransitionTrigger = { type: 'gate_passed' };
       let phase: StrategyPhase = 'RESEARCH';
-      const expectedSteps: StrategyPhase[] = ['BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW'];
-      for (const step of expectedSteps) {
+      for (const step of ['BACKTEST', 'OOS_PASS', 'ROBUSTNESS_PASS', 'PAPER', 'SHADOW'] as StrategyPhase[]) {
         phase = transitionStrategy(phase, passed).to;
         expect(phase).toBe(step);
       }
@@ -62,7 +59,6 @@ describe('Promotion State Machine Safety Hardening', () => {
       expect(canTransition('SHADOW', passed)).toBe(false);
       expect(() => transitionStrategy('SHADOW', passed)).toThrow(/Invalid transition: SHADOW \+ gate_passed/);
     });
-
     it('proves zero automated paths to LIVE or MANUAL_APPROVAL from any phase', () => {
       const passed: TransitionTrigger = { type: 'gate_passed' };
       for (const p of ALL_PHASES) {
@@ -71,25 +67,21 @@ describe('Promotion State Machine Safety Hardening', () => {
         expect(next).not.toBe('MANUAL_APPROVAL');
       }
     });
-
     it('requires human approval to reach MANUAL_APPROVAL and promote to reach LIVE', () => {
       const app = { type: 'manual_approval' as const, approved: true };
       const rej = { type: 'manual_approval' as const, approved: false };
       const prom = { type: 'promote' as const };
-
       expect(getTransition('SHADOW', app)).toBe('MANUAL_APPROVAL');
       expect(getTransition('SHADOW', rej)).toBe('KILLED');
       for (const p of ALL_PHASES.filter((x) => x !== 'SHADOW')) {
         expect(getTransition(p, app)).toBeNull();
         expect(getTransition(p, rej)).toBeNull();
       }
-
       expect(getTransition('MANUAL_APPROVAL', prom)).toBe('LIVE');
       for (const p of ALL_PHASES.filter((x) => x !== 'MANUAL_APPROVAL')) {
         expect(getTransition(p, prom)).toBeNull();
       }
     });
-
     it('proves terminal states KILLED and LIVE cannot transition under any trigger', () => {
       for (const term of ['LIVE', 'KILLED'] as const) {
         expect(isTerminalPhase(term)).toBe(true);
@@ -100,7 +92,6 @@ describe('Promotion State Machine Safety Hardening', () => {
         }
       }
     });
-
     it('handles strengthened gateResultToTrigger inputs correctly', () => {
       expect(gateResultToTrigger('PASSED')).toEqual({ type: 'gate_passed' });
       expect(gateResultToTrigger('PAPER_CANDIDATE')).toEqual({ type: 'gate_passed' });
@@ -109,13 +100,8 @@ describe('Promotion State Machine Safety Hardening', () => {
       expect(gateResultToTrigger({ verdict: 'KILLED' })).toEqual({ type: 'gate_failed' });
       expect(gateResultToTrigger({ status: 'PAPER_CANDIDATE' })).toEqual({ type: 'gate_passed' });
       expect(gateResultToTrigger({ status: 'KILLED' })).toEqual({ type: 'gate_failed' });
-
-      const mockPassedResult: PromotionGateResult = {
-        passed: true, verdict: 'PASSED', checks: [], failedChecks: [], diagnosticReasons: [], timestamp: Date.now(),
-      };
-      const mockKilledResult: PromotionGateResult = {
-        passed: false, verdict: 'KILLED', checks: [], failedChecks: [], diagnosticReasons: ['check failed'], timestamp: Date.now(),
-      };
+      const mockPassedResult: PromotionGateResult = { passed: true, verdict: 'PASSED', checks: [], failedChecks: [], diagnosticReasons: [], timestamp: Date.now() };
+      const mockKilledResult: PromotionGateResult = { passed: false, verdict: 'KILLED', checks: [], failedChecks: [], diagnosticReasons: ['check failed'], timestamp: Date.now() };
       expect(gateResultToTrigger(mockPassedResult)).toEqual({ type: 'gate_passed' });
       expect(gateResultToTrigger(mockKilledResult)).toEqual({ type: 'gate_failed' });
     });

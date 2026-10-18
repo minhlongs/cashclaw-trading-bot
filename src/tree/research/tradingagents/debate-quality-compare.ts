@@ -4,13 +4,8 @@
 // REDUCE or DISABLE — never a silent keep.
 
 import {
-  armMetricsSchema,
-  DEBATE_ARMS,
-  DEFAULT_DEBATE_QUALITY_CONFIG,
-  type DebateArmMetrics,
-  type DebateQualityConfig,
-  type DebateQualityResult,
-  type ArmVerdict,
+  armMetricsSchema, DEBATE_ARMS, DEFAULT_DEBATE_QUALITY_CONFIG,
+  type DebateArmMetrics, type DebateQualityConfig, type DebateQualityResult, type ArmVerdict,
 } from './debate-quality-types';
 
 /** Relative improvement of candidate over baseline (baseline-zero safe). */

@@ -8,8 +8,7 @@ import type { BotCardData } from '@/forest/dashboard/actions';
 import { BotsTable } from './bots-table';
 
 export default function BotsListClient() {
-  const t = useTranslations();
-  const locale = useLocale();
+  const t = useTranslations(), locale = useLocale();
   const [bots, setBots] = useState<BotCardData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +24,7 @@ export default function BotsListClient() {
         const res = await fetch('/api/bots');
         const raw = (await res.json()) as { ok?: boolean; data?: BotCardData[] };
         if (!cancelled) {
-          if (raw.ok && Array.isArray(raw.data)) setBots(raw.data);
-          else setError('Failed to fetch bots');
+          if (raw.ok && Array.isArray(raw.data)) setBots(raw.data); else setError('Failed to fetch bots');
         }
       } catch { if (!cancelled) setError('Failed to fetch bots'); }
       finally { if (!cancelled) setLoading(false); }

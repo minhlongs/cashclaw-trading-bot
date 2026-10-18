@@ -57,15 +57,12 @@ export function MicrostructureLiquidityAnalyzer() {
             </div>
             <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
               <span className="text-xs text-[var(--text-secondary)]">VPIN Toxicity</span>
-              <div className={`mt-1 font-mono text-xl font-bold ${isToxicFlow ? 'text-[var(--color-loss)]' : 'text-[var(--color-profit)]'}`}>
-                {active.vpinToxicity.toFixed(2)}
-              </div>
+              <div className={`mt-1 font-mono text-xl font-bold ${isToxicFlow ? 'text-[var(--color-loss)]' : 'text-[var(--color-profit)]'}`}>{active.vpinToxicity.toFixed(2)}</div>
             </div>
             <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
               <span className="text-xs text-[var(--text-secondary)]">OMS Execution Guard</span>
               <div className="mt-1 font-mono text-sm font-bold flex items-center gap-1 text-[var(--color-warning)]">
-                <AlertTriangle size={14} />
-                <span>{isToxicFlow ? 'TWAP_THROTTLED' : 'NORMAL_PASSIVE'}</span>
+                <AlertTriangle size={14} /><span>{isToxicFlow ? 'TWAP_THROTTLED' : 'NORMAL_PASSIVE'}</span>
               </div>
             </div>
           </div>

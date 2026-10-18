@@ -66,6 +66,9 @@ describe('CashClaw CLI Suite (Apache-2.0 Open-Core)', () => {
       expect(ev.corwinSchultzSpreadBps).toBeGreaterThan(0);
       expect(ev.hamiltonCrisisProb).toBeGreaterThan(0);
       expect(ev.hrpDiversificationRatio).toBeGreaterThan(1);
+      expect(ev.dupireAtmLocalVol).toBeGreaterThan(0);
+      expect(ev.motCorridorWidthBps).toBeGreaterThan(0);
+      expect(typeof ev.roughPathLevyArea12).toBe('number');
       expect(ev.regime).toBeDefined();
     });
 

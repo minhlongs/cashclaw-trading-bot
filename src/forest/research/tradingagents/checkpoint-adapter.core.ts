@@ -3,11 +3,8 @@
 // debateState (WebCrypto only). Round-trip tested.
 
 import {
-  serializeCheckpoint,
-  deserializeCheckpoint,
-  computeDebateResultHash,
-  type DebateCheckpoint,
-  type DebateState,
+  serializeCheckpoint, deserializeCheckpoint, computeDebateResultHash,
+  type DebateCheckpoint, type DebateState,
 } from '@/tree/research/tradingagents/debate-state';
 import type { ModelProvenance, ToolProvenance } from '@/tree/research/tradingagents';
 import type { CheckpointEnvelope, CheckpointAdapterResult } from './checkpoint-adapter.types';

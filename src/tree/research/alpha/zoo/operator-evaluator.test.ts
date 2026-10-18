@@ -1,9 +1,4 @@
 // Operator evaluator — end-to-end tests (Phase 3 Step 2).
-// Verifies the AST walker over a symbol×time panel: exact seed vectors
-// (beta5, alpha101_006), causal warmup nulls, fail-closed typed errors,
-// determinism, and append-invariance (adding later bars never changes
-// already-emitted values). Pure; no I/O.
-
 import { describe, expect, it } from 'vitest';
 import { evaluateFormula, type SymbolPanel } from './operator-evaluator';
 import { normalizeFormula } from './operator-vocabulary';
@@ -193,7 +188,6 @@ describe('evaluator abs operator', () => {
   });
 
   it('abs of a negative literal field is positive', () => {
-    // Force a sign-flipped panel: abs(-close) == close, value-wise.
     const formula = normalized('|-1 * close|');
     const panel = makePanel(['AAA'], 6, 2);
     const r = evaluateFormula(formula, panel);
@@ -206,8 +200,6 @@ describe('evaluator abs operator', () => {
   });
 
   it('vwap equals typical price (high+low+close)/3', () => {
-    // Volume cancels in the VWAP numerator/denominator, so vwap == typical
-    // price per bar — verify against the raw panel values directly.
     const formula = normalized('vwap()');
     const panel = makePanel(['AAA', 'BBB'], 8, 3);
     const r = evaluateFormula(formula, panel);
@@ -218,10 +210,7 @@ describe('evaluator abs operator', () => {
       const low = panel.fields.low[s];
       const close = panel.fields.close[s];
       for (let t = 0; t < 8; t += 1) {
-        expect(r.value[s][t]).toBeCloseTo(
-          ((high[t] as number) + (low[t] as number) + (close[t] as number)) / 3,
-          9,
-        );
+        expect(r.value[s][t]).toBeCloseTo(((high[t] as number) + (low[t] as number) + (close[t] as number)) / 3, 9);
       }
     }
   });

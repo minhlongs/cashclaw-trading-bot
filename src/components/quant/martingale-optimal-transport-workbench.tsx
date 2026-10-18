@@ -2,10 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Compass } from 'lucide-react';
-import {
-  computeMartingaleOptimalTransportTelemetry,
-  type MotSmilePreset,
-} from '@/forest/dashboard/quant-telemetry-service';
+import { computeMartingaleOptimalTransportTelemetry, type MotSmilePreset } from '@/forest/dashboard/quant-telemetry-service';
 import { QuantScreenHeader } from './quant-screen-header';
 import { QuantUxProMaxBar } from './quant-ux-pro-max-bar';
 

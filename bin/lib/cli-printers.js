@@ -67,6 +67,9 @@ function printEvalReport(version, symbol, result) {
     { label: 'Roll Effective Spread', value: `${result.rollEffectiveSpreadBps} bps` },
     { label: 'Hamilton Crisis Prob', value: `${result.hamiltonCrisisProb}` },
     { label: 'HRP Diversification', value: `${result.hrpDiversificationRatio}x` },
+    { label: 'Dupire ATM Local Vol', value: `${result.dupireAtmLocalVol}` },
+    { label: 'MOT Corridor Width', value: `${result.motCorridorWidthBps} bps` },
+    { label: 'Rough Path Levy Area', value: `${result.roughPathLevyArea12}` },
     { label: 'Market Regime', value: result.regime },
     { label: 'Execution Recommendation', value: result.recommendation },
   ]));

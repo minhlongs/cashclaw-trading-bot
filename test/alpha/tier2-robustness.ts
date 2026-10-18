@@ -1,37 +1,19 @@
 import { describe, expect, it } from 'vitest';
+import { getTransition, isTerminalPhase, transitionStrategy } from '@/forest/alpha/gate/promotion-states';
 import {
-  getTransition,
-  isTerminalPhase,
-  transitionStrategy,
-} from '@/forest/alpha/gate/promotion-states';
-import {
-  computeCanonicalSha256,
-  evalBaselineComparison,
-  evalLeakageInvariance,
-  evalNoSingleWindowDependency,
-  evalReproducibleHash,
-  runOpaquePromotionGate,
+  computeCanonicalSha256, evalBaselineComparison, evalLeakageInvariance,
+  evalNoSingleWindowDependency, evalReproducibleHash, runOpaquePromotionGate,
 } from './promotion-gate-fixtures';
 import { createPassingGateInput } from './promotion-gate-generators';
 
 export function registerTier2RobustnessTests(): void {
   describe('Tier 2: Boundary & Corner Cases — Invariance, Baseline, Hash & Safety (F12-F17)', () => {
     describe('F12: leakageInvariance Boundary Values', () => {
-      it('passes at exactly 0 mutations (strict zero-tolerance)', () => {
-        expect(evalLeakageInvariance(0).passed).toBe(true);
-      });
-      it('fails at exactly 1 mutation (any leakage is fatal)', () => {
-        expect(evalLeakageInvariance(1).passed).toBe(false);
-      });
-      it('fails at 2 mutations', () => {
-        expect(evalLeakageInvariance(2).passed).toBe(false);
-      });
-      it('fails when mutation count is fractional 0.5', () => {
-        expect(evalLeakageInvariance(0.5).passed).toBe(false);
-      });
-      it('fails when mutation count is negative -1', () => {
-        expect(evalLeakageInvariance(-1).passed).toBe(false);
-      });
+      it('passes at exactly 0 mutations (strict zero-tolerance)', () => { expect(evalLeakageInvariance(0).passed).toBe(true); });
+      it('fails at exactly 1 mutation (any leakage is fatal)', () => { expect(evalLeakageInvariance(1).passed).toBe(false); });
+      it('fails at 2 mutations', () => { expect(evalLeakageInvariance(2).passed).toBe(false); });
+      it('fails when mutation count is fractional 0.5', () => { expect(evalLeakageInvariance(0.5).passed).toBe(false); });
+      it('fails when mutation count is negative -1', () => { expect(evalLeakageInvariance(-1).passed).toBe(false); });
     });
 
     describe('F13: noSingleWindowDependency Boundary Values', () => {
