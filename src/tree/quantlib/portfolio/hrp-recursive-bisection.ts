@@ -1,25 +1,13 @@
 export interface HrpAllocatorParams {
-  readonly symbols: readonly string[];
-  readonly volatilities: readonly number[];
-  readonly correlationMatrix: readonly (readonly number[])[];
+  readonly symbols: readonly string[]; readonly volatilities: readonly number[]; readonly correlationMatrix: readonly (readonly number[])[];
 }
-
 export interface HrpAssetAllocation {
-  readonly symbol: string;
-  readonly originalIndex: number;
-  readonly quasiDiagRank: number;
-  readonly volatility: number;
-  readonly hrpWeight: number;
-  readonly inverseVolWeight: number;
-  readonly equalWeight: number;
+  readonly symbol: string; readonly originalIndex: number; readonly quasiDiagRank: number;
+  readonly volatility: number; readonly hrpWeight: number; readonly inverseVolWeight: number; readonly equalWeight: number;
 }
-
 export interface HrpAllocationResult {
-  readonly seriatedSymbols: readonly string[];
-  readonly distanceMatrix: readonly (readonly number[])[];
-  readonly portfolioVolatility: number;
-  readonly diversificationRatio: number;
-  readonly allocations: readonly HrpAssetAllocation[];
+  readonly seriatedSymbols: readonly string[]; readonly distanceMatrix: readonly (readonly number[])[];
+  readonly portfolioVolatility: number; readonly diversificationRatio: number; readonly allocations: readonly HrpAssetAllocation[];
 }
 
 function buildCovarianceAndDistance(vols: readonly number[], corr: readonly (readonly number[])[]) {
@@ -79,28 +67,23 @@ export function computeHrpRecursiveBisection(params: HrpAllocatorParams): HrpAll
     const cluster = queue.shift()!;
     if (cluster.length <= 1) continue;
     const mid = Math.floor(cluster.length / 2);
-    const left = cluster.slice(0, mid);
-    const right = cluster.slice(mid);
-    const vLeft = computeClusterVariance(left, cov);
-    const vRight = computeClusterVariance(right, cov);
+    const [left, right] = [cluster.slice(0, mid), cluster.slice(mid)];
+    const [vLeft, vRight] = [computeClusterVariance(left, cov), computeClusterVariance(right, cov)];
     const alpha = 1 - vLeft / (vLeft + vRight);
     for (const idx of left) rawWeights[idx] = (rawWeights[idx] ?? 1) * alpha;
     for (const idx of right) rawWeights[idx] = (rawWeights[idx] ?? 1) * (1 - alpha);
     queue.push(left, right);
   }
-
   const totalW = rawWeights.reduce((a, b) => a + b, 0);
   const weights = rawWeights.map((w) => w / totalW);
   const invVolRaw = params.volatilities.map((v) => 1 / Math.max(1e-6, v));
   const invVolSum = invVolRaw.reduce((a, b) => a + b, 0);
-  let portVar = 0;
-  let weightedVolSum = 0;
+  let [portVar, weightedVolSum] = [0, 0];
   for (let i = 0; i < n; i++) {
     weightedVolSum += weights[i]! * (params.volatilities[i] ?? 0.01);
     for (let j = 0; j < n; j++) portVar += weights[i]! * weights[j]! * cov[i]![j]!;
   }
   const portVol = Math.sqrt(Math.max(1e-10, portVar));
-
   return {
     seriatedSymbols: order.map((idx) => params.symbols[idx]!), distanceMatrix: dist,
     portfolioVolatility: Number(portVol.toFixed(6)), diversificationRatio: Number((weightedVolSum / portVol).toFixed(4)),

@@ -3,41 +3,27 @@ import { volatilityDca } from '@/tree/quantlib/volatility-dca';
 import { resolveStressConfig } from '@/tree/alpha/cost-stress';
 import { TIER_TO_STRESS, REGIME_SEEDS, CANDIDATE_TRIALS } from './quant-telemetry-seeds';
 import {
-  computeHawkesLobTelemetry,
-  computeRoughVolatilityTelemetry,
-  computeDataQualityTelemetry,
-  computeCorrelationTelemetry,
-  type DataFaultMode,
-  type RoughVolMode,
+  computeHawkesLobTelemetry, computeRoughVolatilityTelemetry,
+  computeDataQualityTelemetry, computeCorrelationTelemetry,
+  type DataFaultMode, type RoughVolMode,
 } from './quant-wave2-telemetry';
 import {
-  computeLeadLagTelemetry,
-  computeAlmgrenChrissTelemetry,
-  type LeadLagPairId,
-  type ExecutionUrgencyPreset,
+  computeLeadLagTelemetry, computeAlmgrenChrissTelemetry,
+  type LeadLagPairId, type ExecutionUrgencyPreset,
 } from './quant-wave3-telemetry';
 import {
-  computeHamiltonHmmTelemetry,
-  computeHrpAllocatorTelemetry,
-  type HamiltonScenarioId,
-  type HrpRegimePreset,
+  computeHamiltonHmmTelemetry, computeHrpAllocatorTelemetry,
+  type HamiltonScenarioId, type HrpRegimePreset,
 } from './quant-wave4-telemetry';
 
 export {
-  computeHawkesLobTelemetry,
-  computeRoughVolatilityTelemetry,
-  computeDataQualityTelemetry,
-  computeCorrelationTelemetry,
-  computeLeadLagTelemetry,
-  computeAlmgrenChrissTelemetry,
-  computeHamiltonHmmTelemetry,
-  computeHrpAllocatorTelemetry,
-  type DataFaultMode,
-  type RoughVolMode,
-  type LeadLagPairId,
-  type ExecutionUrgencyPreset,
-  type HamiltonScenarioId,
-  type HrpRegimePreset,
+  computeHawkesLobTelemetry, computeRoughVolatilityTelemetry,
+  computeDataQualityTelemetry, computeCorrelationTelemetry,
+  computeLeadLagTelemetry, computeAlmgrenChrissTelemetry,
+  computeHamiltonHmmTelemetry, computeHrpAllocatorTelemetry,
+  type DataFaultMode, type RoughVolMode,
+  type LeadLagPairId, type ExecutionUrgencyPreset,
+  type HamiltonScenarioId, type HrpRegimePreset,
 };
 
 export type CostTierId = 'BASE' | 'ELEVATED' | 'EXTREME';

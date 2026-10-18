@@ -41,7 +41,7 @@ export {
 
 export {
   computeHawkesIntensity, computeOrderBookImbalance,
-  type HawkesKernelParams, type HawkesTelemetryResult, type OrderBookImbalanceResult,
+  type HawkesParams, type HawkesIntensityResult, type OrderBookImbalanceResult,
 } from './microstructure/hawkes-arrival-kernel';
 
 export { GatheralRoughVolatilityEngine } from './volatility/gatheral-rough-volatility';
@@ -52,7 +52,7 @@ export type { AsynchronousTick, HayashiYoshidaConfig, HayashiYoshidaResult } fro
 
 export {
   computeAlmgrenChrissTrajectory,
-  type AlmgrenChrissParams, type AlmgrenChrissResult, type AlmgrenChrissStep,
+  type AlmgrenChrissParams, type AlmgrenChrissTrajectoryResult, type AlmgrenChrissSlice,
 } from './execution/almgren-chriss-trajectory';
 
 export {

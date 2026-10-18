@@ -1,24 +1,11 @@
 export type HamiltonRegimeState = 'LOW_VOL_BULL' | 'HIGH_VOL_CRISIS';
-
 export interface HamiltonFilterParams {
-  readonly returns: readonly number[];
-  readonly p11: number;
-  readonly p22: number;
-  readonly mu1: number;
-  readonly sigma1: number;
-  readonly mu2: number;
-  readonly sigma2: number;
+  readonly returns: readonly number[]; readonly p11: number; readonly p22: number;
+  readonly mu1: number; readonly sigma1: number; readonly mu2: number; readonly sigma2: number;
 }
-
 export interface HamiltonFilterStep {
-  readonly stepIndex: number;
-  readonly returnVal: number;
-  readonly predictedLowVolProb: number;
-  readonly predictedCrisisProb: number;
-  readonly filteredLowVolProb: number;
-  readonly filteredCrisisProb: number;
-  readonly activeState: HamiltonRegimeState;
-  readonly sizingMultiplier: number;
+  readonly stepIndex: number; readonly returnVal: number; readonly predictedLowVolProb: number; readonly predictedCrisisProb: number;
+  readonly filteredLowVolProb: number; readonly filteredCrisisProb: number; readonly activeState: HamiltonRegimeState; readonly sizingMultiplier: number;
 }
 
 export interface HamiltonFilterResult {
@@ -75,12 +62,9 @@ export function runHamiltonMarkovFilter(params: HamiltonFilterParams): HamiltonF
 
     const sizing = Math.max(0.15, Math.min(1, 1 - 0.85 * xi2));
     steps.push({
-      stepIndex: t + 1,
-      returnVal: r,
-      predictedLowVolProb: Number(pred1.toFixed(6)),
-      predictedCrisisProb: Number(pred2.toFixed(6)),
-      filteredLowVolProb: Number(xi1.toFixed(6)),
-      filteredCrisisProb: Number(xi2.toFixed(6)),
+      stepIndex: t + 1, returnVal: r,
+      predictedLowVolProb: Number(pred1.toFixed(6)), predictedCrisisProb: Number(pred2.toFixed(6)),
+      filteredLowVolProb: Number(xi1.toFixed(6)), filteredCrisisProb: Number(xi2.toFixed(6)),
       activeState: xi2 >= 0.5 ? 'HIGH_VOL_CRISIS' : 'LOW_VOL_BULL',
       sizingMultiplier: Number(sizing.toFixed(4)),
     });
@@ -91,8 +75,7 @@ export function runHamiltonMarkovFilter(params: HamiltonFilterParams): HamiltonF
   const last = steps[steps.length - 1];
 
   return {
-    ergodicLowVolPi1: pi1,
-    ergodicCrisisPi2: pi2,
+    ergodicLowVolPi1: pi1, ergodicCrisisPi2: pi2,
     expectedDurationLowVol: Number((1 / (1 - p11)).toFixed(2)),
     expectedDurationCrisis: Number((1 / (1 - p22)).toFixed(2)),
     logLikelihoodHmm: Number(logLikHmm.toFixed(4)),

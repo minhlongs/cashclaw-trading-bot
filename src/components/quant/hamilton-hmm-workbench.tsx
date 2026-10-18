@@ -2,10 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Activity } from 'lucide-react';
-import {
-  computeHamiltonHmmTelemetry,
-  type HamiltonScenarioId,
-} from '@/forest/dashboard/quant-telemetry-service';
+import { computeHamiltonHmmTelemetry, type HamiltonScenarioId } from '@/forest/dashboard/quant-telemetry-service';
 import { QuantScreenHeader } from './quant-screen-header';
 import { QuantUxProMaxBar } from './quant-ux-pro-max-bar';
 
@@ -26,7 +23,6 @@ export function HamiltonHmmWorkbench() {
         title="Hamilton (1989) Causal Markov-Switching Regime Filter"
         subtitle="Zero-Lookahead Filtered State Probabilities ξ_{t|t} vs Non-Causal Kim Smoother ξ_{t|T}"
       />
-
       <QuantUxProMaxBar screenId="regime-switching-hamilton-hmm" telemetryPayload={hmm} />
 
       <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-4">
@@ -37,10 +33,7 @@ export function HamiltonHmmWorkbench() {
           <div className="flex flex-wrap gap-2" role="group" aria-label="Hamilton regime scenario selector">
             {SCENARIOS.map((item) => (
               <button
-                key={item}
-                type="button"
-                onClick={() => setScenario(item)}
-                aria-pressed={scenario === item}
+                key={item} type="button" onClick={() => setScenario(item)} aria-pressed={scenario === item}
                 className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all duration-150 ease-out ${
                   scenario === item
                     ? 'bg-[var(--color-accent)] text-[var(--bg-primary)] border-[var(--color-accent)]'
@@ -56,21 +49,15 @@ export function HamiltonHmmWorkbench() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)]">
             <span className="text-xs text-[var(--text-secondary)]">Filtered Crisis Prob ξ_t|t^(2)</span>
-            <div className="mt-1 font-mono text-xl font-bold text-[var(--color-accent)]">
-              {hmm.latestCrisisProb.toFixed(4)} ({hmm.latestState})
-            </div>
+            <div className="mt-1 font-mono text-xl font-bold text-[var(--color-accent)]">{hmm.latestCrisisProb.toFixed(4)} ({hmm.latestState})</div>
           </div>
           <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)]">
             <span className="text-xs text-[var(--text-secondary)]">Ergodic Weights (π1 / π2)</span>
-            <div className="mt-1 font-mono text-xl font-bold text-[var(--color-ai)]">
-              {hmm.ergodicLowVolPi1.toFixed(3)} / {hmm.ergodicCrisisPi2.toFixed(3)}
-            </div>
+            <div className="mt-1 font-mono text-xl font-bold text-[var(--color-ai)]">{hmm.ergodicLowVolPi1.toFixed(3)} / {hmm.ergodicCrisisPi2.toFixed(3)}</div>
           </div>
           <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)]">
             <span className="text-xs text-[var(--text-secondary)]">LR Statistic 2Δℓ &amp; Paper Sizing</span>
-            <div className="mt-1 font-mono text-xl font-bold text-[var(--color-profit)]">
-              +{hmm.likelihoodRatio2DeltaL.toFixed(2)} • m_t={hmm.latestSizingMultiplier.toFixed(2)}x
-            </div>
+            <div className="mt-1 font-mono text-xl font-bold text-[var(--color-profit)]">+{hmm.likelihoodRatio2DeltaL.toFixed(2)} • m_t={hmm.latestSizingMultiplier.toFixed(2)}x</div>
           </div>
         </div>
 
