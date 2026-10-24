@@ -1,5 +1,3 @@
-import type { GarmanDealerInventoryParams, GarmanDealerInventoryResult } from './garman-dealer-inventory-types';
-
 export function computeGarmanDealerInventory(p: GarmanDealerInventoryParams): GarmanDealerInventoryResult {
   const i0 = p.initialInventory, p0 = Math.max(1e-4, p.referencePrice);
   const lb = Math.max(0, p.buyerArrivalRate), ls = Math.max(0, p.sellerArrivalRate);
@@ -17,4 +15,22 @@ export function computeGarmanDealerInventory(p: GarmanDealerInventoryParams): Ga
     inventoryVariance: variance,
     exhaustionProbability: Math.max(0, Math.min(1, exhaustionProb)),
   };
+}
+
+export interface GarmanDealerInventoryParams {
+  readonly initialInventory: number;
+  readonly buyerArrivalRate: number;
+  readonly sellerArrivalRate: number;
+  readonly baseSpread: number;
+  readonly inventorySensitivity: number;
+  readonly referencePrice: number;
+}
+
+export interface GarmanDealerInventoryResult {
+  readonly askPrice: number;
+  readonly bidPrice: number;
+  readonly effectiveSpread: number;
+  readonly inventoryDrift: number;
+  readonly inventoryVariance: number;
+  readonly exhaustionProbability: number;
 }

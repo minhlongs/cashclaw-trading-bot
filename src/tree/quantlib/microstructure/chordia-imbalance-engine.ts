@@ -1,5 +1,3 @@
-import type { ChordiaImbalanceParams, ChordiaImbalanceResult } from './chordia-imbalance-types';
-
 export function computeChordiaOrderImbalance(p: ChordiaImbalanceParams): ChordiaImbalanceResult {
   const b = Math.max(0, p.buyerVolume), s = Math.max(0, p.sellerVolume);
   const v = Math.max(0, p.returnVolatility ?? 0);
@@ -13,4 +11,22 @@ export function computeChordiaOrderImbalance(p: ChordiaImbalanceParams): Chordia
   const rawReversal = -betaRev * oibRatio;
   const expectedReversal = Object.is(rawReversal, -0) ? 0 : rawReversal;
   return { orderImbalanceShares: oibShares, orderImbalanceRatio: oibRatio, dynamicSpreadBps: spreadBps, expectedReversalBps: expectedReversal, adversePressureBps: adversePressure, isLiquidityDrained: Math.abs(oibRatio) >= 0.5 };
+}
+
+export interface ChordiaImbalanceParams {
+  readonly buyerVolume: number;
+  readonly sellerVolume: number;
+  readonly returnVolatility?: number;
+  readonly baselineSpreadBps?: number;
+  readonly imbalanceSensitivity?: number;
+  readonly reversalCoefficient?: number;
+}
+
+export interface ChordiaImbalanceResult {
+  readonly orderImbalanceShares: number;
+  readonly orderImbalanceRatio: number;
+  readonly dynamicSpreadBps: number;
+  readonly expectedReversalBps: number;
+  readonly adversePressureBps: number;
+  readonly isLiquidityDrained: boolean;
 }

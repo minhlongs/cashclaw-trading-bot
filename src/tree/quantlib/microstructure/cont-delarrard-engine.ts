@@ -1,5 +1,3 @@
-import type { ContDeLarrardConfig, ContDeLarrardResult } from './cont-delarrard-types';
-
 export class ContDeLarrardEngine {
   public static calculate(config: ContDeLarrardConfig): ContDeLarrardResult {
     const { bidQueueSize: qb, askQueueSize: qa } = config;
@@ -21,4 +19,19 @@ export class ContDeLarrardEngine {
       queueImbalance: Number(imb.toFixed(6)),
     };
   }
+}
+
+export interface ContDeLarrardConfig {
+  readonly bidQueueSize: number;
+  readonly askQueueSize: number;
+  readonly arrivalRate?: number;
+  readonly cancellationRate?: number;
+  readonly marketOrderRate?: number;
+}
+
+export interface ContDeLarrardResult {
+  readonly probPriceIncrease: number;
+  readonly probPriceDecrease: number;
+  readonly expectedDepletionTime: number;
+  readonly queueImbalance: number;
 }

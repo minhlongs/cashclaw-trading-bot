@@ -1,5 +1,3 @@
-import type { MrrStructuralParams, MrrStructuralResult } from './mrr-structural-types';
-
 export function computeMrrStructuralSpread(p: MrrStructuralParams): MrrStructuralResult {
   const theta = Math.max(0, p.adverseSelection), phi = Math.max(1e-6, p.orderProcessingCost);
   const rho = Math.max(-0.999, Math.min(0.999, p.autocorrelation ?? 0));
@@ -15,4 +13,21 @@ export function computeMrrStructuralSpread(p: MrrStructuralParams): MrrStructura
     cumChange += dp;
   }
   return { spread, halfSpread, adverseSelectionShare, orderProcessingShare, predictedInnovations: innovations, cumulativePriceChange: cumChange };
+}
+
+export interface MrrStructuralParams {
+  readonly tradeSigns: readonly number[];
+  readonly adverseSelection: number;
+  readonly orderProcessingCost: number;
+  readonly autocorrelation?: number;
+  readonly midPrice?: number;
+}
+
+export interface MrrStructuralResult {
+  readonly spread: number;
+  readonly halfSpread: number;
+  readonly adverseSelectionShare: number;
+  readonly orderProcessingShare: number;
+  readonly predictedInnovations: readonly number[];
+  readonly cumulativePriceChange: number;
 }

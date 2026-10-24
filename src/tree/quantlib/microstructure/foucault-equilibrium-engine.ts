@@ -1,5 +1,3 @@
-import type { FoucaultEquilibriumParams, FoucaultEquilibriumResult } from './foucault-equilibrium-types';
-
 export function computeFoucaultEquilibrium(p: FoucaultEquilibriumParams): FoucaultEquilibriumResult {
   const sigV = Math.max(1e-4, p.assetVolatility), mid = Math.max(1e-4, p.midPrice ?? 100);
   const alphaI = Math.min(0.99, Math.max(0, p.informedProportion));
@@ -19,4 +17,22 @@ export function computeFoucaultEquilibrium(p: FoucaultEquilibriumParams): Foucau
     winnersCurseBps: curseBps,
     marketOrderProb: marketProb,
   };
+}
+
+export interface FoucaultEquilibriumParams {
+  readonly assetVolatility: number;
+  readonly informedProportion: number;
+  readonly holdingCost?: number;
+  readonly orderArrivalRate?: number;
+  readonly midPrice?: number;
+}
+
+export interface FoucaultEquilibriumResult {
+  readonly halfSpread: number;
+  readonly bid: number;
+  readonly ask: number;
+  readonly spread: number;
+  readonly fillProbability: number;
+  readonly winnersCurseBps: number;
+  readonly marketOrderProb: number;
 }

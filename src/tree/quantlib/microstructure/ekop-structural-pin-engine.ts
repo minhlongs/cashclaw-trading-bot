@@ -1,5 +1,3 @@
-import type { EkopStructuralPinParams, EkopStructuralPinResult, AdverseSelectionRiskLevel } from './ekop-structural-pin-types';
-
 export function computeEkopStructuralPin(p: EkopStructuralPinParams): EkopStructuralPinResult {
   const alpha = Math.max(0, Math.min(1, p.eventProbability));
   const delta = Math.max(0, Math.min(1, p.badNewsProbability));
@@ -20,4 +18,23 @@ export function computeEkopStructuralPin(p: EkopStructuralPinParams): EkopStruct
     orderFlowAsymmetry: asymmetry,
     adverseSelectionRiskLevel: riskLevel,
   };
+}
+
+export interface EkopStructuralPinParams {
+  readonly eventProbability: number; // alpha in [0, 1]
+  readonly badNewsProbability: number; // delta in [0, 1]
+  readonly informedArrivalRate: number; // mu > 0
+  readonly uninformedBuyRate: number; // epsilon_b > 0
+  readonly uninformedSellRate: number; // epsilon_s > 0
+}
+
+export type AdverseSelectionRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface EkopStructuralPinResult {
+  readonly pin: number;
+  readonly expectedBuys: number;
+  readonly expectedSells: number;
+  readonly expectedTotalVolume: number;
+  readonly orderFlowAsymmetry: number;
+  readonly adverseSelectionRiskLevel: AdverseSelectionRiskLevel;
 }
