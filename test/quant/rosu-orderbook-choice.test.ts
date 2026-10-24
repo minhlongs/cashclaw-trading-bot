@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeRosuOrderBook } from '@/tree/quantlib/microstructure/rosu-orderbook-engine';
-import type { RosuOrderBookParams } from '@/tree/quantlib/microstructure/rosu-orderbook-types';
+import type { RosuOrderBookParams } from '@/tree/quantlib/microstructure/rosu-orderbook-engine';
 
 describe('Roşu (2009) Dynamic Limit Order Book Choice & Endogenous Liquidity Engine', () => {
   const baseParams: RosuOrderBookParams = {

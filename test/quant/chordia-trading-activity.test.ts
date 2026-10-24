@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ChordiaTradingActivityEngine } from '@/tree/quantlib/microstructure/chordia-trading-activity-engine';
-import type { DailyActivity } from '@/tree/quantlib/microstructure/chordia-trading-activity-types';
+import type { DailyActivity } from '@/tree/quantlib/microstructure/chordia-trading-activity-engine';
 
 describe('Chordia, Subrahmanyam & Anshuman (2001) Trading Activity & Liquidity Volatility', () => {
   const activities: DailyActivity[] = [

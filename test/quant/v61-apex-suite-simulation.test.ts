@@ -4,7 +4,7 @@ import { BipowerJumpEngine } from '@/tree/quantlib/volatility/bipower-jump-engin
 import { ContDeLarrardEngine } from '@/tree/quantlib/microstructure/cont-delarrard-engine';
 import { ChordiaTradingActivityEngine } from '@/tree/quantlib/microstructure/chordia-trading-activity-engine';
 import type { OhlcBar } from '@/tree/quantlib/volatility/rogers-satchell-types';
-import type { DailyActivity } from '@/tree/quantlib/microstructure/chordia-trading-activity-types';
+import type { DailyActivity } from '@/tree/quantlib/microstructure/chordia-trading-activity-engine';
 
 describe('Triad v61 Golden Apex Suite Simulation', () => {
   it('orchestrates drift-independent volatility, jump diffusion, queue depletion and liquidity volatility', () => {

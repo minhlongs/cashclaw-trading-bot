@@ -1,8 +1,3 @@
-import type {
-  GlostenHarrisDecompositionResult,
-  GlostenHarrisTradeTick,
-} from './glosten-harris-spread-types';
-
 export function computeGlostenHarrisDecomposition(
   ticks: readonly GlostenHarrisTradeTick[],
 ): GlostenHarrisDecompositionResult {
@@ -45,4 +40,20 @@ export function computeGlostenHarrisDecomposition(
     orderProcessingShare: 1 - adverseSelectionShare, adverseSelectionShare,
     rSquared,
   };
+}
+
+export interface GlostenHarrisTradeTick {
+  readonly price: number;
+  readonly tradeDirection: 1 | -1;
+  readonly volume?: number;
+}
+
+export interface GlostenHarrisDecompositionResult {
+  readonly spread: number;
+  readonly halfSpread: number;
+  readonly orderProcessingCost: number;
+  readonly adverseSelectionCost: number;
+  readonly orderProcessingShare: number;
+  readonly adverseSelectionShare: number;
+  readonly rSquared: number;
 }

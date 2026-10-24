@@ -1,5 +1,3 @@
-import type { CopelandGalaiParams, CopelandGalaiResult } from './copeland-galai-types';
-
 export function computeCopelandGalaiSpread(p: CopelandGalaiParams): CopelandGalaiResult {
   const s0 = Math.max(1e-4, p.assetPrice), sigma = Math.max(1e-5, p.volatility);
   const tauYears = Math.max(1e-6, p.timeToQuoteExpirySec / (365.25 * 86400));
@@ -21,4 +19,23 @@ export function computeCopelandGalaiSpread(p: CopelandGalaiParams): CopelandGala
   const uninformedRevenueRatio = halfSpread / Math.max(1e-6, totalDealerOptionLiability);
 
   return { equilibriumSpread, halfSpread, callOptionLiability, putOptionLiability, uninformedRevenueRatio, optimalBid, optimalAsk };
+}
+
+export interface CopelandGalaiParams {
+  readonly assetPrice: number;
+  readonly volatility: number;
+  readonly timeToQuoteExpirySec: number;
+  readonly informedTraderFraction: number; // alpha in [0, 1]
+  readonly orderHandlingCost: number;
+  readonly riskFreeRate?: number;
+}
+
+export interface CopelandGalaiResult {
+  readonly equilibriumSpread: number;
+  readonly halfSpread: number;
+  readonly callOptionLiability: number;
+  readonly putOptionLiability: number;
+  readonly uninformedRevenueRatio: number;
+  readonly optimalBid: number;
+  readonly optimalAsk: number;
 }

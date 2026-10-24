@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { YangZhangVolatilityEngine } from '../../src/tree/quantlib/volatility/yang-zhang-volatility-engine';
 import type { OhlcBar } from '../../src/tree/quantlib/volatility/yang-zhang-volatility-types';
 import { StoikovMicroPriceEngine } from '../../src/tree/quantlib/microstructure/stoikov-microprice-engine';
-import type { StoikovOrderBookL1 } from '../../src/tree/quantlib/microstructure/stoikov-microprice-types';
+import type { StoikovOrderBookL1 } from '../../src/tree/quantlib/microstructure/stoikov-microprice-engine';
 import { generateShadowOrders } from '../../src/tree/alpha/observability/order-generator';
 import {
   computeBatchEdgeAttribution,

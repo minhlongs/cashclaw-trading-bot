@@ -4,7 +4,7 @@ import { calculateAdaptiveVolumeSlices } from '../../src/tree/execution/oms/adap
 import { VectorizedOrthogonalizer } from '../../src/tree/research/vectorized/vectorized-orthogonalizer';
 import { BlackLittermanEngine } from '../../src/tree/quantlib/portfolio/black-litterman-engine';
 import { SlippageAttributionLedger } from '../../src/tree/execution/attribution/slippage-attribution-ledger';
-import type { SignedOrderFlowTrade } from '../../src/tree/quantlib/microstructure/kyle-adverse-selection-types';
+import type { SignedOrderFlowTrade } from '../../src/tree/quantlib/microstructure/kyle-adverse-selection-engine';
 import type { AssetMarketPrior, QualitativeAgentView } from '../../src/tree/quantlib/portfolio/black-litterman-types';
 import type { ExecutionFillRecord } from '../../src/tree/execution/attribution/slippage-attribution-types';
 

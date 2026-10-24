@@ -3,7 +3,7 @@ import { computeObizhaevaWangExecution } from '@/tree/quantlib/execution/obizhae
 import { computeGKNSpreadDecomposition } from '@/tree/quantlib/microstructure/gkn-spread-engine';
 import { ResearchAgent } from '@/forest/alpha/research-agent/agent';
 import { ValidationResultSchema } from '@/forest/alpha/data-quality-eval/schemas';
-import type { GKNPriceBar } from '@/tree/quantlib/microstructure/gkn-spread-types';
+import type { GKNPriceBar } from '@/tree/quantlib/microstructure/gkn-spread-engine';
 
 describe('Triad v25 Apex Multi-Domain Suite Simulation', () => {
   it('integrates GKN microstructure decomposition with Obizhaeva-Wang optimal liquidation', async () => {

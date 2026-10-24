@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { EkopPinEngine } from '../../src/tree/quantlib/microstructure/ekop-pin-engine';
-import type { EkopTradeBucket } from '../../src/tree/quantlib/microstructure/ekop-pin-types';
+import type { EkopTradeBucket } from '../../src/tree/quantlib/microstructure/ekop-pin-engine';
 
 describe('EkopPinEngine', () => {
   const engine = new EkopPinEngine();

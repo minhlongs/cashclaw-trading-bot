@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computeHubbertElasticityExecution } from '../../src/tree/quantlib/execution/hubbert-elasticity-engine';
 import { computeMadhavanSmidtDecomposition } from '../../src/tree/quantlib/microstructure/madhavan-smidt-spread-engine';
-import type { MadhavanSmidtTick } from '../../src/tree/quantlib/microstructure/madhavan-smidt-spread-types';
+import type { MadhavanSmidtTick } from '../../src/tree/quantlib/microstructure/madhavan-smidt-spread-engine';
 import { PromotionGateConfigSchema, PromotionGateResultSchema } from '../../src/forest/alpha/gate/schemas';
 import { formatHypothesisPrompt, formatFeatureProposalPrompt, ProviderError } from '../../src/forest/alpha/research-agent/provider';
 

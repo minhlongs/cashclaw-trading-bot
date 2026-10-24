@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computeOptimalExecution } from '@/tree/quantlib/execution/almgren-nonlinear-impact-engine';
 import { computeMRRDecomposition } from '@/tree/quantlib/microstructure/mrr-spread-decomposition-engine';
-import type { MRRTradeTick } from '@/tree/quantlib/microstructure/mrr-spread-decomposition-types';
+import type { MRRTradeTick } from '@/tree/quantlib/microstructure/mrr-spread-decomposition-engine';
 import { checkDrawdown, checkNetPnlAfterFees, checkTradeCount } from '@/forest/alpha/gate/gate-checks';
 import { macdIndicator, rsiIndicator, smaIndicator } from '@/tree/alpha/indicators-technical';
 import type { Candle } from '@/forest/backtest/ohlcv';

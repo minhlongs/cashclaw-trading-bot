@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { KyleAdverseSelectionEngine } from '../../src/tree/quantlib/microstructure/kyle-adverse-selection-engine';
 import { calculateAdaptiveVolumeSlices } from '../../src/tree/execution/oms/adaptive-volume-slicer';
-import type { SignedOrderFlowTrade } from '../../src/tree/quantlib/microstructure/kyle-adverse-selection-types';
+import type { SignedOrderFlowTrade } from '../../src/tree/quantlib/microstructure/kyle-adverse-selection-engine';
 
 describe('Phase 01: Kyle Microstructure & Adaptive OMS Execution', () => {
   it('correctly estimates Kyle lambda and classifies adverse selection risk', () => {

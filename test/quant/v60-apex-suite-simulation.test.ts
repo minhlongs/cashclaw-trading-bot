@@ -4,7 +4,7 @@ import { ParkinsonVolatilityEngine } from '@/tree/quantlib/volatility/parkinson-
 import { YangZhangVolatilityEngine } from '@/tree/quantlib/volatility/yang-zhang-volatility-engine';
 import { BessembinderKaufmanEngine } from '@/tree/quantlib/microstructure/bessembinder-kaufman-engine';
 import type { OhlcBar } from '@/tree/quantlib/volatility/garman-klass-volatility-types';
-import type { TradeQuotePair } from '@/tree/quantlib/microstructure/bessembinder-kaufman-types';
+import type { TradeQuotePair } from '@/tree/quantlib/microstructure/bessembinder-kaufman-engine';
 
 describe('Triad v60 Golden Apex Suite Simulation', () => {
   it('orchestrates volatility estimation and microstructure execution quality analysis', () => {

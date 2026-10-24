@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeBgtAsymmetricBook } from '@/tree/quantlib/microstructure/bgt-asymmetric-book-engine';
-import type { BgtAsymmetricBookParams } from '@/tree/quantlib/microstructure/bgt-asymmetric-book-types';
+import type { BgtAsymmetricBookParams } from '@/tree/quantlib/microstructure/bgt-asymmetric-book-engine';
 
 describe('BgtAsymmetricBookEngine', () => {
   const baseParams: BgtAsymmetricBookParams = {

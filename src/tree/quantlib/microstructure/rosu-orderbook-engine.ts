@@ -1,5 +1,3 @@
-import type { RosuOrderBookParams, RosuOrderBookResult } from './rosu-orderbook-types';
-
 export function computeRosuOrderBook(p: RosuOrderBookParams): RosuOrderBookResult {
   const lambda = Math.max(1e-4, p.arrivalIntensity);
   const r = Math.max(1e-6, p.impatienceDiscountRate);
@@ -20,4 +18,21 @@ export function computeRosuOrderBook(p: RosuOrderBookParams): RosuOrderBookResul
   }
 
   return { equilibriumSpread, probLimitFillBeforeCancel, expectedWaitingTimeSec, immediacyPremiumBps, depthProfile };
+}
+
+export interface RosuOrderBookParams {
+  readonly arrivalIntensity: number;
+  readonly impatienceDiscountRate: number;
+  readonly tickSize: number;
+  readonly orderSize: number;
+  readonly volatility: number;
+  readonly depthLevels?: number;
+}
+
+export interface RosuOrderBookResult {
+  readonly equilibriumSpread: number;
+  readonly probLimitFillBeforeCancel: number;
+  readonly expectedWaitingTimeSec: number;
+  readonly immediacyPremiumBps: number;
+  readonly depthProfile: readonly number[];
 }
