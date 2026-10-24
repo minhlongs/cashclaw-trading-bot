@@ -1,5 +1,3 @@
-import type { GlostenMilgromParams, GlostenMilgromQuote, GlostenMilgromResult } from './glosten-milgrom-types';
-
 export function computeGlostenMilgromSpread(p: GlostenMilgromParams): GlostenMilgromResult {
   const vL = Math.max(1e-4, p.vLow), vH = Math.max(vL + 1e-4, p.vHigh);
   const mu = Math.min(0.99, Math.max(0, p.informedProb ?? 0.2)), gammaB = Math.min(0.99, Math.max(0.01, p.uninformedBuyProb ?? 0.5));
@@ -24,4 +22,31 @@ export function computeGlostenMilgromSpread(p: GlostenMilgromParams): GlostenMil
   const initialMid = ((p.priorHighProb ?? 0.5) * vH + (1 - (p.priorHighProb ?? 0.5)) * vL);
   const asBps = (avgSpread / initialMid) * 10_000;
   return { quotes, finalProb: pi, averageSpread: avgSpread, adverseSelectionBps: asBps };
+}
+
+export interface GlostenMilgromQuote {
+  readonly step: number;
+  readonly trade: 'buy' | 'sell';
+  readonly priorProb: number;
+  readonly posteriorProb: number;
+  readonly bid: number;
+  readonly ask: number;
+  readonly spread: number;
+  readonly midPrice: number;
+}
+
+export interface GlostenMilgromParams {
+  readonly vLow: number;
+  readonly vHigh: number;
+  readonly tradeSequence: readonly ('buy' | 'sell')[];
+  readonly priorHighProb?: number;
+  readonly informedProb?: number;
+  readonly uninformedBuyProb?: number;
+}
+
+export interface GlostenMilgromResult {
+  readonly quotes: readonly GlostenMilgromQuote[];
+  readonly finalProb: number;
+  readonly averageSpread: number;
+  readonly adverseSelectionBps: number;
 }

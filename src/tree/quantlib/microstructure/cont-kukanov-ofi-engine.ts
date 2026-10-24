@@ -1,5 +1,3 @@
-import type { ContKukanovOfiParams, ContKukanovOfiResult, LobLevel } from './cont-kukanov-ofi-types';
-
 function computeLevelOfi(prev: LobLevel, curr: LobLevel): number {
   const bidOfi = curr.bidPrice > prev.bidPrice ? curr.bidSize : curr.bidPrice === prev.bidPrice ? curr.bidSize - prev.bidSize : -prev.bidSize;
   const askOfi = curr.askPrice < prev.askPrice ? -curr.askSize : curr.askPrice === prev.askPrice ? curr.askSize - prev.askSize : prev.askSize;
@@ -28,4 +26,25 @@ export function computeContKukanovOfi(p: ContKukanovOfiParams): ContKukanovOfiRe
   const predictedPriceImpact = totalOfi * mult;
 
   return { levelOfis, totalOfi, predictedPriceImpact, depthImbalance };
+}
+
+export interface LobLevel {
+  readonly bidPrice: number;
+  readonly bidSize: number;
+  readonly askPrice: number;
+  readonly askSize: number;
+}
+
+export interface ContKukanovOfiParams {
+  readonly prevLevels: readonly LobLevel[];
+  readonly currLevels: readonly LobLevel[];
+  readonly decayBeta?: number; // Level power decay parameter beta (default 0.5)
+  readonly impactMultiplier?: number; // Basis point impact per unit OFI (default 1.0)
+}
+
+export interface ContKukanovOfiResult {
+  readonly levelOfis: readonly number[];
+  readonly totalOfi: number;
+  readonly predictedPriceImpact: number;
+  readonly depthImbalance: number;
 }

@@ -1,5 +1,3 @@
-import type { HoldenSubrahmanyamParams, HoldenSubrahmanyamResult, HoldenSubrahmanyamStage } from './holden-subrahmanyam-types';
-
 export function computeHoldenSubrahmanyamEquilibrium(p: HoldenSubrahmanyamParams): HoldenSubrahmanyamResult {
   const m = Math.max(1, Math.floor(p.numTraders));
   const rounds = Math.max(1, Math.floor(p.numRounds));
@@ -30,4 +28,27 @@ export function computeHoldenSubrahmanyamEquilibrium(p: HoldenSubrahmanyamParams
   const avgDepth = stages.reduce((s, st) => s + (st.lambda > 1e-8 ? 1 / st.lambda : 0), 0) / stages.length;
 
   return { stages, totalInformationRevealed: infoRevealed, terminalUncertainty, averageMarketDepth: avgDepth };
+}
+
+export interface HoldenSubrahmanyamParams {
+  readonly numTraders: number;
+  readonly numRounds: number;
+  readonly priorVariance: number;
+  readonly noiseVariance: number;
+  readonly riskAversion: number;
+}
+
+export interface HoldenSubrahmanyamStage {
+  readonly round: number;
+  readonly beta: number;
+  readonly lambda: number;
+  readonly posteriorVariance: number;
+  readonly priceEfficiency: number;
+}
+
+export interface HoldenSubrahmanyamResult {
+  readonly stages: readonly HoldenSubrahmanyamStage[];
+  readonly totalInformationRevealed: number;
+  readonly terminalUncertainty: number;
+  readonly averageMarketDepth: number;
 }
