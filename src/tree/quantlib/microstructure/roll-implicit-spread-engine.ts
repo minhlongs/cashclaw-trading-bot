@@ -1,5 +1,3 @@
-import type { RollSpreadConfig, RollSpreadResult } from './roll-implicit-spread-types';
-
 export class RollImplicitSpreadEngine {
   public static calculateSpread(config: RollSpreadConfig): RollSpreadResult {
     const { priceChanges: dP, referencePrice } = config;
@@ -16,4 +14,16 @@ export class RollImplicitSpreadEngine {
     const pct = referencePrice && referencePrice > 0 ? rollSpread / referencePrice : undefined;
     return { serialCovariance: cov, rollSpread, percentageSpread: pct, isPositiveCovariance: isPos };
   }
+}
+
+export interface RollSpreadConfig {
+  priceChanges: readonly number[];
+  referencePrice?: number;
+}
+
+export interface RollSpreadResult {
+  serialCovariance: number;
+  rollSpread: number;
+  percentageSpread?: number;
+  isPositiveCovariance: boolean;
 }
