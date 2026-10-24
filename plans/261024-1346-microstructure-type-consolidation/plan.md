@@ -1,7 +1,7 @@
 ---
 title: "QuantLib Microstructure Type-File Consolidation"
 description: "Merge the 57 single-importer microstructure *-types.ts files into their sole consuming engine/queue module to cut directory file count with zero behavior change."
-status: pending
+status: completed
 priority: P3
 effort: 6h
 issue: 14
@@ -32,17 +32,24 @@ hơn file *làm việc* (15 dòng). Chi phí thật là điều hướng và di�
 
 ## Done means (quan sát được bằng lệnh)
 
-- `find src/tree/quantlib/microstructure -name '*.ts' ! -name '*.test.*' | wc -l` giảm từ **132**
+Đo lần cuối ở trạng thái `completed`, so với baseline `b7aba5f`. Chi tiết và lệnh ở
+[`plans/reports/consolidation-closing.md`](../reports/consolidation-closing.md).
+
+- [x] `find src/tree/quantlib/microstructure -name '*.ts' ! -name '*.test.*' | wc -l` giảm từ **132**
   xuống **75** (xoá 57 file `*-types.ts`: 56 cặp có sibling `-engine.ts` + 1 ca queue ở lô 6).
-- Số file `*-types.ts` còn lại trong `microstructure` = **6**, và đúng là 6 file trong bảng
-  safety gate bên dưới (đối chiếu tên, không chỉ đếm).
-- `find src/tree/quantlib/microstructure -name '*.ts' ! -name '*.test.*' -exec wc -l {} + | awk '$1>120 && $2!="total"'` rỗng;
-  file kết quả lớn nhất ≤ **104** dòng (`kyle-adverse-selection`: 83 + 23 − 3 + 1).
-- `npm test` → 720 test files / 6.003 tests vẫn pass.
-- `npm run type-check` exit 0 không output; `npm run lint -- --max-warnings 0` exit 0.
-- `npx knip` không tệ hơn baseline.
-- Với **25** file test (`git diff` chỉ chứa đổi đường dẫn import, đúng **1 dòng mỗi file**; 24 file thuộc
-  lô 5, 1 file `v13` thuộc lô 6) — tổng ≤ **50** dòng `^[+-]` trong `git diff -- test/`.
+- [x] Số file `*-types.ts` còn lại trong `microstructure` = **6**, và đúng là 6 file trong bảng
+  safety gate bên dưới (đối chiếu tên, không chỉ đếm): `abdi-ranaldo`, `corwin-schultz`,
+  `gatheral-transient-impact`, `hawkes-jump`, `kyle-obizhaeva-invariance`, `roll-spread`.
+- [x] `find src/tree/quantlib/microstructure -name '*.ts' ! -name '*.test.*' -exec wc -l {} + | awk '$1>120 && $2!="total"'` rỗng;
+  file kết quả lớn nhất đo được **103** dòng (`kyle-adverse-selection-engine.ts`) — dưới trần 104 đã tính.
+- [x] `npm test` → **722** test files / **6.027** tests pass (baseline 720 / 6.003; +2 file và +24 case
+  là hai test file của phase 1–2 tự nó). Xem deviation D2.
+- [x] `npm run type-check` exit 0 không output; `npm run lint -- --max-warnings 0` exit 0.
+- [x] `npx knip` không tệ hơn baseline: **3 unused files / 44 unused exports**, bằng đúng baseline,
+  **0 unresolved import**.
+- [x] Với **25** file test (`git diff` chỉ chứa đổi đường dẫn import, đúng **1 dòng mỗi file**; 24 file thuộc
+  lô 5, 1 file `v13` thuộc lô 6) — **100** dòng `^[+-]` trên đúng 25 file đó (50 xoá + 50 thêm, mỗi file
+  đúng 2 dòng), **0 dòng assertion** nào bị đổi. Xem deviation D1.
 
 ## Non-goals
 
@@ -156,3 +163,22 @@ Sáu file bị chặn và lý do cụ thể:
 
 - Không có cross-plan dependency.
 - Cần `node_modules` ở worktree (đã `npm ci`) để chạy `type-check`/`lint`/`vitest`.
+
+## Plan Deviations
+
+**D1 — chỉ số 9 (`git diff -- test/ | grep -c '^[+-]'`) đo được 703, không phải ≤ 50.**
+Nguyên nhân: khoảng `b7aba5f..HEAD` chứa cả hai test file mà chính phase 1–2 tạo ra
+(`test/scripts/count-type-importers.test.ts`, `test/scripts/merge-microstructure-types.test.ts`) =
+441 dòng. Chỉ đo trên đúng 25 file consumer mà đợt gộp đổi đường dẫn: **100 dòng**, mỗi file đúng 2
+dòng (1 xoá + 1 thêm), và **0 dòng assertion** nào nằm trong diff. Tính chất mà chỉ số này bảo vệ —
+không test nào bị làm yếu — đạt ở dạng mạnh nhất, nên ghi deviation thay vì nới ngưỡng.
+
+**D2 — suite cuối là 722 files / 6.027 tests, không phải 720 / 6.003.**
+Nguyên nhân: hai test file phase 1–2 chính là test, nên suite lớn thêm 2 file / 24 case. Toàn bộ
+6.003 test có sẵn từ baseline vẫn pass, nên đây là tăng trưởng do Deliverable của phase 1–2, không
+phải regression.
+
+Không deviation cho số file production: **75**, khớp đúng dự đoán của plan.
+
+Không deviation hành vi: không file `test/` nào bị xoá hoặc làm rỗng, và `public-sdk.ts` không đổi
+(diff 0 dòng).

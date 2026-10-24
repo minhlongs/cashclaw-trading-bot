@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: Merge-Script"
-status: todo
+status: completed
 ---
 
 # Phase 2: Merge-Script

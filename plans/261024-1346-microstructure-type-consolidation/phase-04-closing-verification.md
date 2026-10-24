@@ -1,6 +1,6 @@
 ---
 title: "Phase 4: Closing-Verification"
-status: todo
+status: completed
 ---
 
 # Phase 4: Closing-Verification

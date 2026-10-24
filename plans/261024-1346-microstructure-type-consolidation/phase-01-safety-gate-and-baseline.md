@@ -1,6 +1,6 @@
 ---
 title: "Phase 1: Safety-Gate-and-Baseline"
-status: todo
+status: completed
 ---
 
 # Phase 1: Safety-Gate-and-Baseline

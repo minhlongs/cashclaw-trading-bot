@@ -1,6 +1,6 @@
 ---
 title: "Phase 3: Batch-Merges"
-status: todo
+status: completed
 ---
 
 # Phase 3: Batch-Merges
