@@ -1,5 +1,3 @@
-import type { KyleCournotParams, KyleCournotResult } from './kyle-cournot-types';
-
 export function computeKyleCournotEquilibrium(p: KyleCournotParams): KyleCournotResult {
   const n = Math.max(1, Math.round(p.numInformedTraders));
   const sig0 = Math.max(1e-6, p.assetVariance), sigU = Math.max(1e-6, Math.sqrt(Math.max(1e-6, p.noiseVariance)));
@@ -22,4 +20,23 @@ export function computeKyleCournotEquilibrium(p: KyleCournotParams): KyleCournot
     residualUncertainty: residualVar,
     priceEfficiencyRatio: efficiency,
   };
+}
+
+export interface KyleCournotParams {
+  readonly numInformedTraders: number;
+  readonly assetVariance: number;
+  readonly noiseVariance: number;
+  readonly initialPrice: number;
+  readonly fundamentalValue: number;
+}
+
+export interface KyleCournotResult {
+  readonly traderAggressiveness: number;
+  readonly priceImpactLambda: number;
+  readonly marketDepth: number;
+  readonly clearingPrice: number;
+  readonly aggregateInformedFlow: number;
+  readonly expectedTraderProfit: number;
+  readonly residualUncertainty: number;
+  readonly priceEfficiencyRatio: number;
 }

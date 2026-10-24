@@ -1,8 +1,3 @@
-import {
-  OharaOldfieldConfig,
-  OharaOldfieldQuoteResult,
-} from './ohara-oldfield-inventory-types';
-
 export class OharaOldfieldInventoryEngine {
   public static calculateQuotes(config: OharaOldfieldConfig): OharaOldfieldQuoteResult {
     const { midPrice: P0, inventory: I, inventoryTarget: ITarget, carryingCostRate: k, riskAversion: gamma, assetVariance: v, baselineSpread: S0 } = config;
@@ -24,4 +19,28 @@ export class OharaOldfieldInventoryEngine {
       deterministicCarryingCost: deterministicCost,
     };
   }
+}
+
+/**
+ * O'Hara & Oldfield (1986) Microeconomic Dynamic Inventory Types
+ * Reference: Maureen O'Hara & George S. Oldfield (1986), JFQA
+ */
+
+export interface OharaOldfieldConfig {
+  midPrice: number;
+  inventory: number;
+  inventoryTarget: number;
+  carryingCostRate: number; // k (financing / storage / borrow cost)
+  riskAversion: number; // gamma
+  assetVariance: number; // sigma^2
+  baselineSpread: number; // S_0
+}
+
+export interface OharaOldfieldQuoteResult {
+  reservationPrice: number;
+  bidPrice: number;
+  askPrice: number;
+  inventorySkew: number;
+  holdingRiskPremium: number;
+  deterministicCarryingCost: number;
 }

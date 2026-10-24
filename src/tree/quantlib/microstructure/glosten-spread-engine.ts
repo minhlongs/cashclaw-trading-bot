@@ -1,5 +1,3 @@
-import type { GlostenQuote, GlostenSpreadParams, GlostenSpreadResult } from './glosten-spread-types';
-
 export function computeGlostenSpread(p: GlostenSpreadParams): GlostenSpreadResult {
   const m0 = Math.max(1e-4, p.midPrice), s0 = Math.max(1e-4, p.baseSpread ?? 0.02);
   const lambdaInfo = Math.max(0, p.infoIntensity ?? 0.005), beta = Math.max(0.1, p.depthCurvature ?? 0.8);
@@ -20,4 +18,29 @@ export function computeGlostenSpread(p: GlostenSpreadParams): GlostenSpreadResul
   const avgSpread = quotes.length > 0 ? spreadSum / quotes.length : s0;
   const depthScore = Math.max(0, 1 / (1 + lambdaInfo * 100));
   return { quotes, averageEffectiveSpread: avgSpread, quoteDepthScore: depthScore };
+}
+
+export interface GlostenQuote {
+  readonly orderSize: number;
+  readonly bidPrice: number;
+  readonly askPrice: number;
+  readonly marginalSpread: number;
+  readonly adverseSelectionCost: number;
+  readonly inventoryCost: number;
+}
+
+export interface GlostenSpreadParams {
+  readonly midPrice: number;
+  readonly orderSizes: readonly number[];
+  readonly baseSpread?: number;
+  readonly infoIntensity?: number;
+  readonly depthCurvature?: number;
+  readonly specialistInventory?: number;
+  readonly inventoryPenalty?: number;
+}
+
+export interface GlostenSpreadResult {
+  readonly quotes: readonly GlostenQuote[];
+  readonly averageEffectiveSpread: number;
+  readonly quoteDepthScore: number;
 }

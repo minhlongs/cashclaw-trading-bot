@@ -1,5 +1,3 @@
-import type { BackBaruchParams, BackBaruchResult, BackBaruchStep } from './back-baruch-types';
-
 export function computeBackBaruchEquilibrium(p: BackBaruchParams): BackBaruchResult {
   const t = Math.max(1e-4, p.timeHorizon), n = Math.max(1, Math.floor(p.numSteps)), dt = t / n;
   const sig0 = Math.max(1e-8, p.priorVariance), sigmaU = Math.max(1e-6, p.noiseVolatility);
@@ -23,4 +21,28 @@ export function computeBackBaruchEquilibrium(p: BackBaruchParams): BackBaruchRes
     trajectory, terminalVariance: termVar, averageLambda: sumLambda / n,
     finalDiscoveryEfficiency: Math.min(1, Math.max(0, 1 - termVar / sig0)),
   };
+}
+
+export interface BackBaruchParams {
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly priorVariance: number;
+  readonly noiseVolatility: number;
+  readonly fundamentalValue?: number;
+}
+
+export interface BackBaruchStep {
+  readonly step: number;
+  readonly time: number;
+  readonly kyleLambda: number;
+  readonly posteriorVariance: number;
+  readonly traderAggressiveness: number;
+  readonly priceDiscoveryEfficiency: number;
+}
+
+export interface BackBaruchResult {
+  readonly trajectory: readonly BackBaruchStep[];
+  readonly terminalVariance: number;
+  readonly averageLambda: number;
+  readonly finalDiscoveryEfficiency: number;
 }

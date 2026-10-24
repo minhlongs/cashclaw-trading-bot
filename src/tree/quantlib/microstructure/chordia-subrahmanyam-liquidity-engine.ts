@@ -1,5 +1,3 @@
-import type { ChordiaSubrahmanyamParams, ChordiaSubrahmanyamResult } from './chordia-subrahmanyam-liquidity-types';
-
 export function computeChordiaCommonality(p: ChordiaSubrahmanyamParams): ChordiaSubrahmanyamResult {
   const aSpreads = p.assetSpreads, n = aSpreads.length;
   if (n < 4) return { liquidityBeta: 0, commonalityRSquared: 0, downMarketBeta: 0, upMarketBeta: 0, averageAssetSpread: 0, sampleSize: 0 };
@@ -26,4 +24,18 @@ export function computeChordiaCommonality(p: ChordiaSubrahmanyamParams): Chordia
   const upBeta = sumUpDm2 > 1e-12 ? sumUpCov / sumUpDm2 : beta;
   const avgSpread = aSpreads.reduce((a, b) => a + b, 0) / n;
   return { liquidityBeta: beta, commonalityRSquared: r2, downMarketBeta: downBeta, upMarketBeta: upBeta, averageAssetSpread: avgSpread, sampleSize: k };
+}
+
+export interface ChordiaSubrahmanyamParams {
+  readonly assetSpreads: readonly number[];
+  readonly marketSpreads?: readonly number[];
+}
+
+export interface ChordiaSubrahmanyamResult {
+  readonly liquidityBeta: number;
+  readonly commonalityRSquared: number;
+  readonly downMarketBeta: number;
+  readonly upMarketBeta: number;
+  readonly averageAssetSpread: number;
+  readonly sampleSize: number;
 }

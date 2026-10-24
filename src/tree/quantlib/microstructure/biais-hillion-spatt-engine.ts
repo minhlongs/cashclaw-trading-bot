@@ -1,5 +1,3 @@
-import type { BiaisHillionSpattParams, BiaisHillionSpattResult } from './biais-hillion-spatt-types';
-
 export function computeBiaisHillionSpattMicrostructure(p: BiaisHillionSpattParams): BiaisHillionSpattResult {
   const s = Math.max(1, p.spreadTicks);
   const totalDepth = Math.max(1, p.bidDepth + p.askDepth);
@@ -21,4 +19,22 @@ export function computeBiaisHillionSpattMicrostructure(p: BiaisHillionSpattParam
   const resiliencyHalfLife = liquidityReplenishmentRate > 0 ? Math.LN2 / liquidityReplenishmentRate : 999;
 
   return { probLimitOrderAtTouch, probMarketOrder, probCancellation, liquidityReplenishmentRate, spreadWideningRisk, resiliencyHalfLife };
+}
+
+export interface BiaisHillionSpattParams {
+  readonly spreadTicks: number;
+  readonly bidDepth: number;
+  readonly askDepth: number;
+  readonly baseArrivalRate: number;
+  readonly spreadSensitivity: number;
+  readonly depthSensitivity: number;
+}
+
+export interface BiaisHillionSpattResult {
+  readonly probLimitOrderAtTouch: number;
+  readonly probMarketOrder: number;
+  readonly probCancellation: number;
+  readonly liquidityReplenishmentRate: number;
+  readonly spreadWideningRisk: number;
+  readonly resiliencyHalfLife: number;
 }
