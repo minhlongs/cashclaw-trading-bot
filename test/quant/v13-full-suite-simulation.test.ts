@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ContStoikovLOBQueueEngine } from '../../src/tree/quantlib/microstructure/cont-stoikov-lob-queue';
-import type { LOBQueueSnapshot } from '../../src/tree/quantlib/microstructure/cont-stoikov-lob-types';
+import type { LOBQueueSnapshot } from '../../src/tree/quantlib/microstructure/cont-stoikov-lob-queue';
 import { DeliberationReflexiveLoop } from '../../src/forest/research/tradingagents/deliberation-reflexive-loop';
 import type { FactorOOSResult, AgentBeliefPrior } from '../../src/forest/research/tradingagents/deliberation-reflexive-types';
 import { ExecutionOmsWaterfall } from '../../src/tree/execution/oms/execution-oms-waterfall';
