@@ -21,7 +21,6 @@ import { join, basename, relative, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const MICRO = join(ROOT, 'src/tree/quantlib/microstructure');
 
 // Roots scanned for importers. `test/` is deliberately included.
 const SCAN_ROOTS = ['src', 'test', 'tests', 'bin'];
@@ -29,10 +28,10 @@ const SCAN_ROOTS = ['src', 'test', 'tests', 'bin'];
 const IMPORT_SPECIFIER = /(?:import|export)[^;]*?from\s*['"]([^'"]+)['"]/g;
 const DYNAMIC_IMPORT = /(?:import|require)\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
 
-function collectSourceFiles() {
+function collectSourceFiles(scanRoot) {
   const files = [];
   for (const root of SCAN_ROOTS) {
-    const abs = join(ROOT, root);
+    const abs = join(scanRoot, root);
     if (!existsSync(abs)) continue;
     const walk = (dir) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -44,7 +43,7 @@ function collectSourceFiles() {
     };
     walk(abs);
   }
-  for (const entry of readdirSync(ROOT)) {
+  for (const entry of existsSync(scanRoot) ? readdirSync(scanRoot) : []) {
     if (/\.config\.(ts|mts|cts)$/.test(entry)) {
       const full = join(ROOT, entry);
       if (statSync(full).isFile()) files.push(full);
