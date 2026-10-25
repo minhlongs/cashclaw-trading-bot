@@ -4,10 +4,6 @@ import type { MockCallRecord, MockCustomFixtures, MockProviderOptions } from './
 import { resolveMockCompletion } from './mock-provider-dispatch';
 
 export type { MockCallRecord, MockProviderOptions } from './mock-provider-types';
-export {
-  DEFAULT_HYPOTHESIS_FIXTURE, DEFAULT_FEATURE_FIXTURE, DEFAULT_DIAGNOSIS_FIXTURE,
-  DEFAULT_CLUSTERING_FIXTURE, DEFAULT_NEXT_EXPERIMENT_FIXTURE,
-} from './mock-provider-fixtures';
 
 export class DeterministicMockLLMProvider implements ResearchLLMProvider {
   public readonly name = 'DeterministicMockLLMProvider';

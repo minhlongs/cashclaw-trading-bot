@@ -14,8 +14,6 @@ export const ClusterHypothesesRequestSchema = z.object({
   similarityThreshold: z.number().min(0).max(1).optional().default(0.7),
 }).strict();
 
-export const HypothesisClusteringRequestSchema = ClusterHypothesesRequestSchema;
-
 export const HypothesisClusterSchema = z.object({
   clusterId: z.string().min(1).max(100),
   theme: z.string().min(1).max(200),
@@ -53,8 +51,6 @@ export const RecommendExperimentsRequestSchema = z.object({
   verdict: z.unknown().optional(),
   maxRecommendations: z.number().int().min(1).max(10).optional().default(2),
 }).strict();
-
-export const NextExperimentRequestSchema = RecommendExperimentsRequestSchema;
 
 export const NextExperimentResponseSchema = z.object({
   recommendations: z.array(NextExperimentSpecSchema).min(1),

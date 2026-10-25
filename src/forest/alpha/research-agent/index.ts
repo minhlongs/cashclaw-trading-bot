@@ -3,7 +3,6 @@
 
 export {
   ResearchAgent,
-  ResearchAgentError,
   AgentValidationError,
   FalsificationGuardError,
   NonCausalFeatureError,
@@ -12,7 +11,6 @@ export type { ResearchAgentDeps } from './agent';
 
 export {
   ProviderError,
-  ResearchProviderError,
   formatHypothesisPrompt,
   formatFeatureProposalPrompt,
   formatFailureDiagnosisPrompt,
@@ -77,11 +75,9 @@ export {
   FailureDiagnosisResponseSchema,
   ClusteringCandidateSchema,
   ClusterHypothesesRequestSchema,
-  HypothesisClusteringRequestSchema,
   HypothesisClusterSchema,
   HypothesisClusteringResponseSchema,
   NextExperimentSpecSchema,
   RecommendExperimentsRequestSchema,
-  NextExperimentRequestSchema,
   NextExperimentResponseSchema,
 } from './schemas';

@@ -2,7 +2,6 @@
 export {
   TOP_N,
   elapsed,
-  parseCandleIntervalMinutes,
   extractEvalReport,
   extractRegimeBreakdown,
   extractSharpe,

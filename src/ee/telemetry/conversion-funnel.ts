@@ -84,7 +84,3 @@ export function recommendUpgradeTierForQuotaHit(currentTier: SaasTier): SaasTier
 
 export const defaultFunnelSink: FunnelEvent[] = [];
 
-export function clearDefaultFunnelSink(): void {
-  defaultFunnelSink.length = 0;
-}
-

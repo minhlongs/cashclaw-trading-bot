@@ -14,7 +14,7 @@ import { filterSafeHypotheses } from './agent-falsification-filter';
 import { AgentValidationError, wrapSchemaError, type ResearchAgentDeps } from './agent-errors';
 import { validateFeatureCausality } from './agent-causality';
 import { runClusterHypotheses, runRecommendNextExperiments } from './agent-clustering-recommender';
-export { AgentValidationError, ResearchAgentError, FalsificationGuardError, NonCausalFeatureError, type ResearchAgentDeps } from './agent-errors';
+export { AgentValidationError, FalsificationGuardError, NonCausalFeatureError, type ResearchAgentDeps } from './agent-errors';
 
 export class ResearchAgent {
   constructor(private readonly deps: ResearchAgentDeps) {}

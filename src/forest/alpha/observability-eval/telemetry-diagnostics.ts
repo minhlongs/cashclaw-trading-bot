@@ -6,10 +6,10 @@ import type {
   OperationalDiagnosticsSection,
   ProviderProvenanceSummary,
 } from './types';
-import { round4, computePercentiles, makeAlarm } from './telemetry-diagnostics-metrics';
-import { evaluateSystemHealth, checkTelemetryAlarms } from './telemetry-health-evaluator';
+import { round4, computePercentiles } from './telemetry-diagnostics-metrics';
+import { evaluateSystemHealth } from './telemetry-health-evaluator';
 
-export { round4, computePercentiles, makeAlarm, evaluateSystemHealth, checkTelemetryAlarms };
+export { round4, computePercentiles, evaluateSystemHealth };
 
 export function computeOperationalDiagnostics(
   telemetry: readonly OperationalTelemetry[],
