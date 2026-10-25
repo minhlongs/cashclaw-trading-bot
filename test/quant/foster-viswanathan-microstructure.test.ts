@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computeFosterViswanathanEquilibrium } from '@/tree/quantlib/microstructure/foster-viswanathan-engine';
-import type { FosterViswanathanParams } from '@/tree/quantlib/microstructure/foster-viswanathan-types';
+import type { FosterViswanathanParams } from '@/tree/quantlib/microstructure/foster-viswanathan-engine';
 
 describe('Foster-Viswanathan (1993) Multi-Informed Microstructure Engine', () => {
   const baseParams: FosterViswanathanParams = {

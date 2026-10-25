@@ -1,0 +1,31 @@
+=== type-check ===
+
+> trade-bot@1.0.0 type-check
+> tsc --noEmit
+
+exit=0
+=== lint ===
+
+> trade-bot@1.0.0 lint
+> eslint src/ --max-warnings 0 --max-warnings 0
+
+exit=0
+
+=== knip baseline (npx knip, exit 1) ===
+Unused files (3)
+Unused exports (44)
+Duplicate exports (3)
+Configuration hints (6)
+Unresolved imports: ABSENT (0)  <-- key invariant: zero unresolved imports at baseline
+microstructure findings: 0
+Note: exit 1 is pre-existing, caused solely by 6 stale ignoreFiles entries
+      in knip.json ("Remove from ignoreFiles"). Not related to microstructure.
+
+=== file counts ===
+production .ts in microstructure: 132
+*-types.ts in microstructure: 63
+
+=== npm test (vitest run) ===
+Test Files  720 passed (720)
+Tests  6003 passed (6003)
+Duration  101.94s

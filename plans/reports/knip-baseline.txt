@@ -1,0 +1,61 @@
+Unused files (3)
+src/components/dashboard/terminal-waterfall-hud.tsx   
+src/forest/alpha/persistence/d1-adapter-experiments.ts
+src/forest/alpha/persistence/d1-adapter-results.ts    
+Unused exports (44)
+GATE_PILLAR_FILTERS                          src/components/quant/survival-gate-monitor-model.ts:14:14          
+filterSurvivalChecks               function  src/components/quant/survival-gate-monitor-model.ts:31:17          
+clearDefaultFunnelSink             function  src/ee/telemetry/conversion-funnel.ts:87:17                        
+nextPositionId                               src/forest/alpha/execution/engine-positions.ts:1:10                
+toPositionDirection                          src/forest/alpha/execution/engine-positions.ts:1:26                
+positionExposure                             src/forest/alpha/execution/engine-positions.ts:2:10                
+totalExposure                                src/forest/alpha/execution/engine-positions.ts:2:28                
+generateRangingCandles             function  src/forest/alpha/integration/fixtures-patterns.ts:9:17             
+makeAlarm                                    src/forest/alpha/observability-eval/telemetry-diagnostics.ts:12:38 
+checkTelemetryAlarms                         src/forest/alpha/observability-eval/telemetry-diagnostics.ts:12:71 
+parseCandleIntervalMinutes                   src/forest/alpha/pipeline/pipeline-utils.ts:5:3                    
+ResearchAgentError                           src/forest/alpha/research-agent/agent.ts:17:32                     
+DEFAULT_HYPOTHESIS_FIXTURE                   src/forest/alpha/research-agent/mock-provider.ts:8:3               
+DEFAULT_FEATURE_FIXTURE                      src/forest/alpha/research-agent/mock-provider.ts:8:31              
+DEFAULT_DIAGNOSIS_FIXTURE                    src/forest/alpha/research-agent/mock-provider.ts:8:56              
+DEFAULT_CLUSTERING_FIXTURE                   src/forest/alpha/research-agent/mock-provider.ts:9:3               
+DEFAULT_NEXT_EXPERIMENT_FIXTURE              src/forest/alpha/research-agent/mock-provider.ts:9:31              
+ResearchProviderError                        src/forest/alpha/research-agent/provider-errors.ts:26:14           
+HypothesisClusteringRequestSchema            src/forest/alpha/research-agent/schemas-cluster-experiment.ts:17:14
+NextExperimentRequestSchema                  src/forest/alpha/research-agent/schemas-cluster-experiment.ts:57:14
+requirePositiveInteger                       src/tree/alpha/cross-sectional/beta-estimation.ts:5:10             
+requireAlignedSeries                         src/tree/alpha/cross-sectional/beta-estimation.ts:5:34             
+alignedPairs                                 src/tree/alpha/cross-sectional/beta-estimation.ts:5:56             
+variance                                     src/tree/alpha/cross-sectional/beta-estimation.ts:5:70             
+grid                                         src/tree/quantlib/public-sdk.ts:8:18                               
+meanReversion                                src/tree/quantlib/public-sdk.ts:8:24                               
+quantFunctions                               src/tree/quantlib/public-sdk.ts:8:39                               
+AbdiRanaldoEngine                            src/tree/quantlib/public-sdk.ts:15:10                              
+PastorStambaughEngine                        src/tree/quantlib/public-sdk.ts:21:10                              
+ParkinsonVolatilityEngine                    src/tree/quantlib/public-sdk.ts:27:10                              
+YangZhangVolatilityEngine                    src/tree/quantlib/public-sdk.ts:28:10                              
+RogersSatchellVolatilityEngine               src/tree/quantlib/public-sdk.ts:29:10                              
+BessembinderKaufmanEngine                    src/tree/quantlib/public-sdk.ts:30:10                              
+AmihudIlliquidityEngine                      src/tree/quantlib/public-sdk.ts:33:3                               
+RollEffectiveSpreadEngine                    src/tree/quantlib/public-sdk.ts:38:3                               
+computeRollSpread                            src/tree/quantlib/public-sdk.ts:38:30                              
+initializeVpinState                          src/tree/quantlib/public-sdk.ts:85:10                              
+rolling                                      src/tree/research/alpha/zoo/operator-kernels.ts:4:3                
+importAlphaZooManifest                       src/tree/research/alpha/zoo/public-sdk.ts:8:3                      
+alphaZooManifestSchema                       src/tree/research/alpha/zoo/public-sdk.ts:14:3                     
+alphaZooEntrySchema                          src/tree/research/alpha/zoo/public-sdk.ts:15:3                     
+OPERATOR_ALIASES                             src/tree/research/alpha/zoo/public-sdk.ts:22:3                     
+parseOperatorFormula                         src/tree/research/alpha/zoo/public-sdk.ts:29:26                    
+evaluateOperatorFormula                      src/tree/research/alpha/zoo/public-sdk.ts:30:29                    
+Duplicate exports (3)
+ProviderError|ResearchProviderError                            src/forest/alpha/research-agent/provider-errors.ts       
+ClusterHypothesesRequestSchema|HypothesisClusteringRequestSc…  …orest/alpha/research-agent/schemas-cluster-experiment.ts
+RecommendExperimentsRequestSchema|NextExperimentRequestSchema  …orest/alpha/research-agent/schemas-cluster-experiment.ts
+Configuration hints (6)
+src/forest/alpha/persistence/json-adapter.ts    knip.json  Remove from ignoreFiles
+src/forest/alpha/persistence/types.ts           knip.json  Remove from ignoreFiles
+src/tree/regime/alpha-router.ts                 knip.json  Remove from ignoreFiles
+src/forest/alpha/research-agent/index.ts        knip.json  Remove from ignoreFiles
+src/forest/alpha/observability-eval/index.ts    knip.json  Remove from ignoreFiles
+src/forest/alpha/data-quality-eval/index.ts     knip.json  Remove from ignoreFiles
+knip exit=1

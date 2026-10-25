@@ -1,5 +1,3 @@
-import type { EkopTradeBucket, EkopPinResult } from './ekop-pin-types';
-
 export class EkopPinEngine {
   calculate(buckets: readonly EkopTradeBucket[]): EkopPinResult {
     const n = buckets.length;
@@ -54,4 +52,17 @@ export class EkopPinEngine {
       sampleBuckets: n,
     };
   }
+}
+
+export interface EkopTradeBucket {
+  readonly buys: number;
+  readonly sells: number;
+}
+
+export interface EkopPinResult {
+  readonly pin: number; // Probability of Informed Trading [0, 1]
+  readonly alpha: number; // Probability of information event [0, 1]
+  readonly mu: number; // Informed trader arrival rate
+  readonly epsilon: number; // Uninformed noise arrival rate
+  readonly sampleBuckets: number;
 }

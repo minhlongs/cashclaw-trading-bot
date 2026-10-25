@@ -1,5 +1,3 @@
-import type { AmihudMendelsonParams, AmihudMendelsonResult, AmihudMendelsonClientele } from './amihud-mendelson-types';
-
 export function computeAmihudMendelsonSpread(p: AmihudMendelsonParams): AmihudMendelsonResult {
   const r0 = Math.max(0, p.baseYield), s = Math.max(1e-5, p.spreadPct), mu = Math.max(0.1, p.amortizationFactor ?? 1);
   const horizons = p.investorHorizons.length > 0 ? p.investorHorizons : [1];
@@ -22,4 +20,25 @@ export function computeAmihudMendelsonSpread(p: AmihudMendelsonParams): AmihudMe
     optimalHoldingHorizon: optH,
     marginalSpreadElasticity: elasticity,
   };
+}
+
+export interface AmihudMendelsonClientele {
+  readonly horizon: number;
+  readonly requiredReturn: number;
+  readonly amortizedSpreadBps: number;
+}
+
+export interface AmihudMendelsonParams {
+  readonly baseYield: number;
+  readonly spreadPct: number;
+  readonly investorHorizons: readonly number[];
+  readonly amortizationFactor?: number;
+}
+
+export interface AmihudMendelsonResult {
+  readonly clienteleReturns: readonly AmihudMendelsonClientele[];
+  readonly equilibriumReturn: number;
+  readonly liquidityPremiumBps: number;
+  readonly optimalHoldingHorizon: number;
+  readonly marginalSpreadElasticity: number;
 }

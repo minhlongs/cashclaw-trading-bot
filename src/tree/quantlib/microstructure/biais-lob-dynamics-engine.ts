@@ -1,5 +1,3 @@
-import type { BiaisLobDynamicsConfig, BiaisLobDynamicsResult, LobEventType } from './biais-lob-dynamics-types';
-
 const TYPES: LobEventType[] = ['market-order', 'limit-in-spread', 'limit-at-best', 'cancellation'];
 
 export class BiaisLobDynamicsEngine {
@@ -21,4 +19,17 @@ export class BiaisLobDynamicsEngine {
     });
     return { transitionMatrix: matrix, diagonalPersistence: diagSum / 4, flowClusteringScore: diagSum, totalEvents: seq.length };
   }
+}
+
+export type LobEventType = 'market-order' | 'limit-in-spread' | 'limit-at-best' | 'cancellation';
+
+export interface BiaisLobDynamicsConfig {
+  eventSequence: readonly LobEventType[];
+}
+
+export interface BiaisLobDynamicsResult {
+  transitionMatrix: Record<LobEventType, Record<LobEventType, number>>;
+  diagonalPersistence: number;
+  flowClusteringScore: number;
+  totalEvents: number;
 }

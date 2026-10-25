@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computeCopelandGalaiSpread } from '@/tree/quantlib/microstructure/copeland-galai-engine';
-import type { CopelandGalaiParams } from '@/tree/quantlib/microstructure/copeland-galai-types';
+import type { CopelandGalaiParams } from '@/tree/quantlib/microstructure/copeland-galai-engine';
 
 describe('Copeland-Galai (1983) Options Model of Spread Engine', () => {
   it('computes positive equilibrium spread covering dealer option liability and order handling cost', () => {

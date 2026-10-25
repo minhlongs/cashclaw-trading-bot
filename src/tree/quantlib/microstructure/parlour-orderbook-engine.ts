@@ -1,5 +1,3 @@
-import type { ParlourOrderBookParams, ParlourOrderBookResult } from './parlour-orderbook-types';
-
 export function computeParlourOrderBook(p: ParlourOrderBookParams): ParlourOrderBookResult {
   const q = Math.max(0, p.queueDepthAhead), lambda = Math.max(1e-4, p.arrivalIntensity);
   const delta = Math.max(1e-5, p.cancellationRate), t = Math.max(1e-4, p.executionHorizonSec);
@@ -14,4 +12,21 @@ export function computeParlourOrderBook(p: ParlourOrderBookParams): ParlourOrder
   const recommendedOrderType: 'LIMIT' | 'MARKET' = pFill >= 0.5 ? 'LIMIT' : 'MARKET';
 
   return { queueFillProbability: pFill, expectedQueueWaitSec: expectedWait, cancellationProbability: pCancel, marketOrderIncentiveBps, recommendedOrderType };
+}
+
+export interface ParlourOrderBookParams {
+  readonly queueDepthAhead: number;
+  readonly arrivalIntensity: number;
+  readonly cancellationRate: number;
+  readonly tickSpread: number;
+  readonly executionHorizonSec: number;
+  readonly orderSize?: number;
+}
+
+export interface ParlourOrderBookResult {
+  readonly queueFillProbability: number;
+  readonly expectedQueueWaitSec: number;
+  readonly cancellationProbability: number;
+  readonly marketOrderIncentiveBps: number;
+  readonly recommendedOrderType: 'LIMIT' | 'MARKET';
 }

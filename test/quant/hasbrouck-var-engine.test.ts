@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { HasbrouckVarEngine } from '@/tree/quantlib/microstructure/hasbrouck-var-engine';
-import type { TradeObservation } from '@/tree/quantlib/microstructure/hasbrouck-var-types';
+import type { TradeObservation } from '@/tree/quantlib/microstructure/hasbrouck-var-engine';
 
 describe('Hasbrouck (1991) Vector Autoregressive Trade Informativeness Engine', () => {
   const engine = new HasbrouckVarEngine();

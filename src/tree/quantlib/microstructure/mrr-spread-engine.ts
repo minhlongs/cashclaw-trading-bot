@@ -1,5 +1,3 @@
-import type { MrrSpreadParams, MrrSpreadResult } from './mrr-spread-types';
-
 export function computeMrrSpread(p: MrrSpreadParams): MrrSpreadResult {
   const prices = p.prices, n = prices.length;
   if (n < 3) return { effectiveSpread: 0, adverseSelection: 0, orderProcessing: 0, tradeAutocorrelation: 0, sampleSize: 0 };
@@ -22,4 +20,17 @@ export function computeMrrSpread(p: MrrSpreadParams): MrrSpreadResult {
   const rawPhi = Math.max(0, c1 - rawTheta);
   const spread = 2 * (rawPhi + rawTheta);
   return { effectiveSpread: spread, adverseSelection: rawTheta, orderProcessing: rawPhi, tradeAutocorrelation: gamma, sampleSize: count };
+}
+
+export interface MrrSpreadParams {
+  readonly prices: readonly number[];
+  readonly tradeSigns?: readonly number[]; // +1 buy, -1 sell (auto-inferred if omitted)
+}
+
+export interface MrrSpreadResult {
+  readonly effectiveSpread: number; // 2 * (phi + theta)
+  readonly adverseSelection: number; // theta (private information)
+  readonly orderProcessing: number; // phi (friction/processing)
+  readonly tradeAutocorrelation: number; // gamma in [-1, 1]
+  readonly sampleSize: number;
 }

@@ -1,5 +1,3 @@
-import type { ChordiaActivityConfig, ChordiaActivityResult } from './chordia-trading-activity-types';
-
 export class ChordiaTradingActivityEngine {
   public static calculate(config: ChordiaActivityConfig): ChordiaActivityResult {
     const { activities, riskSensitivity = 0.5 } = config;
@@ -22,4 +20,23 @@ export class ChordiaTradingActivityEngine {
       sampleDays: n,
     };
   }
+}
+
+export interface DailyActivity {
+  readonly volume: number;
+  readonly sharesOutstanding: number;
+  readonly price?: number;
+}
+
+export interface ChordiaActivityConfig {
+  readonly activities: readonly DailyActivity[];
+  readonly riskSensitivity?: number;
+}
+
+export interface ChordiaActivityResult {
+  readonly meanTurnover: number;
+  readonly turnoverVolatility: number;
+  readonly coefficientOfVariation: number;
+  readonly liquidityRiskAdjustment: number;
+  readonly sampleDays: number;
 }

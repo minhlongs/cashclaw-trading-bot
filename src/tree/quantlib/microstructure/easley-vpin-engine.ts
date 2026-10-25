@@ -1,5 +1,3 @@
-import type { EasleyVpinParams, EasleyVpinResult, VolumeBucket, ToxicityLevel } from './easley-vpin-types';
-
 export function computeEasleyVpin(p: EasleyVpinParams): EasleyVpinResult {
   const { trades, bucketVolume: V } = p, N = p.numBuckets ?? 20, sigma = p.priceStdDev ?? 1.0;
   if (V <= 0 || trades.length === 0) {
@@ -26,4 +24,33 @@ export function computeEasleyVpin(p: EasleyVpinParams): EasleyVpinResult {
   const level: ToxicityLevel = vpin < 0.2 ? 'low' : vpin < 0.4 ? 'moderate' : vpin < 0.7 ? 'high' : 'extreme';
   const avgImb = windowBuckets.length > 0 ? totalImbalance / windowBuckets.length : 0;
   return { vpin, toxicityLevel: level, totalBuckets: buckets.length, averageImbalance: avgImb, buckets };
+}
+
+export type ToxicityLevel = 'low' | 'moderate' | 'high' | 'extreme';
+
+export interface VpinTrade {
+  size: number;
+  priceChange: number;
+}
+
+export interface VolumeBucket {
+  index: number;
+  buyVolume: number;
+  sellVolume: number;
+  absImbalance: number;
+}
+
+export interface EasleyVpinParams {
+  trades: VpinTrade[];
+  bucketVolume: number;
+  numBuckets?: number;
+  priceStdDev?: number;
+}
+
+export interface EasleyVpinResult {
+  vpin: number;
+  toxicityLevel: ToxicityLevel;
+  totalBuckets: number;
+  averageImbalance: number;
+  buckets: VolumeBucket[];
 }

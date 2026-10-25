@@ -1,8 +1,3 @@
-import type {
-  ContDeLarrardQueueConfig,
-  ContDeLarrardFillProbResult,
-} from './cont-delarrard-queue-types';
-
 export class ContDeLarrardQueueEngine {
   private readonly config: ContDeLarrardQueueConfig;
   private readonly defaultThreshold = 0.65;
@@ -47,4 +42,19 @@ export class ContDeLarrardQueueEngine {
       isHighExecutionProbability: fillProb >= threshold,
     };
   }
+}
+
+export interface ContDeLarrardQueueConfig {
+  readonly queueDepth: number;
+  readonly cancellationRate: number;
+  readonly orderFlowIntensity: number;
+  readonly highProbThreshold?: number;
+}
+
+export interface ContDeLarrardFillProbResult {
+  readonly queuePosition: number;
+  readonly queueDepth: number;
+  readonly fillProbability: number;
+  readonly gamma: number;
+  readonly isHighExecutionProbability: boolean;
 }

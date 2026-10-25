@@ -1,5 +1,3 @@
-import type { HasbrouckTradeImpactParams, HasbrouckTradeImpactResult } from './hasbrouck-trade-impact-types';
-
 export function computeHasbrouckTradeImpact(p: HasbrouckTradeImpactParams): HasbrouckTradeImpactResult {
   const n = Math.min(p.tradeInnovations.length, p.returns.length);
   if (n === 0) return { permanentImpact: 0, transientImpact: 0, informationShare: 0, tradeInnovationVariance: 0, returnVariance: 0 };
@@ -14,4 +12,18 @@ export function computeHasbrouckTradeImpact(p: HasbrouckTradeImpactParams): Hasb
   const tradeExplRetVar = Math.pow(beta, 2) * varX;
   const infoShare = varR > 1e-8 ? Math.max(0, Math.min(1, tradeExplRetVar / varR)) : 0;
   return { permanentImpact: permImpact, transientImpact: Math.max(0, beta * 0.4), informationShare: infoShare, tradeInnovationVariance: varX, returnVariance: varR };
+}
+
+export interface HasbrouckTradeImpactParams {
+  readonly tradeInnovations: readonly number[];
+  readonly returns: readonly number[];
+  readonly lagOrder?: number;
+}
+
+export interface HasbrouckTradeImpactResult {
+  readonly permanentImpact: number;
+  readonly transientImpact: number;
+  readonly informationShare: number;
+  readonly tradeInnovationVariance: number;
+  readonly returnVariance: number;
 }

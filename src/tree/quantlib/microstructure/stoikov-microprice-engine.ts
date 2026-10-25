@@ -1,9 +1,3 @@
-import type {
-  StoikovOrderBookL1,
-  StoikovMicroPriceConfig,
-  StoikovMicroPriceResult,
-} from './stoikov-microprice-types';
-
 export class StoikovMicroPriceEngine {
   calculate(book: StoikovOrderBookL1, config?: StoikovMicroPriceConfig): StoikovMicroPriceResult {
     if (book.bidPrice <= 0 || book.askPrice <= book.bidPrice) {
@@ -34,4 +28,24 @@ export class StoikovMicroPriceEngine {
       probabilityUp: Number(probUp.toFixed(4)),
     };
   }
+}
+
+export interface StoikovOrderBookL1 {
+  readonly bidPrice: number;
+  readonly askPrice: number;
+  readonly bidVolume: number;
+  readonly askVolume: number;
+}
+
+export interface StoikovMicroPriceConfig {
+  readonly kappa?: number;
+}
+
+export interface StoikovMicroPriceResult {
+  readonly midPrice: number;
+  readonly spread: number;
+  readonly imbalance: number;
+  readonly microPrice: number;
+  readonly driftBps: number;
+  readonly probabilityUp: number;
 }

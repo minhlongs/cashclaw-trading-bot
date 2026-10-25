@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeMadhavanSmidtDecomposition } from '../../src/tree/quantlib/microstructure/madhavan-smidt-spread-engine';
-import type { MadhavanSmidtTick } from '../../src/tree/quantlib/microstructure/madhavan-smidt-spread-types';
+import type { MadhavanSmidtTick } from '../../src/tree/quantlib/microstructure/madhavan-smidt-spread-engine';
 
 describe('Madhavan-Smidt (1991) Spread Econometric Decomposition Engine', () => {
   it('handles small tick history (<4 ticks) with fallback values', () => {

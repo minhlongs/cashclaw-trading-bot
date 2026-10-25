@@ -1,5 +1,3 @@
-import type { HuangStollOrderFlowParams, HuangStollOrderFlowResult } from './huang-stoll-orderflow-types';
-
 export function computeHuangStollOrderFlow(p: HuangStollOrderFlowParams): HuangStollOrderFlowResult {
   const prices = p.prices, n = prices.length;
   if (n < 3) return { effectiveSpread: 0, adverseSelectionRatio: 0, inventoryHoldingRatio: 0, orderProcessingRatio: 1, tradeAutocorrelation: 0, sampleSize: 0 };
@@ -27,4 +25,19 @@ export function computeHuangStollOrderFlow(p: HuangStollOrderFlowParams): HuangS
     tradeAutocorrelation: rho,
     sampleSize: count,
   };
+}
+
+export interface HuangStollOrderFlowParams {
+  readonly prices: readonly number[];
+  readonly tradeSigns?: readonly number[]; // +1 buy, -1 sell (auto-inferred if omitted)
+  readonly lag?: number; // default 1
+}
+
+export interface HuangStollOrderFlowResult {
+  readonly effectiveSpread: number;
+  readonly adverseSelectionRatio: number; // alpha in [0, 1]
+  readonly inventoryHoldingRatio: number; // beta in [0, 1]
+  readonly orderProcessingRatio: number; // 1 - alpha - beta in [0, 1]
+  readonly tradeAutocorrelation: number;
+  readonly sampleSize: number;
 }

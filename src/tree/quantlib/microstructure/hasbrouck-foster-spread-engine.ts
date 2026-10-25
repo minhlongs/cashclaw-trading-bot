@@ -1,5 +1,3 @@
-import type { HasbrouckFosterSpreadParams, HasbrouckFosterSpreadResult } from './hasbrouck-foster-spread-types';
-
 export function computeHasbrouckFosterSpread(p: HasbrouckFosterSpreadParams): HasbrouckFosterSpreadResult {
   const pList = p.transactionPrices, n = pList.length;
   if (n < 3) return { effectiveSpread: 0, buyImpact: 0, sellImpact: 0, asymmetryIndex: 0, orderProcessingRatio: 0, sampleSize: 0 };
@@ -21,4 +19,19 @@ export function computeHasbrouckFosterSpread(p: HasbrouckFosterSpreadParams): Ha
   const phi = sumZ2 > 1e-12 ? Math.max(0, Math.min(1.0, sumZDm / sumZ2)) : 0.5;
   const effSpread = count > 0 ? 2 * (sumAbsZ / count) : 0;
   return { effectiveSpread: effSpread, buyImpact: lambdaBuy, sellImpact: lambdaSell, asymmetryIndex: Math.min(1.0, asym), orderProcessingRatio: 1.0 - phi, sampleSize: count };
+}
+
+export interface HasbrouckFosterSpreadParams {
+  readonly transactionPrices: readonly number[];
+  readonly quoteMidpoints?: readonly number[];
+  readonly signedTradeVolumes?: readonly number[];
+}
+
+export interface HasbrouckFosterSpreadResult {
+  readonly effectiveSpread: number;
+  readonly buyImpact: number;
+  readonly sellImpact: number;
+  readonly asymmetryIndex: number;
+  readonly orderProcessingRatio: number;
+  readonly sampleSize: number;
 }

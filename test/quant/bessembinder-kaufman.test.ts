@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BessembinderKaufmanEngine } from '@/tree/quantlib/microstructure/bessembinder-kaufman-engine';
-import type { TradeQuotePair } from '@/tree/quantlib/microstructure/bessembinder-kaufman-types';
+import type { TradeQuotePair } from '@/tree/quantlib/microstructure/bessembinder-kaufman-engine';
 
 describe('BessembinderKaufmanEngine', () => {
   it('throws on empty trade list', () => {

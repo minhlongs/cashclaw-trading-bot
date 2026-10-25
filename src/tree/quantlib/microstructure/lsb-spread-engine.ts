@@ -1,5 +1,3 @@
-import type { LsbSpreadParams, LsbSpreadResult } from './lsb-spread-types';
-
 export function computeLsbSpread(p: LsbSpreadParams): LsbSpreadResult {
   const pList = p.transactionPrices, n = pList.length;
   if (n < 3) return { effectiveSpread: 0, adverseSelectionRatio: 0, orderProcessingRatio: 0, adverseSelectionSpread: 0, orderProcessingSpread: 0, sampleSize: 0 };
@@ -27,4 +25,19 @@ export function computeLsbSpread(p: LsbSpreadParams): LsbSpreadResult {
     orderProcessingSpread: orderProc * avgSpread,
     sampleSize: count,
   };
+}
+
+export interface LsbSpreadParams {
+  readonly transactionPrices: readonly number[];
+  readonly quoteMidpoints?: readonly number[];
+  readonly tradeSigns?: readonly number[];
+}
+
+export interface LsbSpreadResult {
+  readonly effectiveSpread: number;
+  readonly adverseSelectionRatio: number; // lambda in [0, 1]
+  readonly orderProcessingRatio: number; // 1 - lambda
+  readonly adverseSelectionSpread: number; // lambda * S
+  readonly orderProcessingSpread: number; // (1 - lambda) * S
+  readonly sampleSize: number;
 }

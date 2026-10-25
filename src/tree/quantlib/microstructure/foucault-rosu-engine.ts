@@ -1,5 +1,3 @@
-import type { FoucaultRosuParams, FoucaultRosuResult } from './foucault-rosu-types';
-
 export function computeFoucaultRosuMicrostructure(p: FoucaultRosuParams): FoucaultRosuResult {
   const lambdaF = Math.max(0, p.fastTraderArrivalRate);
   const muC = Math.max(1e-6, p.cancelRateSlowTraders);
@@ -14,4 +12,21 @@ export function computeFoucaultRosuMicrostructure(p: FoucaultRosuParams): Foucau
   const fastTraderRentBps = (snipingProbability * sigma * 10000) / p0;
   const effectiveDepthFactor = 1 / (1 + snipingProbability);
   return { snipingProbability, equilibriumSpreadBps, adverseSelectionShare, fastTraderRentBps, effectiveDepthFactor };
+}
+
+export interface FoucaultRosuParams {
+  readonly fastTraderArrivalRate: number;
+  readonly cancelRateSlowTraders: number;
+  readonly fundamentalVolatility: number;
+  readonly baseAssetPrice: number;
+  readonly tickSize: number;
+  readonly inventoryHoldingCost: number;
+}
+
+export interface FoucaultRosuResult {
+  readonly snipingProbability: number;
+  readonly equilibriumSpreadBps: number;
+  readonly adverseSelectionShare: number;
+  readonly fastTraderRentBps: number;
+  readonly effectiveDepthFactor: number;
 }

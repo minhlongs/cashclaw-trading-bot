@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeHuangStollDecomposition } from '@/tree/quantlib/microstructure/huang-stoll-spread-engine';
-import type { HuangStollTradeTick } from '@/tree/quantlib/microstructure/huang-stoll-spread-types';
+import type { HuangStollTradeTick } from '@/tree/quantlib/microstructure/huang-stoll-spread-engine';
 
 describe('Huang-Stoll (1997) 3-Way Spread Decomposition Engine', () => {
   it('returns empty fallback result when tick sample is insufficient (< 3 ticks)', () => {

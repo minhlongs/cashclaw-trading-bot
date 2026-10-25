@@ -1,5 +1,3 @@
-import type { HuangStollDecompositionResult, HuangStollTradeTick } from './huang-stoll-spread-types';
-
 export function computeHuangStollDecomposition(ticks: readonly HuangStollTradeTick[], spreadOverride?: number): HuangStollDecompositionResult {
   if (ticks.length < 3) {
     return { spread: 0, orderProcessingShare: 0, inventoryHoldingShare: 0, adverseSelectionShare: 0, tradeContinuationProb: 0.5 };
@@ -32,4 +30,18 @@ export function computeHuangStollDecomposition(ticks: readonly HuangStollTradeTi
   const alpha = Math.max(0, 1 - beta - gamma);
 
   return { spread: s * 2, orderProcessingShare: alpha, inventoryHoldingShare: beta, adverseSelectionShare: 1 - alpha - beta, tradeContinuationProb: pi };
+}
+
+export interface HuangStollTradeTick {
+  readonly midpoint: number;
+  readonly tradeDirection: 1 | -1;
+  readonly price?: number;
+}
+
+export interface HuangStollDecompositionResult {
+  readonly spread: number;
+  readonly orderProcessingShare: number; // alpha
+  readonly inventoryHoldingShare: number; // beta
+  readonly adverseSelectionShare: number; // gamma = 1 - alpha - beta
+  readonly tradeContinuationProb: number; // pi = P(Q_t = Q_{t-1})
 }

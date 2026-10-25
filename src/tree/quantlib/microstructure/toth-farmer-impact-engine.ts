@@ -1,5 +1,3 @@
-import type { TothFarmerImpactParams, TothFarmerImpactResult, TothFarmerRelaxationStep } from './toth-farmer-impact-types';
-
 export function computeTothFarmerImpact(p: TothFarmerImpactParams): TothFarmerImpactResult {
   const q = Math.max(0, p.orderVolume), v = Math.max(1e-6, p.dailyVolume);
   const sigma = Math.max(0, p.volatility), y = Math.max(0, p.preFactor || 0.7);
@@ -23,4 +21,29 @@ export function computeTothFarmerImpact(p: TothFarmerImpactParams): TothFarmerIm
     participationRate,
     decayTrajectory,
   };
+}
+
+export interface TothFarmerImpactParams {
+  readonly orderVolume: number;
+  readonly dailyVolume: number;
+  readonly volatility: number;
+  readonly preFactor: number;
+  readonly powerLawExponent: number;
+  readonly decayTimeConstant: number;
+  readonly evaluationSteps: number;
+}
+
+export interface TothFarmerRelaxationStep {
+  readonly step: number;
+  readonly timeElapsed: number;
+  readonly decayFactor: number;
+  readonly residualImpact: number;
+}
+
+export interface TothFarmerImpactResult {
+  readonly instantaneousImpact: number;
+  readonly peakImpact: number;
+  readonly permanentResidualImpact: number;
+  readonly participationRate: number;
+  readonly decayTrajectory: readonly TothFarmerRelaxationStep[];
 }

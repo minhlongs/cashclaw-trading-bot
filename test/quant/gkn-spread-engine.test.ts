@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computeGKNSpreadDecomposition } from '@/tree/quantlib/microstructure/gkn-spread-engine';
-import type { GKNPriceBar } from '@/tree/quantlib/microstructure/gkn-spread-types';
+import type { GKNPriceBar } from '@/tree/quantlib/microstructure/gkn-spread-engine';
 
 describe('George-Kaul-Nimalendran (GKN 1991) Spread Decomposition Engine', () => {
   it('returns neutral default allocation for short series (< 4 bars)', () => {

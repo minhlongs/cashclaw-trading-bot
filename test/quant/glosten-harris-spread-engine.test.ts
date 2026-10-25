@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeGlostenHarrisDecomposition } from '../../src/tree/quantlib/microstructure/glosten-harris-spread-engine';
-import type { GlostenHarrisTradeTick } from '../../src/tree/quantlib/microstructure/glosten-harris-spread-types';
+import type { GlostenHarrisTradeTick } from '../../src/tree/quantlib/microstructure/glosten-harris-spread-engine';
 
 describe('Glosten-Harris (1988) Spread Decomposition Engine', () => {
   it('returns empty result when insufficient ticks are provided', () => {

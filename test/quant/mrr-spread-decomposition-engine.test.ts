@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeMRRDecomposition } from '@/tree/quantlib/microstructure/mrr-spread-decomposition-engine';
-import type { MRRTradeTick } from '@/tree/quantlib/microstructure/mrr-spread-decomposition-types';
+import type { MRRTradeTick } from '@/tree/quantlib/microstructure/mrr-spread-decomposition-engine';
 
 describe('Madhavan-Richardson-Roomans (MRR 1997) Spread Decomposition Engine', () => {
   it('handles empty or minimal trade series safely', () => {

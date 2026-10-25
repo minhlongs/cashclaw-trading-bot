@@ -1,9 +1,3 @@
-import {
-  AdmatiPfleidererConfig,
-  AdmatiPeriodMetric,
-  AdmatiPfleidererResult,
-} from './admati-pfleiderer-types';
-
 export class AdmatiPfleidererEngine {
   public static analyzeIntradayClustering(config: AdmatiPfleidererConfig): AdmatiPfleidererResult {
     const { fundamentalVolatility: sigma, fixedExecutionCost: c0, sunshineDisclosureBonus: b, periods } = config;
@@ -30,4 +24,37 @@ export class AdmatiPfleidererEngine {
     const variance = costs.reduce((acc, c) => acc + Math.pow(c - avgCost, 2), 0) / costs.length;
     return { periods: metrics, highestLiquidityPeriod: peakPeriod, intradayCostDispersion: Math.sqrt(variance) };
   }
+}
+
+/**
+ * Admati & Pfleiderer (1988) Volume Clustering & Sunshine Trading Types
+ * Reference: Anat R. Admati & Paul Pfleiderer (1988), RFS
+ */
+
+export interface AdmatiPfleidererPeriodInput {
+  periodIndex: number;
+  nondiscretionaryVolume: number; // inelastic base flow
+  discretionaryTraders: number; // DLT count choosing this period
+  informedTraders: number; // Informed trader count
+}
+
+export interface AdmatiPfleidererConfig {
+  fundamentalVolatility: number;
+  fixedExecutionCost: number;
+  sunshineDisclosureBonus: number; // Discount if orders pre-announced
+  periods: AdmatiPfleidererPeriodInput[];
+}
+
+export interface AdmatiPeriodMetric {
+  periodIndex: number;
+  totalVolume: number;
+  effectiveAdverseSelection: number;
+  expectedTransactionCost: number;
+  isClusteredLiquidityPeak: boolean;
+}
+
+export interface AdmatiPfleidererResult {
+  periods: AdmatiPeriodMetric[];
+  highestLiquidityPeriod: number;
+  intradayCostDispersion: number;
 }

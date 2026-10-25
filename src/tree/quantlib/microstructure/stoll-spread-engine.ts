@@ -1,5 +1,3 @@
-import type { StollSpreadParams, StollSpreadResult } from './stoll-spread-types';
-
 function cov(x: number[], y: number[]): number {
   if (x.length < 2) return 0;
   const mx = x.reduce((a, b) => a + b, 0) / x.length, my = y.reduce((a, b) => a + b, 0) / y.length;
@@ -21,4 +19,24 @@ export function computeStollSpread(p: StollSpreadParams): StollSpreadResult {
   const gamma = Math.max(0, Math.min(1 - alpha, Math.max(0, -covM) / halfSpreadSq));
   const pi = Math.max(0, 1 - alpha - gamma);
   return { effectiveSpread: spread, adverseSelectionFraction: alpha, inventoryHoldingFraction: gamma, orderProcessingFraction: pi, impliedRollSpread: rollSpread, serialCovariancePrice: covP, serialCovarianceMidpoint: covM };
+}
+
+export interface StollTick {
+  price: number;
+  midpoint: number;
+}
+
+export interface StollSpreadParams {
+  ticks: StollTick[];
+  spreadOverride?: number;
+}
+
+export interface StollSpreadResult {
+  effectiveSpread: number;
+  adverseSelectionFraction: number;
+  inventoryHoldingFraction: number;
+  orderProcessingFraction: number;
+  impliedRollSpread: number;
+  serialCovariancePrice: number;
+  serialCovarianceMidpoint: number;
 }

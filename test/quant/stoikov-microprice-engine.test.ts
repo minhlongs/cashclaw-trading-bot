@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { StoikovMicroPriceEngine } from '../../src/tree/quantlib/microstructure/stoikov-microprice-engine';
-import type { StoikovOrderBookL1 } from '../../src/tree/quantlib/microstructure/stoikov-microprice-types';
+import type { StoikovOrderBookL1 } from '../../src/tree/quantlib/microstructure/stoikov-microprice-engine';
 
 describe('StoikovMicroPriceEngine', () => {
   const engine = new StoikovMicroPriceEngine();

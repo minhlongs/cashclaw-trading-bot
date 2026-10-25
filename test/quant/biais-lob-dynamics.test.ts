@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BiaisLobDynamicsEngine } from '@/tree/quantlib/microstructure/biais-lob-dynamics-engine';
-import type { LobEventType } from '@/tree/quantlib/microstructure/biais-lob-dynamics-types';
+import type { LobEventType } from '@/tree/quantlib/microstructure/biais-lob-dynamics-engine';
 
 describe('BiaisLobDynamicsEngine', () => {
   it('analyzes transition matrix and diagonal persistence', () => {

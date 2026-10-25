@@ -1,5 +1,3 @@
-import type { EasleyOharaParams, EasleyOharaResult } from './easley-ohara-types';
-
 export function computeEasleyOharaAsymmetry(p: EasleyOharaParams): EasleyOharaResult {
   const alpha = Math.min(1, Math.max(0, p.eventProbability));
   const mu = Math.max(0, p.informedRate);
@@ -16,4 +14,23 @@ export function computeEasleyOharaAsymmetry(p: EasleyOharaParams): EasleyOharaRe
   const sizeAsymmetryRatio = pinSmall > 0 ? pinLarge / pinSmall : 1;
   const largeOrderAdverseSelectionMarkup = spreadLargeBps - spreadSmallBps;
   return { pinLarge, pinSmall, spreadLargeBps, spreadSmallBps, sizeAsymmetryRatio, largeOrderAdverseSelectionMarkup };
+}
+
+export interface EasleyOharaParams {
+  readonly eventProbability: number;
+  readonly informedLargeFraction: number;
+  readonly uninformedSmallRate: number;
+  readonly uninformedLargeRate: number;
+  readonly informedRate: number;
+  readonly baseAssetPrice: number;
+  readonly volatility: number;
+}
+
+export interface EasleyOharaResult {
+  readonly pinLarge: number;
+  readonly pinSmall: number;
+  readonly spreadLargeBps: number;
+  readonly spreadSmallBps: number;
+  readonly sizeAsymmetryRatio: number;
+  readonly largeOrderAdverseSelectionMarkup: number;
 }

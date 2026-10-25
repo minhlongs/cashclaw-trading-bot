@@ -1,5 +1,3 @@
-import type { BarclayWarnerParams, BarclayWarnerResult, StealthBucketMetrics } from './barclay-warner-stealth-types';
-
 export function computeBarclayWarnerStealth(p: BarclayWarnerParams): BarclayWarnerResult {
   const trades = p.trades, n = trades.length;
   if (n === 0) {
@@ -27,4 +25,32 @@ export function computeBarclayWarnerStealth(p: BarclayWarnerParams): BarclayWarn
   const sm = toMetrics(buckets.small), mm = toMetrics(buckets.medium), lm = toMetrics(buckets.large);
   const dominant = mm.stealthRatio >= sm.stealthRatio && mm.stealthRatio >= lm.stealthRatio ? 'medium' : sm.stealthRatio >= lm.stealthRatio ? 'small' : 'large';
   return { smallBucket: sm, mediumBucket: mm, largeBucket: lm, dominantStealthBucket: dominant, totalTrades: n, netCumulativePriceChange: netCpc };
+}
+
+export interface StealthTrade {
+  readonly size: number;
+  readonly priceChange: number;
+}
+
+export interface StealthBucketMetrics {
+  readonly tradeCount: number;
+  readonly totalVolume: number;
+  readonly cpcFraction: number;
+  readonly volumeFraction: number;
+  readonly stealthRatio: number;
+}
+
+export interface BarclayWarnerParams {
+  readonly trades: readonly StealthTrade[];
+  readonly smallCutoff?: number;
+  readonly largeCutoff?: number;
+}
+
+export interface BarclayWarnerResult {
+  readonly smallBucket: StealthBucketMetrics;
+  readonly mediumBucket: StealthBucketMetrics;
+  readonly largeBucket: StealthBucketMetrics;
+  readonly dominantStealthBucket: 'small' | 'medium' | 'large';
+  readonly totalTrades: number;
+  readonly netCumulativePriceChange: number;
 }

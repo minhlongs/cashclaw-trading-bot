@@ -1,5 +1,3 @@
-import type { GKNPriceBar, GKNSpreadDecompositionResult } from './gkn-spread-types';
-
 export function computeGKNSpreadDecomposition(bars: readonly GKNPriceBar[], spreadOverride?: number): GKNSpreadDecompositionResult {
   if (bars.length < 4) {
     return { spread: 0, orderProcessingShare: 0.5, adverseSelectionShare: 0.5, serialCovariance: 0, priceReturnVariance: 0 };
@@ -33,4 +31,17 @@ export function computeGKNSpreadDecomposition(bars: readonly GKNPriceBar[], spre
   const gamma = 1.0 - alpha;
 
   return { spread: rawSpread, orderProcessingShare: alpha, adverseSelectionShare: gamma, serialCovariance: covU, priceReturnVariance: varR };
+}
+
+export interface GKNPriceBar {
+  readonly price: number;
+  readonly midpoint: number;
+}
+
+export interface GKNSpreadDecompositionResult {
+  readonly spread: number;
+  readonly orderProcessingShare: number;
+  readonly adverseSelectionShare: number;
+  readonly serialCovariance: number;
+  readonly priceReturnVariance: number;
 }

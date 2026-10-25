@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computeKyleCrossAssetImpact } from '@/tree/quantlib/microstructure/kyle-cross-asset-engine';
-import type { KyleCrossAssetParams } from '@/tree/quantlib/microstructure/kyle-cross-asset-types';
+import type { KyleCrossAssetParams } from '@/tree/quantlib/microstructure/kyle-cross-asset-engine';
 
 describe('Kyle-Caballe-Krishnan (1995) Multi-Asset Cross-Impact Microstructure Engine', () => {
   const baseParams: KyleCrossAssetParams = {
