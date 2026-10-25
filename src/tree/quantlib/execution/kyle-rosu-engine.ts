@@ -1,5 +1,3 @@
-import type { KyleRosuParams, KyleRosuResult, KyleRosuStep } from './kyle-rosu-types';
-
 export function computeKyleRosuExecution(p: KyleRosuParams): KyleRosuResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const s0 = Math.max(0, p.initialInventory ?? 1000), v = p.fundamentalValue, p0 = p.initialPrice;
@@ -23,4 +21,36 @@ export function computeKyleRosuExecution(p: KyleRosuParams): KyleRosuResult {
   const vwapPrice = s0 > 0 ? totalNotional / s0 : p0;
   const discEfficiency = v !== p0 ? Math.min(1, Math.max(0, (currentPrice - p0) / (v - p0))) : 1;
   return { trajectory, totalCost, vwapPrice, terminalPrice: currentPrice, priceDiscoveryEfficiency: discEfficiency, terminalInventory: remaining };
+}
+
+export interface KyleRosuParams {
+  readonly fundamentalValue: number;
+  readonly initialPrice: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly volatility: number;
+  readonly noiseTraderStd: number;
+  readonly aggressivenessCoeff: number;
+  readonly temporaryImpactCoeff: number;
+  readonly initialInventory?: number;
+}
+
+export interface KyleRosuStep {
+  readonly step: number;
+  readonly time: number;
+  readonly inventoryRemaining: number;
+  readonly tradeSpeed: number;
+  readonly tradeSize: number;
+  readonly executionPrice: number;
+  readonly priceDiscoveryIndex: number;
+  readonly stepCost: number;
+}
+
+export interface KyleRosuResult {
+  readonly trajectory: readonly KyleRosuStep[];
+  readonly totalCost: number;
+  readonly vwapPrice: number;
+  readonly terminalPrice: number;
+  readonly priceDiscoveryEfficiency: number;
+  readonly terminalInventory: number;
 }

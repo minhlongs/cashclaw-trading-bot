@@ -122,6 +122,19 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       expect(body.ok).toBe(true);
       expect(body.paymentId).toBe('np_payment_999');
       expect(body.targetTier).toBe('PREMIUM');
+      expect(body.activated).toBe(true);
+
+      const replayRes = await postIpn(
+        new Request('http://localhost/api/ee/billing/ipn', {
+          method: 'POST',
+          headers: { 'x-nowpayments-sig': signature },
+          body: JSON.stringify(payload),
+        }),
+      );
+      expect(replayRes.status).toBe(200);
+      const replayBody = (await replayRes.json()) as Record<string, unknown>;
+      expect(replayBody.idempotentReplay).toBe(true);
+      expect(replayBody.activated).toBe(false);
     });
   });
 

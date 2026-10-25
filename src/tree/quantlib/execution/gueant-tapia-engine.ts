@@ -1,5 +1,3 @@
-import type { GueantTapiaParams, GueantTapiaResult, GueantTapiaStep, AssetStepExecution } from './gueant-tapia-types';
-
 export function computeGueantTapiaExecution(p: GueantTapiaParams): GueantTapiaResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const gamma = Math.max(1e-6, p.riskAversion), assets = p.assets;
@@ -33,4 +31,41 @@ export function computeGueantTapiaExecution(p: GueantTapiaParams): GueantTapiaRe
     assetVwaps[a.symbol] = a.shares > 0 ? (totalNotional.get(a.symbol) ?? 0) / a.shares : a.price;
   }
   return { steps, totalExecutionCost: totalCost, assetVwaps, terminalShares };
+}
+
+export interface GueantTapiaAsset {
+  readonly symbol: string;
+  readonly shares: number;
+  readonly price: number;
+  readonly volatility: number;
+  readonly temporaryImpact: number;
+}
+
+export interface GueantTapiaParams {
+  readonly assets: readonly GueantTapiaAsset[];
+  readonly correlationMatrix?: readonly (readonly number[])[];
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly riskAversion: number;
+}
+
+export interface AssetStepExecution {
+  readonly symbol: string;
+  readonly sharesExecuted: number;
+  readonly sharesRemaining: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+}
+
+export interface GueantTapiaStep {
+  readonly step: number;
+  readonly time: number;
+  readonly assetExecutions: readonly AssetStepExecution[];
+}
+
+export interface GueantTapiaResult {
+  readonly steps: readonly GueantTapiaStep[];
+  readonly totalExecutionCost: number;
+  readonly assetVwaps: Readonly<Record<string, number>>;
+  readonly terminalShares: Readonly<Record<string, number>>;
 }

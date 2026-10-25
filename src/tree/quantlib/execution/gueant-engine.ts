@@ -1,5 +1,3 @@
-import type { GueantParams, GueantResult, GueantStep } from './gueant-types';
-
 export function computeGueantExecution(p: GueantParams): GueantResult {
   const n = Math.max(1, Math.floor(p.numSteps)), s0 = Math.max(0, p.totalShares);
   const t = Math.max(1e-4, p.timeHorizon), dt = t / n;
@@ -33,4 +31,30 @@ export function computeGueantExecution(p: GueantParams): GueantResult {
     trajectory, expectedCost: totalCost, benchmarkTwapCost: twapCost,
     costSavings: Math.max(0, twapCost - totalCost), terminalShares: remaining,
   };
+}
+
+export interface GueantParams {
+  readonly totalShares: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly impactParam: number;
+  readonly powerLawExponent: number;
+  readonly riskAversion: number;
+  readonly terminalPenalty?: number;
+}
+
+export interface GueantStep {
+  readonly step: number;
+  readonly sharesRemaining: number;
+  readonly tradeSpeed: number;
+  readonly tradeSize: number;
+  readonly stepCost: number;
+}
+
+export interface GueantResult {
+  readonly trajectory: readonly GueantStep[];
+  readonly expectedCost: number;
+  readonly benchmarkTwapCost: number;
+  readonly costSavings: number;
+  readonly terminalShares: number;
 }

@@ -1,5 +1,3 @@
-import type { BiaisSchedulingParams, BiaisSchedulingResult, BiaisSchedulingStep } from './biais-scheduling-types';
-
 export function executeBiaisScheduling(p: BiaisSchedulingParams): BiaisSchedulingResult {
   const q0 = Math.max(0, p.totalShares), p0 = Math.max(1e-4, p.initialPrice), n = Math.max(1, p.numBuckets ?? 10);
   const alpha = Math.max(0, Math.min(0.99, p.informedArrivalProb ?? 0.2)), theta = Math.max(0, p.adverseIntensity ?? 0.03);
@@ -22,4 +20,31 @@ export function executeBiaisScheduling(p: BiaisSchedulingParams): BiaisSchedulin
   const effectivePrice = q0 > 0 ? totalNotional / q0 : p0;
   const isBps = (Math.max(0, p0 - effectivePrice) / p0) * 10_000;
   return { schedule, totalExecutionCost: totalCost, effectivePrice, implementationShortfallBps: isBps };
+}
+
+export interface BiaisSchedulingStep {
+  readonly bucket: number;
+  readonly sharesTraded: number;
+  readonly remainingShares: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+  readonly informedAdverseImpact: number;
+  readonly latencyPenalty: number;
+}
+
+export interface BiaisSchedulingParams {
+  readonly totalShares: number;
+  readonly initialPrice: number;
+  readonly numBuckets?: number;
+  readonly informedArrivalProb?: number;
+  readonly adverseIntensity?: number;
+  readonly latencyCostRate?: number;
+  readonly baseImpact?: number;
+}
+
+export interface BiaisSchedulingResult {
+  readonly schedule: readonly BiaisSchedulingStep[];
+  readonly totalExecutionCost: number;
+  readonly effectivePrice: number;
+  readonly implementationShortfallBps: number;
 }

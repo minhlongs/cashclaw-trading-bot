@@ -1,5 +1,3 @@
-import type { GatheralSchiedResilientParams, GatheralSchiedResilientResult, GatheralSchiedResilientStep } from './gatheral-schied-resilient-types';
-
 export function computeGatheralSchiedResilientExecution(p: GatheralSchiedResilientParams): GatheralSchiedResilientResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const q0 = Math.max(0, p.initialShares), p0 = p.initialPrice, eta = Math.max(1e-6, p.temporaryImpact);
@@ -30,4 +28,32 @@ export function computeGatheralSchiedResilientExecution(p: GatheralSchiedResilie
   const lastTau = t;
   const reversion = p0 - (trajectory[trajectory.length - 1]?.executionPrice ?? p0) * Math.pow(1 + rho * lastTau, -alpha);
   return { trajectory, totalExecutionCost: totalCost, averageExecutionPrice: vwap, terminalShares: remaining, priceReversion: reversion };
+}
+
+export interface GatheralSchiedResilientParams {
+  readonly initialShares: number;
+  readonly initialPrice: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly temporaryImpact: number;
+  readonly decayRate: number; // rho >= 0
+  readonly decayExponent: number; // alpha in (0, 1]
+  readonly impactPower?: number; // k (default 1.0)
+}
+
+export interface GatheralSchiedResilientStep {
+  readonly step: number;
+  readonly time: number;
+  readonly sharesSold: number;
+  readonly remainingShares: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+}
+
+export interface GatheralSchiedResilientResult {
+  readonly trajectory: readonly GatheralSchiedResilientStep[];
+  readonly totalExecutionCost: number;
+  readonly averageExecutionPrice: number;
+  readonly terminalShares: number;
+  readonly priceReversion: number;
 }

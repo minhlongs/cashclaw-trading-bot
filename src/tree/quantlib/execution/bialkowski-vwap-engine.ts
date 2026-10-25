@@ -1,5 +1,3 @@
-import type { BialkowskiVwapParams, BialkowskiVwapResult, VwapStep } from './bialkowski-vwap-types';
-
 export function computeBialkowskiVwap(p: BialkowskiVwapParams): BialkowskiVwapResult {
   const { totalShares: Q0, initialPrice: P0, intradayVolumeWeights: rawWeights } = p;
   const N = rawWeights.length;
@@ -30,4 +28,28 @@ export function computeBialkowskiVwap(p: BialkowskiVwapParams): BialkowskiVwapRe
   const effectiveVWAP = cumShares > 0 ? cumValue / cumShares : P0;
   const trackingErrorBps = (Math.abs(P0 - effectiveVWAP) / (P0 + 1e-9)) * 10000;
   return { schedule, totalExecutionCost: cumCost, effectiveVWAP, trackingErrorBps };
+}
+
+export interface VwapStep {
+  bucket: number;
+  scheduledShares: number;
+  remainingShares: number;
+  executionPrice: number;
+  stepImpact: number;
+  stepCost: number;
+}
+
+export interface BialkowskiVwapParams {
+  totalShares: number;
+  initialPrice: number;
+  intradayVolumeWeights: number[];
+  impactParam?: number;
+  permImpactParam?: number;
+}
+
+export interface BialkowskiVwapResult {
+  schedule: VwapStep[];
+  totalExecutionCost: number;
+  effectiveVWAP: number;
+  trackingErrorBps: number;
 }

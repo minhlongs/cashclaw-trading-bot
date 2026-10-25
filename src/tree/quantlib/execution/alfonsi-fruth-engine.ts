@@ -1,5 +1,3 @@
-import type { AlfonsiFruthParams, AlfonsiFruthResult, AlfonsiFruthStep } from './alfonsi-fruth-types';
-
 export function computeAlfonsiFruthExecution(p: AlfonsiFruthParams): AlfonsiFruthResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const s0 = Math.max(0, p.initialInventory), p0 = p.initialPrice;
@@ -27,4 +25,34 @@ export function computeAlfonsiFruthExecution(p: AlfonsiFruthParams): AlfonsiFrut
   const terminalPrice = p0 - currentImpact;
   const resilienceRecoveryBps = initialGrossImpact > 0 ? Math.max(0, (1 - currentImpact / initialGrossImpact) * 10000) : 0;
   return { trajectory, totalCost, vwapPrice, terminalPrice, resilienceRecoveryBps, terminalInventory: remaining };
+}
+
+export interface AlfonsiFruthParams {
+  readonly initialInventory: number;
+  readonly initialPrice: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly resilienceSpeed: number;
+  readonly impactFactor: number;
+  readonly shapeExponent?: number;
+}
+
+export interface AlfonsiFruthStep {
+  readonly step: number;
+  readonly time: number;
+  readonly inventoryRemaining: number;
+  readonly tradeSize: number;
+  readonly instantaneousImpact: number;
+  readonly relaxedImpact: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+}
+
+export interface AlfonsiFruthResult {
+  readonly trajectory: readonly AlfonsiFruthStep[];
+  readonly totalCost: number;
+  readonly vwapPrice: number;
+  readonly terminalPrice: number;
+  readonly resilienceRecoveryBps: number;
+  readonly terminalInventory: number;
 }

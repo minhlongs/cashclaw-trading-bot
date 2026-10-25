@@ -1,13 +1,14 @@
 // Test suite for Billing & Entitlements UI components
 // Validates TierComparisonTable, QuotaUsageCard, NowpaymentsCheckoutModal, CliSyncBridgeCard
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { TierComparisonTable } from '../tier-comparison-table';
 import { QuotaUsageCard } from '../quota-usage-card';
 import { CliSyncBridgeCard } from '../cli-sync-bridge-card';
 import { NowpaymentsCheckoutModal } from '../nowpayments-checkout-modal';
+import { useWorkspaceBilling } from '../use-workspace-billing';
 
 describe('Billing & Entitlements UI Components', () => {
   it('renders TierComparisonTable with all 4 tiers and correct pricing', () => {
@@ -62,5 +63,53 @@ describe('Billing & Entitlements UI Components', () => {
     expect(screen.getByText('Upgrade to PREMIUM')).toBeDefined();
     expect(screen.getByText('$29 / month')).toBeDefined();
     expect(screen.getByText('Pay $29 with USDT')).toBeDefined();
+  });
+
+  it('hydrates useWorkspaceBilling state from mocked fetch responses', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/api/ee/quotas')) {
+        return new Response(
+          JSON.stringify({ ok: true, tier: 'ENTERPRISE', entitlements: { monthlyLlmCredits: 50000 } }),
+          { status: 200 },
+        );
+      }
+      if (url.includes('/api/ee/credits')) {
+        return new Response(
+          JSON.stringify({ ok: true, account: { balanceCredits: 42000, consumedCredits: 8000 } }),
+          { status: 200 },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          data: [{ status: 'running' }, { status: 'running' }, { status: 'stopped' }],
+        }),
+        { status: 200 },
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    function Harness() {
+      const { currentTier, runningBots, consumedCredits, totalCredits } =
+        useWorkspaceBilling('ws_test_hydrate');
+      return (
+        <div>
+          <span>{`tier:${currentTier}`}</span>
+          <span>{`bots:${runningBots}`}</span>
+          <span>{`credits:${consumedCredits}/${totalCredits}`}</span>
+        </div>
+      );
+    }
+
+    render(<Harness />);
+
+    await waitFor(() => {
+      expect(screen.getByText('tier:ENTERPRISE')).toBeDefined();
+      expect(screen.getByText('bots:2')).toBeDefined();
+      expect(screen.getByText('credits:8000/50000')).toBeDefined();
+    });
+
+    vi.unstubAllGlobals();
   });
 });

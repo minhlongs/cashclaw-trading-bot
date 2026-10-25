@@ -1,5 +1,3 @@
-import type { KonishiBrowneParams, KonishiBrowneResult, KonishiBrowneStep } from './konishi-browne-types';
-
 export function executeKonishiBrowne(p: KonishiBrowneParams): KonishiBrowneResult {
   const q0 = Math.max(0, p.totalShares), p0 = Math.max(1e-4, p.initialPrice);
   const rawW = p.volumeWeights.length > 0 ? p.volumeWeights : [1];
@@ -23,4 +21,31 @@ export function executeKonishiBrowne(p: KonishiBrowneParams): KonishiBrowneResul
   const effectiveVWAP = q0 > 0 ? totalNotional / q0 : p0, benchVWAP = p0;
   const trackingErrorBps = (Math.abs(effectiveVWAP - benchVWAP) / benchVWAP) * 10_000;
   return { schedule, totalExecutionCost: totalCost, effectiveVWAP, trackingErrorBps, benchmarkVWAP: benchVWAP };
+}
+
+export interface KonishiBrowneParams {
+  totalShares: number;
+  initialPrice: number;
+  volumeWeights: number[];
+  riskAversion?: number;
+  volatility?: number;
+  temporaryImpact?: number;
+  permanentImpact?: number;
+}
+
+export interface KonishiBrowneStep {
+  bucket: number;
+  scheduledShares: number;
+  remainingShares: number;
+  executionPrice: number;
+  stepCost: number;
+  impactPenalty: number;
+}
+
+export interface KonishiBrowneResult {
+  schedule: KonishiBrowneStep[];
+  totalExecutionCost: number;
+  effectiveVWAP: number;
+  trackingErrorBps: number;
+  benchmarkVWAP: number;
 }

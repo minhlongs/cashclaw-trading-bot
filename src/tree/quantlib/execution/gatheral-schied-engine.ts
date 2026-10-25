@@ -1,5 +1,3 @@
-import type { GatheralSchiedParams, GatheralSchiedResult, GatheralSchiedStep } from './gatheral-schied-types';
-
 export function computeGatheralSchiedExecution(p: GatheralSchiedParams): GatheralSchiedResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const s0 = Math.max(0, p.initialInventory), p0 = p.initialPrice;
@@ -33,4 +31,36 @@ export function computeGatheralSchiedExecution(p: GatheralSchiedParams): Gathera
   const totalCost = Math.max(0, s0 * p0 - totalNotional);
   const vwapPrice = s0 > 0 ? totalNotional / s0 : p0;
   return { trajectory, totalCost, vwapPrice, terminalPrice: p0 - terminalImpact, isNoArbitrageGuaranteed, priceReversionPath: reversionPath, terminalInventory: remaining };
+}
+
+export interface GatheralSchiedParams {
+  readonly initialInventory: number;
+  readonly initialPrice: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly instantaneousImpact: number;
+  readonly decayRate: number;
+  readonly powerLawAlpha?: number;
+  readonly riskAversion?: number;
+}
+
+export interface GatheralSchiedStep {
+  readonly step: number;
+  readonly time: number;
+  readonly inventoryRemaining: number;
+  readonly tradeSize: number;
+  readonly tradeSpeed: number;
+  readonly accumulatedImpact: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+}
+
+export interface GatheralSchiedResult {
+  readonly trajectory: readonly GatheralSchiedStep[];
+  readonly totalCost: number;
+  readonly vwapPrice: number;
+  readonly terminalPrice: number;
+  readonly isNoArbitrageGuaranteed: boolean;
+  readonly priceReversionPath: readonly number[];
+  readonly terminalInventory: number;
 }

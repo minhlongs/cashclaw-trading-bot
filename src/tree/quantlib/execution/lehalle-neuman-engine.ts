@@ -1,5 +1,3 @@
-import type { LehalleNeumanParams, LehalleNeumanResult, LehalleNeumanStep } from './lehalle-neuman-types';
-
 export function computeLehalleNeumanExecution(p: LehalleNeumanParams): LehalleNeumanResult {
   const n = Math.max(1, Math.floor(p.numSteps)), s0 = Math.max(0, p.totalShares);
   const t = Math.max(1e-4, p.timeHorizon), dt = t / n;
@@ -35,4 +33,32 @@ export function computeLehalleNeumanExecution(p: LehalleNeumanParams): LehalleNe
     trajectory, expectedCost: totalCost, benchmarkTwapCost: twapCost,
     signalAlphaContribution: signalContrib, costSavings: Math.max(0, twapCost - totalCost),
   };
+}
+
+export interface LehalleNeumanParams {
+  readonly totalShares: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly temporaryImpact: number;
+  readonly permanentImpact: number;
+  readonly riskAversion: number;
+  readonly signalAlpha: number;
+  readonly signalDecay: number;
+}
+
+export interface LehalleNeumanStep {
+  readonly step: number;
+  readonly tradeSpeed: number;
+  readonly tradeSize: number;
+  readonly remainingShares: number;
+  readonly signalValue: number;
+  readonly stepCost: number;
+}
+
+export interface LehalleNeumanResult {
+  readonly trajectory: readonly LehalleNeumanStep[];
+  readonly expectedCost: number;
+  readonly benchmarkTwapCost: number;
+  readonly signalAlphaContribution: number;
+  readonly costSavings: number;
 }

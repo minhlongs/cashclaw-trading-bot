@@ -1,5 +1,3 @@
-import type { KyleSmoothImpactParams, KyleSmoothImpactResult, KyleSmoothImpactStep } from './kyle-smooth-impact-types';
-
 export function computeKyleSmoothImpactExecution(p: KyleSmoothImpactParams): KyleSmoothImpactResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const q0 = Math.max(0, p.initialShares), p0 = p.initialPrice;
@@ -25,4 +23,31 @@ export function computeKyleSmoothImpactExecution(p: KyleSmoothImpactParams): Kyl
 
   const vwap = q0 > 0 ? totalNotional / q0 : p0;
   return { trajectory, totalExecutionCost: totalCost, averageExecutionPrice: vwap, terminalShares: remaining, terminalImpact: currentImpact };
+}
+
+export interface KyleSmoothImpactParams {
+  readonly initialShares: number;
+  readonly initialPrice: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly dissipationRate?: number; // beta, default 2.0
+  readonly impactParam?: number; // lambda, default 0.1
+}
+
+export interface KyleSmoothImpactStep {
+  readonly step: number;
+  readonly time: number;
+  readonly sharesSold: number;
+  readonly remainingShares: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+  readonly smoothImpact: number;
+}
+
+export interface KyleSmoothImpactResult {
+  readonly trajectory: readonly KyleSmoothImpactStep[];
+  readonly totalExecutionCost: number;
+  readonly averageExecutionPrice: number;
+  readonly terminalShares: number;
+  readonly terminalImpact: number;
 }
