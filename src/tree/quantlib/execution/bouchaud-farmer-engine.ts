@@ -1,5 +1,3 @@
-import type { BouchaudFarmerParams, BouchaudFarmerResult, BouchaudFarmerStep } from './bouchaud-farmer-types';
-
 export function computeBouchaudFarmerExecution(p: BouchaudFarmerParams): BouchaudFarmerResult {
   const n = Math.max(1, Math.floor(p.numTrades)), s0 = Math.max(0, p.initialShares), p0 = p.initialPrice;
   const gamma = Math.min(0.99, Math.max(0.01, p.memoryDecayExponent));
@@ -25,4 +23,31 @@ export function computeBouchaudFarmerExecution(p: BouchaudFarmerParams): Bouchau
   const totalExecutionCost = Math.max(0, sign === 1 ? s0 * p0 - totalNotional : totalNotional - s0 * p0);
   const vwapPrice = s0 > 0 ? totalNotional / s0 : p0;
   return { trajectory, totalExecutionCost, vwapPrice, terminalImpact: dressedImpact, hurstExponent };
+}
+
+export interface BouchaudFarmerParams {
+  readonly initialShares: number;
+  readonly initialPrice: number;
+  readonly numTrades: number;
+  readonly memoryDecayExponent: number; // gamma in C(l) ~ l^(-gamma), typically 0.5
+  readonly bareImpactMagnitude: number;
+  readonly tradeSign?: 1 | -1;
+}
+
+export interface BouchaudFarmerStep {
+  readonly tradeIndex: number;
+  readonly sharesExecuted: number;
+  readonly sharesRemaining: number;
+  readonly autocorrelation: number;
+  readonly dressedImpact: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+}
+
+export interface BouchaudFarmerResult {
+  readonly trajectory: readonly BouchaudFarmerStep[];
+  readonly totalExecutionCost: number;
+  readonly vwapPrice: number;
+  readonly terminalImpact: number;
+  readonly hurstExponent: number;
 }

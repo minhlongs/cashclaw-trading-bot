@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeCarteaJaimungalOfiExecution } from '@/tree/quantlib/execution/cartea-jaimungal-ofi-engine';
-import type { CarteaJaimungalOfiParams } from '@/tree/quantlib/execution/cartea-jaimungal-ofi-types';
+import { computeCarteaJaimungalOfiExecution, type CarteaJaimungalOfiParams } from '@/tree/quantlib/execution/cartea-jaimungal-ofi-engine';
 
 describe('Cartea-Jaimungal (2016) OFI Execution Engine', () => {
   const baseParams: CarteaJaimungalOfiParams = {

@@ -1,5 +1,3 @@
-import type { AlmgrenRiskPenaltyParams, AlmgrenRiskPenaltyResult } from './almgren-risk-penalty-types';
-
 export function computeAlmgrenRiskPenalty(p: AlmgrenRiskPenaltyParams): AlmgrenRiskPenaltyResult {
   const x0 = p.totalShares, n = Math.max(1, p.horizonSteps);
   const eta = Math.max(1e-6, p.temporaryImpactEta), sigma = Math.max(1e-6, p.volatility);
@@ -19,4 +17,21 @@ export function computeAlmgrenRiskPenalty(p: AlmgrenRiskPenaltyParams): AlmgrenR
   }
   const varCost = lambda * Math.pow(varAccum, power);
   return { trajectory, expectedCost: expCost, varianceCost: varCost, totalPenaltyCost: expCost + varCost, urgencyKappa: kappa };
+}
+
+export interface AlmgrenRiskPenaltyParams {
+  readonly totalShares: number;
+  readonly horizonSteps: number;
+  readonly volatility: number;
+  readonly riskAversion: number;
+  readonly temporaryImpactEta: number;
+  readonly penaltyExponent?: number;
+}
+
+export interface AlmgrenRiskPenaltyResult {
+  readonly trajectory: readonly number[];
+  readonly expectedCost: number;
+  readonly varianceCost: number;
+  readonly totalPenaltyCost: number;
+  readonly urgencyKappa: number;
 }

@@ -1,5 +1,3 @@
-import type { LorenzAlmgrenParams, LorenzAlmgrenResult, LorenzAlmgrenStep } from './lorenz-almgren-types';
-
 export function computeLorenzAlmgrenExecution(p: LorenzAlmgrenParams): LorenzAlmgrenResult {
   const n = Math.max(1, Math.floor(p.numSteps)), s0 = Math.max(0, p.initialShares), p0 = p.initialPrice;
   const t = Math.max(1e-4, p.timeHorizon), dt = t / n, sigma = Math.max(1e-5, p.volatility);
@@ -28,4 +26,33 @@ export function computeLorenzAlmgrenExecution(p: LorenzAlmgrenParams): LorenzAlm
   const vwapPrice = s0 > 0 ? totalNotional / s0 : p0;
   const utility = -(totalCost + 0.5 * lambda * totalVariance);
   return { trajectory, totalExecutionCost: totalCost, vwapPrice, meanVarianceUtility: utility, terminalShares: remaining };
+}
+
+export interface LorenzAlmgrenParams {
+  readonly initialShares: number;
+  readonly initialPrice: number;
+  readonly numSteps: number;
+  readonly timeHorizon: number;
+  readonly volatility: number;
+  readonly riskAversion: number;
+  readonly temporaryImpact: number;
+  readonly priceDriftSensitivity?: number;
+}
+
+export interface LorenzAlmgrenStep {
+  readonly step: number;
+  readonly time: number;
+  readonly sharesExecuted: number;
+  readonly sharesRemaining: number;
+  readonly adaptiveSpeedFactor: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+}
+
+export interface LorenzAlmgrenResult {
+  readonly trajectory: readonly LorenzAlmgrenStep[];
+  readonly totalExecutionCost: number;
+  readonly vwapPrice: number;
+  readonly meanVarianceUtility: number;
+  readonly terminalShares: number;
 }

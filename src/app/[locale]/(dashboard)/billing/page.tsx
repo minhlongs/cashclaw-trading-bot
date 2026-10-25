@@ -6,11 +6,19 @@ import { TierComparisonTable } from '@/components/billing/tier-comparison-table'
 import { QuotaUsageCard } from '@/components/billing/quota-usage-card';
 import { NowpaymentsCheckoutModal } from '@/components/billing/nowpayments-checkout-modal';
 import { CliSyncBridgeCard } from '@/components/billing/cli-sync-bridge-card';
+import { useWorkspaceBilling } from '@/components/billing/use-workspace-billing';
 
 export default function BillingPage() {
-  const [currentTier, setCurrentTier] = useState<SaasTier>('BASIC');
-  const [selectedTier, setSelectedTier] = useState<SaasTier | null>(null);
   const workspaceId = 'ws_production_default';
+  const [selectedTier, setSelectedTier] = useState<SaasTier | null>(null);
+  const {
+    currentTier,
+    setCurrentTier,
+    runningBots,
+    consumedCredits,
+    totalCredits,
+    refreshBilling,
+  } = useWorkspaceBilling(workspaceId);
 
   return (
     <div className="space-y-6">
@@ -23,9 +31,9 @@ export default function BillingPage() {
 
       <QuotaUsageCard
         currentTier={currentTier}
-        runningBots={1}
-        consumedCredits={250}
-        totalCredits={1000}
+        runningBots={runningBots}
+        consumedCredits={consumedCredits}
+        totalCredits={totalCredits}
       />
 
       <TierComparisonTable
@@ -43,6 +51,7 @@ export default function BillingPage() {
           onClose={() => setSelectedTier(null)}
           onSuccess={() => {
             setCurrentTier(selectedTier);
+            void refreshBilling();
           }}
         />
       )}

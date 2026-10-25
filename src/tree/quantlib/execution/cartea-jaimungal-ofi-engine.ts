@@ -1,5 +1,3 @@
-import type { CarteaJaimungalOfiParams, CarteaJaimungalOfiResult, CarteaJaimungalOfiStep } from './cartea-jaimungal-ofi-types';
-
 export function computeCarteaJaimungalOfiExecution(p: CarteaJaimungalOfiParams): CarteaJaimungalOfiResult {
   const n = Math.max(1, Math.floor(p.numSteps));
   const s0 = Math.max(0, p.totalShares);
@@ -41,4 +39,31 @@ export function computeCarteaJaimungalOfiExecution(p: CarteaJaimungalOfiParams):
     trajectory, expectedCost: totalCost, benchmarkTwapCost: twapCost, ofiCostAdjustment: ofiAdjustment,
     costSavings: Math.max(0, twapCost - totalCost),
   };
+}
+
+export interface CarteaJaimungalOfiParams {
+  readonly totalShares: number;
+  readonly timeHorizon: number; // T
+  readonly numSteps: number;     // N
+  readonly temporaryImpact: number; // k
+  readonly permanentImpact: number; // b
+  readonly riskAversion: number;    // phi/gamma
+  readonly ofiDrift: number;        // beta * OFI
+  readonly volatility: number;      // sigma
+}
+
+export interface CarteaJaimungalOfiStep {
+  readonly step: number;
+  readonly tradeSpeed: number;     // nu_t
+  readonly tradeSize: number;      // nu_t * dt
+  readonly remainingShares: number;
+  readonly stepCost: number;
+}
+
+export interface CarteaJaimungalOfiResult {
+  readonly trajectory: readonly CarteaJaimungalOfiStep[];
+  readonly expectedCost: number;
+  readonly benchmarkTwapCost: number;
+  readonly ofiCostAdjustment: number;
+  readonly costSavings: number;
 }

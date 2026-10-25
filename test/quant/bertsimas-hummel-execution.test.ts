@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeBertsimasHummelExecution } from '@/tree/quantlib/execution/bertsimas-hummel-engine';
-import type { BertsimasHummelParams } from '@/tree/quantlib/execution/bertsimas-hummel-types';
+import { computeBertsimasHummelExecution, type BertsimasHummelParams } from '@/tree/quantlib/execution/bertsimas-hummel-engine';
 
 describe('Bertsimas-Lo-Hummel (2000) Dynamic Execution Engine', () => {
   const baseParams: BertsimasHummelParams = {

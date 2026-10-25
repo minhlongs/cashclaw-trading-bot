@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeLorenzAlmgrenExecution } from '@/tree/quantlib/execution/lorenz-almgren-engine';
-import type { LorenzAlmgrenParams } from '@/tree/quantlib/execution/lorenz-almgren-types';
+import { computeLorenzAlmgrenExecution, type LorenzAlmgrenParams } from '@/tree/quantlib/execution/lorenz-almgren-engine';
 
 describe('Lorenz-Almgren (2011) Adaptive Execution Engine', () => {
   it('computes execution trajectory with liquidation completing at horizon', () => {

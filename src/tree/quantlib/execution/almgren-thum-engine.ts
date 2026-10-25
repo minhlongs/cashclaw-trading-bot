@@ -1,5 +1,3 @@
-import type { AlmgrenThumParams, AlmgrenThumResult, AlmgrenThumStep } from './almgren-thum-types';
-
 export function computeAlmgrenThumExecution(p: AlmgrenThumParams): AlmgrenThumResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const q0 = Math.max(0, p.initialShares), p0 = p.initialPrice, vol = Math.max(1, p.dailyVolume ?? 1_000_000);
@@ -25,4 +23,34 @@ export function computeAlmgrenThumExecution(p: AlmgrenThumParams): AlmgrenThumRe
   const vwap = q0 > 0 ? totalNotional / q0 : p0;
   const totalPerm = gamma * (q0 / vol);
   return { trajectory, totalExecutionCost: totalCost, averageExecutionPrice: vwap, terminalShares: remaining, permanentPriceImpact: totalPerm };
+}
+
+export interface AlmgrenThumParams {
+  readonly initialShares: number;
+  readonly initialPrice: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly dailyVolume?: number;
+  readonly temporaryImpactFactor: number;
+  readonly permanentImpactFactor?: number;
+  readonly powerExponent?: number; // default ~0.6 (Citigroup empirical)
+}
+
+export interface AlmgrenThumStep {
+  readonly step: number;
+  readonly time: number;
+  readonly sharesSold: number;
+  readonly remainingShares: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+  readonly temporaryImpact: number;
+  readonly permanentImpact: number;
+}
+
+export interface AlmgrenThumResult {
+  readonly trajectory: readonly AlmgrenThumStep[];
+  readonly totalExecutionCost: number;
+  readonly averageExecutionPrice: number;
+  readonly terminalShares: number;
+  readonly permanentPriceImpact: number;
 }

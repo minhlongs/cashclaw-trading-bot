@@ -1,5 +1,3 @@
-import type { SchiedZhangParams, SchiedZhangResult, SchiedZhangStep } from './schied-zhang-types';
-
 export function computeSchiedZhangExecution(p: SchiedZhangParams): SchiedZhangResult {
   const n = Math.max(1, Math.floor(p.numSteps)), s0 = Math.max(0, p.initialShares), p0 = p.initialPrice;
   const t = Math.max(1e-4, p.timeHorizon), dt = t / n, h = Math.min(0.5, Math.max(0.01, p.hurstParameter));
@@ -27,4 +25,33 @@ export function computeSchiedZhangExecution(p: SchiedZhangParams): SchiedZhangRe
   const totalCost = Math.max(0, s0 * p0 - totalNotional);
   const vwapPrice = s0 > 0 ? totalNotional / s0 : p0;
   return { trajectory, totalExecutionCost: totalCost, vwapPrice, terminalShares: remaining, roughnessMultiplier: roughness };
+}
+
+export interface SchiedZhangParams {
+  readonly initialShares: number;
+  readonly initialPrice: number;
+  readonly numSteps: number;
+  readonly timeHorizon: number;
+  readonly hurstParameter: number; // H in (0, 0.5]
+  readonly baseVolatility: number;
+  readonly riskAversion: number;
+  readonly temporaryImpact: number;
+}
+
+export interface SchiedZhangStep {
+  readonly step: number;
+  readonly time: number;
+  readonly sharesExecuted: number;
+  readonly sharesRemaining: number;
+  readonly localVolatility: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+}
+
+export interface SchiedZhangResult {
+  readonly trajectory: readonly SchiedZhangStep[];
+  readonly totalExecutionCost: number;
+  readonly vwapPrice: number;
+  readonly terminalShares: number;
+  readonly roughnessMultiplier: number;
 }

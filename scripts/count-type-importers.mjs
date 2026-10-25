@@ -68,8 +68,8 @@ function specifierBasename(specifier) {
   return ext ? last.slice(0, -ext.length) : last;
 }
 
-export function countImporters(root = ROOT) {
-  const microDir = join(root, 'src/tree/quantlib/microstructure');
+export function countImporters(root = ROOT, subDir = 'src/tree/quantlib/microstructure') {
+  const microDir = join(root, subDir);
   if (!existsSync(microDir)) {
     throw new Error(`expected directory not found: ${microDir}`);
   }
@@ -143,7 +143,9 @@ export function countImporters(root = ROOT) {
 }
 
 function main() {
-  const result = countImporters();
+  const dirArg = process.argv.slice(2).find((a) => a.startsWith('--dir='));
+  const dir = dirArg ? dirArg.slice('--dir='.length) : undefined;
+  const result = countImporters(ROOT, dir);
   const classified =
     result.blocked.length +
     result.safeWithTest.length +

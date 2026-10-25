@@ -1,5 +1,3 @@
-import type { BertsimasLoExecutionResult, BertsimasLoParams, BertsimasLoStep } from './bertsimas-lo-execution-types';
-
 export function computeBertsimasLoExecution(p: BertsimasLoParams): BertsimasLoExecutionResult {
   const n = Math.max(1, Math.floor(p.numSteps));
   const s = Math.max(0, p.totalShares);
@@ -32,4 +30,29 @@ export function computeBertsimasLoExecution(p: BertsimasLoParams): BertsimasLoEx
   const impactSavings = Math.max(0, immediateCost - expectedCost);
 
   return { trajectory, expectedCost, twapCost, immediateCost, impactSavings, variance };
+}
+
+export interface BertsimasLoParams {
+  readonly totalShares: number;
+  readonly numSteps: number;
+  readonly temporaryImpactEta: number;
+  readonly permanentImpactGamma?: number;
+  readonly volatility?: number;
+  readonly riskAversion?: number;
+}
+
+export interface BertsimasLoStep {
+  readonly step: number;
+  readonly tradeSize: number;
+  readonly remainingShares: number;
+  readonly stepCost: number;
+}
+
+export interface BertsimasLoExecutionResult {
+  readonly trajectory: readonly BertsimasLoStep[];
+  readonly expectedCost: number;
+  readonly twapCost: number;
+  readonly immediateCost: number;
+  readonly impactSavings: number;
+  readonly variance: number;
 }

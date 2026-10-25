@@ -1,9 +1,3 @@
-import type {
-  AlmgrenExecutionParams,
-  AlmgrenExecutionResult,
-  AlmgrenExecutionStep,
-} from './almgren-nonlinear-impact-types';
-
 export function computeOptimalExecution(p: AlmgrenExecutionParams): AlmgrenExecutionResult {
   const n = Math.max(1, Math.floor(p.numSteps));
   const t = Math.max(1e-4, p.timeHorizon);
@@ -43,4 +37,30 @@ export function computeOptimalExecution(p: AlmgrenExecutionParams): AlmgrenExecu
   const utility = expectedCost + lambda * variance;
 
   return { schedule, expectedCost, variance, utility, halfLife };
+}
+
+export interface AlmgrenExecutionParams {
+  readonly totalShares: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly volatility: number;
+  readonly riskAversion: number;
+  readonly temporaryImpactEta: number;
+  readonly powerExponent?: number;
+  readonly permanentImpactGamma?: number;
+}
+
+export interface AlmgrenExecutionStep {
+  readonly step: number;
+  readonly remainingShares: number;
+  readonly tradeSize: number;
+  readonly tradingSpeed: number;
+}
+
+export interface AlmgrenExecutionResult {
+  readonly schedule: readonly AlmgrenExecutionStep[];
+  readonly expectedCost: number;
+  readonly variance: number;
+  readonly utility: number;
+  readonly halfLife: number;
 }

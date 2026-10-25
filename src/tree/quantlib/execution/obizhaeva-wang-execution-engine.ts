@@ -1,5 +1,3 @@
-import type { ObizhaevaWangExecutionResult, ObizhaevaWangParams, ObizhaevaWangStep } from './obizhaeva-wang-execution-types';
-
 export function computeObizhaevaWangExecution(p: ObizhaevaWangParams): ObizhaevaWangExecutionResult {
   const n = Math.max(1, Math.floor(p.numSteps));
   const s = Math.max(0, p.totalShares);
@@ -35,4 +33,29 @@ export function computeObizhaevaWangExecution(p: ObizhaevaWangParams): Obizhaeva
 
   const immediateCost = 0.5 * lambda * s * s;
   return { trajectory, expectedCost: totalCost, twapCost, immediateCost, impactSavings: Math.max(0, immediateCost - totalCost), resilienceFactor: kappa };
+}
+
+export interface ObizhaevaWangParams {
+  readonly totalShares: number;
+  readonly numSteps: number;
+  readonly resilienceRate: number;
+  readonly timeStep?: number;
+  readonly orderBookDepth?: number;
+}
+
+export interface ObizhaevaWangStep {
+  readonly step: number;
+  readonly tradeSize: number;
+  readonly remainingShares: number;
+  readonly impactLevel: number;
+  readonly stepCost: number;
+}
+
+export interface ObizhaevaWangExecutionResult {
+  readonly trajectory: readonly ObizhaevaWangStep[];
+  readonly expectedCost: number;
+  readonly twapCost: number;
+  readonly immediateCost: number;
+  readonly impactSavings: number;
+  readonly resilienceFactor: number;
 }

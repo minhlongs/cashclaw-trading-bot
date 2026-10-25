@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeKyleDuttaMadhavanExecution } from '@/tree/quantlib/execution/kyle-dutta-madhavan-engine';
-import type { KyleDuttaMadhavanParams } from '@/tree/quantlib/execution/kyle-dutta-madhavan-types';
+import { computeKyleDuttaMadhavanExecution, type KyleDuttaMadhavanParams } from '@/tree/quantlib/execution/kyle-dutta-madhavan-engine';
 
 describe('KyleDuttaMadhavanExecutionEngine', () => {
   const baseParams: KyleDuttaMadhavanParams = {

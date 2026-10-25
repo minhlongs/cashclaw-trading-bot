@@ -1,5 +1,3 @@
-import type { LehalleVolumeCurveParams, LehalleVolumeCurveResult, LehalleVolumeCurveStep } from './lehalle-volume-curve-types';
-
 export function computeLehalleVolumeCurve(p: LehalleVolumeCurveParams): LehalleVolumeCurveResult {
   const q0 = Math.max(0, p.totalShares), p0 = Math.max(1e-4, p.initialPrice);
   const eta = Math.max(1e-6, p.temporaryImpact ?? 0.05), lambda = Math.max(0, p.trackingAversion ?? 0.5);
@@ -21,4 +19,31 @@ export function computeLehalleVolumeCurve(p: LehalleVolumeCurveParams): LehalleV
   const effPrice = q0 > 0 ? totalNotional / q0 : p0;
   const vwapErrBps = (Math.sqrt(sumSqError) / Math.max(1, q0)) * 10_000;
   return { schedule, totalCost, effectivePrice: effPrice, vwapTrackingErrorBps: vwapErrBps, objectiveUtility: totalCost + lambda * sumSqError };
+}
+
+export interface LehalleVolumeCurveStep {
+  readonly step: number;
+  readonly targetFraction: number;
+  readonly allocatedShares: number;
+  readonly remainingShares: number;
+  readonly executionPrice: number;
+  readonly trackingErrorBps: number;
+  readonly stepCost: number;
+}
+
+export interface LehalleVolumeCurveParams {
+  readonly totalShares: number;
+  readonly volumeCurve: readonly number[];
+  readonly initialPrice: number;
+  readonly temporaryImpact?: number;
+  readonly trackingAversion?: number;
+  readonly volatility?: number;
+}
+
+export interface LehalleVolumeCurveResult {
+  readonly schedule: readonly LehalleVolumeCurveStep[];
+  readonly totalCost: number;
+  readonly effectivePrice: number;
+  readonly vwapTrackingErrorBps: number;
+  readonly objectiveUtility: number;
 }

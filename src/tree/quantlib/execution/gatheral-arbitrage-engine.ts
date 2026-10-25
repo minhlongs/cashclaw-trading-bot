@@ -1,5 +1,3 @@
-import type { GatheralDecayConfig, GatheralArbitrageCheck } from './gatheral-arbitrage-types';
-
 export class GatheralArbitrageEngine {
   public static evaluateDecayKernel(config: GatheralDecayConfig): GatheralArbitrageCheck {
     const { decayKernel, decayFactor: alpha, characteristicTime: tau, initialImpact: gamma0 } = config;
@@ -12,4 +10,19 @@ export class GatheralArbitrageEngine {
     const k1 = isPower ? gamma0 / Math.pow(1 + 1 / tau, alpha) : gamma0 * Math.exp(-1 / tau);
     return { isArbitrageFree, isConvex, isMonotoneDecreasing: isMonotone, decayHalfLife: halfLife, kernelValueAt1: k1 };
   }
+}
+
+export interface GatheralDecayConfig {
+  decayKernel: 'power-law' | 'exponential';
+  decayFactor: number;
+  characteristicTime: number;
+  initialImpact: number;
+}
+
+export interface GatheralArbitrageCheck {
+  isArbitrageFree: boolean;
+  isConvex: boolean;
+  isMonotoneDecreasing: boolean;
+  decayHalfLife: number;
+  kernelValueAt1: number;
 }

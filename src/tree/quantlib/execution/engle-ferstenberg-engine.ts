@@ -1,5 +1,3 @@
-import type { EngleFerstenbergParams, EngleFerstenbergResult, EngleFerstenbergStep } from './engle-ferstenberg-types';
-
 export function executeEngleFerstenbergExecution(p: EngleFerstenbergParams): EngleFerstenbergResult {
   const q0 = Math.max(0, p.totalShares), p0 = Math.max(1e-4, p.initialPrice), n = Math.max(1, p.numBuckets ?? 5);
   const lambda = Math.max(1e-6, p.riskAversion ?? 0.05), sigma = Math.max(1e-4, p.volatility ?? 0.02);
@@ -22,4 +20,33 @@ export function executeEngleFerstenbergExecution(p: EngleFerstenbergParams): Eng
   const effectivePrice = q0 > 0 ? totalNotional / q0 : p0;
   const isBps = (Math.max(0, p0 - effectivePrice) / p0) * 10_000;
   return { schedule, totalExecutionCost: totalCost, effectivePrice, implementationShortfallBps: isBps, totalRiskVariance: totalVar };
+}
+
+export interface EngleFerstenbergStep {
+  readonly bucket: number;
+  readonly sharesTraded: number;
+  readonly remainingShares: number;
+  readonly executionPrice: number;
+  readonly stepImpact: number;
+  readonly stepCost: number;
+  readonly volatilityRisk: number;
+}
+
+export interface EngleFerstenbergParams {
+  readonly totalShares: number;
+  readonly initialPrice: number;
+  readonly numBuckets?: number;
+  readonly riskAversion?: number;
+  readonly volatility?: number;
+  readonly marketVolume?: number;
+  readonly permImpactParam?: number;
+  readonly tempImpactParam?: number;
+}
+
+export interface EngleFerstenbergResult {
+  readonly schedule: readonly EngleFerstenbergStep[];
+  readonly totalExecutionCost: number;
+  readonly effectivePrice: number;
+  readonly implementationShortfallBps: number;
+  readonly totalRiskVariance: number;
 }

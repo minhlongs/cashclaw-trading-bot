@@ -1,5 +1,3 @@
-import type { GatheralRoughExecutionParams, GatheralRoughExecutionResult, GatheralRoughExecutionStep } from './gatheral-rough-execution-types';
-
 export function computeGatheralRoughExecution(p: GatheralRoughExecutionParams): GatheralRoughExecutionResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const q0 = Math.max(0, p.initialShares), p0 = p.initialPrice;
@@ -31,4 +29,31 @@ export function computeGatheralRoughExecution(p: GatheralRoughExecutionParams): 
 
   const vwap = q0 > 0 ? totalNotional / q0 : p0;
   return { trajectory, totalExecutionCost: totalCost, averageExecutionPrice: vwap, terminalShares: remaining, terminalImpact: lastImpact };
+}
+
+export interface GatheralRoughExecutionParams {
+  readonly initialShares: number;
+  readonly initialPrice: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly hurstParameter?: number;
+  readonly impactParam?: number;
+}
+
+export interface GatheralRoughExecutionStep {
+  readonly step: number;
+  readonly time: number;
+  readonly sharesSold: number;
+  readonly remainingShares: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+  readonly roughImpact: number;
+}
+
+export interface GatheralRoughExecutionResult {
+  readonly trajectory: readonly GatheralRoughExecutionStep[];
+  readonly totalExecutionCost: number;
+  readonly averageExecutionPrice: number;
+  readonly terminalShares: number;
+  readonly terminalImpact: number;
 }

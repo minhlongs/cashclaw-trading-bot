@@ -1,5 +1,3 @@
-import type { AlmgrenDriftParams, AlmgrenDriftResult, AlmgrenDriftStep } from './almgren-drift-types';
-
 export function computeAlmgrenDriftExecution(p: AlmgrenDriftParams): AlmgrenDriftResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const q0 = Math.max(0, p.initialShares), p0 = p.initialPrice, eta = Math.max(1e-6, p.temporaryImpact);
@@ -28,4 +26,34 @@ export function computeAlmgrenDriftExecution(p: AlmgrenDriftParams): AlmgrenDrif
   const vwap = q0 > 0 ? totalNotional / q0 : p0;
   const driftAlphaCapture = totalNotional - q0 * (p0 - eta * (q0 / t));
   return { trajectory, totalExecutionCost: totalCost, averageExecutionPrice: vwap, terminalShares: remaining, driftAlphaCapture };
+}
+
+export interface AlmgrenDriftParams {
+  readonly initialShares: number;
+  readonly initialPrice: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly temporaryImpact: number;
+  readonly riskAversion?: number;
+  readonly volatility?: number;
+  readonly initialDrift: number;
+  readonly meanReversionSpeed: number; // kappa >= 0
+}
+
+export interface AlmgrenDriftStep {
+  readonly step: number;
+  readonly time: number;
+  readonly sharesSold: number;
+  readonly remainingShares: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+  readonly driftEstimate: number;
+}
+
+export interface AlmgrenDriftResult {
+  readonly trajectory: readonly AlmgrenDriftStep[];
+  readonly totalExecutionCost: number;
+  readonly averageExecutionPrice: number;
+  readonly terminalShares: number;
+  readonly driftAlphaCapture: number;
 }

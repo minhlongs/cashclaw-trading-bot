@@ -94,16 +94,16 @@ function extractExportBlocks(typesText) {
 }
 
 // `root` is injectable so tests can point this at a scratch tree instead of the real `src/`.
-export function mergePair(stem, { dryRun, root = ROOT, git = true }) {
-  const microDir = join(root, 'src/tree/quantlib/microstructure');
+export function mergePair(stem, { dryRun, root = ROOT, git = true, subDir = 'src/tree/quantlib/microstructure' }) {
+  const microDir = join(root, subDir);
   const typesPath = join(microDir, `${stem}-types.ts`);
   if (!existsSync(typesPath)) return { stem, ok: false, reason: `types file not found: ${typesPath}` };
 
   // The counter is the single source of truth for mergeability, so a change to the classification
   // cannot silently diverge from what the gate permits.
-  const result = countImporters(root);
+  const result = countImporters(root, subDir);
   const entry = result.importers[stem];
-  if (!entry) return { stem, ok: false, reason: `not a types file in microstructure: ${stem}` };
+  if (!entry) return { stem, ok: false, reason: `not a types file in ${subDir}: ${stem}` };
   if (result.blocked.includes(stem)) {
     return { stem, ok: false, reason: `blocked (${entry.production.length} production importers)` };
   }
@@ -198,10 +198,11 @@ export function mergePair(stem, { dryRun, root = ROOT, git = true }) {
 }
 
 function parseArgs(argv) {
-  const args = { write: false, stems: [] };
+  const args = { write: false, stems: [], subDir: undefined };
   for (const a of argv) {
     if (a === '--write') args.write = true;
     else if (a === '--dry-run') args.write = false;
+    else if (a.startsWith('--dir=')) args.subDir = a.slice('--dir='.length);
     else if (a.startsWith('--stems=')) args.stems.push(...a.slice('--stems='.length).split(','));
     else args.stems.push(a);
   }
@@ -209,7 +210,7 @@ function parseArgs(argv) {
 }
 
 function main() {
-  const { write, stems } = parseArgs(process.argv.slice(2));
+  const { write, stems, subDir } = parseArgs(process.argv.slice(2));
   if (stems.length === 0) {
     console.error('usage: node scripts/merge-microstructure-types.mjs <stem> [<stem> ...] [--write]');
     process.exit(2);
@@ -217,7 +218,7 @@ function main() {
 
   let failures = 0;
   for (const stem of stems) {
-    const outcome = mergePair(stem, { dryRun: !write });
+    const outcome = mergePair(stem, { dryRun: !write, subDir });
     if (!outcome.ok) {
       failures += 1;
       console.log(`FAIL  ${stem}: ${outcome.reason}`);

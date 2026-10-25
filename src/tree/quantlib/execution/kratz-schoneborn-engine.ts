@@ -1,5 +1,3 @@
-import type { KratzSchonebornParams, KratzSchonebornResult, KratzSchonebornStep } from './kratz-schoneborn-types';
-
 export function computeKratzSchonebornExecution(p: KratzSchonebornParams): KratzSchonebornResult {
   const n = Math.max(1, Math.floor(p.numSteps)), t = Math.max(1e-4, p.timeHorizon), dt = t / n;
   const s0 = Math.max(0, p.initialInventory), p0 = p.initialPrice;
@@ -29,4 +27,36 @@ export function computeKratzSchonebornExecution(p: KratzSchonebornParams): Kratz
   const darkRatio = s0 > 0 ? Math.min(1, totalDarkFilled / s0) : 0;
   const vwapPrice = s0 > 0 ? totalNotional / s0 : p0;
   return { trajectory, totalCost, vwapPrice, terminalPrice: curPrice, darkCaptureRatio: darkRatio, costSavingsVsPureLitBps: savingsBps, terminalInventory: remaining };
+}
+
+export interface KratzSchonebornParams {
+  readonly initialInventory: number;
+  readonly initialPrice: number;
+  readonly timeHorizon: number;
+  readonly numSteps: number;
+  readonly litTemporaryImpact: number;
+  readonly litPermanentImpact: number;
+  readonly darkArrivalRate: number;
+  readonly darkFillProbability: number;
+  readonly riskAversion?: number;
+}
+
+export interface KratzSchonebornStep {
+  readonly step: number;
+  readonly time: number;
+  readonly inventoryRemaining: number;
+  readonly litTradeSize: number;
+  readonly darkTradeSize: number;
+  readonly executionPrice: number;
+  readonly stepCost: number;
+}
+
+export interface KratzSchonebornResult {
+  readonly trajectory: readonly KratzSchonebornStep[];
+  readonly totalCost: number;
+  readonly vwapPrice: number;
+  readonly terminalPrice: number;
+  readonly darkCaptureRatio: number;
+  readonly costSavingsVsPureLitBps: number;
+  readonly terminalInventory: number;
 }

@@ -1,5 +1,3 @@
-import type { KissellGlantzParams, KissellGlantzResult, KissellGlantzStep } from './kissell-glantz-types';
-
 export function computeKissellGlantzExecution(p: KissellGlantzParams): KissellGlantzResult {
   const q0 = Math.max(0, p.totalShares), p0 = Math.max(1e-4, p.initialPrice), n = Math.max(1, p.numBuckets ?? 5);
   const adv = Math.max(1, p.adv ?? 100_000), sigma = Math.max(1e-4, p.volatility ?? 0.02);
@@ -22,4 +20,36 @@ export function computeKissellGlantzExecution(p: KissellGlantzParams): KissellGl
   const effectivePrice = q0 > 0 ? totalNotional / q0 : p0;
   const isBps = (Math.max(0, p0 - effectivePrice) / p0) * 10_000;
   return { schedule, totalExecutionCost: totalCost, effectivePrice, implementationShortfallBps: isBps, totalVariance: totalVar, frontierUtility: totalCost + lambda * totalVar };
+}
+
+export interface KissellGlantzStep {
+  readonly bucket: number;
+  readonly sharesTraded: number;
+  readonly remainingShares: number;
+  readonly executionPrice: number;
+  readonly stepImpact: number;
+  readonly stepCost: number;
+  readonly varianceRisk: number;
+}
+
+export interface KissellGlantzParams {
+  readonly totalShares: number;
+  readonly initialPrice: number;
+  readonly adv?: number;
+  readonly volatility?: number;
+  readonly riskAversion?: number;
+  readonly numBuckets?: number;
+  readonly a1?: number;
+  readonly a2?: number;
+  readonly a3?: number;
+  readonly permImpact?: number;
+}
+
+export interface KissellGlantzResult {
+  readonly schedule: readonly KissellGlantzStep[];
+  readonly totalExecutionCost: number;
+  readonly effectivePrice: number;
+  readonly implementationShortfallBps: number;
+  readonly totalVariance: number;
+  readonly frontierUtility: number;
 }
