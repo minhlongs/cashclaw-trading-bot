@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { KalmanCointegrationEngine } from './kalman-cointegration-engine';
+import { KalmanCointegrationEngine } from './index';
 
 describe('KalmanCointegrationEngine', () => {
   it('converges to true hedge ratio beta for synthetic cointegrated series', () => {

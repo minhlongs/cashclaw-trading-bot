@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildRateGraphEdges, type MarketTickerQuote } from './triangular-rate-graph';
-import { detectTriangularArbitrage } from './bellman-ford-detector';
+import { buildRateGraphEdges, detectTriangularArbitrage, type MarketTickerQuote } from './index';
 
 describe('Triangular Arbitrage Engine', () => {
   it('builds directed log rate edges correctly with bid/ask spreads', () => {

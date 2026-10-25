@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { initializeKalmanState, updateKalmanState } from './kalman-filter-hedge';
-import { estimateOuParameters } from './ou-cointegration-estimator';
-import { generateStatArbSignal } from './statarb-signal-generator';
+import { initializeKalmanState, updateKalmanState, estimateOuParameters, generateStatArbSignal } from './index';
 
 describe('KalmanFilterHedge', () => {
   it('converges to true hedge ratio in linear relationship', () => {
