@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, baseline/wave10-consolidation]
   pull_request:
-    branches: [main]
+    branches: [main, baseline/wave10-consolidation]
 
 jobs:
   ci:
@@ -34,7 +34,10 @@ jobs:
 
       - name: ESLint suppressions baseline check
         run: |
-          CURRENT=$(grep -r 'eslint-disable' src/ --include='*.ts' --include='*.tsx' | grep -v 'checks.ts' | wc -l | tr -d ' ')
+          # Exclude checks-cicd.ts specifically: its docstring documents this check, so counting it
+          # makes the gate fail on itself. Modularization split the original checks.ts, and the old
+          # `grep -v 'checks.ts'` filter no longer matched the file that now carries that docstring.
+          CURRENT=$(grep -r 'eslint-disable' src/ --include='*.ts' --include='*.tsx' | grep -v 'checks-cicd.ts' | wc -l | tr -d ' ')
           BASELINE=$(python3 -c "import json; print(json.load(open('eslint-suppressions.json'))['baseline']['count'])")
           echo "Current: $CURRENT | Baseline: $BASELINE"
           if [ "$CURRENT" -gt "$BASELINE" ]; then
