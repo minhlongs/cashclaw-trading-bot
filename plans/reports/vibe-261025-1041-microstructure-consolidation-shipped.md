@@ -108,9 +108,10 @@ bởi 2 assertion, bỏ backward statement walk bắt bởi 5, tắt trần 120 
 - **Open-Core gate** ("Verify zero .claude / .agentkit / .env tracked in git"): có 46 file như vậy
   được track, và con số là **46 ở baseline `b7aba5f` lẫn 46 ở HEAD**. Diff này thêm và xoá **0**
   file thuộc nhóm đó.
-- **`ci` step "ESLint suppressions baseline check"**: số lượng eslint-disable trong `src/` là 4 ở
-  cả baseline lẫn HEAD; diff thêm và xoá **0** dòng. Baseline trong `eslint-suppressions.json` đã
-  lệch từ trước đợt này.
+- **`ci` step "ESLint suppressions baseline check"**: số lượng eslint-disable trong `src/` là **7** ở
+  cả baseline `b7aba5f` lẫn HEAD; diff thêm và xoá **0** dòng. Gate vẫn đỏ vì
+  `eslint-suppressions.json` ghi `baseline.count: 6` — tức baseline **đã lệch sẵn 1** trước đợt này
+  (đã sửa sau đó trong `fix/ci-gates-suppression-and-hygiene`, commit `65b7f2c`).
 
 **Post-merge CI trên base branch: không chạy được.** Đây là blocker ngoài phạm vi PR. Cả hai
 workflow chỉ trigger trên `main`:
