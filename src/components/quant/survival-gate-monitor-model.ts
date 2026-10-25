@@ -11,12 +11,6 @@ export interface SurvivalCheckItem {
   readonly passed: boolean;
 }
 
-export const GATE_PILLAR_FILTERS: readonly ('ALL' | GatePillar)[] = [
-  'ALL',
-  'STRUCTURAL',
-  'ECONOMIC',
-];
-
 export const SURVIVAL_CHECKS: readonly SurvivalCheckItem[] = [
   { gateId: 'STR-01', pillar: 'STRUCTURAL', criterion: 'Causal Feature Alignment', threshold: '0 Lookahead Ops', observed: '0 Lookahead', passed: true },
   { gateId: 'STR-02', pillar: 'STRUCTURAL', criterion: 'OHLCV 9-Validator Fence', threshold: 'PASS (0 Outages)', observed: 'PASS (730 Bars)', passed: true },
@@ -27,11 +21,3 @@ export const SURVIVAL_CHECKS: readonly SurvivalCheckItem[] = [
   { gateId: 'ECO-03', pillar: 'ECONOMIC', criterion: 'Max Stressed Drawdown Cap', threshold: '<= 15.0%', observed: '18.9%', passed: false },
   { gateId: 'ECO-04', pillar: 'ECONOMIC', criterion: 'Walk-Forward Positive Ratio', threshold: '>= 70.0%', observed: '43.8%', passed: false },
 ];
-
-export function filterSurvivalChecks(
-  pillarFilter: 'ALL' | GatePillar,
-  checks: readonly SurvivalCheckItem[] = SURVIVAL_CHECKS,
-): readonly SurvivalCheckItem[] {
-  if (pillarFilter === 'ALL') return checks;
-  return checks.filter((c) => c.pillar === pillarFilter);
-}

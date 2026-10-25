@@ -1,7 +1,6 @@
 export {
   fromFloat,
   hasNaN,
-  rolling,
   sumWin,
   toFloat,
   type Matrix,

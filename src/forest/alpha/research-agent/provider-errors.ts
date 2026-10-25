@@ -23,5 +23,3 @@ export class ProviderError extends Error {
   }
 }
 
-export const ResearchProviderError = ProviderError;
-export type ResearchProviderError = ProviderError;

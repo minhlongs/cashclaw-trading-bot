@@ -2,8 +2,6 @@ import { computeFactorExposure } from '@/tree/alpha/factors/analysis';
 import type { AssetReturnSeries } from './types';
 import { requirePositiveInteger, requireAlignedSeries, alignedPairs, variance } from './beta-estimation-pairs';
 
-export { requirePositiveInteger, requireAlignedSeries, alignedPairs, variance } from './beta-estimation-pairs';
-
 const OLS_MIN_OBS = 3;
 
 export interface BetaScaleConfig {
