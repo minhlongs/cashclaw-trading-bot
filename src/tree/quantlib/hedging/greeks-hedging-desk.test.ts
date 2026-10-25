@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GreeksHedgingDesk } from './greeks-hedging-desk';
+import { GreeksHedgingDesk } from './index';
 
 describe('GreeksHedgingDesk', () => {
   const desk = new GreeksHedgingDesk({

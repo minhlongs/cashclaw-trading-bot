@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TransientImpactEngine } from './transient-impact-engine';
-import type { ImpactExecutionSlice } from './transient-impact-types';
+import { TransientImpactEngine, type ImpactExecutionSlice } from './index';
 
 describe('TransientImpactEngine', () => {
   const engine = new TransientImpactEngine({ gamma: 0.001, alpha: 0.5, epsilon: 1.0 });

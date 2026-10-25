@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { GtmEngine } from './gtm-engine';
-import { OfiEngine } from './ofi-engine';
-import type { L2OrderBookSnapshot } from './gtm-types';
+import { GtmEngine, OfiEngine, type L2OrderBookSnapshot } from './index';
 
 describe('Guéant-Tapia-Manziadi (2012) Market Making Engine', () => {
   const baseParams = {

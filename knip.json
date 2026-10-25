@@ -41,8 +41,6 @@
     "src/forest/alpha/persistence/d1-adapter-mappers.ts",
     "src/forest/alpha/persistence/d1-adapter-queries.ts",
     "src/forest/alpha/persistence/index.ts",
-    "src/forest/alpha/persistence/json-adapter.ts",
-    "src/forest/alpha/persistence/types.ts",
     "src/forest/alpha/pipeline/index.ts",
     "src/forest/alpha/readiness/index.ts",
     "src/forest/alpha/relative-value-eval/index.ts",
@@ -53,11 +51,7 @@
     "src/forest/research/tradingagents/checkpoint-adapter.core.ts",
     "src/forest/research/tradingagents/checkpoint-adapter.types.ts",
     "src/forest/research/tradingagents/checkpoint-adapter-verify.ts",
-    "src/lib/db/schema-backtest.ts",
-    "src/tree/regime/alpha-router.ts",
-    "src/forest/alpha/research-agent/index.ts",
-    "src/forest/alpha/observability-eval/index.ts",
-    "src/forest/alpha/data-quality-eval/index.ts"
+    "src/lib/db/schema-backtest.ts"
   ],
   "ignoreExportsUsedInFile": true,
   "exclude": [
