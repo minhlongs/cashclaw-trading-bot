@@ -6,7 +6,9 @@
     "src/app/api/**/route.ts",
     "src/worker.ts",
     "src/tree/**/index.ts",
-    "src/forest/alpha/gate/index.ts"
+    "src/forest/alpha/gate/index.ts",
+    "src/tree/quantlib/public-sdk.ts",
+    "src/tree/research/alpha/zoo/public-sdk.ts"
   ],
   "project": [
     "src/**/*.ts",
@@ -33,6 +35,8 @@
     "src/forest/alpha/performance/cache.ts",
     "src/forest/alpha/performance/index.ts",
     "src/forest/alpha/persistence/d1-adapter.ts",
+    "src/forest/alpha/persistence/d1-adapter-experiments.ts",
+    "src/forest/alpha/persistence/d1-adapter-results.ts",
     "src/forest/alpha/persistence/d1-adapter-schema.ts",
     "src/forest/alpha/persistence/d1-adapter-mappers.ts",
     "src/forest/alpha/persistence/d1-adapter-queries.ts",
