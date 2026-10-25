@@ -278,4 +278,33 @@ export class WidgetEngine {
     scaffold(pairWithMultiLineImport());
     expect(mergePair('nonexistent', { dryRun: false, root, git: false }).ok).toBe(false);
   });
+
+  it('refuses to slice a statement the locator cannot delimit', () => {
+    // A specifier quoted in prose above the real import defeats the backward walk: it lands on the
+    // comment line, which carries `from '...'`, so the range it settles on spans the comment
+    // instead of the statement. Slicing there would leave the real import in place while appending
+    // nothing, so the merge has to refuse and leave the tree as it found it. The check that
+    // actually closes this path is the post-merge specifier scan, which is why this case asserts
+    // both the refusal and that the consumer survived byte-for-byte.
+    const engineText = `// migrated from './widget-types' in an earlier revision
+import type { WidgetConfig } from './widget-types';
+
+export class WidgetEngine {
+  public static fit(config: WidgetConfig): boolean {
+    return config.field0 > 0;
+  }
+}
+`;
+    scaffold({
+      'widget-types.ts': 'export interface WidgetConfig {\n  readonly field0: number;\n}\n',
+      'widget-engine.ts': engineText,
+    });
+
+    const outcome = mergePair('widget', { dryRun: false, root, git: false });
+
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toMatch(/still references/);
+    expect(existsSync(join(root, MICRO, 'widget-types.ts'))).toBe(true);
+    expect(readFileSync(join(root, MICRO, 'widget-engine.ts'), 'utf8')).toBe(engineText);
+  });
 });
