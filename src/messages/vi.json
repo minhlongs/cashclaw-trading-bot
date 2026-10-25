@@ -112,17 +112,6 @@
     },
     "v7Metrics": {
       "title": "Bảng Giám Sát Định Lượng v7 Đa Trụ Cột"
-    },
-    "waterfallHud": {
-      "title": "Bảng Điều Khiển OMS Waterfall & Greeks",
-      "subtitle": "Quy trình thực thi 4 tầng với đo lường rủi ro thời gian thực",
-      "darkMeshCrossing": "Khớp Lệnh Dark Mesh",
-      "urgencyGuard": "Bộ Lọc Rủi Ro Cấp Bách",
-      "twapSlices": "Phân Tách Lệnh TWAP",
-      "sorRouting": "Định Tuyến SOR",
-      "deltaRisk": "Rủi Ro Delta",
-      "gammaRisk": "Rủi Ro Gamma",
-      "vegaRisk": "Rủi Ro Vega"
     }
   },
   "bots": {
