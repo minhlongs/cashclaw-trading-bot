@@ -6,6 +6,7 @@ priority: P3
 effort: 6h
 issue: 14
 branch: feat/quantlib-microstructure-type-consolidation
+merged_commit: 50bbb13
 tags: [refactor, tech-debt, quantlib]
 blockedBy: []
 blocks: []
