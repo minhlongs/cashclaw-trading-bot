@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import {
   setupDashboardMocks,
   makeApiBot,
@@ -144,5 +144,32 @@ describe('DashboardClient — Loaded with Data', () => {
       expect(screen.getAllByText('grid').length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText('meanReversion').length).toBeGreaterThanOrEqual(1);
     });
+  });
+
+  it('switches view mode tabs with WAI-ARIA attributes and arrow keys', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(true, twoBots));
+    render(<DashboardClient />);
+    await waitFor(() => {
+      expect(screen.getByRole('tablist', { name: 'label' })).toBeInTheDocument();
+    });
+
+    const tablist = screen.getByRole('tablist', { name: 'label' });
+    const tabs = [
+      screen.getByRole('tab', { name: 'all' }),
+      screen.getByRole('tab', { name: 'trading' }),
+      screen.getByRole('tab', { name: 'telemetry' }),
+    ];
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+    expect(tabs[1]).toHaveAttribute('aria-selected', 'false');
+    expect(tabs[2]).toHaveAttribute('aria-selected', 'false');
+
+    fireEvent.click(tabs[1]);
+    expect(tabs[1]).toHaveAttribute('aria-selected', 'true');
+
+    fireEvent.keyDown(tablist, { key: 'ArrowRight' });
+    expect(tabs[2]).toHaveAttribute('aria-selected', 'true');
+
+    fireEvent.keyDown(tablist, { key: 'Home' });
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
   });
 });

@@ -34,10 +34,16 @@ describe('ConfigStep', () => {
     expect(screen.getByText('BB Period')).toBeInTheDocument();
   });
 
-  it('shows volatility-dca fields when strategy is volatility_dca', () => {
-    render(<ConfigStep form={makeForm('volatility_dca')} strategy="volatility_dca" {...defaults} />);
+  it('shows volatility-dca fields and toggles quantExecution checkbox when strategy is volatility_dca', async () => {
+    const user = userEvent.setup();
+    const updateConfig = vi.fn();
+    render(<ConfigStep form={makeForm('volatility_dca')} strategy="volatility_dca" {...defaults} updateConfig={updateConfig} />);
     expect(screen.getByText('Volatility DCA Config')).toBeInTheDocument();
     expect(screen.getByText('Price Drop Step (%)')).toBeInTheDocument();
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeInTheDocument();
+    await user.click(checkbox);
+    expect(updateConfig).toHaveBeenCalledWith('quantExecution', 1);
   });
 
   it('calls onNext when next is clicked', async () => {

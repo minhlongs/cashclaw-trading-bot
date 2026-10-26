@@ -26,7 +26,18 @@
     "hrp-allocator": "Phân Bổ Vốn HRP",
     "martingale-optimal-transport": "Mặt Biến Động Dupire MOT",
     "rough-path-signatures": "Chữ Ký Đường Nhám Lévy",
-    "style-guide": "Hệ Thống Thiết Kế"
+    "style-guide": "Hệ Thống Thiết Kế",
+    "billing": "Gói Cước & Tín Dụng",
+    "strategies/volatility-dca": "DCA Theo Biến Động",
+    "groups": {
+      "trading": "Thực Thi Giao Dịch",
+      "research": "Nghiên Cứu & Cổng Kiểm Định",
+      "quantlib": "Định Lượng & Vi Cấu Trúc",
+      "system": "Hệ Thống & Quản Trị"
+    },
+    "paperOnlyBadge": "ADR-001 PAPER ONLY",
+    "expandSidebar": "Mở rộng thanh bên",
+    "collapseSidebar": "Thu gọn thanh bên"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -112,12 +123,19 @@
     },
     "v7Metrics": {
       "title": "Bảng Giám Sát Định Lượng v7 Đa Trụ Cột"
+    },
+    "viewMode": {
+      "label": "Chế độ hiển thị Dashboard",
+      "all": "Toàn cảnh",
+      "trading": "Giao dịch",
+      "telemetry": "Giám sát Định lượng"
     }
   },
   "bots": {
     "title": "Bot giao dịch",
     "listTitle": "Danh sách bot",
     "createNew": "Tạo bot mới",
+    "filterAll": "Tất cả trạng thái",
     "status": {
       "draft": "Nháp",
       "paper_test": "Test giấy",
@@ -215,8 +233,12 @@
       "baseOrderSizePct": "Kích Thước Lệnh Cơ Bản (%)",
       "volatilityWindow": "Cửa Sổ Biến Động (nến)",
       "volBaseline": "Biến Động Cơ Sở (% năm)",
-      "reboundTarget": "Mục Tiêu Phục Hồi (%)"
+      "reboundTarget": "Mục Tiêu Phục Hồi (%)",
+      "quantExecution": "Chia Lệnh QuantLib (Almgren-Chriss)",
+      "quantExecutionDesc": "Tự động phân mảnh lệnh DCA theo biến động & thanh khoản"
     },
+    "enabled": "Đã bật",
+    "disabled": "Đã tắt",
     "review": {
       "name": "Tên",
       "pair": "Cặp",

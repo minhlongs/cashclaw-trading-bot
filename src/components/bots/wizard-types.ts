@@ -10,6 +10,7 @@ export interface FieldDef {
   key: string;
   label: string;
   step?: string;
+  type?: 'number' | 'checkbox';
 }
 
 export interface FormState {

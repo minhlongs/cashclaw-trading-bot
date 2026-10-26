@@ -12,8 +12,9 @@ export function BasicStep({ form, update, onNext }: BasicStepProps) {
     <div className="space-y-4">
       <h3 className="card-title">{t('title.basic')}</h3>
       <div className="form-group">
-        <label className="form-label">{t('botName')}</label>
+        <label className="form-label" htmlFor="bot-name-input">{t('botName')}</label>
         <input
+          id="bot-name-input"
           type="text"
           className="form-input"
           placeholder="BTC Grid v2"
@@ -22,8 +23,9 @@ export function BasicStep({ form, update, onNext }: BasicStepProps) {
         />
       </div>
       <div className="form-group">
-        <label className="form-label">{t('tradingPair')}</label>
+        <label className="form-label" htmlFor="bot-pair-select">{t('tradingPair')}</label>
         <select
+          id="bot-pair-select"
           className="form-input"
           value={form.pair}
           onChange={(e) => update('pair', e.target.value)}
@@ -33,8 +35,9 @@ export function BasicStep({ form, update, onNext }: BasicStepProps) {
         </select>
       </div>
       <div className="form-group">
-        <label className="form-label">{t('exchange')}</label>
+        <label className="form-label" htmlFor="bot-exchange-select">{t('exchange')}</label>
         <select
+          id="bot-exchange-select"
           className="form-input"
           value={form.exchange}
           onChange={(e) => update('exchange', e.target.value)}
@@ -45,8 +48,9 @@ export function BasicStep({ form, update, onNext }: BasicStepProps) {
         <PairPriceBadge exchange={form.exchange} pair={form.pair} />
       </div>
       <div className="form-group">
-        <label className="form-label">{t('capitalUsd')}</label>
+        <label className="form-label" htmlFor="bot-capital-input">{t('capitalUsd')}</label>
         <input
+          id="bot-capital-input"
           type="number"
           className="form-input"
           value={form.capital}

@@ -2,17 +2,34 @@
 
 import { ChevronLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type ReviewStepProps, GRID_FIELDS, MEANREV_FIELDS, GRID_DEFAULTS, MEANREV_DEFAULTS, STRATEGY_KEY_MAP, FIELD_KEY_MAP } from './wizard-types';
+import {
+  type ReviewStepProps,
+  GRID_FIELDS, MEANREV_FIELDS, VOLATILITY_DCA_FIELDS,
+  GRID_DEFAULTS, MEANREV_DEFAULTS, VOLATILITY_DCA_DEFAULTS,
+  STRATEGY_KEY_MAP, FIELD_KEY_MAP,
+} from './wizard-types';
 
 export function ReviewStep({ form, submitting, submitError, submitSuccess, onSubmit, onPrev }: ReviewStepProps) {
   const t = useTranslations('botWizard');
-  const fields = form.strategy === 'grid' ? GRID_FIELDS : MEANREV_FIELDS;
-  const defaults = form.strategy === 'grid' ? GRID_DEFAULTS : MEANREV_DEFAULTS;
+  const fields =
+    form.strategy === 'grid'
+      ? GRID_FIELDS
+      : form.strategy === 'mean_reversion'
+      ? MEANREV_FIELDS
+      : VOLATILITY_DCA_FIELDS;
+  const defaults =
+    form.strategy === 'grid'
+      ? GRID_DEFAULTS
+      : form.strategy === 'mean_reversion'
+      ? MEANREV_DEFAULTS
+      : VOLATILITY_DCA_DEFAULTS;
 
   const configSummary = form.strategy
     ? fields.map((f) => {
         const key = FIELD_KEY_MAP[f.key] ?? f.key;
-        return [t(key), form.config[f.key] ?? defaults[f.key]] as [string, number];
+        const rawVal = form.config[f.key] ?? defaults[f.key];
+        const formatted = f.type === 'checkbox' ? (rawVal ? t('enabled') : t('disabled')) : rawVal;
+        return [t(key), formatted] as [string, string | number];
       })
     : [];
 
@@ -38,22 +55,13 @@ export function ReviewStep({ form, submitting, submitError, submitSuccess, onSub
           </div>
         ))}
       </div>
-      <div className="review-note">
-        {t('paperModeNote')}
-      </div>
-
+      <div className="review-note">{t('paperModeNote')}</div>
       {submitSuccess && (
-        <div className="review-success">
-          <CheckCircle size={16} /> {t('createSuccess')}
-        </div>
+        <div className="review-success"><CheckCircle size={16} /> {t('createSuccess')}</div>
       )}
-
       {submitError && (
-        <div className="review-error">
-          <AlertCircle size={16} /> {submitError}
-        </div>
+        <div className="review-error"><AlertCircle size={16} /> {submitError}</div>
       )}
-
       <div className="flex justify-between">
         <button className="btn btn-ghost" onClick={onPrev} disabled={submitting || submitSuccess}>
           <ChevronLeft size={16} /> {t('back')}

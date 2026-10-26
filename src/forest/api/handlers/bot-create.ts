@@ -9,7 +9,7 @@ export interface CreateBotPayload {
   pair: string;
   exchange: string;
   capital: number;
-  config?: Record<string, number>;
+  config?: Record<string, number | boolean>;
   mode?: 'paper' | 'live';
 }
 
@@ -63,25 +63,17 @@ export async function botCreateHandler(
             volatilityWindow: coerceNum({ config: cfg, key: 'volatilityWindow', defaultValue: 20, min: 5, max: 100 }),
             volBaseline: coerceNum({ config: cfg, key: 'volBaseline', defaultValue: 50, min: 1, max: 200 }),
             reboundTarget: coerceNum({ config: cfg, key: 'reboundTarget', defaultValue: 1.0, min: 0.1, max: 20 }),
+            quantExecution: Boolean(cfg.quantExecution),
           } satisfies VolatilityDcaBotConfig);
 
     const botConfig: CreateBotRequest = {
       id: payload.id,
       config: strategyConfig,
-      exchangeConfig: {
-        apiKey: '',
-        apiSecret: '',
-        passphrase: '',
-        testnet: true,
-        sandbox: true,
-        rateLimitMs: 100,
-      },
+      exchangeConfig: { apiKey: '', apiSecret: '', passphrase: '', testnet: true, sandbox: true, rateLimitMs: 100 },
       mode: 'paper',
     };
 
-    const manager = getBotManager();
-    await manager.createBot(botConfig);
-
+    await getBotManager().createBot(botConfig);
     return { ok: true, data: { id: payload.id } };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Failed to create bot' };

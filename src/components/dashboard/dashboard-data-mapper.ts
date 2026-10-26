@@ -44,7 +44,12 @@ export function mapBotsPayloadToDashboardData(items: readonly BotCardDataApi[]):
   const kpis: DashboardKpis = {
     totalBalance: bots.reduce((sum, b) => sum + b.capitalAllocated + b.totalPnl, 0),
     todayPnl: bots.reduce((sum, b) => sum + b.totalPnl, 0),
-    activeBots: bots.filter((b) => b.botStatus === 'running' || b.botStatus === 'active').length,
+    activeBots: bots.filter((b) =>
+      b.botStatus === 'running' ||
+      b.botStatus === 'active' ||
+      b.botStatus === 'live_running' ||
+      b.botStatus === 'paper_test',
+    ).length,
     totalTrades,
     winRate: totalTrades > 0 ? Math.round((totalWinCount / totalTrades) * 100) : 0,
   };

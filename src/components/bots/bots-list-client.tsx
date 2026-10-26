@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Loader2 } from 'lucide-react';
+import { Plus, Search, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import type { BotCardData } from '@/forest/dashboard/actions';
 import { BotsTable } from './bots-table';
@@ -56,11 +56,11 @@ export default function BotsListClient() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center"><h1 className="page-title">{t('bots.listTitle')}</h1></div>
-        <div className="card error-state" role="alert"><p>{error}</p><button className="btn btn-ghost mt-4" onClick={() => window.location.reload()}>Thử lại / Try again</button></div>
+        <div className="card error-state" role="alert"><p>{error}</p><button className="btn btn-ghost mt-4" onClick={() => window.location.reload()}>{t('common.retry')}</button></div>
       </div>
     );
   }
-  const activeCount = bots.filter((b) => b.botStatus === 'live_running').length;
+  const activeCount = bots.filter((b) => b.botStatus === 'live_running' || b.botStatus === 'running').length;
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -73,10 +73,10 @@ export default function BotsListClient() {
       <div className="flex items-center gap-3">
         <div className="search-wrap"><Search size={16} className="search-icon" /><input type="text" placeholder={t('common.search')} aria-label={t('common.search')} className="form-input search-input" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
         <select className="form-input select-auto" aria-label="Filter bots by status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="all">Tất cả / All</option><option value="paper_test">Paper Test</option>
-          <option value="paused">Tạm dừng / Paused</option><option value="draft">Bản nháp / Draft</option><option value="error">Lỗi / Error</option>
+          <option value="all">{t('bots.filterAll')}</option><option value="paper_test">{t('bots.status.paper_test')}</option>
+          <option value="live_running">{t('bots.status.live_running')}</option><option value="paused">{t('bots.status.paused')}</option>
+          <option value="draft">{t('bots.status.draft')}</option><option value="error">{t('bots.status.error')}</option>
         </select>
-        <button className="btn btn-ghost btn-icon" aria-label="Filter"><Filter size={14} /></button>
       </div>
       {actionError && (
         <div className="badge badge-error flex items-center justify-between gap-2 p-3 text-sm" role="alert">
