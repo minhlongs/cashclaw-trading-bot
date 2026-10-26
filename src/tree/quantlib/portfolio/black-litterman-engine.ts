@@ -1,10 +1,35 @@
-import type {
-  AssetMarketPrior,
-  QualitativeAgentView,
-  BlackLittermanConfig,
-  BlackLittermanResult,
-  BlackLittermanAssetResult,
-} from './black-litterman-types';
+export interface AssetMarketPrior {
+  readonly symbol: string;
+  readonly marketWeight: number;
+  readonly equilibriumReturn: number;
+  readonly variance: number;
+}
+
+export interface QualitativeAgentView {
+  readonly symbol: string;
+  readonly expectedReturn: number;
+  readonly confidence: number;
+  readonly viewDescription?: string;
+}
+
+export interface BlackLittermanConfig {
+  readonly riskAversionDelta?: number;
+  readonly tauPriorUncertainty?: number;
+}
+
+export interface BlackLittermanAssetResult {
+  readonly symbol: string;
+  readonly priorReturn: number;
+  readonly posteriorReturn: number;
+  readonly optimalWeight: number;
+  readonly viewTiltPct: number;
+}
+
+export interface BlackLittermanResult {
+  readonly assets: readonly BlackLittermanAssetResult[];
+  readonly totalTiltL1: number;
+  readonly averageConfidence: number;
+}
 
 export class BlackLittermanEngine {
   private readonly delta: number;
@@ -17,11 +42,9 @@ export class BlackLittermanEngine {
 
   computePosteriorWeights(
     priors: readonly AssetMarketPrior[],
-    views: readonly QualitativeAgentView[] = []
+    views: readonly QualitativeAgentView[] = [],
   ): BlackLittermanResult {
-    if (priors.length === 0) {
-      return { assets: [], totalTiltL1: 0, averageConfidence: 0 };
-    }
+    if (priors.length === 0) return { assets: [], totalTiltL1: 0, averageConfidence: 0 };
 
     const viewMap = new Map<string, QualitativeAgentView>();
     let totalConfidence = 0;
@@ -32,44 +55,34 @@ export class BlackLittermanEngine {
     const avgConfidence = views.length > 0 ? totalConfidence / views.length : 0;
 
     let totalTiltL1 = 0;
-    const rawAssetResults: Array<{
-      symbol: string;
-      priorReturn: number;
-      posteriorReturn: number;
-      rawWeight: number;
-      viewTiltPct: number;
-    }> = [];
+    const raw: Array<{ symbol: string; priorReturn: number; posteriorReturn: number; rawWeight: number; viewTiltPct: number }> = [];
 
     for (const p of priors) {
       const view = viewMap.get(p.symbol);
       let posteriorMu = p.equilibriumReturn;
       let viewTilt = 0;
+      const safeVar = Math.max(1e-6, p.variance);
 
       if (view && view.confidence > 0) {
-        const priorVar = this.tau * Math.max(1e-6, p.variance);
-        const omegaInv = view.confidence / Math.max(1e-6, p.variance);
-        const priorPrecision = 1 / priorVar;
-
-        const posteriorPrecision = priorPrecision + omegaInv;
-        posteriorMu = (priorPrecision * p.equilibriumReturn + omegaInv * view.expectedReturn) / posteriorPrecision;
+        const priorPrecision = 1 / (this.tau * safeVar);
+        const omegaInv = view.confidence / safeVar;
+        posteriorMu = (priorPrecision * p.equilibriumReturn + omegaInv * view.expectedReturn) / (priorPrecision + omegaInv);
         viewTilt = ((posteriorMu - p.equilibriumReturn) / Math.max(1e-4, Math.abs(p.equilibriumReturn))) * 100;
       }
 
-      const invVar = 1 / Math.max(1e-6, p.variance);
-      const rawOptimalWeight = Math.max(0, (posteriorMu * invVar) / this.delta);
-
+      const rawWeight = Math.max(0, (posteriorMu * (1 / safeVar)) / this.delta);
       totalTiltL1 += Math.abs(viewTilt);
-      rawAssetResults.push({
+      raw.push({
         symbol: p.symbol,
         priorReturn: Number(p.equilibriumReturn.toFixed(6)),
         posteriorReturn: Number(posteriorMu.toFixed(6)),
-        rawWeight: rawOptimalWeight,
+        rawWeight,
         viewTiltPct: Number(viewTilt.toFixed(2)),
       });
     }
 
-    const sumWeights = rawAssetResults.reduce((acc, a) => acc + a.rawWeight, 0);
-    const assets: BlackLittermanAssetResult[] = rawAssetResults.map((a) => ({
+    const sumWeights = raw.reduce((acc, a) => acc + a.rawWeight, 0);
+    const assets: BlackLittermanAssetResult[] = raw.map((a) => ({
       symbol: a.symbol,
       priorReturn: a.priorReturn,
       posteriorReturn: a.posteriorReturn,
@@ -77,10 +90,6 @@ export class BlackLittermanEngine {
       viewTiltPct: a.viewTiltPct,
     }));
 
-    return {
-      assets,
-      totalTiltL1: Number(totalTiltL1.toFixed(2)),
-      averageConfidence: Number(avgConfidence.toFixed(4)),
-    };
+    return { assets, totalTiltL1: Number(totalTiltL1.toFixed(2)), averageConfidence: Number(avgConfidence.toFixed(4)) };
   }
 }

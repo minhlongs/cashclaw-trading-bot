@@ -1,8 +1,19 @@
 import type { Ticker } from '../../exchange/types';
 import { volatilityDca } from '../../quantlib/volatility-dca';
+import { computeQuantExecutionPlan } from './quantlib-execution-sizer';
 import { computeAnnualizedVol } from './volatility-dca-math';
-import { executeDcaOrder } from './volatility-dca-execution';
+import { executeDcaOrder, executeQuantDcaOrder } from './volatility-dca-execution';
 import type { VolatilityDcaState } from './volatility-dca-state';
+
+function dispatchOrder(s: VolatilityDcaState, side: 'buy' | 'sell', price: number, qty: number, volPct: number): number {
+  if (s.config.quantExecution) {
+    const plan = computeQuantExecutionPlan({ totalQuantity: qty, volatilityPct: volPct });
+    void executeQuantDcaOrder(s.callbacks, s.config.symbol, s.config.exchange, side, price, qty, { volatilityPct: volPct });
+    return plan.sliceQuantity;
+  }
+  void executeDcaOrder(s.callbacks, s.config.symbol, s.config.exchange, side, price, qty);
+  return qty;
+}
 
 export function handleVolatilityDcaTicker(s: VolatilityDcaState, ticker: Ticker): void {
   if (!s.running || ticker.last <= 0) return;
@@ -20,12 +31,12 @@ export function handleVolatilityDcaTicker(s: VolatilityDcaState, ticker: Ticker)
   );
   if (res.signal === 'buy') {
     const capital = s.config.capital * (s.config.baseOrderSizePct / 100), qty = capital / p;
-    s.stepIndex += 1; s.positionQty += qty; s.positionCost += capital;
+    const filledQty = dispatchOrder(s, 'buy', p, qty, vol);
+    s.stepIndex += 1; s.positionQty += filledQty; s.positionCost += filledQty * p;
     s.callbacks.onLog(`VolatilityDCA buy step=${s.stepIndex} price=${p} vol=${vol.toFixed(2)}%`);
-    void executeDcaOrder(s.callbacks, s.config.symbol, s.config.exchange, 'buy', p, qty);
   } else if (res.signal === 'sell') {
     const qty = s.positionQty; s.positionQty = 0; s.positionCost = 0; s.stepIndex = 0; s.referencePrice = p;
     s.callbacks.onLog(`VolatilityDCA sell: price=${p} ref=${s.referencePrice} resetting${qty > 0 ? '' : ' (no position)'}`);
-    if (qty > 0) void executeDcaOrder(s.callbacks, s.config.symbol, s.config.exchange, 'sell', p, qty);
+    if (qty > 0) dispatchOrder(s, 'sell', p, qty, vol);
   }
 }

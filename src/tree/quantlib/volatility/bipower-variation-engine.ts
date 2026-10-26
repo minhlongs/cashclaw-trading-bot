@@ -1,13 +1,23 @@
-import type {
-  BipowerVariationConfig,
-  BipowerVariationResult,
-} from './bipower-variation-types';
+export interface BipowerVariationConfig {
+  readonly minObservations?: number;
+  readonly zCriticalThreshold?: number;
+}
+
+export interface BipowerVariationResult {
+  readonly sampleCount: number;
+  readonly realizedVariance: number;
+  readonly bipowerVariation: number;
+  readonly jumpVariation: number;
+  readonly relativeJumpRatio: number;
+  readonly jumpZScore: number;
+  readonly hasSignificantJump: boolean;
+}
 
 export class BipowerVariationEngine {
   private readonly minObservations: number;
   private readonly zCriticalThreshold: number;
-  private static readonly MU1_INV_SQ = Math.PI / 2; // ~1.5707963
-  private static readonly ASYMPTOTIC_COEFF = Math.PI ** 2 / 4 + Math.PI - 5; // ~0.6090
+  private static readonly MU1_INV_SQ = Math.PI / 2;
+  private static readonly ASYMPTOTIC_COEFF = Math.PI ** 2 / 4 + Math.PI - 5;
 
   constructor(config: BipowerVariationConfig = {}) {
     this.minObservations = Math.max(5, config.minObservations ?? 10);
@@ -29,16 +39,13 @@ export class BipowerVariationEngine {
     }
 
     let rv = 0;
-    for (const r of returns) {
-      rv += r * r;
-    }
+    for (const r of returns) rv += r * r;
 
     let bvSum = 0;
     for (let i = 1; i < n; i++) {
       bvSum += Math.abs(returns[i - 1]!) * Math.abs(returns[i]!);
     }
     const bv = BipowerVariationEngine.MU1_INV_SQ * bvSum;
-
     const jv = Math.max(0, rv - bv);
     const relativeJump = rv > 0 ? jv / rv : 0;
 
@@ -49,9 +56,7 @@ export class BipowerVariationEngine {
       const p3 = Math.pow(Math.abs(returns[i]!), 4 / 3);
       tqSum += p1 * p2 * p3;
     }
-    const mu43Inv3 = 1.7408;
-    const tq = n * mu43Inv3 * tqSum;
-
+    const tq = n * 1.7408 * tqSum;
     const bvSq = bv * bv;
     const ratio = bvSq > 0 ? Math.max(1, tq / bvSq) : 1;
     const stdDev = Math.sqrt((BipowerVariationEngine.ASYMPTOTIC_COEFF / n) * ratio);

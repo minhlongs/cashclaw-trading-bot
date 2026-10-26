@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ParkinsonVolatilityEngine } from '@/tree/quantlib/volatility/parkinson-volatility-engine';
-import type { HighLowBar } from '@/tree/quantlib/volatility/parkinson-volatility-types';
+import { ParkinsonVolatilityEngine, type HighLowBar } from '@/tree/quantlib/volatility/parkinson-volatility-engine';
 
 describe('ParkinsonVolatilityEngine', () => {
   it('throws on empty bars', () => {

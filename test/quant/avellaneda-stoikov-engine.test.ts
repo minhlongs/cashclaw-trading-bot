@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AvellanedaStoikovEngine } from '../../src/tree/quantlib/marketmaking/avellaneda-stoikov-engine';
-import type { AvellanedaStoikovParams } from '../../src/tree/quantlib/marketmaking/avellaneda-stoikov-types';
+import { AvellanedaStoikovEngine, type AvellanedaStoikovParams } from '../../src/tree/quantlib/marketmaking/avellaneda-stoikov-engine';
 
 describe('AvellanedaStoikovEngine', () => {
   const engine = new AvellanedaStoikovEngine();

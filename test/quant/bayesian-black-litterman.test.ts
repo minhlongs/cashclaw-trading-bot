@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { VectorizedOrthogonalizer } from '../../src/tree/research/vectorized/vectorized-orthogonalizer';
-import { BlackLittermanEngine } from '../../src/tree/quantlib/portfolio/black-litterman-engine';
-import type {
-  AssetMarketPrior,
-  QualitativeAgentView,
-} from '../../src/tree/quantlib/portfolio/black-litterman-types';
+import {
+  BlackLittermanEngine,
+  type AssetMarketPrior,
+  type QualitativeAgentView,
+} from '../../src/tree/quantlib/portfolio/black-litterman-engine';
 
 describe('Phase 02: Bayesian Black-Litterman & Factor Orthogonalization', () => {
   it('orthogonalizes factor series removing collinearity', () => {

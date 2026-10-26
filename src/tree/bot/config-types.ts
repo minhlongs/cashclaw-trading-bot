@@ -48,6 +48,7 @@ export interface VolatilityDcaBotConfig extends BaseBotConfig {
   volatilityWindow: number;
   volBaseline: number;
   reboundTarget: number;
+  quantExecution?: boolean;
 }
 
 export type BotConfig = GridBotConfig | MeanRevBotConfig | VolatilityDcaBotConfig;
