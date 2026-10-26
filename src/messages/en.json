@@ -342,179 +342,205 @@
   },
   "landing": {
     "nav": {
-      "logo": "CashClaw",
-      "cta": "Get Started"
+      "logo": "CashClaw Quant OS",
+      "cta": "Launch Bot"
     },
     "hero": {
-      "badge": "Automated Trading Bot",
-      "badgeSub": "for busy people",
-      "title": "Auto-profit",
-      "titleLine2": "without watching charts",
-      "subtitle": "CashClaw runs 24/7 on Binance, Bybit, OKX. Set your strategy, the bot books profits — results sent to Telegram.",
+      "badge": "Open-Core Quant OS v1.66",
+      "badgeSub": "ADR-001 Paper-Only · Non-Custodial",
+      "title": "Institutional Quant OS",
+      "titleLine2": "with causal alpha verification",
+      "subtitle": "Open-core algorithmic trading framework and Cloud SaaS. 28 QuantLib modules, Alpha Zoo falsification, L2/L3 microstructure telemetry, and WebCrypto enclave security.",
       "cta": "Start Free",
-      "trust": "Safe · No lock-in · 7-day trial",
-      "link": "For developers ›"
+      "trust": "Apache-2.0 Open-Core · Non-Custodial · Zero Lookahead Bias",
+      "link": "Architecture Docs ›"
     },
     "features": {
-      "title": "Why CashClaw?",
+      "title": "CashClaw Quant OS Core Capabilities",
       "items": [
         {
           "icon": "bot",
-          "title": "Smart AI Bots",
-          "desc": "Auto-optimized strategies to maximize gains and reduce risk."
+          "title": "Verified Quant Strategies",
+          "desc": "Multi-level Grid, Mean Reversion, and Volatility-Adjusted DCA backed by 100% branch test coverage."
         },
         {
           "icon": "chart",
-          "title": "Transparent Performance",
-          "desc": "Full trade history and bot performance at a glance."
+          "title": "Causal Validation & FDR",
+          "desc": "Alpha Zoo evaluation, Walk-Forward windows, False Discovery Rate (FDR) gates, and strict survival filters."
         },
         {
           "icon": "shield",
-          "title": "Safety First",
-          "desc": "No contracts, cancel anytime. You're always in control."
+          "title": "Sovereign Enclave & ADR-001",
+          "desc": "Local WebCrypto key encryption. Native Paper/Backtest safety mode eliminates real capital custody risk."
         },
         {
           "icon": "briefcase",
-          "title": "Flexible for Any Goal",
-          "desc": "Short, medium, or long-term investing fully customizable."
+          "title": "L2 Microstructure & Multi-Agent",
+          "desc": "Hawkes LOB orderbook imbalance, Hurst rough volatility, and multi-agent LLM deliberation seams."
         }
       ]
     },
     "stats": {
-      "label": "Proven Performance",
+      "label": "Verified Engineering Metrics",
       "items": [
         {
-          "value": "$500+",
-          "label": "Minimum capital"
+          "value": "28",
+          "label": "QuantLib Strategy Modules"
         },
         {
-          "value": "2–10%",
-          "label": "Target monthly return"
-        },
-        {
-          "value": "24/7",
-          "label": "Runs non-stop"
+          "value": "4,140+",
+          "label": "Automated Test Assertions"
         },
         {
           "value": "100%",
-          "label": "Your money, your control"
+          "label": "QuantLib Branch Coverage"
+        },
+        {
+          "value": "0%",
+          "label": "Custodial Fund Risk (ADR-001)"
         }
       ]
     },
     "steps": {
-      "title": "Start in 3 Steps",
+      "title": "Deploy Research in 3 Steps",
       "items": [
         {
           "n": "01",
-          "title": "Choose Strategy",
-          "desc": "Grid or Mean Reversion — pick what fits your goals."
+          "title": "Configure Strategy",
+          "desc": "Select Grid, Mean Reversion, or Volatility DCA with explicit risk and position bounds."
         },
         {
           "n": "02",
-          "title": "Fund Account",
-          "desc": "Deposit funds into your trading account."
+          "title": "Walk-Forward Validation",
+          "desc": "Run causal simulations with exchange fees, configurable slippage, and OHLCV data quality fences."
         },
         {
           "n": "03",
-          "title": "Get Results",
-          "desc": "Relax while the bot runs and sends reports to Telegram."
+          "title": "Real-Time Telemetry",
+          "desc": "Monitor equity curves, L2 market microstructure, and receive cryptographically signed Telegram alerts."
         }
       ]
     },
     "pricing": {
-      "title": "Pricing",
+      "title": "Open-Core & Cloud SaaS Pricing",
       "plans": [
         {
-          "name": "Starter",
-          "price": "$25",
-          "unit": "/day",
+          "name": "BASIC",
+          "price": "$0",
+          "unit": "/month",
           "features": [
-            "Capital: from $500",
-            "Grid",
-            "Email support"
+            "1 Active Bot",
+            "60m Durable Cron",
+            "Apache-2.0 Open-Core",
+            "Grid & Mean Reversion"
           ],
-          "cta": "Start"
+          "cta": "Start Free"
         },
         {
-          "name": "Pro",
-          "price": "$49",
-          "unit": "/day",
+          "name": "PREMIUM",
+          "price": "$29",
+          "unit": "/month",
           "features": [
-            "Capital: from $1,000",
-            "Grid + Mean Rev",
-            "1-1 Telegram"
+            "5 Active Bots",
+            "5m Durable Cron",
+            "Cloud Alpha Feed",
+            "Signed Telegram Alerts"
           ],
-          "cta": "Start",
+          "cta": "Upgrade to Premium",
           "popular": true
+        },
+        {
+          "name": "ENTERPRISE",
+          "price": "$99",
+          "unit": "/month",
+          "features": [
+            "25 Active Bots",
+            "1m High-Frequency Cron",
+            "L2 Microstructure Telemetry",
+            "Multi-Agent Deliberation"
+          ],
+          "cta": "Choose Enterprise"
+        },
+        {
+          "name": "MASTER",
+          "price": "$299",
+          "unit": "/month",
+          "features": [
+            "100 Active Bots",
+            "1m Priority Execution Cron",
+            "All 28 QuantLib Modules",
+            "Dedicated 1-1 Quant Support"
+          ],
+          "cta": "Contact Master"
         }
       ],
-      "popular": "Popular"
+      "popular": "Most Popular"
     },
     "testimonial": {
-      "quote": "CashClaw saves me time and optimizes returns. No more watching charts 24/7.",
-      "author": "Nguyen Van A",
-      "role": "Crypto Investor"
+      "quote": "CashClaw brings institutional causal falsification and L2 microstructure analytics to an open-core workflow we can audit line by line.",
+      "author": "Tran Minh Quan",
+      "role": "Quantitative Researcher"
     },
     "cta": {
-      "title": "Ready to trade automatically?",
-      "subtitle": "7-day free trial. No commitment.",
-      "button": "Sign Up Now"
+      "title": "Ready to standardize your quantitative trading research?",
+      "subtitle": "Start free with the Apache-2.0 BASIC tier. No credit card required.",
+      "button": "Launch Quant Workspace"
     },
     "footer": {
-      "product": "CashClaw",
-      "copyright": "© 2026 CashClaw"
+      "product": "CashClaw Quant OS",
+      "copyright": "© 2026 CashClaw · Open-Core Algorithmic Trading Framework (ADR-001 Paper-Only)"
     }
   },
   "cta": {
     "nav": {
-      "logo": "CashClaw",
-      "back": "← Back"
+      "logo": "CashClaw Quant OS",
+      "back": "← Back to Home"
     },
     "hero": {
       "icon": "rocket",
-      "title": "Get Started Now",
-      "subtitle": "Create your first bot in minutes. We'll guide you step-by-step.",
-      "note": "Powered by Cloudflare — safe, fast, worldwide.",
-      "createButton": "Create First Bot →"
+      "title": "Initialize Your Quant Workspace",
+      "subtitle": "Configure your first simulated trading bot and causal backtest in minutes.",
+      "note": "Powered by Cloudflare Workers & D1 Edge — low latency, WebCrypto enclave security.",
+      "createButton": "Create First Quant Bot →"
     },
     "whatNext": {
-      "title": "What happens next?",
+      "title": "Standard Operating Workflow",
       "items": [
         {
           "icon": "clipboard-list",
-          "title": "Pick a Strategy",
-          "desc": "Grid or Mean Reversion — choose what fits your goals."
+          "title": "Select Model",
+          "desc": "Choose Grid, Mean Reversion, or Volatility DCA with strict drawdown fences."
         },
         {
           "icon": "plug",
-          "title": "Connect Exchange",
-          "desc": "Enter Binance/Bybit/OKX API key — encrypted, safe storage."
+          "title": "Connect Market Data",
+          "desc": "Sync market feeds from Binance, Bybit, or OKX via encrypted stateless channels."
         },
         {
           "icon": "play",
-          "title": "Run Paper Trading",
-          "desc": "7-day free trial with simulated funds — see results before going live."
+          "title": "Run ADR-001 Paper Mode",
+          "desc": "Execute risk-free paper trading with realistic exchange fees and slippage modeling."
         },
         {
           "icon": "trending-up",
-          "title": "Earn Profit",
-          "desc": "Bot runs 24/7, you get daily reports via Telegram."
+          "title": "Evaluate & Promote",
+          "desc": "Inspect Sharpe ratio, 99% CVaR stress, and survival gates before scaling."
         }
       ]
     },
     "guarantee": {
       "icon": "shield-check",
-      "title": "Our Commitment",
+      "title": "Safety & Governance Guarantees",
       "items": [
-        "No lock-in contract — cancel anytime",
-        "Your API key is encrypted — we cannot withdraw funds",
-        "7-day free trial with paper trading first",
-        "1-1 Telegram support for Pro plan"
+        "Strict ADR-001 compliance (Paper & Backtest safety mode enforced)",
+        "Non-custodial architecture — keys protected via WebCrypto Enclave",
+        "Causal evaluation pipeline with zero lookahead bias",
+        "Auditable Apache-2.0 open-core quantitative engine"
       ]
     },
     "cta": {
-      "button": "Sign Up & Create First Bot",
-      "note": "No credit card required to start."
+      "button": "Open Bot Wizard Now",
+      "note": "Start on the $0/month BASIC tier — upgrade anytime."
     }
   },
   "backtests": {

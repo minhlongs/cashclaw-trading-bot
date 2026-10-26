@@ -342,179 +342,205 @@
   },
   "landing": {
     "nav": {
-      "logo": "CashClaw",
-      "cta": "Bắt đầu ngay"
+      "logo": "CashClaw Quant OS",
+      "cta": "Khởi tạo Bot"
     },
     "hero": {
-      "badge": "Bot giao dịch tự động",
-      "badgeSub": "cho người bận rộn",
-      "title": "Chốt lãi tự động",
-      "titleLine2": "không cần canh sàn",
-      "subtitle": "CashClaw chạy 24/7 trên Binance, Bybit, OKX. Bạn đặt chiến lược, bot chốt lãi — kết quả gửi về Telegram.",
-      "cta": "Bắt đầu miễn phí",
-      "trust": "An toàn · Không khoá hợp đồng · Thử nghiệm 7 ngày",
-      "link": "Cho nhà phát triển ›"
+      "badge": "Open-Core Quant OS v1.66",
+      "badgeSub": "ADR-001 Paper-Only · Non-Custodial",
+      "title": "Hệ điều hành định lượng",
+      "titleLine2": "kiểm định nhân quả cấp thể chế",
+      "subtitle": "Khung giao dịch thuật toán mã nguồn mở kết hợp Cloud SaaS. 28 công cụ QuantLib, kiểm định Alpha Zoo, vi cấu trúc sổ lệnh L2/L3 và ký số WebCrypto.",
+      "cta": "Trải nghiệm miễn phí",
+      "trust": "Mã nguồn mở Apache-2.0 · Không giữ tiền · Kiểm định không nhìn trước tương lai",
+      "link": "Tài liệu kiến trúc ›"
     },
     "features": {
-      "title": "Tại sao chọn CashClaw?",
+      "title": "Năng lực cốt lõi của CashClaw Quant OS",
       "items": [
         {
           "icon": "bot",
-          "title": "Bot AI thông minh",
-          "desc": "Chiến lược tự động tối ưu chốt lãi, giảm rủi ro nhờ thuật toán nâng cao."
+          "title": "Chiến lược định lượng chuẩn",
+          "desc": "Grid đa tầng, Mean Reversion và Volatility-Adjusted DCA được kiểm chứng 100% độ phủ mã nguồn."
         },
         {
           "icon": "chart",
-          "title": "Hiệu quả minh bạch",
-          "desc": "Theo dõi toàn bộ lịch sử giao dịch, tối ưu hiệu suất bot."
+          "title": "Kiểm định nhân quả & FDR",
+          "desc": "Alpha Zoo, Walk-Forward, kiểm soát tỷ lệ phát hiện sai (FDR) và cổng sinh tồn nghiêm ngặt."
         },
         {
           "icon": "shield",
-          "title": "An toàn là ưu tiên",
-          "desc": "Không khoá hợp đồng, hủy bất cứ lúc nào. Bạn hoàn toàn làm chủ."
+          "title": "Enclave mật mã & ADR-001",
+          "desc": "Khóa API mã hóa cục bộ bằng WebCrypto. Chế độ Paper/Backtest nguyên bản loại bỏ rủi ro mất vốn."
         },
         {
           "icon": "briefcase",
-          "title": "Linh hoạt mọi mục tiêu",
-          "desc": "Phù hợp đầu tư ngắn, trung và dài hạn. Tùy chỉnh theo chiến lược của bạn."
+          "title": "Vi cấu trúc L2 & Đa tác tử",
+          "desc": "Đo lường mất cân bằng sổ lệnh Hawkes LOB, độ nhám Hurst và hội đồng tranh biện đa tác tử."
         }
       ]
     },
     "stats": {
-      "label": "Hiệu quả đã được chứng minh",
+      "label": "Thông số kỹ thuật đã kiểm chứng",
       "items": [
         {
-          "value": "$500+",
-          "label": "Vốn tối thiểu"
+          "value": "28",
+          "label": "Mô-đun định lượng QuantLib"
         },
         {
-          "value": "2–10%",
-          "label": "Lợi nhuận mục tiêu/tháng"
-        },
-        {
-          "value": "24/7",
-          "label": "Chạy tự động không ngừng"
+          "value": "4,140+",
+          "label": "Bài kiểm thử tự động"
         },
         {
           "value": "100%",
-          "label": "Bạn làm chủ tiền của mình"
+          "label": "Độ phủ nhánh QuantLib"
+        },
+        {
+          "value": "0%",
+          "label": "Rủi ro lưu ký vốn (ADR-001)"
         }
       ]
     },
     "steps": {
-      "title": "Bắt đầu chỉ 3 bước",
+      "title": "Triển khai nghiên cứu trong 3 bước",
       "items": [
         {
           "n": "01",
-          "title": "Chọn chiến lược",
-          "desc": "Grid hoặc Mean Reversion — phù hợp với mục tiêu của bạn."
+          "title": "Cấu hình chiến lược",
+          "desc": "Chọn Grid, Mean Reversion hoặc Volatility DCA cùng tham số quản trị rủi ro."
         },
         {
           "n": "02",
-          "title": "Nạp tiền",
-          "desc": "Nạp tiền vào tài khoản giao dịch của bạn."
+          "title": "Kiểm định Walk-Forward",
+          "desc": "Chạy mô phỏng có tính phí sàn, trượt giá và qua cổng kiểm soát chất lượng dữ liệu."
         },
         {
           "n": "03",
-          "title": "Nhận kết quả",
-          "desc": "Ngồi lại và theo dõi bot tự động chạy, gửi báo cáo qua Telegram."
+          "title": "Giám sát thời gian thực",
+          "desc": "Theo dõi đường cong vốn, vi cấu trúc thị trường và nhận cảnh báo ký số qua Telegram."
         }
       ]
     },
     "pricing": {
-      "title": "Gói dịch vụ",
+      "title": "Bảng giá Cloud SaaS & Open-Core",
       "plans": [
         {
-          "name": "Starter",
-          "price": "99K",
-          "unit": "/ngày",
+          "name": "BASIC",
+          "price": "$0",
+          "unit": "/tháng",
           "features": [
-            "Vốn: từ $500",
-            "Grid",
-            "Hỗ trợ Email"
+            "1 Bot hoạt động",
+            "Chu kỳ 60 phút",
+            "Lõi mã nguồn mở Apache-2.0",
+            "Grid & Mean Reversion"
           ],
-          "cta": "Bắt đầu"
+          "cta": "Bắt đầu miễn phí"
         },
         {
-          "name": "Pro",
-          "price": "199K",
-          "unit": "/ngày",
+          "name": "PREMIUM",
+          "price": "$29",
+          "unit": "/tháng",
           "features": [
-            "Vốn: từ $1,000",
-            "Grid + Mean Rev",
-            "Telegram 1-1"
+            "5 Bot hoạt động",
+            "Chu kỳ 5 phút",
+            "Luồng Cloud Alpha Feed",
+            "Cảnh báo ký số Telegram"
           ],
-          "cta": "Bắt đầu",
+          "cta": "Nâng cấp Premium",
           "popular": true
+        },
+        {
+          "name": "ENTERPRISE",
+          "price": "$99",
+          "unit": "/tháng",
+          "features": [
+            "25 Bot hoạt động",
+            "Chu kỳ 1 phút",
+            "Đo đạc vi cấu trúc L2",
+            "Hội đồng tranh biện đa tác tử"
+          ],
+          "cta": "Chọn Enterprise"
+        },
+        {
+          "name": "MASTER",
+          "price": "$299",
+          "unit": "/tháng",
+          "features": [
+            "100 Bot hoạt động",
+            "Chu kỳ 1 phút ưu tiên",
+            "Trọn bộ 28 công cụ QuantLib",
+            "Hỗ trợ kỹ thuật 1-1 chuyên sâu"
+          ],
+          "cta": "Liên hệ Master"
         }
       ],
-      "popular": "Phổ biến"
+      "popular": "Phổ biến nhất"
     },
     "testimonial": {
-      "quote": "CashClaw tiết kiệm thời gian và tối ưu lợi nhuận. Tôi không còn phải canh sàn 24/7.",
-      "author": "Nguyễn Văn A",
-      "role": "Nhà đầu tư"
+      "quote": "CashClaw mang lại chuẩn mực kiểm định nhân quả và phân tích vi cấu trúc L2 mà trước đây chỉ các quỹ định lượng lớn mới sở hữu.",
+      "author": "Trần Minh Quân",
+      "role": "Kỹ sư Định lượng (Quant Researcher)"
     },
     "cta": {
-      "title": "Sẵn sàng giao dịch tự động?",
-      "subtitle": "Thử nghiệm 7 ngày miễn phí. Không ràng buộc.",
-      "button": "Đăng ký ngay"
+      "title": "Sẵn sàng chuẩn hóa quy trình giao dịch định lượng?",
+      "subtitle": "Khởi tạo miễn phí với gói Open-Core BASIC. Không yêu cầu thẻ tín dụng.",
+      "button": "Khởi tạo không gian làm việc"
     },
     "footer": {
-      "product": "CashClaw",
-      "copyright": "© 2026 CashClaw"
+      "product": "CashClaw Quant OS",
+      "copyright": "© 2026 CashClaw · Open-Core Algorithmic Trading Framework (ADR-001 Paper-Only)"
     }
   },
   "cta": {
     "nav": {
-      "logo": "CashClaw",
-      "back": "← Quay lại"
+      "logo": "CashClaw Quant OS",
+      "back": "← Quay lại trang chủ"
     },
     "hero": {
       "icon": "rocket",
-      "title": "Bắt đầu ngay",
-      "subtitle": "Tạo bot đầu tiên trong vài phút. Chúng tôi hướng dẫn từng bước.",
-      "note": "Nền tảng vận hành trên Cloudflare — an toàn, nhanh, toàn cầu.",
-      "createButton": "Tạo bot đầu tiên →"
+      "title": "Khởi tạo hệ thống định lượng",
+      "subtitle": "Thiết lập bot mô phỏng và kiểm định chiến lược chỉ trong vài phút.",
+      "note": "Vận hành trên hạ tầng biên Cloudflare Workers & D1 — độ trễ thấp, bảo mật WebCrypto.",
+      "createButton": "Tạo bot định lượng đầu tiên →"
     },
     "whatNext": {
-      "title": "Điều gì xảy ra tiếp theo?",
+      "title": "Quy trình vận hành chuẩn",
       "items": [
         {
           "icon": "clipboard-list",
-          "title": "Chọn chiến lược",
-          "desc": "Grid hoặc Mean Reversion — bạn chọn phù hợp mục tiêu."
+          "title": "Thiết lập mô hình",
+          "desc": "Chọn Grid, Mean Reversion hoặc Volatility DCA với ngưỡng cắt lỗ rõ ràng."
         },
         {
           "icon": "plug",
-          "title": "Kết nối sàn",
-          "desc": "Nhập API key Binance/Bybit/OKX — được mã hoá, lưu an toàn."
+          "title": "Kết nối dữ liệu sàn",
+          "desc": "Đồng bộ dữ liệu thị trường từ Binance, Bybit, OKX qua kết nối mã hóa an toàn."
         },
         {
           "icon": "play",
-          "title": "Chạy paper trading",
-          "desc": "Thử nghiệm 7 ngày không tốn tiền thật — xem kết quả trước khi live."
+          "title": "Chạy mô phỏng ADR-001",
+          "desc": "Thực thi Paper Trading không rủi ro tiền thật, tính toán đầy đủ phí và trượt giá."
         },
         {
           "icon": "trending-up",
-          "title": "Thu lãi",
-          "desc": "Bot chạy tự động, bạn nhận báo cáo qua Telegram mỗi ngày."
+          "title": "Đánh giá & Nâng hạng",
+          "desc": "Phân tích chỉ số Sharpe, CVaR 99% và vượt cổng sinh tồn trước khi mở rộng quy mô."
         }
       ]
     },
     "guarantee": {
       "icon": "shield-check",
-      "title": "Cam kết của chúng tôi",
+      "title": "Tiêu chuẩn an toàn & Quản trị",
       "items": [
-        "Không khoá hợp đồng — hủy bất cứ lúc nào",
-        "API key của bạn được mã hoá, chúng tôi không thể rút tiền",
-        "Thử nghiệm 7 ngày miễn phí, dùng paper trading trước",
-        "Hỗ trợ Telegram 1-1 cho gói Pro"
+        "Tuân thủ nghiêm ngặt ADR-001 (Chế độ Paper & Backtest an toàn tuyệt đối)",
+        "Không lưu ký tài sản — khóa API được bảo vệ bằng WebCrypto Enclave",
+        "Kiểm định nhân quả không nhìn trước dữ liệu tương lai (Zero Lookahead Bias)",
+        "Minh bạch mã nguồn lõi theo giấy phép Apache-2.0"
       ]
     },
     "cta": {
-      "button": "Đăng ký & tạo bot đầu tiên",
-      "note": "Không cần thẻ tín dụng để bắt đầu."
+      "button": "Vào Trình khởi tạo Bot ngay",
+      "note": "Bắt đầu với gói BASIC $0/tháng — nâng cấp linh hoạt bất cứ lúc nào."
     }
   },
   "backtests": {

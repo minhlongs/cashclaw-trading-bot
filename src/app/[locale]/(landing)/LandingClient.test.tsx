@@ -30,8 +30,10 @@ vi.mock('next-intl', () => ({
           { n: '3', title: 'Run', desc: 'Watch bots trade' },
         ],
         'pricing.plans': [
-          { name: 'Free', price: '$0', unit: '/mo', features: ['1 bot'], cta: 'Get started' },
-          { name: 'Pro', price: '$49', unit: '/mo', features: ['10 bots', 'API access'], cta: 'Start free', popular: true },
+          { name: 'BASIC', price: '$0', unit: '/month', features: ['1 bot', '60m cron'], cta: 'Start free' },
+          { name: 'PREMIUM', price: '$29', unit: '/month', features: ['5 bots', '5m cron', 'Alpha Feed'], cta: 'Upgrade', popular: true },
+          { name: 'ENTERPRISE', price: '$99', unit: '/month', features: ['25 bots', '1m cron', 'L2 Telemetry'], cta: 'Select' },
+          { name: 'MASTER', price: '$299', unit: '/month', features: ['100 bots', '1m cron', '28 QuantLib'], cta: 'Contact' },
         ],
       };
       return arrays[key] ?? [];
@@ -176,5 +178,20 @@ describe('LandingClient', () => {
     render(<LandingClient />);
     const popularBadge = screen.getByText('pricing.popular');
     expect(popularBadge.className).toContain('pricing-badge');
+  });
+
+  it('renders all 4 SaaS pricing tiers (BASIC, PREMIUM, ENTERPRISE, MASTER)', () => {
+    render(<LandingClient />);
+    expect(screen.getByText('BASIC')).toBeInTheDocument();
+    expect(screen.getByText('PREMIUM')).toBeInTheDocument();
+    expect(screen.getByText('ENTERPRISE')).toBeInTheDocument();
+    expect(screen.getByText('MASTER')).toBeInTheDocument();
+    expect(document.querySelectorAll('.pricing-card')).toHaveLength(4);
+  });
+
+  it('renders Lucide SVG icons inside feature-icon spans', () => {
+    render(<LandingClient />);
+    const svgIcons = document.querySelectorAll('.feature-icon svg');
+    expect(svgIcons.length).toBeGreaterThanOrEqual(3);
   });
 });
