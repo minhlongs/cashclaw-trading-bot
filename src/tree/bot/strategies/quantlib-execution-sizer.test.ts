@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { computeQuantExecutionPlan } from './quantlib-execution-sizer';
 import { executeDcaOrder, executeQuantDcaOrder } from './volatility-dca-execution';
+import { handleVolatilityDcaTicker } from './volatility-dca-handler';
+import type { VolatilityDcaState } from './volatility-dca-state';
 
 describe('computeQuantExecutionPlan', () => {
   it('computes balanced execution trajectory under normal volatility with default parameters', () => {
@@ -116,5 +118,50 @@ describe('executeQuantDcaOrder and executeDcaOrder', () => {
     await executeDcaOrder({ onLog, placeOrder: failOrder }, 'BTC/USDT', 'binance', 'sell', 50000, 1);
     expect(onLog).toHaveBeenCalledWith('VolatilityDCA buy order failed: timeout');
     expect(onLog).toHaveBeenCalledWith('VolatilityDCA sell order failed: unknown');
+  });
+
+  it('routes handleVolatilityDcaTicker through executeQuantDcaOrder when quantExecution is true', () => {
+    const onLog = vi.fn();
+    const placeOrder = vi.fn().mockResolvedValue({ id: 'ord-q2', status: 'filled' });
+    const state: VolatilityDcaState = {
+      config: {
+        strategy: 'volatility_dca',
+        symbol: 'BTC/USDT',
+        pair: 'BTC/USDT',
+        exchange: 'binance',
+        mode: 'paper',
+        capital: 1000,
+        maxDrawdownPct: 10,
+        priceDropStep: 2,
+        maxSteps: 5,
+        baseOrderSizePct: 20,
+        volatilityWindow: 3,
+        volBaseline: 50,
+        reboundTarget: 3,
+        quantExecution: true,
+      },
+      callbacks: { onLog, placeOrder },
+      running: true,
+      referencePrice: 50000,
+      stepIndex: 0,
+      positionQty: 0,
+      positionCost: 0,
+      priceWindow: [50000, 49500],
+    };
+
+    handleVolatilityDcaTicker(state, {
+      symbol: 'BTC/USDT',
+      bid: 47990,
+      ask: 48010,
+      last: 48000,
+      high24h: 50500,
+      low24h: 47500,
+      volume24h: 100,
+      timestamp: Date.now(),
+    });
+
+    expect(state.stepIndex).toBe(1);
+    expect(onLog).toHaveBeenCalledWith(expect.stringContaining('VolatilityDCA quant execution: class='));
+    expect(placeOrder).toHaveBeenCalledTimes(1);
   });
 });

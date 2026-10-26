@@ -1,4 +1,15 @@
-import type { RoughVolatilityConfig, RoughVolatilityResult } from './gatheral-rough-volatility-types';
+export interface RoughVolatilityConfig {
+  readonly minObservations: number;
+  readonly maxLag: number;
+  readonly roughThreshold: number;
+}
+
+export interface RoughVolatilityResult {
+  readonly hurstExponent: number;
+  readonly isRoughRegime: boolean;
+  readonly fitQuality: number;
+  readonly sampleCount: number;
+}
 
 export class GatheralRoughVolatilityEngine {
   private readonly config: RoughVolatilityConfig;
@@ -30,23 +41,15 @@ export class GatheralRoughVolatilityEngine {
         count++;
       }
       if (count > 0 && sumDiffSq > 0) {
-        const meanSqDiff = sumDiffSq / count;
         lags.push(Math.log(lag));
-        // m(2, delta) proportional to delta^(2H), so log m = 2H log delta + C
-        logMoments.push(Math.log(meanSqDiff));
+        logMoments.push(Math.log(sumDiffSq / count));
       }
     }
 
     if (lags.length < 2) {
-      return {
-        hurstExponent: 0.5,
-        isRoughRegime: false,
-        fitQuality: 0,
-        sampleCount: n,
-      };
+      return { hurstExponent: 0.5, isRoughRegime: false, fitQuality: 0, sampleCount: n };
     }
 
-    // Linear regression of logMoments on lags
     const k = lags.length;
     const meanX = lags.reduce((a, b) => a + b, 0) / k;
     const meanY = logMoments.reduce((a, b) => a + b, 0) / k;
@@ -64,9 +67,7 @@ export class GatheralRoughVolatilityEngine {
     }
 
     const slope = varX > 1e-9 ? covXY / varX : 1.0;
-    // Slope = 2H => H = slope / 2
-    const rawH = slope / 2;
-    const hurstExponent = Math.max(0.01, Math.min(0.99, Number(rawH.toFixed(4))));
+    const hurstExponent = Math.max(0.01, Math.min(0.99, Number((slope / 2).toFixed(4))));
 
     let fitQuality = 0;
     if (varX > 1e-9 && varY > 1e-9) {
@@ -74,11 +75,9 @@ export class GatheralRoughVolatilityEngine {
       fitQuality = Math.max(0, Math.min(1.0, Number((r * r).toFixed(4))));
     }
 
-    const isRoughRegime = hurstExponent < this.config.roughThreshold;
-
     return {
       hurstExponent,
-      isRoughRegime,
+      isRoughRegime: hurstExponent < this.config.roughThreshold,
       fitQuality,
       sampleCount: n,
     };

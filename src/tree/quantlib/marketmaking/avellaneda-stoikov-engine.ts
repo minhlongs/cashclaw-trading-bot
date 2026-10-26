@@ -1,4 +1,18 @@
-import type { AvellanedaStoikovParams, AvellanedaStoikovQuote } from './avellaneda-stoikov-types';
+export interface AvellanedaStoikovParams {
+  readonly gamma: number; // Inventory risk aversion (> 0)
+  readonly sigma: number; // Volatility (> 0)
+  readonly timeRemaining: number; // Remaining horizon T - t (> 0)
+  readonly kappa: number; // Order book liquidity intensity parameter (> 0)
+}
+
+export interface AvellanedaStoikovQuote {
+  readonly reservationPrice: number;
+  readonly optimalSpread: number;
+  readonly bidPrice: number;
+  readonly askPrice: number;
+  readonly bidOffset: number;
+  readonly askOffset: number;
+}
 
 export class AvellanedaStoikovEngine {
   calculateQuote(
@@ -12,11 +26,9 @@ export class AvellanedaStoikovEngine {
     const tRemaining = Math.max(0, params.timeRemaining);
     const kappa = Math.max(0.01, params.kappa);
 
-    // Reservation price (indifference price adjusting for inventory risk)
     const varianceTerm = gamma * sigma * sigma * tRemaining;
     const reservationPrice = s - inventory * varianceTerm;
 
-    // Optimal half-spread: (1 / gamma) * ln(1 + gamma / kappa) -> 1 / kappa as gamma -> 0
     const rawHalfSpread = gamma > 1e-5
       ? (1 / gamma) * Math.log(1 + gamma / kappa)
       : (1 / kappa) * (1 - (0.5 * gamma) / kappa);
