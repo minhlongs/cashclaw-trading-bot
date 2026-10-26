@@ -30,16 +30,17 @@ export default function MobileNav() {
   }));
 
   return (
-    <nav className="mobile-nav">
+    <nav className="mobile-nav" aria-label="Mobile Navigation">
       {navItems.map((item) => {
         const active = pathname.includes(item.href);
         return (
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? 'page' : undefined}
             className={`mobile-nav-item ${active ? 'text-profit' : 'text-tertiary'}`}
           >
-            <item.icon size={20} />
+            <item.icon size={20} aria-hidden="true" />
             <span className="mobile-nav-label">
               {t(item.path)}
             </span>

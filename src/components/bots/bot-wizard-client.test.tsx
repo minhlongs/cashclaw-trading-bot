@@ -48,6 +48,9 @@ describe('BotWizardClient', () => {
     render(<BotWizardClient />);
     expect(screen.getByText('1')).toBeInTheDocument();
     expect(screen.getByText('/ 4')).toBeInTheDocument();
+    const progress = screen.getByRole('progressbar', { name: 'Bot creation progress' });
+    expect(progress).toHaveAttribute('aria-valuenow', '1');
+    expect(progress).toHaveAttribute('aria-valuemax', '4');
   });
 
   it('next button is disabled when basic fields are empty', () => {

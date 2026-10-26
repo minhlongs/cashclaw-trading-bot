@@ -9,7 +9,14 @@ export interface BotWizardProgressBarProps {
 
 export function BotWizardProgressBar({ steps, stepNumber }: BotWizardProgressBarProps) {
   return (
-    <div className="wizard-header">
+    <div
+      className="wizard-header"
+      role="progressbar"
+      aria-label="Bot creation progress"
+      aria-valuemin={1}
+      aria-valuemax={steps.length}
+      aria-valuenow={stepNumber}
+    >
       {steps.map((s, i) => (
         <div
           key={s}
