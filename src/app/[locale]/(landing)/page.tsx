@@ -6,8 +6,21 @@ export function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
-  title: 'CashClaw — Auto-Profit Trading Bot | Crypto Trading Bot',
-  description: 'Automated crypto trading bot. Grid & Mean Reversion strategies. Runs 24/7 on Binance, Bybit, OKX.',
+  title: 'CashClaw Quant OS — Open-Core Institutional Algorithmic Trading Framework',
+  description:
+    'Open-core quantitative trading framework and Cloud SaaS. 28 QuantLib modules, causal Alpha Zoo evaluation, L2 microstructure telemetry, and ADR-001 non-custodial WebCrypto safety.',
+  openGraph: {
+    title: 'CashClaw Quant OS — Open-Core Institutional Algorithmic Trading',
+    description:
+      '28 QuantLib modules, Walk-Forward & FDR validation, L2 microstructure telemetry, and non-custodial WebCrypto enclave.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CashClaw Quant OS — Institutional Open-Core Quant Framework',
+    description:
+      'Causal alpha research, L2 microstructure telemetry, and 28 verified QuantLib modules.',
+  },
 };
 
 export default async function LandingPage() {

@@ -955,9 +955,9 @@ select.form-input {
 
 .pricing-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-4);
-  max-width: 600px;
+  max-width: 1120px;
   margin: 0 auto;
 }
 
@@ -1268,6 +1268,10 @@ select.form-input {
 }
 
 /* Landing responsive */
+@media (max-width: 1024px) {
+  .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 768px) {
   .features-grid { grid-template-columns: repeat(2, 1fr); }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }

@@ -6,8 +6,9 @@ export function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
-  title: 'Get Started — CashClaw',
-  description: 'Create your first trading bot in minutes.',
+  title: 'Initialize Workspace — CashClaw Quant OS',
+  description:
+    'Configure your first simulated quantitative trading bot and causal walk-forward backtest in minutes.',
 };
 
 export default async function CtaPage() {

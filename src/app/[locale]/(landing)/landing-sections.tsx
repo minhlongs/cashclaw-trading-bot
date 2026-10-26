@@ -3,6 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import type { Feature, Stat, Step, PricingPlan } from './landing-types';
+import { renderMarketingIcon } from './landing-icons';
 
 export { LandingNav, LandingHero, LandingCta, LandingFooter } from './landing-nav-hero';
 
@@ -14,7 +15,7 @@ export function LandingFeatures({ features }: { features: Feature[] }) {
       <div className="features-grid">
         {features.map((f) => (
           <div key={f.title} className="feature-card">
-            <span className="feature-icon">{f.icon}</span>
+            <span className="feature-icon">{renderMarketingIcon(f.icon, 28)}</span>
             <h3>{f.title}</h3>
             <p>{f.desc}</p>
           </div>
@@ -66,7 +67,7 @@ export function LandingPricing({ pricing }: { pricing: PricingPlan[] }) {
 
   return (
     <section className="landing-section">
-      <h2 className="section-title">{t('pricing.title')}</h2>
+      <h2 className="section-title text-center">{t('pricing.title')}</h2>
       <div className="pricing-grid">
         {pricing.map((p) => (
           <div key={p.name} className={`pricing-card ${p.popular ? 'pricing-popular' : ''}`}>

@@ -2,6 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { renderMarketingIcon } from '../landing-icons';
 
 interface StepItem {
   icon: string;
@@ -29,7 +30,7 @@ export default function CtaClient() {
 
       {/* Hero */}
       <section className="landing-hero">
-        <div className="hero-icon">{t('hero.icon')}</div>
+        <div className="hero-icon">{renderMarketingIcon(t('hero.icon'), 36)}</div>
         <h1 className="hero-title text-accent">{t('hero.title')}</h1>
         <p className="hero-subtitle">{t('hero.subtitle')}</p>
         <p className="hero-note">{t('hero.note')}</p>
@@ -44,7 +45,7 @@ export default function CtaClient() {
         <div className="steps-grid">
           {steps.map((s) => (
             <div key={s.title} className="step-card">
-              <span className="step-icon">{s.icon}</span>
+              <span className="step-icon">{renderMarketingIcon(s.icon, 24)}</span>
               <h3>{s.title}</h3>
               <p>{s.desc}</p>
             </div>
@@ -55,7 +56,7 @@ export default function CtaClient() {
       {/* Guarantee */}
       <section className="landing-section">
         <div className="guarantee-card">
-          <span className="guarantee-icon">{t('guarantee.icon')}</span>
+          <span className="guarantee-icon">{renderMarketingIcon(t('guarantee.icon'), 28)}</span>
           <h2 className="section-title">{t('guarantee.title')}</h2>
           <ul className="guarantee-list">
             {guarantees.map((g) => <li key={g}>{g}</li>)}
