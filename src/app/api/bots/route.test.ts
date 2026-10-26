@@ -109,5 +109,40 @@ describe('/api/bots route', () => {
       const premiumRes = await POST(premiumReq);
       expect(premiumRes.status).toBe(200);
     });
+
+    it('accepts volatility_dca config with quantExecution enabled', async () => {
+      mockCheckRateLimit.mockReturnValue({ allowed: true });
+      mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
+      mockBotCreateHandler.mockResolvedValue({ ok: true, data: { id: 'bot-vdca' } });
+
+      const req = new Request('http://localhost/api/bots', {
+        method: 'POST',
+        body: JSON.stringify({
+          id: 'bot-vdca',
+          name: 'Vol DCA Quant',
+          strategy: 'volatility_dca',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          capital: 2000,
+          config: {
+            priceDropStep: 1.5,
+            maxSteps: 6,
+            baseOrderSizePct: 10,
+            volatilityWindow: 20,
+            volBaseline: 50,
+            reboundTarget: 1.0,
+            quantExecution: 1,
+          },
+        }),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      expect(mockBotCreateHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          strategy: 'volatility_dca',
+          config: expect.objectContaining({ quantExecution: 1 }),
+        }),
+      );
+    });
   });
 });

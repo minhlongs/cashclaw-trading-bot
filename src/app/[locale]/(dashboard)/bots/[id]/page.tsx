@@ -8,7 +8,7 @@ export function generateStaticParams() {
 export default async function BotDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   return (
-    <Suspense fallback={<div className="main-content"><div className="card text-center p-8"><p>Loading...</p></div></div>}>
+    <Suspense fallback={<div className="card text-center p-8"><p>Loading...</p></div>}>
       <BotDetailPageClient params={Promise.resolve(resolvedParams)} />
     </Suspense>
   );

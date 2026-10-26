@@ -25,7 +25,7 @@ export const MEANREV_DEFAULTS: Record<string, number> = {
 
 export const VOLATILITY_DCA_DEFAULTS: Record<string, number> = {
   priceDropStep: 1.5, maxSteps: 6, baseOrderSizePct: 10,
-  volatilityWindow: 20, volBaseline: 50, reboundTarget: 1.0,
+  volatilityWindow: 20, volBaseline: 50, reboundTarget: 1.0, quantExecution: 0,
 };
 
 export const GRID_FIELDS: FieldDef[] = [
@@ -53,6 +53,7 @@ export const VOLATILITY_DCA_FIELDS: FieldDef[] = [
   { key: 'volatilityWindow', label: 'Volatility Window (bars)', step: '1' },
   { key: 'volBaseline', label: 'Vol Baseline (% annualized)', step: '1' },
   { key: 'reboundTarget', label: 'Rebound Target (%)', step: '0.1' },
+  { key: 'quantExecution', label: 'QuantLib Execution', type: 'checkbox' },
 ];
 
 export const STRATEGY_KEY_MAP: Record<string, string> = {
@@ -69,7 +70,9 @@ export const FIELD_KEY_MAP: Record<string, string> = {
   bb_period: 'fields.bbPeriod',
   bb_std: 'fields.bbStd',
   rsi_period: 'fields.rsiPeriod',
+  rsi_buy: 'fields.rsiBuy',
   rsi_buy_threshold: 'fields.rsiBuy',
+  rsi_sell: 'fields.rsiSell',
   rsi_sell_threshold: 'fields.rsiSell',
   volume_multiplier: 'fields.volumeMultiplier',
   position_size_pct: 'fields.positionSizePct',
@@ -79,4 +82,5 @@ export const FIELD_KEY_MAP: Record<string, string> = {
   volatilityWindow: 'fields.volatilityWindow',
   volBaseline: 'fields.volBaseline',
   reboundTarget: 'fields.reboundTarget',
+  quantExecution: 'fields.quantExecution',
 };

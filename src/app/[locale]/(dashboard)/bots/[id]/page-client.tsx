@@ -52,29 +52,25 @@ export default function BotDetailPageClient({ params }: { params: Promise<{ id: 
 
   if (loading) {
     return (
-      <div className="main-content">
-        <div className="card empty-state">
-          <p className="text-secondary">{common('loading')}</p>
-        </div>
+      <div className="card empty-state">
+        <p className="text-secondary">{common('loading')}</p>
       </div>
     );
   }
 
   if (!bot) {
     return (
-      <div className="main-content">
-        <div className="card empty-state">
-          <h2 className="text-secondary">{t('notFound')}</h2>
-          <p className="text-tertiary mt-2">
-            {t('notFoundWithId', { id })}
-          </p>
-        </div>
+      <div className="card empty-state">
+        <h2 className="text-secondary">{t('notFound')}</h2>
+        <p className="text-tertiary mt-2">
+          {t('notFoundWithId', { id })}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="main-content">
+    <div>
       <BotDetailClient bot={bot} trades={trades} />
       <BotDetailEventsTable
         events={tradeEvents}

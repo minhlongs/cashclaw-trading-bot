@@ -61,6 +61,18 @@ describe('ReviewStep', () => {
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
+  it('shows volatility_dca config fields and QuantLib Execution status', () => {
+    const form = makeForm({
+      strategy: 'volatility_dca',
+      config: { priceDropStep: 1.5, maxSteps: 6, quantExecution: 1 },
+    });
+    render(<ReviewStep {...defaultProps} form={form} />);
+    expect(screen.getByText('Price Drop Step (%)')).toBeInTheDocument();
+    expect(screen.getByText('Max DCA Steps')).toBeInTheDocument();
+    expect(screen.getByText('QuantLib Execution (Almgren-Chriss)')).toBeInTheDocument();
+    expect(screen.getByText('Enabled')).toBeInTheDocument();
+  });
+
   it('calls onSubmit when create button clicked', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();

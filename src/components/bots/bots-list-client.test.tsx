@@ -73,7 +73,7 @@ describe('BotsListClient', () => {
     render(<BotsListClient />);
     await waitFor(() => expect(screen.getByText('Failed to fetch bots')).toBeInTheDocument());
 
-    const retryBtn = screen.getByRole('button', { name: /thử lại|try again/i });
+    const retryBtn = screen.getByRole('button', { name: 'common.retry' });
     await userEvent.click(retryBtn);
     expect(reloadSpy).toHaveBeenCalled();
   });
@@ -96,6 +96,10 @@ describe('BotsListClient', () => {
     await waitFor(() => expect(screen.getByText('Grid BTC')).toBeInTheDocument());
 
     const select = screen.getByRole('combobox');
+    await user.selectOptions(select, 'live_running');
+    expect(screen.getByText('Grid BTC')).toBeInTheDocument();
+    expect(screen.queryByText('Mean ETH')).not.toBeInTheDocument();
+
     await user.selectOptions(select, 'paused');
     expect(screen.getByText('Mean ETH')).toBeInTheDocument();
     expect(screen.queryByText('Grid BTC')).not.toBeInTheDocument();

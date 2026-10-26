@@ -12,6 +12,7 @@ import { CockpitHudSection } from './cockpit-hud-section';
 import { V7MetricsCard } from './v7-metrics-card';
 import { DashboardBotList } from './dashboard-bot-list';
 import { DashboardTopKpiCards, DashboardPerformanceGrid } from './dashboard-kpi-cards';
+import { DashboardViewTabs, type DashboardViewMode } from './dashboard-view-tabs';
 import { mapBotsPayloadToDashboardData, type BotCardDataApi, type DashboardData } from './dashboard-data-mapper';
 
 export default function DashboardClient() {
@@ -19,19 +20,20 @@ export default function DashboardClient() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<DashboardViewMode>('ALL');
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
         setLoading(true); setError(null);
-        const response = await fetch('/api/bots', { method: 'GET', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, cache: 'no-store' });
-        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-        const body = (await response.json()) as { ok: boolean; data?: BotCardDataApi[] | null; error?: string | null };
+        const res = await fetch('/api/bots', { method: 'GET', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, cache: 'no-store' });
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        const body = (await res.json()) as { ok: boolean; data?: BotCardDataApi[] | null; error?: string | null };
         if (!body.ok || !Array.isArray(body.data)) throw new Error(body.error ?? 'Unable to load bots.');
         if (!cancelled) setData(mapBotsPayloadToDashboardData(body.data));
-      } catch (fetchError) {
-        if (!cancelled) setError(fetchError instanceof Error ? fetchError.message : 'Unknown dashboard error');
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Unknown dashboard error');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -48,9 +50,7 @@ export default function DashboardClient() {
           <Loader2 size={18} className="animate-spin text-profit" />
           <p className="text-secondary">{t('loading') ?? 'Loading dashboard...'}</p>
         </div>
-        <div className="kpi-grid mt-4">
-          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton-card" />)}
-        </div>
+        <div className="kpi-grid mt-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton-card" />)}</div>
       </section>
     );
   }
@@ -61,32 +61,29 @@ export default function DashboardClient() {
         <header className="section-header"><div><h1>{t('title')}</h1><p className="meta">{t('subtitle')}</p></div></header>
         <div className="panel" role="alert">
           <p className="text-loss">{error ?? t('failed') ?? 'Failed to load dashboard data.'}</p>
-          <button className="btn btn-primary mt-4" onClick={() => { setError(null); setLoading(true); setData(null); }}>
-            {t('retry') ?? 'Retry'}
-          </button>
+          <button className="btn btn-primary mt-4" onClick={() => { setError(null); setLoading(true); setData(null); }}>{t('retry') ?? 'Retry'}</button>
         </div>
       </section>
     );
   }
 
   const { kpis, bots } = data;
+  const showTrading = viewMode === 'ALL' || viewMode === 'TRADING';
+  const showTelemetry = viewMode === 'ALL' || viewMode === 'TELEMETRY';
 
   return (
     <section className="dashboard">
       <header className="section-header">
         <div><h1>{t('title')}</h1><p className="meta">{t('subtitle')}</p></div>
-        <Link href={`/${locale}/bots/new`} className="btn btn-primary"><Plus className="btn-icon" />{t('newBot')}</Link>
+        <div className="flex items-center gap-3">
+          <DashboardViewTabs mode={viewMode} onChange={setViewMode} />
+          <Link href={`/${locale}/bots/new`} className="btn btn-primary"><Plus className="btn-icon" />{t('newBot')}</Link>
+        </div>
       </header>
-
       <DashboardTopKpiCards kpis={kpis} bots={bots} />
-      <TerminalQuickActions bots={bots} />
-      <MarketWatchCard />
-      <CockpitHudSection />
-      <V7MetricsCard />
-      <DeliberationSignalCard />
-      <StrategyVisualizerCard bots={bots} />
-      <DashboardBotList bots={bots} />
-      <DashboardPerformanceGrid kpis={kpis} bots={bots} />
+      <div className={showTrading ? '' : 'hidden'}><TerminalQuickActions bots={bots} /><MarketWatchCard /></div>
+      <div className={showTelemetry ? '' : 'hidden'}><CockpitHudSection /><V7MetricsCard /><DeliberationSignalCard /></div>
+      <div className={showTrading ? '' : 'hidden'}><StrategyVisualizerCard bots={bots} /><DashboardBotList bots={bots} /><DashboardPerformanceGrid kpis={kpis} bots={bots} /></div>
     </section>
   );
 }

@@ -6,7 +6,7 @@ export type CoerceArgs = {
   max: number;
 };
 
-export function normalizeWizardConfig(raw?: Record<string, number>): Record<string, number> {
+export function normalizeWizardConfig(raw?: Record<string, number | boolean>): Record<string, number> {
   const aliases: Record<string, string> = {
     spacing_pct: 'gridSpacingPct',
     spacingPct: 'gridSpacingPct',
@@ -52,12 +52,15 @@ export function normalizeWizardConfig(raw?: Record<string, number>): Record<stri
     volBaseline: 'volBaseline',
     rebound_target: 'reboundTarget',
     reboundTarget: 'reboundTarget',
+    quant_execution: 'quantExecution',
+    quantExecution: 'quantExecution',
   };
   const out: Record<string, number> = {};
   for (const src in raw ?? {}) {
     const normalized = src.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const name = aliases[normalized] ?? aliases[src] ?? src;
-    out[name] = (raw as Record<string, number>)[src];
+    const val = (raw as Record<string, number | boolean>)[src];
+    out[name] = typeof val === 'boolean' ? (val ? 1 : 0) : val;
   }
   return out;
 }

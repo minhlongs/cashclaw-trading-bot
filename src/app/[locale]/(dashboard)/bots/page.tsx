@@ -10,9 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function BotsPage() {
-  return (
-    <div className="main-content">
-      <BotsListClient />
-    </div>
-  );
+  return <BotsListClient />;
 }

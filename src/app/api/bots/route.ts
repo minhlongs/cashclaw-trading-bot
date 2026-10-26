@@ -1,8 +1,3 @@
-// GET /api/bots — list all bots (user-facing, session-cookie auth via middleware)
-// POST /api/bots — create a new bot (user-facing, session-cookie auth via middleware)
-//
-// This is the canonical /api/bots for end users.
-// Operator/CLI access via Bearer token lives in src/worker.ts → /internal/api/bots.
 import { NextResponse } from 'next/server';
 import { botListHandler, botCreateHandler } from '@/forest/api/routes';
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
@@ -26,6 +21,7 @@ const createBotConfigSchema = z.object({
   volatilityWindow: z.number().int().min(2).max(500).optional(),
   volBaseline: z.number().positive().max(500).optional(),
   reboundTarget: z.number().positive().max(100).optional(),
+  quantExecution: z.union([z.boolean(), z.number()]).optional(),
 });
 
 const CreateBotSchema = z.object({
@@ -80,10 +76,7 @@ export async function POST(req: Request) {
     requestedWalkForwardWindows: 1,
   });
   if (!quotaCheck.ok) {
-    return NextResponse.json(
-      { ok: false, error: quotaCheck.error },
-      { status: 403 }
-    );
+    return NextResponse.json({ ok: false, error: quotaCheck.error }, { status: 403 });
   }
 
   const result = await botCreateHandler(parsed.data);

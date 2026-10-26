@@ -26,7 +26,18 @@
     "hrp-allocator": "HRP Risk Parity",
     "martingale-optimal-transport": "Dupire MOT Surface",
     "rough-path-signatures": "Rough Path Signatures",
-    "style-guide": "Style Guide"
+    "style-guide": "Style Guide",
+    "billing": "SaaS Billing",
+    "strategies/volatility-dca": "Volatility DCA",
+    "groups": {
+      "trading": "Trading Core",
+      "research": "Alpha Research & Gates",
+      "quantlib": "QuantLib & Microstructure",
+      "system": "System & Governance"
+    },
+    "paperOnlyBadge": "ADR-001 PAPER ONLY",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -112,12 +123,19 @@
     },
     "v7Metrics": {
       "title": "V7 Multi-Pillar Quantitative HUD"
+    },
+    "viewMode": {
+      "label": "Dashboard view modes",
+      "all": "All Overview",
+      "trading": "Live Trading",
+      "telemetry": "Quant Telemetry"
     }
   },
   "bots": {
     "title": "Trading Bots",
     "listTitle": "Bot List",
     "createNew": "Create New Bot",
+    "filterAll": "All Statuses",
     "status": {
       "draft": "Draft",
       "paper_test": "Paper Test",
@@ -215,8 +233,12 @@
       "baseOrderSizePct": "Base Order Size (%)",
       "volatilityWindow": "Volatility Window (bars)",
       "volBaseline": "Vol Baseline (% annualized)",
-      "reboundTarget": "Rebound Target (%)"
+      "reboundTarget": "Rebound Target (%)",
+      "quantExecution": "QuantLib Execution (Almgren-Chriss)",
+      "quantExecutionDesc": "Slice DCA entries by realized volatility & liquidity"
     },
+    "enabled": "Enabled",
+    "disabled": "Disabled",
     "review": {
       "name": "Name",
       "pair": "Pair",

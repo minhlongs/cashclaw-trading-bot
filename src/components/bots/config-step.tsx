@@ -25,6 +25,23 @@ export function ConfigStep({ form, updateConfig, strategy, onNext, onPrev }: Con
       {fields.map((field) => {
         const key = FIELD_KEY_MAP[field.key] ?? field.key;
         const inputId = `config-${field.key}`;
+        if (field.type === 'checkbox') {
+          const checked = Boolean(form.config[field.key]);
+          return (
+            <div className="form-group" key={field.key}>
+              <label className="flex items-center gap-2 cursor-pointer" htmlFor={inputId}>
+                <input
+                  id={inputId}
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => updateConfig(field.key, e.target.checked ? 1 : 0)}
+                />
+                <span className="form-label mb-0">{t(key)}</span>
+              </label>
+              <p className="text-xs text-tertiary">{t('fields.quantExecutionDesc')}</p>
+            </div>
+          );
+        }
         return (
           <div className="form-group" key={field.key}>
             <label className="form-label" htmlFor={inputId}>{t(key)}</label>
