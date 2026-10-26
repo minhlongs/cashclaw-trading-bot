@@ -6,9 +6,12 @@ import Link from 'next/link';
 import type { BotCardData } from '@/forest/dashboard/actions';
 
 const statusStyles: Record<string, string> = {
+  live_running: 'badge-running',
+  paper_test: 'badge-profit',
   running: 'badge-success',
   active: 'badge-success',
   paused: 'badge-warning',
+  draft: 'badge-neutral',
   stopped: 'badge-neutral',
   error: 'badge-error',
 };

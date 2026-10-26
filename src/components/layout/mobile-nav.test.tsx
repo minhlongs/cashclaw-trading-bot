@@ -61,7 +61,9 @@ describe('MobileNav', () => {
     const settings = screen.getByText('nav.settings').closest('a');
     const dashboard = screen.getByText('nav.dashboard').closest('a');
     expect(settings).toHaveClass('text-profit');
+    expect(settings).toHaveAttribute('aria-current', 'page');
     expect(dashboard).toHaveClass('text-tertiary');
+    expect(dashboard).not.toHaveAttribute('aria-current');
   });
 
   it('highlights the English route when locale is en', () => {
