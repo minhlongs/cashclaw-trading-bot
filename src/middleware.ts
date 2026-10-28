@@ -9,10 +9,10 @@ import { createServerClient } from '@/lib/db/client';
 const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
 
 // API route prefixes that require auth for mutating requests.
-const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha'];
+const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops'];
 
 // GET routes that contain sensitive data — bot capital, PnL, config, settings.
-const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha'];
+const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops'];
 
 // Auth routes are always public (login, logout, me).
 const PUBLIC_API_PREFIXES = ['/api/auth'];
@@ -49,9 +49,9 @@ export async function middleware(req: NextRequest) {
   const db = createServerClient();
   if (db) {
     try {
-      const now = Date.now();
+      const now = Math.floor(Date.now() / 1000);
       const { results } = await db
-        .prepare('SELECT user_id, expires_at FROM user_sessions WHERE session_id = ?')
+        .prepare('SELECT user_id, expires_at FROM user_sessions WHERE id = ?')
         .bind(sessionId)
         .all<{ user_id: string; expires_at: number }>();
 

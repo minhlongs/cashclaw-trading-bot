@@ -28,11 +28,13 @@
     "rough-path-signatures": "Chữ Ký Đường Nhám Lévy",
     "style-guide": "Hệ Thống Thiết Kế",
     "billing": "Gói Cước & Tín Dụng",
+    "operations": "Vận Hành OPC",
     "strategies/volatility-dca": "DCA Theo Biến Động",
     "groups": {
       "trading": "Thực Thi Giao Dịch",
       "research": "Nghiên Cứu & Cổng Kiểm Định",
       "quantlib": "Định Lượng & Vi Cấu Trúc",
+      "operations": "Vận Hành OPC",
       "system": "Hệ Thống & Quản Trị"
     },
     "paperOnlyBadge": "ADR-001 PAPER ONLY",

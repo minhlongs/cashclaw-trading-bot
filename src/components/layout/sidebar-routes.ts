@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Bot, Settings, BookOpen,
   Activity, Zap, Filter, Cpu, MessageSquare, GitBranch, BarChart3,
   Grid, Layers, Database, KeyRound, Scale, Flame, Palette, Compass, Waypoints,
-  CreditCard, TrendingUp,
+  CreditCard, TrendingUp, BriefcaseBusiness,
 } from 'lucide-react';
 
 export interface NavRoute {
@@ -12,7 +12,7 @@ export interface NavRoute {
 }
 
 export interface NavGroup {
-  id: 'trading' | 'research' | 'quantlib' | 'system';
+  id: 'trading' | 'research' | 'quantlib' | 'operations' | 'system';
   routes: NavRoute[];
 }
 
@@ -54,6 +54,12 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: 'hrp-allocator', icon: Scale },
       { path: 'martingale-optimal-transport', icon: Compass },
       { path: 'rough-path-signatures', icon: Waypoints },
+    ],
+  },
+  {
+    id: 'operations',
+    routes: [
+      { path: 'operations', icon: BriefcaseBusiness },
     ],
   },
   {

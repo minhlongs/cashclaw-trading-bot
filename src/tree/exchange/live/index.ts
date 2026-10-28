@@ -14,16 +14,23 @@ export class LiveExchange implements ExchangeAdapter {
   private client: ReturnType<typeof createCCXTClient>;
   private ks: KillswitchCallbacks;
   private pnl = 0; private maxLoss: number; private count = 0; private maxRate: number;
+  private liveExecutionEnabled: boolean;
+  private riskConfigurationValid: boolean;
+  private preTradeAuthorizeAndAudit?: LiveExchangeOptions['preTradeAuthorizeAndAudit'];
   constructor(id: ExchangeId, cfg: ExchangeConfig, ks: KillswitchCallbacks, o: LiveExchangeOptions = {}) {
     this.id = id; this.name = id; this.ks = ks;
     this.client = createCCXTClient(id, { apiKey: cfg.apiKey, apiSecret: cfg.apiSecret, sandbox: cfg.sandbox });
     this.maxLoss = (o.maxDailyLossPct ?? 10) / 100; this.maxRate = o.maxOrdersPerMinute ?? 50;
+    this.liveExecutionEnabled = o.liveExecutionEnabled ?? false;
+    this.riskConfigurationValid = Number.isFinite(o.maxDailyLossPct) && (o.maxDailyLossPct ?? 0) > 0 && (o.maxDailyLossPct ?? 0) <= 100
+      && Number.isInteger(o.maxOrdersPerMinute) && (o.maxOrdersPerMinute ?? 0) > 0;
+    this.preTradeAuthorizeAndAudit = o.preTradeAuthorizeAndAudit;
   }
   fetchTicker(s: string): Promise<Ticker> { return fetchLiveTicker(this.id, this.client, s); }
   fetchOrderBook(s: string, d = 20): Promise<OrderBook> { return fetchLiveOrderBook(this.id, this.client, s, d); }
   fetchBalances(): Promise<Balance[]> { return fetchLiveBalances(this.id, this.client); }
   async placeOrder(req: OrderRequest): Promise<OrderResult> {
-    const { result, newOrderCount } = await executeLiveOrder({ id: this.id, client: this.client, killswitch: this.ks, dailyPnl: this.pnl, maxDailyLoss: this.maxLoss, orderCount: this.count, maxOrdersPerMinute: this.maxRate }, req);
+    const { result, newOrderCount } = await executeLiveOrder({ id: this.id, client: this.client, killswitch: this.ks, dailyPnl: this.pnl, maxDailyLoss: this.maxLoss, orderCount: this.count, maxOrdersPerMinute: this.maxRate, liveExecutionEnabled: this.liveExecutionEnabled, riskConfigurationValid: this.riskConfigurationValid, preTradeAuthorizeAndAudit: this.preTradeAuthorizeAndAudit }, req);
     this.count = newOrderCount; return result;
   }
   cancelOrder(oid: string, s: string): Promise<boolean> { return cancelLiveOrder({ id: this.id, client: this.client, killswitch: this.ks }, oid, s); }

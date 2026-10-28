@@ -41,7 +41,7 @@ describe('middleware', () => {
   /* ── Mutating requests ─────────────────────────────────────── */
 
   it('allows POST with valid session on protected route', async () => {
-    mockDbSession('u1', Date.now() + 86400000);
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
     const res = await middleware(makeReq('POST', '/api/bots', { session_id: 'valid-session' }));
     expect(res.status).toBe(200);
   });
@@ -70,7 +70,7 @@ describe('middleware', () => {
   });
 
   it('allows PUT with valid session', async () => {
-    mockDbSession('u1', Date.now() + 86400000);
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
     const res = await middleware(makeReq('PUT', '/api/settings', { session_id: 'ok' }));
     expect(res.status).toBe(200);
   });
@@ -81,7 +81,7 @@ describe('middleware', () => {
   });
 
   it('allows DELETE with valid session', async () => {
-    mockDbSession('u1', Date.now() + 86400000);
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
     const res = await middleware(makeReq('DELETE', '/api/bots/bot-1', { session_id: 'ok' }));
     expect(res.status).toBe(200);
   });
@@ -92,7 +92,7 @@ describe('middleware', () => {
   });
 
   it('allows PATCH with valid session', async () => {
-    mockDbSession('u1', Date.now() + 86400000);
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
     const res = await middleware(makeReq('PATCH', '/api/bots/bot-1', { session_id: 'ok' }));
     expect(res.status).toBe(200);
   });
@@ -110,7 +110,7 @@ describe('middleware', () => {
   });
 
   it('allows GET /api/bots with valid session', async () => {
-    mockDbSession('u1', Date.now() + 86400000);
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
     const res = await middleware(makeReq('GET', '/api/bots', { session_id: 'ok' }));
     expect(res.status).toBe(200);
   });
@@ -121,7 +121,7 @@ describe('middleware', () => {
   });
 
   it('allows GET /api/bots/[id] with valid session', async () => {
-    mockDbSession('u1', Date.now() + 86400000);
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
     const res = await middleware(makeReq('GET', '/api/bots/bot-1', { session_id: 'ok' }));
     expect(res.status).toBe(200);
   });
@@ -132,9 +132,21 @@ describe('middleware', () => {
   });
 
   it('allows GET /api/settings with valid session', async () => {
-    mockDbSession('u1', Date.now() + 86400000);
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
     const res = await middleware(makeReq('GET', '/api/settings', { session_id: 'ok' }));
     expect(res.status).toBe(200);
+  });
+
+  it('blocks operations reads without a session', async () => {
+    const res = await middleware(makeReq('GET', '/api/ops/work-items'));
+    expect(res.status).toBe(401);
+  });
+
+  it('allows operations reads and writes only with a valid session', async () => {
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
+    expect((await middleware(makeReq('GET', '/api/ops/work-items', { session_id: 'ok' }))).status).toBe(200);
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
+    expect((await middleware(makeReq('POST', '/api/ops/work-items', { session_id: 'ok' }))).status).toBe(200);
   });
 
   /* ── Public routes (no auth needed) ────────────────────────── */
@@ -187,7 +199,7 @@ describe('middleware', () => {
   });
 
   it('strips client-supplied x-user-id header', async () => {
-    mockDbSession('server-user', Date.now() + 86400000);
+    mockDbSession('server-user', Math.floor(Date.now() / 1000) + 86400);
     const req = makeReq('POST', '/api/bots', { session_id: 'valid-session' }, { 'x-user-id': 'spoofed-user' });
     const res = await middleware(req);
     expect(res.status).toBe(200);
