@@ -57,6 +57,7 @@ describe('Sidebar', () => {
     { label: 'nav.hrp-allocator', href: '/vi/hrp-allocator' },
     { label: 'nav.martingale-optimal-transport', href: '/vi/martingale-optimal-transport' },
     { label: 'nav.rough-path-signatures', href: '/vi/rough-path-signatures' },
+    { label: 'nav.operations', href: '/vi/operations' },
     { label: 'nav.sovereign-enclave', href: '/vi/sovereign-enclave' },
     { label: 'nav.billing', href: '/vi/billing' },
     { label: 'nav.style-guide', href: '/vi/style-guide' },
@@ -67,11 +68,12 @@ describe('Sidebar', () => {
     'nav.groups.trading',
     'nav.groups.research',
     'nav.groups.quantlib',
+    'nav.groups.operations',
     'nav.groups.system',
   ];
 
-  it('renders all 28 nav items across 4 semantic groups', () => {
-    expect(NAV_ROUTES).toHaveLength(28);
+  it('renders all 29 nav items across 5 semantic groups', () => {
+    expect(NAV_ROUTES).toHaveLength(29);
     render(<Sidebar />);
 
     for (const groupLabel of groupLabels) {

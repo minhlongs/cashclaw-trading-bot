@@ -46,6 +46,8 @@ describe('LiveExchange', () => {
     ex = new LiveExchange('binance', { apiKey: 'k', apiSecret: 's', testnet: false, sandbox: false, rateLimitMs: 1000 }, cb, {
       maxDailyLossPct: 10,
       maxOrdersPerMinute: 3,
+      liveExecutionEnabled: true,
+      preTradeAuthorizeAndAudit: async () => ({ approved: true }),
     });
   });
 
@@ -87,7 +89,31 @@ describe('LiveExchange', () => {
   });
 
   // --- placeOrder ---
-  it('places order and calls onOrderPlaced', async () => {
+  it('fails closed by default even if the legacy kill-switch callback says enabled', async () => {
+    const e = new LiveExchange('binance', EMPTY_CFG, cb);
+    await expect(e.placeOrder(BUY)).rejects.toThrow('Live trading is disabled (fail-closed)');
+    expect(OK_CLIENT.placeOrder).not.toHaveBeenCalled();
+  });
+
+  it('blocks when explicit risk limits are missing', async () => {
+    const gate = vi.fn().mockResolvedValue({ approved: true });
+    const e = new LiveExchange('binance', EMPTY_CFG, cb, { liveExecutionEnabled: true, preTradeAuthorizeAndAudit: gate });
+    await expect(e.placeOrder(BUY)).rejects.toThrow('explicit valid loss and order limits are required');
+    expect(gate).not.toHaveBeenCalled();
+  });
+
+  it('blocks when the pre-trade approval/audit gate rejects the order', async () => {
+    const { createCCXTClient } = await import('../ccxt/client');
+    const placeOrder = vi.fn();
+    vi.mocked(createCCXTClient).mockReturnValueOnce({ ...OK_CLIENT, placeOrder } as never);
+    const gate = vi.fn().mockResolvedValue({ approved: false, reason: 'stale market data' });
+    const e = new LiveExchange('binance', EMPTY_CFG, cb, { maxDailyLossPct: 5, maxOrdersPerMinute: 10, liveExecutionEnabled: true, preTradeAuthorizeAndAudit: gate });
+    await expect(e.placeOrder(BUY)).rejects.toThrow('Live order blocked: stale market data');
+    expect(gate).toHaveBeenCalledWith(BUY);
+    expect(placeOrder).not.toHaveBeenCalled();
+  });
+
+  it('places order and calls onOrderPlaced after explicit gate approval', async () => {
     const r = await ex.placeOrder(BUY);
     expect(r.id).toBe('1');
     expect(cb.onOrderPlaced).toHaveBeenCalled();
@@ -114,7 +140,7 @@ describe('LiveExchange', () => {
       ...OK_CLIENT,
       placeOrder: vi.fn().mockRejectedValue(new Error('exchange down')),
     } as never);
-    const e = new LiveExchange('binance', EMPTY_CFG, cb);
+    const e = new LiveExchange('binance', EMPTY_CFG, cb, { maxDailyLossPct: 5, maxOrdersPerMinute: 10, liveExecutionEnabled: true, preTradeAuthorizeAndAudit: async () => ({ approved: true }) });
     await expect(e.placeOrder(BUY)).rejects.toThrow('exchange down');
     expect(cb.onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'exchange down' }), 'placeOrder');
   });
@@ -165,12 +191,9 @@ describe('LiveExchange', () => {
     );
   });
 
-  it('fires onError for positive pnl exceeding threshold', () => {
+  it('does not treat positive pnl as a daily loss breach', () => {
     ex.updateDailyPnl(0.5);
-    expect(cb.onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: expect.stringContaining('Daily loss limit breached') }),
-      'dailyLossCheck',
-    );
+    expect(cb.onError).not.toHaveBeenCalled();
   });
 
   // --- tick ---

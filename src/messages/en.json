@@ -28,11 +28,13 @@
     "rough-path-signatures": "Rough Path Signatures",
     "style-guide": "Style Guide",
     "billing": "SaaS Billing",
+    "operations": "OPC Operations",
     "strategies/volatility-dca": "Volatility DCA",
     "groups": {
       "trading": "Trading Core",
       "research": "Alpha Research & Gates",
       "quantlib": "QuantLib & Microstructure",
+      "operations": "OPC Operations",
       "system": "System & Governance"
     },
     "paperOnlyBadge": "ADR-001 PAPER ONLY",
