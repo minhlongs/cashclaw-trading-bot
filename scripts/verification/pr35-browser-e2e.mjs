@@ -122,7 +122,7 @@ function run(command, args, name, env = process.env, expectedPassed) {
       const log = cleanString(`${stdout}\n${stderr}`, readTestSecret());
       writeFileSync(join(raw, `${name}.log`), log);
       process.stdout.write(log.slice(-12_000));
-      if (code !== 0) rejectRun(new Error(`${name} exited with status ${code}`));
+      if (code !== 0) rejectRun(new Error(`${name} exited with status ${code}. Sanitized output tail:\n${log.slice(-12_000)}`));
       else if (expectedPassed !== undefined) {
         try { assertPlaywrightSummary(`${stdout}\n${stderr}`, expectedPassed); resolveRun(); }
         catch (error) { rejectRun(new Error(`${name} did not run its full required set: ${String(error)}`)); }
@@ -282,5 +282,11 @@ try {
   try { await sanitizeTraces(); }
   catch (error) { failure ??= error; }
 }
-if (failure) throw failure;
+if (failure) {
+  const message = cleanString(failure instanceof Error ? failure.message : String(failure), readTestSecret())
+    .replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, ' ')
+    .replace(/\s+/g, ' ').slice(-4000);
+  console.log(`::error title=PR35 verification failure::${message}`);
+  throw failure;
+}
 console.log(`PASS sanitized browser artifacts written under ${artifactDir}`);
