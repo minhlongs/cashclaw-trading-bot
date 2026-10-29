@@ -119,13 +119,25 @@ test('two Vietnamese A tabs surface a real concurrent status conflict', async ({
   ]);
   expect([firstResponse.status(), secondResponse.status()].sort()).toEqual([200, 409]);
   const conflictPage = firstResponse.status() === 409 ? first : second;
-  await expect(conflictPage.getByRole('alert')).toContainText('đã được thay đổi ở nơi khác');
+  await expect(conflictPage.locator('.ops-error')).toContainText('đã được thay đổi ở nơi khác');
   await first.close();
   await second.close();
 });
 
-test('English user B sees isolation, loading/empty states, validation/error handling and usable mobile layout', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+test('English user B sees isolation, loading/empty states, validation/error handling and usable mobile layout', async ({ browser }) => {
+  const ownerPage = await browser.newPage();
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await login(ownerPage, 'vi', accountA);
+  await ownerPage.goto('/vi/operations');
+  const ownerTitle = `PR35 E2E isolation ${runId}`;
+  await ownerPage.getByLabel('Tiêu đề').fill(ownerTitle);
+  const [ownerCreateResponse] = await Promise.all([
+    ownerPage.waitForResponse((response) => response.url().endsWith('/api/ops/work-items') && response.request().method() === 'POST'),
+    ownerPage.getByRole('button', { name: 'Lưu công việc' }).click(),
+  ]);
+  expect(ownerCreateResponse.status()).toBe(201);
+  const ownerItem = (await ownerCreateResponse.json() as { item: { id: string; title: string } }).item;
+  await ownerPage.close();
   await login(page, 'en', accountB);
   let releaseList!: () => void;
   let signalListRequest!: () => void;
@@ -144,9 +156,8 @@ test('English user B sees isolation, loading/empty states, validation/error hand
   await expect(page.getByRole('heading', { name: 'OPC Operations' })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 
-  const state = JSON.parse(readFileSync(statePath, 'utf8')) as SavedState;
   const ownItems = await page.evaluate(async () => (await fetch('/api/ops/work-items')).json() as Promise<{ items: Array<{ id: string; title: string }> }>);
-  expect(ownItems.items.some((item) => item.id === state.itemId || item.title === state.title)).toBe(false);
+  expect(ownItems.items.some((item) => item.id === ownerItem.id || item.title === ownerItem.title)).toBe(false);
 
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeFocused();
@@ -158,7 +169,7 @@ test('English user B sees isolation, loading/empty states, validation/error hand
   await page.getByLabel('Title', { exact: true }).fill('Invalid amount test');
   await page.getByLabel('Amount (minor currency units, optional)').fill('-2');
   await page.getByRole('button', { name: 'Save record' }).click();
-  await expect(page.getByRole('alert')).toHaveText('Check the title, amount, and due date, then try again.');
+  await expect(page.locator('.ops-error')).toHaveText('Check the title, amount, and due date, then try again.');
   await expect(page.getByText('Invalid amount test')).toHaveCount(0);
 
   await page.unroute('**/api/ops/work-items');
@@ -169,7 +180,7 @@ test('English user B sees isolation, loading/empty states, validation/error hand
   });
   await page.getByLabel('Amount (minor currency units, optional)').fill('0');
   await page.getByRole('button', { name: 'Save record' }).click();
-  await expect(page.getByRole('alert')).toHaveText('Could not complete request. Check sign-in and database status.');
+  await expect(page.locator('.ops-error')).toHaveText('Could not complete request. Check sign-in and database status.');
   await expect(page.getByRole('status')).toContainText('BLOCKED');
 
   const dimensions = await page.evaluate(() => ({ width: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth }));
