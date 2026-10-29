@@ -2,6 +2,7 @@
 // Eliminates duplicated header/query/entitlement-store resolution across API routes.
 
 import { defaultSaasEntitlementStore } from '../billing/saas-entitlement-store';
+import { createServerClient } from '@/lib/db/client';
 import { SaasTierSchema, type SaasTier } from './tenant-policy';
 
 export interface WorkspaceTierResolutionOptions {
@@ -50,6 +51,10 @@ export async function resolveWorkspaceTierContext(
     return { workspaceId, tier: parsed.data };
   }
 
+  if (workspaceId) {
+    const db = createServerClient();
+    if (db) defaultSaasEntitlementStore.setDatabase(db);
+  }
   const tier: SaasTier = workspaceId
     ? await defaultSaasEntitlementStore.getWorkspaceTier(workspaceId)
     : 'BASIC';

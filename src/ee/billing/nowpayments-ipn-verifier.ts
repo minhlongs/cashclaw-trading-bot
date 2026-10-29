@@ -1,11 +1,13 @@
 // Shared NOWPayments IPN HTTP Request Verifier
-// Centralizes signature presence, 300s timestamp anti-replay, canonical JSON HMAC-SHA512,
-// and Zod schema verification across `/api/ee/billing/nowpayments-ipn` and `/api/ee/billing/ipn`.
+// Centralizes signature presence, optional timestamp freshness checks, canonical JSON HMAC-SHA512,
+// and Zod schema verification across both NOWPayments callback routes. Durable payment_id idempotency
+// is enforced separately by the D1-backed entitlement store; the timestamp header is not HMAC-signed.
 
 import {
   NowPaymentsIpnPayloadSchema,
   canonicalizeNowPaymentsJson,
   computeNowPaymentsHmacSha512,
+  constantTimeHexEqual,
   type NowPaymentsIpnPayload,
 } from './nowpayments-ipn';
 
@@ -18,7 +20,7 @@ export type NowPaymentsIpnHttpVerifyResult =
     }
   | {
       readonly ok: false;
-      readonly status: 400 | 401 | 403;
+      readonly status: 400 | 401 | 403 | 503;
       readonly error: string;
     };
 
@@ -26,6 +28,11 @@ export async function verifyNowPaymentsIpnHttpRequest(
   req: Request,
   ipnSecretOverride?: string,
 ): Promise<NowPaymentsIpnHttpVerifyResult> {
+  const secret = ipnSecretOverride ?? process.env.NOWPAYMENTS_IPN_SECRET;
+  if (!secret || secret.trim().length === 0) {
+    return { ok: false, status: 503, error: 'IPN verification is not configured' };
+  }
+
   const signature = req.headers.get('x-nowpayments-sig');
   if (!signature) {
     return {
@@ -36,10 +43,10 @@ export async function verifyNowPaymentsIpnHttpRequest(
   }
 
   const timestampHeader = req.headers.get('x-nowpayments-timestamp');
-  if (timestampHeader) {
-    const sentTime = parseInt(timestampHeader, 10);
+  if (timestampHeader !== null) {
+    const sentTime = /^\d+$/.test(timestampHeader) ? Number(timestampHeader) : Number.NaN;
     const currentTime = Math.floor(Date.now() / 1000);
-    if (Number.isNaN(sentTime) || Math.abs(currentTime - sentTime) > MAX_TIMESTAMP_AGE_SECONDS) {
+    if (!Number.isSafeInteger(sentTime) || Math.abs(currentTime - sentTime) > MAX_TIMESTAMP_AGE_SECONDS) {
       return {
         ok: false,
         status: 403,
@@ -60,11 +67,10 @@ export async function verifyNowPaymentsIpnHttpRequest(
     };
   }
 
-  const secret = ipnSecretOverride ?? process.env.NOWPAYMENTS_IPN_SECRET ?? 'test_ipn_secret';
   const canonicalJson = canonicalizeNowPaymentsJson(parsedJson);
   const expectedSig = await computeNowPaymentsHmacSha512(canonicalJson, secret);
 
-  if (expectedSig !== signature.trim().toLowerCase()) {
+  if (!constantTimeHexEqual(signature, expectedSig)) {
     return {
       ok: false,
       status: 403,

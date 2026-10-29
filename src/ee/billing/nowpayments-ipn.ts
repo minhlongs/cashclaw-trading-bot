@@ -30,6 +30,16 @@ export function canonicalizeNowPaymentsJson(payload: Record<string, unknown>): s
   return JSON.stringify(sortedObj);
 }
 
+export function constantTimeHexEqual(received: string, expected: string): boolean {
+  const normalized = received.trim().toLowerCase();
+  if (!/^[0-9a-f]{128}$/.test(normalized) || !/^[0-9a-f]{128}$/.test(expected)) return false;
+  let difference = 0;
+  for (let index = 0; index < expected.length; index += 1) {
+    difference |= normalized.charCodeAt(index) ^ expected.charCodeAt(index);
+  }
+  return difference === 0;
+}
+
 export async function computeNowPaymentsHmacSha512(
   canonicalJson: string,
   ipnSecret: string,
@@ -67,7 +77,7 @@ export async function verifyAndProcessNowPaymentsIpn(
 
   const canonical = canonicalizeNowPaymentsJson(rawPayload);
   const expectedSig = await computeNowPaymentsHmacSha512(canonical, ipnSecret);
-  if (expectedSig !== receivedSignatureHex.trim().toLowerCase()) {
+  if (!constantTimeHexEqual(receivedSignatureHex, expectedSig)) {
     return err('IPN_SIGNATURE_INVALID: HMAC-SHA512 verification failed');
   }
 

@@ -139,6 +139,20 @@ describe('middleware', () => {
     expect(res.status).toBe(200);
   });
 
+  it('blocks sensitive EE billing, credits, quota, scheduler and telemetry reads without a session', async () => {
+    for (const path of [
+      '/api/ee/credits?workspaceId=ws_a', '/api/ee/quotas?workspaceId=ws_a',
+      '/api/ee/scheduler?workspaceId=ws_a', '/api/ee/telemetry',
+      '/api/ee/billing/nowpayments-ipn?workspaceId=ws_a',
+    ]) {
+      expect((await middleware(makeReq('GET', path.split('?')[0]))).status).toBe(401);
+    }
+  });
+
+  it('leaves the paper-advisory alpha feed GET public by design', async () => {
+    expect((await middleware(makeReq('GET', '/api/ee/alpha-feed'))).status).toBe(200);
+  });
+
   it('blocks operations reads without a session', async () => {
     const res = await middleware(makeReq('GET', '/api/ops/work-items'));
     expect(res.status).toBe(401);
@@ -169,11 +183,25 @@ describe('middleware', () => {
   it('allows POST /api/auth/login without session', async () => {
     expect((await middleware(makeReq('POST', '/api/auth/login'))).status).toBe(200);
   });
-  it('allows signed NOWPayments IPN routes through to their HMAC verifier without an app session', async () => {
+  it('allows only exact signed NOWPayments POST paths through without an app session', async () => {
     for (const path of ['/api/ee/billing/ipn', '/api/ee/billing/nowpayments-ipn']) {
       expect((await middleware(makeReq('POST', path, {}, { origin: 'https://payments.example' }))).status).toBe(200);
     }
     expect(createServerClient).not.toHaveBeenCalled();
+    expect((await middleware(makeReq('POST', '/api/ee/billing/ipn/'))).status).toBe(401);
+    expect((await middleware(makeReq('POST', '/api/ee/billing/nowpayments-ipn/child'))).status).toBe(401);
+    expect((await middleware(makeReq('DELETE', '/api/ee/billing/ipn'))).status).toBe(401);
+  });
+
+  it('allows cookie-authenticated non-browser callers with no Origin but rejects no-session requests', async () => {
+    expect((await middleware(makeReq('POST', '/api/ee/sync'))).status).toBe(401);
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
+    expect((await middleware(makeReq('POST', '/api/ee/sync', { session_id: 'valid-session' }))).status).toBe(200);
+  });
+
+  it('applies the cross-origin gate even to public login/logout mutations', async () => {
+    expect((await middleware(makeReq('POST', '/api/auth/login', {}, { origin: 'https://attacker.example' }))).status).toBe(403);
+    expect((await middleware(makeReq('POST', '/api/auth/logout', {}, { 'sec-fetch-site': 'cross-site' }))).status).toBe(403);
   });
 
   it('allows POST /api/auth/logout without session', async () => {
@@ -213,6 +241,8 @@ describe('middleware', () => {
     const res = await middleware(req);
     expect(res.status).toBe(200);
     expect(res.headers.get('x-user-id')).toBeNull();
+    expect(res.headers.get('x-middleware-request-x-user-id')).toBe('server-user');
+    expect(res.headers.get('x-middleware-override-headers')).toContain('x-user-id');
   });
 
   it('treats the exact expiry second as expired', async () => {

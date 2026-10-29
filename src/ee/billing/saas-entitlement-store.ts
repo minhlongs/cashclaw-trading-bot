@@ -41,9 +41,10 @@ export class SaasEntitlementStore {
   public async recordIpnAndUpgradeTier(record: IpnActivationRecord): Promise<WorkspaceEntitlementRow> {
     const nowMs = record.processedAtMs ?? Date.now();
     const isActivated = record.paymentStatus === 'finished' || record.paymentStatus === 'confirmed';
-    if (isActivated) this.processedPayments.add(record.paymentId);
-    if (this.db) await insertD1IpnEvent(this.db, record, nowMs);
-    if (!isActivated) return this.getWorkspaceEntitlement(record.workspaceId);
+    if (!isActivated) {
+      if (this.db) await insertD1IpnEvent(this.db, record, nowMs);
+      return this.getWorkspaceEntitlement(record.workspaceId);
+    }
 
     const spec = getEntitlementsForTier(record.targetTier);
     const updatedRow: WorkspaceEntitlementRow = {
@@ -52,8 +53,14 @@ export class SaasEntitlementStore {
       maxWalkForwardWindows: spec.maxWalkForwardWindows, monthlyLlmCredits: spec.monthlyLlmCredits,
       managedLlmPoolEnabled: spec.managedLlmPoolAllowed, updatedAtMs: nowMs,
     };
+    // Persist entitlement before marking payment terminal. A failed entitlement write
+    // must remain retryable; the terminal event is the durable idempotency marker.
+    if (this.db) {
+      await upsertD1WorkspaceEntitlement(this.db, updatedRow);
+      await insertD1IpnEvent(this.db, record, nowMs);
+    }
     this.workspaceEntitlements.set(record.workspaceId, updatedRow);
-    if (this.db) await upsertD1WorkspaceEntitlement(this.db, updatedRow);
+    this.processedPayments.add(record.paymentId);
     return updatedRow;
   }
 

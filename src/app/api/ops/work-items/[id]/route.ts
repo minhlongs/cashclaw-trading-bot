@@ -25,7 +25,7 @@ export async function GET(request: Request, context: RouteContext) {
       `SELECT e.id, e.action, e.from_status, e.to_status, e.created_at, e.item_version
        FROM ops_work_item_events e JOIN ops_work_items w ON w.id = e.item_id
        WHERE e.item_id = ? AND e.owner_user_id = ? AND w.owner_user_id = ?
-       ORDER BY e.created_at ASC, e.id ASC`,
+       ORDER BY e.item_version ASC, e.created_at ASC, e.id ASC`,
     ).bind(parsedId.data, auth.userId, auth.userId).all<EventRow>();
     const exists = await auth.db.prepare(
       'SELECT id FROM ops_work_items WHERE id = ? AND owner_user_id = ?',

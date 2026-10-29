@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
+import { createServerClient } from '@/lib/db/client';
 import { verifyNowPaymentsIpnHttpRequest } from '@/ee/billing/nowpayments-ipn-verifier';
 import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
 
 export async function GET(req: Request) {
+  const db = createServerClient();
+  if (!db && process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ ok: false, error: 'Payment event store unavailable' }, { status: 503 });
+  }
+  if (db) defaultSaasEntitlementStore.setDatabase(db);
   const url = new URL(req.url);
   const workspaceId = url.searchParams.get('workspaceId') || 'default';
   const entitlement = await defaultSaasEntitlementStore.getWorkspaceEntitlement(workspaceId);
@@ -21,6 +27,12 @@ export async function POST(req: Request) {
         { status: verification.status },
       );
     }
+
+    const db = createServerClient();
+    if (!db && process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ ok: false, error: 'Payment event store unavailable' }, { status: 503 });
+    }
+    if (db) defaultSaasEntitlementStore.setDatabase(db);
 
     const {
       payment_id,

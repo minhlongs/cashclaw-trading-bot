@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { afterAll, beforeAll, describe, it, expect, vi } from 'vitest';
 import { GET as getQuotas } from '../quotas/route';
 import { POST as postIpn } from '../billing/ipn/route';
 import { POST as postNowPaymentsIpn } from '../billing/nowpayments-ipn/route';
@@ -8,6 +8,9 @@ import {
   computeNowPaymentsHmacSha512,
 } from '@/ee/billing/nowpayments-ipn';
 import { createLocalToCloudSyncBundle } from '@/ee/sync/local-to-cloud-sync';
+
+beforeAll(() => vi.stubEnv('NOWPAYMENTS_IPN_SECRET', 'test_ipn_secret'));
+afterAll(() => vi.unstubAllEnvs());
 
 describe('Phase 1: SaaS API Routes Integration', () => {
   describe('GET /api/ee/quotas', () => {

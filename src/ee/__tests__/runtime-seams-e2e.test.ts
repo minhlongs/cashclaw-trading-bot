@@ -1,6 +1,6 @@
 // End-to-End Integration Tests for the 5 Closed Open-Core & Cloud SaaS Runtime Seams (G1–G5)
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest';
 import type { D1Database, D1PreparedStatement } from '@/lib/db/types';
 import { SaasEntitlementStore, defaultSaasEntitlementStore } from '../billing/saas-entitlement-store';
 import { canonicalizeNowPaymentsJson, computeNowPaymentsHmacSha512 } from '../billing/nowpayments-ipn';
@@ -59,9 +59,11 @@ function createMockD1(): { db: D1Database; queries: string[] } {
 
 describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
   beforeEach(() => {
+    vi.stubEnv('NOWPAYMENTS_IPN_SECRET', 'test_ipn_secret');
     defaultSaasEntitlementStore.setDatabase(undefined);
     defaultSaasEntitlementStore.resetMemoryForTesting();
   });
+  afterEach(() => vi.unstubAllEnvs());
 
   it('Seam G2: persists NOWPayments IPN to D1 store and upgrades workspace tier across routes', async () => {
     const { db, queries } = createMockD1();

@@ -1,87 +1,109 @@
-# Báo cáo OPC Trading Platform — 2026-10-29
+# PR #35 review — Operations, middleware auth, and local D1
 
-## A. Kết luận
+**Review date:** 2026-10-29
+**Repository:** `minhlongs/cashclaw-trading-bot`
+**Branch:** `arena/06ec4bf4-cashclaw-trading-bot` (kept; PR remains Draft)
+**Base:** `11a774e820920dfbdb8e0ee52fe4599a69851770`
+**Review status: PARTIAL — not a merge/production recommendation.**
 
-**PARTIAL — không bật giao dịch live, không triển khai production.**
+The changed Operations flow was reviewed and exercised through the hydrated UI, application sessions, OpenNext Worker, and local D1. Migration 0015, concurrent status updates, session failure cases, callback signature/retry behavior, and the cross-API middleware surface were reviewed. The review also confirmed unresolved authorization defects outside the Operations data path: SaaS tier can be self-selected on several routes, and the NOWPayments entitlement GET does not bind a requested workspace to the authenticated owner. A valid session is authentication, not authorization. Those need an owner decision/fix and regression tests before this PR can be considered safe to merge as a security boundary. This report does **not** claim the broader OPC Trading Platform is complete, SaaS-ready, live-ready, or profitable.
 
-Đã hoàn thành và kiểm chứng luồng Operations owner-scoped trên OpenNext Worker với D1 local thật, xác thực bằng login/session của ứng dụng, hai user tổng hợp A/B, audit history có version và persistence qua lần dừng/khởi động lại Worker. Đã sửa lỗi API trả 409 giả khi D1 trigger ghi history và lỗi trang `/en/operations` render tiếng Việt. Full test/type-check/lint/build đều đạt.
+No production deployment, remote D1 migration, live mode, real-money order, or real payment was performed.
 
-Không thể kết luận toàn nền tảng DONE: năm bộ phận mới dùng chung work queue; chưa phải ERP/CRM/helpdesk; chưa xác minh tenancy/RBAC/billing production; backtest/paper run là synthetic; production backtest write path chưa được chạy toàn vẹn qua ứng dụng; live adapter thiếu policy production; browser automation không có; Knip chặn quality gate do lỗi cấp phát buffer. Không có deploy, remote D1 migration, lệnh thật, giao dịch live hoặc thanh toán.
+## 1. Repository and scope
 
-## B. Repo, phạm vi và thay đổi
+- PR: [#35](https://github.com/minhlongs/cashclaw-trading-bot/pull/35), title “Harden session-scoped Operations and local D1 concurrency”.
+- The PR adds session-derived identity, Operations owner scoping, optimistic version checks and append-only status history via `0015_ops_work_item_concurrency.sql`, locale fixes, middleware checks, callback hardening, and tests/docs.
+- The current local review edits are **not yet in the PR head** until committed/pushed. Remote checks observed before those edits apply only to the then-current SHA, not these local changes.
+- Files reviewed include middleware and its callers/tests, Operations API/UI/migration and migrations 0013–0015, EE tier/credits/quota/sync and NOWPayments routes/stores/verifier, Worker Hono auth routes, and relevant tests.
 
-- Repo `minhlongs/cashclaw-trading-bot`, branch `arena/06ec4bf4-cashclaw-trading-bot` (giữ nguyên), base `11a774e820920dfbdb8e0ee52fe4599a69851770`.
-- Commit local: `c67486b10ad666e47db73914bb716bba4df3f1ad` — `Harden session-scoped operations workflow`.
-- PR #34 đã được xác nhận là merge vào base; không áp dụng lại patch cũ.
-- Thêm migration `0015_ops_work_item_concurrency.sql`: CAS `version`, trigger ghi sự kiện status, bảo vệ event log append-only.
-- Thêm resolver session dùng `user_sessions.id` và expiry epoch seconds; API Operations lấy userId từ session server-side thay vì tin header. Middleware áp dụng ngoài Operations: mọi mutation `/api/**` cần DB-backed session, fail-closed, loại `x-user-id` client và chặn cross-origin/cross-site. Login/logout/me vẫn public; hai route NOWPayments IPN (`/api/ee/billing/ipn`, `/api/ee/billing/nowpayments-ipn`) được miễn session và CSRF-origin gate ở middleware vì handler xác minh HMAC. Các mutation API khác như telemetry/alerts/scheduler/sync nay cần session; đây là thay đổi tương thích rộng cần lưu ý với client tích hợp.
-- Chuyển status update sang `UPDATE … RETURNING`; event history trả version; create event bắt đầu ở version 0.
-- Cố định locale vào `getMessages` và `NextIntlClientProvider`, sửa `/en/operations` bị render tiếng Việt.
-- Cập nhật tests và `docs/opc-platform-readiness.md`.
+## 2. Middleware/API route and caller audit
 
-## C. Operations API/security — E2E D1 local thật
+The Next middleware matches application requests and applies two independent rules: cross-origin checks for API mutations, and session requirements for all API mutations plus the listed sensitive GET prefixes. The session is looked up in D1 by the `session_id` cookie and must be unexpired. The middleware deletes incoming `x-user-id` and injects the user ID it resolved. The per-route handler still needs authorization/tenant checks; this middleware does not create workspace membership or RBAC.
 
-Đã apply migration 0001–0015 vào D1 local với persistence ở `/tmp/cashclaw-opc-e2e/persist`. Dùng hai user tổng hợp `@example.invalid`; đăng nhập qua `/api/auth/login`, cookie/session được tra trong D1. Không dùng fixture header làm danh tính.
+| Route/method group | Expected caller | Auth before → after this PR | Behavior/tests and conclusion |
+|---|---|---|---|
+| `POST/PUT/PATCH/DELETE /api/**` (default) | Logged-in browser; any external clients must use the application session | Before: middleware did not require a session for every API write. After: DB-backed session required; no/expired session → 401, unavailable D1/session validation → 503. Foreign `Origin` or `Sec-Fetch-Site: cross-site` → 403. | Middleware tests exercise public exceptions, session, expiry, DB failure, cross-origin, and forged `x-user-id`. This is a compatibility change across APIs, not only Operations. No machine-client exemption was added. |
+| `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` | Login/logout form and session check | Public at middleware; route validates credentials/session as applicable. Login/logout cross-origin mutation still denied. | Login and session routes have tests; login fails closed when DB/config unavailable. |
+| `GET /api/bots/**`, `/api/settings/**`, `/api/alpha/**`, `/api/ops/**`, `/api/ee/credits/**`, `/api/ee/quotas/**`, `/api/ee/scheduler/**`, `/api/ee/telemetry/**`, `/api/ee/billing/nowpayments-ipn/**` | Dashboard or operator; a number of these GETs have no in-repo caller | Before: route-specific coverage varied. After: DB-backed session required. | Prefix coverage is in `src/middleware.test.ts`. Important limitation: a session only authenticates a user; bot operations and EE routes still require per-user/workspace authorization. |
+| `GET /api/ee/alpha-feed` | Public paper-advisory feed | Public before and after | Remains public and marked `PAPER_ADVISORY_ONLY`; however, tier selection is caller-controlled (see §3). |
+| `POST /api/ee/billing/ipn`, `POST /api/ee/billing/nowpayments-ipn` (exact paths only) | NOWPayments server callback | Exact POSTs are exempt from session and middleware origin checks; handler must verify NOWPayments HMAC. | Valid HMAC, missing/invalid secret, malformed/bad signature, D1 persistence failure, retry, and durable replay are covered by tests/local D1 exercise. Other methods/paths do not inherit the exception. No test-secret fallback is used. |
+| `GET /api/ee/billing/nowpayments-ipn` | Authenticated billing client/operator | Now requires a session through the sensitive GET prefix. | **Still vulnerable to cross-workspace entitlement reads:** the handler accepts caller-selected `workspaceId` and does not compare the entitlement owner to the session user. Session gate is not tenant authorization; see §3. |
+| Hono `POST /api/cron/*`, `/api/killswitch/*`; `/internal/api/bots/*` | Worker operator/integration | Separate from Next middleware; `authGuard()` requires a configured `ADMIN_TOKEN` Bearer credential and fails closed if absent/wrong. | Worker route tests exercise missing/valid bearer cases. Scheduled Cloudflare events are platform-invoked and do not call these public HTTP routes. Hono CORS is separate and does not replace bearer auth. |
+| Other public GETs, including Worker `/api/health`, `/api/version`, `/api/killswitch-status`, `/api/tickers`, `/api/quant/telemetry` and Next `/api/ee/alpha-feed` | Status/market/paper-advisory consumers | Public unless independently protected by handler | Read-only routes; route handlers and middleware tests reviewed. Public status may expose operational metadata; not changed by this PR. |
 
-| Kiểm tra | Kết quả quan sát |
-|---|---|
-| Không có session / session hết hạn | 401 |
-| Tạo item hợp lệ | 201, owner là user từ session |
-| Forged `x-user-id` | Bị bỏ qua; không đổi owner |
-| User B list/read/PATCH item của A | Không thấy / 404 |
-| Origin ngoài ứng dụng khi POST | 403 |
-| Ngày lịch không hợp lệ | 400 |
-| `open → in_progress → done` | 200, version tăng lần lượt 1, 2 |
-| Chuyển trạng thái không hợp lệ | 409, không tạo transition |
-| Gửi lại trạng thái hiện tại | 200, `unchanged` |
-| History trong D1 | `created@0`, `open→in_progress@1`, `in_progress→done@2` |
-| Dừng rồi khởi động lại Worker với cùng D1 | Login lại và đọc được item cùng đủ 3 events |
-| Trang VI / EN qua HTTP | Cả hai 200 và nội dung đúng locale sau fix |
+**Origin/CSRF details:** same-origin browser mutations are allowed. Explicit foreign Origin and `Sec-Fetch-Site: cross-site` are denied. A missing Origin is allowed for a valid session to preserve non-browser compatibility; no cookie still yields 401. Exact NOWPayments POST paths bypass this middleware check because third-party callbacks cannot present the application session and rely on their HMAC. The callback verifier does not use an optional timestamp header as a replay credential. External clients that omit Origin need a separate compatibility review; middleware tests do not prove every external caller.
 
-SQL kiểm tra xác nhận owner, trạng thái, version và event khớp. Các ID trong fixture là synthetic; E2E không dùng dữ liệu người dùng thật. Đây là HTTP E2E thực với local D1, không phải browser automation. Không có Chromium/Playwright, nên chưa xác nhận hydration/click flow bằng trình duyệt và không có screenshot.
+## 3. Open authorization findings — merge blockers for security claims
 
-## D. Năm bộ phận và giới hạn sản phẩm
+### A. Caller-controlled SaaS tier is not trusted entitlement
 
-- **Finance — PARTIAL/BLOCKED:** work item có amount nguyên theo minor currency units; không có double-entry ledger, chứng từ, đối soát, thuế hoặc billing reconciliation.
-- **Operations — PARTIAL:** hàng đợi lưu bền, owner-scoped, có trạng thái/history; chưa có vendor/procurement/asset/SLA/automation hoàn chỉnh.
-- **Marketing — BLOCKED:** không có consent/contact store, attribution, campaign automation; không gửi email/marketing.
-- **Sales — BLOCKED:** không có CRM pipeline, customer accounts, quote/contract/order lifecycle.
-- **Customer support — BLOCKED:** không có ticket SLA, customer identity, channel ingestion hoặc response tooling.
+`resolveWorkspaceTierContext()` selects a tier from `?tier=` or `x-cashclaw-tier` before consulting the entitlement store. The middleware-provided session identity does not alter this precedence, and workspace IDs supplied by the caller are not proven to belong to that user. Relevant consumers include:
 
-Không gọi work item là ERP/CRM/helpdesk/kế toán. `done` chỉ là hoàn tất công việc, không phải đã thu tiền hay hoàn tất nghiệp vụ tài chính.
+- `POST /api/bots`: caller-supplied `x-cashclaw-tier` can affect the quota decision before bot creation; `resolveActiveBotCount()` also trusts caller-controlled `x-cashclaw-active-bots`, so a caller can under-report usage. The bot handlers are not shown here to enforce per-user ownership either.
+- `GET/POST /api/ee/credits`: query/body tier is forwarded as `explicitTier` and affects the credit account/debit calculation.
+- `GET /api/ee/quotas`, `POST /api/ee/sync`, and `GET /api/ee/alpha-feed`: tier/header/query can alter returned entitlement/quota/feed behavior.
 
-## E. Research / backtest / paper — chỉ synthetic, không tuyên bố edge
+A valid session does not prevent a user from self-selecting a higher tier. No database-backed owner-to-workspace membership source is present in the reviewed migrations; payment-created entitlement rows can have `owner_user_id = 'system'`. Do not describe these checks as SaaS authorization or entitlement enforcement. This is not repaired by the middleware work and must be resolved before relying on tier-based limits.
 
-- Chạy AlphaResearchPipeline E2E với dữ liệu tổng hợp: 12 bước; 194 derivative signals; Sharpe 0.0000; pipeline khuyến nghị `discard`. Không nâng cấp strategy.
-- Chạy `runBacktest` qua `PaperExchange` trên 8 nến synthetic 1h, Volatility DCA: 2 simulated trades, net PnL mô phỏng +172.28, phí 4.18, 8 điểm equity, fee assumption 0.1% và slippage assumption 0.05%. Đây chỉ là kết quả minh họa trên fixture ngắn, không phải hiệu năng ngoài mẫu hay bằng chứng lợi nhuận.
-- Bao kết quả với nguồn/commit/cost assumptions rồi ghi vào một bảng E2E tạm trong **D1 local** bằng Wrangler; đọc lại sau lần restart Worker, kiểm SHA-256 `fac0916943847d1d045fa3817c70b1214b3a4f0b91163a63622f0fa175aea13a`.
-- Giới hạn: harness persistence này dùng một bảng local tạm, không chứng minh production `runBacktestAction → persistBacktestResultToD1 → replay` đã chạy end-to-end. Không gọi dữ liệu synthetic là market data hoặc kết quả này là paper trade trên sàn.
+### B. NOWPayments entitlement GET lacks workspace owner check
 
-## F. Live, SaaS, tenancy và billing
+`GET /api/ee/billing/nowpayments-ipn?workspaceId=...` requires a valid application session in middleware but reads a caller-selected ID and returns that workspace's entitlement without comparing `owner_user_id` with the authenticated user or a membership table. This is a tenant-isolation gap. Do not expose this endpoint as safe merely because an `x-user-id` header was injected.
 
-- Runtime live vẫn **default-off**. Repo docs/ADR mô tả paper-only; `LiveExchange` hiện có guard/gate nhưng không có production-grade approver/revocation policy, bounded exposure/loss controls, durable idempotency, exchange reconciliation và audit-before-dispatch đủ để cho phép live. Không bật flag, không cấu hình credentials, không gửi lệnh.
-- Không dùng tài khoản/sàn, keys hoặc data thật; không dùng payment provider. Không chứng nhận SaaS-ready.
-- Operations hiện scoping theo **user**, chưa theo workspace. RBAC/granular roles, isolation nhiều workspace, entitlement/billing và payment webhook chưa được audit end-to-end với danh tính/payment thực. Không mock payment để tuyên bố billing production.
-- Các nhận định về production ở đây là review code/docs; không truy cập production state.
+### Required regression tests before claiming the gaps closed
 
-## G. Kiểm tra, lệnh và giới hạn governance
+1. User A and B have independent persisted session rows and independently owned workspace entitlements. User B requesting A's workspace via query, header, or body receives 403/404 and no entitlement/credit details; A can read only its own workspace.
+2. For each route above, send a valid lower-tier session with `?tier=MASTER`, `x-cashclaw-tier: MASTER`, and where supported body/query tier. The effective tier and quota/credit operation must remain the stored server-side entitlement (or fail closed if workspace ownership is unknown); no client value may elevate it. For bot quotas, also forge `x-cashclaw-active-bots` low/high and prove the server derives usage from owned persisted bots instead.
+3. Test missing/expired session and D1 unavailable for these routes (401/503), forged `x-user-id`, unknown workspace, and D1 query errors. No fallback to a more privileged in-memory/caller-supplied tier.
+4. Prove signed NOWPayments POST still accepts a correctly signed synthetic callback without an application session while rejecting absent/wrong secret/signature. Keep the exception exact to the signed POST paths.
 
-| Lệnh/hoạt động | Exit/kết quả | Phạm vi / giới hạn |
+These are **acceptance criteria/design**, not passing tests in this revision. Because a workspace owner source of truth is missing, implementation needs an explicit ownership model; inventing one or silently treating `system` as a user would be unsafe.
+
+## 4. Operations migration, history, concurrency, and D1 results
+
+`0015_ops_work_item_concurrency.sql` was reviewed alongside migrations 0013 and 0014 and the Operations routes/store. It adds a version counter and database-side history protections required for version-aware status writes. Validation used local D1 only:
+
+- Applied migrations from an empty local database and separately upgraded a local database already at migration 0014 with synthetic existing work-item data.
+- Verified existing 0014 rows survive upgrade and receive the migration's expected initial version/history state; verified inserts and updates after 0015 persist the expected owner, status, version, and append-only event history.
+- Exercised competing versioned status updates against local D1. One update wins the expected version; stale writer receives a conflict and does not create a duplicate/false history transition. History owner isolation was checked with two synthetic users.
+- Through the Worker + D1 E2E, tested create, list, detail, status transition, history/version, stale status conflict, persistence on restart, invalid date, forbidden cross-owner access, and forged `x-user-id`. No header-only identity was used.
+- These tests establish local migration/code behavior only. No remote migration ran. Rollout remains ordered: deploy/apply the reviewed schema before serving code that depends on it, after checking the target D1 migration history and release compatibility. Do not infer zero-downtime safety for an untested mixed-version production deployment.
+
+## 5. NOWPayments signed callback D1 exercise
+
+Used a synthetic-only secret and synthetic payload against the real local Wrangler Worker and D1. An injected D1 event-write failure caused a correctly signed callback to return 500 (not a success response). After removing the synthetic trigger, retry returned 200 with `activated=true`, `idempotentReplay=false`; the durable replay returned 200 with `activated=false`, `idempotentReplay=true`. D1 query confirmed the synthetic workspace entitlement and a persisted event with `signature_verified=1`. **The injected failure also showed the current entitlement upsert and event insert are separate D1 operations: the upsert can persist while the event insert fails.** The HTTP 500 plus provider retry can repair the event, but this is not atomic; do not claim all-or-nothing billing/audit persistence. The Operations status event is DB-triggered atomically with the status update; that distinct property does not extend to billing. This covered fail/retry/replay through the route/store, not real payment settlement, and does not repair the entitlement GET owner check.
+
+## 6. Hydrated browser E2E and screenshot
+
+Browser automation was available and used: Playwright with Chromium drove the built OpenNext/Cloudflare Worker at `http://127.0.0.1:8794` backed by local D1 `/tmp/cashclaw-pr35-browser-final4`. All users, sessions, passcodes, titles, and records were synthetic. The script `/tmp/pr35-browser-e2e.mjs` exercised user A/B login, creation/persistence, session identity, cross-owner isolation, valid/invalid transitions, stale version conflict/reload, history/version display, Vietnamese locale, 390×844 mobile layout/no horizontal overflow, and a synthetic injected API failure state. Browser assertions passed; earlier script reported eight grouped assertions. This is hydrated browser interaction, distinct from the route-level D1 HTTP checks.
+
+After the `.ops-page` mobile bottom-padding change, a fresh screenshot was captured at `/home/user/pr35-operations-e2e.png`. In the 390×844 viewport the history event remains visible above the fixed mobile navigation; the screenshot contains synthetic data only. The local Worker was stopped and the temporary synthetic secret file removed. Wrangler's sandbox `Request.cf` TLS-fallback warning did not prevent requests; it is not a production network test.
+
+## 7. Verification and quality gate
+
+| Check | Result | Notes |
 |---|---|---|
-| `npx vitest run src/middleware.test.ts src/lib/auth/session-user.test.ts src/app/api/ops/work-items/route.test.ts src/app/api/ee/billing/nowpayments-ipn/route.test.ts src/app/api/ee/__tests__/ee-routes.test.ts` | 0 — 62 tests PASS | Targeted auth/Operations/IPN verifier integration; includes middleware pass-through for the two signed webhook endpoints |
-| `npm run type-check` | 0 — PASS | `tsc --noEmit` |
-| `npm run lint` | 0 — PASS | ESLint `src/`, zero warnings; chạy trong quality gate sau refactor |
-| `npm test -- --reporter=dot` | 0 — 726 files, 6,065 tests PASS | Full suite rerun after signed-webhook middleware exception; log có warning/deprecation và một research test skip do cache không có |
-| `npm run build:worker` | 0 — PASS after signed-webhook middleware exception | Next/OpenNext/Cloudflare Worker; Next còn cảnh báo convention `middleware` → `proxy` deprecated |
-| `npm run quality:gate` | 1 — PARTIAL | Type-check/lint và coverage test run hoàn tất; `npx knip` lỗi `RangeError: Array buffer allocation failed` khi Oxc parser yêu cầu buffer 6 GiB. Knip chưa được xác nhận xanh |
-| `git diff --check` và staged diff check | 0 — PASS | Không phát hiện whitespace errors |
-| OpenNext + Wrangler HTTP E2E | PASS theo bảng C | Chỉ D1 local; có TLS `Request.cf` warning trong sandbox nhưng worker khởi động/đáp ứng HTTP |
-| Browser automation/screenshot | NOT RUN | Không có browser runtime trong môi trường |
+| Full Vitest suite: `npm test -- --pool=threads --maxWorkers=1 --minWorkers=1 --reporter=dot` | **PASS** — 727 files, 6,075 tests | Expected test warnings/deprecations; one unrelated research determinism test skipped because its cache was unavailable. |
+| Coverage suite: `npm run test:coverage -- --pool=threads --maxWorkers=1 --minWorkers=1` | **PASS**, exit 0 | V8 coverage completed across the configured test scope; this was run separately without reducing test scope. |
+| `npm run build:worker` after the CSS adjustment | **PASS**, exit 0 | Next/OpenNext/Cloudflare Worker build. Next emits the existing middleware-convention deprecation warning. |
+| Type-check and lint | **PASS** in the exact `npm run quality:gate` execution after docs and CSS changes | `npm run type-check` and `npm run lint` both passed on the current local tree. |
+| `npm run quality:gate` / `npx knip --memory` | **FAIL locally at Knip**, exit 1 | Knip 6.32.2 uses Oxc parser 0.143.0, Node 22.22.3; `npx knip` throws `RangeError: Array buffer allocation failed` in `oxc-parser/src-js/raw-transfer/common.js` creating its fixed ~6 GiB (2 GiB block + 4 GiB alignment) buffer. Local machine reports 3.8 GiB RAM and no swap. No rule, file scope, or exit status was suppressed. |
+| GitHub CI configuration | Same project lockfile/Node 22 and `npx knip`; workflow runs type-check, lint, build, tests, Knip, coverage as separate steps on `ubuntu-latest` | Remote green checks previously observed were for the pre-review SHA only. Recheck the newly pushed HEAD; do not infer it passes from local tests or old checks. Hosted runner has a different memory limit, so local allocation failure alone does not establish a CI failure. |
+| Worker + local D1 callback and Operations E2E | **PASS** | Real local Wrangler/D1 requests with synthetic identities/data, including callback retry/replay and cross-owner Operations checks. |
+| `git diff --check` | Must be run again after docs are finalized | No generated coverage artifacts are to be committed. |
 
-## H. Artifact, trạng thái repo và việc cần mở khóa
+## 8. Readiness, rollout, and explicit non-claims
 
-- Báo cáo A–H được version hóa trong repo tại `docs/opc-platform-readiness-2026-10-29.md` để reviewer truy cập cùng source diff. Bản tóm tắt `docs/opc-platform-readiness.md` liên kết tới báo cáo này.
-- Commit code chính: `c67486b10ad666e47db73914bb716bba4df3f1ad`; nhánh review là `arena/06ec4bf4-cashclaw-trading-bot` trên base `11a774e820920dfbdb8e0ee52fe4599a69851770`. Các thay đổi tương thích/auth bổ sung được nêu ngay trong mục B.
-- Migration mới `0015_ops_work_item_concurrency.sql` đã chỉ chạy với D1 local trong E2E này. Khi có phê duyệt rollout, áp dụng migration qua quy trình release D1 hiện hành trước khi phát hành code phụ thuộc schema; tuyệt đối không áp dụng remote migration trong tác vụ này.
-- Bước còn lại: browser runtime để chạy UI hydrated E2E/screenshot; sửa/nâng môi trường Knip/Oxc để hoàn tất quality gate; audit workspace membership + RBAC + entitlement/billing; production live safety review chỉ khi được phê duyệt riêng.
-- **Không thực hiện:** deploy, remote D1 migration, real-money order/live mode, mở rộng quyền, marketing/outbound, payment/billing thật, truy cập/tiết lộ secrets.
+- **Operations:** the reviewed app workflow is owner-scoped to the authenticated user with D1 persistence, history, version conflicts, browser UI, and mobile nav spacing. That does not imply every app API is user/workspace scoped.
+- **Authentication vs authorization:** middleware now authenticates a session for broad API mutation and selected sensitive GETs; it does not implement workspace membership/RBAC. The open tier spoofing and workspace entitlement read findings above block a security/merge-ready conclusion.
+- **Machine clients:** no broad cron/webhook exemption was added. Hono machine routes use Bearer `ADMIN_TOKEN`; Next API writes require the application session except exact HMAC-signed payment POSTs. Inventory/compatibility with clients outside this repository remains unverified.
+- **Quality gate:** full tests, coverage and build passed, but local Knip did not. Current-HEAD GitHub CI is still required after push. This is not a green gate.
+- **Product and trading:** Operations is a persisted internal work queue, not ERP/CRM/accounting/helpdesk. No claims are made about profitability, market edge, complete OPC Trading Platform readiness, SaaS readiness, or live-trading safety.
+- **Forbidden actions not performed:** no merge, deployment, remote D1 migration, live-mode activation, real order, real-money use, or real payment.
+
+## 9. Next decisions for the PR owner
+
+1. Decide whether to expand the PR to establish server-trusted workspace ownership/entitlement before merge, or split this authorization remediation into a blocking follow-up while keeping #35 Draft. Do not mark the PR ready/mergeable based only on the session middleware or green CI.
+2. Add and pass the §3 regression matrix before claiming tier or entitlement isolation.
+3. Commit and push the reviewed local changes only to `arena/06ec4bf4-cashclaw-trading-bot`, update the Draft PR body with these results, and wait for checks on the new HEAD. If hosted Knip also fails, fix its environment/tool/runtime allocation without reducing analysis scope or swallowing errors.
+4. Any future production rollout requires a separately approved D1 migration plan and API caller compatibility review. No remote changes are authorized here.

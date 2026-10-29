@@ -3,7 +3,11 @@ import { createServerClient } from '@/lib/db/client';
 import { resolveSessionUser } from '@/lib/auth/session-user';
 
 const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
-const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops'];
+const SENSITIVE_GET_PREFIXES = [
+  '/api/bots', '/api/settings', '/api/alpha', '/api/ops',
+  '/api/ee/credits', '/api/ee/quotas', '/api/ee/scheduler',
+  '/api/ee/telemetry', '/api/ee/billing/nowpayments-ipn',
+];
 const PUBLIC_API_PATHS = new Set(['/api/auth/login', '/api/auth/logout', '/api/auth/me']);
 // These routes verify NOWPayments HMAC signatures in their handlers; a third-party
 // payment provider cannot supply an application session cookie.
