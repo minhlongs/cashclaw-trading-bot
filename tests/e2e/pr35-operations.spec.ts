@@ -14,8 +14,14 @@ async function login(page: Page, locale: 'vi' | 'en', account: typeof accountA) 
   await page.goto(`/${locale}/login`);
   await page.getByLabel('Email / Email').fill(account.email);
   await page.getByLabel('Mật khẩu / Passcode').fill(account.passcode);
-  await page.getByRole('button', { name: 'Đăng nhập / Login' }).click();
-  await page.waitForURL(`**/${locale}/dashboard`);
+  const [loginResponse] = await Promise.all([
+    page.waitForResponse((response) => response.url().endsWith('/api/auth/login'), { timeout: 10_000 }),
+    page.getByRole('button', { name: 'Đăng nhập / Login' }).click(),
+  ]);
+  if (!loginResponse.ok()) {
+    throw new Error(`Synthetic ${locale} login returned ${loginResponse.status()}: ${(await loginResponse.text()).slice(0, 500)}`);
+  }
+  await page.waitForURL(`**/${locale}/dashboard`, { timeout: 10_000 });
 }
 
 async function expectAccessibleOperations(page: Page) {
