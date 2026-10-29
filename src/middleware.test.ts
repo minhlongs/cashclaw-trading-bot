@@ -169,6 +169,13 @@ describe('middleware', () => {
   it('allows POST /api/auth/login without session', async () => {
     expect((await middleware(makeReq('POST', '/api/auth/login'))).status).toBe(200);
   });
+  it('allows signed NOWPayments IPN routes through to their HMAC verifier without an app session', async () => {
+    for (const path of ['/api/ee/billing/ipn', '/api/ee/billing/nowpayments-ipn']) {
+      expect((await middleware(makeReq('POST', path, {}, { origin: 'https://payments.example' }))).status).toBe(200);
+    }
+    expect(createServerClient).not.toHaveBeenCalled();
+  });
+
   it('allows POST /api/auth/logout without session', async () => {
     expect((await middleware(makeReq('POST', '/api/auth/logout'))).status).toBe(200);
   });

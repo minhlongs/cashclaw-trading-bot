@@ -14,7 +14,7 @@ Không thể kết luận toàn nền tảng DONE: năm bộ phận mới dùng 
 - Commit local: `c67486b10ad666e47db73914bb716bba4df3f1ad` — `Harden session-scoped operations workflow`.
 - PR #34 đã được xác nhận là merge vào base; không áp dụng lại patch cũ.
 - Thêm migration `0015_ops_work_item_concurrency.sql`: CAS `version`, trigger ghi sự kiện status, bảo vệ event log append-only.
-- Thêm resolver session dùng `user_sessions.id` và expiry epoch seconds; API Operations lấy userId từ session server-side thay vì tin header; middleware fail-closed, loại `x-user-id` client và chặn mutation cross-origin/cross-site.
+- Thêm resolver session dùng `user_sessions.id` và expiry epoch seconds; API Operations lấy userId từ session server-side thay vì tin header. Middleware áp dụng ngoài Operations: mọi mutation `/api/**` cần DB-backed session, fail-closed, loại `x-user-id` client và chặn cross-origin/cross-site. Login/logout/me vẫn public; hai route NOWPayments IPN (`/api/ee/billing/ipn`, `/api/ee/billing/nowpayments-ipn`) được miễn session và CSRF-origin gate ở middleware vì handler xác minh HMAC. Các mutation API khác như telemetry/alerts/scheduler/sync nay cần session; đây là thay đổi tương thích rộng cần lưu ý với client tích hợp.
 - Chuyển status update sang `UPDATE … RETURNING`; event history trả version; create event bắt đầu ở version 0.
 - Cố định locale vào `getMessages` và `NextIntlClientProvider`, sửa `/en/operations` bị render tiếng Việt.
 - Cập nhật tests và `docs/opc-platform-readiness.md`.
@@ -68,11 +68,11 @@ Không gọi work item là ERP/CRM/helpdesk/kế toán. `done` chỉ là hoàn t
 
 | Lệnh/hoạt động | Exit/kết quả | Phạm vi / giới hạn |
 |---|---|---|
-| `npx vitest run src/app/api/ops/work-items/route.test.ts src/middleware.test.ts src/lib/auth/session-user.test.ts` | 0 — 48 tests PASS | Targeted API/session/middleware |
+| `npx vitest run src/middleware.test.ts src/lib/auth/session-user.test.ts src/app/api/ops/work-items/route.test.ts src/app/api/ee/billing/nowpayments-ipn/route.test.ts src/app/api/ee/__tests__/ee-routes.test.ts` | 0 — 62 tests PASS | Targeted auth/Operations/IPN verifier integration; includes middleware pass-through for the two signed webhook endpoints |
 | `npm run type-check` | 0 — PASS | `tsc --noEmit` |
 | `npm run lint` | 0 — PASS | ESLint `src/`, zero warnings; chạy trong quality gate sau refactor |
-| `npm test -- --reporter=dot` | 0 — 726 files, 6,064 tests PASS | Full suite; log có warning/deprecation và một research test skip do cache không có |
-| `npm run build:worker` | 0 — PASS | Next/OpenNext/Cloudflare Worker; build cuối sau commit. Next còn cảnh báo convention `middleware` → `proxy` deprecated |
+| `npm test -- --reporter=dot` | 0 — 726 files, 6,065 tests PASS | Full suite rerun after signed-webhook middleware exception; log có warning/deprecation và một research test skip do cache không có |
+| `npm run build:worker` | 0 — PASS after signed-webhook middleware exception | Next/OpenNext/Cloudflare Worker; Next còn cảnh báo convention `middleware` → `proxy` deprecated |
 | `npm run quality:gate` | 1 — PARTIAL | Type-check/lint và coverage test run hoàn tất; `npx knip` lỗi `RangeError: Array buffer allocation failed` khi Oxc parser yêu cầu buffer 6 GiB. Knip chưa được xác nhận xanh |
 | `git diff --check` và staged diff check | 0 — PASS | Không phát hiện whitespace errors |
 | OpenNext + Wrangler HTTP E2E | PASS theo bảng C | Chỉ D1 local; có TLS `Request.cf` warning trong sandbox nhưng worker khởi động/đáp ứng HTTP |
@@ -80,9 +80,8 @@ Không gọi work item là ERP/CRM/helpdesk/kế toán. `done` chỉ là hoàn t
 
 ## H. Artifact, trạng thái repo và việc cần mở khóa
 
-- Working tree sạch sau commit; không push, không tạo PR.
-- Patch: `cashclaw-ops-hardening.patch` — 55,860 bytes, SHA-256 `a8a8ed57983d220f374086fe0e8379b201a54de01347a4b78dc243c595219d89`. Đã `git apply --check` và apply trên bản sao sạch tại base; tree khớp commit.
-- Git bundle: `cashclaw-trading-bot.bundle` — 12,815 bytes, SHA-256 `2d181e7978751395245ee136b84054fe1fd56b0b25f42681c9ba72787517d3e8`. Bundle incremental, cần base commit `11a774e820920dfbdb8e0ee52fe4599a69851770`; đã verify và fetch vào bản sao sạch ở base.
-- `SHA256SUMS` và `manifest.txt` nằm cùng thư mục artifacts. Các artifact đã được tạo trong workspace; điều này không có nghĩa chúng đã được tải xuống máy người dùng.
-- Bước tiếp theo: chủ dự án cần có browser runtime để chạy UI hydrated E2E/screenshot; sửa hoặc nâng môi trường Knip/Oxc để hoàn tất quality gate; audit/triển khai workspace membership + RBAC + entitlement/billing; hoàn thiện production live safety review chỉ khi có approval riêng. Không cần cấp quyền live trong tác vụ này.
-- **Không thực hiện:** push/PR, deploy, remote D1 migration, real-money order/live mode, mở rộng quyền, marketing/outbound, payment/billing thật, truy cập/tiết lộ secrets.
+- Báo cáo A–H được version hóa trong repo tại `docs/opc-platform-readiness-2026-10-29.md` để reviewer truy cập cùng source diff. Bản tóm tắt `docs/opc-platform-readiness.md` liên kết tới báo cáo này.
+- Commit code chính: `c67486b10ad666e47db73914bb716bba4df3f1ad`; nhánh review là `arena/06ec4bf4-cashclaw-trading-bot` trên base `11a774e820920dfbdb8e0ee52fe4599a69851770`. Các thay đổi tương thích/auth bổ sung được nêu ngay trong mục B.
+- Migration mới `0015_ops_work_item_concurrency.sql` đã chỉ chạy với D1 local trong E2E này. Khi có phê duyệt rollout, áp dụng migration qua quy trình release D1 hiện hành trước khi phát hành code phụ thuộc schema; tuyệt đối không áp dụng remote migration trong tác vụ này.
+- Bước còn lại: browser runtime để chạy UI hydrated E2E/screenshot; sửa/nâng môi trường Knip/Oxc để hoàn tất quality gate; audit workspace membership + RBAC + entitlement/billing; production live safety review chỉ khi được phê duyệt riêng.
+- **Không thực hiện:** deploy, remote D1 migration, real-money order/live mode, mở rộng quyền, marketing/outbound, payment/billing thật, truy cập/tiết lộ secrets.
