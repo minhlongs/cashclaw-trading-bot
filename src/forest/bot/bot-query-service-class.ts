@@ -4,7 +4,7 @@
  */
 
 import { createServerClient } from '@/lib/db/client';
-import { findBotsByUser, findAllBots } from '@/lib/db/repositories';
+import { findBotsByUser, findBotsByWorkspace, findAllBots } from '@/lib/db/repositories';
 import type { D1Database } from '@/lib/db/types';
 import { createLogger } from '@/lib/logger';
 import type { BotMetrics, BotSummary, BotRow } from './bot-query-service-types';
@@ -54,6 +54,21 @@ export class BotQueryService {
       });
       return [];
     }
+  }
+
+  /** Fetch only bots attached to an authorized workspace. */
+  async listBotsByWorkspace(workspaceId: string): Promise<BotSummary[]> {
+    if (!this.db) throw new Error('Bot database unavailable');
+    const rows = await findBotsByWorkspace(this.db, workspaceId);
+    return rows.map((row) => rowToBotSummary(row as unknown as BotRow));
+  }
+
+  /** Fetch a bot only when it belongs to the selected workspace. */
+  async getBotInWorkspace(id: string, workspaceId: string): Promise<BotSummary | null> {
+    if (!this.db) throw new Error('Bot database unavailable');
+    const row = await this.db.prepare('SELECT * FROM bots WHERE id = ? AND workspace_id = ?')
+      .bind(id, workspaceId).first<BotRow>();
+    return row ? rowToBotSummary(row) : null;
   }
 
   /** Fetch just the metrics for a bot. */

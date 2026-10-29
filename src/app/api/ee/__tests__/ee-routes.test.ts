@@ -14,62 +14,29 @@ afterAll(() => vi.unstubAllEnvs());
 
 describe('Phase 1: SaaS API Routes Integration', () => {
   describe('GET /api/ee/quotas', () => {
-    it('returns workspace entitlements for default BASIC tier', async () => {
-      const req = new Request('http://localhost/api/ee/quotas');
-      const res = await getQuotas(req);
-      expect(res.status).toBe(200);
-
-      const body = (await res.json()) as Record<string, unknown>;
-      expect(body.ok).toBe(true);
-      expect(body.tier).toBe('BASIC');
-      expect((body.entitlements as Record<string, unknown>).maxRunningPaperBots).toBe(1);
+    it('requires a session even when no workspace is selected', async () => {
+      const res = await getQuotas(new Request('http://localhost/api/ee/quotas'));
+      expect(res.status).toBe(401);
     });
 
-    it('returns workspace entitlements for PREMIUM tier when specified', async () => {
-      const req = new Request('http://localhost/api/ee/quotas?tier=PREMIUM');
-      const res = await getQuotas(req);
-      expect(res.status).toBe(200);
-
-      const body = (await res.json()) as Record<string, unknown>;
-      expect(body.ok).toBe(true);
-      expect(body.tier).toBe('PREMIUM');
-      expect((body.entitlements as Record<string, unknown>).maxRunningPaperBots).toBe(5);
+    it('does not let query/header tier or workspace claims bypass missing authentication', async () => {
+      const res = await getQuotas(new Request('http://localhost/api/ee/quotas?workspaceId=victim&tier=MASTER', {
+        headers: { 'x-cashclaw-tier': 'MASTER', 'x-user-id': 'attacker', 'x-cashclaw-workspace': 'victim' },
+      }));
+      expect(res.status).toBe(401);
     });
 
-    it('resolves upgraded tier from entitlement store via x-cashclaw-workspace header', async () => {
-      const secret = 'test_ipn_secret';
+    it('rejects callback-supplied workspace and tier authority even when correctly signed', async () => {
       const payload = {
-        payment_id: 'np_quota_upgrade_01',
-        payment_status: 'finished',
-        order_id: 'order_ent_quota_01',
-        workspace_id: 'ws_quota_upgraded_01',
-        target_tier: 'ENTERPRISE',
-        pay_amount: 149.0,
-        pay_currency: 'USDT',
+        payment_id: 'np_quota_upgrade_01', payment_status: 'finished', order_id: 'order_ent_quota_01',
+        workspace_id: 'ws_quota_upgraded_01', target_tier: 'ENTERPRISE', price_amount: 99,
+        price_currency: 'USD', pay_amount: 99, pay_currency: 'USDT',
       };
-      const canonical = canonicalizeNowPaymentsJson(payload);
-      const signature = await computeNowPaymentsHmacSha512(canonical, secret);
-
-      const ipnRes = await postNowPaymentsIpn(
-        new Request('http://localhost/api/ee/billing/nowpayments-ipn', {
-          method: 'POST',
-          headers: { 'x-nowpayments-sig': signature },
-          body: JSON.stringify(payload),
-        }),
-      );
-      expect(ipnRes.status).toBe(200);
-
-      const quotaRes = await getQuotas(
-        new Request('http://localhost/api/ee/quotas', {
-          headers: { 'x-cashclaw-workspace': 'ws_quota_upgraded_01' },
-        }),
-      );
-      expect(quotaRes.status).toBe(200);
-      const body = (await quotaRes.json()) as Record<string, unknown>;
-      expect(body.ok).toBe(true);
-      expect(body.workspaceId).toBe('ws_quota_upgraded_01');
-      expect(body.tier).toBe('ENTERPRISE');
-      expect((body.entitlements as Record<string, unknown>).maxRunningPaperBots).toBe(25);
+      const signature = await computeNowPaymentsHmacSha512(canonicalizeNowPaymentsJson(payload), 'test_ipn_secret');
+      const response = await postNowPaymentsIpn(new Request('http://localhost/api/ee/billing/nowpayments-ipn', {
+        method: 'POST', headers: { 'x-nowpayments-sig': signature }, body: JSON.stringify(payload),
+      }));
+      expect(response.status).toBe(400);
     });
   });
 
@@ -83,15 +50,9 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       expect(res.status).toBe(401);
     });
 
-    it('rejects stale timestamp outside 300s replay window (403)', async () => {
-      const staleTime = Math.floor(Date.now() / 1000) - 600;
+    it('rejects a malformed signature (403)', async () => {
       const req = new Request('http://localhost/api/ee/billing/ipn', {
-        method: 'POST',
-        headers: {
-          'x-nowpayments-sig': 'abc123',
-          'x-nowpayments-timestamp': String(staleTime),
-        },
-        body: JSON.stringify({ payment_id: 'np_123' }),
+        method: 'POST', headers: { 'x-nowpayments-sig': 'abc123' }, body: JSON.stringify({ payment_id: 'np_123' }),
       });
       const res = await postIpn(req);
       expect(res.status).toBe(403);
@@ -100,13 +61,8 @@ describe('Phase 1: SaaS API Routes Integration', () => {
     it('processes valid IPN payload with case-normalized HMAC-SHA512 signature', async () => {
       const secret = 'test_ipn_secret';
       const payload = {
-        payment_id: 'np_payment_999',
-        payment_status: 'finished',
-        order_id: 'order_prem_001',
-        workspace_id: 'ws_demo_01',
-        target_tier: 'PREMIUM',
-        pay_amount: 29.0,
-        pay_currency: 'USDT',
+        payment_id: 'np_payment_999', payment_status: 'finished', order_id: 'order_prem_001',
+        price_amount: 29, price_currency: 'USD', pay_amount: 29, pay_currency: 'USDT',
       };
       const canonical = canonicalizeNowPaymentsJson(payload);
       const signature = await computeNowPaymentsHmacSha512(canonical, secret);
@@ -120,24 +76,13 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       });
 
       const res = await postIpn(req);
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as Record<string, unknown>;
-      expect(body.ok).toBe(true);
-      expect(body.paymentId).toBe('np_payment_999');
-      expect(body.targetTier).toBe('PREMIUM');
-      expect(body.activated).toBe(true);
+      expect(res.status).toBe(503);
+      expect(await res.json()).toMatchObject({ ok: false, error: 'Billing store unavailable' });
 
-      const replayRes = await postIpn(
-        new Request('http://localhost/api/ee/billing/ipn', {
-          method: 'POST',
-          headers: { 'x-nowpayments-sig': signature },
-          body: JSON.stringify(payload),
-        }),
-      );
-      expect(replayRes.status).toBe(200);
-      const replayBody = (await replayRes.json()) as Record<string, unknown>;
-      expect(replayBody.idempotentReplay).toBe(true);
-      expect(replayBody.activated).toBe(false);
+      const retryRes = await postIpn(new Request('http://localhost/api/ee/billing/ipn', {
+        method: 'POST', headers: { 'x-nowpayments-sig': signature }, body: JSON.stringify(payload),
+      }));
+      expect(retryRes.status).toBe(503);
     });
   });
 
@@ -161,10 +106,8 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       });
 
       const res = await postSync(req);
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as Record<string, unknown>;
-      expect(body.ok).toBe(true);
-      expect(body.botName).toBe('Volatility DCA Local');
+      expect(res.status).toBe(401);
+      expect(await res.json()).toMatchObject({ ok: false, error: 'Authentication required' });
     });
   });
 });

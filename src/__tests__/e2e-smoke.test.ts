@@ -7,6 +7,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mockBotCreateHandler = vi.fn();
 const mockBotListHandler = vi.fn();
+const routeMocks = vi.hoisted(() => ({
+  context: vi.fn(), reserve: vi.fn(), hash: vi.fn(), mark: vi.fn(), release: vi.fn(),
+}));
 
 vi.mock('@/forest/api/routes', () => ({
   get botCreateHandler() { return mockBotCreateHandler; },
@@ -20,6 +23,17 @@ vi.mock('@/forest/api/rate-limiter', () => ({
 
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ error: vi.fn(), warn: vi.fn(), info: vi.fn() }),
+}));
+
+vi.mock('@/ee/tenancy/workspace-request-context', () => ({
+  resolveWorkspaceTierContext: (...args: unknown[]) => routeMocks.context(...args),
+  workspaceContextErrorResponse: (error: unknown) => Response.json({ ok: false, error: String(error) }, { status: 503 }),
+}));
+vi.mock('@/ee/billing/bot-quota-reservations', () => ({
+  hashBotCreateRequest: (...args: unknown[]) => routeMocks.hash(...args),
+  reserveWorkspaceBotSlot: (...args: unknown[]) => routeMocks.reserve(...args),
+  markBotReservationCreated: (...args: unknown[]) => routeMocks.mark(...args),
+  releaseBotReservation: (...args: unknown[]) => routeMocks.release(...args),
 }));
 
 function postRequest(path: string, body: unknown): Request {
@@ -37,6 +51,11 @@ describe('POST /api/bots — bot creation', () => {
     vi.clearAllMocks();
     mockBotCreateHandler.mockResolvedValue({ ok: true, data: { id: 'new-bot-1' } });
     mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
+    routeMocks.context.mockResolvedValue({ db: {}, userId: 'user-a', workspaceId: 'ws-a', role: 'OWNER', tier: 'BASIC', entitlementExpiresAtMs: null });
+    routeMocks.hash.mockResolvedValue('hash');
+    routeMocks.reserve.mockResolvedValue({ kind: 'reserved' });
+    routeMocks.mark.mockResolvedValue(undefined);
+    routeMocks.release.mockResolvedValue(undefined);
     POST = (await import('@/app/api/bots/route')).POST;
   });
 
@@ -61,11 +80,12 @@ describe('POST /api/bots — bot creation', () => {
     const res = await POST(postRequest('/api/bots', validBotPayload()));
     const json = (await res.json()) as Record<string, unknown>;
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     expect(json.ok).toBe(true);
-    expect((json.data as { id: string })?.id).toBe('new-bot-1');
+    expect((json.data as { id: string })?.id).toBe('bot-abc');
     expect(mockBotCreateHandler).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'bot-abc', name: 'Grid BTC' }),
+      { userId: 'user-a', workspaceId: 'ws-a' },
     );
   });
 
@@ -74,6 +94,7 @@ describe('POST /api/bots — bot creation', () => {
 
     expect(mockBotCreateHandler).toHaveBeenCalledWith(
       expect.objectContaining({ mode: 'paper' }),
+      { userId: 'user-a', workspaceId: 'ws-a' },
     );
   });
 
@@ -137,6 +158,7 @@ describe('GET /api/bots', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
+    routeMocks.context.mockResolvedValue({ db: {}, userId: 'user-a', workspaceId: 'ws-a', role: 'OWNER', tier: 'BASIC', entitlementExpiresAtMs: null });
     GET = (await import('@/app/api/bots/route')).GET;
   });
 
@@ -145,7 +167,7 @@ describe('GET /api/bots', () => {
   });
 
   it('returns a bot list', async () => {
-    const res = await GET();
+    const res = await GET(new Request('https://app.example/api/bots'));
     const json = (await res.json()) as Record<string, unknown>;
 
     expect(res.status).toBe(200);

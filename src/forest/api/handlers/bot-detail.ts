@@ -5,10 +5,10 @@ import { executeBotControl } from './bot-detail-control';
 
 export type { BotDetail, BotControlAction };
 
-export async function botDetailHandler(id: string): Promise<{ ok: boolean; data?: BotDetail; error?: string }> {
+export async function botDetailHandler(id: string, ownerUserId?: string): Promise<{ ok: boolean; data?: BotDetail; error?: string }> {
   try {
     const manager = getBotManager();
-    const bot = manager.getBot(id) ?? await manager.getOrCreateBot(id);
+    const bot = manager.getBot(id, ownerUserId) ?? await manager.getOrCreateBot(id, ownerUserId);
     if (!bot) return { ok: false, error: `Bot not found: ${id}` };
 
     const snapshot = bot.getSnapshot();
@@ -32,6 +32,6 @@ export async function botDetailHandler(id: string): Promise<{ ok: boolean; data?
   }
 }
 
-export async function botControlHandler(botId: string, action: BotControlAction): Promise<{ ok: boolean; error?: string }> {
-  return executeBotControl(botId, action);
+export async function botControlHandler(botId: string, action: BotControlAction, ownerUserId?: string): Promise<{ ok: boolean; error?: string }> {
+  return executeBotControl(botId, action, ownerUserId);
 }

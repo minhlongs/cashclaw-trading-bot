@@ -20,13 +20,13 @@ export async function upsertUser(db: D1Database, user: User): Promise<void> {
 
 export async function insertBot(db: D1Database, bot: Bot): Promise<void> {
   await db.prepare(
-    `INSERT INTO bots (id, user_id, name, strategy, pair, exchange, status, config_json,
+    `INSERT INTO bots (id, user_id, workspace_id, name, strategy, pair, exchange, status, config_json,
        capital_allocated, capital_used, total_pnl, win_count, loss_count,
        max_drawdown, total_trades, started_at, stopped_at, last_error,
        last_tick_at, last_order_at, current_drawdown, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(
-    bot.id, bot.user_id, bot.name, bot.strategy, bot.pair, bot.exchange, bot.status, bot.config_json,
+    bot.id, bot.user_id, bot.workspace_id ?? null, bot.name, bot.strategy, bot.pair, bot.exchange, bot.status, bot.config_json,
     bot.capital_allocated, bot.capital_used, bot.total_pnl, bot.win_count, bot.loss_count,
     bot.max_drawdown, bot.total_trades, bot.started_at, bot.stopped_at, bot.last_error,
     bot.last_tick_at, bot.last_order_at, bot.current_drawdown, bot.created_at, bot.updated_at,
@@ -47,6 +47,11 @@ export async function deleteBot(db: D1Database, botId: string): Promise<void> {
 
 export async function findBotsByUser(db: D1Database, userId: string): Promise<Bot[]> {
   const result = await db.prepare('SELECT * FROM bots WHERE user_id = ?').bind(userId).all<Bot>();
+  return result.results ?? [];
+}
+
+export async function findBotsByWorkspace(db: D1Database, workspaceId: string): Promise<Bot[]> {
+  const result = await db.prepare('SELECT * FROM bots WHERE workspace_id = ?').bind(workspaceId).all<Bot>();
   return result.results ?? [];
 }
 

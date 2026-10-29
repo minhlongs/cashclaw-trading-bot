@@ -1,37 +1,63 @@
-// GET /api/bots/[id] — bot detail + trades (user-facing, session-cookie auth)
-// POST /api/bots/[id] — control action (start/stop/pause/resume) (user-facing)
-// PATCH /api/bots/[id] — update bot configuration (user-facing)
-//
-// Operator/CLI access via Bearer token lives in src/worker.ts → /internal/api/bots.
+// User-facing bot routes: every operation is bound to the authenticated workspace.
 import { NextResponse } from 'next/server';
 import { botDetailHandler, botControlHandler, botUpdateConfigHandler } from '@/forest/api/routes';
+import { resolveWorkspaceTierContext, workspaceContextErrorResponse } from '@/ee/tenancy/workspace-request-context';
 
 export const dynamicParams = true;
+type RouteParams = { params: Promise<{ id: string }> };
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const result = await botDetailHandler(id);
-  return NextResponse.json(result);
+async function findAuthorizedBot(req: Request, id: string, write: boolean) {
+  const context = await resolveWorkspaceTierContext(req);
+  if (write && !['OWNER', 'ADMIN', 'TRADER'].includes(context.role)) {
+    return { response: NextResponse.json({ ok: false, error: 'Workspace role cannot modify bots' }, { status: 403 }) } as const;
+  }
+  const bot = await context.db.prepare('SELECT id, user_id FROM bots WHERE id = ? AND workspace_id = ?')
+    .bind(id, context.workspaceId).first<{ id: string; user_id: string }>();
+  if (!bot) return { response: NextResponse.json({ ok: false, error: 'Bot not found' }, { status: 404 }) } as const;
+  return { context, bot } as const;
 }
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const body = (await req.json().catch(() => ({}))) as { action?: string };
-  const action = body.action as 'start' | 'stop' | 'pause' | 'resume' | undefined;
-  if (!action) {
-    return NextResponse.json({ ok: false, error: 'Missing action' }, { status: 400 });
+export async function GET(req: Request, { params }: RouteParams): Promise<Response> {
+  try {
+    const { id } = await params;
+    const access = await findAuthorizedBot(req, id, false);
+    if ('response' in access && access.response) return access.response;
+    const result = await botDetailHandler(id, access.bot.user_id);
+    return NextResponse.json(result, result.ok ? undefined : { status: 503 });
+  } catch (error) {
+    return workspaceContextErrorResponse(error);
   }
-  const result = await botControlHandler(id, action);
-  return NextResponse.json(result);
 }
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const body = (await req.json().catch(() => ({}))) as { config?: Record<string, number> };
-  if (!body.config || typeof body.config !== 'object' || Array.isArray(body.config)) {
-    return NextResponse.json({ ok: false, error: 'Missing or invalid config object' }, { status: 400 });
+export async function POST(req: Request, { params }: RouteParams): Promise<Response> {
+  try {
+    const { id } = await params;
+    const body = await req.json().catch(() => ({})) as { action?: unknown };
+    if (!['start', 'stop', 'pause', 'resume'].includes(String(body.action))) {
+      return NextResponse.json({ ok: false, error: 'Missing or invalid action' }, { status: 400 });
+    }
+    const access = await findAuthorizedBot(req, id, true);
+    if ('response' in access && access.response) return access.response;
+    const result = await botControlHandler(id, body.action as 'start' | 'stop' | 'pause' | 'resume', access.bot.user_id);
+    return NextResponse.json(result, result.ok ? undefined : { status: 400 });
+  } catch (error) {
+    return workspaceContextErrorResponse(error);
   }
-  const result = await botUpdateConfigHandler(id, body.config);
-  const status = result.ok ? 200 : (result.error?.includes('not found') ? 404 : 400);
-  return NextResponse.json(result, { status });
+}
+
+export async function PATCH(req: Request, { params }: RouteParams): Promise<Response> {
+  try {
+    const { id } = await params;
+    const body = await req.json().catch(() => ({})) as { config?: unknown };
+    if (!body.config || typeof body.config !== 'object' || Array.isArray(body.config)) {
+      return NextResponse.json({ ok: false, error: 'Missing or invalid config object' }, { status: 400 });
+    }
+    const access = await findAuthorizedBot(req, id, true);
+    if ('response' in access && access.response) return access.response;
+    const result = await botUpdateConfigHandler(id, body.config as Record<string, number>, access.bot.user_id);
+    const status = result.ok ? 200 : (result.error?.includes('not found') ? 404 : 400);
+    return NextResponse.json(result, { status });
+  } catch (error) {
+    return workspaceContextErrorResponse(error);
+  }
 }
