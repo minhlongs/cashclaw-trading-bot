@@ -4,7 +4,8 @@
 **Repository / branch:** `minhlongs/cashclaw-trading-bot` / `arena/06ec4bf4-cashclaw-trading-bot`
 **PR:** [#35](https://github.com/minhlongs/cashclaw-trading-bot/pull/35) — OPEN, Draft
 **Base:** `main` at `11a774e820920dfbdb8e0ee52fe4599a69851770`
-**Most recent pre-continuation source head with successful hosted CI:** `bab44fd914e2e5abfd62521bf8dd63129fa6f349` (CI run `40882121879`, governance run `40882122055`, both passed). This continuation commit must be checked again on its exact resulting PR head.
+**Source/evidence commit:** `8038e0ceb61b3a83f8849b8fe3405463a19ca993`.
+**Hosted checks on that exact commit:** CI run [`40896023320`](https://github.com/minhlongs/cashclaw-trading-bot/actions/runs/40896023320) PASS; governance run [`40896023159`](https://github.com/minhlongs/cashclaw-trading-bot/actions/runs/40896023159) PASS. Any later report-only commit must also be checked at its own exact PR head. The PR body records the current final head/checks.
 **Review status: PARTIAL.** Authorization, workspace quota, and payment callback blockers are fixed and the current hosted CI/governance checks pass. Operations browser evidence could not be recovered/revalidated in this workspace, and the local Knip run remains blocked by this host's memory limit. This is not merge/production approval.
 
 This PR does **not** establish that OPC Trading Platform is complete, SaaS-ready, live-ready, or profitable. No merge, deployment, remote D1 migration, live mode, real order, real-money use, or real payment was performed.
