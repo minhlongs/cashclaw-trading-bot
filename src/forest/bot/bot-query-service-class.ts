@@ -63,14 +63,6 @@ export class BotQueryService {
     return rows.map((row) => rowToBotSummary(row as unknown as BotRow));
   }
 
-  /** Fetch a bot only when it belongs to the selected workspace. */
-  async getBotInWorkspace(id: string, workspaceId: string): Promise<BotSummary | null> {
-    if (!this.db) throw new Error('Bot database unavailable');
-    const row = await this.db.prepare('SELECT * FROM bots WHERE id = ? AND workspace_id = ?')
-      .bind(id, workspaceId).first<BotRow>();
-    return row ? rowToBotSummary(row) : null;
-  }
-
   /** Fetch just the metrics for a bot. */
   async getBotMetrics(id: string): Promise<BotMetrics | null> {
     if (!this.db) return null;

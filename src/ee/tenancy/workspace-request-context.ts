@@ -4,7 +4,6 @@ import { createServerClient } from '@/lib/db/client';
 import { resolveSessionUser } from '@/lib/auth/session-user';
 import { parseSessionCookie } from '@/lib/auth/session-utils';
 import type { D1Database } from '@/lib/db/types';
-import { getEntitlementsForTier } from '../billing/tier-entitlements';
 import { SaasTierSchema, type SaasTier } from './tenant-policy';
 
 export class WorkspaceContextError extends Error {
@@ -146,8 +145,4 @@ export async function resolveActiveBotCount(context: WorkspaceTierContext): Prom
   } catch {
     throw new WorkspaceContextError('Workspace quota database unavailable', 503);
   }
-}
-
-export function workspaceBotLimit(context: WorkspaceTierContext): number {
-  return getEntitlementsForTier(context.tier).maxRunningPaperBots;
 }

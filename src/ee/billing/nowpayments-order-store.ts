@@ -3,7 +3,7 @@ import { getEntitlementsForTier } from './tier-entitlements';
 import { SaasTierSchema, type SaasTier } from '../tenancy/tenant-policy';
 import type { NowPaymentsIpnPayload } from './nowpayments-ipn';
 
-export interface PendingPaymentOrder {
+interface PendingPaymentOrder {
   readonly orderId: string;
   readonly workspaceId: string;
   readonly targetTier: SaasTier;

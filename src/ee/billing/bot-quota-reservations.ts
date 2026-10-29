@@ -1,7 +1,7 @@
 import type { D1Database } from '@/lib/db/types';
 import type { WorkspaceTierContext } from '../tenancy/workspace-request-context';
 
-export type BotReservationResult =
+type BotReservationResult =
   | { readonly kind: 'reserved' }
   | { readonly kind: 'created' }
   | { readonly kind: 'in_progress' }
