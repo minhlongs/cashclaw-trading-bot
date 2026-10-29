@@ -14,7 +14,7 @@ export default defineConfig({
   use: {
     ...devices['Desktop Chrome'],
     viewport: { width: 1365, height: 900 },
-    baseURL: process.env.PR35_BASE_URL ?? 'http://127.0.0.1:8787',
+    baseURL: process.env.PR35_BASE_URL ?? 'http://localhost:8787',
     headless: true,
     trace: 'on',
     screenshot: 'off',
