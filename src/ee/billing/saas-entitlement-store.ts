@@ -28,4 +28,3 @@ export class SaasEntitlementStore {
 }
 
 /** @deprecated Kept for test/import compatibility only; has no mutable state or DB fallback. */
-export const defaultSaasEntitlementStore = new SaasEntitlementStore();
