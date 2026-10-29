@@ -2,6 +2,8 @@
 
 ## Result: PARTIAL — do not enable live execution
 
+Current A–H report with exact local E2E evidence, check results, limits and artifact hashes: [OPC readiness report (2026-10-29)](./opc-platform-readiness-2026-10-29.md).
+
 This checkout contains a substantial existing CashClaw trading/research application and SaaS-oriented modules. This pass added an owner-scoped persistent internal operations work queue and closed two existing session-validation defects needed to secure its API. It is not a completed ERP/CRM/helpdesk, nor a production multi-tenant SaaS release.
 
 ## Verified baseline
