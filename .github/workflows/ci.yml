@@ -53,7 +53,8 @@ jobs:
         run: npm test
 
       - name: Dead code check
-        run: npx knip
+        # Keep the full Knip scan and exit behavior; GitHub annotations surface findings when raw logs are unavailable.
+        run: npx knip --reporter symbols --reporter github-actions
 
       - name: Coverage check
         run: npm run test:coverage
