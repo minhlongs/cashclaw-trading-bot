@@ -1,0 +1,157 @@
+[
+  {
+    "results": [
+      {
+        "workspace_id": "legacy-basic",
+        "owner_user_id": "legacy-owner-basic",
+        "tier": "BASIC",
+        "updated_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "legacy-paid-expired-like",
+        "owner_user_id": "legacy-owner-expired",
+        "tier": "ENTERPRISE",
+        "updated_at_ms": 1700000000000
+      },
+      {
+        "workspace_id": "legacy-paid-failed-payment",
+        "owner_user_id": "legacy-owner-failed",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "legacy-paid-finished-proof",
+        "owner_user_id": "legacy-owner-good",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "legacy-paid-no-proof",
+        "owner_user_id": "legacy-owner-none",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "legacy-paid-pending-payment",
+        "owner_user_id": "legacy-owner-pending",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "legacy-paid-system-owner",
+        "owner_user_id": "system",
+        "tier": "MASTER",
+        "updated_at_ms": 1760000000000
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "payment_status": "failed",
+        "signature_verified": 1,
+        "row_count": 1,
+        "earliest_processed_at_ms": 1760000000000
+      },
+      {
+        "payment_status": "finished",
+        "signature_verified": 1,
+        "row_count": 2,
+        "earliest_processed_at_ms": 1700000000000
+      },
+      {
+        "payment_status": "waiting",
+        "signature_verified": 1,
+        "row_count": 1,
+        "earliest_processed_at_ms": 1760000000000
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "cid": 0,
+        "name": "workspace_id",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "owner_user_id",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "tier",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": "'BASIC'",
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "max_running_bots",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": "1",
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "max_walk_forward_windows",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": "4",
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "monthly_llm_credits",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": "1000",
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "managed_llm_pool_enabled",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": "0",
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "updated_at_ms",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  }
+]
