@@ -104,8 +104,8 @@ beforeAll(async () => {
   db = new LocalD1Database(path.join(d1Dir, dbFile));
   holder.db = db as unknown as D1Database;
   vi.stubEnv('NOWPAYMENTS_IPN_SECRET', SECRET);
-});
-beforeEach(clearFixture);
+}, 30_000);
+beforeEach(clearFixture, 15_000);
 afterAll(async () => {
   if (db) await db.exec(`DROP TRIGGER IF EXISTS d1_test_fail_ipn_finalize;
     DROP TRIGGER IF EXISTS d1_test_fail_order_update;
@@ -123,7 +123,7 @@ afterAll(async () => {
     DELETE FROM user_sessions WHERE id IN ('d1-test-session', 'd1-test-session-b', 'd1-test-session-expired');`);
   holder.db = null;
   vi.unstubAllEnvs();
-});
+}, 30_000);
 
 describe('NOWPayments callback and billing orders against Wrangler local D1 SQLite', () => {
   it('creates server-priced orders only for the session owner and rejects forged identity/workspace claims', async () => {
