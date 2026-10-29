@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockAll = vi.fn();
 vi.mock('@/lib/db/client', () => ({ createServerClient: vi.fn() }));
 
 import { middleware } from './middleware';
@@ -8,26 +7,29 @@ import { createServerClient } from '@/lib/db/client';
 
 function makeReq(method: string, pathname: string, cookies: Record<string, string> = {}, headers: Record<string, string> = {}) {
   const cookieMap = new Map(Object.entries(cookies).map(([k, v]) => [k, { value: v, name: k }]));
-  return { method, nextUrl: { pathname }, cookies: { get: (name: string) => cookieMap.get(name) }, headers } as unknown as Parameters<typeof middleware>[0];
+  const requestHeaders = new Headers(headers);
+  if (Object.keys(cookies).length) requestHeaders.set('cookie', Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; '));
+  return { method, nextUrl: { pathname, origin: 'https://example.test' }, cookies: { get: (name: string) => cookieMap.get(name) }, headers: requestHeaders } as unknown as Parameters<typeof middleware>[0];
 }
 
 function mockDbSession(userId: string, expiresAt: number) {
+  const bind = vi.fn((_sessionId: string, now: number) => ({
+    first: vi.fn().mockResolvedValue(expiresAt > now ? { user_id: userId } : null),
+  }));
   vi.mocked(createServerClient).mockReturnValue({
-    prepare: vi.fn().mockReturnValue({
-      bind: vi.fn().mockReturnValue({ all: mockAll.mockResolvedValue({ results: [{ user_id: userId, expires_at: expiresAt }] }) }),
-    }),
+    prepare: vi.fn().mockReturnValue({ bind }),
   } as never);
 }
 
 function mockDbEmpty() {
   vi.mocked(createServerClient).mockReturnValue({
-    prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnValue({ all: mockAll.mockResolvedValue({ results: [] }) }) }),
+    prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue(null) }) }),
   } as never);
 }
 
 function mockDbError() {
   vi.mocked(createServerClient).mockReturnValue({
-    prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnValue({ all: mockAll.mockRejectedValue(new Error('D1 down')) }) }),
+    prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnValue({ first: vi.fn().mockRejectedValue(new Error('D1 down')) }) }),
   } as never);
 }
 
@@ -63,10 +65,10 @@ describe('middleware', () => {
     expect(res.status).toBe(401);
   });
 
-  it('blocks POST when D1 query fails', async () => {
+  it('fails closed with 503 when D1 session lookup fails', async () => {
     mockDbError();
     const res = await middleware(makeReq('POST', '/api/bots', { session_id: 'db-fail' }));
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(503);
   });
 
   it('allows PUT with valid session', async () => {
@@ -184,10 +186,10 @@ describe('middleware', () => {
 
   /* ── DB unavailable fallback ────────────────────────────────── */
 
-  it('falls back to cookie check when DB unavailable (dev mode)', async () => {
+  it('fails closed when DB unavailable in development too', async () => {
     mockDbUnavailable();
     const res = await middleware(makeReq('POST', '/api/bots', { session_id: 'dev-ok' }));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
   });
 
   it('returns 503 when DB unavailable in production', async () => {
@@ -203,7 +205,27 @@ describe('middleware', () => {
     const req = makeReq('POST', '/api/bots', { session_id: 'valid-session' }, { 'x-user-id': 'spoofed-user' });
     const res = await middleware(req);
     expect(res.status).toBe(200);
-    // Response headers should NOT contain client-supplied x-user-id
     expect(res.headers.get('x-user-id')).toBeNull();
+  });
+
+  it('treats the exact expiry second as expired', async () => {
+    mockDbSession('u1', Math.floor(Date.now() / 1000));
+    expect((await middleware(makeReq('GET', '/api/ops/work-items', { session_id: 'expired-now' }))).status).toBe(401);
+  });
+
+  it('does not accidentally match adjacent route names', async () => {
+    expect((await middleware(makeReq('GET', '/api/opsx'))).status).toBe(200);
+    expect((await middleware(makeReq('GET', '/api/bots-extra'))).status).toBe(200);
+  });
+
+  it('protects new mutating API routes by default', async () => {
+    expect((await middleware(makeReq('POST', '/api/new-sensitive-route'))).status).toBe(401);
+  });
+
+  it('rejects cross-origin and cross-site API mutations', async () => {
+    const foreignOrigin = makeReq('POST', '/api/ops/work-items', { session_id: 's1' }, { origin: 'https://attacker.example' });
+    expect((await middleware(foreignOrigin)).status).toBe(403);
+    const crossSite = makeReq('PATCH', '/api/ops/work-items/x', { session_id: 's1' }, { 'sec-fetch-site': 'cross-site' });
+    expect((await middleware(crossSite)).status).toBe(403);
   });
 });
