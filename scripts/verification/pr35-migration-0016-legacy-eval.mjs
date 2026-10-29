@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { copyFileSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 assert.ok(process.argv.includes('--reset'), 'Pass --reset to recreate only the isolated PR35 migration-evaluation D1.');
@@ -10,6 +10,7 @@ const persist = '.wrangler/verification/pr35-migration-d1';
 const pre16Dir = '.wrangler/verification/migrations-pre16';
 const seedFile = '.wrangler/verification/pr35-migration-legacy-seed.sql';
 const artifactDir = 'docs/verification/artifacts';
+const preflightFile = 'docs/verification/pr35-0016-legacy-preflight.sql';
 
 rmSync(persist, { recursive: true, force: true });
 rmSync(pre16Dir, { recursive: true, force: true });
@@ -52,6 +53,9 @@ SELECT name FROM sqlite_master WHERE type='table' AND name IN ('saas_workspace_m
 PRAGMA table_info('saas_workspace_entitlements');
 `);
 writeFileSync(`${artifactDir}/pr35-migration-before.json`, `${JSON.stringify(before, null, 2)}\n`);
+const preflightSql = readFileSync(preflightFile, 'utf8').split('\n').filter((line) => !line.trimStart().startsWith('--')).join('\n');
+const preflight = query(preflightSql);
+writeFileSync(`${artifactDir}/pr35-migration-preflight.json`, `${JSON.stringify(preflight, null, 2)}\n`);
 
 applyMigrations('../migrations');
 const after = query(`
@@ -74,7 +78,13 @@ const eventHistory = after[4]?.results?.[0]?.new_event_history_rows;
 const orders = after[5]?.results?.[0]?.payment_order_rows;
 const bots = after[6]?.results ?? [];
 const orphanOwnerMemberships = after[7]?.results?.[0]?.owner_memberships_without_user;
-assert.equal(entitlements.length, 9);
+const orphanOwnersInPreflight = preflight[4]?.results ?? [];
+const orphanSessionsInPreflight = preflight[5]?.results ?? [];
+const orphanBotsInPreflight = preflight[6]?.results ?? [];
+assert.deepEqual(orphanOwnersInPreflight.map((row) => row.owner_user_id).sort(), ['legacy-user-missing', 'system']);
+assert.equal(orphanSessionsInPreflight.length, 1);
+assert.equal(orphanBotsInPreflight.length, 0);
+assert.equal(entitlements.length, 10);
 assert.equal(entitlements.filter((row) => row.tier !== 'BASIC' && row.revoked_at_ms !== null).length, 6);
 assert.equal(workspaces.length, 8);
 assert.equal(memberships.length, 8);
@@ -83,6 +93,11 @@ assert.equal(eventHistory, 0);
 assert.equal(orders, 0);
 assert.equal(bots.length, 2);
 assert.ok(bots.every((bot) => bot.workspace_id === `personal:${bot.user_id}`));
-assert.equal(orphanOwnerMemberships, 6);
-console.log('PASS migration 0016 synthetic before/after: all 6 non-BASIC rows revoked; legacy events retained; 2 bots preserved/assigned; 6 legacy owner memberships have no matching users row; no new orders/history inferred.');
-console.log(`Artifacts: ${artifactDir}/pr35-migration-{before,after}.json`);
+assert.equal(orphanOwnerMemberships, 0);
+assert.ok(entitlements.some((row) => row.workspace_id === 'legacy-orphan-basic-negative-test' && row.tier === 'BASIC'));
+assert.ok(!workspaces.some((row) => row.workspace_id === 'legacy-orphan-basic-negative-test'));
+assert.ok(!memberships.some((row) => row.workspace_id === 'legacy-orphan-basic-negative-test'));
+assert.ok(!workspaces.some((row) => row.owner_user_id === 'system'));
+assert.ok(!memberships.some((row) => row.user_id === 'system'));
+console.log('PASS migration 0016 consistent legacy owners: all 6 non-BASIC rows fail closed; legacy events retained; 2 bots preserved/assigned; orphan owner/session preflight is read-only; orphan negative case receives no workspace/membership.');
+console.log(`Artifacts: ${artifactDir}/pr35-migration-{before,preflight,after}.json`);

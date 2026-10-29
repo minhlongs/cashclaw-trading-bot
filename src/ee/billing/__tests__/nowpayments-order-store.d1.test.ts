@@ -23,6 +23,10 @@ let db: LocalD1Database;
 
 async function seedWorkspace() {
   await db.batch([
+    db.prepare(`INSERT OR REPLACE INTO users (id, email, display_name, locale, created_at, updated_at) VALUES (?, ?, ?, 'en', ?, ?)`)
+      .bind(USER_ID, 'd1-test-user-a@example.test', 'D1 Test A', Math.floor(NOW / 1000), Math.floor(NOW / 1000)),
+    db.prepare(`INSERT OR REPLACE INTO users (id, email, display_name, locale, created_at, updated_at) VALUES (?, ?, ?, 'en', ?, ?)`)
+      .bind('d1-test-user-b', 'd1-test-user-b@example.test', 'D1 Test B', Math.floor(NOW / 1000), Math.floor(NOW / 1000)),
     db.prepare(`INSERT OR REPLACE INTO user_sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)`)
       .bind('d1-test-session', USER_ID, Math.floor(NOW / 1000) + 3600, Math.floor(NOW / 1000)),
     db.prepare(`INSERT OR REPLACE INTO user_sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)`)
@@ -64,7 +68,8 @@ async function clearFixture() {
     DELETE FROM saas_workspaces WHERE workspace_id IN ('d1-test-workspace-b', 'd1-test-viewer-workspace');
     DELETE FROM saas_workspace_memberships WHERE workspace_id = '${WORKSPACE_ID}';
     DELETE FROM saas_workspaces WHERE workspace_id = '${WORKSPACE_ID}';
-    DELETE FROM user_sessions WHERE id IN ('d1-test-session', 'd1-test-session-b', 'd1-test-session-expired');`);
+    DELETE FROM user_sessions WHERE id IN ('d1-test-session', 'd1-test-session-b', 'd1-test-session-expired');
+    DELETE FROM users WHERE id IN ('d1-test-user-a', 'd1-test-user-b');`);
   await seedWorkspace();
 }
 
@@ -120,7 +125,8 @@ afterAll(async () => {
     DELETE FROM saas_workspaces WHERE workspace_id IN ('d1-test-workspace-b', 'd1-test-viewer-workspace');
     DELETE FROM saas_workspace_memberships WHERE workspace_id = '${WORKSPACE_ID}';
     DELETE FROM saas_workspaces WHERE workspace_id = '${WORKSPACE_ID}';
-    DELETE FROM user_sessions WHERE id IN ('d1-test-session', 'd1-test-session-b', 'd1-test-session-expired');`);
+    DELETE FROM user_sessions WHERE id IN ('d1-test-session', 'd1-test-session-b', 'd1-test-session-expired');
+    DELETE FROM users WHERE id IN ('d1-test-user-a', 'd1-test-user-b');`);
   holder.db = null;
   vi.unstubAllEnvs();
 }, 30_000);

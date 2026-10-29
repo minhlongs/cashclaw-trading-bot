@@ -25,17 +25,20 @@ CREATE TABLE IF NOT EXISTS saas_workspace_memberships (
 CREATE INDEX IF NOT EXISTS idx_saas_workspace_memberships_user
   ON saas_workspace_memberships(user_id, status, workspace_id);
 
--- Keep verifiable owners from pre-existing entitlement rows. Legacy pseudo-owners are not users.
+-- Keep verifiable owners from pre-existing entitlement rows only when the owner still exists.
+-- The legacy tables have no foreign keys; never create a workspace/membership for an orphan ID.
 INSERT OR IGNORE INTO saas_workspaces (workspace_id, owner_user_id, status, created_at_ms)
 SELECT workspace_id, owner_user_id, 'active', updated_at_ms
 FROM saas_workspace_entitlements
-WHERE owner_user_id NOT IN ('system', 'default', '');
+WHERE owner_user_id NOT IN ('system', 'default', '')
+  AND EXISTS (SELECT 1 FROM users WHERE users.id = saas_workspace_entitlements.owner_user_id);
 
 INSERT OR IGNORE INTO saas_workspace_memberships
   (workspace_id, user_id, role, status, expires_at_ms, created_at_ms)
 SELECT workspace_id, owner_user_id, 'OWNER', 'active', NULL, updated_at_ms
 FROM saas_workspace_entitlements
-WHERE owner_user_id NOT IN ('system', 'default', '');
+WHERE owner_user_id NOT IN ('system', 'default', '')
+  AND EXISTS (SELECT 1 FROM users WHERE users.id = saas_workspace_entitlements.owner_user_id);
 
 -- Existing paid rows without an expiry/order cannot prove an active subscription: fail closed.
 UPDATE saas_workspace_entitlements
@@ -45,11 +48,11 @@ WHERE tier <> 'BASIC' AND expires_at_ms IS NULL;
 -- Provision one BASIC personal workspace for each existing session/bot owner. Workspace IDs are
 -- deterministic server-derived IDs; caller-provided IDs never create membership.
 INSERT OR IGNORE INTO saas_workspaces (workspace_id, owner_user_id, status, created_at_ms)
-SELECT 'personal:' || user_id, user_id, 'active', CAST(strftime('%s','now') AS INTEGER) * 1000
-FROM user_sessions WHERE user_id <> '';
+SELECT 'personal:' || s.user_id, s.user_id, 'active', CAST(strftime('%s','now') AS INTEGER) * 1000
+FROM user_sessions s JOIN users u ON u.id = s.user_id WHERE s.user_id <> '';
 INSERT OR IGNORE INTO saas_workspaces (workspace_id, owner_user_id, status, created_at_ms)
-SELECT 'personal:' || user_id, user_id, 'active', CAST(strftime('%s','now') AS INTEGER) * 1000
-FROM bots WHERE user_id <> '';
+SELECT 'personal:' || b.user_id, b.user_id, 'active', CAST(strftime('%s','now') AS INTEGER) * 1000
+FROM bots b JOIN users u ON u.id = b.user_id WHERE b.user_id <> '';
 
 INSERT OR IGNORE INTO saas_workspace_memberships
   (workspace_id, user_id, role, status, expires_at_ms, created_at_ms)
@@ -64,7 +67,9 @@ SELECT workspace_id, owner_user_id, 'BASIC', 1, 4, 1000, 0, created_at_ms, NULL,
 FROM saas_workspaces
 WHERE workspace_id LIKE 'personal:%';
 
-UPDATE bots SET workspace_id = 'personal:' || user_id WHERE workspace_id IS NULL AND user_id <> '';
+UPDATE bots SET workspace_id = 'personal:' || user_id
+WHERE workspace_id IS NULL AND user_id <> ''
+  AND EXISTS (SELECT 1 FROM users WHERE users.id = bots.user_id);
 CREATE INDEX IF NOT EXISTS idx_bots_workspace_status
   ON bots(workspace_id, status, id);
 

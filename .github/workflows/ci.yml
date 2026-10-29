@@ -58,3 +58,36 @@ jobs:
 
       - name: Coverage check
         run: npm run test:coverage
+
+  worker-browser-e2e:
+    name: OpenNext Worker + D1 browser E2E
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run isolated OpenNext Worker and browser regression suite
+        run: node scripts/verification/pr35-browser-e2e.mjs
+
+      - name: Upload sanitized browser screenshots, traces and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr35-browser-e2e-${{ github.sha }}
+          path: .wrangler/verification/pr35-browser-artifacts/
+          if-no-files-found: error
+          retention-days: 14

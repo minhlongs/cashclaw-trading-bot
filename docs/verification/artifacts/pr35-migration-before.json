@@ -8,6 +8,12 @@
         "updated_at_ms": 1760000000000
       },
       {
+        "workspace_id": "legacy-orphan-basic-negative-test",
+        "owner_user_id": "legacy-user-missing",
+        "tier": "BASIC",
+        "updated_at_ms": 1760000000000
+      },
+      {
         "workspace_id": "legacy-paid-expired-like",
         "owner_user_id": "legacy-owner-expired",
         "tier": "ENTERPRISE",
@@ -72,7 +78,7 @@
     ],
     "success": true,
     "meta": {
-      "duration": 0
+      "duration": 1
     }
   },
   {

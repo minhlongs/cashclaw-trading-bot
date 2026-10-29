@@ -11,6 +11,15 @@
         "current_payment_id": null
       },
       {
+        "workspace_id": "legacy-orphan-basic-negative-test",
+        "owner_user_id": "legacy-user-missing",
+        "tier": "BASIC",
+        "updated_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "revoked_at_ms": null,
+        "current_payment_id": null
+      },
+      {
         "workspace_id": "legacy-paid-expired-like",
         "owner_user_id": "legacy-owner-expired",
         "tier": "ENTERPRISE",
@@ -68,7 +77,7 @@
         "workspace_id": "personal:legacy-user-a",
         "owner_user_id": "legacy-user-a",
         "tier": "BASIC",
-        "updated_at_ms": 1793285588000,
+        "updated_at_ms": 1793288431000,
         "expires_at_ms": null,
         "revoked_at_ms": null,
         "current_payment_id": null
@@ -77,7 +86,7 @@
         "workspace_id": "personal:legacy-user-b",
         "owner_user_id": "legacy-user-b",
         "tier": "BASIC",
-        "updated_at_ms": 1793285588000,
+        "updated_at_ms": 1793288431000,
         "expires_at_ms": null,
         "revoked_at_ms": null,
         "current_payment_id": null
@@ -85,7 +94,7 @@
     ],
     "success": true,
     "meta": {
-      "duration": 1
+      "duration": 0
     }
   },
   {
@@ -130,13 +139,13 @@
         "workspace_id": "personal:legacy-user-a",
         "owner_user_id": "legacy-user-a",
         "status": "active",
-        "created_at_ms": 1793285588000
+        "created_at_ms": 1793288431000
       },
       {
         "workspace_id": "personal:legacy-user-b",
         "owner_user_id": "legacy-user-b",
         "status": "active",
-        "created_at_ms": 1793285588000
+        "created_at_ms": 1793288431000
       }
     ],
     "success": true,
@@ -256,7 +265,7 @@
   {
     "results": [
       {
-        "owner_memberships_without_user": 6
+        "owner_memberships_without_user": 0
       }
     ],
     "success": true,

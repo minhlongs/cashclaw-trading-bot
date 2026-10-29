@@ -36,3 +36,31 @@ LEFT JOIN bots b ON b.user_id = e.owner_user_id
 WHERE e.tier <> 'BASIC'
 GROUP BY e.owner_user_id
 ORDER BY e.owner_user_id;
+
+-- Explicit integrity cases: do not infer that absent users mean invalid payment or valid entitlement.
+SELECT e.workspace_id, e.owner_user_id, e.tier,
+       COUNT(DISTINCT i.payment_id) AS legacy_ipn_rows,
+       COUNT(DISTINCT s.id) AS session_rows,
+       COUNT(DISTINCT b.id) AS bot_rows
+FROM saas_workspace_entitlements e
+LEFT JOIN users u ON u.id = e.owner_user_id
+LEFT JOIN saas_nowpayments_ipn_events i ON i.workspace_id = e.workspace_id
+LEFT JOIN user_sessions s ON s.user_id = e.owner_user_id
+LEFT JOIN bots b ON b.user_id = e.owner_user_id
+WHERE u.id IS NULL
+GROUP BY e.workspace_id, e.owner_user_id, e.tier
+ORDER BY e.workspace_id;
+
+SELECT s.user_id, COUNT(*) AS orphan_session_rows
+FROM user_sessions s
+LEFT JOIN users u ON u.id = s.user_id
+WHERE u.id IS NULL
+GROUP BY s.user_id
+ORDER BY s.user_id;
+
+SELECT b.user_id, COUNT(*) AS orphan_bot_rows
+FROM bots b
+LEFT JOIN users u ON u.id = b.user_id
+WHERE u.id IS NULL
+GROUP BY b.user_id
+ORDER BY b.user_id;

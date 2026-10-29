@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T14:47:05.265Z",
+  "generatedAt": "2026-10-29T15:28:28.000Z",
   "base": "http://127.0.0.1:8787",
   "workerEnvironment": "local Wrangler/OpenNext, D1 binding local",
   "checks": [
@@ -74,12 +74,12 @@
       "name": "refund callback persists terminal state and reduces current entitlement to BASIC"
     }
   ],
-  "operationsItemId": "960af2cd-156a-4836-b67f-1f053038f703",
+  "operationsItemId": "b8348ef4-4b59-42bf-8c32-75e5a00b9f4f",
   "winningBotId": "pr35-quota-1",
   "syntheticOrderIds": [
-    "cc_db3c16b6-e2a2-4c74-ac22-bd32915cd431",
-    "cc_e8bb61f1-0d2e-4aeb-8feb-3b85a64055db",
-    "cc_b81d6e2c-5169-4319-a8d7-f7d409fdb6bf"
+    "cc_c57c93c9-e9aa-4606-8ef4-026f76799a77",
+    "cc_eca10f97-0d4b-4e50-8bb6-cdc10ccfd9b9",
+    "cc_2654a607-6514-409b-90e0-51b6f3fd4794"
   ],
   "note": "HTTP-to-Worker with isolated local D1 binding. No cookies, passwords, signatures, or secret values written."
 }

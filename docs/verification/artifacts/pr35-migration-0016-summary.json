@@ -1,43 +1,58 @@
 {
   "testOnly": true,
-  "execution": "Wrangler local D1 bound to isolated persistence; migrations 0001-0015 applied, synthetic legacy rows inserted, then 0016 applied. No remote D1 was addressed.",
+  "execution": "Wrangler local D1 only: migrations 0001-0015 applied, consistent synthetic legacy rows seeded, then 0016 applied. No remote D1 was addressed.",
   "before": {
-    "entitlements": 7,
-    "nonBasicPaidEntitlements": 6,
-    "basicEntitlements": 1,
+    "entitlements": 8,
+    "nonBasicEntitlements": 6,
+    "basicEntitlements": 2,
     "legacyIpnRows": 4,
     "signedFinishedIpnRows": 2,
     "pendingIpnRows": 1,
     "failedIpnRows": 1,
-    "hasExpiryColumn": false,
-    "hasCurrentPaymentIdColumn": false,
-    "hasWorkspaceMembershipTable": false,
-    "hasPaymentOrdersTable": false,
-    "hasNewEventHistoryTable": false
+    "expiryColumn": false,
+    "currentPaymentIdColumn": false,
+    "workspaceMembershipTable": false,
+    "paymentOrdersTable": false,
+    "newEventHistoryTable": false,
+    "validLegacyOwnersHaveUsersRows": true,
+    "negativeOrphanBasicEntitlementAndSessionSeeded": true
+  },
+  "readOnlyPreflightOnSyntheticPreMigrationSnapshot": {
+    "ownerIdsMissingFromUsers": ["legacy-user-missing", "system"],
+    "ownerEntitlementRowsMissingUsers": 2,
+    "orphanSessions": 1,
+    "orphanBots": 0,
+    "legacyFinishedSignedEventRows": 2,
+    "meaning": "Synthetic checks only; production data was not queried. Missing users are integrity cases, not payment-validity findings."
   },
   "after": {
-    "entitlements": 9,
+    "entitlements": 10,
     "nonBasicEntitlementsRevoked": 6,
-    "basicEntitlementsRetainedOrProvisioned": 3,
+    "basicEntitlementsRetainedOrProvisioned": 4,
     "workspaces": 8,
     "ownerMembershipRows": 8,
-    "legacyOwnerMembershipRowsWithoutMatchingUsers": 6,
+    "ownerMembershipsWithoutMatchingUsers": 0,
+    "orphanNegativeTestReceivedWorkspaceOrMembership": false,
+    "orphanSessionReceivedPersonalWorkspace": false,
     "botsPreservedAndAssignedPersonalWorkspace": 2,
     "legacyIpnRowsRetained": 4,
     "newEventHistoryRows": 0,
     "paymentOrderRows": 0,
-    "newExpiryValuesOnLegacyPaidRows": 0,
-    "newCurrentPaymentIdsOnLegacyPaidRows": 0
+    "legacyPaidExpiryValues": 0,
+    "legacyPaidCurrentPaymentIds": 0
   },
   "cases": [
-    { "case": "paid row with signed finished legacy IPN evidence", "beforeTier": "PREMIUM", "afterTier": "PREMIUM", "afterRevoked": true, "reason": "0016 revokes every non-BASIC entitlement with null expires_at_ms; the old row has no expiry/order binding." },
-    { "case": "paid row without payment proof", "beforeTier": "PREMIUM", "afterTier": "PREMIUM", "afterRevoked": true, "reason": "No expiry or payment-order proof exists." },
-    { "case": "expired-like legacy paid row", "beforeTier": "ENTERPRISE", "afterTier": "ENTERPRISE", "afterRevoked": true, "reason": "The legacy schema has no expiry field; an old timestamp is not a verified expiry." },
-    { "case": "legacy failed-payment event plus paid entitlement", "beforeTier": "PREMIUM", "afterTier": "PREMIUM", "afterRevoked": true, "reason": "Null expiry causes revocation regardless of the failed event." },
-    { "case": "legacy pending-payment event plus paid entitlement", "beforeTier": "PREMIUM", "afterTier": "PREMIUM", "afterRevoked": true, "reason": "Null expiry causes revocation regardless of the waiting event." },
-    { "case": "pseudo-owner system", "beforeTier": "MASTER", "afterTier": "MASTER", "afterRevoked": true, "workspaceCreated": false, "membershipCreated": false, "reason": "Pseudo-owner is excluded from workspace and OWNER-membership backfill." },
-    { "case": "BASIC entitlement", "beforeTier": "BASIC", "afterTier": "BASIC", "afterRevoked": false, "reason": "BASIC row remains unchanged." }
+    { "case": "paid row with signed finished legacy IPN evidence and an existing owner user", "legacyEvidence": "signature_verified=1, finished, workspace/tier/payment id and pay amount/currency recorded", "missingEvidence": "No bound order, expected price/currency, provider raw signed body, or entitlement expiry/term", "afterPersistedTier": "PREMIUM", "afterRevoked": true, "classification": "Insufficient data to prove active validity; not evidence of invalid payment." },
+    { "case": "paid row with no event proof and existing owner user", "afterRevoked": true, "classification": "Insufficient data; not evidence of invalid payment." },
+    { "case": "expired-like old paid row with old finished event", "afterRevoked": true, "classification": "Legacy schema has no expiry/term; an old event timestamp cannot prove expiry or continued validity." },
+    { "case": "paid row with failed event", "afterRevoked": true, "classification": "No current positive proof in this fixture; a failed event alone cannot disprove a prior successful payment missing from the legacy table." },
+    { "case": "paid row with pending event", "afterRevoked": true, "classification": "Pending event is not proof of paid status; absence of an older successful event remains unknown." },
+    { "case": "paid pseudo-owner system", "afterRevoked": true, "workspaceCreated": false, "membershipCreated": false, "classification": "No user identity/owner linkage; not automatically recoverable." },
+    { "case": "existing BASIC owner", "afterRevoked": false, "workspaceAndMembershipPreserved": true },
+    { "case": "orphan BASIC owner negative control", "usersRow": false, "sessionRow": true, "workspaceCreated": false, "membershipCreated": false, "classification": "Intentionally inconsistent integrity negative control; retained as data but not treated as a valid customer." }
   ],
-  "dataLoss": "No seeded entitlement, legacy IPN-event, or bot rows were deleted. However, all six paid/non-BASIC synthetic rows became effectively BASIC through revoked_at_ms; this is six access-loss cases, including one with signed finished legacy IPN evidence. No expiry or provider-order record can be reconstructed from this migration alone.",
-  "limitations": "The pre-0016 schema cannot represent an entitlement with expires_at_ms/current_payment_id, a payment-order row, or a prior explicit revoked flag. The signed-finished legacy IPN is evidence of a callback, not sufficient proof of an active unexpired subscription. The exact hypothetical paid-valid-with-expiry case is therefore impossible to seed as a legacy row without changing the old schema or pre-granting post-migration state. In this synthetic set, 6 owner memberships were created for legacy owner IDs absent from users; confirm such owners against users/sessions before any migration, while noting absence of a users row alone does not demonstrate a real session or accessible account."
+  "dataImpact": "No seeded entitlement, legacy IPN event, or bot row was deleted. All six legitimate-user/system non-BASIC rows were retained but revoked because expires_at_ms was null. Six synthetic valid owner rows matched users and received memberships, while the pseudo-owner system row received none. The separately labeled orphan negative-control row received no workspace/membership. Two session-backed user workspaces were provisioned and both bots were assigned. The signed-finished event establishes a historically recorded callback but not a currently active subscription.",
+  "migrationDesign": "The broad revocation is an intentional fail-closed rule in 0016, not a finding that the six payments were invalid. The old schema cannot validate amount/currency against a checkout order, bind an event to an owner/order, or establish subscription duration/expiry. A preservation/recovery path must require an owner-reviewed proof manifest with those fields and verifiable supporting evidence; it must only clear revocation for exact matching rows. No grace period or automatic entitlement restoration was applied.",
+  "integrityFix": "Migration 0016 now creates legacy workspaces/memberships only when owner_user_id exists in users; personal workspace/bot backfills also require a users row. Session authentication joins user_sessions to users and rejects orphan sessions. The test has consistent primary legacy owners plus an explicitly labeled orphan entitlement/session negative control.",
+  "limitations": "Pre-0016 rows cannot encode expires_at_ms/current_payment_id, order price/fiat currency, or prior explicit revocation. Valid paid customers with no recoverable order/term evidence may lose access under the current fail-closed migration; business must choose how to handle them. The signed-finished callback metadata cannot by itself establish active rights."
 }

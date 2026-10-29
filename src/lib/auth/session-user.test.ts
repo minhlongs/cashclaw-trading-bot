@@ -5,8 +5,9 @@ import { resolveSessionUser } from './session-user';
 function mockDb(row: { user_id: string } | null) {
   const first = vi.fn().mockResolvedValue(row);
   const bind = vi.fn().mockReturnValue({ first });
-  const db = { prepare: vi.fn().mockReturnValue({ bind }) } as unknown as D1Database;
-  return { db, bind, first };
+  const prepare = vi.fn().mockReturnValue({ bind });
+  const db = { prepare } as unknown as D1Database;
+  return { db, bind, first, prepare };
 }
 
 describe('resolveSessionUser', () => {
@@ -17,10 +18,18 @@ describe('resolveSessionUser', () => {
   });
 
   it('uses the session primary key and strict epoch-second expiry predicate', async () => {
-    const { db, bind } = mockDb({ user_id: 'user-a' });
+    const { db, bind, prepare } = mockDb({ user_id: 'user-a' });
     const result = await resolveSessionUser(new Request('https://example.test/api', { headers: { cookie: 'session_id=sess-fixture-a' } }), db, 123);
     expect(result).toEqual({ userId: 'user-a', errorStatus: null });
+    expect(prepare).toHaveBeenCalledWith(expect.stringContaining('JOIN users u ON u.id = s.user_id'));
     expect(bind).toHaveBeenCalledWith('sess-fixture-a', 123);
+  });
+
+  it('rejects orphan session rows because identity must still exist in users', async () => {
+    const { db, prepare } = mockDb(null);
+    const result = await resolveSessionUser(new Request('https://example.test/api', { headers: { cookie: 'session_id=orphan-session' } }), db, 100);
+    expect(result).toEqual({ userId: null, errorStatus: 401 });
+    expect(prepare).toHaveBeenCalledWith(expect.stringContaining('JOIN users u ON u.id = s.user_id'));
   });
 
   it('rejects missing, expired, empty-owner and oversized sessions', async () => {

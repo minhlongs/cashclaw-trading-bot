@@ -14,7 +14,9 @@ export async function resolveSessionUser(
   if (!sessionId || sessionId.length > 128) return { userId: null, errorStatus: 401 };
   try {
     const row = await db.prepare(
-      'SELECT user_id FROM user_sessions WHERE id = ? AND expires_at > ?',
+      `SELECT s.user_id FROM user_sessions s
+       JOIN users u ON u.id = s.user_id
+       WHERE s.id = ? AND s.expires_at > ?`,
     ).bind(sessionId, nowSeconds).first<{ user_id: string }>();
     if (!row || typeof row.user_id !== 'string' || row.user_id.length === 0 || row.user_id.length > 128) {
       return { userId: null, errorStatus: 401 };
