@@ -158,18 +158,23 @@ async function waitForWorker(worker) {
   }
   throw new Error(`Worker did not become healthy: ${cleanString(String(lastError))}`);
 }
+function signalGroup(child, signal) {
+  try {
+    if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, signal);
+    else child.kill(signal);
+  } catch (error) {
+    // ESRCH means the worker process group is already gone, which is the desired end state.
+    if (error?.code !== 'ESRCH') throw error;
+  }
+}
 async function stopWorker(worker, name) {
-  if (worker.child.exitCode === null) {
-    if (process.platform !== 'win32' && worker.child.pid) process.kill(-worker.child.pid, 'SIGTERM');
-    else worker.child.kill('SIGTERM');
+  if (worker.child.exitCode === null && worker.child.signalCode === null) {
+    signalGroup(worker.child, 'SIGTERM');
     await Promise.race([
       new Promise((resolveExit) => worker.child.once('close', resolveExit)),
       new Promise((resolveTimeout) => setTimeout(resolveTimeout, 10_000)),
     ]);
-    if (worker.child.exitCode === null && worker.child.pid) {
-      if (process.platform !== 'win32') process.kill(-worker.child.pid, 'SIGKILL');
-      else worker.child.kill('SIGKILL');
-    }
+    if (worker.child.exitCode === null && worker.child.signalCode === null) signalGroup(worker.child, 'SIGKILL');
   }
   const secret = readTestSecret();
   writeFileSync(join(raw, `${name}.log`), cleanString(worker.getLogs(), secret));
@@ -262,31 +267,40 @@ function assertNoSensitiveStrings(dir, secret) {
 
 let worker;
 let failure;
+const progress = [];
 try {
   await run('npm', ['run', 'build:worker'], 'worker-build');
+  progress.push('build:ok');
   await run(process.execPath, ['scripts/verification/pr35-worker-d1-setup.mjs', '--reset'], 'd1-setup');
+  progress.push('d1-setup:ok');
   worker = startWorker();
   await waitForWorker(worker);
+  progress.push('worker1:healthy');
   await run('npx', ['playwright', 'test', '--config', 'playwright.pr35.config.ts', '--grep-invert', '@restart'], 'playwright-runtime', playwrightEnv(join(raw, 'phase1', 'test-results')), 3);
+  progress.push('phase1:3-passed');
   await stopWorker(worker, 'worker-runtime');
+  progress.push('worker1:stopped');
   worker = startWorker();
   await waitForWorker(worker);
+  progress.push('worker2:healthy');
   await run('npx', ['playwright', 'test', '--config', 'playwright.pr35.config.ts', '--grep', '@restart'], 'playwright-restart', playwrightEnv(join(raw, 'phase2', 'test-results')), 1);
+  progress.push('phase2:1-passed');
 } catch (error) {
   failure = error;
+  progress.push(`failed-after:${progress.length ? progress.at(-1) : 'start'}`);
 } finally {
   if (worker) {
-    try { await stopWorker(worker, 'worker-final'); }
-    catch (error) { failure ??= error; }
+    try { await stopWorker(worker, 'worker-final'); progress.push('worker-final:stopped'); }
+    catch (error) { failure ??= error; progress.push('worker-final:cleanup-error'); }
   }
-  try { await sanitizeTraces(); }
-  catch (error) { failure ??= error; }
+  try { await sanitizeTraces(); progress.push('artifacts:sanitized'); }
+  catch (error) { failure ??= error; progress.push('artifacts:error'); }
 }
 if (failure) {
   const message = cleanString(failure instanceof Error ? failure.message : String(failure), readTestSecret())
     .replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, ' ')
     .replace(/\s+/g, ' ').slice(-4000);
-  console.log(`::error title=PR35 verification failure::${message}`);
+  console.log(`::error title=PR35 verification failure::Phase progress: ${progress.join('; ')}. ${message}`);
   throw failure;
 }
 console.log(`PASS sanitized browser artifacts written under ${artifactDir}`);
