@@ -207,13 +207,17 @@ test('Worker restart retains A’s Operations record, version and history @resta
   const state = JSON.parse(readFileSync(statePath, 'utf8')) as SavedState;
   await login(page, 'vi', accountA);
   await page.goto('/vi/operations');
-  await expect(page.getByText(state.title)).toBeVisible();
-  await expect(page.getByText(/Hoàn tất/)).toBeVisible();
-  await expect(page.getByText(/Phiên bản 2/)).toBeVisible();
-  await page.getByRole('button', { name: 'Xem lịch sử' }).click();
-  await expect(page.getByText('Đã tạo: Mở')).toBeVisible();
-  await expect(page.getByText('Đã đổi trạng thái: Đang xử lý')).toBeVisible();
-  await expect(page.getByText('Đã đổi trạng thái: Hoàn tất')).toBeVisible();
+  // Phase 1 leaves several A-owned items (history, conflict, isolation fixture);
+  // scope every assertion to the one persisted record this restart check must prove.
+  const item = page.locator('.ops-item').filter({ hasText: state.title });
+  await expect(item).toHaveCount(1);
+  await expect(item.getByText(state.title)).toBeVisible();
+  await expect(item.getByText(/Hoàn tất/)).toBeVisible();
+  await expect(item.getByText(/Phiên bản 2/)).toBeVisible();
+  await item.getByRole('button', { name: 'Xem lịch sử' }).click();
+  await expect(item.getByText('Đã tạo: Mở')).toBeVisible();
+  await expect(item.getByText('Đã đổi trạng thái: Đang xử lý')).toBeVisible();
+  await expect(item.getByText('Đã đổi trạng thái: Hoàn tất')).toBeVisible();
   await expectAccessibleOperations(page);
   await page.screenshot({ path: saveScreenshot('operations-vi-after-worker-restart.png'), fullPage: true });
 });
