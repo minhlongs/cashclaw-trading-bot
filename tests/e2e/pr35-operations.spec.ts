@@ -173,7 +173,13 @@ test('English user B sees isolation, loading/empty states, validation/error hand
   await expect(page.locator('#main-content')).toBeFocused();
   await expectAccessibleOperations(page);
 
-  await page.getByLabel('Department', { exact: true }).selectOption('finance');
+  const departmentSelect = page.locator('.ops-form select');
+  await expect(departmentSelect).toHaveCount(1);
+  await expect(departmentSelect).toBeVisible();
+  // Implicit-label exact text can never match: Playwright's label text includes the nested <option> labels.
+  // The accessible name itself starts with the exact English label, asserted by pattern.
+  await expect(departmentSelect).toHaveAccessibleName(/^Department/);
+  await departmentSelect.selectOption('finance');
   await page.getByLabel('Title', { exact: true }).fill('Invalid amount test');
   await page.getByLabel('Amount (minor currency units, optional)').fill('-2');
   await page.getByRole('button', { name: 'Save record' }).click();
