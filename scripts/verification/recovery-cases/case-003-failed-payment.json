@@ -1,0 +1,15 @@
+{
+  "caseId": "recovery-2026-10-30-003",
+  "actor": "owner-reviewer:synthetic-ops-lead",
+  "reason": "Synthetic evaluation: case claims a finished payment but the stored event records a failed payment.",
+  "workspaceId": "legacy-paid-failed-payment",
+  "ownerUserId": "legacy-owner-failed",
+  "tier": "PREMIUM",
+  "paymentId": "legacy-payment-failed",
+  "paymentStatus": "finished",
+  "priceAmount": 29,
+  "priceCurrency": "USDT",
+  "termEndsAtMs": 1823072000000,
+  "termBasis": "attempted subscription term ending 2027-10-08",
+  "evidenceRefs": ["provider-record-PR-7783"]
+}

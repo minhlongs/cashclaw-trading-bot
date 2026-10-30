@@ -1,0 +1,15 @@
+{
+  "caseId": "recovery-2026-10-30-002",
+  "actor": "owner-reviewer:synthetic-ops-lead",
+  "reason": "Synthetic evaluation: customer claim exists but no payment evidence can be located.",
+  "workspaceId": "legacy-paid-no-proof",
+  "ownerUserId": "legacy-owner-none",
+  "tier": "PREMIUM",
+  "paymentId": "legacy-payment-none",
+  "paymentStatus": "finished",
+  "priceAmount": 29,
+  "priceCurrency": "USDT",
+  "termEndsAtMs": 1823072000000,
+  "termBasis": "claim form only; no provider record located",
+  "evidenceRefs": ["claim-form-CF-0002"]
+}

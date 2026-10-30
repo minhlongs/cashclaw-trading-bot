@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-10-30T07:00:18.623Z",
+  "target": "isolated local Wrangler D1 only (pr35-recovery-eval); no remote D1, no provider calls",
+  "baselineRevokedNonBasic": 6,
+  "restored": [
+    "recovery-2026-10-30-001 (legacy-paid-finished-proof -> expires 1823072000000)",
+    "recovery-race-a (legacy-paid-expired-like -> expires 1823072000000)"
+  ],
+  "rejected": [
+    "case-002-missing-proof.json: payment-evidence-missing",
+    "case-003-failed-payment.json: payment-status-not-finished",
+    "case-004-waiting-payment.json: payment-status-not-finished",
+    "case-006-wrong-amount.json: evidence-amount-mismatch",
+    "case-007-system-owner.json: identity-unverified",
+    "case-008-orphan-basic.json: basic-out-of-scope",
+    "case-005-signed-event-missing-term.json: case-schema-invalid",
+    "recovery-race-b (stale concurrent): cas-conflict"
+  ],
+  "stillRevoked": [
+    "legacy-paid-failed-payment",
+    "legacy-paid-no-proof",
+    "legacy-paid-pending-payment",
+    "legacy-paid-system-owner"
+  ],
+  "auditRows": [
+    {
+      "recovery_id": "recovery-2026-10-30-001",
+      "workspace_id": "legacy-paid-finished-proof",
+      "restored_expires_at_ms": 1823072000000,
+      "actor": "owner-reviewer:synthetic-ops-lead"
+    },
+    {
+      "recovery_id": "recovery-race-a",
+      "workspace_id": "legacy-paid-expired-like",
+      "restored_expires_at_ms": 1823072000000,
+      "actor": "owner-reviewer:synthetic-ops-lead"
+    }
+  ]
+}

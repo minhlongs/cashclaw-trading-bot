@@ -1,0 +1,136 @@
+[
+  {
+    "results": [
+      {
+        "workspace_id": "legacy-paid-expired-like",
+        "owner_user_id": "legacy-owner-expired",
+        "tier": "ENTERPRISE",
+        "updated_at_ms": 1700000000000,
+        "revoked_at_ms": 1700000000000,
+        "expires_at_ms": null,
+        "current_payment_id": null,
+        "user_rows": 1,
+        "active_workspace_rows": 1,
+        "owner_membership_rows": 1,
+        "legacy_ipn_rows": 1,
+        "signed_finished_ipn_rows": 1,
+        "order_rows": 0,
+        "finished_order_rows": 0,
+        "recovery_review_class": "candidate-legacy-evidence-needs-manual-term"
+      },
+      {
+        "workspace_id": "legacy-paid-failed-payment",
+        "owner_user_id": "legacy-owner-failed",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000,
+        "revoked_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "current_payment_id": null,
+        "user_rows": 1,
+        "active_workspace_rows": 1,
+        "owner_membership_rows": 1,
+        "legacy_ipn_rows": 1,
+        "signed_finished_ipn_rows": 0,
+        "order_rows": 0,
+        "finished_order_rows": 0,
+        "recovery_review_class": "reject-payment-evidence-not-finished"
+      },
+      {
+        "workspace_id": "legacy-paid-finished-proof",
+        "owner_user_id": "legacy-owner-good",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000,
+        "revoked_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "current_payment_id": null,
+        "user_rows": 1,
+        "active_workspace_rows": 1,
+        "owner_membership_rows": 1,
+        "legacy_ipn_rows": 1,
+        "signed_finished_ipn_rows": 1,
+        "order_rows": 0,
+        "finished_order_rows": 0,
+        "recovery_review_class": "candidate-legacy-evidence-needs-manual-term"
+      },
+      {
+        "workspace_id": "legacy-paid-no-proof",
+        "owner_user_id": "legacy-owner-none",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000,
+        "revoked_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "current_payment_id": null,
+        "user_rows": 1,
+        "active_workspace_rows": 1,
+        "owner_membership_rows": 1,
+        "legacy_ipn_rows": 0,
+        "signed_finished_ipn_rows": 0,
+        "order_rows": 0,
+        "finished_order_rows": 0,
+        "recovery_review_class": "reject-no-payment-evidence"
+      },
+      {
+        "workspace_id": "legacy-paid-pending-payment",
+        "owner_user_id": "legacy-owner-pending",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000,
+        "revoked_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "current_payment_id": null,
+        "user_rows": 1,
+        "active_workspace_rows": 1,
+        "owner_membership_rows": 1,
+        "legacy_ipn_rows": 1,
+        "signed_finished_ipn_rows": 0,
+        "order_rows": 0,
+        "finished_order_rows": 0,
+        "recovery_review_class": "reject-payment-evidence-not-finished"
+      },
+      {
+        "workspace_id": "legacy-paid-system-owner",
+        "owner_user_id": "system",
+        "tier": "MASTER",
+        "updated_at_ms": 1760000000000,
+        "revoked_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "current_payment_id": null,
+        "user_rows": 0,
+        "active_workspace_rows": 0,
+        "owner_membership_rows": 0,
+        "legacy_ipn_rows": 0,
+        "signed_finished_ipn_rows": 0,
+        "order_rows": 0,
+        "finished_order_rows": 0,
+        "recovery_review_class": "reject-identity-unverified"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 1
+    }
+  },
+  {
+    "results": [
+      {
+        "recovery_review_class": "candidate-legacy-evidence-needs-manual-term",
+        "row_count": 2
+      },
+      {
+        "recovery_review_class": "reject-identity-unverified",
+        "row_count": 1
+      },
+      {
+        "recovery_review_class": "reject-no-payment-evidence",
+        "row_count": 1
+      },
+      {
+        "recovery_review_class": "reject-payment-evidence-not-finished",
+        "row_count": 2
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  }
+]
