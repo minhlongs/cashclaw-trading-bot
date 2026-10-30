@@ -1,8 +1,10 @@
 {
-  "generatedAt": "2026-10-30T07:00:18.623Z",
+  "generatedAt": "2026-10-30T09:07:01.619Z",
   "target": "isolated local Wrangler D1 only (pr35-recovery-eval); no remote D1, no provider calls",
   "baselineRevokedNonBasic": 6,
   "restored": [
+    "recovery-2026-10-30-order-01 (legacy-paid-order-proof -> expires 1823072000000, payment-order evidence)",
+    "recovery-neg-trigger-rollback (neg-trigger-workspace -> expires 1823072000000, after rolled-back failures)",
     "recovery-2026-10-30-001 (legacy-paid-finished-proof -> expires 1823072000000)",
     "recovery-race-a (legacy-paid-expired-like -> expires 1823072000000)"
   ],
@@ -14,7 +16,14 @@
     "case-007-system-owner.json: identity-unverified",
     "case-008-orphan-basic.json: basic-out-of-scope",
     "case-005-signed-event-missing-term.json: case-schema-invalid",
-    "recovery-race-b (stale concurrent): cas-conflict"
+    "case-file parse rejections: actor/sensitive/term-overflow/NaN/Infinity/missing-field (25 inputs)",
+    "verify rejections: tier/status/currency/binding mismatch, elapsed term, horizon overflow",
+    "recovery-race-b (stale concurrent): cas-conflict",
+    "reused recovery_id with different payload: recovery-id-conflict",
+    "stale verify with membership/owner/tier/expiry/evidence mutation: cas-conflict (6 scenarios)",
+    "DB term guard (stale applied_at): term-already-ended",
+    "simulated storage failure: full rollback, no audit row",
+    "no-op restore: post-state guard aborts, no audit row"
   ],
   "stillRevoked": [
     "legacy-paid-failed-payment",
@@ -26,12 +35,28 @@
     {
       "recovery_id": "recovery-2026-10-30-001",
       "workspace_id": "legacy-paid-finished-proof",
+      "evidence_kind": "legacy-ipn",
+      "restored_expires_at_ms": 1823072000000,
+      "actor": "owner-reviewer:synthetic-ops-lead"
+    },
+    {
+      "recovery_id": "recovery-2026-10-30-order-01",
+      "workspace_id": "legacy-paid-order-proof",
+      "evidence_kind": "payment-order",
+      "restored_expires_at_ms": 1823072000000,
+      "actor": "owner-reviewer:synthetic-ops-lead"
+    },
+    {
+      "recovery_id": "recovery-neg-trigger-rollback",
+      "workspace_id": "neg-trigger-workspace",
+      "evidence_kind": "legacy-ipn",
       "restored_expires_at_ms": 1823072000000,
       "actor": "owner-reviewer:synthetic-ops-lead"
     },
     {
       "recovery_id": "recovery-race-a",
       "workspace_id": "legacy-paid-expired-like",
+      "evidence_kind": "legacy-ipn",
       "restored_expires_at_ms": 1823072000000,
       "actor": "owner-reviewer:synthetic-ops-lead"
     }
