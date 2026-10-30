@@ -68,13 +68,19 @@ test('Vietnamese user A creates, updates, reloads and reads versioned Operations
   await expect(page.getByText(/Hoàn tất/)).toBeVisible();
   await expect(page.getByText(/Phiên bản 2/)).toBeVisible();
 
-  await page.getByRole('button', { name: 'Xem lịch sử' }).click();
+  const [historyResponse] = await Promise.all([
+    page.waitForResponse((response) => response.url().endsWith(`/api/ops/work-items/${created.item.id}`) && response.request().method() === 'GET'),
+    page.getByRole('button', { name: 'Xem lịch sử' }).click(),
+  ]);
+  expect(historyResponse.status()).toBe(200);
+  const history = await historyResponse.json() as { events: Array<{ version: number | null }> };
+  expect(history.events.map((event) => event.version)).toEqual([0, 1, 2]);
   await expect(page.getByText('Đã tạo: Mở')).toBeVisible();
   await expect(page.getByText('Đã đổi trạng thái: Đang xử lý')).toBeVisible();
   await expect(page.getByText('Đã đổi trạng thái: Hoàn tất')).toBeVisible();
-  await expect(page.getByText('Phiên bản 0')).toBeVisible();
-  await expect(page.getByText('Phiên bản 1')).toBeVisible();
-  await expect(page.getByText('Phiên bản 2')).toBeVisible();
+  await expect(page.locator('.ops-history-event').filter({ hasText: 'Phiên bản 0' })).toBeVisible();
+  await expect(page.locator('.ops-history-event').filter({ hasText: 'Phiên bản 1' })).toBeVisible();
+  await expect(page.locator('.ops-history-event').filter({ hasText: 'Phiên bản 2' })).toBeVisible();
   await expectAccessibleOperations(page);
 
   await page.reload();
@@ -125,8 +131,10 @@ test('two Vietnamese A tabs surface a real concurrent status conflict', async ({
 });
 
 test('English user B sees isolation, loading/empty states, validation/error handling and usable mobile layout', async ({ browser }) => {
-  const ownerPage = await browser.newPage();
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const ownerContext = await browser.newContext();
+  const ownerPage = await ownerContext.newPage();
+  const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await mobileContext.newPage();
   await login(ownerPage, 'vi', accountA);
   await ownerPage.goto('/vi/operations');
   const ownerTitle = `PR35 E2E isolation ${runId}`;
@@ -137,7 +145,7 @@ test('English user B sees isolation, loading/empty states, validation/error hand
   ]);
   expect(ownerCreateResponse.status()).toBe(201);
   const ownerItem = (await ownerCreateResponse.json() as { item: { id: string; title: string } }).item;
-  await ownerPage.close();
+  await ownerContext.close();
   await login(page, 'en', accountB);
   let releaseList!: () => void;
   let signalListRequest!: () => void;
@@ -186,6 +194,7 @@ test('English user B sees isolation, loading/empty states, validation/error hand
   const dimensions = await page.evaluate(() => ({ width: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.width);
   await page.screenshot({ path: saveScreenshot('operations-en-mobile-error.png'), fullPage: true });
+  await mobileContext.close();
 });
 
 test('Worker restart retains A’s Operations record, version and history @restart', async ({ page }) => {
