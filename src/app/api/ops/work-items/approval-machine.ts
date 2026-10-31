@@ -85,5 +85,3 @@ export function planApprovalAction(
       return { ok: false, code: 'invalid-state-transition', error: 'Unknown approval action' };
   }
 }
-
-export const APPROVAL_STATE_VALUES: readonly ApprovalState[] = ['none', 'draft', 'pending_approval', 'approved', 'rejected'];
