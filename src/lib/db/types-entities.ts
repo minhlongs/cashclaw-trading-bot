@@ -25,6 +25,7 @@ export interface SettingsRow {
 export interface Bot {
   id: string;
   user_id: string;
+  workspace_id?: string | null;
   name: string;
   strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
   pair: string;

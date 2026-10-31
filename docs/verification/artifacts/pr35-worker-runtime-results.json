@@ -1,0 +1,85 @@
+{
+  "generatedAt": "2026-10-29T15:28:28.000Z",
+  "base": "http://127.0.0.1:8787",
+  "workerEnvironment": "local Wrangler/OpenNext, D1 binding local",
+  "checks": [
+    {
+      "name": "OpenNext Worker reports D1 binding healthy",
+      "checks": {
+        "db": "ok",
+        "circuitBreaker": "ok",
+        "rateLimiter": "ok"
+      }
+    },
+    {
+      "name": "synthetic users A/B authenticated over Worker HTTP"
+    },
+    {
+      "name": "Vietnamese and English Operations route render over Worker HTTP; UI interactions remain browser-only"
+    },
+    {
+      "name": "D1 binding auto-provisions isolated BASIC personal workspaces for A/B"
+    },
+    {
+      "name": "forged identity/tier/count and cross-workspace reads fail closed",
+      "botReadStatus": 404,
+      "billingReadStatus": 404
+    },
+    {
+      "name": "Operations create, owner isolation, status history and compare-and-swap conflict over Worker/D1",
+      "finalStatus": "done",
+      "version": 2,
+      "historyEvents": 3,
+      "raceStatuses": [
+        200,
+        409
+      ]
+    },
+    {
+      "name": "bot persistence fault returns 503 and releases reservation; no DB bot or active reservation remains"
+    },
+    {
+      "name": "quota under 8-way concurrent HTTP create: exactly one PAPER bot persisted and listed; retries idempotent; spoofed MASTER/count cannot raise BASIC cap",
+      "statuses": [
+        403,
+        201,
+        403,
+        403,
+        403,
+        403,
+        403,
+        403
+      ],
+      "persistedCount": 1,
+      "winnerId": "pr35-quota-1"
+    },
+    {
+      "name": "callback invalid HMAC and signed amount-binding mismatch produce no event/order mutation",
+      "invalidSignatureStatus": 403,
+      "bindingMismatchStatus": 404
+    },
+    {
+      "name": "signed callback waiting→finished concurrent duplicate→out-of-order waiting; single activation, monotonic stored status",
+      "concurrentResponses": 5,
+      "activatedCount": 1,
+      "finalCallbackStatus": "finished"
+    },
+    {
+      "name": "callback event-write fault rolls back order/entitlement and same signed retry activates after trigger removal"
+    },
+    {
+      "name": "callback order-mutation fault rolls back inserted event; retry activates after trigger removal"
+    },
+    {
+      "name": "refund callback persists terminal state and reduces current entitlement to BASIC"
+    }
+  ],
+  "operationsItemId": "b8348ef4-4b59-42bf-8c32-75e5a00b9f4f",
+  "winningBotId": "pr35-quota-1",
+  "syntheticOrderIds": [
+    "cc_c57c93c9-e9aa-4606-8ef4-026f76799a77",
+    "cc_eca10f97-0d4b-4e50-8bb6-cdc10ccfd9b9",
+    "cc_2654a607-6514-409b-90e0-51b6f3fd4794"
+  ],
+  "note": "HTTP-to-Worker with isolated local D1 binding. No cookies, passwords, signatures, or secret values written."
+}

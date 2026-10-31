@@ -1,0 +1,276 @@
+[
+  {
+    "results": [
+      {
+        "workspace_id": "legacy-basic",
+        "owner_user_id": "legacy-owner-basic",
+        "tier": "BASIC",
+        "updated_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "revoked_at_ms": null,
+        "current_payment_id": null
+      },
+      {
+        "workspace_id": "legacy-orphan-basic-negative-test",
+        "owner_user_id": "legacy-user-missing",
+        "tier": "BASIC",
+        "updated_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "revoked_at_ms": null,
+        "current_payment_id": null
+      },
+      {
+        "workspace_id": "legacy-paid-expired-like",
+        "owner_user_id": "legacy-owner-expired",
+        "tier": "ENTERPRISE",
+        "updated_at_ms": 1700000000000,
+        "expires_at_ms": null,
+        "revoked_at_ms": 1700000000000,
+        "current_payment_id": null
+      },
+      {
+        "workspace_id": "legacy-paid-failed-payment",
+        "owner_user_id": "legacy-owner-failed",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "revoked_at_ms": 1760000000000,
+        "current_payment_id": null
+      },
+      {
+        "workspace_id": "legacy-paid-finished-proof",
+        "owner_user_id": "legacy-owner-good",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "revoked_at_ms": 1760000000000,
+        "current_payment_id": null
+      },
+      {
+        "workspace_id": "legacy-paid-no-proof",
+        "owner_user_id": "legacy-owner-none",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "revoked_at_ms": 1760000000000,
+        "current_payment_id": null
+      },
+      {
+        "workspace_id": "legacy-paid-pending-payment",
+        "owner_user_id": "legacy-owner-pending",
+        "tier": "PREMIUM",
+        "updated_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "revoked_at_ms": 1760000000000,
+        "current_payment_id": null
+      },
+      {
+        "workspace_id": "legacy-paid-system-owner",
+        "owner_user_id": "system",
+        "tier": "MASTER",
+        "updated_at_ms": 1760000000000,
+        "expires_at_ms": null,
+        "revoked_at_ms": 1760000000000,
+        "current_payment_id": null
+      },
+      {
+        "workspace_id": "personal:legacy-user-a",
+        "owner_user_id": "legacy-user-a",
+        "tier": "BASIC",
+        "updated_at_ms": 1793288431000,
+        "expires_at_ms": null,
+        "revoked_at_ms": null,
+        "current_payment_id": null
+      },
+      {
+        "workspace_id": "personal:legacy-user-b",
+        "owner_user_id": "legacy-user-b",
+        "tier": "BASIC",
+        "updated_at_ms": 1793288431000,
+        "expires_at_ms": null,
+        "revoked_at_ms": null,
+        "current_payment_id": null
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "workspace_id": "legacy-basic",
+        "owner_user_id": "legacy-owner-basic",
+        "status": "active",
+        "created_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "legacy-paid-expired-like",
+        "owner_user_id": "legacy-owner-expired",
+        "status": "active",
+        "created_at_ms": 1700000000000
+      },
+      {
+        "workspace_id": "legacy-paid-failed-payment",
+        "owner_user_id": "legacy-owner-failed",
+        "status": "active",
+        "created_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "legacy-paid-finished-proof",
+        "owner_user_id": "legacy-owner-good",
+        "status": "active",
+        "created_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "legacy-paid-no-proof",
+        "owner_user_id": "legacy-owner-none",
+        "status": "active",
+        "created_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "legacy-paid-pending-payment",
+        "owner_user_id": "legacy-owner-pending",
+        "status": "active",
+        "created_at_ms": 1760000000000
+      },
+      {
+        "workspace_id": "personal:legacy-user-a",
+        "owner_user_id": "legacy-user-a",
+        "status": "active",
+        "created_at_ms": 1793288431000
+      },
+      {
+        "workspace_id": "personal:legacy-user-b",
+        "owner_user_id": "legacy-user-b",
+        "status": "active",
+        "created_at_ms": 1793288431000
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "workspace_id": "legacy-basic",
+        "user_id": "legacy-owner-basic",
+        "role": "OWNER",
+        "status": "active"
+      },
+      {
+        "workspace_id": "legacy-paid-expired-like",
+        "user_id": "legacy-owner-expired",
+        "role": "OWNER",
+        "status": "active"
+      },
+      {
+        "workspace_id": "legacy-paid-failed-payment",
+        "user_id": "legacy-owner-failed",
+        "role": "OWNER",
+        "status": "active"
+      },
+      {
+        "workspace_id": "legacy-paid-finished-proof",
+        "user_id": "legacy-owner-good",
+        "role": "OWNER",
+        "status": "active"
+      },
+      {
+        "workspace_id": "legacy-paid-no-proof",
+        "user_id": "legacy-owner-none",
+        "role": "OWNER",
+        "status": "active"
+      },
+      {
+        "workspace_id": "legacy-paid-pending-payment",
+        "user_id": "legacy-owner-pending",
+        "role": "OWNER",
+        "status": "active"
+      },
+      {
+        "workspace_id": "personal:legacy-user-a",
+        "user_id": "legacy-user-a",
+        "role": "OWNER",
+        "status": "active"
+      },
+      {
+        "workspace_id": "personal:legacy-user-b",
+        "user_id": "legacy-user-b",
+        "role": "OWNER",
+        "status": "active"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "legacy_event_rows": 4
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "new_event_history_rows": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "payment_order_rows": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "id": "legacy-bot-a",
+        "user_id": "legacy-user-a",
+        "workspace_id": "personal:legacy-user-a",
+        "status": "draft"
+      },
+      {
+        "id": "legacy-bot-b",
+        "user_id": "legacy-user-b",
+        "workspace_id": "personal:legacy-user-b",
+        "status": "stopped"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "owner_memberships_without_user": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  }
+]

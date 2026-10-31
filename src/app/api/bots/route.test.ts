@@ -1,148 +1,89 @@
-// route.test.ts — tests for /api/bots route handlers
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockBotListHandler = vi.fn();
-const mockBotCreateHandler = vi.fn();
-const mockCheckRateLimit = vi.fn().mockReturnValue({ allowed: true });
-const mockGetRateLimitHeaders = vi.fn().mockReturnValue({});
-
-vi.mock('@/forest/api/routes', () => ({
-  botListHandler: (...args: unknown[]) => mockBotListHandler(...args),
-  botCreateHandler: (...args: unknown[]) => mockBotCreateHandler(...args),
+const mocks = vi.hoisted(() => ({
+  list: vi.fn(), create: vi.fn(), rate: vi.fn(), headers: vi.fn(), context: vi.fn(),
+  reserve: vi.fn(), mark: vi.fn(), release: vi.fn(), hash: vi.fn(),
 }));
-
-vi.mock('@/forest/api/rate-limiter', () => ({
-  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
-  getRateLimitHeaders: (...args: unknown[]) => mockGetRateLimitHeaders(...args),
+vi.mock('@/forest/api/routes', () => ({ botListHandler: (...args: unknown[]) => mocks.list(...args), botCreateHandler: (...args: unknown[]) => mocks.create(...args) }));
+vi.mock('@/forest/api/rate-limiter', () => ({ checkRateLimit: (...args: unknown[]) => mocks.rate(...args), getRateLimitHeaders: (...args: unknown[]) => mocks.headers(...args) }));
+vi.mock('@/ee/tenancy/workspace-request-context', () => ({
+  resolveWorkspaceTierContext: (...args: unknown[]) => mocks.context(...args),
+  workspaceContextErrorResponse: (error: unknown) => Response.json({ ok: false, error: String(error) }, { status: 503 }),
+}));
+vi.mock('@/ee/billing/bot-quota-reservations', () => ({
+  hashBotCreateRequest: (...args: unknown[]) => mocks.hash(...args),
+  reserveWorkspaceBotSlot: (...args: unknown[]) => mocks.reserve(...args),
+  markBotReservationCreated: (...args: unknown[]) => mocks.mark(...args),
+  releaseBotReservation: (...args: unknown[]) => mocks.release(...args),
 }));
 
 const { GET, POST } = await import('./route');
+const db = {};
+const ctx = { db, userId: 'user-a', workspaceId: 'ws-a', role: 'OWNER', tier: 'BASIC', entitlementExpiresAtMs: null };
+const payload = (id = 'bot-1') => ({ id, name: 'Test Bot', strategy: 'grid', pair: 'BTC/USDT', exchange: 'binance', capital: 1000 });
 
-describe('/api/bots route', () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  describe('GET', () => {
-    it('returns bot list', async () => {
-      mockBotListHandler.mockResolvedValue({ ok: true, bots: [] });
-      const res = await GET();
-      expect(res.status).toBe(200);
-      const body = await res.json() as Record<string, unknown>;
-      expect(body.ok).toBe(true);
-    });
+describe('/api/bots', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.context.mockResolvedValue(ctx);
+    mocks.rate.mockReturnValue({ allowed: true });
+    mocks.headers.mockReturnValue({});
+    mocks.hash.mockResolvedValue('request-hash');
+    mocks.reserve.mockResolvedValue({ kind: 'reserved' });
+    mocks.mark.mockResolvedValue(undefined);
+    mocks.release.mockResolvedValue(undefined);
+    mocks.list.mockResolvedValue({ ok: true, data: [] });
+    mocks.create.mockResolvedValue({ ok: true, data: { id: 'bot-1' } });
   });
 
-  describe('POST', () => {
-    it('creates a bot when rate limit allows', async () => {
-      mockCheckRateLimit.mockReturnValue({ allowed: true });
-      mockBotCreateHandler.mockResolvedValue({ ok: true, id: 'bot-1' });
-      const req = new Request('http://localhost/api/bots', {
-        method: 'POST',
-        body: JSON.stringify({
-          id: 'bot-1',
-          name: 'Test Bot',
-          strategy: 'grid',
-          pair: 'BTC/USDT',
-          exchange: 'binance',
-          capital: 1000,
-        }),
-      });
-      const res = await POST(req);
-      expect(res.status).toBe(200);
-    });
+  it('lists only the session-resolved workspace', async () => {
+    const res = await GET(new Request('https://app.example/api/bots', { headers: { cookie: 'session_id=valid' } }));
+    expect(res.status).toBe(200);
+    expect(mocks.list).toHaveBeenCalledWith('ws-a');
+  });
 
-    it('returns 429 when rate limited', async () => {
-      mockCheckRateLimit.mockReturnValue({ allowed: false, retryAfterMs: 1000 });
-      const req = new Request('http://localhost/api/bots', {
-        method: 'POST',
-        body: JSON.stringify({}),
-      });
-      const res = await POST(req);
-      expect(res.status).toBe(429);
-      expect(await res.json()).toEqual({ ok: false, error: 'Rate limit exceeded' });
-    });
+  it('reserves quota atomically before creating a workspace-owned paper bot', async () => {
+    const res = await POST(new Request('https://app.example/api/bots', { method: 'POST', body: JSON.stringify(payload()) }));
+    expect(res.status).toBe(201);
+    expect(mocks.reserve).toHaveBeenCalledWith(ctx, 'bot-1', 'request-hash');
+    expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({ id: 'bot-1', mode: 'paper' }), { userId: 'user-a', workspaceId: 'ws-a' });
+    expect(mocks.mark).toHaveBeenCalledWith(db, 'bot-1', 'user-a');
+  });
 
-    it('returns 400 when bot creation fails', async () => {
-      mockCheckRateLimit.mockReturnValue({ allowed: true });
-      mockBotCreateHandler.mockResolvedValue({ ok: false, error: 'Invalid config' });
-      const req = new Request('http://localhost/api/bots', {
-        method: 'POST',
-        body: JSON.stringify({}),
-      });
-      const res = await POST(req);
-      expect(res.status).toBe(400);
-    });
+  it('does not let a forged tier header bypass the authoritative BASIC quota', async () => {
+    mocks.reserve.mockResolvedValue({ kind: 'quota_exceeded' });
+    const res = await POST(new Request('https://app.example/api/bots', {
+      method: 'POST', headers: { 'x-cashclaw-tier': 'MASTER' }, body: JSON.stringify(payload('bot-2')),
+    }));
+    expect(res.status).toBe(403);
+    expect(mocks.context).toHaveBeenCalledWith(expect.any(Request), { explicitWorkspaceId: undefined });
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
 
-    it('returns 403 QUOTA_EXCEEDED on BASIC tier when 1 bot is already running, and allows on PREMIUM', async () => {
-      mockCheckRateLimit.mockReturnValue({ allowed: true });
-      mockBotListHandler.mockResolvedValue({ ok: true, data: [{ id: 'existing-bot-1' }] });
-      mockBotCreateHandler.mockResolvedValue({ ok: true, id: 'bot-2' });
+  it('returns idempotent success for a previously created identical request', async () => {
+    mocks.reserve.mockResolvedValue({ kind: 'created' });
+    const res = await POST(new Request('https://app.example/api/bots', { method: 'POST', body: JSON.stringify(payload()) }));
+    expect(res.status).toBe(200);
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
 
-      const basicReq = new Request('http://localhost/api/bots', {
-        method: 'POST',
-        headers: { 'x-cashclaw-tier': 'BASIC' },
-        body: JSON.stringify({
-          id: 'bot-2',
-          name: 'Second Bot',
-          strategy: 'grid',
-          pair: 'BTC/USDT',
-          exchange: 'binance',
-          capital: 1000,
-        }),
-      });
-      const basicRes = await POST(basicReq);
-      expect(basicRes.status).toBe(403);
-      const basicBody = (await basicRes.json()) as { ok: boolean; error: string };
-      expect(basicBody.error).toContain('QUOTA_EXCEEDED');
+  it('returns conflict for concurrent in-progress request and releases reservations after create failure', async () => {
+    mocks.reserve.mockResolvedValueOnce({ kind: 'in_progress' });
+    const first = await POST(new Request('https://app.example/api/bots', { method: 'POST', body: JSON.stringify(payload()) }));
+    expect(first.status).toBe(409);
 
-      const premiumReq = new Request('http://localhost/api/bots', {
-        method: 'POST',
-        headers: { 'x-cashclaw-tier': 'PREMIUM' },
-        body: JSON.stringify({
-          id: 'bot-2',
-          name: 'Second Bot',
-          strategy: 'grid',
-          pair: 'BTC/USDT',
-          exchange: 'binance',
-          capital: 1000,
-        }),
-      });
-      const premiumRes = await POST(premiumReq);
-      expect(premiumRes.status).toBe(200);
-    });
+    mocks.reserve.mockResolvedValueOnce({ kind: 'reserved' });
+    mocks.create.mockResolvedValueOnce({ ok: false, error: 'synthetic create failure' });
+    const second = await POST(new Request('https://app.example/api/bots', { method: 'POST', body: JSON.stringify(payload('bot-3')) }));
+    expect(second.status).toBe(400);
+    expect(mocks.release).toHaveBeenCalledWith(db, 'bot-3', 'user-a');
+  });
 
-    it('accepts volatility_dca config with quantExecution enabled', async () => {
-      mockCheckRateLimit.mockReturnValue({ allowed: true });
-      mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
-      mockBotCreateHandler.mockResolvedValue({ ok: true, data: { id: 'bot-vdca' } });
-
-      const req = new Request('http://localhost/api/bots', {
-        method: 'POST',
-        body: JSON.stringify({
-          id: 'bot-vdca',
-          name: 'Vol DCA Quant',
-          strategy: 'volatility_dca',
-          pair: 'BTC/USDT',
-          exchange: 'binance',
-          capital: 2000,
-          config: {
-            priceDropStep: 1.5,
-            maxSteps: 6,
-            baseOrderSizePct: 10,
-            volatilityWindow: 20,
-            volBaseline: 50,
-            reboundTarget: 1.0,
-            quantExecution: 1,
-          },
-        }),
-      });
-      const res = await POST(req);
-      expect(res.status).toBe(200);
-      expect(mockBotCreateHandler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          strategy: 'volatility_dca',
-          config: expect.objectContaining({ quantExecution: 1 }),
-        }),
-      );
-    });
+  it('keeps live mode and rate limits rejected', async () => {
+    const live = await POST(new Request('https://app.example/api/bots', { method: 'POST', body: JSON.stringify({ ...payload(), mode: 'live' }) }));
+    expect(live.status).toBe(400);
+    mocks.rate.mockReturnValue({ allowed: false });
+    const limited = await POST(new Request('https://app.example/api/bots', { method: 'POST', body: JSON.stringify({}) }));
+    expect(limited.status).toBe(429);
   });
 });

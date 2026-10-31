@@ -1,0 +1,14 @@
+{
+  "caseId": "recovery-2026-10-30-005",
+  "actor": "owner-reviewer:synthetic-ops-lead",
+  "reason": "Synthetic evaluation: a signed finished legacy event exists but nothing determines the entitlement term or expiry.",
+  "workspaceId": "legacy-paid-expired-like",
+  "ownerUserId": "legacy-owner-expired",
+  "tier": "ENTERPRISE",
+  "paymentId": "legacy-payment-expired-like",
+  "paymentStatus": "finished",
+  "priceAmount": 99,
+  "priceCurrency": "USDT",
+  "termBasis": "unknown: signed callback alone does not carry the purchased term",
+  "evidenceRefs": ["legacy-ipn-event legacy-payment-expired-like"]
+}

@@ -1,195 +1,126 @@
-// End-to-End Integration Tests for the 5 Closed Open-Core & Cloud SaaS Runtime Seams (G1–G5)
-
-import { describe, it, expect, beforeEach } from 'vitest';
-import type { D1Database, D1PreparedStatement } from '@/lib/db/types';
-import { SaasEntitlementStore, defaultSaasEntitlementStore } from '../billing/saas-entitlement-store';
-import { canonicalizeNowPaymentsJson, computeNowPaymentsHmacSha512 } from '../billing/nowpayments-ipn';
+// HTTP-boundary integration tests for SaaS runtime seams. D1 order transactions are exercised
+// separately against Wrangler's local D1 SQLite database in nowpayments-order-store.d1.test.ts.
+import { afterAll, afterEach, beforeAll, describe, it, expect, beforeEach, vi } from 'vitest';
+import { mkdtempSync, readFileSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { LocalD1Database } from '@/ee/billing/__tests__/local-d1-adapter';
+import { SaasEntitlementStore } from '../billing/saas-entitlement-store';
 import { createLocalToCloudSyncBundle } from '../sync/local-to-cloud-sync';
-import { GET as getIpnEntitlement, POST as postNowPaymentsIpn } from '@/app/api/ee/billing/nowpayments-ipn/route';
 import { GET as getCredits, POST as postCredits } from '@/app/api/ee/credits/route';
 import { GET as getAlphaFeed } from '@/app/api/ee/alpha-feed/route';
 import { POST as postCloudAlert } from '@/app/api/ee/alerts/route';
 import { POST as postCloudSync } from '@/app/api/ee/sync/route';
 
-function createMockD1(): { db: D1Database; queries: string[] } {
-  const queries: string[] = [];
-  const ipnRows = new Map<string, { payment_id: string }>();
-  const entitlementRows = new Map<string, Record<string, unknown>>();
+const auth = vi.hoisted(() => ({ resolve: vi.fn(), activeCount: vi.fn() }));
+vi.mock('@/ee/tenancy/workspace-request-context', () => ({
+  resolveWorkspaceTierContext: (...args: unknown[]) => auth.resolve(...args),
+  resolveActiveBotCount: (...args: unknown[]) => auth.activeCount(...args),
+  workspaceContextErrorResponse: (error: unknown) => Response.json({ ok: false, error: String(error) }, { status: 503 }),
+}));
 
-  const db: D1Database = {
-    prepare(sql: string): D1PreparedStatement {
-      let params: unknown[] = [];
-      const stmt: D1PreparedStatement = {
-        bind(...values: unknown[]) {
-          params = values;
-          queries.push(sql);
-          return stmt;
-        },
-        async first<T = unknown>(): Promise<T | null> {
-          const key = String(params[0] ?? '');
-          if (sql.includes('FROM saas_nowpayments_ipn_events')) return (ipnRows.get(key) as T) ?? null;
-          if (sql.includes('FROM saas_workspace_entitlements')) return (entitlementRows.get(key) as T) ?? null;
-          return null;
-        },
-        async firstRow<T = unknown>(): Promise<T | null> { return stmt.first<T>(); },
-        async all<T = unknown>() { return { results: [] as T[], meta: { duration: 1 } }; },
-        async run() {
-          const key = String(params[0] ?? '');
-          if (sql.includes('INSERT OR IGNORE INTO saas_nowpayments_ipn_events')) {
-            ipnRows.set(key, { payment_id: key });
-          } else if (sql.includes('INSERT INTO saas_workspace_entitlements')) {
-            entitlementRows.set(key, {
-              workspace_id: key, owner_user_id: String(params[1] ?? 'system'), tier: String(params[2] ?? 'BASIC'),
-              max_running_bots: Number(params[3] ?? 1), max_walk_forward_windows: Number(params[4] ?? 4),
-              monthly_llm_credits: Number(params[5] ?? 1000), managed_llm_pool_enabled: Number(params[6] ?? 0),
-              updated_at_ms: Number(params[7] ?? 0),
-            });
-          }
-          return { meta: { changes: 1, last_row_id: 1, duration: 1 } };
-        },
-      };
-      return stmt;
-    },
-    async batch<T = unknown>() { return [] as T[]; },
-    async exec() { return { count: 1, duration: 1 }; },
-    async dump() { return ''; },
-  };
-  return { db, queries };
+let localD1: LocalD1Database;
+beforeAll(async () => {
+  localD1 = new LocalD1Database(path.join(mkdtempSync(path.join(tmpdir(), 'pr35-seams-')), 'seams.db'));
+  const migrationsDir = path.join(process.cwd(), 'migrations');
+  for (const file of readdirSync(migrationsDir).filter((name) => name.endsWith('.sql')).sort()) {
+    await localD1.exec(readFileSync(path.join(migrationsDir, file), 'utf8'));
+  }
+  await localD1.prepare(
+    `INSERT INTO bots (id, user_id, name, strategy, pair, exchange, status, config_json, capital_allocated, created_at, updated_at, workspace_id)
+     VALUES ('bot-a', 'server-user-a', 'Bot A', 'grid', 'BTC/USDT', 'binance', 'draft', '{}', 100, 1, 1, 'server-ws-a')`,
+  ).run();
+});
+afterAll(() => vi.unstubAllEnvs());
+
+function context(tier: 'BASIC' | 'PREMIUM' | 'ENTERPRISE' = 'BASIC', activeBotCount = 0) {
+  return { db: localD1, userId: 'server-user-a', workspaceId: 'server-ws-a', role: 'OWNER', tier,
+    entitlementExpiresAtMs: null, activeBotCount };
 }
 
-describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
-  beforeEach(() => {
-    defaultSaasEntitlementStore.setDatabase(undefined);
-    defaultSaasEntitlementStore.resetMemoryForTesting();
+beforeEach(() => {
+  vi.clearAllMocks();
+  auth.resolve.mockResolvedValue(context());
+  auth.activeCount.mockImplementation((ctx: { activeBotCount: number }) => ctx.activeBotCount);
+  vi.stubEnv('CASHCLAW_ALERT_WEBHOOK_SECRET', 'local-test-alert-secret');
+});
+afterEach(() => vi.unstubAllEnvs());
+
+describe('EE HTTP authorization and entitlement seams', () => {
+  it('disables legacy callback mutation that accepted caller-supplied workspace and tier', async () => {
+    const store = new SaasEntitlementStore();
+    await expect(store.recordIpnAndUpgradeTier({
+      paymentId: 'pay_forged', workspaceId: 'victim', targetTier: 'MASTER', paymentStatus: 'finished',
+      payAmount: 0.01, payCurrency: 'USD',
+    })).rejects.toThrow('Legacy payment mutation disabled');
   });
 
-  it('Seam G2: persists NOWPayments IPN to D1 store and upgrades workspace tier across routes', async () => {
-    const { db, queries } = createMockD1();
-    const customStore = new SaasEntitlementStore(db);
-    expect(await customStore.getWorkspaceTier('ws_d1')).toBe('BASIC');
+  it('ignores query/body tier claims for credits and derives account from server context', async () => {
+    auth.resolve.mockResolvedValue(context('BASIC'));
+    const getRes = await getCredits(new Request('https://app.example/api/ee/credits?workspaceId=server-ws-a&tier=MASTER'));
+    expect(getRes.status).toBe(200);
+    expect(await getRes.json()).toMatchObject({ account: { tier: 'BASIC', balanceCredits: 1000 } });
 
-    await customStore.recordIpnAndUpgradeTier({
-      paymentId: 'pay_d1_100', workspaceId: 'ws_d1', targetTier: 'ENTERPRISE',
-      paymentStatus: 'finished', payAmount: 99, payCurrency: 'USDT', processedAtMs: 1_760_000_000_000,
-    });
-    expect(await customStore.hasProcessedPayment('pay_d1_100')).toBe(true);
-    expect(await customStore.getWorkspaceTier('ws_d1')).toBe('ENTERPRISE');
-    expect(queries.length).toBeGreaterThanOrEqual(2);
-
-    defaultSaasEntitlementStore.setDatabase(db);
-    const payload = {
-      payment_id: 'pay_http_200', payment_status: 'finished', order_id: 'ord_200',
-      workspace_id: 'ws_live_tenant', target_tier: 'ENTERPRISE', pay_amount: 99, pay_currency: 'USDT',
-    };
-    const secret = process.env.NOWPAYMENTS_IPN_SECRET || 'test_ipn_secret';
-    const sig = await computeNowPaymentsHmacSha512(canonicalizeNowPaymentsJson(payload), secret);
-
-    const ipnRes = await postNowPaymentsIpn(
-      new Request('http://localhost/api/ee/billing/nowpayments-ipn', {
-        method: 'POST', headers: { 'x-nowpayments-sig': sig }, body: JSON.stringify(payload),
-      }),
-    );
-    expect(ipnRes.status).toBe(200);
-
-    const getRes = await getIpnEntitlement(new Request('http://localhost/api/ee/billing/nowpayments-ipn?workspaceId=ws_live_tenant'));
-    const getBody = (await getRes.json()) as { entitlement: { tier: string } };
-    expect(getBody.entitlement.tier).toBe('ENTERPRISE');
-
-    const creditsRes = await getCredits(new Request('http://localhost/api/ee/credits?workspaceId=ws_live_tenant'));
-    const creditsBody = (await creditsRes.json()) as { account: { tier: string; balanceCredits: number } };
-    expect(creditsBody.account.tier).toBe('ENTERPRISE');
-    expect(creditsBody.account.balanceCredits).toBe(50_000);
-
-    // POST /api/ee/credits without explicit tier should inherit ENTERPRISE from IPN store
-    const debitRes = await postCredits(
-      new Request('http://localhost/api/ee/credits', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workspaceId: 'ws_live_tenant', modelTier: 'REASONING', promptTokens: 500, completionTokens: 500 }),
-      }),
-    );
-    expect(debitRes.status).toBe(200);
-    const debitBody = (await debitRes.json()) as { account: { tier: string; balanceCredits: number } };
-    expect(debitBody.account.tier).toBe('ENTERPRISE');
-    expect(debitBody.account.balanceCredits).toBeLessThan(50_000);
+    const postRes = await postCredits(new Request('https://app.example/api/ee/credits', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ workspaceId: 'server-ws-a', tier: 'MASTER', modelTier: 'FAST', promptTokens: 1000, completionTokens: 0 }),
+    }));
+    expect(postRes.status).toBe(200);
+    expect(await postRes.json()).toMatchObject({ account: { tier: 'BASIC', balanceCredits: 999 } });
   });
 
-  it('Seam G3: enforces workspace quota on POST /api/ee/sync before importing CLI bundles', async () => {
-    const bundleRes = await createLocalToCloudSyncBundle({
-      botName: 'CLI Local Bot',
-      strategyId: 'volatilityDca',
-      symbol: 'BTC/USDT',
-      intervalMinutes: 60,
-      feeBps: 10,
-      slippageBps: 5,
-      parameters: { baseOrderSizePct: 5 },
-    });
-    expect(bundleRes.ok).toBe(true);
-    if (!bundleRes.ok) return;
-    const bundle = bundleRes.data;
-
-    const blockedRes = await postCloudSync(
-      new Request('http://localhost/api/ee/sync', {
-        method: 'POST',
-        headers: { 'x-cashclaw-tier': 'BASIC', 'x-cashclaw-active-bots': '1' },
-        body: JSON.stringify(bundle),
-      }),
-    );
-    expect(blockedRes.status).toBe(403);
-
-    const allowedRes = await postCloudSync(
-      new Request('http://localhost/api/ee/sync', {
-        method: 'POST',
-        headers: { 'x-cashclaw-tier': 'PREMIUM', 'x-cashclaw-active-bots': '1' },
-        body: JSON.stringify(bundle),
-      }),
-    );
-    expect(allowedRes.status).toBe(200);
+  it('serves alpha-feed by stored tier, ignoring ?tier=MASTER', async () => {
+    auth.resolve.mockResolvedValue(context('BASIC'));
+    const response = await getAlphaFeed(new Request('https://app.example/api/ee/alpha-feed?tier=MASTER'));
+    const body = await response.json() as { tier: string; count: number };
+    expect(response.status).toBe(200);
+    expect(body.tier).toBe('BASIC');
+    expect(body.count).toBe(1);
   });
 
-  it('Seam G4 & G5: serves tier-filtered Cloud Alpha Feed, signs & deduplicates Cloud Alerts, and guards cron tick leases', async () => {
-    const basicFeedRes = await getAlphaFeed(new Request('http://localhost/api/ee/alpha-feed?tier=BASIC'));
-    const basicFeed = (await basicFeedRes.json()) as { count: number; safetyMode: string };
-    expect(basicFeed.count).toBe(1);
-    expect(basicFeed.safetyMode).toBe('PAPER_ADVISORY_ONLY');
-
-    const entFeedRes = await getAlphaFeed(new Request('http://localhost/api/ee/alpha-feed?tier=ENTERPRISE'));
-    const entFeed = (await entFeedRes.json()) as { count: number };
-    expect(entFeed.count).toBe(3);
-
-    const alertPayload = {
-      eventId: 'evt_seam_1',
-      workspaceId: 'ws_alert',
-      botId: 'bot_1',
-      channel: 'WEBHOOK',
-      message: 'Paper Drawdown Threshold Warning',
-      timestampMs: 1_760_000_000_000,
-      tier: 'PREMIUM',
-    };
-    const firstAlert = await postCloudAlert(
-      new Request('http://localhost/api/ee/alerts', { method: 'POST', body: JSON.stringify(alertPayload) }),
-    );
-    const firstBody = (await firstAlert.json()) as { dispatched: boolean; envelope: { signatureHex: string } };
-    expect(firstBody.dispatched).toBe(true);
-    expect(firstBody.envelope.signatureHex).toMatch(/^[0-9a-f]{64}$/);
-
-    const duplicateAlert = await postCloudAlert(
-      new Request('http://localhost/api/ee/alerts', {
-        method: 'POST',
-        body: JSON.stringify({ ...alertPayload, timestampMs: 1_760_000_010_000 }),
-      }),
-    );
-    const dupBody = (await duplicateAlert.json()) as { dispatched: boolean; deduplicated: boolean };
-    expect(dupBody.dispatched).toBe(false);
-    expect(dupBody.deduplicated).toBe(true);
-
-    const { cronSchedulerCoordinator } = await import('@/worker-cron');
-    const lease1 = cronSchedulerCoordinator.acquireTickLease({
-      botId: 'cron-bot', workspaceId: 'ws_cron', isolateId: 'iso-a', nowMs: 1_760_000_000_000,
+  it('uses verified workspace tier and D1 active-bot count for sync quota despite spoofed headers', async () => {
+    const bundleResult = await createLocalToCloudSyncBundle({
+      botName: 'CLI Local Bot', strategyId: 'volatilityDca', symbol: 'BTC/USDT',
+      intervalMinutes: 60, feeBps: 10, slippageBps: 5, parameters: { baseOrderSizePct: 5 },
     });
-    const lease2 = cronSchedulerCoordinator.acquireTickLease({
-      botId: 'cron-bot', workspaceId: 'ws_cron', isolateId: 'iso-b', nowMs: 1_760_000_005_000,
-    });
-    expect(lease1.ok).toBe(true);
-    expect(lease2.ok).toBe(false);
+    expect(bundleResult.ok).toBe(true);
+    if (!bundleResult.ok) return;
+
+    auth.resolve.mockResolvedValue(context('BASIC', 1));
+    const blocked = await postCloudSync(new Request('https://app.example/api/ee/sync', {
+      method: 'POST', headers: { 'x-cashclaw-tier': 'MASTER', 'x-cashclaw-active-bots': '-99' },
+      body: JSON.stringify(bundleResult.data),
+    }));
+    expect(blocked.status).toBe(403);
+
+    auth.resolve.mockResolvedValue(context('PREMIUM', 1));
+    const allowed = await postCloudSync(new Request('https://app.example/api/ee/sync', {
+      method: 'POST', headers: { 'x-cashclaw-tier': 'BASIC', 'x-cashclaw-active-bots': '99999' },
+      body: JSON.stringify(bundleResult.data),
+    }));
+    expect(allowed.status).toBe(200);
+  });
+
+  it('enforces alert tier from workspace store and never accepts caller signing secret', async () => {
+    const payload = { eventId: `evt-${Date.now()}`, workspaceId: 'server-ws-a', botId: 'bot-a',
+      channel: 'WEBHOOK', message: 'Paper alert', timestampMs: Date.now(), tier: 'MASTER', signingSecret: 'attacker-secret' };
+    auth.resolve.mockResolvedValue(context('BASIC'));
+    const denied = await postCloudAlert(new Request('https://app.example/api/ee/alerts', {
+      method: 'POST', body: JSON.stringify(payload),
+    }));
+    expect(denied.status).toBe(402);
+
+    auth.resolve.mockResolvedValue(context('PREMIUM'));
+    const allowed = await postCloudAlert(new Request('https://app.example/api/ee/alerts', {
+      method: 'POST', body: JSON.stringify(payload),
+    }));
+    const body = await allowed.json() as { dispatched: boolean; delivered: boolean; deliveryStatus: string; envelope: { signatureHex: string } };
+    expect(allowed.status).toBe(200);
+    expect(body.dispatched).toBe(true);
+    // Honest delivery reporting: with no channel configured the pipeline must NOT claim delivery.
+    expect(body.delivered).toBe(false);
+    expect(body.deliveryStatus).toBe('unconfigured');
+    expect(body.envelope.signatureHex).toMatch(/^[0-9a-f]{64}$/);
+    expect(JSON.stringify(body)).not.toContain('attacker-secret');
   });
 });

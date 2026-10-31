@@ -22,7 +22,7 @@ export class BotManagerCache {
 
   private factoryProxy: BotFactoryDelegate = {
     createBotSync: (req, userId) => this.factory.createBotSync(req, userId),
-    createBot: (req, userId) => this.factory.createBot(req, userId),
+    createBot: (req, userId, workspaceId) => this.factory.createBot(req, userId, workspaceId),
   };
 
   setFactory(factory: BotFactoryDelegate): void {

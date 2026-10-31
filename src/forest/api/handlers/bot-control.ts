@@ -6,8 +6,8 @@
 import { getBotManager } from '@/tree/bot';
 import { createServerClient } from '@/lib/db/client';
 
-async function validateStartCredentials(id: string): Promise<{ ok: boolean; error?: string }> {
-  const bot = getBotManager().getBot(id);
+async function validateStartCredentials(id: string, ownerUserId?: string): Promise<{ ok: boolean; error?: string }> {
+  const bot = getBotManager().getBot(id, ownerUserId);
   if (!bot) {
     return { ok: false, error: `Bot not found: ${id}` };
   }
@@ -39,30 +39,32 @@ async function validateStartCredentials(id: string): Promise<{ ok: boolean; erro
 export async function botControlHandler(
   id: string,
   action: 'start' | 'stop' | 'pause' | 'resume',
+  ownerUserId?: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const manager = getBotManager();
     // Lazy single-bot hydration: load only this bot from D1 if not in memory
-    const bot = manager.getBot(id) ?? await manager.getOrCreateBot(id);
+    const bot = manager.getBot(id, ownerUserId) ?? await manager.getOrCreateBot(id, ownerUserId);
     if (!bot) {
       return { ok: false, error: `Bot not found: ${id}` };
     }
 
     switch (action) {
       case 'start': {
-        const preflight = await validateStartCredentials(id);
+        const preflight = await validateStartCredentials(id, ownerUserId);
         if (!preflight.ok) return preflight;
-        await manager.getBot(id)!.start();
+        await manager.getBot(id, ownerUserId)!.start();
         break;
       }
       case 'stop':
-        manager.getBot(id)!.stop();
+        manager.getBot(id, ownerUserId)!.stop();
         break;
       case 'pause':
-        manager.getBot(id)!.pause();
+        manager.getBot(id, ownerUserId)!.pause();
         break;
       case 'resume':
-        manager.resumeBot(id);
+        if (ownerUserId === undefined) manager.resumeBot(id);
+        else manager.resumeBot(id, ownerUserId);
         break;
       default:
         return { ok: false, error: `Unknown action: ${action}` };

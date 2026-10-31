@@ -17,6 +17,7 @@ export function toD1Status(status: string): D1BotStatus {
 export interface D1CallbackDeps {
   botId: string;
   userId: string;
+  workspaceId?: string;
   config: BotConfig;
   capital: number;
   onLog: (msg: string) => void;
@@ -26,7 +27,7 @@ export interface D1CallbackDeps {
 }
 
 export async function persistNewBot(deps: D1CallbackDeps): Promise<void> {
-  persistBot(deps.userId, {
+  const bot = {
     id: deps.botId,
     config: deps.config,
     capital: deps.capital,
@@ -34,5 +35,7 @@ export async function persistNewBot(deps: D1CallbackDeps): Promise<void> {
     strategy: deps.config.strategy,
     pair: deps.config.symbol,
     exchange: deps.config.exchange,
-  });
+  };
+  if (deps.workspaceId) await persistBot(deps.userId, bot, deps.workspaceId);
+  else await persistBot(deps.userId, bot);
 }

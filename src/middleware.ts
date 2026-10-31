@@ -1,79 +1,69 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/db/client';
+import { resolveSessionUser } from '@/lib/auth/session-user';
 
-// Session-cookie auth guard for Next.js App Router routes.
-// This middleware applies to /api/* routes handled by Next.js only.
-// Hono routes in src/worker.ts use Bearer token auth (auth-guard.ts).
-// Protected: mutating endpoints (POST/PUT/DELETE/PATCH) + sensitive GET routes.
-// Public: dashboard pages, health/version/metrics, auth endpoints.
 const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
+const SENSITIVE_GET_PREFIXES = [
+  '/api/bots', '/api/settings', '/api/alpha', '/api/ops',
+  '/api/ee/credits', '/api/ee/quotas', '/api/ee/scheduler',
+  '/api/ee/telemetry', '/api/ee/billing/nowpayments-ipn',
+];
+const PUBLIC_API_PATHS = new Set(['/api/auth/login', '/api/auth/logout', '/api/auth/me']);
+// These routes verify NOWPayments HMAC signatures in their handlers; a third-party
+// payment provider cannot supply an application session cookie.
+const SIGNED_WEBHOOK_PATHS = new Set(['/api/ee/billing/ipn', '/api/ee/billing/nowpayments-ipn']);
+const API_PREFIX = '/api/';
+const AUTH_API_PREFIX = '/api/auth';
 
-// API route prefixes that require auth for mutating requests.
-const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops'];
+function matchesPrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
 
-// GET routes that contain sensitive data — bot capital, PnL, config, settings.
-const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops'];
+function jsonError(error: string, status: number) {
+  return NextResponse.json({ ok: false, error }, { status });
+}
 
-// Auth routes are always public (login, logout, me).
-const PUBLIC_API_PREFIXES = ['/api/auth'];
+function isSignedWebhookPost(request: NextRequest): boolean {
+  return request.method === 'POST' && SIGNED_WEBHOOK_PATHS.has(request.nextUrl.pathname);
+}
+
+function hasCrossOriginMutation(request: NextRequest): boolean {
+  const { pathname } = request.nextUrl;
+  if (isSignedWebhookPost(request)) return false;
+  if (!PROTECTED_METHODS.includes(request.method) || !pathname.startsWith(API_PREFIX)) return false;
+  const origin = request.headers.get('origin');
+  const fetchSite = request.headers.get('sec-fetch-site');
+  return Boolean((origin && origin !== request.nextUrl.origin) || fetchSite === 'cross-site');
+}
+
+function requiresSession(request: NextRequest): boolean {
+  const { pathname } = request.nextUrl;
+  if (PUBLIC_API_PATHS.has(pathname) || isSignedWebhookPost(request)) return false;
+  return (PROTECTED_METHODS.includes(request.method) && pathname.startsWith(API_PREFIX))
+    || (matchesPrefix(pathname, AUTH_API_PREFIX) && request.method === 'GET')
+    || SENSITIVE_GET_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix));
+}
 
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const method = req.method;
+  if (hasCrossOriginMutation(req)) return jsonError('Cross-origin request denied', 403);
+  if (!requiresSession(req)) return NextResponse.next();
 
-  // Auth routes are always public.
-  if (PUBLIC_API_PREFIXES.some(p => pathname.startsWith(p))) {
-    return NextResponse.next();
-  }
-
-  // Does this request need a session cookie?
-  const isMutating = PROTECTED_METHODS.includes(method);
-  const isSensitiveGet = !isMutating && SENSITIVE_GET_PREFIXES.some(p => pathname.startsWith(p));
-  const needsAuth = (isMutating && PROTECTED_API_PREFIXES.some(p => pathname.startsWith(p))) || isSensitiveGet;
-
-  if (!needsAuth) {
-    return NextResponse.next();
-  }
-
-  // Validate session cookie exists.
   const sessionId = req.cookies.get('session_id')?.value;
-  if (!sessionId) {
-    return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 });
+  if (!sessionId) return jsonError('Authentication required', 401);
+
+  const db = createServerClient();
+  if (!db) return jsonError('Session store unavailable', 503);
+  const result = await resolveSessionUser(req, db);
+  if (!result.userId) {
+    return result.errorStatus === 503
+      ? jsonError('Session validation unavailable', 503)
+      : jsonError('Session expired or invalid', 401);
   }
 
-  // Strip any client-supplied x-user-id to prevent spoofing
   const sanitizedHeaders = new Headers(req.headers);
   sanitizedHeaders.delete('x-user-id');
-
-  // Validate session against D1
-  const db = createServerClient();
-  if (db) {
-    try {
-      const now = Math.floor(Date.now() / 1000);
-      const { results } = await db
-        .prepare('SELECT user_id, expires_at FROM user_sessions WHERE id = ?')
-        .bind(sessionId)
-        .all<{ user_id: string; expires_at: number }>();
-
-      if (!results.length || results[0].expires_at < now) {
-        return NextResponse.json({ ok: false, error: 'Session expired' }, { status: 401 });
-      }
-
-      // Set server-verified userId on request (overrides any client value)
-      sanitizedHeaders.set('x-user-id', results[0].user_id);
-      return NextResponse.next({ request: { headers: sanitizedHeaders } });
-    } catch {
-      // D1 query failed — deny request rather than silently allowing
-      return NextResponse.json({ ok: false, error: 'Session validation failed' }, { status: 401 });
-    }
-  }
-
-  // No DB available (local dev only) — accept with valid cookie
-  // In production this should never happen; fail-closed.
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ ok: false, error: 'Session store unavailable' }, { status: 503 });
-  }
-  return NextResponse.next();
+  sanitizedHeaders.set('x-user-id', result.userId);
+  return NextResponse.next({ request: { headers: sanitizedHeaders } });
 }
 
 export const config = {

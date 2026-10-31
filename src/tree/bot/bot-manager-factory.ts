@@ -55,7 +55,7 @@ export class BotManagerFactory implements BotFactoryDelegate {
     );
   }
 
-  async createBot(req: CreateBotRequest, userId?: string): Promise<BotInstance> {
+  async createBot(req: CreateBotRequest, userId?: string, workspaceId?: string): Promise<BotInstance> {
     if (this.cache.has(req.id)) throw new Error(`Bot already exists: ${req.id}`);
     const effectiveUserId = userId ?? this.deps.userId;
     const exchange = this.getOrCreateQueuedExchange((req.config.exchange ?? 'binance') as ExchangeId, req.mode, req.config.capital);
@@ -63,13 +63,16 @@ export class BotManagerFactory implements BotFactoryDelegate {
       req.id, req.config,
       { exchange, killswitch: this.killswitch, exchangeOrchestrator: this.deps.getOrchestrator?.() ?? undefined },
       createD1Callbacks({
-        botId: req.id, userId: effectiveUserId ?? '', config: req.config, capital: req.config.capital,
+        botId: req.id, userId: effectiveUserId ?? '', workspaceId, config: req.config, capital: req.config.capital,
         onLog: this.deps.onLog, onError: this.deps.onError, onBotEvent: this.deps.onBotEvent,
         emitTelemetry: (type, details) => this.emitTelemetry(type, details),
       }),
     );
+    if (effectiveUserId) {
+      await persistNewBot({ botId: req.id, userId: effectiveUserId, workspaceId, config: req.config,
+        capital: req.config.capital, onLog: this.deps.onLog, onError: this.deps.onError });
+    }
     this.cache.cacheBot(bot, effectiveUserId);
-    if (effectiveUserId) persistNewBot({ botId: req.id, userId: effectiveUserId, config: req.config, capital: req.config.capital, onLog: this.deps.onLog, onError: this.deps.onError });
     this.deps.onLog(`Bot ${req.id} created (${req.config.strategy}, ${req.config.symbol}, ${req.mode})`);
     return bot;
   }
