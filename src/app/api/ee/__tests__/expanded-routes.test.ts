@@ -1,7 +1,11 @@
 // Test suite for newly expanded Cloud SaaS EE API routes
 // Covers /api/ee/alpha-feed, /api/ee/credits, /api/ee/alerts, /api/ee/scheduler, /api/ee/telemetry
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { mkdtempSync, readFileSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { LocalD1Database } from '@/ee/billing/__tests__/local-d1-adapter';
 
 const auth = vi.hoisted(() => ({ resolve: vi.fn(), activeCount: vi.fn() }));
 vi.mock('@/ee/tenancy/workspace-request-context', () => ({
@@ -10,8 +14,23 @@ vi.mock('@/ee/tenancy/workspace-request-context', () => ({
   workspaceContextErrorResponse: (error: unknown) => Response.json({ ok: false, error: String(error) }, { status: 503 }),
 }));
 
-function serverContext(tier: 'BASIC' | 'PREMIUM' | 'ENTERPRISE' = 'BASIC', workspaceId = 'ws_server') {
-  return { db: { prepare: () => ({ bind: () => ({ first: async () => ({ id: 'bot-1' }) }) }) },
+let localD1: LocalD1Database;
+beforeAll(async () => {
+  localD1 = new LocalD1Database(path.join(mkdtempSync(path.join(tmpdir(), 'pr35-ee-routes-')), 'ee.db'));
+  const migrationsDir = path.join(process.cwd(), 'migrations');
+  for (const file of readdirSync(migrationsDir).filter((name) => name.endsWith('.sql')).sort()) {
+    await localD1.exec(readFileSync(path.join(migrationsDir, file), 'utf8'));
+  }
+  for (const [botId, workspaceId] of [['bot_vol_1', 'ws_abc'], ['bot_vol_basic', 'ws_basic_alerts'], ['bot_sched_1', 'ws_xyz']]) {
+    await localD1.prepare(
+      `INSERT INTO bots (id, user_id, name, strategy, pair, exchange, status, config_json, capital_allocated, created_at, updated_at, workspace_id)
+       VALUES (?, 'user-a', ?, 'grid', 'BTC/USDT', 'binance', 'draft', '{}', 100, 1, 1, ?)`,
+    ).bind(botId, `Bot ${botId}`, workspaceId).run();
+  }
+});
+
+function serverContext(tier: 'BASIC' | 'PREMIUM' | 'ENTERPRISE' = 'BASIC', workspaceId = 'ws_server', db?: unknown) {
+  return { db: db ?? { prepare: () => ({ bind: () => ({ first: async () => ({ id: 'bot-1' }) }) }) },
     userId: 'user-a', workspaceId, role: 'OWNER', tier, entitlementExpiresAtMs: null, activeBotCount: 0 };
 }
 
@@ -76,10 +95,10 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
   });
 
   it('POST /api/ee/alerts uses stored tier and server signing secret, then deduplicates', async () => {
-    auth.resolve.mockResolvedValueOnce(serverContext('PREMIUM', 'ws_abc'))
-      .mockResolvedValueOnce(serverContext('PREMIUM', 'ws_abc'))
-      .mockResolvedValueOnce(serverContext('BASIC', 'ws_basic_alerts'))
-      .mockResolvedValueOnce(serverContext('BASIC', 'ws_basic_alerts'));
+    auth.resolve.mockResolvedValueOnce(serverContext('PREMIUM', 'ws_abc', localD1))
+      .mockResolvedValueOnce(serverContext('PREMIUM', 'ws_abc', localD1))
+      .mockResolvedValueOnce(serverContext('BASIC', 'ws_basic_alerts', localD1))
+      .mockResolvedValueOnce(serverContext('BASIC', 'ws_basic_alerts', localD1));
     const payload = {
       eventId: 'evt_001', workspaceId: 'ws_abc', botId: 'bot_vol_1', channel: 'WEBHOOK',
       message: 'Grid rebalance complete', signingSecret: 'ultra-secure-hmac-secret-12345', timestampMs: 1700000000000, tier: 'PREMIUM',
@@ -97,25 +116,24 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(data2.suppressed).toBe(true);
 
     const resBlocked = await alertsPost(
-      postJson('http://localhost/api/ee/alerts', { ...payload, eventId: 'evt_gated_01', workspaceId: 'ws_basic_alerts', tier: 'BASIC' }),
+      postJson('http://localhost/api/ee/alerts', { ...payload, eventId: 'evt_gated_01', workspaceId: 'ws_basic_alerts', botId: 'bot_vol_basic', tier: 'BASIC' }),
     );
     expect(resBlocked.status).toBe(402);
 
     const resTelegramBasic = await alertsPost(
       postJson('http://localhost/api/ee/alerts', {
-        ...payload, eventId: 'evt_telegram_basic', workspaceId: 'ws_basic_alerts', channel: 'TELEGRAM', tier: 'BASIC',
+        ...payload, eventId: 'evt_telegram_basic', workspaceId: 'ws_basic_alerts', botId: 'bot_vol_basic', channel: 'TELEGRAM', tier: 'BASIC',
       }),
     );
     expect(resTelegramBasic.status).toBe(200);
   });
 
   it('GET and POST /api/ee/scheduler scopes leases to the server-resolved workspace', async () => {
-    auth.resolve.mockResolvedValueOnce(serverContext('BASIC', 'ws_xyz'))
-      .mockResolvedValueOnce(serverContext('BASIC', 'ws_xyz'))
-      .mockResolvedValueOnce(serverContext('BASIC', 'ws_xyz'))
-      .mockResolvedValueOnce(serverContext('BASIC', 'ws_other'));
+    auth.resolve.mockResolvedValueOnce(serverContext('BASIC', 'ws_xyz', localD1))
+      .mockResolvedValueOnce(serverContext('BASIC', 'ws_xyz', localD1))
+      .mockResolvedValueOnce(serverContext('BASIC', 'ws_xyz', localD1))
+      .mockResolvedValueOnce(serverContext('BASIC', 'ws_other', localD1));
     expect(cronSchedulerCoordinator).toBe(defaultCloudSchedulerCoordinator);
-    defaultCloudSchedulerCoordinator.clearLeases();
     const payload = {
       botId: 'bot_sched_1',
       workspaceId: 'ws_xyz',

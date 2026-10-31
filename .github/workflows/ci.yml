@@ -86,6 +86,9 @@ jobs:
       - name: Legacy entitlement recovery evaluator (isolated local D1)
         run: node scripts/verification/pr35-legacy-recovery-eval.mjs --reset
 
+      - name: Ops approval + durable scheduling evaluator (isolated local D1)
+        run: node scripts/verification/pr35-ops-scheduling-eval.mjs --reset
+
       - name: Upload evaluator artifacts
         if: always()
         uses: actions/upload-artifact@v4

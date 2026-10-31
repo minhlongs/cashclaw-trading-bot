@@ -1,6 +1,10 @@
 // HTTP-boundary integration tests for SaaS runtime seams. D1 order transactions are exercised
 // separately against Wrangler's local D1 SQLite database in nowpayments-order-store.d1.test.ts.
-import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, it, expect, beforeEach, vi } from 'vitest';
+import { mkdtempSync, readFileSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { LocalD1Database } from '@/ee/billing/__tests__/local-d1-adapter';
 import { SaasEntitlementStore } from '../billing/saas-entitlement-store';
 import { createLocalToCloudSyncBundle } from '../sync/local-to-cloud-sync';
 import { GET as getCredits, POST as postCredits } from '@/app/api/ee/credits/route';
@@ -15,11 +19,22 @@ vi.mock('@/ee/tenancy/workspace-request-context', () => ({
   workspaceContextErrorResponse: (error: unknown) => Response.json({ ok: false, error: String(error) }, { status: 503 }),
 }));
 
+let localD1: LocalD1Database;
+beforeAll(async () => {
+  localD1 = new LocalD1Database(path.join(mkdtempSync(path.join(tmpdir(), 'pr35-seams-')), 'seams.db'));
+  const migrationsDir = path.join(process.cwd(), 'migrations');
+  for (const file of readdirSync(migrationsDir).filter((name) => name.endsWith('.sql')).sort()) {
+    await localD1.exec(readFileSync(path.join(migrationsDir, file), 'utf8'));
+  }
+  await localD1.prepare(
+    `INSERT INTO bots (id, user_id, name, strategy, pair, exchange, status, config_json, capital_allocated, created_at, updated_at, workspace_id)
+     VALUES ('bot-a', 'server-user-a', 'Bot A', 'grid', 'BTC/USDT', 'binance', 'draft', '{}', 100, 1, 1, 'server-ws-a')`,
+  ).run();
+});
+afterAll(() => vi.unstubAllEnvs());
+
 function context(tier: 'BASIC' | 'PREMIUM' | 'ENTERPRISE' = 'BASIC', activeBotCount = 0) {
-  const db = {
-    prepare: () => ({ bind: () => ({ first: async () => ({ id: 'bot-a' }) }) }),
-  };
-  return { db, userId: 'server-user-a', workspaceId: 'server-ws-a', role: 'OWNER', tier,
+  return { db: localD1, userId: 'server-user-a', workspaceId: 'server-ws-a', role: 'OWNER', tier,
     entitlementExpiresAtMs: null, activeBotCount };
 }
 
@@ -99,9 +114,12 @@ describe('EE HTTP authorization and entitlement seams', () => {
     const allowed = await postCloudAlert(new Request('https://app.example/api/ee/alerts', {
       method: 'POST', body: JSON.stringify(payload),
     }));
-    const body = await allowed.json() as { dispatched: boolean; envelope: { signatureHex: string } };
+    const body = await allowed.json() as { dispatched: boolean; delivered: boolean; deliveryStatus: string; envelope: { signatureHex: string } };
     expect(allowed.status).toBe(200);
     expect(body.dispatched).toBe(true);
+    // Honest delivery reporting: with no channel configured the pipeline must NOT claim delivery.
+    expect(body.delivered).toBe(false);
+    expect(body.deliveryStatus).toBe('unconfigured');
     expect(body.envelope.signatureHex).toMatch(/^[0-9a-f]{64}$/);
     expect(JSON.stringify(body)).not.toContain('attacker-secret');
   });

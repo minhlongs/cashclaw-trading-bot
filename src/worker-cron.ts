@@ -1,11 +1,20 @@
 // Cloudflare Workers Scheduled Cron Handler — CashClaw Trading Bot Platform
 import { getBotManager } from './tree/bot';
 import { defaultCloudSchedulerCoordinator } from './ee/scheduler/cloud-scheduler-coordinator';
+import { createD1TickLeaseStore, createMemoryTickLeaseStore, type TickLeaseStore } from './ee/scheduler/tick-lease-store';
 import type { WorkerEnv } from './worker-env';
 import type { ScheduledEvent } from './worker-types';
 import type { D1Database } from '@/lib/db/types';
 
 export const cronSchedulerCoordinator = defaultCloudSchedulerCoordinator;
+
+// Resolve the durable lease store: D1 whenever a database binding exists (cross-isolate, survives
+// restarts); the memory store is a documented single-isolate fallback for runtimes without DB.
+export function resolveCronLeaseStore(env: WorkerEnv): TickLeaseStore {
+  const db = env.DB as D1Database | undefined;
+  if (db && typeof db.prepare === 'function') return createD1TickLeaseStore(db);
+  return createMemoryTickLeaseStore();
+}
 
 // CF Cron trigger — fires every 5 minutes per wrangler.jsonc [[triggers]]
 // Drains exchange request queues and logs outcome for observability.
@@ -19,7 +28,7 @@ export async function scheduled(
 
   if (env.CLOUD_LEASE_ENABLED === 'true') {
     const nowMs = event.scheduledTime || Date.now();
-    const leaseResult = cronSchedulerCoordinator.acquireTickLease({
+    const leaseResult = await resolveCronLeaseStore(env).acquireTickLease({
       botId: 'cron-queue-drainer',
       workspaceId: 'global-cloud',
       isolateId: env.ISOLATE_ID ?? 'worker-isolate-1',

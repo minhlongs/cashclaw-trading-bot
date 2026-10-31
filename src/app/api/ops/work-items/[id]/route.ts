@@ -7,6 +7,7 @@ const Id = z.string().min(1).max(64).regex(/^[A-Za-z0-9_-]+$/);
 const StatusBody = z.object({ status: Status }).strict();
 type RouteContext = { params: Promise<{ id: string }> };
 type EventRow = { id: string; action: 'created' | 'status_changed'; from_status: string | null; to_status: string; created_at: number; item_version: number | null };
+type ApprovalEventRow = { id: number; actor: string; from_state: string; to_state: string; reason: string | null; item_version: number; created_at_ms: number };
 
 const TRANSITIONS: Record<z.infer<typeof Status>, readonly z.infer<typeof Status>[]> = {
   open: ['in_progress', 'done', 'cancelled'],
@@ -31,9 +32,18 @@ export async function GET(request: Request, context: RouteContext) {
       'SELECT id FROM ops_work_items WHERE id = ? AND owner_user_id = ?',
     ).bind(parsedId.data, auth.userId).first<{ id: string }>();
     if (!exists) return NextResponse.json({ ok: false, error: 'Record not found' }, { status: 404 });
+    const approvalResults = await auth.db.prepare(
+      `SELECT id, actor, from_state, to_state, reason, item_version, created_at_ms
+       FROM ops_approval_events
+       WHERE item_id = ? AND owner_user_id = ?
+       ORDER BY item_version ASC, created_at_ms ASC, id ASC`,
+    ).bind(parsedId.data, auth.userId).all<ApprovalEventRow>();
     return NextResponse.json({ ok: true, events: results.map((event) => ({
       id: event.id, action: event.action, fromStatus: event.from_status, toStatus: event.to_status,
       createdAt: event.created_at, version: event.item_version,
+    })), approvalEvents: approvalResults.results.map((event) => ({
+      id: event.id, actor: event.actor, fromState: event.from_state, toState: event.to_state,
+      reason: event.reason, version: event.item_version, createdAt: event.created_at_ms,
     })) });
   } catch {
     return NextResponse.json({ ok: false, error: 'Could not load operation history' }, { status: 503 });

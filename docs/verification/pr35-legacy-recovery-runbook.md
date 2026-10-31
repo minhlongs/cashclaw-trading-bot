@@ -210,9 +210,11 @@ nothing. Missing proof is not a finding of non-payment; it stays a manual-review
   before/after the whole run; the 4 unverifiable rows stay revoked with no expiry granted.
 
 Migration 0016 evaluator (`pr35-migration-0016-legacy-eval.mjs --reset`) also runs in CI and passes.
-Both evaluators run in the hosted CI job **Migration + legacy recovery evaluators (isolated local
-D1)** on every pull request — isolated local Wrangler D1 only, no secrets, no remote D1, strict
-assertions and nonzero exit codes.
+A third evaluator, `pr35-ops-scheduling-eval.mjs --reset`, proves the migration 0018 semantics
+(ops approval CAS/atomic transitions, append-only approval audit, durable tick leases, alert
+dispatch dedup/retry) on the same isolated local D1 basis. All evaluators run in the hosted CI job
+**Migration + legacy recovery evaluators (isolated local D1)** on every pull request — isolated
+local Wrangler D1 only, no secrets, no remote D1, strict assertions and nonzero exit codes.
 
 Artifacts: `docs/verification/artifacts/pr35-recovery-preflight.json`,
 `docs/verification/artifacts/pr35-recovery-summary.json` (also uploaded as a CI artifact).

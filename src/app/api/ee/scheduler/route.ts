@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { defaultCloudSchedulerCoordinator } from '@/ee/scheduler/cloud-scheduler-coordinator';
+import { createD1TickLeaseStore } from '@/ee/scheduler/tick-lease-store';
 import { resolveWorkspaceTierContext, workspaceContextErrorResponse } from '@/ee/tenancy/workspace-request-context';
+
+// Tick leases are acquired through the D1-backed store so duplicate-tick protection holds across
+// worker isolates and survives restarts (the in-memory coordinator cannot). Semantics: one lease
+// per workspace/bot/minute, takeover of expired leases only, exactly-one-row CAS on takeover.
 
 const LeaseRequestSchema = z.object({
   botId: z.string().min(1).max(128),
@@ -20,8 +24,9 @@ export async function GET(req: Request) {
     const context = await resolveWorkspaceTierContext(req, {
       explicitWorkspaceId: url.searchParams.get('workspaceId')?.trim() || undefined,
     });
+    const store = createD1TickLeaseStore(context.db);
     return NextResponse.json({ ok: true, nowMs, workspaceId: context.workspaceId,
-      activeLeaseCount: defaultCloudSchedulerCoordinator.activeLeaseCount(nowMs, context.workspaceId) });
+      activeLeaseCount: await store.activeLeaseCount(nowMs, context.workspaceId) });
   } catch (error) {
     return workspaceContextErrorResponse(error);
   }
@@ -38,7 +43,8 @@ export async function POST(req: Request) {
     const bot = await context.db.prepare('SELECT id FROM bots WHERE id = ? AND workspace_id = ?')
       .bind(parsed.data.botId, context.workspaceId).first<{ id: string }>();
     if (!bot) return NextResponse.json({ ok: false, error: 'Bot not found' }, { status: 404 });
-    const result = defaultCloudSchedulerCoordinator.acquireTickLease({ ...parsed.data, workspaceId: context.workspaceId });
+    const store = createD1TickLeaseStore(context.db);
+    const result = await store.acquireTickLease({ ...parsed.data, workspaceId: context.workspaceId });
     if (!result.ok) return NextResponse.json({ ok: false, error: result.error }, { status: 409 });
     return NextResponse.json({ ok: true, lease: result.data });
   } catch (error) {
