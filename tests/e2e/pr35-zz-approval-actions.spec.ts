@@ -87,7 +87,9 @@ let pageA2: Page;
 let sessionB: BrowserContext;
 let pageB: Page;
 
-test.beforeAll(async ({ browser }: { browser: Browser }) => {
+test.beforeAll(async ({ browser }: { browser: Browser }, testInfo) => {
+  // Hook budget: logins may need one 61s backoff window on the auth rate limiter.
+  testInfo.setTimeout(240_000);
   sessionA = await browser.newContext();
   pageA = await sessionA.newPage();
   await login(pageA, 'vi', accountA);
@@ -99,7 +101,7 @@ test.beforeAll(async ({ browser }: { browser: Browser }) => {
   sessionB = await browser.newContext();
   pageB = await sessionB.newPage();
   await login(pageB, 'en', accountB);
-}, 240_000);
+});
 
 test.afterAll(async () => {
   await sessionA?.close();
