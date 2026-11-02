@@ -139,7 +139,7 @@ test('approval lifecycle: draft persists, submit/approve/execute record_only, at
   await item.getByRole('button', { name: 'Xem lịch sử' }).click();
   await expect(item.getByText(/pending_approval → approved/)).toBeVisible();
   await expect(item.getByText(/Các lần thực thi/)).toBeVisible();
-  await expect(item.getByText(/provider_accepted/)).toBeVisible();
+  await expect(item.getByText(/Lần 1: provider_accepted/)).toBeVisible();
 
   // Mobile viewport on the new panel: no horizontal overflow.
   await pageA.setViewportSize({ width: 390, height: 844 });
@@ -197,7 +197,7 @@ test('outbound_message hits the fake receiver; retries stay inside the approved 
   const flakyItem = pageA.locator('.ops-item').filter({ hasText: `PR35 flaky ${runId}` });
   await expect(flakyItem.getByText(/Đã phê duyệt/)).toBeVisible();
   await flakyItem.getByRole('button', { name: 'Xem lịch sử' }).click();
-  await expect(flakyItem.getByText(/failed_retryable/).first()).toBeVisible();
+  await expect(flakyItem.getByText(/Lần \d+: failed_retryable/).first()).toBeVisible();
   const state = await receiverState();
   expect(state.totalRequests).toBe(3); // 1 success + 2 failed attempts actually reached the receiver
 });
@@ -234,7 +234,8 @@ test('post-approval edits require re-approval; revoke and expiry block all sends
   await pageA.reload();
   const revokeItem = pageA.locator('.ops-item').filter({ hasText: `PR35 revoke ${runId}` });
   await revokeItem.getByRole('button', { name: 'Thu hồi phê duyệt' }).click();
-  await expect(revokeItem.getByText(/Đã thu hồi/)).toBeVisible();
+  await expect(revokeItem.getByText(/Đã thu hồi/).first()).toBeVisible();
+  await expect(revokeItem.getByText(/không gửi thêm/)).toBeVisible();
   const afterRevoke = await approvalAction(pageA.request, 'execute', revoke.id);
   expect(afterRevoke).toMatchObject({ ok: false, code: /not-approved|revoked/ });
   expect((await receiverState()).totalRequests).toBe(0);
@@ -307,8 +308,8 @@ test('ambiguous timeout outcome is recorded as unknown and duplicates are accept
   await pageA.reload();
   const item = pageA.locator('.ops-item').filter({ hasText: `PR35 ambiguous ${runId}` });
   await item.getByRole('button', { name: 'Xem lịch sử' }).click();
-  await expect(item.getByText(/unknown/).first()).toBeVisible();
-  await expect(item.getByText(/provider_accepted/).first()).toBeVisible();
+  await expect(item.getByText(/Lần 1: unknown/)).toBeVisible();
+  await expect(item.getByText(/Lần 2: provider_accepted/)).toBeVisible();
   writeFileSync(approvalStatePath, JSON.stringify({ runId } satisfies ApprovalState));
 });
 
@@ -319,8 +320,8 @@ test('approved items, attempts and queues survive a worker restart @restart', as
   const item = page.locator('.ops-item').filter({ hasText: `PR35 ambiguous ${state.runId}` });
   await expect(item).toHaveCount(1);
   await item.getByRole('button', { name: 'Xem lịch sử' }).click();
-  await expect(item.getByText(/unknown/).first()).toBeVisible();
-  await expect(item.getByText(/provider_accepted/).first()).toBeVisible();
+  await expect(item.getByText(/Lần 1: unknown/)).toBeVisible();
+  await expect(item.getByText(/Lần 2: provider_accepted/)).toBeVisible();
   await expect(item.getByText(/Đã thực thi/)).toBeVisible();
   await page.screenshot({ path: saveScreenshot('approval-after-restart.png'), fullPage: true });
 });
