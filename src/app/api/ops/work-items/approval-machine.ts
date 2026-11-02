@@ -4,10 +4,10 @@
 // machine. The database trigger in migration 0018 enforces the same transitions atomically; this
 // module produces the audited transition plan and the human-readable errors.
 
-export type ApprovalState = 'none' | 'draft' | 'pending_approval' | 'approved' | 'rejected';
+export type ApprovalState = 'none' | 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'revoked';
 export type ExecutionState = 'executed' | 'failed';
-export type ApprovalAction = 'submit' | 'approve' | 'reject' | 'execute';
-export type TransitionToState = 'pending_approval' | 'approved' | 'rejected' | 'executed' | 'failed';
+export type ApprovalAction = 'submit' | 'approve' | 'reject' | 'execute' | 'revoke';
+export type TransitionToState = 'pending_approval' | 'approved' | 'rejected' | 'revoked' | 'executed' | 'failed';
 
 export interface ApprovalItemSnapshot {
   readonly id: string;
@@ -66,6 +66,13 @@ function planExecute(item: ApprovalItemSnapshot, reason: string | null): Approva
   return { ok: true, transition: { kind: 'execution', fromState: 'approved', toState: 'executed', reason, itemVersion: item.version } };
 }
 
+function planRevoke(item: ApprovalItemSnapshot, reason: string | null): ApprovalPlan {
+  if (item.approvalState !== 'approved') {
+    return { ok: false, code: 'invalid-state-transition', error: `Cannot revoke from state ${item.approvalState}` };
+  }
+  return { ok: true, transition: { kind: 'approval', fromState: 'approved', toState: 'revoked', reason, itemVersion: item.version } };
+}
+
 export function planApprovalAction(
   action: ApprovalAction,
   item: ApprovalItemSnapshot,
@@ -81,6 +88,7 @@ export function planApprovalAction(
     case 'approve': return planApprove(item, normalized);
     case 'reject': return planReject(item, normalized);
     case 'execute': return planExecute(item, normalized);
+    case 'revoke': return planRevoke(item, normalized);
     default:
       return { ok: false, code: 'invalid-state-transition', error: 'Unknown approval action' };
   }

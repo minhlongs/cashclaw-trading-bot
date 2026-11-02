@@ -20,7 +20,10 @@ export type AlertDeliveryStatus = 'sent' | 'failed' | 'unconfigured' | 'suppress
 export interface AlertDispatchRecord {
   readonly eventId: string;
   readonly dispatched: boolean;
+  /** @deprecated Kept for API compatibility. True = PROVIDER ACCEPTED (HTTP 2xx); never proof of end-user delivery. */
   readonly delivered: boolean;
+  /** Canonical field: provider accepted the request. End-user delivery is only reportable with provider-side evidence. */
+  readonly providerAccepted: boolean;
   readonly deliveryStatus: AlertDeliveryStatus;
   readonly attempts: number;
   readonly providerRef?: string;
@@ -112,13 +115,13 @@ export function createAlertDispatchService(options: {
       const claimed = await options.logStore.claim(event, nowMs);
       const attempts = await options.logStore.attempts(event.eventId);
       if (!claimed) {
-        return { eventId: event.eventId, dispatched: false, delivered: false, deliveryStatus: 'suppressed', attempts };
+        return { eventId: event.eventId, dispatched: false, delivered: false, providerAccepted: false, deliveryStatus: 'suppressed', attempts };
       }
       const sender: AlertSender | undefined = options.senders[event.channel];
       if (!sender) {
         await options.logStore.record(event.eventId, 'failed', nowMs, { error: 'channel-not-configured' });
         return {
-          eventId: event.eventId, dispatched: true, delivered: false,
+          eventId: event.eventId, dispatched: true, delivered: false, providerAccepted: false,
           deliveryStatus: 'unconfigured', attempts, error: 'channel-not-configured',
         };
       }
@@ -126,13 +129,13 @@ export function createAlertDispatchService(options: {
       if (outcome.delivered) {
         await options.logStore.record(event.eventId, 'sent', nowMs, { providerRef: outcome.providerRef });
         return {
-          eventId: event.eventId, dispatched: true, delivered: true,
+          eventId: event.eventId, dispatched: true, delivered: true, providerAccepted: true,
           deliveryStatus: 'sent', attempts, providerRef: outcome.providerRef,
         };
       }
       await options.logStore.record(event.eventId, 'failed', nowMs, { error: outcome.error ?? 'delivery-failed' });
       return {
-        eventId: event.eventId, dispatched: true, delivered: false,
+        eventId: event.eventId, dispatched: true, delivered: false, providerAccepted: false,
         deliveryStatus: 'failed', attempts, error: outcome.error ?? 'delivery-failed',
       };
     },

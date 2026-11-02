@@ -8,6 +8,11 @@ const StatusBody = z.object({ status: Status }).strict();
 type RouteContext = { params: Promise<{ id: string }> };
 type EventRow = { id: string; action: 'created' | 'status_changed'; from_status: string | null; to_status: string; created_at: number; item_version: number | null };
 type ApprovalEventRow = { id: number; actor: string; from_state: string; to_state: string; reason: string | null; item_version: number; created_at_ms: number };
+type AttemptRow = {
+  id: number; attempt_no: number; claimed_by: string; claimed_at_ms: number; timeout_ms: number;
+  scheduled_for_ms: number; outcome: string; outcome_detail: string | null;
+  provider_ref: string | null; http_status: number | null; finished_at_ms: number | null;
+};
 
 const TRANSITIONS: Record<z.infer<typeof Status>, readonly z.infer<typeof Status>[]> = {
   open: ['in_progress', 'done', 'cancelled'],
@@ -38,12 +43,23 @@ export async function GET(request: Request, context: RouteContext) {
        WHERE item_id = ? AND owner_user_id = ?
        ORDER BY item_version ASC, created_at_ms ASC, id ASC`,
     ).bind(parsedId.data, auth.userId).all<ApprovalEventRow>();
+    const attemptResults = await auth.db.prepare(
+      `SELECT id, attempt_no, claimed_by, claimed_at_ms, timeout_ms, scheduled_for_ms, outcome,
+              outcome_detail, provider_ref, http_status, finished_at_ms
+       FROM ops_action_attempts
+       WHERE item_id = ? AND owner_user_id = ?
+       ORDER BY attempt_no ASC, id ASC`,
+    ).bind(parsedId.data, auth.userId).all<AttemptRow>();
     return NextResponse.json({ ok: true, events: results.map((event) => ({
       id: event.id, action: event.action, fromStatus: event.from_status, toStatus: event.to_status,
       createdAt: event.created_at, version: event.item_version,
     })), approvalEvents: approvalResults.results.map((event) => ({
       id: event.id, actor: event.actor, fromState: event.from_state, toState: event.to_state,
       reason: event.reason, version: event.item_version, createdAt: event.created_at_ms,
+    })), attempts: attemptResults.results.map((attempt) => ({
+      id: attempt.id, attemptNo: attempt.attempt_no, outcome: attempt.outcome,
+      detail: attempt.outcome_detail, providerRef: attempt.provider_ref, httpStatus: attempt.http_status,
+      claimedAt: attempt.claimed_at_ms, finishedAt: attempt.finished_at_ms,
     })) });
   } catch {
     return NextResponse.json({ ok: false, error: 'Could not load operation history' }, { status: 503 });

@@ -11,6 +11,8 @@ export interface WorkerEnv {
   MICRO_INGEST_SYMBOLS?: string;
   CLOUD_LEASE_ENABLED?: string;
   ISOLATE_ID?: string;
+  CASHCLAW_ALLOW_MEMORY_LEASE?: string;
+  CASHCLAW_OPS_AUTORETRY_ENABLED?: string;
 }
 
 export type Env = WorkerEnv;

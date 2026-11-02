@@ -62,8 +62,8 @@ let row = query(`SELECT approval_state, version, submitted_at_ms FROM ops_work_i
 assert.equal(row.approval_state, 'pending_approval');
 assert.equal(row.version, 1);
 assert.equal(row.submitted_at_ms, 2000);
-query(`INSERT INTO ops_approval_events (item_id, owner_user_id, actor, from_state, to_state, reason, item_version, created_at_ms)
-VALUES ('item-a', 'ops-user', 'ops-user', 'pending_approval', 'approved', 'reviewed', 1, 3000);`);
+query(`INSERT INTO ops_approval_events (item_id, owner_user_id, actor, from_state, to_state, reason, item_version, created_at_ms, approved_sha256, approved_target)
+VALUES ('item-a', 'ops-user', 'ops-user', 'pending_approval', 'approved', 'reviewed', 1, 3000, 'sched-sha', 'email:ops@example.test');`);
 row = query(`SELECT approval_state, version, approved_by, approved_at_ms FROM ops_work_items WHERE id = 'item-a';`)[0].results[0];
 assert.deepEqual({ ...row }, { approval_state: 'approved', version: 2, approved_by: 'ops-user', approved_at_ms: 3000 });
 console.log('PASS approval transitions: audit INSERT performs submit/approve atomically with version CAS.');

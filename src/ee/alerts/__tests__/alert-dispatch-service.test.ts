@@ -63,18 +63,18 @@ describe('alert dispatch service (memory log)', () => {
   it('suppresses duplicate event ids, retries only failed ones, and reports unconfigured channels', async () => {
     let deliveredCount = 0;
     const service = createAlertDispatchService({
-      senders: { TELEGRAM: { channel: 'TELEGRAM', async send() { deliveredCount += 1; return { delivered: true, providerRef: 'tg' }; } } },
+      senders: { TELEGRAM: { channel: 'TELEGRAM', targetDescriptor: 'telegram:test', async send() { deliveredCount += 1; return { delivered: true, kind: 'provider_accepted', providerRef: 'tg' }; } } },
       logStore: createMemoryDispatchLogStore(),
     });
     const first = await service.dispatch(event());
-    expect(first).toMatchObject({ dispatched: true, delivered: true, deliveryStatus: 'sent', attempts: 1 });
+    expect(first).toMatchObject({ dispatched: true, delivered: true, providerAccepted: true, deliveryStatus: 'sent', attempts: 1 });
     const duplicate = await service.dispatch(event());
     expect(duplicate).toMatchObject({ dispatched: false, delivered: false, deliveryStatus: 'suppressed' });
     expect(deliveredCount).toBe(1);
 
     let attempts = 0;
     const flaky = createAlertDispatchService({
-      senders: { EMAIL: { channel: 'EMAIL', async send() { attempts += 1; return attempts === 1 ? { delivered: false, error: 'boom' } : { delivered: true }; } } },
+      senders: { EMAIL: { channel: 'EMAIL', targetDescriptor: 'email:test', async send() { attempts += 1; return attempts === 1 ? { delivered: false, kind: 'failed_retryable', error: 'boom' } : { delivered: true, kind: 'provider_accepted' }; } } },
       logStore: createMemoryDispatchLogStore(),
     });
     const failed = await flaky.dispatch(event({ eventId: 'evt-flaky', channel: 'EMAIL' }));
@@ -84,7 +84,7 @@ describe('alert dispatch service (memory log)', () => {
 
     const unconfigured = createAlertDispatchService({ senders: {}, logStore: createMemoryDispatchLogStore() });
     const bare = await unconfigured.dispatch(event({ eventId: 'evt-bare' }));
-    expect(bare).toMatchObject({ dispatched: true, delivered: false, deliveryStatus: 'unconfigured', error: 'channel-not-configured' });
+    expect(bare).toMatchObject({ dispatched: true, delivered: false, providerAccepted: false, deliveryStatus: 'unconfigured', error: 'channel-not-configured' });
   });
 });
 
@@ -102,7 +102,7 @@ describe('alert dispatch service (durable D1 log)', () => {
     const store = createD1DispatchLogStore(db);
     let sends = 0;
     const service = createAlertDispatchService({
-      senders: { TELEGRAM: { channel: 'TELEGRAM', async send() { sends += 1; return { delivered: true, providerRef: 'tg:1' }; } } },
+      senders: { TELEGRAM: { channel: 'TELEGRAM', targetDescriptor: 'telegram:test', async send() { sends += 1; return { delivered: true, kind: 'provider_accepted', providerRef: 'tg:1' }; } } },
       logStore: store,
     });
     expect(await service.dispatch(event({ eventId: 'evt-durable' }))).toMatchObject({ deliveryStatus: 'sent', attempts: 1 });
@@ -110,13 +110,13 @@ describe('alert dispatch service (durable D1 log)', () => {
     expect(sends).toBe(1);
 
     const restarted = createAlertDispatchService({
-      senders: { TELEGRAM: { channel: 'TELEGRAM', async send() { sends += 1; return { delivered: true }; } } },
+      senders: { TELEGRAM: { channel: 'TELEGRAM', targetDescriptor: 'telegram:test', async send() { sends += 1; return { delivered: true, kind: 'provider_accepted' }; } } },
       logStore: createD1DispatchLogStore(db),
     });
     expect(await restarted.dispatch(event({ eventId: 'evt-durable' }))).toMatchObject({ deliveryStatus: 'suppressed' });
 
     const flaky = createAlertDispatchService({
-      senders: { EMAIL: { channel: 'EMAIL', async send() { sends += 1; return { delivered: false, error: 'smtp down' }; } } },
+      senders: { EMAIL: { channel: 'EMAIL', targetDescriptor: 'email:test', async send() { sends += 1; return { delivered: false, kind: 'failed_retryable', error: 'smtp down' }; } } },
       logStore: createD1DispatchLogStore(db),
     });
     expect(await flaky.dispatch(event({ eventId: 'evt-retry', channel: 'EMAIL' }))).toMatchObject({ deliveryStatus: 'failed', error: 'smtp down' });

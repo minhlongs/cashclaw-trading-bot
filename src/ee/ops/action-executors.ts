@@ -1,11 +1,16 @@
 // Approved-execution action executors.
-// Executors run ONLY for approved work items (the route checks the approval machine and the DB
-// trigger enforces it). An executor either performs the external effect through a configured
-// channel sender or reports an honest failure — it never claims success it did not achieve.
-// Delivery is at-least-once: a crash between the provider call and the audit insert can re-send on
-// retry, which is the documented semantics for email/telegram-style channels.
+// Executors run ONLY for approved work items and ONLY through the execution module's claim
+// machinery. An executor either performs the external effect through a configured channel sender
+// or reports an honest outcome classification:
+//   provider_accepted — provider accepted the request (NOT proof of end-user delivery)
+//   failed_retryable  — transient failure, safe to retry within the approved attempt budget
+//   failed_terminal   — configuration/auth/input error, needs a human, never auto-retried
+//   unknown           — timeout after the request may have left the client (ambiguous; the
+//                       owner's accepted-duplicates policy allows retrying, which may duplicate)
+// Delivery is at-least-once: a crash between the provider call and the outcome record can re-send
+// on retry. This is the documented semantics the owner accepted.
 
-import type { AlertSender, AlertSenders } from '../alerts/alert-channel-senders';
+import type { AlertSender, AlertSenders, SendOutcomeKind } from '../alerts/alert-channel-senders';
 
 export type OutboundChannel = 'TELEGRAM' | 'WEBHOOK' | 'EMAIL';
 export type ActionKind = 'outbound_message' | 'record_only';
@@ -16,9 +21,11 @@ export interface OutboundMessagePayload {
 }
 
 export interface ActionExecutionOutcome {
-  readonly ok: boolean;
+  readonly kind: SendOutcomeKind | 'recorded';
   readonly detail: string;
   readonly providerRef?: string;
+  readonly httpStatus?: number;
+  readonly retryAfterMs?: number;
 }
 
 const OUTBOUND_CHANNELS: readonly OutboundChannel[] = ['TELEGRAM', 'WEBHOOK', 'EMAIL'];
@@ -37,29 +44,43 @@ export function parseActionPayload(actionType: ActionKind, payload: unknown): { 
   return { ok: true };
 }
 
+export function resolveActionTargetDescriptor(actionType: string, payload: unknown, senders: AlertSenders): string | null {
+  if (actionType === 'record_only') return 'record:internal-ledger';
+  if (actionType !== 'outbound_message') return null;
+  const { channel } = (payload ?? {}) as OutboundMessagePayload;
+  const sender: AlertSender | undefined = senders[channel];
+  return sender ? sender.targetDescriptor : null;
+}
+
 export async function executeAction(input: {
   itemId: string;
   actionType: string;
   payload: unknown;
   senders: AlertSenders;
+  timeoutMs?: number;
 }): Promise<ActionExecutionOutcome> {
   if (input.actionType === 'record_only') {
-    return { ok: true, detail: 'recorded' };
+    return { kind: 'recorded', detail: 'recorded' };
   }
   if (input.actionType !== 'outbound_message') {
-    return { ok: false, detail: `unsupported-action-type:${input.actionType}` };
+    return { kind: 'failed_terminal', detail: `unsupported-action-type:${input.actionType}` };
   }
   const parsed = parseActionPayload('outbound_message', input.payload);
-  if (!parsed.ok) return { ok: false, detail: parsed.error };
+  if (!parsed.ok) return { kind: 'failed_terminal', detail: parsed.error };
   const { channel, message } = input.payload as OutboundMessagePayload;
   const sender: AlertSender | undefined = input.senders[channel];
-  if (!sender) return { ok: false, detail: `channel-not-configured:${channel}` };
+  if (!sender) return { kind: 'failed_terminal', detail: `channel-not-configured:${channel}` };
   const outcome = await sender.send({
     eventId: `ops-action-${input.itemId}`,
     message,
     timestampMs: Date.now(),
+    timeoutMs: input.timeoutMs,
   });
-  return outcome.delivered
-    ? { ok: true, detail: `sent:${channel}`, providerRef: outcome.providerRef }
-    : { ok: false, detail: outcome.error ?? 'delivery-failed' };
+  return {
+    kind: outcome.kind,
+    detail: outcome.error ?? outcome.kind,
+    providerRef: outcome.providerRef,
+    httpStatus: outcome.httpStatus,
+    retryAfterMs: outcome.retryAfterMs,
+  };
 }

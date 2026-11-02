@@ -14,14 +14,27 @@ vi.mock('@/ee/alerts/alert-channel-senders', () => ({
   createSendersFromEnv: () => ({
     EMAIL: {
       channel: 'EMAIL',
+      targetDescriptor: 'email:ops@example.test',
       send: vi.fn(async () => senderBehavior.deliver
-        ? { delivered: true, providerRef: 'email:ops@example.test' }
-        : { delivered: false, error: senderBehavior.error }),
+        ? { delivered: true, kind: 'provider_accepted', providerRef: 'email:ops@example.test' }
+        : { delivered: false, kind: 'failed_retryable', error: senderBehavior.error }),
     },
   }),
 }));
 
 import { POST } from './route';
+import { computeApprovedSha256 } from '@/ee/ops/approved-snapshot';
+
+async function stampSnapshot(id: string) {
+  const row = await db.prepare(`SELECT * FROM ops_work_items WHERE id = ?`).bind(id).first<{ action_type: string; action_payload_json: string; max_attempts: number; request_timeout_ms: number; backoff_base_ms: number; backoff_max_ms: number; approval_ttl_ms: number }>();
+  const sha = await computeApprovedSha256({
+    actionType: row!.action_type,
+    payload: JSON.parse(row!.action_payload_json ?? 'null'),
+    target: 'email:ops@example.test',
+    policy: { maxAttempts: row!.max_attempts, requestTimeoutMs: row!.request_timeout_ms, backoffBaseMs: row!.backoff_base_ms, backoffMaxMs: row!.backoff_max_ms, approvalTtlMs: row!.approval_ttl_ms },
+  });
+  await db.prepare(`UPDATE ops_work_items SET approved_sha256 = ?, approved_target = 'email:ops@example.test' WHERE id = ?`).bind(sha, id).run();
+}
 
 const USER = 'approval-user-a';
 let db: LocalD1Database;
@@ -167,18 +180,20 @@ describe('approvals route (real local D1 with migration 0018 triggers)', () => {
     ]);
   });
 
-  it('failed executions are recorded as failed and retriable; success is terminal', async () => {
+  it('failed executions are recorded with honest outcomes and remain retriable; success is terminal', async () => {
     const id = await seedItem({ approvalState: 'approved', version: 2 });
+    await stampSnapshot(id);
     senderBehavior.deliver = false;
     const failing = await post({ action: 'execute', itemId: id });
-    expect(failing.body.results[0]).toMatchObject({ ok: true, executionState: 'failed' });
+    // The attempt ran but the provider did NOT accept: ok=false is the honest delivery outcome.
+    expect(failing.body.results[0]).toMatchObject({ ok: false, outcome: 'failed_retryable', executionState: 'failed' });
     const row = await db.prepare(`SELECT execution_state, execution_result, version FROM ops_work_items WHERE id = ?`).bind(id).first<{ execution_state: string; execution_result: string; version: number }>();
     expect(row).toMatchObject({ execution_state: 'failed', version: 3 });
     expect(row?.execution_result).toContain('smtp down');
 
     senderBehavior.deliver = true;
     const retried = await post({ action: 'execute', itemId: id });
-    expect(retried.body.results[0]).toMatchObject({ ok: true, executionState: 'executed', version: 4 });
+    expect(retried.body.results[0]).toMatchObject({ ok: true, outcome: 'provider_accepted', executionState: 'executed', version: 4 });
     const again = await post({ action: 'execute', itemId: id });
     expect(again.body.results[0]).toMatchObject({ ok: false, code: 'invalid-state-transition' });
     senderBehavior.deliver = true;

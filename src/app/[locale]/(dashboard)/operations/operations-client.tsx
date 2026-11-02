@@ -5,12 +5,18 @@ import { useLocale } from 'next-intl';
 
 type Department = 'finance' | 'operations' | 'marketing' | 'sales' | 'support';
 type Status = 'open' | 'in_progress' | 'done' | 'cancelled';
-type ApprovalState = 'none' | 'draft' | 'pending_approval' | 'approved' | 'rejected';
+type ApprovalState = 'none' | 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'revoked';
 type ExecutionState = 'executed' | 'failed';
 type Item = {
   id: string; department: Department; title: string; description: string; status: Status;
   amountMinor: number | null; dueDate: string | null; createdAt: number; updatedAt: number; version: number;
   actionType?: string | null; approvalState?: ApprovalState; executionState?: ExecutionState | null; decisionReason?: string | null;
+  approvalExpiresAtMs?: number | null; nextAttemptAtMs?: number | null; revokedAtMs?: number | null;
+  retryPolicy?: { maxAttempts: number; requestTimeoutMs: number; backoffBaseMs: number; backoffMaxMs: number; approvalTtlMs: number };
+};
+type AttemptEvent = {
+  id: number; attemptNo: number; outcome: string; detail: string | null;
+  providerRef: string | null; httpStatus: number | null; claimedAt: number; finishedAt: number | null;
 };
 type WorkEvent = {
   id: string; action: 'created' | 'status_changed'; fromStatus: Status | null; toStatus: Status;
@@ -24,35 +30,62 @@ const departments: Department[] = ['finance', 'operations', 'marketing', 'sales'
 
 type Labels = typeof labels.en | typeof labels.vi;
 
+type ApprovalView = 'draft' | 'pending' | 'approved' | 'approved-failed' | 'settled' | 'revoked';
+type ApprovalActionKind = 'submit' | 'approve' | 'reject' | 'execute' | 'revoke';
+type ApprovalButton = { action: ApprovalActionKind; label: 'submitForApproval' | 'approve' | 'reject' | 'execute' | 'retryExecution' | 'revoke' };
+
+function approvalView(item: Item): ApprovalView {
+  if (item.approvalState === 'draft') return 'draft';
+  if (item.approvalState === 'pending_approval') return 'pending';
+  if (item.approvalState === 'revoked') return 'revoked';
+  if (item.approvalState !== 'approved') return 'settled';
+  return item.executionState === 'executed' ? 'settled' : item.executionState === 'failed' ? 'approved-failed' : 'approved';
+}
+
+const VIEW_BUTTONS: Record<ApprovalView, ApprovalButton[]> = {
+  draft: [{ action: 'submit', label: 'submitForApproval' }],
+  pending: [{ action: 'approve', label: 'approve' }, { action: 'reject', label: 'reject' }],
+  approved: [{ action: 'execute', label: 'execute' }, { action: 'revoke', label: 'revoke' }],
+  'approved-failed': [{ action: 'execute', label: 'retryExecution' }, { action: 'revoke', label: 'revoke' }],
+  settled: [],
+  revoked: [],
+};
+
+function ReasonField(props: { t: Labels; reason: string; onReason: (value: string) => void }) {
+  return (
+    <label className="ops-field"><span>{props.t.approvalReason}</span>
+      <input className="ops-control" maxLength={500} value={props.reason}
+        onChange={(e) => props.onReason(e.target.value)} />
+    </label>
+  );
+}
+
 function ApprovalControls(props: {
   item: Item;
   t: Labels;
   busy: boolean;
   reason: string;
+  attemptCount?: number;
   onReason: (value: string) => void;
-  onAction: (action: 'submit' | 'approve' | 'reject' | 'execute') => void;
+  onAction: (action: ApprovalActionKind) => void;
 }) {
   const { item, t } = props;
-  const needsReason = item.approvalState === 'draft' || item.approvalState === 'pending_approval'
-    || (item.approvalState === 'approved' && item.executionState !== 'executed');
+  const view = approvalView(item);
+  const buttons = VIEW_BUTTONS[view];
+  const showRetryNote = view === 'approved-failed' && typeof item.nextAttemptAtMs === 'number';
   return (
     <div className="ops-approval">
-      {needsReason && (
-        <label className="ops-field"><span>{t.approvalReason}</span>
-          <input className="ops-control" maxLength={500} value={props.reason}
-            onChange={(e) => props.onReason(e.target.value)} />
-        </label>
-      )}
+      {buttons.length > 0 && <ReasonField t={t} reason={props.reason} onReason={props.onReason} />}
       <div className="ops-actions">
-        {item.approvalState === 'draft' && <button type="button" disabled={props.busy} className="ops-action" onClick={() => props.onAction('submit')}>{t.submitForApproval}</button>}
-        {item.approvalState === 'pending_approval' && <button type="button" disabled={props.busy} className="ops-action" onClick={() => props.onAction('approve')}>{t.approve}</button>}
-        {item.approvalState === 'pending_approval' && <button type="button" disabled={props.busy} className="ops-action" onClick={() => props.onAction('reject')}>{t.reject}</button>}
-        {item.approvalState === 'approved' && item.executionState !== 'executed' && (
-          <button type="button" disabled={props.busy} className="ops-action" onClick={() => props.onAction('execute')}>
-            {item.executionState === 'failed' ? t.retryExecution : t.execute}
-          </button>
-        )}
+        {buttons.map((button) => (
+          <button key={button.action + button.label} type="button" disabled={props.busy} className="ops-action"
+            onClick={() => props.onAction(button.action)}>{t[button.label]}</button>
+        ))}
       </div>
+      {view === 'revoked' && <p className="meta ops-approval-note">{t.revokedNote}</p>}
+      {showRetryNote && (
+        <p className="meta ops-approval-note">{t.retryNote} · {t.attempt} {(props.attemptCount ?? 0) + 1} {t.attemptOf} {item.retryPolicy?.maxAttempts ?? '—'}</p>
+      )}
     </div>
   );
 }
@@ -79,6 +112,7 @@ function HistoryPanel(props: {
   item: Item;
   events: WorkEvent[] | undefined;
   approvalEvents: ApprovalEvent[] | undefined;
+  attempts: AttemptEvent[] | undefined;
   loading: boolean;
   t: Labels;
 }) {
@@ -93,6 +127,15 @@ function HistoryPanel(props: {
       {props.item.actionType && (
         <ApprovalHistory events={props.approvalEvents ?? []} t={props.t} versionLabel={props.t.version} />
       )}
+      {(props.attempts?.length ?? 0) > 0 && (
+        <div className="ops-approval-history">
+          <p className="meta">{props.t.attemptsLabel}</p>
+          {props.attempts?.map((attempt) => <div className="ops-history-event" key={`attempt-${attempt.id}`}>
+            <span>{props.t.attempt} {attempt.attemptNo}: {attempt.outcome}{attempt.detail ? ` · ${attempt.detail}` : ''}</span>
+            <span>{attempt.httpStatus ?? '—'}</span>
+          </div>)}
+        </div>
+      )}
     </div>
   );
 }
@@ -105,7 +148,8 @@ const labels = {
     empty: 'No saved work items yet.', noDb: 'BLOCKED — persistent database or authenticated session is unavailable. Sign in and configure the D1 binding/migration.', error: 'Could not complete request. Check sign-in and database status.',
     departments: { finance: 'Finance', operations: 'Operations', marketing: 'Marketing', sales: 'Sales', support: 'Customer support' },
     states: { open: 'Open', in_progress: 'In progress', done: 'Done', cancelled: 'Cancelled' },
-    approvalStates: { none: 'No approval needed', draft: 'Draft — awaiting submission', pending_approval: 'Awaiting approval', approved: 'Approved', rejected: 'Rejected' },
+    approvalStates: { none: 'No approval needed', draft: 'Draft — awaiting submission', pending_approval: 'Awaiting approval', approved: 'Approved', rejected: 'Rejected', revoked: 'Revoked' },
+    attemptsLabel: 'Execution attempts', attempt: 'Attempt', attemptOf: 'of', revoke: 'Revoke approval', expiredNote: 'Approval expired — re-approval required.', exhaustedNote: 'Attempt budget exhausted.', revokedNote: 'Approval revoked — no further sends.', retryNote: 'Retry scheduled',
     executionStates: { executed: 'Executed', failed: 'Execution failed' },
     submitForApproval: 'Submit for approval', approve: 'Approve', reject: 'Reject', execute: 'Execute', retryExecution: 'Retry execution',
     approvalReason: 'Decision reason (required to reject)', approvalHistory: 'Approval audit', approvalHistoryEmpty: 'No approval events yet.',
@@ -119,7 +163,8 @@ const labels = {
     empty: 'Chưa có công việc được lưu.', noDb: 'BLOCKED — chưa có cơ sở dữ liệu bền vững hoặc phiên đăng nhập hợp lệ. Hãy đăng nhập và cấu hình D1/migration.', error: 'Không thể hoàn tất. Kiểm tra phiên đăng nhập và trạng thái cơ sở dữ liệu.',
     departments: { finance: 'Tài chính', operations: 'Quản trị vận hành', marketing: 'Marketing', sales: 'Bán hàng', support: 'Hỗ trợ khách hàng' },
     states: { open: 'Mở', in_progress: 'Đang xử lý', done: 'Hoàn tất', cancelled: 'Đã hủy' },
-    approvalStates: { none: 'Không cần duyệt', draft: 'Bản nháp — chờ gửi duyệt', pending_approval: 'Chờ phê duyệt', approved: 'Đã phê duyệt', rejected: 'Đã từ chối' },
+    approvalStates: { none: 'Không cần duyệt', draft: 'Bản nháp — chờ gửi duyệt', pending_approval: 'Chờ phê duyệt', approved: 'Đã phê duyệt', rejected: 'Đã từ chối', revoked: 'Đã thu hồi' },
+    attemptsLabel: 'Các lần thực thi', attempt: 'Lần', attemptOf: 'trên', revoke: 'Thu hồi phê duyệt', expiredNote: 'Phê duyệt đã hết hạn — cần duyệt lại.', exhaustedNote: 'Đã hết ngân sách thử.', revokedNote: 'Đã thu hồi phê duyệt — không gửi thêm.', retryNote: 'Đã lên lịch gửi lại',
     executionStates: { executed: 'Đã thực thi', failed: 'Thực thi thất bại' },
     submitForApproval: 'Gửi duyệt', approve: 'Phê duyệt', reject: 'Từ chối', execute: 'Thực thi', retryExecution: 'Thực thi lại',
     approvalReason: 'Lý do quyết định (bắt buộc khi từ chối)', approvalHistory: 'Nhật ký phê duyệt', approvalHistoryEmpty: 'Chưa có sự kiện phê duyệt.',
@@ -144,6 +189,7 @@ export default function OperationsClient() {
   const [expandedHistoryId, setExpandedHistoryId] = useState('');
   const [historyByItem, setHistoryByItem] = useState<Record<string, WorkEvent[]>>({});
   const [approvalByItem, setApprovalByItem] = useState<Record<string, ApprovalEvent[]>>({});
+  const [attemptsByItem, setAttemptsByItem] = useState<Record<string, AttemptEvent[]>>({});
   const [historyLoadingId, setHistoryLoadingId] = useState('');
   const [approvalReason, setApprovalReason] = useState<Record<string, string>>({});
 
@@ -218,15 +264,16 @@ export default function OperationsClient() {
     setHistoryLoadingId(itemId);
     try {
       const response = await fetch(`/api/ops/work-items/${encodeURIComponent(itemId)}`, { cache: 'no-store' });
-      const data = await response.json() as { ok: boolean; events?: WorkEvent[]; approvalEvents?: ApprovalEvent[] };
+      const data = await response.json() as { ok: boolean; events?: WorkEvent[]; approvalEvents?: ApprovalEvent[]; attempts?: AttemptEvent[] };
       if (!response.ok || !data.ok) throw new Error(String(response.status));
       setHistoryByItem((previous) => ({ ...previous, [itemId]: data.events ?? [] }));
       setApprovalByItem((previous) => ({ ...previous, [itemId]: data.approvalEvents ?? [] }));
+      setAttemptsByItem((previous) => ({ ...previous, [itemId]: data.attempts ?? [] }));
     } catch { setError(t.error); }
     finally { setHistoryLoadingId(''); }
   }
 
-  async function runApprovalAction(item: Item, action: 'submit' | 'approve' | 'reject' | 'execute') {
+  async function runApprovalAction(item: Item, action: 'submit' | 'approve' | 'reject' | 'execute' | 'revoke') {
     setBusyId(item.id); setError('');
     try {
       const reason = (approvalReason[item.id] ?? '').trim();
@@ -313,6 +360,7 @@ export default function OperationsClient() {
                     t={t}
                     busy={busyId === item.id}
                     reason={approvalReason[item.id] ?? ''}
+                    attemptCount={attemptsByItem[item.id]?.length ?? 0}
                     onReason={(value) => setApprovalReason((previous) => ({ ...previous, [item.id]: value }))}
                     onAction={(action) => void runApprovalAction(item, action)}
                   />}
@@ -325,6 +373,7 @@ export default function OperationsClient() {
                     item={item}
                     events={historyByItem[item.id]}
                     approvalEvents={approvalByItem[item.id]}
+                    attempts={attemptsByItem[item.id]}
                     loading={historyLoadingId === item.id}
                     t={t}
                   />

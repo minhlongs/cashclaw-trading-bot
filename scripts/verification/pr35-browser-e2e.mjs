@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import AdmZip from 'adm-zip';
+import { startFakeReceiver } from './pr35-fake-receiver.mjs';
 
 const config = '.wrangler/pr35-local.jsonc';
 const database = '.wrangler/verification/pr35-d1-worker';
@@ -13,6 +14,8 @@ const baseUrl = 'http://localhost:8787';
 const secretFile = '.wrangler/verification/pr35-worker.dev.vars';
 const passcodes = ['Temporary-A-Only-2026', 'Temporary-B-Only-2026'];
 const emails = ['pr35-a@example.test', 'pr35-b@example.test'];
+const receiverPort = 8791;
+const receiverUrl = `http://127.0.0.1:${receiverPort}`;
 
 rmSync(raw, { recursive: true, force: true });
 rmSync(artifactDir, { recursive: true, force: true });
@@ -188,6 +191,8 @@ function playwrightEnv(outputDir) {
     PR35_SCREENSHOTS_DIR: resolve(raw, 'screenshots'),
     PR35_BROWSER_STATE: resolve(state),
     PR35_PLAYWRIGHT_OUTPUT_DIR: resolve(outputDir),
+    PR35_RECEIVER_URL: receiverUrl,
+    PR35_RECEIVER_SECRET_FILE: resolve(secretFile),
   };
 }
 async function sanitizeTraces() {
@@ -266,6 +271,7 @@ function assertNoSensitiveStrings(dir, secret) {
 }
 
 let worker;
+let receiver;
 let failure;
 const progress = [];
 try {
@@ -273,22 +279,31 @@ try {
   progress.push('build:ok');
   await run(process.execPath, ['scripts/verification/pr35-worker-d1-setup.mjs', '--reset'], 'd1-setup');
   progress.push('d1-setup:ok');
+  // Test-harness-only worker configuration: the fake receiver target (loopback allowed by explicit
+  // server config), and no auto-retry cron drain (tests drive attempts directly for determinism).
+  appendFileSync(secretFile, `CASHCLAW_ALERT_WEBHOOK_TARGET_URL=${receiverUrl}/webhook\nCASHCLAW_WEBHOOK_ALLOW_LOOPBACK=true\nCASHCLAW_OPS_AUTORETRY_ENABLED=false\nCASHCLAW_ALLOW_MEMORY_LEASE=false\n`);
+  receiver = await startFakeReceiver(receiverPort);
+  progress.push('receiver:listening');
   worker = startWorker();
   await waitForWorker(worker);
   progress.push('worker1:healthy');
-  await run('npx', ['playwright', 'test', '--config', 'playwright.pr35.config.ts', '--grep-invert', '@restart'], 'playwright-runtime', playwrightEnv(join(raw, 'phase1', 'test-results')), 3);
-  progress.push('phase1:3-passed');
+  await run('npx', ['playwright', 'test', '--config', 'playwright.pr35.config.ts', '--grep-invert', '@restart'], 'playwright-runtime', playwrightEnv(join(raw, 'phase1', 'test-results')), 8);
+  progress.push('phase1:8-passed');
   await stopWorker(worker, 'worker-runtime');
   progress.push('worker1:stopped');
   worker = startWorker();
   await waitForWorker(worker);
   progress.push('worker2:healthy');
-  await run('npx', ['playwright', 'test', '--config', 'playwright.pr35.config.ts', '--grep', '@restart'], 'playwright-restart', playwrightEnv(join(raw, 'phase2', 'test-results')), 1);
-  progress.push('phase2:1-passed');
+  await run('npx', ['playwright', 'test', '--config', 'playwright.pr35.config.ts', '--grep', '@restart'], 'playwright-restart', playwrightEnv(join(raw, 'phase2', 'test-results')), 2);
+  progress.push('phase2:2-passed');
 } catch (error) {
   failure = error;
   progress.push(`failed-after:${progress.length ? progress.at(-1) : 'start'}`);
 } finally {
+  if (receiver) {
+    try { await new Promise((resolveClose) => receiver.server.close(resolveClose)); progress.push('receiver:stopped'); }
+    catch (error) { failure ??= error; progress.push('receiver:cleanup-error'); }
+  }
   if (worker) {
     try { await stopWorker(worker, 'worker-final'); progress.push('worker-final:stopped'); }
     catch (error) { failure ??= error; progress.push('worker-final:cleanup-error'); }

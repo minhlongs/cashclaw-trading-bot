@@ -31,13 +31,16 @@ describe('resolveCronLeaseStore', () => {
       await db.exec(readFileSync(path.join(migrationsDir, file), 'utf8'));
     }
     const durable = resolveCronLeaseStore(env({ DB: db }));
-    const first = await durable.acquireTickLease({ botId: 'cron-queue-drainer', workspaceId: 'global-cloud', isolateId: 'isolate-1', nowMs: 1_700_000_000_000 });
+    expect(durable).not.toBeNull();
+    const first = await durable!.acquireTickLease({ botId: 'cron-queue-drainer', workspaceId: 'global-cloud', isolateId: 'isolate-1', nowMs: 1_700_000_000_000 });
     expect(first.ok).toBe(true);
     const row = await db.prepare(`SELECT COUNT(*) AS n FROM saas_bot_tick_leases`).first<{ n: number }>();
     expect(row?.n).toBe(1);
 
-    const memory = resolveCronLeaseStore(env({ DB: undefined }));
-    expect(memory).toBeDefined();
+    // No DB + no explicit test-mode flag: null (the caller must stop, never degrade silently).
+    expect(resolveCronLeaseStore(env({ DB: undefined }))).toBeNull();
+    const testMode = resolveCronLeaseStore(env({ DB: undefined, CASHCLAW_ALLOW_MEMORY_LEASE: 'true' }));
+    expect(testMode).not.toBeNull();
     const memoryStore = createMemoryTickLeaseStore();
     expect((await memoryStore.acquireTickLease({ botId: 'b', workspaceId: 'w', isolateId: 'i', nowMs: 1 })).ok).toBe(true);
   });
