@@ -11,9 +11,11 @@
 - Repository: https://github.com/minhlongs/cashclaw-trading-bot
 - PR: https://github.com/minhlongs/cashclaw-trading-bot/pull/35 (OPEN / **Draft** — giữ Draft)
 - Branch làm việc: `arena/06ec4bf4-cashclaw-trading-bot` (base `main` @ `11a774e820920dfbdb8e0ee52fe4599a69851770`)
-- Code commits của đợt này (HEAD cuối = commit chứa code):
-  - `456ec6d` — (đợt trước) dọn export thừa knip
+- Code commits của đợt này (đã push, xếp theo thứ tự):
   - `374d339` — **Bound approved outbound_message retries and harden scheduler/alert semantics** (migration 0019, execution runner, senders hardening, E2E + receiver, evaluators)
+  - `b34130b` — tài liệu handoff này (bản đầu)
+  - `3c02078` · `abea4ba` · `18a0556` · `5601bb9` · `6082053` · `f6a1d18` · `4ea618f` — sửa E2E/harness (receiver control endpoints, session-cookie API calls, login rate-limit windows, config vars injection, department visibility, timeout classification, strict-mode locators)
+  - `1a26916` — sửa assertion chống leak cookie (marker `[REDACTED]` bị coi là leak) — **HEAD cuối, all checks GREEN**
 - Commit chứa tài liệu handoff này: **commit riêng ngay sau `374d339`** (xem mục "Cam kết SHA" bên dưới).
 - Đã push toàn bộ lên branch PR. Working tree sạch tại thời điểm bàn giao (trừ các file artifact timestamp do evaluator ghi lại).
 - Sự cố workspace trong phiên: cloud snapshot restore về `11a774e` **5 lần**. Quy trình phục hồi đã dùng:
@@ -138,20 +140,22 @@ counters độc lập tại `GET /__state` (so sánh request thực tới nơi v
 
 - Local (sandbox Arena, Node 22): `npm test` 736/6134 PASS; `test:coverage` exit 0; `type-check` 0 lỗi;
   `lint --max-warnings 0` sạch; 4 evaluator PASS (0016: 1 stage, recovery: 24, scheduling: 8, execution: 8).
-- **Browser E2E CHƯA chạy được trong sandbox Arena** (Chromium không tải được — host download bị chặn).
-  Bộ 5 test mới (`tests/e2e/pr35-approval-actions.spec.ts`) + fake receiver + harness counts (8/2) được
-  xác minh bởi **hosted CI** trên head cuối — xem run links trong PR body. Nếu hosted fail ở browser job,
-  sửa theo record log cụ thể trong artifact (không nới assertion, không skip).
-- CI hosted trên `374d339`: xem "Current head and hosted checks" trong PR body (nguồn sự thật).
-  Trước đó: `456ec6d` all-green (runs 41195577896/41195577898) — CI + evaluators + browser + governance.
-- Artifacts: **chưa xem nội dung** (blob host chặn tải từ sandbox). Links mới nhất ở PR body.
+- **Browser E2E: XANH trên hosted CI tại HEAD cuối `1a26916`** (run `41389294743`):
+  `ci (22)` PASS 6m09s · evaluators PASS 10m02s (4 evaluator) · browser E2E PASS 4m07s
+  (**8 test phase 1** = 3 regression ops + 5 approval-action; **2 test phase 2 @restart**; **0 skip**);
+  governance `41389294724` PASS 1m49s. Suite approval chạy SAU suite regression (login rate-limit).
+- **Browser E2E KHÔNG chạy được trong sandbox Arena** (Chromium không tải được — host download bị chặn);
+  toàn bộ 5 test approval + fake receiver được xác minh qua hosted CI như trên. Sửa E2E trong tương lai:
+  chạy `node scripts/verification/pr35-browser-e2e.mjs` ở máy có Chromium hoặc chờ hosted.
+- Artifacts head cuối: browser `13116822414` (13.563.362 bytes), eval `13116609862` (9.082 bytes) —
+  **chưa xem nội dung** (blob host chặn tải từ sandbox); links ở PR body.
 - Khác biệt local/hosted: browser suite chỉ hosted; mọi thứ khác chạy cả hai nơi.
 
 ## F. Công việc còn lại (cho Claude Code CLI)
 
 | # | Ưu tiên | Việc | File/flow | Bằng chứng hiện tại | Tiêu chí hoàn thành | Local/ quyền ngoài | Blocker |
 |---|---|---|---|---|---|---|---|
-| 1 | Cao | Xác minh hosted CI trên head cuối; sửa browser E2E nếu fail | `tests/e2e/pr35-approval-actions.spec.ts`, `scripts/verification/pr35-browser-e2e.mjs` | 5 test mới chưa chạy browser thật | CI browser job xanh (8 phase1 + 2 phase2, 0 skip) | Cần GitHub Actions (quyền ngoài) | Chromium không chạy được trong sandbox |
+| 1 | ~~Cao~~ XONG | ~~Xác minh hosted CI trên head cuối~~ | `tests/e2e/pr35-zz-approval-actions.spec.ts`, `scripts/verification/pr35-browser-e2e.mjs` | **Đã xanh** run `41389294743` (8+2, 0 skip) | Hoàn thành | — | — |
 | 2 | Cao | Owner review artifact browser + duyệt policy retry production (giá trị hiện là test defaults) | PR body links; mục B.4 | Defaults agent-chốt | Owner xác nhận/điều chỉnh maxAttempts/TTL/backoff cho production | Quyền owner | Chưa có quyết định production |
 | 3 | Trung bình | Fencing token cho bot job result-write (hiện lease chỉ entry-guard) | `src/ee/scheduler/tick-lease-store.ts`, `src/tree/bot/**` | Docs ghi rõ giới hạn | Kết quả ghi kèm lease token bị từ chối khi lease đã bị takeover | Local được | Chạm vào bot runtime — cần scope riêng |
 | 4 | Trung bình | Per-workspace đích nhận thông báo + isolation tương ứng | `src/ee/alerts/alert-channel-senders.ts`, env-based target | Hiện 1 đích operator (đúng mô hình 1 người) | Khi có >1 tenant thật: per-workspace target + test isolation | Local được | YAGNI tới khi có khách thật |
@@ -164,6 +168,7 @@ counters độc lập tại `GET /__state` (so sánh request thực tới nơi v
 1. **Trước mọi mutation**: `git status`, `git branch --show-current`, `git rev-parse HEAD` — chỉ làm việc trên `arena/06ec4bf4-cashclaw-trading-bot`; không checkout/reset `main`; không rebase/force-push.
 2. **Bảo toàn concurrent work**: nếu thấy worktree dirty bất thường (snapshot restore), so sánh từng file với remote trước khi đụng; backup ra ngoài repo trước khi reset; không `reset --hard` khi chưa chứng minh nội dung là stale.
 3. **Không áp lại patch cũ / không re-run artifact đã có**; đọc code + evidence thật.
+3b. E2E đã biết các bẫy: login rate-limits (5/phút/email, suite approval phải chạy sau suite regression, login dồn vào beforeAll với backoff 61s); vars test phải nạp qua config `vars` của wrangler (không phải file `.dev.vars` tùy tên); locator phải khớp format record (`Lần N: outcome`) để tránh strict-mode; assertion leak cookie phải bỏ qua marker `[REDACTED]`.
 4. Đọc `AGENTS.md`, `.claude/CLAUDE.md` và tài liệu này trước khi làm.
 5. **Không tin báo cáo Arena là bằng chứng đã tự kiểm chứng** — chạy lại evaluator/test ở mục D và tự đọc output.
 6. **Không tự**: merge/undraft PR, deploy, remote migration, gửi email/tin/webhook thật, payment, khôi phục entitlement thật, bật live trading, đặt lệnh thật, tiết lộ secrets.
