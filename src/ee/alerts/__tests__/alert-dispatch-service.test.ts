@@ -55,7 +55,18 @@ describe('alert channel senders (injected fetch — no provider calls)', () => {
       token: 't', chatId: 'c',
       fetchImpl: async () => { throw new Error('network down'); },
     });
-    expect(await offline.send({ eventId: 'e', message: 'm', timestampMs: 1 })).toMatchObject({ delivered: false, error: /network down/ });
+    expect(await offline.send({ eventId: 'e', message: 'm', timestampMs: 1 })).toMatchObject({ delivered: false, kind: 'failed_retryable', error: /network down/ });
+  });
+
+  it('classifies OUR timeout as ambiguous unknown regardless of the runtime error shape', async () => {
+    const hanging = createWebhookSender({
+      targetUrl: 'https://hooks.example.test/abc',
+      fetchImpl: (_url, init) => new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(new TypeError('fetch failed')));
+      }),
+    });
+    const outcome = await hanging.send({ eventId: 'evt-hang', message: 'm', timestampMs: 1, timeoutMs: 50 });
+    expect(outcome).toMatchObject({ delivered: false, kind: 'unknown', error: /timed out/ });
   });
 });
 

@@ -333,10 +333,15 @@ try {
   }
 }
 if (failure) {
-  const message = cleanString(failure instanceof Error ? failure.message : String(failure), readTestSecret())
+  const rawMessage = cleanString(failure instanceof Error ? failure.message : String(failure), readTestSecret())
     .replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ').slice(-3500) + (sanitizeFailure ? ` || ARTIFACT-SANITIZE: ${sanitizeFailure.slice(0, 500)}` : '');
+    .replace(/\s+/g, ' ');
+  // Keep the assertion head (first 1800 chars) AND the tail; the head is where expect() details live.
+  const message = rawMessage.length > 3600 ? `${rawMessage.slice(0, 1800)} … ${rawMessage.slice(-1800)}` : rawMessage;
   console.log(`::error title=PR35 verification failure::Phase progress: ${progress.join('; ')}. ${message}`);
+  if (sanitizeFailure) {
+    console.log(`::error title=PR35 artifact sanitize failure::${sanitizeFailure.slice(0, 1500)}`);
+  }
   throw failure;
 }
 console.log(`PASS sanitized browser artifacts written under ${artifactDir}`);

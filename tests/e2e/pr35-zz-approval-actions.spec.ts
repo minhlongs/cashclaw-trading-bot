@@ -164,7 +164,7 @@ test('outbound_message hits the fake receiver; retries stay inside the approved 
   await resetReceiver();
   await setReceiverMode('ok');
   const outbound = await createActionItem(pageA.request, {
-    department: 'support',
+    department: 'operations',
     title: `PR35 outbound ${runId}`,
     description: 'receiver delivery check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `hello ${runId}` } , policy: { maxAttempts: 2, requestTimeoutMs: 3000, backoffBaseMs: 100, backoffMaxMs: 500, approvalTtlMs: 3600000 } },
@@ -177,7 +177,7 @@ test('outbound_message hits the fake receiver; retries stay inside the approved 
 
   // Bounded retries: provider failure is retried only within maxAttempts=2, then exhausted.
   const flaky = await createActionItem(pageA.request, {
-    department: 'support',
+    department: 'operations',
     title: `PR35 flaky ${runId}`,
     description: 'bounded retry check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `flaky ${runId}` } , policy: { maxAttempts: 2, requestTimeoutMs: 1500, backoffBaseMs: 100, backoffMaxMs: 200, approvalTtlMs: 3600000 } },
@@ -209,7 +209,7 @@ test('post-approval edits require re-approval; revoke and expiry block all sends
 
   // 1) Payload edited after approval -> snapshot mismatch -> re-approval required.
   const tamper = await createActionItem(pageA.request, {
-    department: 'sales',
+    department: 'operations',
     title: `PR35 tamper ${runId}`,
     description: 'immutable snapshot check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `original ${runId}` } , policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 3600000 } },
@@ -224,7 +224,7 @@ test('post-approval edits require re-approval; revoke and expiry block all sends
 
   // 2) Revocation blocks sends for good (UI revoke button on the action item).
   const revoke = await createActionItem(pageA.request, {
-    department: 'sales',
+    department: 'operations',
     title: `PR35 revoke ${runId}`,
     description: 'revocation check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `revoked ${runId}` } , policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 3600000 } },
@@ -241,7 +241,7 @@ test('post-approval edits require re-approval; revoke and expiry block all sends
 
   // 3) Expiry blocks sends (approval TTL already elapsed).
   const expired = await createActionItem(pageA.request, {
-    department: 'sales',
+    department: 'operations',
     title: `PR35 expired ${runId}`,
     description: 'expiry check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `expired ${runId}` } , policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 60000 } },
@@ -258,7 +258,7 @@ test('post-approval edits require re-approval; revoke and expiry block all sends
 
 test('two sessions conflict on approval transitions and users cannot touch foreign items', async () => {
   const foreign = await createActionItem(pageA.request, {
-    department: 'finance',
+    department: 'operations',
     title: `PR35 isolation ${runId}`,
     description: 'cross-user check',
     action: { type: 'record_only' },
@@ -288,7 +288,7 @@ test('ambiguous timeout outcome is recorded as unknown and duplicates are accept
   await resetReceiver();
   await setReceiverMode('hang');
   const ambiguous = await createActionItem(pageA.request, {
-    department: 'support',
+    department: 'operations',
     title: `PR35 ambiguous ${runId}`,
     description: 'unknown outcome check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `ambiguous ${runId}` } , policy: { maxAttempts: 2, requestTimeoutMs: 700, backoffBaseMs: 100, backoffMaxMs: 200, approvalTtlMs: 3600000 } },

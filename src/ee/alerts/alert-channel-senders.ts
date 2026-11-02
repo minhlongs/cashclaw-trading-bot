@@ -79,7 +79,10 @@ async function sendWithTimeout(
   providerRef: string,
 ): Promise<AlertSendOutcome> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  // A timeout fired by OUR budget is always the ambiguous 'unknown' outcome (the request may have
+  // reached the provider), regardless of how the runtime names the abort error.
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
   try {
     const response = await fetchImpl(url, { ...init, signal: controller.signal, redirect: 'manual' });
     const outcome = classifyHttpOutcome(response);
@@ -88,6 +91,7 @@ async function sendWithTimeout(
     }
     return { ...outcome, providerRef: outcome.providerRef ?? providerRef };
   } catch (error) {
+    if (timedOut) return { delivered: false, kind: 'unknown', error: 'request timed out; provider may have received it' };
     return classifySendError(error);
   } finally {
     clearTimeout(timer);
