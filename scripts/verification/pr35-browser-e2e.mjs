@@ -273,6 +273,7 @@ function assertNoSensitiveStrings(dir, secret) {
 let worker;
 let receiver;
 let failure;
+let sanitizeFailure = '';
 const progress = [];
 try {
   await run('npm', ['run', 'build:worker'], 'worker-build');
@@ -312,7 +313,8 @@ try {
   catch (error) {
     // Surface the sanitize error even when an earlier failure is already recorded, so a leak or
     // scrubber problem is never silently masked by the test failure message.
-    console.error(`artifact sanitize error: ${cleanString(error instanceof Error ? error.message : String(error), readTestSecret())}`);
+    sanitizeFailure = cleanString(error instanceof Error ? error.message : String(error), readTestSecret());
+    console.error(`artifact sanitize error: ${sanitizeFailure}`);
     failure ??= error;
     progress.push('artifacts:error');
   }
@@ -320,7 +322,7 @@ try {
 if (failure) {
   const message = cleanString(failure instanceof Error ? failure.message : String(failure), readTestSecret())
     .replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ').slice(-4000);
+    .replace(/\s+/g, ' ').slice(-3500) + (sanitizeFailure ? ` || ARTIFACT-SANITIZE: ${sanitizeFailure.slice(0, 500)}` : '');
   console.log(`::error title=PR35 verification failure::Phase progress: ${progress.join('; ')}. ${message}`);
   throw failure;
 }

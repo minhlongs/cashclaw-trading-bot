@@ -22,16 +22,28 @@ const receiverUrl = process.env.PR35_RECEIVER_URL ?? 'http://127.0.0.1:8791';
 const accountA = { email: 'pr35-a@example.test', passcode: process.env.PR35_USER_A_PASSCODE ?? 'Temporary-A-Only-2026' };
 const accountB = { email: 'pr35-b@example.test', passcode: process.env.PR35_USER_B_PASSCODE ?? 'Temporary-B-Only-2026' };
 
+// The app rate-limits login attempts (5/minute/email). The regression suite already spends most
+// of that budget for account A, so logins back off one window on 429. All logins happen in
+// beforeAll (hook budget) — tests themselves never log in and keep the 60s test timeout.
 async function login(page: Page, locale: 'vi' | 'en', account: typeof accountA) {
-  await page.goto(`/${locale}/login`);
-  await page.getByLabel('Email / Email').fill(account.email);
-  await page.getByLabel('Mật khẩu / Passcode').fill(account.passcode);
-  const [loginResponse] = await Promise.all([
-    page.waitForResponse((response) => response.url().endsWith('/api/auth/login'), { timeout: 10_000 }),
-    page.getByRole('button', { name: 'Đăng nhập / Login' }).click(),
-  ]);
-  expect(loginResponse.ok()).toBeTruthy();
-  await page.waitForURL(`**/${locale}/dashboard`, { timeout: 10_000 });
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.goto(`/${locale}/login`);
+    await page.getByLabel('Email / Email').fill(account.email);
+    await page.getByLabel('Mật khẩu / Passcode').fill(account.passcode);
+    const [loginResponse] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/api/auth/login'), { timeout: 10_000 }),
+      page.getByRole('button', { name: 'Đăng nhập / Login' }).click(),
+    ]);
+    if (loginResponse.ok()) {
+      await page.waitForURL(`**/${locale}/dashboard`, { timeout: 10_000 });
+      return;
+    }
+    if (loginResponse.status() === 429 && attempt < 2) {
+      await page.waitForTimeout(61_000);
+      continue;
+    }
+    throw new Error(`Synthetic ${locale} login returned ${loginResponse.status()}: ${(await loginResponse.text()).slice(0, 300)}`);
+  }
 }
 
 function saveScreenshot(name: string) {
@@ -70,6 +82,8 @@ function runD1(sql: string) {
 
 let sessionA: BrowserContext;
 let pageA: Page;
+let sessionA2: BrowserContext;
+let pageA2: Page;
 let sessionB: BrowserContext;
 let pageB: Page;
 
@@ -77,13 +91,19 @@ test.beforeAll(async ({ browser }: { browser: Browser }) => {
   sessionA = await browser.newContext();
   pageA = await sessionA.newPage();
   await login(pageA, 'vi', accountA);
+  // The second A session for the two-session conflict test is prepared here so the test itself
+  // never waits on the login rate-limit window.
+  sessionA2 = await browser.newContext();
+  pageA2 = await sessionA2.newPage();
+  await login(pageA2, 'en', accountA);
   sessionB = await browser.newContext();
   pageB = await sessionB.newPage();
   await login(pageB, 'en', accountB);
-});
+}, 240_000);
 
 test.afterAll(async () => {
   await sessionA?.close();
+  await sessionA2?.close();
   await sessionB?.close();
 });
 
@@ -93,8 +113,7 @@ test('approval lifecycle: draft persists, submit/approve/execute record_only, at
     department: 'operations',
     title: `PR35 approval draft ${runId}`,
     description: 'approved-execution lifecycle check',
-    action: { type: 'record_only' },
-    policy: { maxAttempts: 2, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 1000, approvalTtlMs: 3600000 },
+    action: { type: 'record_only' , policy: { maxAttempts: 2, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 1000, approvalTtlMs: 3600000 } },
   });
   await pageA.reload();
   const item = pageA.locator('.ops-item').filter({ hasText: `PR35 approval draft ${runId}` });
@@ -146,8 +165,7 @@ test('outbound_message hits the fake receiver; retries stay inside the approved 
     department: 'support',
     title: `PR35 outbound ${runId}`,
     description: 'receiver delivery check',
-    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `hello ${runId}` } },
-    policy: { maxAttempts: 2, requestTimeoutMs: 3000, backoffBaseMs: 100, backoffMaxMs: 500, approvalTtlMs: 3600000 },
+    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `hello ${runId}` } , policy: { maxAttempts: 2, requestTimeoutMs: 3000, backoffBaseMs: 100, backoffMaxMs: 500, approvalTtlMs: 3600000 } },
   });
   expect(await approvalAction(pageA.request, 'submit', outbound.id)).toMatchObject({ ok: true, state: 'pending_approval' });
   expect(await approvalAction(pageA.request, 'approve', outbound.id)).toMatchObject({ ok: true, state: 'approved' });
@@ -160,8 +178,7 @@ test('outbound_message hits the fake receiver; retries stay inside the approved 
     department: 'support',
     title: `PR35 flaky ${runId}`,
     description: 'bounded retry check',
-    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `flaky ${runId}` } },
-    policy: { maxAttempts: 2, requestTimeoutMs: 1500, backoffBaseMs: 100, backoffMaxMs: 200, approvalTtlMs: 3600000 },
+    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `flaky ${runId}` } , policy: { maxAttempts: 2, requestTimeoutMs: 1500, backoffBaseMs: 100, backoffMaxMs: 200, approvalTtlMs: 3600000 } },
   });
   await approvalAction(pageA.request, 'submit', flaky.id);
   await approvalAction(pageA.request, 'approve', flaky.id);
@@ -193,8 +210,7 @@ test('post-approval edits require re-approval; revoke and expiry block all sends
     department: 'sales',
     title: `PR35 tamper ${runId}`,
     description: 'immutable snapshot check',
-    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `original ${runId}` } },
-    policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 3600000 },
+    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `original ${runId}` } , policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 3600000 } },
   });
   await approvalAction(pageA.request, 'submit', tamper.id);
   await approvalAction(pageA.request, 'approve', tamper.id);
@@ -209,8 +225,7 @@ test('post-approval edits require re-approval; revoke and expiry block all sends
     department: 'sales',
     title: `PR35 revoke ${runId}`,
     description: 'revocation check',
-    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `revoked ${runId}` } },
-    policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 3600000 },
+    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `revoked ${runId}` } , policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 3600000 } },
   });
   await approvalAction(pageA.request, 'submit', revoke.id);
   await approvalAction(pageA.request, 'approve', revoke.id);
@@ -227,8 +242,7 @@ test('post-approval edits require re-approval; revoke and expiry block all sends
     department: 'sales',
     title: `PR35 expired ${runId}`,
     description: 'expiry check',
-    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `expired ${runId}` } },
-    policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 60000 },
+    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `expired ${runId}` } , policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 60000 } },
   });
   await approvalAction(pageA.request, 'submit', expired.id);
   await approvalAction(pageA.request, 'approve', expired.id);
@@ -240,27 +254,23 @@ test('post-approval edits require re-approval; revoke and expiry block all sends
   await pageA.screenshot({ path: saveScreenshot('approval-blocked-outcomes.png'), fullPage: true });
 });
 
-test('two sessions conflict on approval transitions and users cannot touch foreign items', async ({ browser }: { browser: Browser }) => {
+test('two sessions conflict on approval transitions and users cannot touch foreign items', async () => {
   const foreign = await createActionItem(pageA.request, {
     department: 'finance',
     title: `PR35 isolation ${runId}`,
     description: 'cross-user check',
     action: { type: 'record_only' },
   });
-  // A second, independent session of the SAME user races the approval transition: exactly one wins.
-  const secondSession = await browser.newContext();
-  const secondPage = await secondSession.newPage();
-  await login(secondPage, 'en', accountA);
+  // A second, independent session of the SAME user (prepared in beforeAll) races the transition.
   const [first, second] = await Promise.all([
     approvalAction(pageA.request, 'submit', foreign.id),
-    approvalAction(secondPage.request, 'submit', foreign.id),
+    approvalAction(pageA2.request, 'submit', foreign.id),
   ]);
   const winners = [first, second].filter((result) => result.ok === true);
   expect(winners).toHaveLength(1);
   const loser = [first, second].find((result) => result.ok === false);
   // Depending on interleaving the loser is refused by the state machine or by the DB CAS guard.
   expect(['invalid-state-transition', 'concurrent-change']).toContain(loser?.code);
-  await secondSession.close();
 
   // User B (different account) must not see or touch A's items at all.
   const denied = await pageB.request.post('/api/ops/work-items/approvals', { data: { action: 'approve', itemId: foreign.id } });
@@ -279,8 +289,7 @@ test('ambiguous timeout outcome is recorded as unknown and duplicates are accept
     department: 'support',
     title: `PR35 ambiguous ${runId}`,
     description: 'unknown outcome check',
-    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `ambiguous ${runId}` } },
-    policy: { maxAttempts: 2, requestTimeoutMs: 700, backoffBaseMs: 100, backoffMaxMs: 200, approvalTtlMs: 3600000 },
+    action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `ambiguous ${runId}` } , policy: { maxAttempts: 2, requestTimeoutMs: 700, backoffBaseMs: 100, backoffMaxMs: 200, approvalTtlMs: 3600000 } },
   });
   await approvalAction(pageA.request, 'submit', ambiguous.id);
   await approvalAction(pageA.request, 'approve', ambiguous.id);
