@@ -309,7 +309,13 @@ try {
     catch (error) { failure ??= error; progress.push('worker-final:cleanup-error'); }
   }
   try { await sanitizeTraces(); progress.push('artifacts:sanitized'); }
-  catch (error) { failure ??= error; progress.push('artifacts:error'); }
+  catch (error) {
+    // Surface the sanitize error even when an earlier failure is already recorded, so a leak or
+    // scrubber problem is never silently masked by the test failure message.
+    console.error(`artifact sanitize error: ${cleanString(error instanceof Error ? error.message : String(error), readTestSecret())}`);
+    failure ??= error;
+    progress.push('artifacts:error');
+  }
 }
 if (failure) {
   const message = cleanString(failure instanceof Error ? failure.message : String(failure), readTestSecret())
