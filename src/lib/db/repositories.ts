@@ -7,7 +7,7 @@ import type { D1Database, SettingsRow } from './types';
 
 export type { SettingsRow };
 
-export { findUserById, upsertUser, insertBot, updateBot, deleteBot, findBotsByUser, findBotById, findAllBots } from './repo-users-bots';
+export { findUserById, upsertUser, insertBot, updateBot, deleteBot, findBotsByUser, findBotsByWorkspace, findBotById, findAllBots } from './repo-users-bots';
 export { insertTrade, findTradesByBot, upsertCredential, insertTradeEvent, insertCapitalSnapshot, insertAudit } from './repo-trades-credentials';
 
 export async function findSettingsByUser(db: D1Database, userId: string | null): Promise<SettingsRow | null> {

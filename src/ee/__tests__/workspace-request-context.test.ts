@@ -1,87 +1,130 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { defaultSaasEntitlementStore } from '../billing/saas-entitlement-store';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { D1Database, D1PreparedStatement } from '@/lib/db/types';
+
+const { createServerClient } = vi.hoisted(() => ({ createServerClient: vi.fn() }));
+vi.mock('@/lib/db/client', () => ({ createServerClient }));
+
 import {
-  resolveWorkspaceTierContext,
   resolveActiveBotCount,
+  resolveWorkspaceTierContext,
 } from '../tenancy/workspace-request-context';
 
-describe('workspace-request-context', () => {
+function makeDb() {
+  const sessions = new Map([
+    ['session-a', { user_id: 'user-a', expires_at: Math.floor(Date.now() / 1000) + 3600 }],
+    ['session-b', { user_id: 'user-b', expires_at: Math.floor(Date.now() / 1000) + 3600 }],
+    ['session-expired', { user_id: 'user-a', expires_at: Math.floor(Date.now() / 1000) - 1 }],
+  ]);
+  const memberships = new Map<string, { owner_user_id: string; role: string; status: string; expires_at_ms: number | null; tier: string; revoked_at_ms: number | null }>([
+    ['ws-a:user-a', { owner_user_id: 'user-a', role: 'OWNER', status: 'active', expires_at_ms: null, tier: 'BASIC', revoked_at_ms: null }],
+    ['ws-paid:user-a', { owner_user_id: 'user-a', role: 'OWNER', status: 'active', expires_at_ms: Date.now() - 1000, tier: 'PREMIUM', revoked_at_ms: null }],
+    ['ws-revoked:user-a', { owner_user_id: 'user-a', role: 'OWNER', status: 'active', expires_at_ms: null, tier: 'ENTERPRISE', revoked_at_ms: Date.now() - 1000 }],
+  ]);
+  let activeCount = 7;
+  let failQueries = false;
+  const db = {
+    prepare(sql: string) {
+      let values: unknown[] = [];
+      const stmt = {
+        bind(...args: unknown[]) { values = args; return stmt; },
+        async first<T>() {
+          if (failQueries) throw new Error('synthetic D1 outage');
+          if (sql.includes('FROM user_sessions')) {
+            const row = sessions.get(String(values[0]));
+            return row && row.expires_at > Number(values[1]) ? { user_id: row.user_id } as T : null;
+          }
+          if (sql.includes('FROM saas_workspaces w')) {
+            const row = memberships.get(`${String(values[0])}:${String(values[1])}`);
+            return row ? { workspace_id: values[0], ...row } as T : null;
+          }
+          if (sql.includes('AS active_count')) return { active_count: activeCount } as T;
+          return null;
+        },
+        async run() { return { meta: { changes: 1, last_row_id: 1, duration: 0 } }; },
+        async all<T>() { return { results: [] as T[], meta: { duration: 0 } }; },
+        async firstRow<T>() { return null as T | null; },
+      };
+      return stmt as unknown as D1PreparedStatement;
+    },
+    async batch<T = unknown>(statements: D1PreparedStatement[]) { return await Promise.all(statements.map((statement) => statement.run())) as unknown as T[]; },
+    async exec() { return { count: 0, duration: 0 }; },
+    async dump() { return ''; },
+  } as unknown as D1Database;
+  return {
+    db,
+    setActiveCount(value: number) { activeCount = value; },
+    failQueries(value: boolean) { failQueries = value; },
+  };
+}
+
+const testDb = makeDb();
+const request = (url: string, session?: string, headers?: Record<string, string>) => new Request(url, {
+  headers: { ...(session ? { cookie: `session_id=${session}` } : {}), ...headers },
+});
+
+describe('workspace-request-context security regressions', () => {
   beforeEach(() => {
-    defaultSaasEntitlementStore.setDatabase(undefined);
-    defaultSaasEntitlementStore.resetMemoryForTesting();
+    createServerClient.mockReturnValue(testDb.db);
+    testDb.failQueries(false);
+    testDb.setActiveCount(7);
   });
 
-  it('resolves explicit workspaceId and explicit valid tier or URL query params', async () => {
-    const req = new Request('http://localhost/api/ee/credits');
-    const ctx = await resolveWorkspaceTierContext(req, {
-      explicitWorkspaceId: 'ws_explicit',
-      explicitTier: 'PREMIUM',
-    });
-    expect(ctx).toEqual({
-      workspaceId: 'ws_explicit',
-      tier: 'PREMIUM',
-      invalidExplicitTier: undefined,
-    });
+  it('uses the stored tier, ignoring query/header/body tier sources', async () => {
+    const query = await resolveWorkspaceTierContext(request(
+      'https://cashclaw.example/api/ee/quotas?workspaceId=ws-a&tier=MASTER', 'session-a',
+      { 'x-cashclaw-tier': 'ENTERPRISE', 'x-cashclaw-workspace': 'ws-a' },
+    ));
+    expect(query.tier).toBe('BASIC');
+    expect(query.workspaceId).toBe('ws-a');
 
-    const queryReq = new Request('http://localhost/api/ee/quotas?workspaceId=ws_query&tier=ENTERPRISE');
-    const queryCtx = await resolveWorkspaceTierContext(queryReq);
-    expect(queryCtx).toEqual({
-      workspaceId: 'ws_query',
-      tier: 'ENTERPRISE',
-      invalidExplicitTier: undefined,
-    });
+    const explicitWorkspace = await resolveWorkspaceTierContext(request(
+      'https://cashclaw.example/api/ee/credits', 'session-a',
+    ), { explicitWorkspaceId: 'ws-a' });
+    expect(explicitWorkspace.tier).toBe('BASIC');
+    expect(explicitWorkspace).not.toHaveProperty('invalidExplicitTier');
   });
 
-  it('flags invalid explicit tier from payload or header', async () => {
-    const req = new Request('http://localhost/api/ee/credits', {
-      headers: { 'x-cashclaw-tier': 'GOLD_INVALID' },
-    });
-    const ctx = await resolveWorkspaceTierContext(req);
-    expect(ctx.invalidExplicitTier).toBe('GOLD_INVALID');
-    expect(ctx.tier).toBe('BASIC');
+  it('requires a live session and fails closed on expired sessions or D1 errors', async () => {
+    await expect(resolveWorkspaceTierContext(request('https://cashclaw.example/api/ee/quotas?workspaceId=ws-a')))
+      .rejects.toMatchObject({ status: 401 });
+    await expect(resolveWorkspaceTierContext(request('https://cashclaw.example/api/ee/quotas?workspaceId=ws-a', 'session-expired')))
+      .rejects.toMatchObject({ status: 401 });
+
+    testDb.failQueries(true);
+    await expect(resolveWorkspaceTierContext(request('https://cashclaw.example/api/ee/quotas?workspaceId=ws-a', 'session-a')))
+      .rejects.toMatchObject({ status: 503 });
   });
 
-  it('falls back to IPN store tier when no explicit or header tier is given', async () => {
-    await defaultSaasEntitlementStore.recordIpnAndUpgradeTier({
-      paymentId: 'pay_ctx_1',
-      workspaceId: 'ws_upgraded',
-      targetTier: 'MASTER',
-      paymentStatus: 'finished',
-      payAmount: 499,
-      payCurrency: 'USDT',
-      processedAtMs: 1_760_000_000_000,
-    });
+  it('conceals a workspace without active membership and enforces expiry/revocation as BASIC', async () => {
+    await expect(resolveWorkspaceTierContext(request(
+      'https://cashclaw.example/api/ee/quotas?workspaceId=ws-a', 'session-b',
+    ))).rejects.toMatchObject({ status: 404 });
+    await expect(resolveWorkspaceTierContext(request(
+      'https://cashclaw.example/api/ee/quotas?workspaceId=does-not-exist', 'session-a',
+    ))).rejects.toMatchObject({ status: 404 });
 
-    const req = new Request('http://localhost/api/ee/credits', {
-      headers: { 'x-cashclaw-workspace': 'ws_upgraded' },
-    });
-    const ctx = await resolveWorkspaceTierContext(req);
-    expect(ctx.workspaceId).toBe('ws_upgraded');
-    expect(ctx.tier).toBe('MASTER');
+    const expired = await resolveWorkspaceTierContext(request(
+      'https://cashclaw.example/api/ee/quotas?workspaceId=ws-paid', 'session-a',
+    ));
+    expect(expired.tier).toBe('BASIC');
+    const revoked = await resolveWorkspaceTierContext(request(
+      'https://cashclaw.example/api/ee/quotas?workspaceId=ws-revoked', 'session-a',
+    ));
+    expect(revoked.tier).toBe('BASIC');
   });
 
-  it('parses x-cashclaw-active-bots header when valid', async () => {
-    const req = new Request('http://localhost/api/ee/sync', {
-      headers: { 'x-cashclaw-active-bots': '4' },
-    });
-    expect(await resolveActiveBotCount(req)).toBe(4);
+  it('ignores forged active-bot headers and obtains count from D1 for the authorized workspace', async () => {
+    const context = await resolveWorkspaceTierContext(request(
+      'https://cashclaw.example/api/bots?workspaceId=ws-a', 'session-a', { 'x-cashclaw-active-bots': '0' },
+    ));
+    expect(await resolveActiveBotCount(context)).toBe(7);
   });
 
-  it('falls back to live bot loader when x-cashclaw-active-bots header is absent', async () => {
-    const req = new Request('http://localhost/api/ee/sync');
-    const count = await resolveActiveBotCount(req, async () => ({
-      data: [{ id: 'b1' }, { id: 'b2' }],
-    }));
-    expect(count).toBe(2);
-
-    const countFromBotsField = await resolveActiveBotCount(req, async () => ({
-      bots: [{ id: 'b1' }],
-    }));
-    expect(countFromBotsField).toBe(1);
-
-    const countOnError = await resolveActiveBotCount(req, async () => {
-      throw new Error('DB offline');
-    });
-    expect(countOnError).toBe(0);
+  it('fails closed instead of treating a quota database error as zero usage', async () => {
+    const context = await resolveWorkspaceTierContext(request(
+      'https://cashclaw.example/api/bots?workspaceId=ws-a', 'session-a',
+    ));
+    testDb.failQueries(true);
+    await expect(resolveActiveBotCount(context)).rejects.toMatchObject({ status: 503 });
   });
 });

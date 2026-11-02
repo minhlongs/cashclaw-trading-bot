@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { TierComparisonTable } from '../tier-comparison-table';
 import { QuotaUsageCard } from '../quota-usage-card';
 import { CliSyncBridgeCard } from '../cli-sync-bridge-card';
@@ -62,7 +62,20 @@ describe('Billing & Entitlements UI Components', () => {
 
     expect(screen.getByText('Upgrade to PREMIUM')).toBeDefined();
     expect(screen.getByText('$29 / month')).toBeDefined();
-    expect(screen.getByText('Pay $29 with USDT')).toBeDefined();
+    expect(screen.getByText('Create PREMIUM Order')).toBeDefined();
+    expect(screen.getByText(/Payment provider checkout is not configured/)).toBeDefined();
+  });
+
+  it('records an order without falsely claiming invoice/payment success', async () => {
+    const onSuccess = vi.fn();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true, order: { orderId: 'cc-order-1' } }), { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+    render(<NowpaymentsCheckoutModal isOpen targetTier="PREMIUM" workspaceId="ws_a" onClose={() => {}} onSuccess={onSuccess} />);
+    fireEvent.click(screen.getByText('Create PREMIUM Order'));
+    expect(await screen.findByText('Pending order recorded')).toBeDefined();
+    expect(screen.getByText(/no invoice was created/i)).toBeDefined();
+    expect(onSuccess).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 
   it('hydrates useWorkspaceBilling state from mocked fetch responses', async () => {

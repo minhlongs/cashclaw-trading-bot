@@ -1,0 +1,15 @@
+{
+  "caseId": "recovery-2026-10-30-007",
+  "actor": "owner-reviewer:synthetic-ops-lead",
+  "reason": "Synthetic evaluation: pseudo-system owner has no verifiable identity and must never be restored.",
+  "workspaceId": "legacy-paid-system-owner",
+  "ownerUserId": "system",
+  "tier": "MASTER",
+  "paymentId": "legacy-payment-system",
+  "paymentStatus": "finished",
+  "priceAmount": 999,
+  "priceCurrency": "USDT",
+  "termEndsAtMs": 1823072000000,
+  "termBasis": "no provider record can bind a real customer identity to this row",
+  "evidenceRefs": ["internal-note-N-0007"]
+}

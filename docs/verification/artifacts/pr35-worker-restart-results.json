@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-10-29T15:28:43.078Z",
+  "check": "restart/readback after terminating and relaunching local OpenNext Worker",
+  "checks": [
+    {
+      "name": "restart retained work item/history, exactly one persisted PAPER bot, workspace isolation, empty reservation set and entitlement readback",
+      "itemVersion": 2,
+      "historyEvents": 3,
+      "persistedBots": 1,
+      "reserved": 0
+    },
+    {
+      "name": "after restart same signed callback is an idempotent replay; refunded order remains terminal",
+      "status": "refunded",
+      "replay": true
+    }
+  ]
+}

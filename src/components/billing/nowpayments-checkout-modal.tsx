@@ -12,19 +12,33 @@ export interface CheckoutModalProps {
   onSuccess?: () => void;
 }
 
-export function NowpaymentsCheckoutModal({
-  isOpen, targetTier, workspaceId, onClose, onSuccess,
-}: CheckoutModalProps) {
-  const [currency, setCurrency] = useState<'USDT' | 'USDC' | 'BTC'>('USDT');
+export function NowpaymentsCheckoutModal({ isOpen, targetTier, workspaceId, onClose }: CheckoutModalProps) {
   const [loading, setLoading] = useState(false);
-  const [invoiceCreated, setInvoiceCreated] = useState(false);
-
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   if (!isOpen) return null;
   const ent = SAAS_TIER_ENTITLEMENTS[targetTier];
 
-  const handleCreatePayment = () => {
+  const handleCreateOrder = async () => {
     setLoading(true);
-    setTimeout(() => { setLoading(false); setInvoiceCreated(true); onSuccess?.(); }, 600);
+    setError(null);
+    try {
+      const response = await fetch('/api/ee/billing/orders', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ targetTier, workspaceId }),
+      });
+      const result = await response.json() as { ok?: boolean; order?: { orderId?: string }; error?: string };
+      if (!response.ok || !result.ok || !result.order?.orderId) {
+        setError(result.error ?? 'Unable to create a billing order.');
+        return;
+      }
+      setOrderId(result.order.orderId);
+    } catch {
+      setError('Billing service unavailable. No payment was initiated.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,53 +49,27 @@ export function NowpaymentsCheckoutModal({
           <button type="button" onClick={onClose} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-lg leading-none">✕</button>
         </div>
 
-        {!invoiceCreated ? (
-          <div>
-            <div className="bg-surface-raised p-4 rounded-lg mb-4 text-sm">
-              <div className="flex justify-between mb-1"><span className="meta">Workspace:</span><span className="mono font-semibold">{workspaceId}</span></div>
-              <div className="flex justify-between mb-1"><span className="meta">Plan Amount:</span><span className="mono font-bold text-profit">${ent.priceUsdMonthly} / month</span></div>
-              <div className="flex justify-between"><span className="meta">Max Bots:</span><span className="mono">{ent.maxRunningPaperBots} Bots (24/7 Cloud)</span></div>
-            </div>
+        <div className="bg-surface-raised p-4 rounded-lg mb-4 text-sm">
+          <div className="flex justify-between mb-1"><span className="meta">Workspace:</span><span className="mono font-semibold">{workspaceId}</span></div>
+          <div className="flex justify-between mb-1"><span className="meta">Plan Amount:</span><span className="mono font-bold text-profit">${ent.priceUsdMonthly} / month</span></div>
+          <div className="flex justify-between"><span className="meta">Max Bots:</span><span className="mono">{ent.maxRunningPaperBots} Bots (24/7 Cloud)</span></div>
+        </div>
 
-            <div className="mb-5">
-              <label className="block text-xs font-semibold mb-2 uppercase tracking-wide meta">Select Crypto Currency</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['USDT', 'USDC', 'BTC'] as const).map((curr) => (
-                  <button
-                    key={curr}
-                    type="button"
-                    onClick={() => setCurrency(curr)}
-                    className={`py-2 px-3 text-xs font-mono rounded border transition ${currency === curr ? 'border-primary bg-primary/10 text-primary font-bold' : 'border-neutral-200 dark:border-neutral-800'}`}
-                  >
-                    {curr}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleCreatePayment}
-              className="w-full py-2.5 px-4 rounded bg-profit text-white font-medium text-sm hover:bg-profit/90 transition"
-            >
-              {loading ? 'Generating Invoice...' : `Pay $${ent.priceUsdMonthly} with ${currency}`}
+        {!orderId ? (
+          <>
+            <p className="text-xs meta mb-4">Payment provider checkout is not configured. Creating an order will not create an invoice or charge you.</p>
+            {error && <p role="alert" className="text-xs text-loss mb-3">{error}</p>}
+            <button type="button" disabled={loading || targetTier === 'BASIC'} onClick={handleCreateOrder}
+              className="w-full py-2.5 px-4 rounded bg-profit text-white font-medium text-sm hover:bg-profit/90 transition disabled:opacity-50">
+              {loading ? 'Creating Order...' : `Create ${targetTier} Order`}
             </button>
-          </div>
+          </>
         ) : (
-          <div className="text-center py-4">
-            <div className="text-4xl text-profit mb-2">✓</div>
-            <h4 className="font-bold mb-1">Invoice Generated</h4>
-            <p className="text-xs meta mb-4">
-              Send exact payment via NOWPayments IPN. Tier activates automatically upon 1 confirmation.
-            </p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="py-2 px-6 rounded bg-neutral-100 dark:bg-neutral-800 text-xs font-medium"
-            >
-              Close
-            </button>
+          <div className="text-center py-2">
+            <h4 className="font-bold mb-2">Pending order recorded</h4>
+            <p className="text-xs meta mb-2">No invoice was created and no payment was initiated. Your tier remains unchanged until a verified, order-bound provider callback is processed.</p>
+            <p className="text-xs mono break-all mb-4">Order ID: {orderId}</p>
+            <button type="button" onClick={onClose} className="py-2 px-6 rounded bg-neutral-100 dark:bg-neutral-800 text-xs font-medium">Close</button>
           </div>
         )}
       </div>

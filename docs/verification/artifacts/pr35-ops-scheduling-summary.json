@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-10-31T10:22:31.343Z",
+  "target": "isolated local Wrangler D1 only (pr35-ops-scheduling-eval); no remote D1, no provider calls",
+  "proved": [
+    "migration 0018 applies on fresh D1 with all prior migrations",
+    "approval transitions atomic via audit INSERT trigger with CAS on state + version",
+    "stale/wrong/prior-state transitions abort with zero rows written",
+    "failed execution retriable; executed terminal; append-only audit",
+    "tick leases: one per bot/minute (PK), expired-only takeover with exactly-one-row guard",
+    "alert dispatch log: durable dedup by event id; retry only from failed"
+  ]
+}

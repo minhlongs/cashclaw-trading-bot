@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-11-02T02:28:35.869Z",
+  "target": "isolated local Wrangler D1 only (pr35-ops-execution-eval); no remote D1, no provider calls",
+  "proved": [
+    "migration chain 0001..0019 applies on a fresh D1",
+    "approve requires and atomically stamps the immutable snapshot (hash + target + TTL expiry)",
+    "revoke is a real lifecycle state that blocks all further sends",
+    "attempt claims elect exactly one winner per attempt number (UNIQUE)",
+    "attempt claim identity is immutable; outcomes settle once; attempt history is never deleted",
+    "legacy approvals without a snapshot fail closed until re-approved"
+  ]
+}

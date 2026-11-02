@@ -10,11 +10,11 @@ import { uid, now } from './d1-persistence-utils';
 
 function botToRow(bot: {
   id: string; config: BotConfig; capital: number;
-  user_id: string; name: string; strategy: string; pair: string; exchange: string;
+  user_id: string; workspace_id?: string; name: string; strategy: string; pair: string; exchange: string;
 }): Omit<Bot, 'created_at' | 'updated_at'> {
   const cfg = bot.config as GridBotConfig | MeanRevBotConfig;
   return {
-    id: bot.id, user_id: bot.user_id, name: bot.name || bot.id,
+    id: bot.id, user_id: bot.user_id, workspace_id: bot.workspace_id ?? null, name: bot.name || bot.id,
     strategy: bot.strategy as Bot['strategy'], pair: bot.pair,
     exchange: bot.exchange as Bot['exchange'], status: 'draft',
     config_json: JSON.stringify(cfg), capital_allocated: bot.capital,
@@ -28,13 +28,20 @@ function botToRow(bot: {
 export async function persistBot(userId: string, bot: {
   id: string; config: BotConfig; capital: number;
   name: string; strategy: string; pair: string; exchange: string;
-}): Promise<void> {
+}, workspaceId?: string): Promise<void> {
   const db = createServerClient();
-  if (!db) return;
+  if (!db) {
+    if (workspaceId) throw new Error('Bot database unavailable');
+    return;
+  }
 
-  const row = botToRow({ ...bot, user_id: userId });
+  const row = botToRow({ ...bot, user_id: userId, workspace_id: workspaceId });
   const full: Bot = { ...row, created_at: now(), updated_at: now() };
-  await insertBot(db, full);
+  try {
+    await insertBot(db, full);
+  } catch {
+    throw new Error('Bot persistence failed; D1 write was not confirmed');
+  }
 }
 
 /** Update bot fields in D1 (status, pnl, etc.). */

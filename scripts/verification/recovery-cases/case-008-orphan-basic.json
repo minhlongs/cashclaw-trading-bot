@@ -1,0 +1,15 @@
+{
+  "caseId": "recovery-2026-10-30-008",
+  "actor": "owner-reviewer:synthetic-ops-lead",
+  "reason": "Synthetic evaluation: orphan BASIC negative control must stay out of paid recovery scope.",
+  "workspaceId": "legacy-orphan-basic-negative-test",
+  "ownerUserId": "legacy-user-missing",
+  "tier": "PREMIUM",
+  "paymentId": "legacy-payment-orphan",
+  "paymentStatus": "finished",
+  "priceAmount": 29,
+  "priceCurrency": "USDT",
+  "termEndsAtMs": 1823072000000,
+  "termBasis": "no valid basis; negative control",
+  "evidenceRefs": ["internal-note-N-0008"]
+}

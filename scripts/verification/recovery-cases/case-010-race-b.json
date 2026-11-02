@@ -1,0 +1,15 @@
+{
+  "caseId": "recovery-race-b",
+  "actor": "owner-reviewer:synthetic-ops-lead-second",
+  "reason": "Synthetic evaluation: concurrent recovery racer B claiming a different term for the same row.",
+  "workspaceId": "legacy-paid-expired-like",
+  "ownerUserId": "legacy-owner-expired",
+  "tier": "ENTERPRISE",
+  "paymentId": "legacy-payment-expired-like",
+  "paymentStatus": "finished",
+  "priceAmount": 99,
+  "priceCurrency": "USDT",
+  "termEndsAtMs": 1854694400000,
+  "termBasis": "provider record provider-record-PR-7791: claimed term ending 2028-10-08",
+  "evidenceRefs": ["provider-record-PR-7791", "legacy-ipn-event legacy-payment-expired-like"]
+}

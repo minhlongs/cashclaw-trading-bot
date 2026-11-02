@@ -31,7 +31,7 @@ export interface CachedBot {
 
 export interface BotFactoryDelegate {
   createBotSync(req: { id: string; config: BotConfig }, userId?: string): BotInstance;
-  createBot(req: CreateBotRequest, userId?: string): Promise<BotInstance>;
+  createBot(req: CreateBotRequest, userId?: string, workspaceId?: string): Promise<BotInstance>;
 }
 
 export type D1BotStatus = 'draft' | 'paper_test' | 'live_running' | 'paused' | 'error' | 'stopped';

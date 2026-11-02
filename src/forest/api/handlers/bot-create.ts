@@ -14,11 +14,12 @@ export interface CreateBotPayload {
 }
 
 export async function botCreateHandler(
-  payload: CreateBotPayload
-): Promise<{ ok: boolean; data?: { id: string }; error?: string }> {
+  payload: CreateBotPayload,
+  ownership?: { userId: string; workspaceId: string },
+): Promise<{ ok: boolean; data?: { id: string }; error?: string; status?: 400 | 409 | 503 }> {
   try {
     if (payload.mode === 'live') {
-      return { ok: false, error: 'Live trading not available in v1 — paper mode only' };
+      return { ok: false, error: 'Live trading not available in v1 — paper mode only', status: 400 };
     }
 
     const cfg = normalizeWizardConfig(payload.config);
@@ -73,9 +74,13 @@ export async function botCreateHandler(
       mode: 'paper',
     };
 
-    await getBotManager().createBot(botConfig);
+    await getBotManager().createBot(botConfig, ownership?.userId, ownership?.workspaceId);
     return { ok: true, data: { id: payload.id } };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Failed to create bot' };
+    const message = e instanceof Error ? e.message : 'Failed to create bot';
+    const status = /already exists|duplicate|unique constraint/i.test(message) ? 409
+      : /persistence|database|d1|sql|sqlite/i.test(message) ? 503
+      : 400;
+    return { ok: false, error: message, status };
   }
 }

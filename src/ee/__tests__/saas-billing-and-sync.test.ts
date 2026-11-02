@@ -6,7 +6,8 @@ import { enforceWorkspaceQuota } from '../billing/quota-guard';
 import {
   canonicalizeNowPaymentsJson,
   computeNowPaymentsHmacSha512,
-  verifyAndProcessNowPaymentsIpn,
+  constantTimeHexEqual,
+  NowPaymentsIpnPayloadSchema,
 } from '../billing/nowpayments-ipn';
 import { resolveLlmKeyRouting } from '../billing/key-mode-router';
 import {
@@ -48,36 +49,16 @@ describe('Phase 4 (Steps 16-20): SaaS Billing, Quotas & Conversion Funnel', () =
     expect(allowed.ok).toBe(true);
   });
 
-  it('Step 18: Verifies NOWPayments IPN HMAC-SHA512 signature and activates tier idempotently', async () => {
+  it('Step 18: Verifies signed NOWPayments order fields without trusting callback workspace/tier claims', async () => {
     const secret = 'ipn_secret_test_key';
     const payload = {
-      payment_id: 'np_998877',
-      payment_status: 'finished',
-      order_id: 'ord_1',
-      workspace_id: 'ws_pro',
-      target_tier: 'PREMIUM',
-      pay_amount: 29,
-      pay_currency: 'usdttrc20',
+      payment_id: 'np_998877', payment_status: 'finished', order_id: 'ord_1',
+      price_amount: 29, price_currency: 'USD', pay_amount: 29, pay_currency: 'usdttrc20',
     };
-
-    const canonical = canonicalizeNowPaymentsJson(payload);
-    const sig = await computeNowPaymentsHmacSha512(canonical, secret);
-    const ledger = new Set<string>();
-
-    const first = await verifyAndProcessNowPaymentsIpn(payload, sig, secret, ledger);
-    expect(first.ok).toBe(true);
-    if (first.ok) {
-      expect(first.data.activated).toBe(true);
-      expect(first.data.newTier).toBe('PREMIUM');
-      expect(first.data.idempotentReplay).toBe(false);
-    }
-
-    const replay = await verifyAndProcessNowPaymentsIpn(payload, sig, secret, ledger);
-    expect(replay.ok).toBe(true);
-    if (replay.ok) {
-      expect(replay.data.activated).toBe(false);
-      expect(replay.data.idempotentReplay).toBe(true);
-    }
+    const signature = await computeNowPaymentsHmacSha512(canonicalizeNowPaymentsJson(payload), secret);
+    expect(constantTimeHexEqual(signature, await computeNowPaymentsHmacSha512(canonicalizeNowPaymentsJson(payload), secret))).toBe(true);
+    expect(NowPaymentsIpnPayloadSchema.safeParse(payload).success).toBe(true);
+    expect(NowPaymentsIpnPayloadSchema.safeParse({ ...payload, workspace_id: 'ws_pro', target_tier: 'MASTER' }).success).toBe(false);
   });
 
   it('Step 19: Routes BYOK vs Managed Cloud LLM Pool according to edition and tier', () => {

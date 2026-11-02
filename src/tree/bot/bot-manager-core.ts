@@ -35,7 +35,7 @@ export class BotManager implements BotFactoryDelegate {
   getRunningBots(userId?: string): Promise<BotInstance[]> { return this.cache.getRunningBots(userId); }
   getOrCreateBot(id: string, userId?: string): Promise<BotInstance | null> { return this.cache.getOrCreateBot(id, userId); }
   createBotSync(req: { id: string; config: BotConfig }, userId?: string): BotInstance { return this.factory.createBotSync(req, userId); }
-  createBot(req: CreateBotRequest, userId?: string): Promise<BotInstance> { return this.factory.createBot(req, userId); }
+  createBot(req: CreateBotRequest, userId?: string, workspaceId?: string): Promise<BotInstance> { return this.factory.createBot(req, userId, workspaceId); }
   startBot(id: string, userId?: string): Promise<void> { return this.delegate.startBot(id, userId); }
   pauseBot(id: string, userId?: string): void { this.delegate.pauseBot(id, userId); }
   resumeBot(id: string, userId?: string): void { this.delegate.resumeBot(id, userId); }
