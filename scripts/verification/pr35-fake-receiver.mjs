@@ -21,19 +21,16 @@ export function startFakeReceiver(port) {
     req.on('data', (chunk) => chunks.push(chunk));
     req.on('end', () => {
       const url = new URL(req.url, 'http://127.0.0.1');
+      const body = Buffer.concat(chunks).toString('utf8');
       if (url.pathname === '/__state') {
         res.writeHead(200, { 'content-type': 'application/json' });
         res.end(JSON.stringify({ mode: state.mode, totalRequests: state.totalRequests, requests: state.requests.slice(-50) }));
         return;
       }
       if (url.pathname === '/__mode' && req.method === 'POST') {
-        let body = '';
-        req.on('data', (chunk) => { body += chunk; });
-        req.on('end', () => {
-          try { state.mode = JSON.parse(body || '{}').mode ?? 'ok'; } catch { /* keep current mode */ }
-          res.writeHead(200, { 'content-type': 'application/json' });
-          res.end(JSON.stringify({ ok: true, mode: state.mode }));
-        });
+        try { state.mode = JSON.parse(body || '{}').mode ?? 'ok'; } catch { /* keep current mode */ }
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, mode: state.mode }));
         return;
       }
       if (url.pathname === '/__reset' && req.method === 'POST') {
@@ -51,7 +48,7 @@ export function startFakeReceiver(port) {
         path: url.pathname,
         eventId: req.headers['x-cashclaw-event-id'] ?? null,
         idempotencyKey: req.headers['idempotency-key'] ?? null,
-        bodyPreview: Buffer.concat(chunks).toString('utf8').slice(0, 200),
+        bodyPreview: body.slice(0, 200),
       });
       if (state.mode === 'hang') return; // never respond — the client times out (ambiguous outcome)
       if (state.mode === 'drop') { req.socket.destroy(); return; } // response lost (ambiguous)

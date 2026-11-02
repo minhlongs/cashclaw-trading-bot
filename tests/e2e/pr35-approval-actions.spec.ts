@@ -64,10 +64,10 @@ function runD1(sql: string) {
   expect(result.status, `d1 execute failed: ${result.stderr?.slice(-800)}`).toBe(0);
 }
 
-test('approval lifecycle: draft persists, submit/approve/execute record_only, attempts visible, keyboard/mobile/locale', async ({ page, request, browser }) => {
+test('approval lifecycle: draft persists, submit/approve/execute record_only, attempts visible, keyboard/mobile/locale', async ({ page, browser }) => {
   await login(page, 'vi', accountA);
   await page.goto('/vi/operations');
-  const draft = await createActionItem(request, {
+  const draft = await createActionItem(page.request, {
     department: 'operations',
     title: `PR35 approval draft ${runId}`,
     description: 'approved-execution lifecycle check',
@@ -117,40 +117,40 @@ test('approval lifecycle: draft persists, submit/approve/execute record_only, at
   await english.close();
 });
 
-test('outbound_message hits the fake receiver; retries stay inside the approved budget', async ({ page, request }) => {
+test('outbound_message hits the fake receiver; retries stay inside the approved budget', async ({ page }) => {
   await login(page, 'vi', accountA);
   await page.goto('/vi/operations');
   await resetReceiver();
   await setReceiverMode('ok');
-  const outbound = await createActionItem(request, {
+  const outbound = await createActionItem(page.request, {
     department: 'support',
     title: `PR35 outbound ${runId}`,
     description: 'receiver delivery check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `hello ${runId}` } },
     policy: { maxAttempts: 2, requestTimeoutMs: 3000, backoffBaseMs: 100, backoffMaxMs: 500, approvalTtlMs: 3600000 },
   });
-  expect(await approvalAction(request, 'submit', outbound.id)).toMatchObject({ ok: true, state: 'pending_approval' });
-  expect(await approvalAction(request, 'approve', outbound.id)).toMatchObject({ ok: true, state: 'approved' });
-  const executed = await approvalAction(request, 'execute', outbound.id);
+  expect(await approvalAction(page.request, 'submit', outbound.id)).toMatchObject({ ok: true, state: 'pending_approval' });
+  expect(await approvalAction(page.request, 'approve', outbound.id)).toMatchObject({ ok: true, state: 'approved' });
+  const executed = await approvalAction(page.request, 'execute', outbound.id);
   expect(executed).toMatchObject({ ok: true, outcome: 'provider_accepted', executionState: 'executed' });
   expect((await receiverState()).totalRequests).toBe(1);
 
   // Bounded retries: provider failure is retried only within maxAttempts=2, then exhausted.
-  const flaky = await createActionItem(request, {
+  const flaky = await createActionItem(page.request, {
     department: 'support',
     title: `PR35 flaky ${runId}`,
     description: 'bounded retry check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `flaky ${runId}` } },
     policy: { maxAttempts: 2, requestTimeoutMs: 1500, backoffBaseMs: 100, backoffMaxMs: 200, approvalTtlMs: 3600000 },
   });
-  await approvalAction(request, 'submit', flaky.id);
-  await approvalAction(request, 'approve', flaky.id);
+  await approvalAction(page.request, 'submit', flaky.id);
+  await approvalAction(page.request, 'approve', flaky.id);
   await setReceiverMode('fail500');
-  const first = await approvalAction(request, 'execute', flaky.id);
+  const first = await approvalAction(page.request, 'execute', flaky.id);
   expect(first).toMatchObject({ ok: false, outcome: 'failed_retryable', executionState: 'failed' });
-  const second = await approvalAction(request, 'execute', flaky.id);
+  const second = await approvalAction(page.request, 'execute', flaky.id);
   expect(second).toMatchObject({ ok: false, outcome: 'failed_retryable' });
-  const third = await approvalAction(request, 'execute', flaky.id);
+  const third = await approvalAction(page.request, 'execute', flaky.id);
   expect(third).toMatchObject({ ok: false, code: 'exhausted' });
 
   // UI shows the failed outcome and the exhausted note; attempts are listed.
@@ -163,67 +163,69 @@ test('outbound_message hits the fake receiver; retries stay inside the approved 
   expect(state.totalRequests).toBe(3); // 1 success + 2 failed attempts actually reached the receiver
 });
 
-test('post-approval edits require re-approval; revoke and expiry block all sends', async ({ page, request }) => {
+test('post-approval edits require re-approval; revoke and expiry block all sends', async ({ page }) => {
   await login(page, 'vi', accountA);
   await page.goto('/vi/operations');
   await resetReceiver();
   await setReceiverMode('ok');
 
   // 1) Payload edited after approval -> snapshot mismatch -> re-approval required.
-  const tamper = await createActionItem(request, {
+  const tamper = await createActionItem(page.request, {
     department: 'sales',
     title: `PR35 tamper ${runId}`,
     description: 'immutable snapshot check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `original ${runId}` } },
     policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 3600000 },
   });
-  await approvalAction(request, 'submit', tamper.id);
-  await approvalAction(request, 'approve', tamper.id);
+  await approvalAction(page.request, 'submit', tamper.id);
+  await approvalAction(page.request, 'approve', tamper.id);
   runD1(`UPDATE ops_work_items SET action_payload_json = '{"channel":"WEBHOOK","message":"TAMPERED ${runId}"}' WHERE id = '${tamper.id}';`);
-  const blocked = await approvalAction(request, 'execute', tamper.id);
+  const blocked = await approvalAction(page.request, 'execute', tamper.id);
   expect(blocked).toMatchObject({ ok: false, code: 'snapshot-mismatch' });
   expect(String(blocked.error)).toContain('re-approval required');
   expect((await receiverState()).totalRequests).toBe(0);
 
   // 2) Revocation blocks sends for good.
-  const revoke = await createActionItem(request, {
+  const revoke = await createActionItem(page.request, {
     department: 'sales',
     title: `PR35 revoke ${runId}`,
     description: 'revocation check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `revoked ${runId}` } },
     policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 3600000 },
   });
-  await approvalAction(request, 'submit', revoke.id);
-  await approvalAction(request, 'approve', revoke.id);
+  await approvalAction(page.request, 'submit', revoke.id);
+  await approvalAction(page.request, 'approve', revoke.id);
   await page.reload();
   const revokeItem = page.locator('.ops-item').filter({ hasText: `PR35 revoke ${runId}` });
   await revokeItem.getByRole('button', { name: 'Thu hồi phê duyệt' }).click();
   await expect(revokeItem.getByText(/Đã thu hồi/)).toBeVisible();
-  const afterRevoke = await approvalAction(request, 'execute', revoke.id);
+  const afterRevoke = await approvalAction(page.request, 'execute', revoke.id);
   expect(afterRevoke).toMatchObject({ ok: false, code: /not-approved|revoked/ });
   expect((await receiverState()).totalRequests).toBe(0);
 
   // 3) Expiry blocks sends (approval TTL already elapsed).
-  const expired = await createActionItem(request, {
+  const expired = await createActionItem(page.request, {
     department: 'sales',
     title: `PR35 expired ${runId}`,
     description: 'expiry check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `expired ${runId}` } },
     policy: { maxAttempts: 3, requestTimeoutMs: 2000, backoffBaseMs: 100, backoffMaxMs: 300, approvalTtlMs: 60000 },
   });
-  await approvalAction(request, 'submit', expired.id);
-  await approvalAction(request, 'approve', expired.id);
+  await approvalAction(page.request, 'submit', expired.id);
+  await approvalAction(page.request, 'approve', expired.id);
   runD1(`UPDATE ops_work_items SET approval_expires_at_ms = 1 WHERE id = '${expired.id}';`);
-  const expiredResult = await approvalAction(request, 'execute', expired.id);
+  const expiredResult = await approvalAction(page.request, 'execute', expired.id);
   expect(expiredResult).toMatchObject({ ok: false, code: 'expired' });
   expect((await receiverState()).totalRequests).toBe(0);
 
   await page.screenshot({ path: saveScreenshot('approval-blocked-outcomes.png'), fullPage: true });
 });
 
-test('two sessions conflict on approval transitions and users cannot touch foreign items', async ({ browser, request }) => {
-  await login(await browser.newPage(), 'vi', accountA);
-  const foreign = await createActionItem(request, {
+test('two sessions conflict on approval transitions and users cannot touch foreign items', async ({ browser }) => {
+  const firstContext = await browser.newContext();
+  const firstPage = await firstContext.newPage();
+  await login(firstPage, 'vi', accountA);
+  const foreign = await createActionItem(firstPage.request, {
     department: 'finance',
     title: `PR35 isolation ${runId}`,
     description: 'cross-user check',
@@ -235,7 +237,7 @@ test('two sessions conflict on approval transitions and users cannot touch forei
   const otherRequest = otherContext.request;
   // A different signed-in session of the SAME user races the approval transition: exactly one wins.
   const [first, second] = await Promise.all([
-    approvalAction(request, 'submit', foreign.id),
+    approvalAction(firstPage.request, 'submit', foreign.id),
     otherRequest.post('/api/ops/work-items/approvals', { data: { action: 'submit', itemId: foreign.id } }).then(async (response) => (await response.json()).results[0]),
   ]);
   const winners = [first, second].filter((result) => result.ok === true);
@@ -243,6 +245,7 @@ test('two sessions conflict on approval transitions and users cannot touch forei
   const loser = [first, second].find((result) => result.ok === false);
   // Depending on interleaving the loser is refused by the state machine or by the DB CAS guard.
   expect(['invalid-state-transition', 'concurrent-change']).toContain(loser?.code);
+  await firstContext.close();
   await otherContext.close();
 
   // User B (different account) must not see or touch A's items at all.
@@ -259,25 +262,25 @@ test('two sessions conflict on approval transitions and users cannot touch forei
   await contextB.close();
 });
 
-test('ambiguous timeout outcome is recorded as unknown and duplicates are accepted within budget', async ({ page, request }) => {
+test('ambiguous timeout outcome is recorded as unknown and duplicates are accepted within budget', async ({ page }) => {
   await login(page, 'vi', accountA);
   await page.goto('/vi/operations');
   await resetReceiver();
   await setReceiverMode('hang');
-  const ambiguous = await createActionItem(request, {
+  const ambiguous = await createActionItem(page.request, {
     department: 'support',
     title: `PR35 ambiguous ${runId}`,
     description: 'unknown outcome check',
     action: { type: 'outbound_message', payload: { channel: 'WEBHOOK', message: `ambiguous ${runId}` } },
     policy: { maxAttempts: 2, requestTimeoutMs: 700, backoffBaseMs: 100, backoffMaxMs: 200, approvalTtlMs: 3600000 },
   });
-  await approvalAction(request, 'submit', ambiguous.id);
-  await approvalAction(request, 'approve', ambiguous.id);
-  const first = await approvalAction(request, 'execute', ambiguous.id);
+  await approvalAction(page.request, 'submit', ambiguous.id);
+  await approvalAction(page.request, 'approve', ambiguous.id);
+  const first = await approvalAction(page.request, 'execute', ambiguous.id);
   // Timeout after the request reached the receiver => 'unknown', never a claimed success.
   expect(first).toMatchObject({ ok: false, outcome: 'unknown', executionState: 'failed' });
   await setReceiverMode('ok');
-  const retry = await approvalAction(request, 'execute', ambiguous.id);
+  const retry = await approvalAction(page.request, 'execute', ambiguous.id);
   expect(retry).toMatchObject({ ok: true, outcome: 'provider_accepted', executionState: 'executed' });
   const state = await receiverState();
   // Owner accepted at-least-once delivery: both sends reached the receiver (duplicates allowed).
