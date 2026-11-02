@@ -256,7 +256,9 @@ function assertNoSensitiveStrings(dir, secret) {
       for (const sensitive of [...passcodes, ...emails, secret].filter(Boolean)) {
         if (text.includes(sensitive)) throw new Error(`Sensitive test value leaked into ${relative(artifactDir, full)}`);
       }
-      if (/session_id=[^;\s"'<>]+/i.test(text)) throw new Error(`Session cookie leaked into ${relative(artifactDir, full)}`);
+      // Any session cookie value that is NOT the redaction marker is a leak; the marker itself is
+      // the scrubber's output and is safe.
+      if (/session_id=(?!\[REDACTED\])[^;\s"'<>]+/i.test(text)) throw new Error(`Session cookie leaked into ${relative(artifactDir, full)}`);
     };
     if (entry.name.endsWith('.zip')) {
       const zip = new AdmZip(full);
