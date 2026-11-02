@@ -280,8 +280,21 @@ try {
   progress.push('build:ok');
   await run(process.execPath, ['scripts/verification/pr35-worker-d1-setup.mjs', '--reset'], 'd1-setup');
   progress.push('d1-setup:ok');
-  // Test-harness-only worker configuration: the fake receiver target (loopback allowed by explicit
-  // server config), and no auto-retry cron drain (tests drive attempts directly for determinism).
+  // Test-harness-only worker configuration, injected into the isolated config's vars block (the
+  // only channel wrangler dev reliably loads): the fake receiver target (loopback allowed by
+  // explicit server config) and no auto-retry cron drain (tests drive attempts directly).
+  {
+    const harnessVars = {
+      CASHCLAW_ALERT_WEBHOOK_TARGET_URL: `${receiverUrl}/webhook`,
+      CASHCLAW_WEBHOOK_ALLOW_LOOPBACK: 'true',
+      CASHCLAW_OPS_AUTORETRY_ENABLED: 'false',
+      CASHCLAW_ALLOW_MEMORY_LEASE: 'false',
+    };
+    let configText = readFileSync(config, 'utf8');
+    const injected = Object.entries(harnessVars).map(([key, value]) => `"${key}": "${value}"`).join(', ');
+    configText = configText.replace('"vars": {', `"vars": {\n\t\t${injected},`);
+    writeFileSync(config, configText, { mode: 0o600 });
+  }
   appendFileSync(secretFile, `CASHCLAW_ALERT_WEBHOOK_TARGET_URL=${receiverUrl}/webhook\nCASHCLAW_WEBHOOK_ALLOW_LOOPBACK=true\nCASHCLAW_OPS_AUTORETRY_ENABLED=false\nCASHCLAW_ALLOW_MEMORY_LEASE=false\n`);
   receiver = await startFakeReceiver(receiverPort);
   progress.push('receiver:listening');
