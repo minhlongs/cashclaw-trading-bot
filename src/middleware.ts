@@ -9,20 +9,26 @@ import { createServerClient } from '@/lib/db/client';
 const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
 
 // API route prefixes that require auth for mutating requests.
-const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops'];
+const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops', '/api/ee'];
 
 // GET routes that contain sensitive data — bot capital, PnL, config, settings.
-const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops'];
+const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops', '/api/ee'];
 
 // Auth routes are always public (login, logout, me).
+// The IPN webhooks must stay public for POST callbacks: NOWPayments calls them
+// without a session cookie, so requiring one would drop notifications from real payers.
 const PUBLIC_API_PREFIXES = ['/api/auth'];
+const PUBLIC_WEBHOOK_PATHS = ['/api/ee/billing/ipn', '/api/ee/billing/nowpayments-ipn'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method = req.method;
 
-  // Auth routes are always public.
-  if (PUBLIC_API_PREFIXES.some(p => pathname.startsWith(p))) {
+  // Auth routes are always public; IPN webhook routes are public for POST callbacks only.
+  if (
+    PUBLIC_API_PREFIXES.some(p => pathname.startsWith(p)) ||
+    (method === 'POST' && PUBLIC_WEBHOOK_PATHS.some(p => pathname.startsWith(p)))
+  ) {
     return NextResponse.next();
   }
 

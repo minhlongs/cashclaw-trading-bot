@@ -1,0 +1,35 @@
+  ...n-contract.ts |     100 |     90.9 |     100 |     100 | 49                
+  ...n-log-hash.ts |     100 |      100 |     100 |     100 |                   
+  ...-log-types.ts |     100 |      100 |     100 |     100 |                   
+  decision-log.ts  |     100 |      100 |     100 |     100 |                   
+  ...is-builder.ts |     100 |      100 |     100 |     100 |                   
+  ...extraction.ts |     100 |      100 |     100 |     100 |                   
+  ...-extractor.ts |     100 |      100 |     100 |     100 |                   
+  ...thesis-fnv.ts |     100 |      100 |     100 |     100 |                   
+  index.ts         |       0 |      100 |     100 |       0 | 5-15              
+  ...provenance.ts |     100 |       90 |     100 |     100 | 81                
+  ...-synthesis.ts |     100 |     90.9 |     100 |     100 | 83                
+  ...enario-set.ts |     100 |       90 |     100 |     100 | 85                
+  ...e-patterns.ts |     100 |      100 |     100 |     100 |                   
+  ...-sanitizer.ts |     100 |      100 |     100 |     100 |                   
+  security-gate.ts |     100 |      100 |     100 |     100 |                   
+  ...s-internal.ts |       0 |        0 |       0 |       0 |                   
+  types.ts         |     100 |      100 |     100 |     100 |                   
+ ...rch/vectorized |   97.56 |    73.46 |      90 |   97.56 |                   
+  index.ts         |       0 |        0 |       0 |       0 | 1-2               
+  ...on-kernels.ts |     100 |    69.56 |     100 |     100 | 19,45,55-61       
+  ...tor-engine.ts |   96.49 |       75 |     100 |   96.49 | 60-61             
+  ...ctor-types.ts |       0 |        0 |       0 |       0 |                   
+  ...ogonalizer.ts |     100 |     87.5 |     100 |     100 | 5                 
+ ...tree/telemetry |   98.96 |     93.1 |     100 |   98.96 |                   
+  index.ts         |       0 |      100 |     100 |       0 | 2                 
+  types.ts         |       0 |        0 |       0 |       0 |                   
+  ...r-emitters.ts |     100 |      100 |     100 |     100 |                   
+  writer-flush.ts  |     100 |    88.88 |     100 |     100 | 17                
+  ...er-helpers.ts |     100 |       75 |     100 |     100 | 8                 
+  ...r-snapshot.ts |     100 |    66.66 |     100 |     100 | 16                
+  writer-sql.ts    |     100 |      100 |     100 |     100 |                   
+  writer-types.ts  |       0 |        0 |       0 |       0 |                   
+  writer.ts        |     100 |    95.83 |     100 |     100 | 22                
+-------------------|---------|----------|---------|---------|-------------------
+EXIT=0

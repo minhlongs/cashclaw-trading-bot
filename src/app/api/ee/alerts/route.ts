@@ -19,7 +19,6 @@ const CloudAlertEventSchema = z.object({
   timestampMs: z.number().int().positive(),
   cooldownMs: z.number().int().positive().optional(),
   signingSecret: z.string().min(8).optional(),
-  tier: z.string().optional(),
 });
 
 export const defaultAlertDeduplicator = new CloudAlertDeduplicator();
@@ -35,13 +34,10 @@ export async function POST(req: Request) {
       );
     }
 
+    // The tier comes from the workspace's D1 entitlement, never from the request body.
     const tierContext = await resolveWorkspaceTierContext(req, {
       explicitWorkspaceId: parsed.data.workspaceId,
-      explicitTier: parsed.data.tier,
     });
-    if (tierContext.invalidExplicitTier) {
-      return NextResponse.json({ ok: false, error: `Invalid tier: ${tierContext.invalidExplicitTier}` }, { status: 400 });
-    }
 
     const entitlements = getEntitlementsForTier(tierContext.tier);
     if (parsed.data.channel === 'WEBHOOK' && !entitlements.customWebhookAlertsAllowed) {

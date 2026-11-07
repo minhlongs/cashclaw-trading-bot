@@ -1,0 +1,21 @@
+# Baseline — measured, not assumed
+
+| SHA | Command | Result |
+|---|---|---|
+| `b683ca9` (pre-pull) | `npm run quality:gate` | exit 0 — 6036 tests / 723 files, coverage 93.92% |
+| `11a774e` = `origin/main` (post-pull) | `npm run quality:gate` | exit 0 — **6051 tests / 725 files**, coverage 93.87% |
+| `11a774e` | `npx knip` | exit 0 |
+
+Full output: `baseline-gates.txt` (post-pull).
+Baseline SHA for phase-02 onward: `11a774e820920dfbdb8e0ee52fe4599a69851770`
+
+## Notes
+
+- The old report number 3,881 is obsolete; the pre-pull number 6,036 was correct for
+  `b683ca9` and 6,051 is correct for `origin/main`. Use 6,051.
+- The 5 commits pulled in did **not** touch the revenue-seam files except `src/middleware.ts`
+  (commit `f11e29d`). That commit added `/api/ops` to `PROTECTED_API_PREFIXES` and
+  `SENSITIVE_GET_PREFIXES` and fixed two session-query bugs in the same file:
+  `Date.now()` → `Math.floor(Date.now() / 1000)` (seconds, matching `expires_at`), and
+  `SELECT ... WHERE session_id = ?` → `WHERE id = ?` (the column is `id`).
+  Phase-03 edits this file and must build on that fixed version, not the old one.

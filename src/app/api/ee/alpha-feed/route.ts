@@ -8,13 +8,7 @@ import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-cont
 
 export async function GET(req: Request) {
   try {
-    const { workspaceId, tier, invalidExplicitTier } = await resolveWorkspaceTierContext(req);
-    if (invalidExplicitTier) {
-      return NextResponse.json(
-        { ok: false, error: `Invalid SaaS tier: ${invalidExplicitTier}` },
-        { status: 400 },
-      );
-    }
+    const { workspaceId, tier } = await resolveWorkspaceTierContext(req);
 
     const entitlements = getEntitlementsForTier(tier);
     const items = getCloudAlphaFeedForTier(tier);

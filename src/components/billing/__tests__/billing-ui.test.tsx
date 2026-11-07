@@ -69,8 +69,13 @@ describe('Billing & Entitlements UI Components', () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes('/api/ee/quotas')) {
+        // The first call resolves the session's workspace; the server returns the
+        // tier, never the client naming one.
         return new Response(
-          JSON.stringify({ ok: true, tier: 'ENTERPRISE', entitlements: { monthlyLlmCredits: 50000 } }),
+          JSON.stringify({
+            ok: true, workspaceId: 'ws_test_hydrate', tier: 'ENTERPRISE',
+            entitlements: { monthlyLlmCredits: 50000 },
+          }),
           { status: 200 },
         );
       }
@@ -91,13 +96,14 @@ describe('Billing & Entitlements UI Components', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     function Harness() {
-      const { currentTier, runningBots, consumedCredits, totalCredits } =
-        useWorkspaceBilling('ws_test_hydrate');
+      const { currentTier, runningBots, consumedCredits, totalCredits, workspaceId } =
+        useWorkspaceBilling();
       return (
         <div>
           <span>{`tier:${currentTier}`}</span>
           <span>{`bots:${runningBots}`}</span>
           <span>{`credits:${consumedCredits}/${totalCredits}`}</span>
+          <span>{`workspace:${workspaceId ?? 'none'}`}</span>
         </div>
       );
     }
@@ -108,7 +114,14 @@ describe('Billing & Entitlements UI Components', () => {
       expect(screen.getByText('tier:ENTERPRISE')).toBeDefined();
       expect(screen.getByText('bots:2')).toBeDefined();
       expect(screen.getByText('credits:8000/50000')).toBeDefined();
+      expect(screen.getByText('workspace:ws_test_hydrate')).toBeDefined();
     });
+
+    // The tier read resolved the workspace from the session rather than naming
+    // one, and the resolved id is what the workspace-scoped read then carried.
+    const calledUrls = fetchMock.mock.calls.map((call) => String(call[0]));
+    expect(calledUrls).toContain('/api/ee/quotas');
+    expect(calledUrls).toContain('/api/ee/credits?workspaceId=ws_test_hydrate');
 
     vi.unstubAllGlobals();
   });

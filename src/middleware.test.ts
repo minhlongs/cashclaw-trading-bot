@@ -149,6 +149,41 @@ describe('middleware', () => {
     expect((await middleware(makeReq('POST', '/api/ops/work-items', { session_id: 'ok' }))).status).toBe(200);
   });
 
+  /* ── EE routes (now session-scoped) ────────────────────────── */
+  it('blocks GET /api/ee/quotas without session', async () => {
+    expect((await middleware(makeReq('GET', '/api/ee/quotas'))).status).toBe(401);
+  });
+  it('allows GET /api/ee/quotas with a valid session', async () => {
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
+    expect((await middleware(makeReq('GET', '/api/ee/quotas', { session_id: 'ok' }))).status).toBe(200);
+  });
+  it('blocks POST /api/ee/sync without session', async () => {
+    expect((await middleware(makeReq('POST', '/api/ee/sync'))).status).toBe(401);
+  });
+  it('blocks GET /api/ee/alpha-feed without session', async () => {
+    expect((await middleware(makeReq('GET', '/api/ee/alpha-feed'))).status).toBe(401);
+  });
+
+  /* ── IPN webhooks must stay public ─────────────────────────── */
+  it('allows POST /api/ee/billing/ipn without session (payment callback)', async () => {
+    expect((await middleware(makeReq('POST', '/api/ee/billing/ipn'))).status).toBe(200);
+  });
+  it('allows POST /api/ee/billing/nowpayments-ipn without session (payment callback)', async () => {
+    expect((await middleware(makeReq('POST', '/api/ee/billing/nowpayments-ipn'))).status).toBe(200);
+  });
+  it('requires session for GET /api/ee/billing/nowpayments-ipn (entitlement read)', async () => {
+    expect((await middleware(makeReq('GET', '/api/ee/billing/nowpayments-ipn'))).status).toBe(401);
+  });
+  it('exempts only the two IPN routes, not the checkout route beside them', async () => {
+    // The checkout route lives under /api/ee/billing/ next to the IPN webhooks. It
+    // must not inherit their exemption: creating an invoice needs a session so the
+    // server knows which workspace is buying.
+    expect((await middleware(makeReq('POST', '/api/ee/billing/checkout'))).status).toBe(401);
+  });
+  it('requires session for other /api/ee/billing routes', async () => {
+    expect((await middleware(makeReq('GET', '/api/ee/billing/invoices'))).status).toBe(401);
+  });
+
   /* ── Public routes (no auth needed) ────────────────────────── */
   it('allows GET /api/health without session', async () => {
     expect((await middleware(makeReq('GET', '/api/health'))).status).toBe(200);

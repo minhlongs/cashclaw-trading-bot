@@ -19,6 +19,12 @@ export interface EditionConfig {
 export interface EditionEnvInput {
   readonly CASHCLAW_EDITION?: string;
   readonly CASHCLAW_CLOUD_URL?: string;
+  /**
+   * Optional here because a zero-config OSS checkout has no billing to verify
+   * signatures for. On the CLOUD_SAAS billing path it is required and the IPN
+   * routes fail closed (503) when it is absent — that enforcement lives in
+   * `resolveIpnSecret`, not in this optional input.
+   */
   readonly NOWPAYMENTS_IPN_SECRET?: string;
 }
 

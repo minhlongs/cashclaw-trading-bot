@@ -68,7 +68,7 @@ export async function POST(req: Request) {
   }
 
   const { tier } = await resolveWorkspaceTierContext(req);
-  const currentBotCount = await resolveActiveBotCount(req, botListHandler);
+  const currentBotCount = await resolveActiveBotCount(botListHandler);
 
   const quotaCheck = enforceWorkspaceQuota({
     tier,

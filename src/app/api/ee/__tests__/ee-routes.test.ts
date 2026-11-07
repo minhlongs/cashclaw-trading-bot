@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GET as getQuotas } from '../quotas/route';
 import { POST as postIpn } from '../billing/ipn/route';
 import { POST as postNowPaymentsIpn } from '../billing/nowpayments-ipn/route';
@@ -8,8 +8,37 @@ import {
   computeNowPaymentsHmacSha512,
 } from '@/ee/billing/nowpayments-ipn';
 import { createLocalToCloudSyncBundle } from '@/ee/sync/local-to-cloud-sync';
+import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
+import { defaultCheckoutOrderStore } from '@/ee/billing/checkout-order-store';
+
+const mockBotListHandler = vi.fn();
+vi.mock('@/forest/api/routes', () => ({
+  botListHandler: (...args: unknown[]) => mockBotListHandler(...args),
+}));
+
+/** Seeds a workspace tier through the production path — a verified IPN upgrade. */
+async function seedWorkspaceTier(workspaceId: string, targetTier: 'BASIC' | 'PREMIUM' | 'ENTERPRISE' | 'MASTER') {
+  await defaultSaasEntitlementStore.recordIpnAndUpgradeTier({
+    paymentId: `pay_seed_${workspaceId}`,
+    workspaceId,
+    targetTier,
+    paymentStatus: 'finished',
+    payAmount: 29,
+    payCurrency: 'USDT',
+  });
+}
 
 describe('Phase 1: SaaS API Routes Integration', () => {
+  beforeEach(() => {
+    defaultSaasEntitlementStore.setDatabase(undefined);
+    defaultSaasEntitlementStore.resetMemoryForTesting();
+    vi.clearAllMocks();
+    mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
+    // Production has no default IPN secret, so the test names one explicitly.
+    vi.stubEnv('NOWPAYMENTS_IPN_SECRET', 'ee-routes-ipn-secret');
+    defaultCheckoutOrderStore.resetMemoryForTesting();
+  });
+
   describe('GET /api/ee/quotas', () => {
     it('returns workspace entitlements for default BASIC tier', async () => {
       const req = new Request('http://localhost/api/ee/quotas');
@@ -22,8 +51,10 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       expect((body.entitlements as Record<string, unknown>).maxRunningPaperBots).toBe(1);
     });
 
-    it('returns workspace entitlements for PREMIUM tier when specified', async () => {
-      const req = new Request('http://localhost/api/ee/quotas?tier=PREMIUM');
+    it('ignores a self-declared tier query parameter and returns the D1 tier', async () => {
+      await seedWorkspaceTier('ws_quota_ignored', 'PREMIUM');
+
+      const req = new Request('http://localhost/api/ee/quotas?workspaceId=ws_quota_ignored&tier=BASIC');
       const res = await getQuotas(req);
       expect(res.status).toBe(200);
 
@@ -34,7 +65,15 @@ describe('Phase 1: SaaS API Routes Integration', () => {
     });
 
     it('resolves upgraded tier from entitlement store via x-cashclaw-workspace header', async () => {
-      const secret = 'test_ipn_secret';
+      const secret = 'ee-routes-ipn-secret';
+      // The checkout the server issued: only this record says what was bought.
+      await defaultCheckoutOrderStore.recordOrder({
+        orderId: 'order_ent_quota_01',
+        workspaceId: 'ws_quota_upgraded_01',
+        targetTier: 'ENTERPRISE',
+        expectedAmountUsd: 149,
+        payCurrency: 'USDT',
+      });
       const payload = {
         payment_id: 'np_quota_upgrade_01',
         payment_status: 'finished',
@@ -95,7 +134,14 @@ describe('Phase 1: SaaS API Routes Integration', () => {
     });
 
     it('processes valid IPN payload with case-normalized HMAC-SHA512 signature', async () => {
-      const secret = 'test_ipn_secret';
+      const secret = 'ee-routes-ipn-secret';
+      await defaultCheckoutOrderStore.recordOrder({
+        orderId: 'order_prem_001',
+        workspaceId: 'ws_demo_01',
+        targetTier: 'PREMIUM',
+        expectedAmountUsd: 29,
+        payCurrency: 'USDT',
+      });
       const payload = {
         payment_id: 'np_payment_999',
         payment_status: 'finished',

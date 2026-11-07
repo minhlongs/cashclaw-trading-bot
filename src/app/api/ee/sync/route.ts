@@ -12,14 +12,8 @@ import { botListHandler } from '@/forest/api/routes';
 
 export async function POST(req: Request) {
   try {
-    const { tier, invalidExplicitTier } = await resolveWorkspaceTierContext(req);
-    if (invalidExplicitTier) {
-      return NextResponse.json(
-        { ok: false, error: `Invalid SaaS tier: ${invalidExplicitTier}` },
-        { status: 400 },
-      );
-    }
-    const activeRunningBots = await resolveActiveBotCount(req, botListHandler);
+    const { tier } = await resolveWorkspaceTierContext(req);
+    const activeRunningBots = await resolveActiveBotCount(botListHandler);
 
     const quotaCheck = enforceWorkspaceQuota({
       tier,
