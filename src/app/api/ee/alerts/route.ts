@@ -7,8 +7,15 @@ import { z } from 'zod';
 import {
   CloudAlertDeduplicator, signAlertWebhookPayload, type CloudAlertEvent, type SignedWebhookEnvelope,
 } from '@/ee/alerts/cloud-alert-dispatcher';
+import {
+  ALERT_MISSING_SECRET_ERROR,
+  readAlertWebhookSecret,
+} from '@/ee/alerts/alert-webhook-secret';
 import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
-import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
+import {
+  resolveEffectiveWorkspaceId,
+  resolveWorkspaceTierContext,
+} from '@/ee/tenancy/workspace-request-context';
 
 const CloudAlertEventSchema = z.object({
   eventId: z.string().min(1),
@@ -50,8 +57,20 @@ export async function POST(req: Request) {
       );
     }
 
+    const secret = readAlertWebhookSecret(parsed.data.signingSecret);
+    if (!secret) {
+      return NextResponse.json(
+        { ok: false, code: 'ALERT_CONFIG_ERROR', error: ALERT_MISSING_SECRET_ERROR },
+        { status: 503 },
+      );
+    }
+
+    const effectiveWorkspaceId =
+      resolveEffectiveWorkspaceId(req, tierContext.workspaceId, parsed.data.workspaceId) ??
+      parsed.data.workspaceId;
+
     const event: CloudAlertEvent = {
-      eventId: parsed.data.eventId, workspaceId: parsed.data.workspaceId, botId: parsed.data.botId,
+      eventId: parsed.data.eventId, workspaceId: effectiveWorkspaceId, botId: parsed.data.botId,
       channel: parsed.data.channel, message: parsed.data.message, timestampMs: parsed.data.timestampMs,
     };
 
@@ -63,7 +82,6 @@ export async function POST(req: Request) {
       });
     }
 
-    const secret = parsed.data.signingSecret || process.env.CASHCLAW_ALERT_WEBHOOK_SECRET || 'default_alert_secret';
     const payloadJson = JSON.stringify(event);
     const signatureHex = await signAlertWebhookPayload(payloadJson, secret);
     const envelope: SignedWebhookEnvelope = { eventId: event.eventId, signatureHex, payloadJson };

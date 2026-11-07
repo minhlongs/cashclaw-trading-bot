@@ -4,7 +4,10 @@ import {
   defaultCreditLedgerStore,
   type DeliberationModelTier,
 } from '@/ee/deliberation-cloud/llm-credit-ledger';
-import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
+import {
+  resolveEffectiveWorkspaceId,
+  resolveWorkspaceTierContext,
+} from '@/ee/tenancy/workspace-request-context';
 
 const QuerySchema = z.object({
   workspaceId: z.string().min(1),
@@ -32,7 +35,9 @@ export async function GET(req: Request) {
       await resolveWorkspaceTierContext(req, {
         explicitWorkspaceId: parsed.data.workspaceId,
       });
-    const effectiveWorkspaceId = resolvedWorkspaceId ?? parsed.data.workspaceId;
+    const effectiveWorkspaceId =
+      resolveEffectiveWorkspaceId(req, resolvedWorkspaceId, parsed.data.workspaceId) ??
+      parsed.data.workspaceId;
 
     const account = defaultCreditLedgerStore.getOrCreateAccount(effectiveWorkspaceId, resolvedTier);
     return NextResponse.json({ ok: true, account });
@@ -57,7 +62,9 @@ export async function POST(req: Request) {
       await resolveWorkspaceTierContext(req, {
         explicitWorkspaceId: parsed.data.workspaceId,
       });
-    const effectiveWorkspaceId = resolvedWorkspaceId ?? parsed.data.workspaceId;
+    const effectiveWorkspaceId =
+      resolveEffectiveWorkspaceId(req, resolvedWorkspaceId, parsed.data.workspaceId) ??
+      parsed.data.workspaceId;
 
     const debitReq = {
       workspaceId: effectiveWorkspaceId,

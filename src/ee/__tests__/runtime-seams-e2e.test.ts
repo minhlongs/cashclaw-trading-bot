@@ -82,8 +82,9 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     defaultCheckoutOrderStore.resetMemoryForTesting();
     mockBotListHandler.mockReset();
     mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
-    // Production has no default IPN secret, so the test names one explicitly.
+    // Production has no default IPN or alert webhook secret, so the test names them explicitly.
     vi.stubEnv('NOWPAYMENTS_IPN_SECRET', 'runtime-seams-ipn-secret');
+    vi.stubEnv('CASHCLAW_ALERT_WEBHOOK_SECRET', 'runtime-seams-alert-secret');
   });
 
   it('Seam G2: persists NOWPayments IPN to D1 store and upgrades workspace tier across routes', async () => {

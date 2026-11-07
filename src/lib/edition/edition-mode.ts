@@ -26,6 +26,13 @@ export interface EditionEnvInput {
    * `resolveIpnSecret`, not in this optional input.
    */
   readonly NOWPAYMENTS_IPN_SECRET?: string;
+  /**
+   * Optional here because zero-config OSS mode does not require outbound signed
+   * cloud alert webhooks. On `POST /api/ee/alerts`, when no per-request
+   * `signingSecret` is provided, `readAlertWebhookSecret` requires this secret
+   * and fails closed (503) when absent.
+   */
+  readonly CASHCLAW_ALERT_WEBHOOK_SECRET?: string;
 }
 
 const DEFAULT_CLOUD_URL = 'https://cloud.cashclaw.io/upgrade';
