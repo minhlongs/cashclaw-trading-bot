@@ -8,12 +8,10 @@ import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-cont
 
 const QuerySchema = z.object({
   workspaceId: z.string().min(1),
-  tier: z.string().optional(),
 });
 
 const DebitSchema = z.object({
   workspaceId: z.string().min(1),
-  tier: z.string().optional(),
   modelTier: z.enum(['FAST', 'REASONING', 'LOCAL']),
   promptTokens: z.number().int().nonnegative(),
   completionTokens: z.number().int().nonnegative(),
@@ -24,21 +22,19 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const parsed = QuerySchema.safeParse({
       workspaceId: url.searchParams.get('workspaceId') ?? '',
-      tier: url.searchParams.get('tier') ?? undefined,
     });
     if (!parsed.success) {
-      return NextResponse.json({ ok: false, error: 'Invalid workspaceId or tier' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'Invalid workspaceId' }, { status: 400 });
     }
 
-    const { tier: resolvedTier, invalidExplicitTier } = await resolveWorkspaceTierContext(req, {
-      explicitWorkspaceId: parsed.data.workspaceId,
-      explicitTier: parsed.data.tier,
-    });
-    if (invalidExplicitTier) {
-      return NextResponse.json({ ok: false, error: 'Invalid workspaceId or tier' }, { status: 400 });
-    }
+    // The tier is read from the workspace's D1 entitlement, never from `?tier=`.
+    const { workspaceId: resolvedWorkspaceId, tier: resolvedTier } =
+      await resolveWorkspaceTierContext(req, {
+        explicitWorkspaceId: parsed.data.workspaceId,
+      });
+    const effectiveWorkspaceId = resolvedWorkspaceId ?? parsed.data.workspaceId;
 
-    const account = defaultCreditLedgerStore.getOrCreateAccount(parsed.data.workspaceId, resolvedTier);
+    const account = defaultCreditLedgerStore.getOrCreateAccount(effectiveWorkspaceId, resolvedTier);
     return NextResponse.json({ ok: true, account });
   } catch {
     return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
@@ -56,16 +52,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const { tier: resolvedTier, invalidExplicitTier } = await resolveWorkspaceTierContext(req, {
-      explicitWorkspaceId: parsed.data.workspaceId,
-      explicitTier: parsed.data.tier,
-    });
-    if (invalidExplicitTier) {
-      return NextResponse.json({ ok: false, error: 'Invalid tier specified' }, { status: 400 });
-    }
+    // The tier is read from the workspace's D1 entitlement, never from the request body.
+    const { workspaceId: resolvedWorkspaceId, tier: resolvedTier } =
+      await resolveWorkspaceTierContext(req, {
+        explicitWorkspaceId: parsed.data.workspaceId,
+      });
+    const effectiveWorkspaceId = resolvedWorkspaceId ?? parsed.data.workspaceId;
 
     const debitReq = {
-      workspaceId: parsed.data.workspaceId,
+      workspaceId: effectiveWorkspaceId,
       modelTier: parsed.data.modelTier as DeliberationModelTier,
       promptTokens: parsed.data.promptTokens,
       completionTokens: parsed.data.completionTokens,
@@ -78,7 +73,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      workspaceId: parsed.data.workspaceId,
+      workspaceId: effectiveWorkspaceId,
       modelTier: parsed.data.modelTier,
       costCredits: debitResult.data.debited,
       account: debitResult.data.updated,

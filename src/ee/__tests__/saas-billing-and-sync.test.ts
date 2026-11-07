@@ -64,7 +64,11 @@ describe('Phase 4 (Steps 16-20): SaaS Billing, Quotas & Conversion Funnel', () =
     const sig = await computeNowPaymentsHmacSha512(canonical, secret);
     const ledger = new Set<string>();
 
-    const first = await verifyAndProcessNowPaymentsIpn(payload, sig, secret, ledger);
+    // The checkout order the server issued is what authorises the tier; the
+    // callback's own fields only prove who sent it.
+    const order = { workspaceId: 'ws_pro', targetTier: 'PREMIUM' as const };
+
+    const first = await verifyAndProcessNowPaymentsIpn(payload, sig, secret, ledger, order);
     expect(first.ok).toBe(true);
     if (first.ok) {
       expect(first.data.activated).toBe(true);
@@ -72,7 +76,7 @@ describe('Phase 4 (Steps 16-20): SaaS Billing, Quotas & Conversion Funnel', () =
       expect(first.data.idempotentReplay).toBe(false);
     }
 
-    const replay = await verifyAndProcessNowPaymentsIpn(payload, sig, secret, ledger);
+    const replay = await verifyAndProcessNowPaymentsIpn(payload, sig, secret, ledger, order);
     expect(replay.ok).toBe(true);
     if (replay.ok) {
       expect(replay.data.activated).toBe(false);

@@ -18,8 +18,28 @@ vi.mock('@/forest/api/rate-limiter', () => ({
 
 const { GET, POST } = await import('./route');
 
+/** Seeds a workspace tier through the production path — a verified IPN upgrade. */
+async function seedWorkspaceTier(workspaceId: string, targetTier: 'BASIC' | 'PREMIUM' | 'ENTERPRISE' | 'MASTER') {
+  const { defaultSaasEntitlementStore } = await import('@/ee/billing/saas-entitlement-store');
+  await defaultSaasEntitlementStore.recordIpnAndUpgradeTier({
+    paymentId: `pay_seed_${workspaceId}`,
+    workspaceId,
+    targetTier,
+    paymentStatus: 'finished',
+    payAmount: 29,
+    payCurrency: 'USDT',
+  });
+}
+
 describe('/api/bots route', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const { defaultSaasEntitlementStore } = await import('@/ee/billing/saas-entitlement-store');
+    defaultSaasEntitlementStore.setDatabase(undefined);
+    defaultSaasEntitlementStore.resetMemoryForTesting();
+    await seedWorkspaceTier('ws_bots_basic', 'BASIC');
+    await seedWorkspaceTier('ws_bots_premium', 'PREMIUM');
+  });
 
   describe('GET', () => {
     it('returns bot list', async () => {
@@ -79,7 +99,7 @@ describe('/api/bots route', () => {
 
       const basicReq = new Request('http://localhost/api/bots', {
         method: 'POST',
-        headers: { 'x-cashclaw-tier': 'BASIC' },
+        headers: { 'x-cashclaw-workspace': 'ws_bots_basic' },
         body: JSON.stringify({
           id: 'bot-2',
           name: 'Second Bot',
@@ -96,7 +116,7 @@ describe('/api/bots route', () => {
 
       const premiumReq = new Request('http://localhost/api/bots', {
         method: 'POST',
-        headers: { 'x-cashclaw-tier': 'PREMIUM' },
+        headers: { 'x-cashclaw-workspace': 'ws_bots_premium' },
         body: JSON.stringify({
           id: 'bot-2',
           name: 'Second Bot',
@@ -108,6 +128,35 @@ describe('/api/bots route', () => {
       });
       const premiumRes = await POST(premiumReq);
       expect(premiumRes.status).toBe(200);
+    });
+
+    it('refuses a self-declared tier header that would escape a BASIC bot quota', async () => {
+      mockCheckRateLimit.mockReturnValue({ allowed: true });
+      mockBotListHandler.mockResolvedValue({ ok: true, data: [{ id: 'existing-bot-1' }] });
+      mockBotCreateHandler.mockResolvedValue({ ok: true, id: 'bot-3' });
+
+      const spoofedReq = new Request('http://localhost/api/bots', {
+        method: 'POST',
+        headers: {
+          'x-cashclaw-workspace': 'ws_bots_basic',
+          'x-cashclaw-tier': 'MASTER',
+          'x-cashclaw-active-bots': '0',
+        },
+        body: JSON.stringify({
+          id: 'bot-3',
+          name: 'Spoofed Bot',
+          strategy: 'grid',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          capital: 1000,
+        }),
+      });
+      const res = await POST(spoofedReq);
+      expect(res.status).toBe(403);
+      const body = (await res.json()) as { ok: boolean; error: string };
+      expect(body.error).toContain('QUOTA_EXCEEDED');
+      // The live loader counted the running bots; the header did not.
+      expect(mockBotListHandler).toHaveBeenCalled();
     });
 
     it('accepts volatility_dca config with quantExecution enabled', async () => {

@@ -9,16 +9,15 @@ import { CliSyncBridgeCard } from '@/components/billing/cli-sync-bridge-card';
 import { useWorkspaceBilling } from '@/components/billing/use-workspace-billing';
 
 export default function BillingPage() {
-  const workspaceId = 'ws_production_default';
   const [selectedTier, setSelectedTier] = useState<SaasTier | null>(null);
   const {
     currentTier,
-    setCurrentTier,
     runningBots,
     consumedCredits,
     totalCredits,
     refreshBilling,
-  } = useWorkspaceBilling(workspaceId);
+    workspaceId,
+  } = useWorkspaceBilling();
 
   return (
     <div className="space-y-6">
@@ -41,19 +40,24 @@ export default function BillingPage() {
         onSelectTier={(tier) => setSelectedTier(tier)}
       />
 
-      <CliSyncBridgeCard workspaceId={workspaceId} />
+      <CliSyncBridgeCard workspaceId={workspaceId ?? 'personal'} />
 
       {selectedTier && (
         <NowpaymentsCheckoutModal
           isOpen={Boolean(selectedTier)}
           targetTier={selectedTier}
-          workspaceId={workspaceId}
+          workspaceId={workspaceId ?? 'personal'}
           onClose={() => setSelectedTier(null)}
           onSuccess={() => {
-            setCurrentTier(selectedTier);
             void refreshBilling();
           }}
         />
+      )}
+
+      {selectedTier && !workspaceId && (
+        <p className="meta text-sm">
+          Sign in before paying: your workspace is provisioned on the first checkout.
+        </p>
       )}
     </div>
   );

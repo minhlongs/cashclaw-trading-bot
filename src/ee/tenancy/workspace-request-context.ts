@@ -1,74 +1,94 @@
 // Canonical SaaS Workspace, Tier & Active-Bot Request Context Resolver
 // Eliminates duplicated header/query/entitlement-store resolution across API routes.
 
+import { createServerClient } from '@/lib/db/client';
 import { defaultSaasEntitlementStore } from '../billing/saas-entitlement-store';
-import { SaasTierSchema, type SaasTier } from './tenant-policy';
+import { listWorkspaceMemberships, pickActiveMembership } from './workspace-membership';
+import type { SaasTier } from './tenant-policy';
 
 export interface WorkspaceTierResolutionOptions {
   readonly explicitWorkspaceId?: string | null;
-  readonly explicitTier?: string | null;
 }
 
 export interface WorkspaceTierContext {
   readonly workspaceId: string | undefined;
   readonly tier: SaasTier;
-  readonly invalidExplicitTier?: string;
+  /**
+   * Workspaces the signed-in user belongs to, when the workspace was derived
+   * from a session rather than named by the request. A caller can show this so
+   * the user can switch instead of being silently pinned to one workspace.
+   */
+  readonly memberWorkspaceIds?: readonly string[];
 }
 
 /**
  * Resolves the effective workspaceId and SaaS tier from an HTTP request.
- * Precedence:
- * 1. Explicit tier parameter or `x-cashclaw-tier` header (validated via SaasTierSchema)
- * 2. Upgraded workspace tier in `defaultSaasEntitlementStore` (keyed by explicit workspaceId or `x-cashclaw-workspace`)
- * 3. Default `'BASIC'`
+ *
+ * The tier is never read from the request — not from a query parameter, not from
+ * a header, not from a request body passed in by a route. Any of those would let
+ * a caller grant itself a tier it has not paid for. The tier is read only from
+ * `defaultSaasEntitlementStore`, which is written by the IPN handler after a
+ * verified NOWPayments payment.
+ *
+ * Precedence for tier: `defaultSaasEntitlementStore` (keyed by workspaceId), else `'BASIC'`.
+ * WorkspaceId: `explicitWorkspaceId`, then `?workspaceId=`, then `x-cashclaw-workspace`,
+ * then the active membership of the session-verified `x-user-id`.
  */
 export async function resolveWorkspaceTierContext(
   req: Request,
   options?: WorkspaceTierResolutionOptions,
 ): Promise<WorkspaceTierContext> {
   let queryWorkspace: string | null = null;
-  let queryTier: string | null = null;
   try {
     const url = new URL(req.url);
     queryWorkspace = url.searchParams.get('workspaceId');
-    queryTier = url.searchParams.get('tier');
   } catch {
     // Ignore malformed URLs in synthetic Request mocks
   }
 
   const headerWorkspace = req.headers.get('x-cashclaw-workspace');
-  const workspaceId =
+  const namedWorkspaceId =
     (options?.explicitWorkspaceId ?? queryWorkspace ?? headerWorkspace)?.trim() || undefined;
 
-  const rawExplicitTier = (options?.explicitTier ?? queryTier)?.trim().toUpperCase();
-  const rawHeaderTier = req.headers.get('x-cashclaw-tier')?.trim().toUpperCase();
-  const candidateTier = rawExplicitTier || rawHeaderTier;
-
-  if (candidateTier) {
-    const parsed = SaasTierSchema.safeParse(candidateTier);
-    if (!parsed.success) return { workspaceId, tier: 'BASIC', invalidExplicitTier: candidateTier };
-    return { workspaceId, tier: parsed.data };
+  // `x-user-id` is written by the middleware from the validated D1 session and
+  // stripped of any client value first, so a request cannot pick another user.
+  const userId = req.headers.get('x-user-id')?.trim();
+  if (userId) {
+    const memberships = await listWorkspaceMemberships(userId, createServerClient() ?? undefined);
+    const active = pickActiveMembership(memberships);
+    if (!active) {
+      return { workspaceId: undefined, tier: 'BASIC' };
+    }
+    const memberWorkspaceIds = memberships.map((membership) => membership.workspaceId);
+    const selectedWorkspaceId =
+      namedWorkspaceId && memberWorkspaceIds.includes(namedWorkspaceId)
+        ? namedWorkspaceId
+        : active.workspaceId;
+    return {
+      workspaceId: selectedWorkspaceId,
+      tier: await defaultSaasEntitlementStore.getWorkspaceTier(selectedWorkspaceId),
+      memberWorkspaceIds,
+    };
   }
 
-  const tier: SaasTier = workspaceId
-    ? await defaultSaasEntitlementStore.getWorkspaceTier(workspaceId)
-    : 'BASIC';
-  return { workspaceId, tier };
+  if (namedWorkspaceId) {
+    const tier = await defaultSaasEntitlementStore.getWorkspaceTier(namedWorkspaceId);
+    return { workspaceId: namedWorkspaceId, tier };
+  }
+
+  return { workspaceId: undefined, tier: 'BASIC' };
 }
 
 /**
  * Resolves the active bot count for quota enforcement.
- * Uses `x-cashclaw-active-bots` header when explicitly provided; otherwise queries live bot list.
+ *
+ * The count is never read from the request. A caller-controlled count would let a
+ * client already at its bot limit report zero running bots and keep creating more.
+ * The live bot list is the only source.
  */
 export async function resolveActiveBotCount(
-  req: Request,
   loadLiveBots?: () => Promise<unknown>,
 ): Promise<number> {
-  const rawHeader = req.headers.get('x-cashclaw-active-bots');
-  if (rawHeader !== null) {
-    const parsed = parseInt(rawHeader, 10);
-    if (!Number.isNaN(parsed)) return Math.max(0, parsed);
-  }
   if (!loadLiveBots) return 0;
   try {
     const listResult = (await loadLiveBots()) as { data?: unknown[]; bots?: unknown[] } | undefined;

@@ -1,8 +1,9 @@
 // End-to-End Integration Tests for the 5 Closed Open-Core & Cloud SaaS Runtime Seams (G1–G5)
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { D1Database, D1PreparedStatement } from '@/lib/db/types';
 import { SaasEntitlementStore, defaultSaasEntitlementStore } from '../billing/saas-entitlement-store';
+import { defaultCheckoutOrderStore } from '../billing/checkout-order-store';
 import { canonicalizeNowPaymentsJson, computeNowPaymentsHmacSha512 } from '../billing/nowpayments-ipn';
 import { createLocalToCloudSyncBundle } from '../sync/local-to-cloud-sync';
 import { GET as getIpnEntitlement, POST as postNowPaymentsIpn } from '@/app/api/ee/billing/nowpayments-ipn/route';
@@ -10,6 +11,11 @@ import { GET as getCredits, POST as postCredits } from '@/app/api/ee/credits/rou
 import { GET as getAlphaFeed } from '@/app/api/ee/alpha-feed/route';
 import { POST as postCloudAlert } from '@/app/api/ee/alerts/route';
 import { POST as postCloudSync } from '@/app/api/ee/sync/route';
+
+const mockBotListHandler = vi.fn();
+vi.mock('@/forest/api/routes', () => ({
+  botListHandler: (...args: unknown[]) => mockBotListHandler(...args),
+}));
 
 function createMockD1(): { db: D1Database; queries: string[] } {
   const queries: string[] = [];
@@ -57,10 +63,27 @@ function createMockD1(): { db: D1Database; queries: string[] } {
   return { db, queries };
 }
 
+/** Seeds a workspace tier through the production path — a verified IPN upgrade. */
+async function seedWorkspaceTier(workspaceId: string, targetTier: 'BASIC' | 'PREMIUM' | 'ENTERPRISE' | 'MASTER') {
+  await defaultSaasEntitlementStore.recordIpnAndUpgradeTier({
+    paymentId: `pay_seed_${workspaceId}`,
+    workspaceId,
+    targetTier,
+    paymentStatus: 'finished',
+    payAmount: 29,
+    payCurrency: 'USDT',
+  });
+}
+
 describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
   beforeEach(() => {
     defaultSaasEntitlementStore.setDatabase(undefined);
     defaultSaasEntitlementStore.resetMemoryForTesting();
+    defaultCheckoutOrderStore.resetMemoryForTesting();
+    mockBotListHandler.mockReset();
+    mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
+    // Production has no default IPN secret, so the test names one explicitly.
+    vi.stubEnv('NOWPAYMENTS_IPN_SECRET', 'runtime-seams-ipn-secret');
   });
 
   it('Seam G2: persists NOWPayments IPN to D1 store and upgrades workspace tier across routes', async () => {
@@ -77,11 +100,19 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     expect(queries.length).toBeGreaterThanOrEqual(2);
 
     defaultSaasEntitlementStore.setDatabase(db);
+    await defaultCheckoutOrderStore.recordOrder({
+      orderId: 'ord_200',
+      workspaceId: 'ws_live_tenant',
+      targetTier: 'ENTERPRISE',
+      expectedAmountUsd: 99,
+      payCurrency: 'USDT',
+    });
     const payload = {
       payment_id: 'pay_http_200', payment_status: 'finished', order_id: 'ord_200',
       workspace_id: 'ws_live_tenant', target_tier: 'ENTERPRISE', pay_amount: 99, pay_currency: 'USDT',
     };
-    const secret = process.env.NOWPAYMENTS_IPN_SECRET || 'test_ipn_secret';
+    const secret = process.env.NOWPAYMENTS_IPN_SECRET ?? '';
+    expect(secret.length).toBeGreaterThan(0);
     const sig = await computeNowPaymentsHmacSha512(canonicalizeNowPaymentsJson(payload), secret);
 
     const ipnRes = await postNowPaymentsIpn(
@@ -127,32 +158,63 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     if (!bundleRes.ok) return;
     const bundle = bundleRes.data;
 
+    await seedWorkspaceTier('ws_sync_basic', 'BASIC');
+    await seedWorkspaceTier('ws_sync_premium', 'PREMIUM');
+
+    // One running bot occupies the single BASIC slot, so the next sync is refused.
+    mockBotListHandler.mockResolvedValue({ ok: true, data: [{ id: 'bot_running_1' }] });
     const blockedRes = await postCloudSync(
       new Request('http://localhost/api/ee/sync', {
         method: 'POST',
-        headers: { 'x-cashclaw-tier': 'BASIC', 'x-cashclaw-active-bots': '1' },
+        headers: {
+          'x-cashclaw-workspace': 'ws_sync_basic',
+          // A spoofed tier and bot count must not move the quota decision.
+          'x-cashclaw-tier': 'MASTER',
+          'x-cashclaw-active-bots': '0',
+        },
         body: JSON.stringify(bundle),
       }),
     );
     expect(blockedRes.status).toBe(403);
 
+    mockBotListHandler.mockResolvedValue({ ok: true, data: [{ id: 'bot_running_1' }] });
     const allowedRes = await postCloudSync(
       new Request('http://localhost/api/ee/sync', {
         method: 'POST',
-        headers: { 'x-cashclaw-tier': 'PREMIUM', 'x-cashclaw-active-bots': '1' },
+        headers: {
+          'x-cashclaw-workspace': 'ws_sync_premium',
+          'x-cashclaw-tier': 'BASIC',
+          'x-cashclaw-active-bots': '99',
+        },
         body: JSON.stringify(bundle),
       }),
     );
     expect(allowedRes.status).toBe(200);
+    const allowedBody = (await allowedRes.json()) as { tier: string };
+    expect(allowedBody.tier).toBe('PREMIUM');
   });
 
   it('Seam G4 & G5: serves tier-filtered Cloud Alpha Feed, signs & deduplicates Cloud Alerts, and guards cron tick leases', async () => {
-    const basicFeedRes = await getAlphaFeed(new Request('http://localhost/api/ee/alpha-feed?tier=BASIC'));
-    const basicFeed = (await basicFeedRes.json()) as { count: number; safetyMode: string };
+    await seedWorkspaceTier('ws_feed_basic', 'BASIC');
+    await seedWorkspaceTier('ws_feed_enterprise', 'ENTERPRISE');
+    await seedWorkspaceTier('ws_alert', 'PREMIUM');
+    await seedWorkspaceTier('ws_basic_alerts', 'BASIC');
+
+    const basicFeedRes = await getAlphaFeed(
+      new Request('http://localhost/api/ee/alpha-feed', {
+        headers: { 'x-cashclaw-workspace': 'ws_feed_basic' },
+      }),
+    );
+    const basicFeed = (await basicFeedRes.json()) as { count: number; safetyMode: string; tier: string };
     expect(basicFeed.count).toBe(1);
     expect(basicFeed.safetyMode).toBe('PAPER_ADVISORY_ONLY');
+    expect(basicFeed.tier).toBe('BASIC');
 
-    const entFeedRes = await getAlphaFeed(new Request('http://localhost/api/ee/alpha-feed?tier=ENTERPRISE'));
+    const entFeedRes = await getAlphaFeed(
+      new Request('http://localhost/api/ee/alpha-feed', {
+        headers: { 'x-cashclaw-workspace': 'ws_feed_enterprise' },
+      }),
+    );
     const entFeed = (await entFeedRes.json()) as { count: number };
     expect(entFeed.count).toBe(3);
 
@@ -163,7 +225,6 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
       channel: 'WEBHOOK',
       message: 'Paper Drawdown Threshold Warning',
       timestampMs: 1_760_000_000_000,
-      tier: 'PREMIUM',
     };
     const firstAlert = await postCloudAlert(
       new Request('http://localhost/api/ee/alerts', { method: 'POST', body: JSON.stringify(alertPayload) }),

@@ -16,6 +16,20 @@ interface D1EntitlementRecord {
   updated_at_ms: number;
 }
 
+/** Owner of a workspace, read from the membership table (migration 0015).
+ *  Returns undefined when no member row names a real owner — the caller keeps
+ *  its existing sentinel rather than inventing an owner. */
+export async function fetchD1WorkspaceOwner(
+  db: D1Database,
+  workspaceId: string,
+): Promise<string | undefined> {
+  const row = await db
+    .prepare("SELECT user_id FROM saas_workspace_members WHERE workspace_id = ? AND role = 'OWNER' ORDER BY created_at_ms ASC LIMIT 1")
+    .bind(workspaceId)
+    .first<{ user_id: string }>();
+  return row?.user_id;
+}
+
 export async function hasD1ProcessedPayment(db: D1Database, paymentId: string): Promise<boolean> {
   const row = await db
     .prepare("SELECT payment_id FROM saas_nowpayments_ipn_events WHERE payment_id = ? AND payment_status IN ('finished', 'confirmed')")
@@ -45,6 +59,10 @@ export async function upsertD1WorkspaceEntitlement(
        (workspace_id, owner_user_id, tier, max_running_bots, max_walk_forward_windows, monthly_llm_credits, managed_llm_pool_enabled, updated_at_ms)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(workspace_id) DO UPDATE SET
+         owner_user_id = CASE
+           WHEN excluded.owner_user_id NOT IN ('system', 'default') THEN excluded.owner_user_id
+           ELSE saas_workspace_entitlements.owner_user_id
+         END,
          tier = excluded.tier,
          max_running_bots = excluded.max_running_bots,
          max_walk_forward_windows = excluded.max_walk_forward_windows,
@@ -57,6 +75,16 @@ export async function upsertD1WorkspaceEntitlement(
       row.maxWalkForwardWindows, row.monthlyLlmCredits, row.managedLlmPoolEnabled ? 1 : 0, row.updatedAtMs,
     )
     .run();
+
+  if (row.ownerUserId && row.ownerUserId !== 'system' && row.ownerUserId !== 'default') {
+    await db
+      .prepare(
+        `INSERT OR IGNORE INTO saas_workspace_members (user_id, workspace_id, role, created_at_ms)
+         VALUES (?, ?, 'OWNER', ?)`,
+      )
+      .bind(row.ownerUserId, row.workspaceId, row.updatedAtMs)
+      .run();
+  }
 }
 
 export async function fetchD1WorkspaceEntitlement(

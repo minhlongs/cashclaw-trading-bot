@@ -6,6 +6,19 @@ import { z } from 'zod';
 import { type Result, ok, err } from '../../lib/result';
 import { SaasTierSchema, type SaasTier } from '../tenancy/tenant-policy';
 
+/** One string both the HTTP verifier and this pure seam return when the secret
+ *  is absent, so a deploy that forgot the secret fails identically everywhere.
+ *  There is no default secret: a literal in a public repo would let anyone sign
+ *  their own payment callback. */
+export const IPN_MISSING_SECRET_ERROR = 'IPN_CONFIG_ERROR: Missing NOWPAYMENTS_IPN_SECRET';
+
+/** `workspace_id` and `target_tier` are optional and are *not* provider fields:
+ *  NOWPayments echoes back only its own values (`payment_id`, `payment_status`,
+ *  `order_id`, `pay_amount`, `pay_currency`, ...). Both are carried through here
+ *  only so a callback that happens to include them still validates; the tier and
+ *  workspace an IPN is allowed to change are resolved from the checkout order the
+ *  server wrote when it created the invoice (see `CheckoutOrderStore`). Trusting
+ *  these fields meant anyone holding a valid signature could name their own tier. */
 export const NowPaymentsIpnPayloadSchema = z.object({
   payment_id: z.string().min(1),
   payment_status: z.enum([
@@ -13,8 +26,8 @@ export const NowPaymentsIpnPayloadSchema = z.object({
     'partially_paid', 'finished', 'failed', 'refunded', 'expired',
   ]),
   order_id: z.string().min(1),
-  workspace_id: z.string().min(1),
-  target_tier: SaasTierSchema,
+  workspace_id: z.string().min(1).optional(),
+  target_tier: SaasTierSchema.optional(),
   pay_amount: z.number().positive(),
   pay_currency: z.string().min(2),
 });
@@ -53,6 +66,10 @@ export async function verifyAndProcessNowPaymentsIpn(
   receivedSignatureHex: string,
   ipnSecret: string,
   processedPaymentIds: Set<string>,
+  /** The tier and workspace this callback is allowed to act on, resolved by the
+   *  caller from the checkout order the server recorded. The callback's own
+   *  `workspace_id` / `target_tier` fields are never used for this decision. */
+  orderDecision?: { readonly workspaceId: string; readonly targetTier: SaasTier },
 ): Promise<
   Result<{
     readonly activated: boolean;
@@ -62,7 +79,7 @@ export async function verifyAndProcessNowPaymentsIpn(
   }>
 > {
   if (!ipnSecret || ipnSecret.trim().length === 0) {
-    return err('IPN_CONFIG_ERROR: Missing NOWPAYMENTS_IPN_SECRET');
+    return err(IPN_MISSING_SECRET_ERROR);
   }
 
   const canonical = canonicalizeNowPaymentsJson(rawPayload);
@@ -77,14 +94,21 @@ export async function verifyAndProcessNowPaymentsIpn(
   }
 
   const data = parsed.data;
+  if (!orderDecision) {
+    // No server-issued order backs this callback, so there is nothing to upgrade
+    // and no way to check the tier the callback claims.
+    return err('IPN_ORDER_UNKNOWN: no checkout order matches this order_id');
+  }
+  const { workspaceId, targetTier } = orderDecision;
+
   if (processedPaymentIds.has(data.payment_id)) {
-    return ok({ activated: false, workspaceId: data.workspace_id, newTier: data.target_tier, idempotentReplay: true });
+    return ok({ activated: false, workspaceId, newTier: targetTier, idempotentReplay: true });
   }
 
   if (data.payment_status === 'finished' || data.payment_status === 'confirmed') {
     processedPaymentIds.add(data.payment_id);
-    return ok({ activated: true, workspaceId: data.workspace_id, newTier: data.target_tier, idempotentReplay: false });
+    return ok({ activated: true, workspaceId, newTier: targetTier, idempotentReplay: false });
   }
 
-  return ok({ activated: false, workspaceId: data.workspace_id, newTier: data.target_tier, idempotentReplay: false });
+  return ok({ activated: false, workspaceId, newTier: targetTier, idempotentReplay: false });
 }

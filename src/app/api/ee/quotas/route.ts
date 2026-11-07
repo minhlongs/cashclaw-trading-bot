@@ -5,9 +5,6 @@ import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-cont
 export async function GET(req: Request) {
   try {
     const context = await resolveWorkspaceTierContext(req);
-    if (context.invalidExplicitTier) {
-      return NextResponse.json({ ok: false, error: 'Invalid tier specified' }, { status: 400 });
-    }
 
     const entitlements = getEntitlementsForTier(context.tier);
     return NextResponse.json({

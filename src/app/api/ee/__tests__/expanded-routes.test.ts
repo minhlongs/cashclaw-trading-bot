@@ -1,7 +1,7 @@
 // Test suite for newly expanded Cloud SaaS EE API routes
 // Covers /api/ee/alpha-feed, /api/ee/credits, /api/ee/alerts, /api/ee/scheduler, /api/ee/telemetry
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { GET as alphaFeedGet } from '../alpha-feed/route';
 import { GET as creditsGet, POST as creditsPost } from '../credits/route';
 import { POST as alertsPost } from '../alerts/route';
@@ -9,38 +9,81 @@ import { GET as schedulerGet, POST as schedulerPost } from '../scheduler/route';
 import { GET as telemetryGet, POST as telemetryPost } from '../telemetry/route';
 import { cronSchedulerCoordinator } from '@/worker-cron';
 import { defaultCloudSchedulerCoordinator } from '@/ee/scheduler/cloud-scheduler-coordinator';
+import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
+import { defaultCreditLedgerStore } from '@/ee/deliberation-cloud/llm-credit-ledger';
 
 function postJson(url: string, body: unknown): Request {
   return new Request(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 }
 
+/** Seeds a workspace tier through the production path — a verified IPN upgrade. */
+async function seedWorkspaceTier(workspaceId: string, targetTier: 'BASIC' | 'PREMIUM' | 'ENTERPRISE' | 'MASTER') {
+  await defaultSaasEntitlementStore.recordIpnAndUpgradeTier({
+    paymentId: `pay_seed_${workspaceId}`,
+    workspaceId,
+    targetTier,
+    paymentStatus: 'finished',
+    payAmount: 29,
+    payCurrency: 'USDT',
+  });
+}
+
 describe('Expanded Cloud SaaS EE API Routes', () => {
+  beforeEach(() => {
+    defaultSaasEntitlementStore.setDatabase(undefined);
+    defaultSaasEntitlementStore.resetMemoryForTesting();
+    defaultCreditLedgerStore.resetMemoryForTesting();
+  });
+
   it('GET /api/ee/alpha-feed returns tier-gated curated alpha list', async () => {
-    const resBasic = await alphaFeedGet(new Request('http://localhost/api/ee/alpha-feed?tier=BASIC'));
+    await seedWorkspaceTier('ws_feed_basic', 'BASIC');
+    await seedWorkspaceTier('ws_feed_enterprise', 'ENTERPRISE');
+
+    const resBasic = await alphaFeedGet(
+      new Request('http://localhost/api/ee/alpha-feed', {
+        headers: { 'x-cashclaw-workspace': 'ws_feed_basic' },
+      }),
+    );
     const dataBasic = (await resBasic.json()) as { ok: boolean; fullFeedAccess: boolean; feed: unknown[] };
     expect(resBasic.status).toBe(200);
     expect(dataBasic.fullFeedAccess).toBe(false);
     expect(dataBasic.feed.length).toBe(1);
 
-    const resEnterprise = await alphaFeedGet(new Request('http://localhost/api/ee/alpha-feed?tier=ENTERPRISE'));
+    const resEnterprise = await alphaFeedGet(
+      new Request('http://localhost/api/ee/alpha-feed', {
+        headers: { 'x-cashclaw-workspace': 'ws_feed_enterprise' },
+      }),
+    );
     const dataEnterprise = (await resEnterprise.json()) as { ok: boolean; fullFeedAccess: boolean; feed: unknown[] };
     expect(resEnterprise.status).toBe(200);
     expect(dataEnterprise.fullFeedAccess).toBe(true);
     expect(dataEnterprise.feed.length).toBe(3);
   });
 
-  it('GET and POST /api/ee/credits persists debits, normalizes case-insensitive tier, and reconciles upgrades', async () => {
-    const resGet = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=premium'));
-    const dataGet = (await resGet.json()) as { ok: boolean; account: { balanceCredits: number } };
-    expect(resGet.status).toBe(200);
-    expect(dataGet.account.balanceCredits).toBe(10_000);
+  it('GET /api/ee/alpha-feed ignores a self-declared tier query parameter', async () => {
+    await seedWorkspaceTier('ws_feed_premium', 'PREMIUM');
 
-    const resInvalidTier = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=INVALID_TIER'));
-    expect(resInvalidTier.status).toBe(400);
+    const res = await alphaFeedGet(
+      new Request('http://localhost/api/ee/alpha-feed?workspaceId=ws_feed_premium&tier=MASTER'),
+    );
+    const data = (await res.json()) as { ok: boolean; tier: string; fullFeedAccess: boolean };
+    expect(res.status).toBe(200);
+    expect(data.tier).toBe('PREMIUM');
+    expect(data.fullFeedAccess).toBe(true);
+  });
+
+  it('GET and POST /api/ee/credits persists debits and reconciles upgrades from the D1 tier', async () => {
+    await seedWorkspaceTier('ws_123', 'PREMIUM');
+
+    const resGet = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123'));
+    const dataGet = (await resGet.json()) as { ok: boolean; account: { tier: string; balanceCredits: number } };
+    expect(resGet.status).toBe(200);
+    expect(dataGet.account.tier).toBe('PREMIUM');
+    expect(dataGet.account.balanceCredits).toBe(10_000);
 
     const resPost = await creditsPost(
       postJson('http://localhost/api/ee/credits', {
-        workspaceId: 'ws_123', tier: 'premium', modelTier: 'REASONING', promptTokens: 1500, completionTokens: 500,
+        workspaceId: 'ws_123', modelTier: 'REASONING', promptTokens: 1500, completionTokens: 500,
       }),
     );
     const dataPost = (await resPost.json()) as {
@@ -51,14 +94,15 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(dataPost.account.balanceCredits).toBe(9_992);
     expect(dataPost.account.consumedCredits).toBe(8);
 
-    const resGetAfter = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=PREMIUM'));
+    const resGetAfter = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123'));
     const dataGetAfter = (await resGetAfter.json()) as {
       ok: boolean; account: { balanceCredits: number; consumedCredits: number };
     };
     expect(dataGetAfter.account.balanceCredits).toBe(9_992);
     expect(dataGetAfter.account.consumedCredits).toBe(8);
 
-    const resUpgraded = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123&tier=ENTERPRISE'));
+    await seedWorkspaceTier('ws_123', 'ENTERPRISE');
+    const resUpgraded = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123'));
     const dataUpgraded = (await resUpgraded.json()) as {
       ok: boolean; account: { tier: string; balanceCredits: number; consumedCredits: number };
     };
@@ -67,10 +111,40 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(dataUpgraded.account.consumedCredits).toBe(8);
   });
 
+  it('GET /api/ee/credits ignores a self-declared tier query parameter', async () => {
+    await seedWorkspaceTier('ws_credits_spoof', 'BASIC');
+
+    const res = await creditsGet(
+      new Request('http://localhost/api/ee/credits?workspaceId=ws_credits_spoof&tier=MASTER'),
+    );
+    const data = (await res.json()) as { ok: boolean; account: { tier: string; balanceCredits: number } };
+    expect(res.status).toBe(200);
+    expect(data.account.tier).toBe('BASIC');
+    expect(data.account.balanceCredits).toBe(1_000);
+  });
+
+  it('POST /api/ee/credits ignores a self-declared tier in the request body', async () => {
+    await seedWorkspaceTier('ws_credits_body', 'BASIC');
+
+    const res = await creditsPost(
+      postJson('http://localhost/api/ee/credits', {
+        workspaceId: 'ws_credits_body', tier: 'MASTER', modelTier: 'REASONING',
+        promptTokens: 1500, completionTokens: 500,
+      }),
+    );
+    const data = (await res.json()) as { ok: boolean; account: { tier: string; balanceCredits: number } };
+    expect(res.status).toBe(200);
+    expect(data.account.tier).toBe('BASIC');
+    expect(data.account.balanceCredits).toBe(992);
+  });
+
   it('POST /api/ee/alerts handles alert signing, deduplication, and unconditional WEBHOOK tier gating', async () => {
+    await seedWorkspaceTier('ws_abc', 'PREMIUM');
+    await seedWorkspaceTier('ws_basic_alerts', 'BASIC');
+
     const payload = {
       eventId: 'evt_001', workspaceId: 'ws_abc', botId: 'bot_vol_1', channel: 'WEBHOOK',
-      message: 'Grid rebalance complete', signingSecret: 'ultra-secure-hmac-secret-12345', timestampMs: 1700000000000, tier: 'PREMIUM',
+      message: 'Grid rebalance complete', signingSecret: 'ultra-secure-hmac-secret-12345', timestampMs: 1700000000000,
     };
 
     const res1 = await alertsPost(postJson('http://localhost/api/ee/alerts', payload));
@@ -85,16 +159,32 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(data2.suppressed).toBe(true);
 
     const resBlocked = await alertsPost(
-      postJson('http://localhost/api/ee/alerts', { ...payload, eventId: 'evt_gated_01', workspaceId: 'ws_basic_alerts', tier: 'BASIC' }),
+      postJson('http://localhost/api/ee/alerts', { ...payload, eventId: 'evt_gated_01', workspaceId: 'ws_basic_alerts' }),
     );
     expect(resBlocked.status).toBe(402);
 
     const resTelegramBasic = await alertsPost(
       postJson('http://localhost/api/ee/alerts', {
-        ...payload, eventId: 'evt_telegram_basic', workspaceId: 'ws_basic_alerts', channel: 'TELEGRAM', tier: 'BASIC',
+        ...payload, eventId: 'evt_telegram_basic', workspaceId: 'ws_basic_alerts', channel: 'TELEGRAM',
       }),
     );
     expect(resTelegramBasic.status).toBe(200);
+  });
+
+  it('POST /api/ee/alerts ignores a self-declared tier in the request body', async () => {
+    await seedWorkspaceTier('ws_alerts_spoof', 'BASIC');
+
+    const res = await alertsPost(
+      postJson('http://localhost/api/ee/alerts', {
+        eventId: 'evt_alerts_spoof', workspaceId: 'ws_alerts_spoof', botId: 'bot_vol_2', channel: 'WEBHOOK',
+        message: 'Grid rebalance complete', signingSecret: 'ultra-secure-hmac-secret-12345',
+        timestampMs: 1700000000000, tier: 'MASTER',
+      }),
+    );
+    // A declaring body cannot buy the WEBHOOK entitlement a BASIC tier lacks.
+    expect(res.status).toBe(402);
+    const body = (await res.json()) as { tier: string };
+    expect(body.tier).toBe('BASIC');
   });
 
   it('GET and POST /api/ee/scheduler unifies cronSchedulerCoordinator, filters by workspaceId, and prunes expired leases', async () => {
