@@ -80,6 +80,36 @@ export async function resolveWorkspaceTierContext(
 }
 
 /**
+ * Resolves the effective workspace identifier for a route after `resolveWorkspaceTierContext`.
+ *
+ * When a verified session user (`x-user-id`) is present, the route must never fall
+ * back to an unowned `explicitWorkspaceId` from the query string or request body —
+ * even when the user has zero rows in `saas_workspace_members` (`resolvedWorkspaceId === undefined`).
+ * In that unenrolled-session case, this helper derives the user's deterministic
+ * personal workspace (`ws_<safeUserId>`), matching `ensureUserWorkspaceMembership`.
+ *
+ * Only when no `x-user-id` header is present (local OSS / synthetic unit-test calls
+ * that invoke route handlers directly without session middleware) does it fall back
+ * to `explicitWorkspaceId`.
+ */
+export function resolveEffectiveWorkspaceId(
+  req: Request,
+  resolvedWorkspaceId: string | undefined,
+  explicitWorkspaceId?: string | null,
+): string | undefined {
+  if (resolvedWorkspaceId) {
+    return resolvedWorkspaceId;
+  }
+  const userId = req.headers.get('x-user-id')?.trim();
+  if (userId) {
+    const safeId = userId.replace(/[^a-zA-Z0-9_-]/g, '_');
+    return `ws_${safeId}`;
+  }
+  const trimmedExplicit = explicitWorkspaceId?.trim();
+  return trimmedExplicit && trimmedExplicit.length > 0 ? trimmedExplicit : undefined;
+}
+
+/**
  * Resolves the active bot count for quota enforcement.
  *
  * The count is never read from the request. A caller-controlled count would let a

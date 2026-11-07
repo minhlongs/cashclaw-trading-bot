@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { defaultCloudSchedulerCoordinator } from '@/ee/scheduler/cloud-scheduler-coordinator';
+import {
+  resolveEffectiveWorkspaceId,
+  resolveWorkspaceTierContext,
+} from '@/ee/tenancy/workspace-request-context';
 
 const LeaseRequestSchema = z.object({
   botId: z.string().min(1),
@@ -13,15 +17,27 @@ const LeaseRequestSchema = z.object({
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const rawNow = url.searchParams.get('nowMs');
-  const workspaceId = url.searchParams.get('workspaceId')?.trim() || undefined;
+  const queryWorkspaceId = url.searchParams.get('workspaceId')?.trim() || undefined;
   const parsedNow = rawNow ? Number(rawNow) : Date.now();
   const nowMs = Number.isFinite(parsedNow) && parsedNow > 0 ? parsedNow : Date.now();
+
+  const { workspaceId: resolvedWorkspaceId } = await resolveWorkspaceTierContext(req, {
+    explicitWorkspaceId: queryWorkspaceId,
+  });
+  const effectiveWorkspaceId = resolveEffectiveWorkspaceId(
+    req,
+    resolvedWorkspaceId,
+    queryWorkspaceId,
+  );
 
   return NextResponse.json({
     ok: true,
     nowMs,
-    ...(workspaceId ? { workspaceId } : {}),
-    activeLeaseCount: defaultCloudSchedulerCoordinator.activeLeaseCount(nowMs, workspaceId),
+    ...(effectiveWorkspaceId ? { workspaceId: effectiveWorkspaceId } : {}),
+    activeLeaseCount: defaultCloudSchedulerCoordinator.activeLeaseCount(
+      nowMs,
+      effectiveWorkspaceId,
+    ),
   });
 }
 
@@ -37,7 +53,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = defaultCloudSchedulerCoordinator.acquireTickLease(parsed.data);
+    const { workspaceId: resolvedWorkspaceId } = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: parsed.data.workspaceId,
+    });
+    const effectiveWorkspaceId =
+      resolveEffectiveWorkspaceId(req, resolvedWorkspaceId, parsed.data.workspaceId) ??
+      parsed.data.workspaceId;
+
+    const result = defaultCloudSchedulerCoordinator.acquireTickLease({
+      ...parsed.data,
+      workspaceId: effectiveWorkspaceId,
+    });
     if (!result.ok) {
       return NextResponse.json({ ok: false, error: result.error }, { status: 409 });
     }
