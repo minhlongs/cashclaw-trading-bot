@@ -9,7 +9,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db/client';
-import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
+import {
+  resolveEffectiveWorkspaceId,
+  resolveWorkspaceTierContext,
+} from '@/ee/tenancy/workspace-request-context';
 import {
   ensureUserWorkspaceMembership,
   ensureWorkspaceMembership,
@@ -37,7 +40,7 @@ async function resolveCheckoutWorkspace(
   if (resolvedWorkspaceId && userId && db) {
     await ensureWorkspaceMembership(userId, resolvedWorkspaceId, 'OWNER', db);
   }
-  return resolvedWorkspaceId;
+  return resolveEffectiveWorkspaceId(req, resolvedWorkspaceId);
 }
 
 export async function POST(req: Request) {

@@ -62,7 +62,7 @@ export async function botUpdateConfigHandler(
       return { ok: false, error: `Bot not found: ${id}` };
     }
 
-    const ownerId = (bot as { userId?: string | null }).userId;
+    const ownerId = manager.getBotOwnerId(id);
     if (userId && ownerId && ownerId !== userId) {
       return { ok: false, error: `Bot not found: ${id}` };
     }

@@ -8,7 +8,6 @@ vi.mock('@/forest/bot/d1-adapter', () => ({
 
 const mockBot = {
   id: 'bot-1',
-  userId: 'user-1',
   getConfig: vi.fn((): BotConfig => ({
     strategy: 'grid',
     symbol: 'BTC/USDT',
@@ -29,6 +28,9 @@ const mockBot = {
 const mockManager = {
   getBot: vi.fn(),
   getOrCreateBot: vi.fn(),
+  // Ownership lives on the bot's cache entry, not on the instance itself, so the
+  // handler reads it through this accessor to refuse a bot owned by another user.
+  getBotOwnerId: vi.fn((): string | undefined => 'user-1'),
 };
 
 vi.mock('@/tree/bot', () => ({
@@ -40,6 +42,7 @@ beforeEach(() => {
   mockPatchBot.mockResolvedValue(undefined);
   mockManager.getBot.mockReturnValue(mockBot);
   mockManager.getOrCreateBot.mockResolvedValue(mockBot);
+  mockManager.getBotOwnerId.mockReturnValue('user-1');
 });
 
 describe('botUpdateConfigHandler', () => {

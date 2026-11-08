@@ -31,6 +31,9 @@ export class BotManager implements BotFactoryDelegate {
   get queues(): Map<string, RequestQueue> { return this.factory.queues; }
   getKillswitch(): Killswitch { return this.killswitch; }
   getBot(id: string, userId?: string): BotInstance | undefined { return this.cache.getBot(id, userId); }
+  /** Owner recorded on the bot's cache entry. Callers use it to refuse a bot
+   *  that exists but belongs to another tenant, instead of trusting the lookup. */
+  getBotOwnerId(id: string): string | undefined { return this.cache.getBotOwnerId(id); }
   getAllBots(userId?: string): Promise<BotInstance[]> { return this.cache.getAllBots(userId); }
   getRunningBots(userId?: string): Promise<BotInstance[]> { return this.cache.getRunningBots(userId); }
   getOrCreateBot(id: string, userId?: string): Promise<BotInstance | null> { return this.cache.getOrCreateBot(id, userId); }

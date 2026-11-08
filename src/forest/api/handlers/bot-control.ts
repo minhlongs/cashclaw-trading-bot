@@ -6,23 +6,26 @@
 import { getBotManager } from '@/tree/bot';
 import { createServerClient } from '@/lib/db/client';
 
-async function validateStartCredentials(id: string): Promise<{ ok: boolean; error?: string }> {
-  const bot = getBotManager().getBot(id);
-  if (!bot) {
+async function validateStartCredentials(
+  id: string,
+  exchange: string,
+  ownerId: string | undefined,
+  userId?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (userId && ownerId && ownerId !== userId) {
     return { ok: false, error: `Bot not found: ${id}` };
   }
-  const exchange = (bot as { exchange?: string }).exchange;
   if (!exchange) {
     return { ok: false, error: 'Missing exchange credentials for bot. Please add API keys in settings.' };
   }
   // Scope credential lookup to the bot owner when available to prevent cross-user IDOR
-  const userId = (bot as { userId?: string | null }).userId ?? null;
+  const effectiveUserId = userId ?? ownerId ?? null;
   const db = createServerClient();
   if (db) {
     try {
       const creds = await db.prepare(
         'SELECT api_key_encrypted, api_secret_encrypted, is_testnet FROM api_credentials WHERE exchange = ? AND (user_id = ? OR user_id IS NULL) ORDER BY updated_at DESC LIMIT 1'
-      ).bind(exchange, userId).first<{ api_key_encrypted?: string | null }>();
+      ).bind(exchange, effectiveUserId).first<{ api_key_encrypted?: string | null }>();
       if (!creds || !creds.api_key_encrypted) {
         return { ok: false, error: `Missing exchange credentials for ${exchange}. Please configure API keys first.` };
       }
@@ -36,33 +39,51 @@ async function validateStartCredentials(id: string): Promise<{ ok: boolean; erro
   return { ok: true };
 }
 
+async function resolveAuthorizedBot(
+  id: string,
+  userId?: string,
+) {
+  const manager = getBotManager();
+  const bot = (userId ? manager.getBot(id, userId) : manager.getBot(id))
+    ?? await (userId ? manager.getOrCreateBot(id, userId) : manager.getOrCreateBot(id));
+  if (!bot) return null;
+  const ownerId = manager.getBotOwnerId(id);
+  if (userId && ownerId && ownerId !== userId) return null;
+  return bot;
+}
+
 export async function botControlHandler(
   id: string,
   action: 'start' | 'stop' | 'pause' | 'resume',
+  userId?: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const manager = getBotManager();
-    // Lazy single-bot hydration: load only this bot from D1 if not in memory
-    const bot = manager.getBot(id) ?? await manager.getOrCreateBot(id);
+    const bot = await resolveAuthorizedBot(id, userId);
     if (!bot) {
       return { ok: false, error: `Bot not found: ${id}` };
     }
+    const ownerId = manager.getBotOwnerId(id);
+    const { exchange } = bot.getConfig() as { exchange?: string };
 
     switch (action) {
       case 'start': {
-        const preflight = await validateStartCredentials(id);
+        const preflight = await validateStartCredentials(
+          id, exchange ?? '', ownerId, userId,
+        );
         if (!preflight.ok) return preflight;
-        await manager.getBot(id)!.start();
+        await bot.start();
         break;
       }
       case 'stop':
-        manager.getBot(id)!.stop();
+        bot.stop();
         break;
       case 'pause':
-        manager.getBot(id)!.pause();
+        bot.pause();
         break;
       case 'resume':
-        manager.resumeBot(id);
+        if (userId) manager.resumeBot(id, userId);
+        else manager.resumeBot(id);
         break;
       default:
         return { ok: false, error: `Unknown action: ${action}` };

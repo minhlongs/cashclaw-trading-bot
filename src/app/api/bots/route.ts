@@ -44,8 +44,9 @@ const CreateBotSchema = z.object({
   }).optional(),
 });
 
-export async function GET() {
-  const result = await botListHandler();
+export async function GET(req?: Request) {
+  const userId = req?.headers.get('x-user-id')?.trim() || undefined;
+  const result = userId ? await botListHandler(userId) : await botListHandler();
   return NextResponse.json(result);
 }
 
@@ -67,8 +68,11 @@ export async function POST(req: Request) {
     );
   }
 
+  const userId = req.headers.get('x-user-id')?.trim() || undefined;
   const { tier } = await resolveWorkspaceTierContext(req);
-  const currentBotCount = await resolveActiveBotCount(botListHandler);
+  const currentBotCount = await resolveActiveBotCount(() =>
+    userId ? botListHandler(userId) : botListHandler(),
+  );
 
   const quotaCheck = enforceWorkspaceQuota({
     tier,
@@ -79,6 +83,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: quotaCheck.error }, { status: 403 });
   }
 
-  const result = await botCreateHandler(parsed.data);
+  const result = userId
+    ? await botCreateHandler(parsed.data, userId)
+    : await botCreateHandler(parsed.data);
   return NextResponse.json(result, result.ok ? undefined : { status: 400 });
 }

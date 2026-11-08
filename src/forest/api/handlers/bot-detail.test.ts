@@ -53,6 +53,7 @@ const mockBot = {
 const mockManager = {
   getBot: vi.fn((): typeof mockBot | undefined => mockBot),
   getOrCreateBot: vi.fn(async (): Promise<typeof mockBot | null> => mockBot),
+  getBotOwnerId: vi.fn((): string | undefined => undefined),
   resumeBot: vi.fn(),
 };
 
@@ -64,20 +65,21 @@ vi.mock('@/forest/dashboard/trade-events', () => ({
   getRecentEvents: vi.fn(async () => []),
 }));
 
-async function getDetail(id: string) {
+async function getDetail(id: string, userId?: string) {
   const { botDetailHandler } = await import('./bot-detail');
-  return botDetailHandler(id);
+  return botDetailHandler(id, userId);
 }
 
-async function control(botId: string, action: string) {
+async function control(botId: string, action: string, userId?: string) {
   const { botControlHandler } = await import('./bot-detail');
-  return botControlHandler(botId, action as 'start' | 'stop' | 'pause' | 'resume');
+  return botControlHandler(botId, action as 'start' | 'stop' | 'pause' | 'resume', userId);
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
   mockManager.getBot.mockReturnValue(mockBot);
   mockManager.getOrCreateBot.mockResolvedValue(mockBot);
+  mockManager.getBotOwnerId.mockReturnValue(undefined);
   mockBot.getConfig.mockReturnValue(mockGridConfig);
   mockBot.getSnapshot.mockReturnValue(mockSnapshot);
 });
@@ -117,6 +119,20 @@ describe('botDetailHandler', () => {
     const result = await getDetail('bot-1');
     expect(result.ok).toBe(false);
     expect(result.error).toBe('d1 down');
+  });
+
+  it('denies cross-user access when the bot is owned by another userId', async () => {
+    // BotInstance carries no owner field; the manager returns the owner from the
+    // bot's cache entry, and the handler must refuse on that identity alone.
+    mockManager.getBot.mockReturnValue(undefined);
+    mockManager.getOrCreateBot.mockResolvedValue(null);
+    mockManager.getBotOwnerId.mockReturnValue('usr_owner');
+
+    const denied = await getDetail('bot-1', 'usr_attacker');
+
+    expect(denied.ok).toBe(false);
+    expect(denied.error).toBe('Bot not found: bot-1');
+    expect(mockManager.getBot).toHaveBeenCalledWith('bot-1', 'usr_attacker');
   });
 });
 
@@ -158,5 +174,24 @@ describe('botControlHandler', () => {
     const result = await control('bot-1', 'start');
     expect(result.ok).toBe(false);
     expect(result.error).toBe('exchange down');
+  });
+
+  it('denies control action when the bot is owned by another userId and forwards userId on resume', async () => {
+    mockManager.getBot.mockReturnValue(undefined);
+    mockManager.getOrCreateBot.mockResolvedValue(null);
+    mockManager.getBotOwnerId.mockReturnValue('usr_owner');
+
+    const denied = await control('bot-1', 'stop', 'usr_attacker');
+
+    expect(denied.ok).toBe(false);
+    expect(denied.error).toBe('Bot not found: bot-1');
+    expect(mockBot.stop).not.toHaveBeenCalled();
+
+    mockManager.getBot.mockReturnValue(mockBot);
+    mockManager.getOrCreateBot.mockResolvedValue(mockBot);
+    mockManager.getBotOwnerId.mockReturnValue('usr_owner');
+    const ownerResume = await control('bot-1', 'resume', 'usr_owner');
+    expect(ownerResume.ok).toBe(true);
+    expect(mockManager.resumeBot).toHaveBeenCalledWith('bot-1', 'usr_owner');
   });
 });

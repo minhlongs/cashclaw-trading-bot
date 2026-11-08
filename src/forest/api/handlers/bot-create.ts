@@ -14,7 +14,8 @@ export interface CreateBotPayload {
 }
 
 export async function botCreateHandler(
-  payload: CreateBotPayload
+  payload: CreateBotPayload,
+  userId?: string,
 ): Promise<{ ok: boolean; data?: { id: string }; error?: string }> {
   try {
     if (payload.mode === 'live') {
@@ -73,7 +74,11 @@ export async function botCreateHandler(
       mode: 'paper',
     };
 
-    await getBotManager().createBot(botConfig);
+    if (userId) {
+      await getBotManager().createBot(botConfig, userId);
+    } else {
+      await getBotManager().createBot(botConfig);
+    }
     return { ok: true, data: { id: payload.id } };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Failed to create bot' };
