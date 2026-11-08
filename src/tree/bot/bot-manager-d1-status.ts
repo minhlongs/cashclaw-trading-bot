@@ -30,7 +30,7 @@ export async function persistNewBot(deps: D1CallbackDeps): Promise<void> {
     id: deps.botId,
     config: deps.config,
     capital: deps.capital,
-    name: deps.botId,
+    name: deps.config.name || deps.botId,
     strategy: deps.config.strategy,
     pair: deps.config.symbol,
     exchange: deps.config.exchange,

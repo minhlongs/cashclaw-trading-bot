@@ -11,7 +11,7 @@ const log = createLogger('settings-actions');
 
 export async function getSettings(userId?: string): Promise<SettingsData> { return loadCurrentSettings(userId); }
 export async function updateNotificationSettings(botToken: string, chatId: string, userId?: string): Promise<Result<void>> {
-  return mutateNotificationSettings(botToken, chatId, userId);
+  try { return await mutateNotificationSettings(botToken, chatId, userId); } catch (e) { return err(e instanceof Error ? e.message : 'Update failed'); }
 }
 
 export async function updateExchangeCredentials(

@@ -18,8 +18,9 @@ async function validateStartCredentials(
   if (!exchange) {
     return { ok: false, error: 'Missing exchange credentials for bot. Please add API keys in settings.' };
   }
-  // Scope credential lookup to the bot owner when available to prevent cross-user IDOR
-  const effectiveUserId = userId ?? ownerId ?? null;
+  // Scope credential lookup to the bot owner when available, falling back to 'default'
+  // to match syncExchangeToD1 when no session user is present.
+  const effectiveUserId = userId ?? ownerId ?? 'default';
   const db = createServerClient();
   if (db) {
     try {
