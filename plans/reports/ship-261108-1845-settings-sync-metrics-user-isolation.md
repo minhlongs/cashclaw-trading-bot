@@ -2,6 +2,7 @@
 
 - **Date:** 2026-11-08
 - **Issue:** #41
+- **PR:** #42
 - **Branch:** `fix/settings-sync-metrics-user-isolation`
 - **Plan:** `plans/261108-1845-settings-sync-metrics-user-isolation/plan.md`
 

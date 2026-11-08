@@ -6,6 +6,7 @@ priority: P1
 effort: 2h
 branch: fix/settings-sync-metrics-user-isolation
 issue: 41
+pr: 42
 tags: [security, tenancy, settings, ee-sync, metrics, killswitch, d1, cloudflare-workers]
 ---
 
