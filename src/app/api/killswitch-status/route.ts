@@ -7,7 +7,7 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('killswitch-status');
 
-export async function GET() {
+export async function GET(req?: Request) {
   const db = createServerClient();
 
   if (!db) {
@@ -24,8 +24,10 @@ export async function GET() {
   }
 
   try {
-    // Read killswitch state from D1 settings
-    const settings = await findSettingsByUser(db, null);
+    const userId = req?.headers?.get?.('x-user-id')?.trim() || null;
+
+    // Read killswitch state from D1 settings scoped to the user when present
+    const settings = await findSettingsByUser(db, userId);
     const enabled = settings ? settings.killswitch_enabled === 1 : true;
     const halted = !enabled;
     const haltReason = settings?.killswitch_reason ?? null;

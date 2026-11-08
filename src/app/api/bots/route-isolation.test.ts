@@ -39,11 +39,13 @@ describe('Session user scoping on /api/bots and /api/ee/sync', () => {
     mockVerifyAndImport.mockResolvedValue({
       ok: true,
       data: {
-        schemaVersion: 'CASHCLAW-SYNC-v1',
-        workspaceId: 'ws_usr_tenant_a',
-        bundleSha256: 'deadbeef',
-        botCount: 1,
-        importedAtMs: 1_770_000_000_000,
+        botName: 'Synced Tenant A Bot',
+        strategyId: 'grid',
+        symbol: 'BTC/USDT',
+        intervalMinutes: 15,
+        feeBps: 10,
+        slippageBps: 5,
+        parameters: { levels: 10 },
       },
     });
   });
@@ -118,8 +120,13 @@ describe('Session user scoping on /api/bots and /api/ee/sync', () => {
 
     expect(res.status).toBe(200);
     expect(mockBotListHandler).toHaveBeenCalledWith('usr_tenant_a');
-    const body = (await res.json()) as { ok: boolean; imported: boolean };
+    expect(mockBotCreateHandler).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Synced Tenant A Bot', mode: 'paper' }),
+      'usr_tenant_a',
+    );
+    const body = (await res.json()) as { ok: boolean; imported: boolean; botId: string };
     expect(body.ok).toBe(true);
     expect(body.imported).toBe(true);
+    expect(body.botId).toBe('bot_a_1');
   });
 });

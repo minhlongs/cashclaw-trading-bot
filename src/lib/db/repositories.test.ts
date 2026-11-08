@@ -107,11 +107,21 @@ describe('findAllBots', () => {
 });
 
 describe('findSettingsByUser', () => {
-  it('returns settings when found', async () => {
+  it('returns settings when found and scopes strictly to user_id IS ?', async () => {
     mockFirst.mockResolvedValue({ id: 's1', user_id: 'u1' });
     const { findSettingsByUser } = await import('./repositories');
     const result = await findSettingsByUser(mockDb, 'u1');
     expect(result?.id).toBe('s1');
+    expect(mockPrepare).toHaveBeenCalledWith(expect.stringContaining('WHERE user_id IS ?'));
+    expect(mockPrepare).not.toHaveBeenCalledWith(expect.stringContaining('OR user_id IS NULL'));
+    expect(mockBind).toHaveBeenCalledWith('u1');
+  });
+
+  it('binds null when querying system/default settings', async () => {
+    const { findSettingsByUser } = await import('./repositories');
+    const result = await findSettingsByUser(mockDb, null);
+    expect(result).toBeNull();
+    expect(mockBind).toHaveBeenCalledWith(null);
   });
 
   it('returns null when not found', async () => {

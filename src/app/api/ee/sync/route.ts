@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import {
   type SignedCloudSyncBundle,
+  type SyncStrategyConfig,
   verifyAndImportCloudSyncBundle,
 } from '@/ee/sync/local-to-cloud-sync';
 import { enforceWorkspaceQuota } from '@/ee/billing/quota-guard';
@@ -8,7 +9,34 @@ import {
   resolveActiveBotCount,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
-import { botListHandler } from '@/forest/api/routes';
+import { botCreateHandler, botListHandler, type CreateBotPayload } from '@/forest/api/routes';
+
+const STRATEGY_MAP: Record<SyncStrategyConfig['strategyId'], CreateBotPayload['strategy']> = {
+  grid: 'grid',
+  meanReversion: 'mean_reversion',
+  volatilityDca: 'volatility_dca',
+};
+
+function normalizeSyncPair(symbol: string): string {
+  const trimmed = symbol.trim().toUpperCase();
+  if (trimmed.includes('/')) return trimmed;
+  for (const quote of ['USDT', 'USDC', 'BUSD', 'USD', 'BTC', 'ETH']) {
+    if (trimmed.endsWith(quote) && trimmed.length > quote.length) {
+      return `${trimmed.slice(0, -quote.length)}/${quote}`;
+    }
+  }
+  return trimmed;
+}
+
+function buildSyncBotConfig(
+  params: Record<string, number | string | boolean>,
+): Record<string, number | boolean> {
+  const config: Record<string, number | boolean> = {};
+  for (const [k, v] of Object.entries(params)) {
+    if (typeof v === 'number' || typeof v === 'boolean') config[k] = v;
+  }
+  return config;
+}
 
 export async function POST(req: Request) {
   try {
@@ -40,13 +68,39 @@ export async function POST(req: Request) {
       );
     }
 
+    const { botName, strategyId, symbol, parameters } = importResult.data;
+    const botId = `sync_${crypto.randomUUID().slice(0, 8)}`;
+    const rawCapital = parameters.capital;
+    const capital = typeof rawCapital === 'number' && rawCapital > 0 ? rawCapital : 1000;
+    const payload: CreateBotPayload = {
+      id: botId,
+      name: botName,
+      strategy: STRATEGY_MAP[strategyId],
+      pair: normalizeSyncPair(symbol),
+      exchange: typeof parameters.exchange === 'string' && parameters.exchange ? parameters.exchange : 'binance',
+      capital,
+      config: buildSyncBotConfig(parameters),
+      mode: 'paper',
+    };
+
+    const created = userId
+      ? await botCreateHandler(payload, userId)
+      : await botCreateHandler(payload);
+    if (!created.ok) {
+      return NextResponse.json(
+        { ok: false, error: created.error ?? 'Failed to materialize synced bot' },
+        { status: 422 },
+      );
+    }
+
     return NextResponse.json({
       ok: true,
       imported: true,
       tier,
-      botName: importResult.data.botName,
-      strategyId: importResult.data.strategyId,
-      symbol: importResult.data.symbol,
+      botId: created.data?.id ?? botId,
+      botName,
+      strategyId,
+      symbol,
     });
   } catch {
     return NextResponse.json(

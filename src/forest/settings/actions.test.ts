@@ -4,11 +4,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockFindSettings = vi.fn();
 const mockUpsertSettings = vi.fn();
+const mockUpsertCredential = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({ createServerClient: vi.fn() }));
 vi.mock('@/lib/db/repositories', () => ({
   findSettingsByUser: (...a: unknown[]) => mockFindSettings(...a),
   upsertSettings: (...a: unknown[]) => mockUpsertSettings(...a),
+  upsertCredential: (...a: unknown[]) => mockUpsertCredential(...a),
 }));
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
@@ -47,6 +49,7 @@ beforeEach(() => {
       }),
     }),
   } as any);
+  mockUpsertCredential.mockResolvedValue(undefined);
 });
 
 /** Helper to dynamically import a named export from the actions module. */
@@ -64,6 +67,32 @@ describe('getSettings', () => {
       risk: { maxDrawdownPct: 15 },
       killswitch: { enabled: true },
     });
+  });
+
+  it('reads only the caller user row, never another tenant', async () => {
+    mockFindSettings.mockImplementation((_db: unknown, userId: string | null) => (
+      userId === 'user_a'
+        ? {
+            id: 'settings_user_a',
+            user_id: 'user_a',
+            exchange_creds_json: JSON.stringify({ binance: { apiKey: 'a-key', apiSecret: 'a-secret', testnet: false } }),
+            risk_limits_json: JSON.stringify({ maxDrawdownPct: 15, dailyLossLimitPct: 10, cooldownMinutes: 60, maxOpenOrders: 10 }),
+            notification_json: '{}',
+            killswitch_daily_json: '{}',
+            killswitch_enabled: 1,
+            killswitch_reason: null,
+            killswitch_triggered_at: null,
+            updated_at: Date.now(),
+          }
+        : null
+    ));
+
+    const mine = await getSettings('user_a');
+    expect(mine.exchanges.binance.apiKey).toBe('a-key');
+    expect(mockFindSettings).toHaveBeenCalledWith(expect.anything(), 'user_a');
+
+    const other = await getSettings('user_b');
+    expect(other.exchanges.binance.apiKey).toBe('');
   });
 
   it('parses settings row and uses D1 killswitch state', async () => {
@@ -112,6 +141,38 @@ describe('updateExchangeCredentials', () => {
     const fn = await action('./actions', 'updateExchangeCredentials');
     const result = (await fn('bybit', '', '', false)) as { ok: boolean; error?: string };
     expect(result).toEqual({ ok: false, error: 'API key and secret are required' });
+  });
+
+  it('persists settings and mirrors the key into api_credentials for the bot-start preflight', async () => {
+    mockFindSettings.mockResolvedValue({ ...DEFAULT_SETTINGS_ROW } as any);
+    const fn = await action('./actions', 'updateExchangeCredentials');
+    const result = (await fn('binance', 'k', 's', false, 'user_a')) as { ok: boolean };
+
+    expect(result).toEqual({ ok: true });
+    expect(mockFindSettings).toHaveBeenCalledWith(expect.anything(), 'user_a');
+    const settingsRow = mockUpsertSettings.mock.calls[0]?.[1] as { id: string; user_id: string | null };
+    expect(settingsRow.id).toBe('settings_user_a');
+    expect(settingsRow.user_id).toBe('user_a');
+
+    expect(mockUpsertCredential).toHaveBeenCalledOnce();
+    const cred = mockUpsertCredential.mock.calls[0]?.[1] as {
+      id: string; user_id: string; exchange: string; is_testnet: number;
+    };
+    expect(cred.id).toBe('cred_user_a_binance');
+    expect(cred.user_id).toBe('user_a');
+    expect(cred.exchange).toBe('binance');
+    expect(cred.is_testnet).toBe(0);
+  });
+
+  it('keeps risk limits scoped to the caller user id', async () => {
+    mockFindSettings.mockResolvedValue({ ...DEFAULT_SETTINGS_ROW } as any);
+    const fn = await action('./actions', 'updateRiskLimits');
+    await fn({ maxDrawdownPct: 30 }, 'user_b');
+
+    expect(mockFindSettings).toHaveBeenCalledWith(expect.anything(), 'user_b');
+    const settingsRow = mockUpsertSettings.mock.calls[0]?.[1] as { id: string; user_id: string | null };
+    expect(settingsRow.id).toBe('settings_user_b');
+    expect(settingsRow.user_id).toBe('user_b');
   });
 });
 
