@@ -37,6 +37,11 @@ export class BotManagerCache {
     return cached.bot;
   }
 
+  /** Owner recorded on the cache entry, independent of whether the caller may read the bot. */
+  getBotOwnerId(id: string): string | undefined {
+    return this.state.get(id)?.userId;
+  }
+
   async getAllBots(userId?: string): Promise<BotInstance[]> {
     return this.db.getAllBots(userId);
   }

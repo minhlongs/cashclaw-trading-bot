@@ -97,6 +97,18 @@ describe('BotManager — D1 Direct-Read & Anti-IDOR Authorization', () => {
       expect(mgr.getBot('owned-bot', 'user-2')).toBeUndefined();
     });
 
+    it('getBotOwnerId reports the cache-entry owner even when the caller cannot read the bot', async () => {
+      // Handlers must refuse on recorded ownership alone: a foreign caller gets no
+      // instance from getBot, so the owner must come from the cache entry instead.
+      const mgr = createManager('user-1');
+      await mgr.createBot(mockRequest('owner-bot'), 'user-owner');
+
+      expect(mgr.getBotOwnerId('owner-bot')).toBe('user-owner');
+      expect(mgr.getBot('owner-bot', 'user-attacker')).toBeUndefined();
+      expect(mgr.getBotOwnerId('owner-bot')).toBe('user-owner');
+      expect(mgr.getBotOwnerId('never-cached')).toBeUndefined();
+    });
+
     it('lifecycle methods reject cross-user access', async () => {
       const mgr = createManager('user-1');
       await mgr.createBot(mockRequest('lifecycle-bot'));

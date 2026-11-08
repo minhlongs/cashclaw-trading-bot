@@ -14,7 +14,7 @@ export async function botDetailHandler(
     const bot = (userId ? manager.getBot(id, userId) : manager.getBot(id))
       ?? await (userId ? manager.getOrCreateBot(id, userId) : manager.getOrCreateBot(id));
     if (!bot) return { ok: false, error: `Bot not found: ${id}` };
-    const ownerId = (bot as { userId?: string | null }).userId;
+    const ownerId = manager.getBotOwnerId(id);
     if (userId && ownerId && ownerId !== userId) {
       return { ok: false, error: `Bot not found: ${id}` };
     }

@@ -13,9 +13,12 @@ function sessionUserId(req: Request): string | undefined {
 }
 
 /** A bot the caller cannot see must be indistinguishable from a bot that does
- *  not exist, so a cross-tenant probe learns nothing about another tenant. */
+ *  not exist, so a cross-tenant probe learns nothing about another tenant. The
+ *  bot manager reports an absent bot and a bot owned by someone else the same
+ *  way, and both must land on 404 rather than leaking existence via 200. */
 function notFoundStatus(error: string | undefined): number | undefined {
-  return error && error.toLowerCase().includes('not found') ? 404 : undefined;
+  if (!error) return undefined;
+  return /not found|unauthorized/i.test(error) ? 404 : undefined;
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {

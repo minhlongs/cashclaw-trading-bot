@@ -8,18 +8,13 @@ import { createServerClient } from '@/lib/db/client';
 
 async function validateStartCredentials(
   id: string,
+  exchange: string,
+  ownerId: string | undefined,
   userId?: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const manager = getBotManager();
-  const bot = userId ? manager.getBot(id, userId) : manager.getBot(id);
-  if (!bot) {
-    return { ok: false, error: `Bot not found: ${id}` };
-  }
-  const ownerId = (bot as { userId?: string | null }).userId;
   if (userId && ownerId && ownerId !== userId) {
     return { ok: false, error: `Bot not found: ${id}` };
   }
-  const exchange = (bot as { exchange?: string }).exchange;
   if (!exchange) {
     return { ok: false, error: 'Missing exchange credentials for bot. Please add API keys in settings.' };
   }
@@ -52,7 +47,7 @@ async function resolveAuthorizedBot(
   const bot = (userId ? manager.getBot(id, userId) : manager.getBot(id))
     ?? await (userId ? manager.getOrCreateBot(id, userId) : manager.getOrCreateBot(id));
   if (!bot) return null;
-  const ownerId = (bot as { userId?: string | null }).userId;
+  const ownerId = manager.getBotOwnerId(id);
   if (userId && ownerId && ownerId !== userId) return null;
   return bot;
 }
@@ -68,10 +63,14 @@ export async function botControlHandler(
     if (!bot) {
       return { ok: false, error: `Bot not found: ${id}` };
     }
+    const ownerId = manager.getBotOwnerId(id);
+    const { exchange } = bot.getConfig() as { exchange?: string };
 
     switch (action) {
       case 'start': {
-        const preflight = await validateStartCredentials(id, userId);
+        const preflight = await validateStartCredentials(
+          id, exchange ?? '', ownerId, userId,
+        );
         if (!preflight.ok) return preflight;
         await bot.start();
         break;

@@ -11,7 +11,7 @@ export async function executeBotControl(
     const bot = (userId ? manager.getBot(botId, userId) : manager.getBot(botId))
       ?? await (userId ? manager.getOrCreateBot(botId, userId) : manager.getOrCreateBot(botId));
     if (!bot) return { ok: false, error: `Bot not found: ${botId}` };
-    const ownerId = (bot as { userId?: string | null }).userId;
+    const ownerId = manager.getBotOwnerId(botId);
     if (userId && ownerId && ownerId !== userId) {
       return { ok: false, error: `Bot not found: ${botId}` };
     }
