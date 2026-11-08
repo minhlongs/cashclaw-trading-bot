@@ -251,5 +251,86 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       expect(body.ok).toBe(false);
       expect(body.error).toBe('DB insert failed');
     });
+
+    it('normalizes a case-mismatched exchange so the D1 constraint still accepts the row', async () => {
+      const bundleResult = await createLocalToCloudSyncBundle({
+        botName: 'Cased Exchange Bot',
+        symbol: 'ETHUSDT',
+        strategyId: 'grid',
+        intervalMinutes: 15,
+        feeBps: 10,
+        slippageBps: 5,
+        parameters: { levels: 5, exchange: 'BINANCE' },
+      });
+      expect(bundleResult.ok).toBe(true);
+      if (!bundleResult.ok) return;
+
+      const res = await postSync(
+        new Request('http://localhost/api/ee/sync', {
+          method: 'POST',
+          headers: { 'x-user-id': 'user_sync_1' },
+          body: JSON.stringify(bundleResult.data),
+        }),
+      );
+      expect(res.status).toBe(200);
+      expect(mockBotCreateHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ exchange: 'binance' }),
+        'user_sync_1',
+      );
+    });
+
+    it('falls back to binance for an exchange outside the supported set', async () => {
+      const bundleResult = await createLocalToCloudSyncBundle({
+        botName: 'Unsupported Exchange Bot',
+        symbol: 'ETH/USDT',
+        strategyId: 'grid',
+        intervalMinutes: 15,
+        feeBps: 10,
+        slippageBps: 5,
+        parameters: { levels: 5, exchange: 'kraken' },
+      });
+      expect(bundleResult.ok).toBe(true);
+      if (!bundleResult.ok) return;
+
+      const res = await postSync(
+        new Request('http://localhost/api/ee/sync', {
+          method: 'POST',
+          headers: { 'x-user-id': 'user_sync_1' },
+          body: JSON.stringify(bundleResult.data),
+        }),
+      );
+      expect(res.status).toBe(200);
+      expect(mockBotCreateHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ exchange: 'binance' }),
+        'user_sync_1',
+      );
+    });
+
+    it('replaces an out-of-range or non-numeric capital with the safe default', async () => {
+      const bundleResult = await createLocalToCloudSyncBundle({
+        botName: 'Bad Capital Bot',
+        symbol: 'ETH/USDT',
+        strategyId: 'grid',
+        intervalMinutes: 15,
+        feeBps: 10,
+        slippageBps: 5,
+        parameters: { levels: 5, capital: -50 },
+      });
+      expect(bundleResult.ok).toBe(true);
+      if (!bundleResult.ok) return;
+
+      const res = await postSync(
+        new Request('http://localhost/api/ee/sync', {
+          method: 'POST',
+          headers: { 'x-user-id': 'user_sync_1' },
+          body: JSON.stringify(bundleResult.data),
+        }),
+      );
+      expect(res.status).toBe(200);
+      expect(mockBotCreateHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ capital: 1000 }),
+        'user_sync_1',
+      );
+    });
   });
 });

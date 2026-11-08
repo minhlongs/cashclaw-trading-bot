@@ -17,6 +17,22 @@ const STRATEGY_MAP: Record<SyncStrategyConfig['strategyId'], CreateBotPayload['s
   volatilityDca: 'volatility_dca',
 };
 
+const ALLOWED_EXCHANGES = new Set(['binance', 'bybit', 'okx']);
+
+function resolveSyncExchange(raw: unknown): string {
+  if (typeof raw === 'string') {
+    const normalized = raw.trim().toLowerCase();
+    if (ALLOWED_EXCHANGES.has(normalized)) return normalized;
+  }
+  return 'binance';
+}
+
+function resolveSyncCapital(raw: unknown): number {
+  return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 && raw <= 1_000_000
+    ? raw
+    : 1000;
+}
+
 function normalizeSyncPair(symbol: string): string {
   const trimmed = symbol.trim().toUpperCase();
   if (trimmed.includes('/')) return trimmed;
@@ -70,15 +86,13 @@ export async function POST(req: Request) {
 
     const { botName, strategyId, symbol, parameters } = importResult.data;
     const botId = `sync_${crypto.randomUUID().slice(0, 8)}`;
-    const rawCapital = parameters.capital;
-    const capital = typeof rawCapital === 'number' && rawCapital > 0 ? rawCapital : 1000;
     const payload: CreateBotPayload = {
       id: botId,
       name: botName,
       strategy: STRATEGY_MAP[strategyId],
       pair: normalizeSyncPair(symbol),
-      exchange: typeof parameters.exchange === 'string' && parameters.exchange ? parameters.exchange : 'binance',
-      capital,
+      exchange: resolveSyncExchange(parameters.exchange),
+      capital: resolveSyncCapital(parameters.capital),
       config: buildSyncBotConfig(parameters),
       mode: 'paper',
     };

@@ -121,4 +121,20 @@ describe('botControlHandler', () => {
     expect(result).toEqual({ ok: false, error: 'Bot not found: bot-1' });
     expect(mockBot.start).not.toHaveBeenCalled();
   });
+
+  it('binds default as the preflight user when neither caller nor bot owner is set', async () => {
+    // syncExchangeToD1 stores unauthenticated credentials under user_id = 'default',
+    // so the preflight query must bind 'default' rather than null to find them.
+    const { createServerClient } = await import('@/lib/db/client');
+    const mockFirst = vi.fn().mockResolvedValue({ api_key_encrypted: 'enc_key' });
+    const mockBind = vi.fn().mockReturnValue({ first: mockFirst });
+    const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
+    vi.mocked(createServerClient).mockReturnValueOnce({ prepare: mockPrepare } as unknown as ReturnType<typeof createServerClient>);
+
+    const result = await control('bot-1', 'start');
+
+    expect(result).toEqual({ ok: true });
+    expect(mockBind).toHaveBeenCalledWith('binance', 'default');
+    expect(mockBot.start).toHaveBeenCalledOnce();
+  });
 });

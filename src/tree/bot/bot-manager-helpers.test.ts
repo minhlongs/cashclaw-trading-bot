@@ -144,6 +144,13 @@ describe('bot-manager-helpers', () => {
       });
     });
 
+    it('falls back to the bot id when the config has no name', async () => {
+      await persistNewBot(makeDeps({ config: { ...gridConfig, name: undefined } }));
+      expect(persistBot).toHaveBeenCalledWith('user-123', expect.objectContaining({
+        name: 'bot-123',
+      }));
+    });
+
     it('calls persistBot with mean_reversion params', async () => {
       const config = {
         strategy: 'mean_reversion' as const, symbol: 'ETH/USDT', exchange: 'binance',
@@ -155,6 +162,16 @@ describe('bot-manager-helpers', () => {
       await persistNewBot(makeDeps({ config, capital: 2000 }));
       expect(persistBot).toHaveBeenCalledWith('user-123', expect.objectContaining({
         strategy: 'mean_reversion', pair: 'ETH/USDT',
+      }));
+    });
+
+    it('persists the configured name over the generated bot id', async () => {
+      // A synced bundle carries botName; storing only botId would drop the name
+      // the user sees on the dashboard.
+      const config = { ...gridConfig, name: 'Volatility DCA Local' };
+      await persistNewBot(makeDeps({ config }));
+      expect(persistBot).toHaveBeenCalledWith('user-123', expect.objectContaining({
+        name: 'Volatility DCA Local',
       }));
     });
   });

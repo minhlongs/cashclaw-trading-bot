@@ -122,6 +122,17 @@ describe('getSettings', () => {
   });
 });
 
+describe('updateNotificationSettings', () => {
+  it('returns a failed result instead of throwing when persistence rejects', async () => {
+    // A thrown D1 error would surface as a 500 from the server action; the
+    // caller needs { ok: false, error } to render the failure in the form.
+    mockFindSettings.mockRejectedValue(new Error('D1 write failed'));
+    const fn = await action('./actions', 'updateNotificationSettings');
+    const result = (await fn('bot-token', 'chat-id')) as { ok: boolean; error?: string };
+    expect(result).toEqual({ ok: false, error: 'D1 write failed' });
+  });
+});
+
 describe('updateExchangeCredentials', () => {
   it('returns error when DB unavailable', async () => {
     vi.mocked(createServerClient).mockReturnValue(null as any);
