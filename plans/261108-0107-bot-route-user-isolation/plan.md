@@ -6,6 +6,7 @@ priority: P1
 effort: 2h
 branch: fix/bot-route-user-isolation
 issue: 39
+linked_pr: 40
 tags: [security, tenancy, idor, bots, ee, d1, cloudflare-workers]
 ---
 
