@@ -144,6 +144,17 @@ describe('botListHandler', () => {
     });
   });
 
+  describe('user scoping', () => {
+    it('forwards userId to BotQueryService.listBots when provided', async () => {
+      mockListBots.mockResolvedValue([]);
+
+      const result = await botListHandler('usr_tenant_a');
+
+      expect(result.ok).toBe(true);
+      expect(mockListBots).toHaveBeenCalledWith('usr_tenant_a');
+    });
+  });
+
   describe('error handling', () => {
     it('returns error when listBots throws', async () => {
       mockListBots.mockRejectedValue(new Error('D1 connection failed'));

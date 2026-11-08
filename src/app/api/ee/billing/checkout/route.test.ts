@@ -16,9 +16,13 @@ vi.mock('@/ee/billing/nowpayments-invoice-client', () => ({
   createNowPaymentsInvoice: (input: Record<string, unknown>) => createInvoice(input),
 }));
 
-vi.mock('@/ee/tenancy/workspace-request-context', () => ({
-  resolveWorkspaceTierContext: (req: Request) => resolveWorkspace(req),
-}));
+vi.mock('@/ee/tenancy/workspace-request-context', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/ee/tenancy/workspace-request-context')>();
+  return {
+    ...actual,
+    resolveWorkspaceTierContext: (req: Request) => resolveWorkspace(req),
+  };
+});
 
 /** A request shaped like the middleware leaves it: the session-verified user id
  *  is already on the header and the workspace follows from membership. */
@@ -110,13 +114,26 @@ describe('POST /api/ee/billing/checkout', () => {
     expect(recorded?.expectedAmountUsd).toBe(SAAS_TIER_ENTITLEMENTS.MASTER.priceUsdMonthly);
   });
 
-  it('refuses when the session resolves to no workspace', async () => {
+  it('refuses when the session resolves to no workspace and no session user is present', async () => {
     resolveWorkspace.mockResolvedValueOnce({ workspaceId: undefined, tier: 'BASIC' });
 
-    const res = await POST(checkoutRequest({ targetTier: 'PREMIUM' }));
+    const res = await POST(checkoutRequest({ targetTier: 'PREMIUM' }, ''));
 
     expect(res.status).toBe(401);
     expect(createInvoice).not.toHaveBeenCalled();
+  });
+
+  it('falls back to deterministic personal workspace ws_<safeUserId> when session user has no D1 membership row', async () => {
+    resolveWorkspace.mockResolvedValueOnce({ workspaceId: undefined, tier: 'BASIC' });
+    stubInvoice('ws:ws_usr_unenrolled_buyer:abc123');
+
+    const res = await POST(checkoutRequest({ targetTier: 'PREMIUM' }, 'usr_unenrolled_buyer'));
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.workspaceId).toBe('ws_usr_unenrolled_buyer');
+    const recorded = await defaultCheckoutOrderStore.getOrder('ws:ws_usr_unenrolled_buyer:abc123');
+    expect(recorded?.workspaceId).toBe('ws_usr_unenrolled_buyer');
   });
 
   it('surfaces a provider refusal as 503, not a fake success', async () => {

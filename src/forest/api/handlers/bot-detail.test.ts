@@ -64,14 +64,14 @@ vi.mock('@/forest/dashboard/trade-events', () => ({
   getRecentEvents: vi.fn(async () => []),
 }));
 
-async function getDetail(id: string) {
+async function getDetail(id: string, userId?: string) {
   const { botDetailHandler } = await import('./bot-detail');
-  return botDetailHandler(id);
+  return botDetailHandler(id, userId);
 }
 
-async function control(botId: string, action: string) {
+async function control(botId: string, action: string, userId?: string) {
   const { botControlHandler } = await import('./bot-detail');
-  return botControlHandler(botId, action as 'start' | 'stop' | 'pause' | 'resume');
+  return botControlHandler(botId, action as 'start' | 'stop' | 'pause' | 'resume', userId);
 }
 
 beforeEach(() => {
@@ -118,6 +118,15 @@ describe('botDetailHandler', () => {
     expect(result.ok).toBe(false);
     expect(result.error).toBe('d1 down');
   });
+
+  it('denies cross-user access when bot belongs to another userId', async () => {
+    const ownedBot = { ...mockBot, userId: 'usr_owner' };
+    mockManager.getBot.mockReturnValue(ownedBot);
+    const denied = await getDetail('bot-1', 'usr_attacker');
+    expect(denied.ok).toBe(false);
+    expect(denied.error).toBe('Bot not found: bot-1');
+    expect(mockManager.getBot).toHaveBeenCalledWith('bot-1', 'usr_attacker');
+  });
 });
 
 describe('botControlHandler', () => {
@@ -158,5 +167,18 @@ describe('botControlHandler', () => {
     const result = await control('bot-1', 'start');
     expect(result.ok).toBe(false);
     expect(result.error).toBe('exchange down');
+  });
+
+  it('denies control action when bot belongs to another userId and forwards userId on resume', async () => {
+    const ownedBot = { ...mockBot, userId: 'usr_owner' };
+    mockManager.getBot.mockReturnValue(ownedBot);
+    const denied = await control('bot-1', 'stop', 'usr_attacker');
+    expect(denied.ok).toBe(false);
+    expect(denied.error).toBe('Bot not found: bot-1');
+    expect(mockBot.stop).not.toHaveBeenCalled();
+
+    const allowed = await control('bot-1', 'resume', 'usr_owner');
+    expect(allowed.ok).toBe(true);
+    expect(mockManager.resumeBot).toHaveBeenCalledWith('bot-1', 'usr_owner');
   });
 });

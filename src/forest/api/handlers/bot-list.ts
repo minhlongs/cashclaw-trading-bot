@@ -20,14 +20,14 @@ export interface BotListItem {
   updatedAt: number;
 }
 
-export async function botListHandler(): Promise<{
+export async function botListHandler(userId?: string): Promise<{
   ok: boolean;
   data?: BotListItem[];
   error?: string;
 }> {
   try {
     const service = new BotQueryService();
-    const bots = await service.listBots();
+    const bots = userId ? await service.listBots(userId) : await service.listBots();
 
     const items: BotListItem[] = bots.map((bot) => ({
       id: bot.id,

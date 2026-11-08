@@ -122,6 +122,12 @@ describe('botCreateHandler', () => {
         maxDrawdownPct: 10,
       });
     });
+    it('forwards userId to manager.createBot when provided so the bot is bound to the session user', async () => {
+      const result = await botCreateHandler(paperPayload({ id: 'owned-bot' }), 'usr_tenant_a');
+      expect(result.ok).toBe(true);
+      expect(mockCreateBot).toHaveBeenCalledTimes(1);
+      expect(mockCreateBot.mock.calls[0][1]).toBe('usr_tenant_a');
+    });
   });
 
   describe('error handling', () => {

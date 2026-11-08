@@ -5,11 +5,19 @@ import { executeBotControl } from './bot-detail-control';
 
 export type { BotDetail, BotControlAction };
 
-export async function botDetailHandler(id: string): Promise<{ ok: boolean; data?: BotDetail; error?: string }> {
+export async function botDetailHandler(
+  id: string,
+  userId?: string,
+): Promise<{ ok: boolean; data?: BotDetail; error?: string }> {
   try {
     const manager = getBotManager();
-    const bot = manager.getBot(id) ?? await manager.getOrCreateBot(id);
+    const bot = (userId ? manager.getBot(id, userId) : manager.getBot(id))
+      ?? await (userId ? manager.getOrCreateBot(id, userId) : manager.getOrCreateBot(id));
     if (!bot) return { ok: false, error: `Bot not found: ${id}` };
+    const ownerId = (bot as { userId?: string | null }).userId;
+    if (userId && ownerId && ownerId !== userId) {
+      return { ok: false, error: `Bot not found: ${id}` };
+    }
 
     const snapshot = bot.getSnapshot();
     const config = bot.getConfig() as BotConfig;
@@ -32,6 +40,10 @@ export async function botDetailHandler(id: string): Promise<{ ok: boolean; data?
   }
 }
 
-export async function botControlHandler(botId: string, action: BotControlAction): Promise<{ ok: boolean; error?: string }> {
-  return executeBotControl(botId, action);
+export async function botControlHandler(
+  botId: string,
+  action: BotControlAction,
+  userId?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  return executeBotControl(botId, action, userId);
 }

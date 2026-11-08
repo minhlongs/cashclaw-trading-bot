@@ -1,7 +1,7 @@
 ---
 title: "Close Cross-Tenant IDOR Seams on Bot & EE Routes via Session User Scoping"
 description: "Thread session user identity (x-user-id) through forest bot handlers (list, create, detail, control, update), Next.js /api/bots and /api/bots/[id] routes, /api/ee/sync quota counting, and /api/ee/billing/checkout workspace fallback."
-status: in_progress
+status: completed
 priority: P1
 effort: 2h
 branch: fix/bot-route-user-isolation

@@ -12,8 +12,11 @@ import { botListHandler } from '@/forest/api/routes';
 
 export async function POST(req: Request) {
   try {
+    const userId = req.headers.get('x-user-id')?.trim() || undefined;
     const { tier } = await resolveWorkspaceTierContext(req);
-    const activeRunningBots = await resolveActiveBotCount(botListHandler);
+    const activeRunningBots = await resolveActiveBotCount(() =>
+      userId ? botListHandler(userId) : botListHandler(),
+    );
 
     const quotaCheck = enforceWorkspaceQuota({
       tier,

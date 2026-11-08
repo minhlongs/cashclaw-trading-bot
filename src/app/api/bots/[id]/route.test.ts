@@ -25,6 +25,16 @@ describe('/api/bots/[id] route', () => {
       const body = await res.json() as Record<string, unknown>;
       expect(body.ok).toBe(true);
     });
+
+    it('forwards x-user-id to botDetailHandler and returns 404 when not found', async () => {
+      mockBotDetailHandler.mockResolvedValue({ ok: false, error: 'Bot not found: bot-1' });
+      const req = new Request('http://localhost/api/bots/bot-1', {
+        headers: { 'x-user-id': 'usr_attacker' },
+      });
+      const res = await GET(req, { params: Promise.resolve({ id: 'bot-1' }) });
+      expect(res.status).toBe(404);
+      expect(mockBotDetailHandler).toHaveBeenCalledWith('bot-1', 'usr_attacker');
+    });
   });
 
   describe('POST', () => {
@@ -48,6 +58,18 @@ describe('/api/bots/[id] route', () => {
       const res = await POST(req, { params: Promise.resolve({ id: 'bot-1' }) });
       expect(res.status).toBe(200);
       expect(mockBotControlHandler).toHaveBeenCalledWith('bot-1', 'start');
+    });
+
+    it('forwards x-user-id to botControlHandler and returns 404 on cross-tenant denial', async () => {
+      mockBotControlHandler.mockResolvedValue({ ok: false, error: 'Bot not found: bot-1' });
+      const req = new Request('http://localhost/api/bots/bot-1', {
+        method: 'POST',
+        headers: { 'x-user-id': 'usr_attacker' },
+        body: JSON.stringify({ action: 'stop' }),
+      });
+      const res = await POST(req, { params: Promise.resolve({ id: 'bot-1' }) });
+      expect(res.status).toBe(404);
+      expect(mockBotControlHandler).toHaveBeenCalledWith('bot-1', 'stop', 'usr_attacker');
     });
   });
 
@@ -73,15 +95,16 @@ describe('/api/bots/[id] route', () => {
       expect(res.status).toBe(404);
     });
 
-    it('returns 200 on successful config update', async () => {
+    it('returns 200 on successful config update and forwards x-user-id when present', async () => {
       mockBotUpdateConfigHandler.mockResolvedValue({ ok: true, data: { id: 'bot-1' } });
       const req = new Request('http://localhost/api/bots/bot-1', {
         method: 'PATCH',
+        headers: { 'x-user-id': 'usr_owner' },
         body: JSON.stringify({ config: { gridLevels: 5 } }),
       });
       const res = await PATCH(req, { params: Promise.resolve({ id: 'bot-1' }) });
       expect(res.status).toBe(200);
-      expect(mockBotUpdateConfigHandler).toHaveBeenCalledWith('bot-1', { gridLevels: 5 });
+      expect(mockBotUpdateConfigHandler).toHaveBeenCalledWith('bot-1', { gridLevels: 5 }, 'usr_owner');
     });
   });
 });

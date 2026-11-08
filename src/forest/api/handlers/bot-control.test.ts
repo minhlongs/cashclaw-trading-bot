@@ -26,9 +26,9 @@ beforeEach(() => {
   mockManager.getOrCreateBot.mockResolvedValue(mockBot);
 });
 
-async function control(id: string, action: string) {
+async function control(id: string, action: string, userId?: string) {
   const { botControlHandler } = await import('./bot-control');
-  return botControlHandler(id, action as 'start' | 'stop' | 'pause' | 'resume');
+  return botControlHandler(id, action as 'start' | 'stop' | 'pause' | 'resume', userId);
 }
 
 describe('botControlHandler', () => {
@@ -75,5 +75,18 @@ describe('botControlHandler', () => {
     const result = await control('bot-1', 'start');
     expect(result.ok).toBe(false);
     expect(result.error).toBe('exchange down');
+  });
+
+  it('scopes bot lookup and resume to userId and blocks cross-tenant control', async () => {
+    const ownedBot = { ...mockBot, userId: 'usr_owner' };
+    mockManager.getBot.mockReturnValue(ownedBot);
+
+    const crossTenant = await control('bot-1', 'stop', 'usr_attacker');
+    expect(crossTenant).toEqual({ ok: false, error: 'Bot not found: bot-1' });
+    expect(mockBot.stop).not.toHaveBeenCalled();
+
+    const ownerResume = await control('bot-1', 'resume', 'usr_owner');
+    expect(ownerResume).toEqual({ ok: true });
+    expect(mockManager.resumeBot).toHaveBeenCalledWith('bot-1', 'usr_owner');
   });
 });
