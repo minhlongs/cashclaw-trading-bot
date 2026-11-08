@@ -12,8 +12,10 @@ import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store
 import { defaultCheckoutOrderStore } from '@/ee/billing/checkout-order-store';
 
 const mockBotListHandler = vi.fn();
+const mockBotCreateHandler = vi.fn();
 vi.mock('@/forest/api/routes', () => ({
   botListHandler: (...args: unknown[]) => mockBotListHandler(...args),
+  botCreateHandler: (...args: unknown[]) => mockBotCreateHandler(...args),
 }));
 
 /** Seeds a workspace tier through the production path — a verified IPN upgrade. */
@@ -34,6 +36,7 @@ describe('Phase 1: SaaS API Routes Integration', () => {
     defaultSaasEntitlementStore.resetMemoryForTesting();
     vi.clearAllMocks();
     mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
+    mockBotCreateHandler.mockResolvedValue({ ok: true, data: { id: 'sync_test_01' } });
     // Production has no default IPN secret, so the test names one explicitly.
     vi.stubEnv('NOWPAYMENTS_IPN_SECRET', 'ee-routes-ipn-secret');
     defaultCheckoutOrderStore.resetMemoryForTesting();
@@ -185,21 +188,22 @@ describe('Phase 1: SaaS API Routes Integration', () => {
   });
 
   describe('POST /api/ee/sync', () => {
-    it('accepts and imports valid Local-to-Cloud Sync Bundle', async () => {
+    it('accepts and imports valid Local-to-Cloud Sync Bundle and materializes a paper bot', async () => {
       const bundleResult = await createLocalToCloudSyncBundle({
         botName: 'Volatility DCA Local',
-        symbol: 'BTC/USDT',
+        symbol: 'BTCUSDT',
         strategyId: 'volatilityDca',
         intervalMinutes: 60,
         feeBps: 10,
         slippageBps: 5,
-        parameters: { window: 20 },
+        parameters: { window: 20, capital: 2500 },
       });
       expect(bundleResult.ok).toBe(true);
       if (!bundleResult.ok) return;
 
       const req = new Request('http://localhost/api/ee/sync', {
         method: 'POST',
+        headers: { 'x-user-id': 'user_sync_1' },
         body: JSON.stringify(bundleResult.data),
       });
 
@@ -208,6 +212,44 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       const body = (await res.json()) as Record<string, unknown>;
       expect(body.ok).toBe(true);
       expect(body.botName).toBe('Volatility DCA Local');
+      expect(body.botId).toBe('sync_test_01');
+      expect(mockBotCreateHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Volatility DCA Local',
+          strategy: 'volatility_dca',
+          pair: 'BTC/USDT',
+          capital: 2500,
+          mode: 'paper',
+          config: { window: 20, capital: 2500 },
+        }),
+        'user_sync_1',
+      );
+    });
+
+    it('returns 422 when botCreateHandler fails to materialize the synced bot', async () => {
+      mockBotCreateHandler.mockResolvedValueOnce({ ok: false, error: 'DB insert failed' });
+      const bundleResult = await createLocalToCloudSyncBundle({
+        botName: 'Failing Bot',
+        symbol: 'ETH/USDT',
+        strategyId: 'grid',
+        intervalMinutes: 15,
+        feeBps: 10,
+        slippageBps: 5,
+        parameters: { levels: 10 },
+      });
+      expect(bundleResult.ok).toBe(true);
+      if (!bundleResult.ok) return;
+
+      const res = await postSync(
+        new Request('http://localhost/api/ee/sync', {
+          method: 'POST',
+          body: JSON.stringify(bundleResult.data),
+        }),
+      );
+      expect(res.status).toBe(422);
+      const body = (await res.json()) as Record<string, unknown>;
+      expect(body.ok).toBe(false);
+      expect(body.error).toBe('DB insert failed');
     });
   });
 });

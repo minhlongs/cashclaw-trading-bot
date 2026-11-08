@@ -144,4 +144,32 @@ describe('GET /api/metrics', () => {
     expect(res.status).toBe(200);
     expect(bots.total).toBe(0);
   });
+
+  it('scopes bot counts and trade aggregates to x-user-id when present', async () => {
+    const mockBind = vi.fn().mockReturnValue({ all: mockAll, first: mockFirst });
+    const mockPrepare = vi.fn().mockReturnValue({
+      bind: mockBind,
+      all: mockAll,
+      first: mockFirst,
+    });
+    vi.mocked(createServerClient).mockReturnValue({ prepare: mockPrepare } as any);
+
+    mockBotGroups({ status: 'live_running', count: 1 });
+    mockTradeAgg(4, 50, 3, 1);
+
+    const req = new Request('http://localhost/api/metrics', {
+      headers: { 'x-user-id': 'user_metrics_1' },
+    });
+    const res = await GET(req);
+    const json = await res.json() as Json;
+    const bots = json.bots as Record<string, unknown>;
+    const perf = json.performance as Record<string, unknown>;
+
+    expect(bots.total).toBe(1);
+    expect(perf.totalPnl).toBe(50);
+    expect(mockPrepare).toHaveBeenCalledWith(expect.stringContaining('WHERE user_id = ?'));
+    expect(mockPrepare).toHaveBeenCalledWith(expect.stringContaining('INNER JOIN bots b ON t.bot_id = b.id'));
+    expect(mockBind).toHaveBeenCalledWith('user_metrics_1');
+    expect(mockBind).toHaveBeenCalledWith('filled', 'user_metrics_1');
+  });
 });

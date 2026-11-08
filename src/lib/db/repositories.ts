@@ -11,7 +11,9 @@ export { findUserById, upsertUser, insertBot, updateBot, deleteBot, findBotsByUs
 export { insertTrade, findTradesByBot, upsertCredential, insertTradeEvent, insertCapitalSnapshot, insertAudit } from './repo-trades-credentials';
 
 export async function findSettingsByUser(db: D1Database, userId: string | null): Promise<SettingsRow | null> {
-  const row = await db.prepare('SELECT * FROM settings WHERE user_id = ? OR user_id IS NULL ORDER BY user_id DESC LIMIT 1')
+  // A null userId means a system/legacy caller reading the shared row; an explicit
+  // user id must never fall back to it, or a tenant reads another tenant's config.
+  const row = await db.prepare('SELECT * FROM settings WHERE user_id IS ? ORDER BY updated_at DESC LIMIT 1')
     .bind(userId).first<SettingsRow>();
   return row ?? null;
 }

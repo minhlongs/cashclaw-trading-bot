@@ -52,8 +52,9 @@ beforeEach(() => {
   mockResumeFromHalt.mockResolvedValue({ ok: true });
 });
 
-function mockReq(body: unknown) {
-  return { json: async () => body, method: 'POST' } as any;
+function mockReq(body: unknown, headers: Record<string, string> = {}) {
+  const hdrs = new Headers(headers);
+  return { json: async () => body, method: 'POST', headers: hdrs } as any;
 }
 
 async function loadRoute() {
@@ -66,6 +67,17 @@ describe('GET /api/settings', () => {
     const res = await route.GET();
     const json = await res.json() as Json;
     expect(json.ok).toBe(true);
+  });
+
+  it('forwards the session user id to getSettings', async () => {
+    const route = await loadRoute();
+    const req = new Request('http://localhost/api/settings', {
+      headers: { 'x-user-id': 'user_settings_1' },
+    });
+    const res = await route.GET(req);
+    const json = await res.json() as Json;
+    expect(json.ok).toBe(true);
+    expect(mockGetSettings).toHaveBeenCalledWith('user_settings_1');
   });
 
   it('returns 500 on error', async () => {
@@ -100,6 +112,17 @@ describe('POST /api/settings', () => {
     const json = await res.json() as Json;
     expect(json.ok).toBe(true);
     expect(mockUpdateExchange).toHaveBeenCalledWith('binance', 'k', 's', false);
+  });
+
+  it('forwards the session user id when updating settings', async () => {
+    const route = await loadRoute();
+    await route.POST(
+      mockReq(
+        { type: 'exchange', exchange: 'binance', apiKey: 'k', apiSecret: 's', testnet: false },
+        { 'x-user-id': 'user_settings_1' },
+      ),
+    );
+    expect(mockUpdateExchange).toHaveBeenCalledWith('binance', 'k', 's', false, 'user_settings_1');
   });
 
   it('returns 400 when exchange update fails', async () => {

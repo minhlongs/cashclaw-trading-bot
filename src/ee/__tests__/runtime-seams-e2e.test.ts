@@ -13,8 +13,10 @@ import { POST as postCloudAlert } from '@/app/api/ee/alerts/route';
 import { POST as postCloudSync } from '@/app/api/ee/sync/route';
 
 const mockBotListHandler = vi.fn();
+const mockBotCreateHandler = vi.fn();
 vi.mock('@/forest/api/routes', () => ({
   botListHandler: (...args: unknown[]) => mockBotListHandler(...args),
+  botCreateHandler: (...args: unknown[]) => mockBotCreateHandler(...args),
 }));
 
 function createMockD1(): { db: D1Database; queries: string[] } {
@@ -82,6 +84,8 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     defaultCheckoutOrderStore.resetMemoryForTesting();
     mockBotListHandler.mockReset();
     mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
+    mockBotCreateHandler.mockReset();
+    mockBotCreateHandler.mockResolvedValue({ ok: true, data: { id: 'sync_test_bot' } });
     // Production has no default IPN or alert webhook secret, so the test names them explicitly.
     vi.stubEnv('NOWPAYMENTS_IPN_SECRET', 'runtime-seams-ipn-secret');
     vi.stubEnv('CASHCLAW_ALERT_WEBHOOK_SECRET', 'runtime-seams-alert-secret');

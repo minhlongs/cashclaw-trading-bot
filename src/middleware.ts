@@ -11,8 +11,16 @@ const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
 // API route prefixes that require auth for mutating requests.
 const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops', '/api/ee'];
 
-// GET routes that contain sensitive data — bot capital, PnL, config, settings.
-const SENSITIVE_GET_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops', '/api/ee'];
+// GET routes that contain sensitive data — bot capital, PnL, config, settings, metrics, killswitch.
+const SENSITIVE_GET_PREFIXES = [
+  '/api/bots',
+  '/api/settings',
+  '/api/alpha',
+  '/api/ops',
+  '/api/ee',
+  '/api/metrics',
+  '/api/killswitch-status',
+];
 
 // Auth routes are always public (login, logout, me).
 // The IPN webhooks must stay public for POST callbacks: NOWPayments calls them

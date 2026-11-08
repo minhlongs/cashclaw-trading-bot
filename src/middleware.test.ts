@@ -191,11 +191,19 @@ describe('middleware', () => {
   it('allows GET /api/version without session', async () => {
     expect((await middleware(makeReq('GET', '/api/version'))).status).toBe(200);
   });
-  it('allows GET /api/metrics without session', async () => {
-    expect((await middleware(makeReq('GET', '/api/metrics'))).status).toBe(200);
+  it('blocks GET /api/metrics without session', async () => {
+    expect((await middleware(makeReq('GET', '/api/metrics'))).status).toBe(401);
   });
-  it('allows GET /api/killswitch-status without session', async () => {
-    expect((await middleware(makeReq('GET', '/api/killswitch-status'))).status).toBe(200);
+  it('allows GET /api/metrics with valid session', async () => {
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
+    expect((await middleware(makeReq('GET', '/api/metrics', { session_id: 'ok' }))).status).toBe(200);
+  });
+  it('blocks GET /api/killswitch-status without session', async () => {
+    expect((await middleware(makeReq('GET', '/api/killswitch-status'))).status).toBe(401);
+  });
+  it('allows GET /api/killswitch-status with valid session', async () => {
+    mockDbSession('u1', Math.floor(Date.now() / 1000) + 86400);
+    expect((await middleware(makeReq('GET', '/api/killswitch-status', { session_id: 'ok' }))).status).toBe(200);
   });
 
   /* ── Auth routes (always public) ───────────────────────────── */

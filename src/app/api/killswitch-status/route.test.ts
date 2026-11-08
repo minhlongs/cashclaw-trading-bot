@@ -126,4 +126,26 @@ describe('GET /api/killswitch-status', () => {
     expect(json.dailyPnl).toBe(0);
     expect(json.consecutiveLosses).toBe(0);
   });
+
+  it('scopes killswitch lookup to x-user-id when present', async () => {
+    mockDbAvailable();
+    vi.mocked(findSettingsByUser).mockResolvedValue({
+      id: 'settings_user_ks',
+      user_id: 'user_ks',
+      killswitch_enabled: 0,
+      killswitch_reason: 'User halt',
+      killswitch_triggered_at: 1700001000,
+      killswitch_daily_json: '{}',
+    } as any);
+
+    const req = new Request('http://localhost/api/killswitch-status', {
+      headers: { 'x-user-id': 'user_ks' },
+    });
+    const res = await GET(req);
+    const json = await res.json() as Record<string, unknown>;
+
+    expect(vi.mocked(findSettingsByUser)).toHaveBeenCalledWith(expect.anything(), 'user_ks');
+    expect(json.halted).toBe(true);
+    expect(json.haltReason).toBe('User halt');
+  });
 });
