@@ -19,6 +19,10 @@ vi.mock('@/tree/bot', () => ({
   getBotManager: vi.fn(() => mockManager),
 }));
 
+vi.mock('@/lib/db/client', () => ({
+  createServerClient: vi.fn(() => null),
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockManager.getBot.mockReturnValue(mockBot);
@@ -144,6 +148,21 @@ describe('bot-actions', () => {
 
       expect(await botActionResume('bot-1', 'usr_owner')).toEqual({ ok: true });
       expect(mockManager.resumeBot).toHaveBeenCalledWith('bot-1', 'usr_owner');
+    });
+
+    it('enforces D1 api_credentials preflight when starting a bot via botActionStart', async () => {
+      const { createServerClient } = await import('@/lib/db/client');
+      const mockFirst = vi.fn().mockResolvedValue(null);
+      const mockBind = vi.fn().mockReturnValue({ first: mockFirst });
+      const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
+      vi.mocked(createServerClient).mockReturnValueOnce({ prepare: mockPrepare } as unknown as ReturnType<typeof createServerClient>);
+
+      const { botActionStart } = await import('./bot-actions');
+      const result = await botActionStart('bot-1', 'usr_owner');
+
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('Missing exchange credentials');
+      expect(mockBot.start).not.toHaveBeenCalled();
     });
   });
 });

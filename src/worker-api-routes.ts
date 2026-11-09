@@ -37,6 +37,17 @@ export function registerPublicStatusRoutes(app: AppType): void {
       return c.json({ ok: true, data: { version: '0.0.0-dev', shortSha: '0000000' } }, 200);
     }
   });
+}
+
+export function registerProtectedRoutes(app: AppType): void {
+  app.use('/internal/api/bots/*', authGuard());
+  app.use('/api/killswitch/*', authGuard());
+  app.use('/api/killswitch-status', authGuard());
+  app.use('/api/killswitch-status/*', authGuard());
+  app.use('/api/cron/*', authGuard());
+  app.use('/api/events', authGuard());
+  app.use('/api/events/*', authGuard());
+  app.use('/api/stats/*', authGuard());
 
   app.get('/api/killswitch-status', async (c) => {
     try {
@@ -51,15 +62,6 @@ export function registerPublicStatusRoutes(app: AppType): void {
     } catch { /* fallback */ }
     return c.json({ ...defaultKillswitch, timestamp: Date.now() });
   });
-}
-
-export function registerProtectedRoutes(app: AppType): void {
-  app.use('/internal/api/bots/*', authGuard());
-  app.use('/api/killswitch/*', authGuard());
-  app.use('/api/cron/*', authGuard());
-  app.use('/api/events', authGuard());
-  app.use('/api/events/*', authGuard());
-  app.use('/api/stats/*', authGuard());
 
   app.get('/internal/api/bots', async (c) => { const r = await botListHandler(); return c.json(r, r.ok ? 200 : 500); });
   app.get('/internal/api/bots/:id', async (c) => { const r = await botDetailHandler(c.req.param('id')); return c.json(r, r.ok ? 200 : 404); });

@@ -27,8 +27,13 @@ describe('worker-api supplementary tests', () => {
     expect(json.data.shortSha).toBe('abcdef1');
   });
 
-  it('GET /api/killswitch-status returns fallback when DB is absent', async () => {
-    const res = await app.request('/api/killswitch-status', {}, makeEnv({ DB: null }));
+  it('GET /api/killswitch-status requires Bearer token and returns fallback when DB is absent', async () => {
+    const unauthRes = await app.request('/api/killswitch-status', {}, makeEnv({ DB: null }));
+    expect(unauthRes.status).toBe(401);
+
+    const res = await app.request('/api/killswitch-status', {
+      headers: { Authorization: 'Bearer test-token' },
+    }, makeEnv({ DB: null }));
     expect(res.status).toBe(200);
     const body = await res.json() as { enabled: boolean; halted: boolean };
     expect(body.enabled).toBe(true);

@@ -1,65 +1,36 @@
 // Forest layer — Bot lifecycle actions (start, stop, pause, resume, killswitch)
-// Thin wrappers around BotInstance methods with error handling.
+// Delegates lifecycle control to unified botControlHandler (enforcing credential preflight on start).
 
 'use server';
 
 import { getBotManager } from '@/tree/bot';
+import { botControlHandler } from '@/forest/api/handlers/bot-control';
 
-async function resolveOwnedBot(id: string, userId?: string) {
-  const manager = getBotManager();
-  const bot = (userId ? manager.getBot(id, userId) : manager.getBot(id))
-    ?? await (userId ? manager.getOrCreateBot?.(id, userId) : manager.getOrCreateBot?.(id));
-  if (!bot) return null;
-  const ownerId = manager.getBotOwnerId?.(id);
-  if (userId && ownerId && ownerId !== userId) return null;
-  return bot;
+function normalizeActionError(
+  result: { ok: boolean; error?: string },
+  id: string,
+): { ok: boolean; error?: string } {
+  if (!result.ok && result.error === `Bot not found: ${id}`) {
+    return { ok: false, error: 'Bot not found' };
+  }
+  return result;
 }
 
 // ── Server Actions ──────────────────────────────────────────────
 export async function botActionStart(id: string, userId?: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const bot = await resolveOwnedBot(id, userId);
-    if (!bot) return { ok: false, error: 'Bot not found' };
-    await bot.start();
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Start failed' };
-  }
+  return normalizeActionError(await botControlHandler(id, 'start', userId), id);
 }
 
 export async function botActionStop(id: string, userId?: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const bot = await resolveOwnedBot(id, userId);
-    if (!bot) return { ok: false, error: 'Bot not found' };
-    bot.stop();
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Stop failed' };
-  }
+  return normalizeActionError(await botControlHandler(id, 'stop', userId), id);
 }
 
 export async function botActionPause(id: string, userId?: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const bot = await resolveOwnedBot(id, userId);
-    if (!bot) return { ok: false, error: 'Bot not found' };
-    bot.pause();
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Pause failed' };
-  }
+  return normalizeActionError(await botControlHandler(id, 'pause', userId), id);
 }
 
 export async function botActionResume(id: string, userId?: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const manager = getBotManager();
-    const bot = await resolveOwnedBot(id, userId);
-    if (!bot) return { ok: false, error: 'Bot not found' };
-    if (userId) manager.resumeBot(id, userId);
-    else manager.resumeBot(id);
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Resume failed' };
-  }
+  return normalizeActionError(await botControlHandler(id, 'resume', userId), id);
 }
 
 // ── Killswitch Actions ──────────────────────────────────────────
