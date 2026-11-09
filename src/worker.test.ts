@@ -142,12 +142,15 @@ describe('worker routes', () => {
       registerProtectedRoutes(freshApp as never);
       expect((await freshApp.request('/api/events', {}, mkEnv())).status).toBe(401);
       expect((await freshApp.request('/api/stats/daily', {}, mkEnv())).status).toBe(401);
+      expect((await freshApp.request('/api/killswitch-status', {}, mkEnv())).status).toBe(401);
       const authEvents = await freshApp.request('/api/events?botId=bot-1&limit=10', { headers: { Authorization: 'Bearer test-token' } }, mkEnv());
       expect(authEvents.status).toBe(200);
       expect(eventsHandler).toHaveBeenCalledWith('bot-1', 10);
       const authStats = await freshApp.request('/api/stats/daily', { headers: { Authorization: 'Bearer test-token' } }, mkEnv());
       expect(authStats.status).toBe(200);
       expect(dailyStatsHandler).toHaveBeenCalledOnce();
+      const authKillswitch = await freshApp.request('/api/killswitch-status', { headers: { Authorization: 'Bearer test-token' } }, mkEnv());
+      expect(authKillswitch.status).toBe(200);
     });
   });
 

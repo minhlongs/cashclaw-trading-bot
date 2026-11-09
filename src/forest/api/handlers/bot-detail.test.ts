@@ -114,6 +114,16 @@ describe('botDetailHandler', () => {
     expect(denied.error).toBe('Bot not found: bot-1');
     expect(mockManager.getBot).toHaveBeenCalledWith('bot-1', 'usr_attacker');
   });
+
+  it('forwards userId to getRecentEvents when fetching bot detail', async () => {
+    const { getRecentEvents } = await import('@/forest/dashboard/trade-events');
+    mockManager.getBotOwnerId.mockReturnValue('usr_owner');
+
+    const result = await getDetail('bot-1', 'usr_owner');
+
+    expect(result.ok).toBe(true);
+    expect(getRecentEvents).toHaveBeenCalledWith(['bot-1'], 'usr_owner');
+  });
 });
 
 describe('botControlHandler', () => {

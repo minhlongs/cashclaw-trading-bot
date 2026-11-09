@@ -46,9 +46,9 @@ async function resolveAuthorizedBot(
 ) {
   const manager = getBotManager();
   const bot = (userId ? manager.getBot(id, userId) : manager.getBot(id))
-    ?? await (userId ? manager.getOrCreateBot(id, userId) : manager.getOrCreateBot(id));
+    ?? await (userId ? manager.getOrCreateBot?.(id, userId) : manager.getOrCreateBot?.(id));
   if (!bot) return null;
-  const ownerId = manager.getBotOwnerId(id);
+  const ownerId = manager.getBotOwnerId?.(id);
   if (userId && ownerId && ownerId !== userId) return null;
   return bot;
 }
@@ -64,8 +64,11 @@ export async function botControlHandler(
     if (!bot) {
       return { ok: false, error: `Bot not found: ${id}` };
     }
-    const ownerId = manager.getBotOwnerId(id);
-    const { exchange } = bot.getConfig() as { exchange?: string };
+    const ownerId = manager.getBotOwnerId?.(id);
+    const rawConfig = typeof bot.getConfig === 'function'
+      ? (bot.getConfig() as { exchange?: string } | undefined)
+      : { exchange: 'paper' };
+    const { exchange } = rawConfig ?? {};
 
     switch (action) {
       case 'start': {

@@ -22,7 +22,7 @@ export async function botDetailHandler(
     const snapshot = bot.getSnapshot();
     const config = bot.getConfig() as BotConfig;
     const gridConfig = extractGridConfig(config);
-    const recentEvents = await getRecentEvents([id]);
+    const recentEvents = await getRecentEvents([id], userId);
 
     return {
       ok: true,
