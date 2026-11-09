@@ -8,13 +8,13 @@ export type { DailyStats, SnapshotRow, EventRow } from './daily-stats-types';
 
 const log = createLogger('api/daily-stats');
 
-export async function dailyStatsHandler(): Promise<DailyStats> {
+export async function dailyStatsHandler(userId?: string): Promise<DailyStats> {
   const db = createServerClient();
   if (!db) return { ok: false, error: 'Database not available' };
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   try {
-    const { snapResults, tradeResults } = await fetchDailyStatsRaw(db, startOfDay.getTime());
+    const { snapResults, tradeResults } = await fetchDailyStatsRaw(db, startOfDay.getTime(), userId);
     return { ok: true, data: aggregateDailyStats(startOfDay, snapResults, tradeResults) };
   } catch (error) {
     log.error('Failed to compute daily stats', error instanceof Error ? error : new Error(String(error)), { action: 'dailyStatsHandler' });

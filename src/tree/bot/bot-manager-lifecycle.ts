@@ -38,7 +38,7 @@ export class BotManagerLifecycle {
     bot.pause();
     if (effectiveUserId) {
       const state = bot.getSnapshot();
-      this.patchBotSafe(id, { status: toD1Status(state.status), total_pnl: state.totalPnl });
+      this.patchBotSafe(id, { status: toD1Status(state.status), total_pnl: state.totalPnl }, effectiveUserId);
     }
   }
 
@@ -51,7 +51,7 @@ export class BotManagerLifecycle {
     bot.resume();
     if (effectiveUserId) {
       const state = bot.getSnapshot();
-      this.patchBotSafe(id, { status: toD1Status(state.status), total_pnl: state.totalPnl });
+      this.patchBotSafe(id, { status: toD1Status(state.status), total_pnl: state.totalPnl }, effectiveUserId);
     }
   }
 
@@ -61,7 +61,7 @@ export class BotManagerLifecycle {
     bot.stop();
     if (effectiveUserId) {
       const state = bot.getSnapshot();
-      this.patchBotSafe(id, { status: toD1Status(state.status), total_pnl: state.totalPnl });
+      this.patchBotSafe(id, { status: toD1Status(state.status), total_pnl: state.totalPnl }, effectiveUserId);
     }
   }
 
@@ -75,13 +75,13 @@ export class BotManagerLifecycle {
       cached.bot.destroy();
       this.cache.delete(id);
       if (effectiveUserId) {
-        this.patchBotSafe(id, { status: 'stopped', total_pnl: 0 });
+        this.patchBotSafe(id, { status: 'stopped', total_pnl: 0 }, effectiveUserId);
       }
     }
   }
 
-  private patchBotSafe(id: string, fields: Record<string, unknown>): void {
-    patchBot(id, fields).catch((error) => {
+  private patchBotSafe(id: string, fields: Record<string, unknown>, userId?: string): void {
+    patchBot(id, fields, userId).catch((error) => {
       log.error(`D1 persist failed for ${id}`, error instanceof Error ? error : new Error(String(error)), { action: 'patchBot' });
     });
   }

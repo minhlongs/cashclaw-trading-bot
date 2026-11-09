@@ -21,6 +21,10 @@ const defaultKillswitch = {
 
 type AppType = Hono<{ Bindings: WorkerEnv }>;
 
+function resolveWorkerUserId(c: { req: { header: (name: string) => string | undefined; query: (name: string) => string | undefined } }): string | undefined {
+  return c.req.header('x-user-id')?.trim() || c.req.query('userId')?.trim() || undefined;
+}
+
 export function registerPublicStatusRoutes(app: AppType): void {
   app.get('/api/health', async (c) => {
     const bots = await new BotQueryService().listBots();
@@ -53,7 +57,7 @@ export function registerProtectedRoutes(app: AppType): void {
     try {
       if (c.env.DB) {
         const { findSettingsByUser } = await import('./lib/db/repositories');
-        const s = await findSettingsByUser(c.env.DB as D1Database, null);
+        const s = await findSettingsByUser(c.env.DB as D1Database, resolveWorkerUserId(c) ?? null);
         if (s) {
           const enabled = s.killswitch_enabled === 1;
           return c.json({ ...defaultKillswitch, enabled, halted: !enabled, haltReason: s.killswitch_reason ?? null, haltedAt: s.killswitch_triggered_at ?? null, timestamp: Date.now() });
@@ -63,12 +67,12 @@ export function registerProtectedRoutes(app: AppType): void {
     return c.json({ ...defaultKillswitch, timestamp: Date.now() });
   });
 
-  app.get('/internal/api/bots', async (c) => { const r = await botListHandler(); return c.json(r, r.ok ? 200 : 500); });
-  app.get('/internal/api/bots/:id', async (c) => { const r = await botDetailHandler(c.req.param('id')); return c.json(r, r.ok ? 200 : 404); });
+  app.get('/internal/api/bots', async (c) => { const r = await botListHandler(resolveWorkerUserId(c)); return c.json(r, r.ok ? 200 : 500); });
+  app.get('/internal/api/bots/:id', async (c) => { const r = await botDetailHandler(c.req.param('id'), resolveWorkerUserId(c)); return c.json(r, r.ok ? 200 : 404); });
   app.post('/internal/api/bots/:id/:action', async (c) => {
     const action = c.req.param('action');
     if (!['start', 'stop', 'pause', 'resume'].includes(action ?? '')) return c.json({ ok: false, error: 'Invalid action' }, 400);
-    const r = await botControlHandler(c.req.param('id'), action as 'start' | 'stop' | 'pause' | 'resume');
+    const r = await botControlHandler(c.req.param('id'), action as 'start' | 'stop' | 'pause' | 'resume', resolveWorkerUserId(c));
     return c.json(r, r.ok ? 200 : 500);
   });
   app.post('/api/killswitch/halt', async (c) => {
@@ -79,9 +83,9 @@ export function registerProtectedRoutes(app: AppType): void {
   app.post('/api/killswitch/resume', async (c) => { const r = await killswitchResumeHandler(); return c.json(r, r.ok ? 200 : 500); });
   app.get('/api/events', async (c) => {
     const limit = parseInt(c.req.query('limit') ?? '50', 10);
-    const r = await eventsHandler(c.req.query('botId') ?? undefined, limit);
+    const r = await eventsHandler(c.req.query('botId') ?? undefined, limit, resolveWorkerUserId(c));
     return c.json(r, r.ok ? 200 : 500);
   });
-  app.get('/api/stats/daily', async (c) => { const r = await dailyStatsHandler(); return c.json(r, r.ok ? 200 : 500); });
+  app.get('/api/stats/daily', async (c) => { const r = await dailyStatsHandler(resolveWorkerUserId(c)); return c.json(r, r.ok ? 200 : 500); });
   app.post('/api/cron/eval', async (c) => c.json(await new BotScheduler().tick()));
 }

@@ -73,7 +73,7 @@ export async function botUpdateConfigHandler(
       mode: 'paper', // ADR-001 paper-only invariant
     };
 
-    await patchBot(id, { config_json: JSON.stringify(updatedConfig) });
+    await patchBot(id, { config_json: JSON.stringify(updatedConfig) }, userId);
     bot.updateConfig(updatedConfig);
 
     return {

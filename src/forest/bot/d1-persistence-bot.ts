@@ -38,19 +38,19 @@ export async function persistBot(userId: string, bot: {
 }
 
 /** Update bot fields in D1 (status, pnl, etc.). */
-export async function patchBot(botId: string, patch: Partial<Bot>): Promise<void> {
+export async function patchBot(botId: string, patch: Partial<Bot>, userId?: string): Promise<void> {
   const db = createServerClient();
   if (!db) return;
 
   const data = { ...patch, updated_at: now() };
-  await updateBot(db, botId, data);
+  await updateBot(db, botId, data, userId);
 }
 
 /** Delete a bot from D1. */
-export async function deleteBotRecord(botId: string): Promise<void> {
+export async function deleteBotRecord(botId: string, userId?: string): Promise<void> {
   const db = createServerClient();
   if (!db) return;
-  await deleteBot(db, botId);
+  await deleteBot(db, botId, userId);
 }
 
 /**

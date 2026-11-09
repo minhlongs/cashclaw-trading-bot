@@ -18,6 +18,7 @@ const MAX_LIMIT = 200;
 export async function eventsHandler(
   botId?: string,
   limit = 50,
+  userId?: string,
 ): Promise<EventsResponse> {
   const db = createServerClient();
   if (!db) {
@@ -27,6 +28,34 @@ export async function eventsHandler(
   const cappedLimit = Math.min(limit, MAX_LIMIT);
 
   try {
+    if (userId) {
+      const { results } = botId
+        ? await db
+            .prepare(
+              `SELECT te.id, te.bot_id, te.event_type, te.detail_json, te.created_at
+               FROM trade_events te
+               INNER JOIN bots b ON te.bot_id = b.id
+               WHERE te.bot_id = ? AND b.user_id = ?
+               ORDER BY te.created_at DESC
+               LIMIT ?`,
+            )
+            .bind(botId, userId, cappedLimit)
+            .all<EventRow>()
+        : await db
+            .prepare(
+              `SELECT te.id, te.bot_id, te.event_type, te.detail_json, te.created_at
+               FROM trade_events te
+               INNER JOIN bots b ON te.bot_id = b.id
+               WHERE b.user_id = ?
+               ORDER BY te.created_at DESC
+               LIMIT ?`,
+            )
+            .bind(userId, cappedLimit)
+            .all<EventRow>();
+
+      return { ok: true, data: rowsToEvents(results) };
+    }
+
     if (botId) {
       const { results } = await db
         .prepare(
