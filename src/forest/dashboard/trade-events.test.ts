@@ -128,4 +128,16 @@ describe('getRecentEvents', () => {
     const result = await getRecentEvents(['bot-1']);
     expect(result).toEqual([]);
   });
+
+  it('filters botIds to owned bots when userId is provided', async () => {
+    const { getRecentEvents } = await import('./trade-events');
+    // BotQueryService mock returns ['bot-a', 'bot-b']; foreign 'bot-foreign' is stripped
+    await getRecentEvents(['bot-a', 'bot-foreign'], 'usr_1');
+    expect(mockBind).toHaveBeenCalledWith('bot-a', 200);
+
+    mockBind.mockClear();
+    const noneOwned = await getRecentEvents(['bot-foreign'], 'usr_1');
+    expect(noneOwned).toEqual([]);
+    expect(mockBind).not.toHaveBeenCalled();
+  });
 });

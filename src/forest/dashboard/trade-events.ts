@@ -21,12 +21,18 @@ interface EventRow {
 }
 
 // ── Server Actions ──────────────────────────────────────────────
-export async function getRecentEvents(botIds?: string[]): Promise<TradeEvent[]> {
+export async function getRecentEvents(botIds?: string[], userId?: string): Promise<TradeEvent[]> {
   const db = createServerClient();
   if (!db) return [];
 
   let ids = botIds;
-  if (!ids || ids.length === 0) {
+  if (userId) {
+    const ownedBots = await new BotQueryService().listBots(userId);
+    const ownedIds = new Set(ownedBots.map((b) => b.id));
+    ids = ids && ids.length > 0
+      ? ids.filter((id) => ownedIds.has(id))
+      : Array.from(ownedIds);
+  } else if (!ids || ids.length === 0) {
     const service = new BotQueryService();
     const bots = await service.listBots();
     ids = bots.map((b) => b.id);

@@ -19,14 +19,19 @@ export class BotQueryService {
     this.db = db ?? createServerClient();
   }
 
-  /** Fetch a single bot by ID. Returns null if not found or DB unavailable. */
-  async getBot(id: string): Promise<BotSummary | null> {
+  /** Fetch a single bot by ID, optionally scoped to userId. Returns null if not found or DB unavailable. */
+  async getBot(id: string, userId?: string): Promise<BotSummary | null> {
     if (!this.db) return null;
     try {
-      const row = await this.db
-        .prepare('SELECT * FROM bots WHERE id = ?')
-        .bind(id)
-        .first<BotRow>();
+      const row = userId
+        ? await this.db
+            .prepare('SELECT * FROM bots WHERE id = ? AND user_id = ?')
+            .bind(id, userId)
+            .first<BotRow>()
+        : await this.db
+            .prepare('SELECT * FROM bots WHERE id = ?')
+            .bind(id)
+            .first<BotRow>();
       if (!row) return null;
       return rowToBotSummary(row);
     } catch (error) {

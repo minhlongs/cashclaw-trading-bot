@@ -57,6 +57,9 @@ export function registerProtectedRoutes(app: AppType): void {
   app.use('/internal/api/bots/*', authGuard());
   app.use('/api/killswitch/*', authGuard());
   app.use('/api/cron/*', authGuard());
+  app.use('/api/events', authGuard());
+  app.use('/api/events/*', authGuard());
+  app.use('/api/stats/*', authGuard());
 
   app.get('/internal/api/bots', async (c) => { const r = await botListHandler(); return c.json(r, r.ok ? 200 : 500); });
   app.get('/internal/api/bots/:id', async (c) => { const r = await botDetailHandler(c.req.param('id')); return c.json(r, r.ok ? 200 : 404); });

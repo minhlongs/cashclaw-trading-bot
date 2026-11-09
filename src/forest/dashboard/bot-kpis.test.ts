@@ -168,12 +168,7 @@ describe('getBotCards', () => {
   it('maps summaries to card data correctly', async () => {
     mockListBots.mockResolvedValue([
       mockSummary({
-        id: 'mr-1',
-        name: 'mr-1',
-        status: 'running',
-        strategy: 'mean_reversion',
-        pair: 'ETH/USDT',
-        exchange: 'binance',
+        id: 'mr-1', name: 'mr-1', status: 'running', strategy: 'mean_reversion', pair: 'ETH/USDT', exchange: 'binance',
         metrics: { totalPnl: 50, winCount: 2, lossCount: 1, maxDrawdown: 5, currentDrawdown: 0, totalTrades: 3, startedAt: 1000, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null },
         config: { strategy: 'mean_reversion', symbol: 'ETH/USDT', exchange: 'binance', mode: 'live', capital: 500, maxDrawdownPct: 10, bbPeriod: 20, bbStdDev: 2, rsiPeriod: 14, rsiBuyThreshold: 30, rsiSellThreshold: 70, volumeMultiplier: 1.5, positionSizePct: 10, cooldownMinutes: 5 },
         updatedAt: 2000,
@@ -184,8 +179,21 @@ describe('getBotCards', () => {
     expect(cards[0]).toEqual({
       id: 'mr-1', name: 'mr-1', strategy: 'mean_reversion', pair: 'ETH/USDT',
       exchange: 'binance', botStatus: 'running', totalPnl: 50, winCount: 2,
-      lossCount: 1, startedAt: 1000, updatedAt: 2000, capitalAllocated: 500,
-      maxDrawdownPct: 5,
+      lossCount: 1, startedAt: 1000, updatedAt: 2000, capitalAllocated: 500, maxDrawdownPct: 5,
     });
+  });
+
+  it('forwards userId to listBots and getRecentEvents across dashboard actions', async () => {
+    const { getDashboardData, getKpis } = await import('./bot-kpis');
+    mockListBots.mockResolvedValue([mockSummary({ id: 'bot-u1' })]);
+    await getDashboardData('usr_1');
+    expect(mockListBots).toHaveBeenCalledWith('usr_1');
+    expect(mockGetRecentEvents).toHaveBeenCalledWith(['bot-u1'], 'usr_1');
+    mockListBots.mockClear();
+    await getKpis('usr_1');
+    expect(mockListBots).toHaveBeenCalledWith('usr_1');
+    mockListBots.mockClear();
+    await getBotCards('usr_1');
+    expect(mockListBots).toHaveBeenCalledWith('usr_1');
   });
 });

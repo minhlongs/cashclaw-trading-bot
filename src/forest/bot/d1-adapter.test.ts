@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { loadAllBotsFromD1, hydrateFromD1 } from './d1-adapter';
+import { loadAllBotsFromD1, hydrateFromD1, BotQueryService } from './d1-adapter';
 
 // Mock dependencies
 vi.mock('@/lib/db/client', () => ({
@@ -100,6 +100,23 @@ describe('d1-adapter', () => {
       await hydrateFromD1('user_123');
 
       expect(createServerClient).toHaveBeenCalled();
+    });
+  });
+
+  describe('BotQueryService.getBot', () => {
+    it('binds user_id when userId is passed', async () => {
+      const { createServerClient } = await import('@/lib/db/client');
+      const mockFirst = vi.fn().mockResolvedValue(null);
+      const mockBind = vi.fn().mockReturnValue({ first: mockFirst });
+      const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
+      (createServerClient as ReturnType<typeof vi.fn>).mockReturnValue({ prepare: mockPrepare });
+
+      const svc = new BotQueryService();
+      const result = await svc.getBot('bot_123', 'user_abc');
+
+      expect(result).toBeNull();
+      expect(mockPrepare).toHaveBeenCalledWith('SELECT * FROM bots WHERE id = ? AND user_id = ?');
+      expect(mockBind).toHaveBeenCalledWith('bot_123', 'user_abc');
     });
   });
 });

@@ -71,6 +71,21 @@ describe('/api/alpha/research route', () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(429);
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('alpha:research', expect.any(Object));
+  });
+
+  it('scopes the rate limit bucket per x-user-id', async () => {
+    const req = new Request('http://localhost/api/alpha/research', {
+      method: 'POST',
+      headers: { 'x-user-id': 'usr_alpha_1' },
+      body: JSON.stringify({ symbol: 'BTCUSDT', timeframe: '1h' }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('alpha:research:usr_alpha_1', {
+      windowMs: 60_000,
+      maxRequests: 5,
+    });
   });
 
   it('returns 422 when Binance returns 0 candles', async () => {

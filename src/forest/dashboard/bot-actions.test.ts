@@ -9,6 +9,7 @@ const mockBot = {
 
 const mockManager = {
   getBot: vi.fn(),
+  getBotOwnerId: vi.fn((): string | undefined => undefined),
   resumeBot: vi.fn(),
   manualHalt: vi.fn(),
   manualResume: vi.fn(),
@@ -124,6 +125,25 @@ describe('bot-actions', () => {
       const result = await killswitchActionResume();
       expect(result.ok).toBe(true);
       expect(mockManager.manualResume).toHaveBeenCalled();
+    });
+  });
+
+  describe('multi-tenant userId scoping', () => {
+    it('blocks cross-tenant start/stop/pause/resume and forwards userId on resume', async () => {
+      mockManager.getBotOwnerId.mockReturnValue('usr_owner');
+      const { botActionStart, botActionStop, botActionPause, botActionResume } = await import('./bot-actions');
+
+      expect(await botActionStart('bot-1', 'usr_attacker')).toEqual({ ok: false, error: 'Bot not found' });
+      expect(await botActionStop('bot-1', 'usr_attacker')).toEqual({ ok: false, error: 'Bot not found' });
+      expect(await botActionPause('bot-1', 'usr_attacker')).toEqual({ ok: false, error: 'Bot not found' });
+      expect(await botActionResume('bot-1', 'usr_attacker')).toEqual({ ok: false, error: 'Bot not found' });
+      expect(mockBot.start).not.toHaveBeenCalled();
+      expect(mockBot.stop).not.toHaveBeenCalled();
+      expect(mockBot.pause).not.toHaveBeenCalled();
+      expect(mockManager.resumeBot).not.toHaveBeenCalled();
+
+      expect(await botActionResume('bot-1', 'usr_owner')).toEqual({ ok: true });
+      expect(mockManager.resumeBot).toHaveBeenCalledWith('bot-1', 'usr_owner');
     });
   });
 });
