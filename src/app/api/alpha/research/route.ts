@@ -14,8 +14,10 @@ import { ResearchRequestSchema, PIPELINE_TIMEOUT_MS } from './research-schema';
 import { executeResearchRun } from './research-runner';
 
 export async function POST(req: Request) {
+  const userId = req.headers?.get?.('x-user-id')?.trim() || undefined;
+  const rateLimitKey = userId ? `alpha:research:${userId}` : 'alpha:research';
   // Rate limit — pipeline runs are expensive (network + CPU), so a tight limit.
-  const rateLimit = checkRateLimit('alpha:research', {
+  const rateLimit = checkRateLimit(rateLimitKey, {
     windowMs: 60_000,
     maxRequests: 5,
   });

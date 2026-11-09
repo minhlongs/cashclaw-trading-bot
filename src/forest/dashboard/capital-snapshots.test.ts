@@ -5,6 +5,13 @@ const mockBind = vi.fn().mockReturnValue({ all: mockAll });
 const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
 const mockDb = { prepare: mockPrepare };
 
+const mockGetBot = vi.fn();
+vi.mock('@/forest/bot/d1-adapter', () => ({
+  BotQueryService: vi.fn().mockImplementation(() => ({
+    getBot: mockGetBot,
+  })),
+}));
+
 vi.mock('@/lib/db/client', () => ({
   createServerClient: vi.fn(() => mockDb),
 }));
@@ -12,6 +19,7 @@ vi.mock('@/lib/db/client', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mockAll.mockResolvedValue({ results: [] });
+  mockGetBot.mockResolvedValue({ id: 'bot-1' });
 });
 
 describe('getCapitalSnapshots', () => {
@@ -63,5 +71,14 @@ describe('getCapitalSnapshots', () => {
     const { getCapitalSnapshots } = await import('./capital-snapshots');
     const result = await getCapitalSnapshots('bot-1');
     expect(result).toEqual([]);
+  });
+
+  it('blocks capital snapshot lookup when bot is not owned by userId', async () => {
+    mockGetBot.mockResolvedValueOnce(null);
+    const { getCapitalSnapshots } = await import('./capital-snapshots');
+    const denied = await getCapitalSnapshots('bot-1', 30, 'usr_attacker');
+    expect(denied).toEqual([]);
+    expect(mockGetBot).toHaveBeenCalledWith('bot-1', 'usr_attacker');
+    expect(mockPrepare).not.toHaveBeenCalled();
   });
 });

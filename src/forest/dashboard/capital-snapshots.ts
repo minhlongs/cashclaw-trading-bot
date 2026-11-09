@@ -3,6 +3,7 @@
 
 'use server';
 
+import { BotQueryService } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
 import type { CapitalSnapshot } from '@/tree/telemetry';
 import { createLogger } from '@/lib/logger';
@@ -25,7 +26,11 @@ interface SnapshotRow {
 }
 
 // ── Server Actions ──────────────────────────────────────────────
-export async function getCapitalSnapshots(botId: string, limit = 30): Promise<CapitalSnapshot[]> {
+export async function getCapitalSnapshots(botId: string, limit = 30, userId?: string): Promise<CapitalSnapshot[]> {
+  if (userId) {
+    const owned = await new BotQueryService().getBot(botId, userId);
+    if (!owned) return [];
+  }
   const db = createServerClient();
   if (!db) return [];
 

@@ -86,14 +86,14 @@ describe('worker extended coverage', () => {
   });
 
   // ── Events endpoint ──
-  it('returns events telemetry', async () => {
-    const res = await app.request('/api/events', {}, mkEnv());
+  it('returns events telemetry with valid Bearer token', async () => {
+    const res = await app.request('/api/events', { headers: { Authorization: 'Bearer test-token' } }, mkEnv());
     expect(res.status).toBe(200);
   });
 
   // ── Daily stats endpoint ──
-  it('returns daily stats', async () => {
-    const res = await app.request('/api/stats/daily', {}, mkEnv());
+  it('returns daily stats with valid Bearer token', async () => {
+    const res = await app.request('/api/stats/daily', { headers: { Authorization: 'Bearer test-token' } }, mkEnv());
     expect(res.status).toBe(200);
   });
 

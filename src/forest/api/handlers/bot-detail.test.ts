@@ -1,45 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockSnapshot = {
-  id: 'bot-1',
-  status: 'running',
-  totalPnl: 150.5,
-  totalTrades: 20,
-  winCount: 12,
-  lossCount: 8,
-  maxDrawdown: 5.2,
-  currentDrawdown: 1.1,
-  startedAt: 1000,
-  stoppedAt: null,
-  lastTickAt: 2000,
-  lastOrderAt: 1500,
-  error: null,
+  id: 'bot-1', status: 'running', totalPnl: 150.5, totalTrades: 20,
+  winCount: 12, lossCount: 8, maxDrawdown: 5.2, currentDrawdown: 1.1,
+  startedAt: 1000, stoppedAt: null, lastTickAt: 2000, lastOrderAt: 1500, error: null,
 };
 
 const mockGridConfig = {
-  strategy: 'grid',
-  symbol: 'BTC/USDT',
-  exchange: 'binance',
-  capital: 1000,
-  gridSpacingPct: 2,
-  gridLevels: 10,
-  capitalPerLevelPct: 10,
-  takeProfitPct: 3,
-  stopLossPct: 5,
-  rebalanceOnFill: true,
+  strategy: 'grid', symbol: 'BTC/USDT', exchange: 'binance', capital: 1000,
+  gridSpacingPct: 2, gridLevels: 10, capitalPerLevelPct: 10,
+  takeProfitPct: 3, stopLossPct: 5, rebalanceOnFill: true,
 };
 
 const mockDcaConfig = {
-  strategy: 'dca',
-  symbol: 'ETH/USDT',
-  exchange: 'binance',
-  capital: 500,
-  gridSpacingPct: 0,
-  gridLevels: 0,
-  capitalPerLevelPct: 0,
-  takeProfitPct: 3,
-  stopLossPct: 5,
-  rebalanceOnFill: false,
+  strategy: 'dca', symbol: 'ETH/USDT', exchange: 'binance', capital: 500,
+  gridSpacingPct: 0, gridLevels: 0, capitalPerLevelPct: 0,
+  takeProfitPct: 3, stopLossPct: 5, rebalanceOnFill: false,
 };
 
 const mockBot = {
@@ -63,6 +39,10 @@ vi.mock('@/tree/bot', () => ({
 
 vi.mock('@/forest/dashboard/trade-events', () => ({
   getRecentEvents: vi.fn(async () => []),
+}));
+
+vi.mock('@/lib/db/client', () => ({
+  createServerClient: vi.fn(() => null),
 }));
 
 async function getDetail(id: string, userId?: string) {
@@ -193,5 +173,18 @@ describe('botControlHandler', () => {
     const ownerResume = await control('bot-1', 'resume', 'usr_owner');
     expect(ownerResume.ok).toBe(true);
     expect(mockManager.resumeBot).toHaveBeenCalledWith('bot-1', 'usr_owner');
+  });
+
+  it('enforces credential preflight on start via unified botControlHandler', async () => {
+    const { createServerClient } = await import('@/lib/db/client');
+    const mockFirst = vi.fn().mockResolvedValue(null);
+    const mockBind = vi.fn().mockReturnValue({ first: mockFirst });
+    const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
+    vi.mocked(createServerClient).mockReturnValueOnce({ prepare: mockPrepare } as unknown as ReturnType<typeof createServerClient>);
+
+    const result = await control('bot-1', 'start', 'usr_owner');
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain('Missing exchange credentials for binance');
+    expect(mockBot.start).not.toHaveBeenCalled();
   });
 });

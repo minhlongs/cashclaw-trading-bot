@@ -122,6 +122,7 @@ describe('POST /api/settings', () => {
         { 'x-user-id': 'user_settings_1' },
       ),
     );
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('settings:update:user_settings_1');
     expect(mockUpdateExchange).toHaveBeenCalledWith('binance', 'k', 's', false, 'user_settings_1');
   });
 

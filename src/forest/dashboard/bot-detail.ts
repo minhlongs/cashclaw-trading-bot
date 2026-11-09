@@ -13,15 +13,19 @@ import { botToDetail } from './bot-detail-mapper';
 export type { BotDetailData, TradeRow };
 export { botToDetail };
 
-export async function getBotDetail(id: string): Promise<BotDetailData | null> {
+export async function getBotDetail(id: string, userId?: string): Promise<BotDetailData | null> {
   const service = new BotQueryService();
-  const bot = await service.getBot(id);
+  const bot = userId ? await service.getBot(id, userId) : await service.getBot(id);
   if (!bot) return null;
   return botToDetail(bot);
 }
 
-export async function getTradeHistory(botId: string, limit = 20): Promise<TradeRow[]> {
+export async function getTradeHistory(botId: string, limit = 20, userId?: string): Promise<TradeRow[]> {
   const log = createLogger('bot-detail');
+  if (userId) {
+    const owned = await new BotQueryService().getBot(botId, userId);
+    if (!owned) return [];
+  }
   const db = createServerClient();
   if (!db) return [];
 
@@ -54,6 +58,6 @@ export async function getTradeHistory(botId: string, limit = 20): Promise<TradeR
   }
 }
 
-export async function getAllBots(): Promise<BotCardData[]> {
-  return getBotCards();
+export async function getAllBots(userId?: string): Promise<BotCardData[]> {
+  return getBotCards(userId);
 }

@@ -5,11 +5,20 @@
 
 import { getBotManager } from '@/tree/bot';
 
+async function resolveOwnedBot(id: string, userId?: string) {
+  const manager = getBotManager();
+  const bot = (userId ? manager.getBot(id, userId) : manager.getBot(id))
+    ?? await (userId ? manager.getOrCreateBot?.(id, userId) : manager.getOrCreateBot?.(id));
+  if (!bot) return null;
+  const ownerId = manager.getBotOwnerId?.(id);
+  if (userId && ownerId && ownerId !== userId) return null;
+  return bot;
+}
+
 // ── Server Actions ──────────────────────────────────────────────
-export async function botActionStart(id: string): Promise<{ ok: boolean; error?: string }> {
+export async function botActionStart(id: string, userId?: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    const manager = getBotManager();
-    const bot = manager.getBot(id);
+    const bot = await resolveOwnedBot(id, userId);
     if (!bot) return { ok: false, error: 'Bot not found' };
     await bot.start();
     return { ok: true };
@@ -18,10 +27,9 @@ export async function botActionStart(id: string): Promise<{ ok: boolean; error?:
   }
 }
 
-export async function botActionStop(id: string): Promise<{ ok: boolean; error?: string }> {
+export async function botActionStop(id: string, userId?: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    const manager = getBotManager();
-    const bot = manager.getBot(id);
+    const bot = await resolveOwnedBot(id, userId);
     if (!bot) return { ok: false, error: 'Bot not found' };
     bot.stop();
     return { ok: true };
@@ -30,10 +38,9 @@ export async function botActionStop(id: string): Promise<{ ok: boolean; error?: 
   }
 }
 
-export async function botActionPause(id: string): Promise<{ ok: boolean; error?: string }> {
+export async function botActionPause(id: string, userId?: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    const manager = getBotManager();
-    const bot = manager.getBot(id);
+    const bot = await resolveOwnedBot(id, userId);
     if (!bot) return { ok: false, error: 'Bot not found' };
     bot.pause();
     return { ok: true };
@@ -42,12 +49,13 @@ export async function botActionPause(id: string): Promise<{ ok: boolean; error?:
   }
 }
 
-export async function botActionResume(id: string): Promise<{ ok: boolean; error?: string }> {
+export async function botActionResume(id: string, userId?: string): Promise<{ ok: boolean; error?: string }> {
   try {
     const manager = getBotManager();
-    const bot = manager.getBot(id);
+    const bot = await resolveOwnedBot(id, userId);
     if (!bot) return { ok: false, error: 'Bot not found' };
-    manager.resumeBot(id);
+    if (userId) manager.resumeBot(id, userId);
+    else manager.resumeBot(id);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Resume failed' };
