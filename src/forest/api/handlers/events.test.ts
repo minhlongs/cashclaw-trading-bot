@@ -62,12 +62,8 @@ describe('eventsHandler', () => {
 
     it('handles non-Error throw during JSON.parse (line 85 else branch)', async () => {
       vi.mocked(createServerClient).mockReturnValue({ prepare: mockPrepare } as never);
-      const parseSpy = vi.spyOn(JSON, 'parse').mockImplementationOnce(() => {
-        throw 'string-not-error';
-      });
-      mockAll.mockResolvedValue({
-        results: [{ id: 'ev4', bot_id: 'bot-4', event_type: 'fill', detail_json: 'some-value', created_at: 4000 }],
-      });
+      const parseSpy = vi.spyOn(JSON, 'parse').mockImplementationOnce(() => { throw 'string-not-error'; });
+      mockAll.mockResolvedValue({ results: [{ id: 'ev4', bot_id: 'bot-4', event_type: 'fill', detail_json: 'some-value', created_at: 4000 }] });
       const result = await eventsHandler();
       expect(result.ok).toBe(true);
       expect(result.data![0].details).toEqual({});
@@ -104,13 +100,23 @@ describe('eventsHandler', () => {
 
     it('returns only filtered events for given botId', async () => {
       vi.mocked(createServerClient).mockReturnValue({ prepare: mockPrepare } as never);
-      mockAll.mockResolvedValue({
-        results: [{ id: 'ev1', bot_id: 'target-bot', event_type: 'fill', detail_json: '{"x":1}', created_at: 1000 }],
-      });
+      mockAll.mockResolvedValue({ results: [{ id: 'ev1', bot_id: 'target-bot', event_type: 'fill', detail_json: '{"x":1}', created_at: 1000 }] });
       const result = await eventsHandler('target-bot');
       expect(result.ok).toBe(true);
       expect(result.data).toHaveLength(1);
       expect(result.data![0].botId).toBe('target-bot');
+    });
+
+    it('scopes query by userId (with and without botId)', async () => {
+      vi.mocked(createServerClient).mockReturnValue({ prepare: mockPrepare } as never);
+      mockAll.mockResolvedValue({ results: [] });
+      await eventsHandler('target-bot', 25, 'usr_tenant');
+      expect(mockPrepare).toHaveBeenCalledWith(expect.stringContaining('WHERE te.bot_id = ? AND b.user_id = ?'));
+      expect(mockBind).toHaveBeenCalledWith('target-bot', 'usr_tenant', 25);
+
+      await eventsHandler(undefined, 40, 'usr_tenant');
+      expect(mockPrepare).toHaveBeenCalledWith(expect.stringContaining('WHERE b.user_id = ?'));
+      expect(mockBind).toHaveBeenCalledWith('usr_tenant', 40);
     });
   });
 

@@ -17,19 +17,13 @@ beforeEach(() => {
 });
 
 describe('findUserById', () => {
-  it('returns user when found', async () => {
+  it('returns user when found and null when not found', async () => {
     const user = { id: 'u1', email: 'test@test.com' };
-    mockFirst.mockResolvedValue(user);
+    mockFirst.mockResolvedValueOnce(user).mockResolvedValueOnce(null);
     const { findUserById } = await import('./repo-users-bots');
-    const result = await findUserById(mockDb, 'u1');
-    expect(result).toEqual(user);
+    expect(await findUserById(mockDb, 'u1')).toEqual(user);
     expect(mockPrepare).toHaveBeenCalledWith(expect.stringContaining('users'));
-  });
-
-  it('returns null when not found', async () => {
-    const { findUserById } = await import('./repo-users-bots');
-    const result = await findUserById(mockDb, 'nonexistent');
-    expect(result).toBeNull();
+    expect(await findUserById(mockDb, 'nonexistent')).toBeNull();
   });
 });
 
@@ -59,7 +53,13 @@ describe('updateBot', () => {
     const { updateBot } = await import('./repo-users-bots');
     await updateBot(mockDb, 'b1', { status: 'live_running' });
     expect(mockRun).toHaveBeenCalledOnce();
-    expect(mockBind).toHaveBeenCalled();
+    expect(mockBind).toHaveBeenCalledWith('live_running', 'b1');
+  });
+  it('scopes UPDATE with WHERE id = ? AND user_id = ? when userId is provided', async () => {
+    const { updateBot } = await import('./repo-users-bots');
+    await updateBot(mockDb, 'b1', { status: 'paused' }, 'u1');
+    expect(mockPrepare).toHaveBeenCalledWith(expect.stringContaining('WHERE id = ? AND user_id = ?'));
+    expect(mockBind).toHaveBeenCalledWith('paused', 'b1', 'u1');
   });
 });
 
@@ -69,30 +69,28 @@ describe('deleteBot', () => {
     await deleteBot(mockDb, 'b1');
     expect(mockRun).toHaveBeenCalledOnce();
   });
+  it('scopes DELETE with WHERE id = ? AND user_id = ? when userId is provided', async () => {
+    const { deleteBot } = await import('./repo-users-bots');
+    await deleteBot(mockDb, 'b1', 'u1');
+    expect(mockPrepare).toHaveBeenCalledWith('DELETE FROM bots WHERE id = ? AND user_id = ?');
+    expect(mockBind).toHaveBeenCalledWith('b1', 'u1');
+  });
 });
 
 describe('findBotsByUser', () => {
-  it('returns bots for user', async () => {
-    mockAll.mockResolvedValue({ results: [{ id: 'b1' }], meta: { duration: 1 } });
+  it('returns bots for user or empty array when none found', async () => {
     const { findBotsByUser } = await import('./repo-users-bots');
+    mockAll.mockResolvedValueOnce({ results: [{ id: 'b1' }], meta: { duration: 1 } });
     expect(await findBotsByUser(mockDb, 'u1')).toHaveLength(1);
-  });
-
-  it('returns empty array when none found', async () => {
-    const { findBotsByUser } = await import('./repo-users-bots');
     expect(await findBotsByUser(mockDb, 'u1')).toEqual([]);
   });
 });
 
 describe('findBotById', () => {
-  it('returns bot when found', async () => {
-    mockFirst.mockResolvedValue({ id: 'b1', name: 'Bot' });
+  it('returns bot when found and null when not found', async () => {
     const { findBotById } = await import('./repo-users-bots');
+    mockFirst.mockResolvedValueOnce({ id: 'b1', name: 'Bot' });
     expect((await findBotById(mockDb, 'b1'))?.id).toBe('b1');
-  });
-
-  it('returns null when not found', async () => {
-    const { findBotById } = await import('./repo-users-bots');
     expect(await findBotById(mockDb, 'nonexistent')).toBeNull();
   });
 });
@@ -101,8 +99,7 @@ describe('findAllBots', () => {
   it('returns all bots', async () => {
     mockAll.mockResolvedValue({ results: [{ id: 'b1' }, { id: 'b2' }], meta: { duration: 1 } });
     const { findAllBots } = await import('./repo-users-bots');
-    const result = await findAllBots(mockDb);
-    expect(result).toHaveLength(2);
+    expect(await findAllBots(mockDb)).toHaveLength(2);
   });
 });
 
@@ -116,18 +113,14 @@ describe('findSettingsByUser', () => {
     expect(mockPrepare).not.toHaveBeenCalledWith(expect.stringContaining('OR user_id IS NULL'));
     expect(mockBind).toHaveBeenCalledWith('u1');
   });
-
   it('binds null when querying system/default settings', async () => {
     const { findSettingsByUser } = await import('./repositories');
-    const result = await findSettingsByUser(mockDb, null);
-    expect(result).toBeNull();
+    expect(await findSettingsByUser(mockDb, null)).toBeNull();
     expect(mockBind).toHaveBeenCalledWith(null);
   });
-
   it('returns null when not found', async () => {
     const { findSettingsByUser } = await import('./repositories');
-    const result = await findSettingsByUser(mockDb, 'u1');
-    expect(result).toBeNull();
+    expect(await findSettingsByUser(mockDb, 'u1')).toBeNull();
   });
 });
 
@@ -161,7 +154,6 @@ describe('findTradesByBot', () => {
     const { findTradesByBot } = await import('./repo-trades-credentials');
     expect(await findTradesByBot(mockDb, 'b1')).toHaveLength(1);
   });
-
   it('returns empty array when none found', async () => {
     const { findTradesByBot } = await import('./repo-trades-credentials');
     expect(await findTradesByBot(mockDb, 'b1')).toEqual([]);

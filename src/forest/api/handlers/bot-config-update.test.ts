@@ -57,11 +57,22 @@ describe('botUpdateConfigHandler', () => {
     expect(result.data?.id).toBe('bot-1');
     expect((result.data?.config as { gridSpacingPct?: number })?.gridSpacingPct).toBe(2.5);
     expect((result.data?.config as { gridLevels?: number })?.gridLevels).toBe(8);
-    expect(mockPatchBot).toHaveBeenCalledWith('bot-1', {
-      config_json: expect.stringContaining('"gridSpacingPct":2.5'),
-    });
+    expect(mockPatchBot).toHaveBeenCalledWith(
+      'bot-1',
+      {
+        config_json: expect.stringContaining('"gridSpacingPct":2.5'),
+      },
+      undefined,
+    );
     expect(mockBot.updateConfig).toHaveBeenCalledWith(
       expect.objectContaining({ gridSpacingPct: 2.5, gridLevels: 8, mode: 'paper' }),
+    );
+
+    await botUpdateConfigHandler('bot-1', { gridLevels: 6 }, 'user-1');
+    expect(mockPatchBot).toHaveBeenLastCalledWith(
+      'bot-1',
+      { config_json: expect.stringContaining('"gridLevels":6') },
+      'user-1',
     );
   });
 

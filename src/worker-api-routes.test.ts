@@ -40,6 +40,27 @@ describe('worker-api supplementary tests', () => {
     expect(body.halted).toBe(false);
   });
 
+  it('GET /api/killswitch-status forwards x-user-id to D1 settings query', async () => {
+    const mockFirst = vi.fn().mockResolvedValue({
+      id: 'set_1',
+      user_id: 'usr_worker',
+      killswitch_enabled: 0,
+      killswitch_reason: 'Tenant halt',
+      killswitch_triggered_at: 12345,
+    });
+    const mockBind = vi.fn().mockReturnValue({ first: mockFirst });
+    const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
+    const res = await app.request('/api/killswitch-status', {
+      headers: { Authorization: 'Bearer test-token', 'x-user-id': 'usr_worker' },
+    }, makeEnv({ DB: { prepare: mockPrepare } as unknown as WorkerEnv['DB'] }));
+    expect(res.status).toBe(200);
+    expect(mockBind).toHaveBeenCalledWith('usr_worker');
+    const body = await res.json() as { enabled: boolean; halted: boolean; haltReason: string };
+    expect(body.enabled).toBe(false);
+    expect(body.halted).toBe(true);
+    expect(body.haltReason).toBe('Tenant halt');
+  });
+
   it('CORS origin handler resolves origin correctly', async () => {
     const env = makeEnv({ ALLOWED_ORIGINS: 'https://app.cashclaw.io,https://test.cashclaw.io' });
     const res1 = await app.request('/api/health', {

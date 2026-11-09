@@ -59,12 +59,13 @@ describe('persistBot', () => {
 
 describe('patchBot', () => {
   it('updates with merged fields and updated_at', async () => {
-    await patchBot('bot_1', { status: 'live_running', total_pnl: 50 });
+    await patchBot('bot_1', { status: 'live_running', total_pnl: 50 }, 'user_1');
     expect(mockUpdateBot).toHaveBeenCalledOnce();
-    const [, id, data] = mockUpdateBot.mock.calls[0] as unknown[];
+    const [, id, data, userId] = mockUpdateBot.mock.calls[0] as unknown[];
     expect(id).toBe('bot_1');
     expect(data).toMatchObject({ status: 'live_running', total_pnl: 50 });
     expect(data).toHaveProperty('updated_at');
+    expect(userId).toBe('user_1');
   });
   it('no-ops when db is null', async () => {
     const mod = await import('@/lib/db/client');
@@ -75,9 +76,9 @@ describe('patchBot', () => {
 });
 
 describe('deleteBotRecord', () => {
-  it('calls deleteBot', async () => {
-    await deleteBotRecord('bot_1');
-    expect(mockDeleteBot).toHaveBeenCalledWith(mockDb, 'bot_1');
+  it('calls deleteBot and forwards optional userId', async () => {
+    await deleteBotRecord('bot_1', 'user_1');
+    expect(mockDeleteBot).toHaveBeenCalledWith(mockDb, 'bot_1', 'user_1');
   });
   it('no-ops when db is null', async () => {
     const mod = await import('@/lib/db/client');

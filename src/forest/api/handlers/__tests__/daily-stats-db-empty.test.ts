@@ -100,5 +100,21 @@ describe('dailyStatsHandler — Database & Empty Queries', () => {
         expect(typeof call[0]).toBe('number');
       }
     });
+
+    it('joins bots and binds userId when userId is provided', async () => {
+      enableMockDb();
+      await dailyStatsHandler('usr_tenant');
+      expect(preparedCalls).toHaveLength(2);
+      expect(preparedCalls[0]).toContain('INNER JOIN bots b ON cs.bot_id = b.id');
+      expect(preparedCalls[0]).toContain('b.user_id = ?');
+      expect(preparedCalls[1]).toContain('INNER JOIN bots b ON te.bot_id = b.id');
+      expect(preparedCalls[1]).toContain('b.user_id = ?');
+      expect(mockBind).toHaveBeenCalledTimes(2);
+      for (const call of mockBind.mock.calls) {
+        expect(call).toHaveLength(2);
+        expect(typeof call[0]).toBe('number');
+        expect(call[1]).toBe('usr_tenant');
+      }
+    });
   });
 });

@@ -101,20 +101,13 @@ describe('worker routes', () => {
     it('triggers scheduler tick and returns report', async () => {
       const res = await app.request('/api/cron/eval', { method: 'POST' }, mkEnv());
       expect(res.status).toBe(200);
-      const body = await res.json() as Record<string, unknown>;
-      expect(body.evaluated).toBe(0);
-      expect(body.errors).toBe(0);
+      expect(await res.json()).toMatchObject({ evaluated: 0, errors: 0 });
     });
   });
 
-  describe('POST /api/killswitch/halt', () => {
-    it('halts all bots', async () => {
+  describe('POST /api/killswitch/halt and /api/killswitch/resume', () => {
+    it('halts and resumes all bots', async () => {
       expect((await app.request('/api/killswitch/halt', { method: 'POST' }, mkEnv())).status).toBe(200);
-    });
-  });
-
-  describe('POST /api/killswitch/resume', () => {
-    it('resumes all bots', async () => {
       expect((await app.request('/api/killswitch/resume', { method: 'POST' }, mkEnv())).status).toBe(200);
     });
   });
@@ -132,25 +125,32 @@ describe('worker routes', () => {
           return undefined;
         },
       );
-      const { eventsHandler, dailyStatsHandler } = await import('./forest/api/routes');
+      const { eventsHandler, dailyStatsHandler, botListHandler, botDetailHandler, botControlHandler } = await import('./forest/api/routes');
       vi.mocked(eventsHandler).mockResolvedValue({ ok: true, data: [] });
       vi.mocked(dailyStatsHandler).mockResolvedValue({
         ok: true,
         data: { date: '2026-11-09', activeBots: 0, totalTrades: 0, totalPnl: 0, winCount: 0, lossCount: 0, winRate: 0, byStrategy: {} },
       });
+      vi.mocked(botListHandler).mockResolvedValue({ ok: true, data: [] });
+      vi.mocked(botDetailHandler).mockResolvedValue({ ok: true, data: { id: 'bot-1' } as never });
+      vi.mocked(botControlHandler).mockResolvedValue({ ok: true });
       const freshApp = new Hono();
       registerProtectedRoutes(freshApp as never);
       expect((await freshApp.request('/api/events', {}, mkEnv())).status).toBe(401);
       expect((await freshApp.request('/api/stats/daily', {}, mkEnv())).status).toBe(401);
       expect((await freshApp.request('/api/killswitch-status', {}, mkEnv())).status).toBe(401);
-      const authEvents = await freshApp.request('/api/events?botId=bot-1&limit=10', { headers: { Authorization: 'Bearer test-token' } }, mkEnv());
-      expect(authEvents.status).toBe(200);
-      expect(eventsHandler).toHaveBeenCalledWith('bot-1', 10);
-      const authStats = await freshApp.request('/api/stats/daily', { headers: { Authorization: 'Bearer test-token' } }, mkEnv());
-      expect(authStats.status).toBe(200);
-      expect(dailyStatsHandler).toHaveBeenCalledOnce();
-      const authKillswitch = await freshApp.request('/api/killswitch-status', { headers: { Authorization: 'Bearer test-token' } }, mkEnv());
-      expect(authKillswitch.status).toBe(200);
+      const authHeaders = { Authorization: 'Bearer test-token', 'x-user-id': 'usr_owner' };
+      expect((await freshApp.request('/api/events?botId=bot-1&limit=10', { headers: authHeaders }, mkEnv())).status).toBe(200);
+      expect(eventsHandler).toHaveBeenCalledWith('bot-1', 10, 'usr_owner');
+      expect((await freshApp.request('/api/stats/daily', { headers: authHeaders }, mkEnv())).status).toBe(200);
+      expect(dailyStatsHandler).toHaveBeenCalledWith('usr_owner');
+      expect((await freshApp.request('/api/killswitch-status', { headers: authHeaders }, mkEnv())).status).toBe(200);
+      expect((await freshApp.request('/internal/api/bots', { headers: authHeaders }, mkEnv())).status).toBe(200);
+      expect(botListHandler).toHaveBeenCalledWith('usr_owner');
+      expect((await freshApp.request('/internal/api/bots/bot-1', { headers: authHeaders }, mkEnv())).status).toBe(200);
+      expect(botDetailHandler).toHaveBeenCalledWith('bot-1', 'usr_owner');
+      expect((await freshApp.request('/internal/api/bots/bot-1/pause', { method: 'POST', headers: authHeaders }, mkEnv())).status).toBe(200);
+      expect(botControlHandler).toHaveBeenCalledWith('bot-1', 'pause', 'usr_owner');
     });
   });
 

@@ -33,15 +33,23 @@ export async function insertBot(db: D1Database, bot: Bot): Promise<void> {
   ).run();
 }
 
-export async function updateBot(db: D1Database, botId: string, patch: Partial<Bot>): Promise<void> {
-  const fields = Object.keys(patch).filter(k => k !== 'id' && k !== 'created_at');
+export async function updateBot(db: D1Database, botId: string, patch: Partial<Bot>, userId?: string): Promise<void> {
+  const fields = Object.keys(patch).filter(k => k !== 'id' && k !== 'user_id' && k !== 'created_at');
   if (fields.length === 0) return;
   const setClauses = fields.map(f => `${f.replace(/([A-Z])/g, '_$1').toLowerCase()} = ?`).join(', ');
   const values = fields.map(f => (patch as Record<string, unknown>)[f]);
+  if (userId) {
+    await db.prepare(`UPDATE bots SET ${setClauses} WHERE id = ? AND user_id = ?`).bind(...values, botId, userId).run();
+    return;
+  }
   await db.prepare(`UPDATE bots SET ${setClauses} WHERE id = ?`).bind(...values, botId).run();
 }
 
-export async function deleteBot(db: D1Database, botId: string): Promise<void> {
+export async function deleteBot(db: D1Database, botId: string, userId?: string): Promise<void> {
+  if (userId) {
+    await db.prepare('DELETE FROM bots WHERE id = ? AND user_id = ?').bind(botId, userId).run();
+    return;
+  }
   await db.prepare('DELETE FROM bots WHERE id = ?').bind(botId).run();
 }
 
