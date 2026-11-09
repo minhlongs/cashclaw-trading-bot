@@ -118,5 +118,32 @@ describe('d1-adapter', () => {
       expect(mockPrepare).toHaveBeenCalledWith('SELECT * FROM bots WHERE id = ? AND user_id = ?');
       expect(mockBind).toHaveBeenCalledWith('bot_123', 'user_abc');
     });
+
+    it('binds user_id in getBotMetrics when userId is passed', async () => {
+      const { createServerClient } = await import('@/lib/db/client');
+      const mockFirst = vi.fn().mockResolvedValue({
+        total_pnl: 42,
+        win_count: 3,
+        loss_count: 1,
+        max_drawdown: 2.5,
+        current_drawdown: 1.0,
+        total_trades: 4,
+        started_at: 1000,
+        stopped_at: null,
+        last_tick_at: 2000,
+        last_order_at: 1900,
+        last_error: null,
+      });
+      const mockBind = vi.fn().mockReturnValue({ first: mockFirst });
+      const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
+      (createServerClient as ReturnType<typeof vi.fn>).mockReturnValue({ prepare: mockPrepare });
+
+      const svc = new BotQueryService();
+      const metrics = await svc.getBotMetrics('bot_123', 'user_abc');
+
+      expect(mockPrepare).toHaveBeenCalledWith('SELECT * FROM bots WHERE id = ? AND user_id = ?');
+      expect(mockBind).toHaveBeenCalledWith('bot_123', 'user_abc');
+      expect(metrics?.totalPnl).toBe(42);
+    });
   });
 });

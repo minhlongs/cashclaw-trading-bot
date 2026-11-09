@@ -25,7 +25,7 @@ export function createD1Callbacks(deps: D1CallbackDeps): BotCallbacks {
         last_tick_at: state.lastTickAt,
         last_order_at: state.lastOrderAt,
         last_error: state.error,
-      }).catch((error) => {
+      }, deps.userId || undefined).catch((error) => {
         log.error(`D1 persist state failed for ${deps.botId}`, error instanceof Error ? error : new Error(String(error)), { action: 'patchBot:state' });
       });
     },

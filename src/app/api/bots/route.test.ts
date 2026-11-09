@@ -57,6 +57,7 @@ describe('/api/bots route', () => {
       mockBotCreateHandler.mockResolvedValue({ ok: true, id: 'bot-1' });
       const req = new Request('http://localhost/api/bots', {
         method: 'POST',
+        headers: { 'x-user-id': 'usr_test_1' },
         body: JSON.stringify({
           id: 'bot-1',
           name: 'Test Bot',
@@ -68,6 +69,7 @@ describe('/api/bots route', () => {
       });
       const res = await POST(req);
       expect(res.status).toBe(200);
+      expect(mockCheckRateLimit).toHaveBeenCalledWith('bots:create:usr_test_1');
     });
 
     it('returns 429 when rate limited', async () => {

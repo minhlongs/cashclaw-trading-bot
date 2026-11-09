@@ -61,14 +61,19 @@ export class BotQueryService {
     }
   }
 
-  /** Fetch just the metrics for a bot. */
-  async getBotMetrics(id: string): Promise<BotMetrics | null> {
+  /** Fetch just the metrics for a bot, optionally scoped to userId. */
+  async getBotMetrics(id: string, userId?: string): Promise<BotMetrics | null> {
     if (!this.db) return null;
     try {
-      const row = await this.db
-        .prepare('SELECT * FROM bots WHERE id = ?')
-        .bind(id)
-        .first<BotRow>();
+      const row = userId
+        ? await this.db
+            .prepare('SELECT * FROM bots WHERE id = ? AND user_id = ?')
+            .bind(id, userId)
+            .first<BotRow>()
+        : await this.db
+            .prepare('SELECT * FROM bots WHERE id = ?')
+            .bind(id)
+            .first<BotRow>();
       if (!row) return null;
       return {
         totalPnl: row.total_pnl,

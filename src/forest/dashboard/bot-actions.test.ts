@@ -115,20 +115,26 @@ describe('bot-actions', () => {
   });
 
   describe('killswitchActionHalt', () => {
-    it('halts and returns ok', async () => {
+    it('halts and returns ok while syncing D1 settings', async () => {
+      const settingsActions = await import('@/forest/settings/actions');
+      const spyHalt = vi.spyOn(settingsActions, 'emergencyHalt');
       const { killswitchActionHalt } = await import('./bot-actions');
-      const result = await killswitchActionHalt('emergency');
+      const result = await killswitchActionHalt('emergency', 'usr_owner');
       expect(result.ok).toBe(true);
       expect(mockManager.manualHalt).toHaveBeenCalledWith('emergency');
+      expect(spyHalt).toHaveBeenCalledWith('emergency', 'usr_owner');
     });
   });
 
   describe('killswitchActionResume', () => {
-    it('resumes and returns ok', async () => {
+    it('resumes and returns ok while syncing D1 settings', async () => {
+      const settingsActions = await import('@/forest/settings/actions');
+      const spyResume = vi.spyOn(settingsActions, 'resumeFromHalt');
       const { killswitchActionResume } = await import('./bot-actions');
-      const result = await killswitchActionResume();
+      const result = await killswitchActionResume('usr_owner');
       expect(result.ok).toBe(true);
       expect(mockManager.manualResume).toHaveBeenCalled();
+      expect(spyResume).toHaveBeenCalledWith('usr_owner');
     });
   });
 

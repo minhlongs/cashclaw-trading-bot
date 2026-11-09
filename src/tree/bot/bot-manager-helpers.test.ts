@@ -12,18 +12,10 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 const gridConfig = {
-  strategy: 'grid' as const,
-  symbol: 'BTC/USDT',
-  exchange: 'binance',
-  mode: 'paper' as const,
-  capital: 1000,
-  maxDrawdownPct: 10,
-  gridLevels: 10,
-  gridSpacingPct: 1,
-  capitalPerLevelPct: 10,
-  takeProfitPct: 2,
-  stopLossPct: 5,
-  rebalanceOnFill: false,
+  strategy: 'grid' as const, symbol: 'BTC/USDT', exchange: 'binance',
+  mode: 'paper' as const, capital: 1000, maxDrawdownPct: 10,
+  gridLevels: 10, gridSpacingPct: 1, capitalPerLevelPct: 10,
+  takeProfitPct: 2, stopLossPct: 5, rebalanceOnFill: false,
 };
 
 function makeBotState(overrides: Partial<BotState> = {}): BotState {
@@ -73,27 +65,27 @@ describe('bot-manager-helpers', () => {
     });
 
     describe('onStateChange', () => {
-      it('maps running to paper_test with timestamps', () => {
+      it('maps running to paper_test with timestamps and forwards userId', () => {
         const cb = createD1Callbacks(makeDeps());
         const state = makeBotState({ status: 'running', error: null });
         cb.onStateChange(state);
         expect(patchBot).toHaveBeenCalledWith('bot-123', expect.objectContaining({
           status: 'paper_test', started_at: state.startedAt, stopped_at: state.stoppedAt,
-        }));
+        }), 'user-123');
       });
 
       it.each([
         ['paused', 'paused'], ['stopped', 'stopped'], ['idle', 'draft'],
       ] as const)('maps %s to D1 status %s', (input, expected) => {
         createD1Callbacks(makeDeps()).onStateChange(makeBotState({ status: input }));
-        expect(patchBot).toHaveBeenCalledWith('bot-123', expect.objectContaining({ status: expected }));
+        expect(patchBot).toHaveBeenCalledWith('bot-123', expect.objectContaining({ status: expected }), 'user-123');
       });
 
       it('maps error status and includes last_error', () => {
         createD1Callbacks(makeDeps()).onStateChange(makeBotState({ status: 'error', error: 'fail' }));
         expect(patchBot).toHaveBeenCalledWith('bot-123', expect.objectContaining({
           status: 'error', last_error: 'fail',
-        }));
+        }), 'user-123');
       });
 
       it('does not throw on patchBot failure and handles non-Error rejection', async () => {
@@ -123,11 +115,8 @@ describe('bot-manager-helpers', () => {
       });
     });
 
-    it('onLog does not throw', () => {
+    it('onLog does not throw and onError delegates to deps.onError', () => {
       expect(() => createD1Callbacks(makeDeps()).onLog('test')).not.toThrow();
-    });
-
-    it('onError calls deps.onError', () => {
       const deps = makeDeps();
       const error = new Error('test');
       createD1Callbacks(deps).onError(error, 'ctx');
@@ -136,19 +125,14 @@ describe('bot-manager-helpers', () => {
   });
 
   describe('persistNewBot', () => {
-    it('calls persistBot with grid bot params', async () => {
+    it('calls persistBot with grid bot params and falls back to bot id when config has no name', async () => {
       await persistNewBot(makeDeps());
       expect(persistBot).toHaveBeenCalledWith('user-123', {
         id: 'bot-123', config: gridConfig, capital: 1000,
         name: 'bot-123', strategy: 'grid', pair: 'BTC/USDT', exchange: 'binance',
       });
-    });
-
-    it('falls back to the bot id when the config has no name', async () => {
       await persistNewBot(makeDeps({ config: { ...gridConfig, name: undefined } }));
-      expect(persistBot).toHaveBeenCalledWith('user-123', expect.objectContaining({
-        name: 'bot-123',
-      }));
+      expect(persistBot).toHaveBeenCalledWith('user-123', expect.objectContaining({ name: 'bot-123' }));
     });
 
     it('calls persistBot with mean_reversion params', async () => {

@@ -41,7 +41,7 @@ describe('d1-hydration', () => {
       expect(mockedFindBotsByUser).not.toHaveBeenCalled();
     });
 
-    it('creates bot and restores state from valid row', async () => {
+    it('creates bot and restores state from valid row with owner userId', async () => {
       const { hydrateFromD1 } = await import('./d1-hydration');
       const bot = createBotLike();
       const manager = { createBot: vi.fn().mockResolvedValue(bot) };
@@ -51,6 +51,7 @@ describe('d1-hydration', () => {
 
       await hydrateFromD1('user_1');
       expect(manager.createBot).toHaveBeenCalledTimes(1);
+      expect(manager.createBot).toHaveBeenCalledWith(expect.objectContaining({ id: 'bot_1' }), 'user_1');
       expect(bot.patchState).toHaveBeenCalledWith(expect.objectContaining({
         totalTrades: 10, startedAt: 1000, totalPnl: 12, winCount: 4, lossCount: 3,
         maxDrawdown: 1.2, currentDrawdown: 0.5, lastTickAt: 900, lastOrderAt: 800,
