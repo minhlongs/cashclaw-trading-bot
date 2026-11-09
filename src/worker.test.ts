@@ -72,9 +72,7 @@ describe('worker routes', () => {
     it('returns ok with zero bots', async () => {
       mockListBots.mockResolvedValue([]);
       const res = await app.request('/api/health', {}, mkEnv());
-      const body = await res.json() as Record<string, unknown>;
-      expect(body.status).toBe('ok');
-      expect(body.bots).toBe(0);
+      expect(await res.json()).toMatchObject({ status: 'ok', bots: 0 });
     });
   });
 
@@ -82,18 +80,13 @@ describe('worker routes', () => {
     it('returns version from env', async () => {
       const res = await app.request('/api/version', {}, mkEnv({ VERSION: 'deadbeef123' }));
       expect(res.status).toBe(200);
-      const body = await res.json() as Record<string, unknown>;
-      expect(body.ok).toBe(true);
-      const data = body.data as Record<string, unknown>;
-      expect(data.version).toBe('deadbeef123');
-      expect(data.shortSha).toBe('deadbee');
+      expect(await res.json()).toMatchObject({ ok: true, data: { version: 'deadbeef123', shortSha: 'deadbee' } });
     });
 
     it('returns fallback when no VERSION set', async () => {
       const res = await app.request('/api/version', {}, mkEnv({ VERSION: undefined }));
       expect(res.status).toBe(200);
-      const body = await res.json() as Record<string, unknown>;
-      expect((body.data as Record<string, unknown>).version).toBe('0.0.0-dev');
+      expect(await res.json()).toMatchObject({ ok: true, data: { version: '0.0.0-dev' } });
     });
   });
 
@@ -106,9 +99,12 @@ describe('worker routes', () => {
   });
 
   describe('POST /api/killswitch/halt and /api/killswitch/resume', () => {
-    it('halts and resumes all bots', async () => {
-      expect((await app.request('/api/killswitch/halt', { method: 'POST' }, mkEnv())).status).toBe(200);
-      expect((await app.request('/api/killswitch/resume', { method: 'POST' }, mkEnv())).status).toBe(200);
+    it('halts and resumes all bots while forwarding userId', async () => {
+      const { killswitchHaltHandler, killswitchResumeHandler } = await import('./forest/api/routes');
+      expect((await app.request('/api/killswitch/halt', { method: 'POST', headers: { 'x-user-id': 'usr_owner' } }, mkEnv())).status).toBe(200);
+      expect(killswitchHaltHandler).toHaveBeenCalledWith('', 'usr_owner');
+      expect((await app.request('/api/killswitch/resume', { method: 'POST', headers: { 'x-user-id': 'usr_owner' } }, mkEnv())).status).toBe(200);
+      expect(killswitchResumeHandler).toHaveBeenCalledWith('usr_owner');
     });
   });
 
@@ -192,7 +188,7 @@ describe('worker routes', () => {
     it('hydrates running bots then drains queues', async () => {
       mockManager.drainQueues = vi.fn().mockResolvedValue({ binance: { processed: 0, skipped: 0, pending: 0 } });
       const { scheduled } = await import('./worker');
-      await scheduled({ scheduledTime: Date.now() }, {} as any, {} as any);
+      await scheduled({ scheduledTime: Date.now() }, {} as never, {} as never);
       expect(mockManager.drainQueues).toHaveBeenCalledTimes(1);
     });
   });

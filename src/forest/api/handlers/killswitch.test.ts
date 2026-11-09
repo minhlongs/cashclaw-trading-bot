@@ -21,6 +21,14 @@ vi.mock('./serialize-detail', () => ({
   serializeDetail: (v: unknown) => JSON.stringify(v),
 }));
 
+const mockEmergencyHalt = vi.fn().mockResolvedValue({ ok: true });
+const mockResumeFromHalt = vi.fn().mockResolvedValue({ ok: true });
+
+vi.mock('@/forest/settings/actions', () => ({
+  emergencyHalt: (...args: unknown[]) => mockEmergencyHalt(...args),
+  resumeFromHalt: (...args: unknown[]) => mockResumeFromHalt(...args),
+}));
+
 import { killswitchHaltHandler, killswitchResumeHandler } from './killswitch';
 
 beforeEach(() => {
@@ -28,10 +36,11 @@ beforeEach(() => {
 });
 
 describe('killswitchHaltHandler', () => {
-  it('returns ok when given a valid reason', async () => {
-    const result = await killswitchHaltHandler('Emergency stop');
+  it('returns ok when given a valid reason and syncs D1 settings with userId', async () => {
+    const result = await killswitchHaltHandler('Emergency stop', 'usr_owner');
     expect(result.ok).toBe(true);
     expect(mockManager.manualHalt).toHaveBeenCalledWith('Emergency stop');
+    expect(mockEmergencyHalt).toHaveBeenCalledWith('Emergency stop', 'usr_owner');
   });
 
   it('returns error when reason is empty', async () => {
@@ -58,10 +67,11 @@ describe('killswitchHaltHandler', () => {
 });
 
 describe('killswitchResumeHandler', () => {
-  it('returns ok on success', async () => {
-    const result = await killswitchResumeHandler();
+  it('returns ok on success and syncs D1 settings with userId', async () => {
+    const result = await killswitchResumeHandler('usr_owner');
     expect(result.ok).toBe(true);
     expect(mockManager.manualResume).toHaveBeenCalled();
+    expect(mockResumeFromHalt).toHaveBeenCalledWith('usr_owner');
   });
 
   it('returns error when manualResume throws', async () => {

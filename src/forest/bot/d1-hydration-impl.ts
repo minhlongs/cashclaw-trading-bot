@@ -12,18 +12,20 @@ type HydratableBot = {
 };
 
 async function createBotFromRow(
-  row: BotHydrateRow & { id: string; config_json: string },
+  row: BotHydrateRow & { id: string; config_json: string; user_id?: string },
   onError: ErrorHandler | undefined,
   errorContext: string,
+  userId?: string,
 ): Promise<HydratableBot | null> {
   const manager = getBotManager();
   try {
     const config = JSON.parse(row.config_json) as BotConfig;
+    const ownerUserId = row.user_id || userId || undefined;
     const bot = await manager.createBot({
       id: row.id, config,
       exchangeConfig: { apiKey: '', apiSecret: '', testnet: true, sandbox: true, rateLimitMs: 100 },
       mode: 'paper',
-    });
+    }, ownerUserId);
     return bot as HydratableBot;
   } catch (err) {
     onError?.(err instanceof Error ? err : new Error(String(err)), errorContext);
@@ -44,9 +46,10 @@ export async function hydrateFromD1(userId: string, onError?: ErrorHandler): Pro
   for (const row of rows) {
     const hydratedRow = row as unknown as BotHydrateRow;
     const bot = await createBotFromRow(
-      { ...row, ...hydratedRow } as BotHydrateRow & { id: string; config_json: string },
+      { ...row, ...hydratedRow } as BotHydrateRow & { id: string; config_json: string; user_id?: string },
       onError,
       `d1-adapter:hydrateBot:${row.id}`,
+      userId,
     );
     if (bot) restoreBotStateFromRow(bot, hydratedRow);
   }
@@ -78,7 +81,7 @@ export async function loadAllBotsFromD1(onError?: ErrorHandler): Promise<void> {
 
     const hydratedRow = row as unknown as BotHydrateRow;
     const bot = await createBotFromRow(
-      { ...row, ...hydratedRow } as BotHydrateRow & { id: string; config_json: string },
+      { ...row, ...hydratedRow } as BotHydrateRow & { id: string; config_json: string; user_id?: string },
       onError,
       `d1-adapter:loadBot:${row.id}`,
     );

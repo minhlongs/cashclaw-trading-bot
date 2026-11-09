@@ -77,10 +77,10 @@ export function registerProtectedRoutes(app: AppType): void {
   });
   app.post('/api/killswitch/halt', async (c) => {
     const body = await c.req.parseBody();
-    const r = await killswitchHaltHandler(typeof body.reason === 'string' ? body.reason : '');
+    const r = await killswitchHaltHandler(typeof body.reason === 'string' ? body.reason : '', resolveWorkerUserId(c));
     return c.json(r, r.ok ? 200 : 400);
   });
-  app.post('/api/killswitch/resume', async (c) => { const r = await killswitchResumeHandler(); return c.json(r, r.ok ? 200 : 500); });
+  app.post('/api/killswitch/resume', async (c) => { const r = await killswitchResumeHandler(resolveWorkerUserId(c)); return c.json(r, r.ok ? 200 : 500); });
   app.get('/api/events', async (c) => {
     const limit = parseInt(c.req.query('limit') ?? '50', 10);
     const r = await eventsHandler(c.req.query('botId') ?? undefined, limit, resolveWorkerUserId(c));

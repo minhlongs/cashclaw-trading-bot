@@ -51,7 +51,9 @@ export async function GET(req?: Request) {
 }
 
 export async function POST(req: Request) {
-  const rateLimit = checkRateLimit('bots:create');
+  const userId = req.headers?.get?.('x-user-id')?.trim() || undefined;
+  const rateLimitKey = userId ? `bots:create:${userId}` : 'bots:create';
+  const rateLimit = checkRateLimit(rateLimitKey);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { ok: false, error: 'Rate limit exceeded' },
@@ -68,7 +70,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const userId = req.headers.get('x-user-id')?.trim() || undefined;
   const { tier } = await resolveWorkspaceTierContext(req);
   const currentBotCount = await resolveActiveBotCount(() =>
     userId ? botListHandler(userId) : botListHandler(),

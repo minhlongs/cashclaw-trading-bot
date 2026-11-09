@@ -5,6 +5,7 @@
 
 import { getBotManager } from '@/tree/bot';
 import { botControlHandler } from '@/forest/api/handlers/bot-control';
+import { emergencyHalt, resumeFromHalt } from '@/forest/settings/actions';
 
 function normalizeActionError(
   result: { ok: boolean; error?: string },
@@ -34,12 +35,14 @@ export async function botActionResume(id: string, userId?: string): Promise<{ ok
 }
 
 // ── Killswitch Actions ──────────────────────────────────────────
-export async function killswitchActionHalt(reason: string): Promise<{ ok: boolean }> {
+export async function killswitchActionHalt(reason: string, userId?: string): Promise<{ ok: boolean }> {
   getBotManager().manualHalt(reason);
+  await emergencyHalt(reason, userId);
   return { ok: true };
 }
 
-export async function killswitchActionResume(): Promise<{ ok: boolean }> {
+export async function killswitchActionResume(userId?: string): Promise<{ ok: boolean }> {
   getBotManager().manualResume();
+  await resumeFromHalt(userId);
   return { ok: true };
 }
