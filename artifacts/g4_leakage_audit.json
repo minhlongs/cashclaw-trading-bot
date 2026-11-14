@@ -1,7 +1,7 @@
 {
-  "schema_version": 1,
-  "generated_at": "2026-11-14T08:11:42.420797+00:00",
-  "commit": "980cb653366d9ff7451deb86dd9c7306e1d4876b",
+  "schema_version": 2,
+  "generated_at": "2026-11-14T11:45:54.806804+00:00",
+  "commit": "3d3dc0e3be6c3d18608729a4f6917da9ec4e47fa",
   "negative_control": {
     "H1": {
       "gross_sharpe": {
@@ -66,26 +66,91 @@
       ],
       "verdict": "PASS"
     },
-    "_note": "A causal strategy cannot earn a positive Sharpe on driftless data. The band reported here is the mean gross Sharpe across independent noise seeds plus and minus two standard errors; a mean landing above that band means the backtest is manufacturing return from structureless input. Net Sharpe is reported separately because a large negative net number on noise is cost drag (high turnover against zero edge), which is expected and not a leak."
+    "_note": "A causal strategy cannot earn a positive Sharpe on driftless data. The band reported here is the mean gross Sharpe across independent noise seeds plus and minus two standard errors; a mean landing outside that band means the backtest is manufacturing return from structureless input."
+  },
+  "negative_control_batch2": {
+    "H1_G1": {
+      "gross_sharpe": {
+        "mean": -0.2159,
+        "std": 0.5613,
+        "min": -1.1196,
+        "max": 0.7835,
+        "n_seeds": 10
+      },
+      "net_sharpe": {
+        "mean": -0.6382,
+        "std": 0.558,
+        "min": -1.5316,
+        "max": 0.3559,
+        "n_seeds": 10
+      },
+      "gross_mean_two_se_band": [
+        -0.5709,
+        0.1391
+      ],
+      "verdict": "PASS"
+    },
+    "H2_G1": {
+      "gross_sharpe": {
+        "mean": 0.3152,
+        "std": 0.5108,
+        "min": -0.2831,
+        "max": 1.3415,
+        "n_seeds": 10
+      },
+      "net_sharpe": {
+        "mean": 0.0621,
+        "std": 0.5156,
+        "min": -0.5353,
+        "max": 1.1,
+        "n_seeds": 10
+      },
+      "gross_mean_two_se_band": [
+        -0.0079,
+        0.6383
+      ],
+      "verdict": "PASS"
+    },
+    "H3_MAKER": {
+      "gross_sharpe": {
+        "mean": 0.0814,
+        "std": 0.4715,
+        "min": -0.5748,
+        "max": 1.0063,
+        "n_seeds": 10
+      },
+      "net_sharpe": {
+        "mean": -2.177,
+        "std": 0.3883,
+        "min": -2.8962,
+        "max": -1.4983,
+        "n_seeds": 10
+      },
+      "gross_mean_two_se_band": [
+        -0.2168,
+        0.3796
+      ],
+      "verdict": "PASS"
+    }
   },
   "leak_quantification": {
     "H2": {
-      "causal_sharpe": 0.0555,
-      "leaky_sharpe": 2.2236,
-      "fabricated_sharpe": 2.1681,
-      "causal_cum_net": 0.1711,
-      "leaky_cum_net": 6.6234,
+      "causal_sharpe": 0.0536,
+      "leaky_sharpe": 2.2264,
+      "fabricated_sharpe": 2.1728,
+      "causal_cum_net": 0.1652,
+      "leaky_cum_net": 6.6294,
       "verdict": "CONFIRMED-LEAK"
     },
     "H3": {
-      "causal_sharpe": 2.5424,
-      "leaky_sharpe": 2.5086,
-      "fabricated_sharpe": -0.0338,
+      "causal_sharpe": 2.5422,
+      "leaky_sharpe": 2.4755,
+      "fabricated_sharpe": -0.0667,
       "causal_cum_net": 0.1306,
-      "leaky_cum_net": 0.1326,
+      "leaky_cum_net": 0.1307,
       "verdict": "NO-MATERIAL-LEAK"
     },
-    "_note": "H1 has no shift to remove: its trailing-mean window already ends at t-1, so it is causal by construction and is not part of this comparison. The difference between the two columns is what a same-bar signal would have added, and it is the evidence for keeping the shift."
+    "_note": "H1 has no shift to remove: its trailing-mean window already ends at t-1, so it is causal by construction and is not part of this comparison."
   },
   "signal_lag_probe": {
     "validated_on_noise": {
@@ -110,68 +175,121 @@
     },
     "real_panel_context": {
       "H1": {
-        "future_returns": 1.1264,
-        "aligned": 1.3352,
-        "delayed_returns": 1.2693
+        "future_returns": 1.1176,
+        "aligned": 1.3198,
+        "delayed_returns": 1.2585
       },
       "H2": {
-        "future_returns": 1.0934,
-        "aligned": 0.7739,
-        "delayed_returns": 4.23
+        "future_returns": 1.0894,
+        "aligned": 0.7676,
+        "delayed_returns": 4.2266
       },
       "H3": {
-        "future_returns": 6.2324,
-        "aligned": 6.5632,
-        "delayed_returns": 6.5687
+        "future_returns": 6.2312,
+        "aligned": 6.5628,
+        "delayed_returns": 6.5483
       }
     },
-    "_note": "The gate is `validated_on_noise`: with no serial dependence in the input, handing the strategy next-bar returns must score the same as the aligned mapping. `real_panel_context` shows the future-return variant scoring higher, which on real data reflects genuine momentum persistence rather than a leak -- the strategy reads only past closes, so it can benefit from persistence one day further out without having seen the future. It is reported for transparency, not as a gate."
+    "_note": "The gate is `validated_on_noise`: with no serial dependence in the input, handing the strategy next-bar returns must score the same as the aligned mapping."
   },
   "staleness_guard": {
     "gap_days": 6,
     "missing_bars": 5,
     "max_stale_days": 2,
+    "synthetic_ok": true,
     "adjacent_return": 0.01,
     "two_day_gap_return": 0.019608,
     "return_before_gap": 0.009434,
     "return_after_gap": null,
-    "real_panel_uniusdt_2023_01_resumed_return": null,
-    "real_panel_uniusdt_2023_01_day_after_resume": 0.04643,
+    "uniusdt_2023_01_contiguous_ok": true,
+    "uniusdt_2023_01_missing_days": 0,
+    "uniusdt_day_19389_return": 0.037658,
+    "boundary_gaps_ok": true,
+    "aptusdt_first_listed_day": 19284,
+    "aptusdt_prelisting_ok": true,
+    "delisted_zombie_truncation": {
+      "EOSUSDT": {
+        "last_active_day": 20229,
+        "inactive_trailing_days": 528,
+        "post_settlement_non_null_closes": 0,
+        "post_settlement_non_null_returns": 0,
+        "post_settlement_non_null_funding": 0,
+        "ok": true
+      },
+      "FTMUSDT": {
+        "last_active_day": 20094,
+        "inactive_trailing_days": 663,
+        "post_settlement_non_null_closes": 0,
+        "post_settlement_non_null_returns": 0,
+        "post_settlement_non_null_funding": 0,
+        "ok": true
+      },
+      "MATICUSDT": {
+        "last_active_day": 19970,
+        "inactive_trailing_days": 787,
+        "post_settlement_non_null_closes": 0,
+        "post_settlement_non_null_returns": 0,
+        "post_settlement_non_null_funding": 0,
+        "ok": true
+      },
+      "MKRUSDT": {
+        "last_active_day": 20339,
+        "inactive_trailing_days": 418,
+        "post_settlement_non_null_closes": 0,
+        "post_settlement_non_null_returns": 0,
+        "post_settlement_non_null_funding": 0,
+        "ok": true
+      }
+    },
     "verdict": "PASS",
-    "detail": "The bar after a multi-day price gap exceeding max_stale_days must have a null return, while 1-day and 2-day steps remain valid; verified on both synthetic integer-day bars and UNIUSDT's 2023-01 archive gap."
+    "detail": "Verified: (1) synthetic 6-day gap nulls resumed bar return while 1d/2d steps stay valid; (2) backfilled UNIUSDT 2023-01 is contiguous with 0 missing days; and (3) APTUSDT pre-listing and EOS/FTM/MATIC/MKR post-delisting volume==0 zombie bars and post-settlement funding prints are truncated with zero fabricated returns."
   },
   "embargo": {
     "rule": "embargo_days = 2 x slowest feature memory, applied after the train block",
     "grid_max_lookback": {
       "H1": 14,
       "H2": 180,
-      "H3": 30
+      "H3": 30,
+      "H1_G1": 14,
+      "H2_G1": 120,
+      "H3_MAKER": 30
     },
     "embargo_days_grid_max": {
       "H1": 28,
       "H2": 360,
-      "H3": 60
+      "H3": 60,
+      "H1_G1": 28,
+      "H2_G1": 240,
+      "H3_MAKER": 60
     },
     "embargo_days_selected": {
       "H1": 6,
       "H2": 60,
-      "H3": 60
+      "H3": 60,
+      "H1_G1": 6,
+      "H2_G1": 60,
+      "H3_MAKER": 60
     },
     "total_days": 2130,
     "oos_days": 639,
     "usable_oos_after_embargo": {
       "H1": 633,
       "H2": 579,
-      "H3": 579
+      "H3": 579,
+      "H1_G1": 633,
+      "H2_G1": 579,
+      "H3_MAKER": 579
     },
     "grid_max_embargo_exceeds_oos": {
       "H1": false,
       "H2": false,
-      "H3": false
-    },
-    "note": "The 180-day momentum lookback in H2's grid requires a 360-day embargo, which is more than half the 639-day locked out-of-sample window. That configuration therefore cannot be honestly scored on the locked set at all; only configurations with a short enough memory survive the rule."
+      "H3": false,
+      "H1_G1": false,
+      "H2_G1": false,
+      "H3_MAKER": false
+    }
   },
   "overall": "PASS",
-  "checks_passed": 7,
-  "checks_total": 7
+  "checks_passed": 10,
+  "checks_total": 10
 }

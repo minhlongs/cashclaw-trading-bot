@@ -1,34 +1,12 @@
-"""G5 - statistical validity: DSR, PBO, CPCV, MinTRL against the audit's gates.
+"""G5 - statistical validity: DSR, PBO, CPCV, MinTRL, WRC & 7-Regime Attribution.
 
-The audit's central objection is that a quoted Sharpe has no search behind it.
-Every number here is therefore conditioned on N, and N is the registry count --
-not an estimate, not a judgement about how many configurations "seemed
-reasonable". The registry is hash-chained, so the trial count can be audited
-rather than believed.
+Evaluates both Batch 1 (`H1`, `H2`, `H3` on `CORE_19`, `seq 1..93`) and the pre-registered
+Batch 2 (`H1_G1`, `H2_G1`, `H3_MAKER` on `SURVIVORSHIP_23`, `seq 94..185`) against the
+audit's statistical survival gates conditioned on the true cumulative trial count
+`N_total` in the append-only hash-chained `artifacts/trial_registry.jsonl`.
 
-Verdict rules, transcribed from the audit's acceptance criteria:
-
-- DSR >= 0.95 over the full recorded N, else reject
-- PBO >= 0.1523, reject immediately
-- PSR >= 0.95 on the single locked out-of-sample set, with skew/kurtosis correction
-- the winning parameter must sit on a plateau, not a spike: no +/-20% nudge may
-  drop net Sharpe by more than 25%
-- H1 additionally: reject if net OOS Sharpe < 0.80, or net PnL is negative at
-  2.0x cost, or downside tail correlation with BTC exceeds 0.50
-
-The locked out-of-sample set is the last 30% of days. It is never part of the
-search and is scored once, after the registry is sealed.
-
-Two things are deliberately reported alongside the gates so the numbers cannot
-be read more favourably than they are:
-
-* N is reported both for the hypothesis's own grid and for the full recorded
-  total. The gate uses the full total, because an analyst who ran all three
-  hypotheses has, in effect, searched across all three.
-* A sparse-return diagnostic. A series that is flat most days has a deflated
-  daily standard deviation, and sqrt(365) annualisation then inflates the
-  Sharpe. Where the sparse fraction is high, PSR is computed on active days only
-  as well, so the reader can see how much of the ratio is denominator collapse.
+Lines `1..93` of `artifacts/trial_registry.jsonl` (`seq 93` hash `0efe8164...`) are
+verified intact and preserved forever; Batch 2 is appended once onto `seq 93`'s digest.
 """
 
 from __future__ import annotations
@@ -41,14 +19,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
+import polars as pl
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from verification_lab.execution import market  # noqa: E402
 from verification_lab.runner import run_grid  # noqa: E402
 from verification_lab.runner.trial_registry import TrialRegistry  # noqa: E402
-from verification_lab.strategies import h1_funding_carry as h1  # noqa: E402
-from verification_lab.strategies import h2_tsmom as h2  # noqa: E402
-from verification_lab.strategies import h3_basis_carry as h3  # noqa: E402
+from verification_lab.stats import regimes as regimes_mod  # noqa: E402
 from verification_lab.stats.core import (  # noqa: E402
     cpcv,
     deflated_sharpe,
@@ -61,12 +39,20 @@ from verification_lab.stats.episodes import (  # noqa: E402,F401
     trade_episodes,
     trade_expectancy,
 )
+from verification_lab.strategies import h1_funding_carry as h1  # noqa: E402
+from verification_lab.strategies import h2_tsmom as h2  # noqa: E402
+from verification_lab.strategies import h3_basis_carry as h3  # noqa: E402
+from verification_lab.strategies import loaders as L  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "artifacts"
 REGISTRY = OUT / "trial_registry.jsonl"
 PERIODS = 365
 TRAIN_FRACTION = 0.7
+
+BATCH1_COUNT = 93
+BATCH1_HEAD_HASH = "0efe8164eff07606be76d6b243a5d28cdce1ac265b546f4f442b1942768dca10"
+BATCH2_NOTE = "batch2_issue59_survivorship23_g1_h3maker"
 
 # Verbatim from the audit.
 PBO_REJECT_AT = 0.1523
@@ -84,13 +70,7 @@ SPARSE_FLAT_THRESHOLD = 0.20
 
 
 def psr(returns: np.ndarray, benchmark_sr_per_period: float = 0.0) -> dict:
-    """Probabilistic Sharpe Ratio with skew and kurtosis correction.
-
-    PSR is the probability that the true Sharpe exceeds a benchmark given the
-    observed record, corrected for non-normality. A strategy with fat left tails
-    needs a longer record for the same Sharpe to be believed, which is why the
-    correction is applied rather than a raw t-test.
-    """
+    """Probabilistic Sharpe Ratio with skew and kurtosis correction."""
     x = np.asarray(returns, dtype=float)
     x = x[np.isfinite(x)]
     n = x.size
@@ -134,25 +114,14 @@ def sparse_diagnostic(returns: np.ndarray) -> dict:
     }
     if out["sparse"]:
         out["interpretation"] = (
-            "Over half the days are flat, so the all-days Sharpe is a diluted ratio: "
-            "flat days add zero return and zero variance, and the ratio says nothing "
-            "about how much capital the strategy actually put to work. Compare it "
-            "against the active-day Sharpe to see the direction of the dilution, and "
-            "decide on the annualised net return -- a high ratio on a tiny return "
-            "stream is not a deployable edge."
+            "A substantial fraction of days are flat, diluting variance across inactive bars; "
+            "compare against active-day Sharpe and annualised net return."
         )
     return out
 
 
 def max_drawdown(net: np.ndarray) -> float:
-    """Peak-to-trough drawdown of a fixed-notional (1.0 initial equity) net curve.
-
-    Strategies size daily simple returns on fixed unit notional (`1.0`), so equity
-    evolves additively as `1.0 + cumsum(net)` starting from `1.0`. Anchoring at
-    `1.0` ensures monotonic losing strategies record positive drawdowns instead of
-    collapsing to `0.0` against a `0.0` initial peak, and prevents early penny gains
-    from producing >100% percentage drawdowns.
-    """
+    """Peak-to-trough drawdown of a fixed-notional (1.0 initial equity) net curve."""
     x = np.nan_to_num(np.asarray(net, dtype=float), nan=0.0)
     if x.size == 0:
         return 0.0
@@ -164,12 +133,7 @@ def max_drawdown(net: np.ndarray) -> float:
 
 
 def compounded_max_drawdown(net: np.ndarray) -> float:
-    """Peak-to-trough drawdown of a geometrically reinvested (`cumprod(1 + r)`) curve.
-
-    Reported alongside fixed-notional `max_drawdown` so reviewers can compare the
-    uncompounded fixed-$1M drawdown against continuously reinvested equity. Any
-    single-period loss `<= -100%` wipes equity to `0.0` (`100%` max drawdown).
-    """
+    """Peak-to-trough drawdown of a geometrically reinvested (`cumprod(1 + r)`) curve."""
     x = np.nan_to_num(np.asarray(net, dtype=float), nan=0.0)
     if x.size == 0:
         return 0.0
@@ -201,18 +165,7 @@ def block_bootstrap_ci(
     block: int = BOOTSTRAP_BLOCK,
     seed: int = BOOTSTRAP_SEED,
 ) -> dict:
-    """Circular block bootstrap CIs for net Sharpe, Calmar and expectancy.
-
-    Blocks of consecutive days are resampled rather than single days, so serial
-    dependence and volatility clustering survive the resampling. Sampling single
-    days would break the autocorrelation and produce intervals that are too
-    narrow -- the overconfidence the audit complains about.
-
-    Expectancy per trade is bootstrapped over *trades*, not days: resampling days
-    would mix holding episodes together and answer a different question. Trade
-    PnL is drawn independently, which is the weaker assumption but the honest one
-    for a book whose episodes are separated in time by construction.
-    """
+    """Circular block bootstrap CIs for net Sharpe, Calmar and expectancy."""
     x = np.asarray(net, dtype=float)
     x = x[np.isfinite(x)]
     n = x.size
@@ -232,6 +185,7 @@ def block_bootstrap_ci(
             calmar(sample),
             float(sample.sum()) * PERIODS / sample.size,
         )
+
     def interval(col: int, point: float) -> dict:
         values = indep[:, col]
         values = values[np.isfinite(values)]
@@ -265,7 +219,6 @@ def block_bootstrap_ci(
         "sharpe": sharpe_iv,
         "calmar": interval(1, calmar(x)),
         "annualised_net_return": interval(2, float(x.sum()) * PERIODS / x.size),
-        # Kept for compatibility with the flat Sharpe report above.
         "point": sharpe_iv["point"],
         "ci90": sharpe_iv["ci90"],
         "ci95": sharpe_iv["ci95"],
@@ -297,17 +250,7 @@ def white_reality_check(
     block: int = BOOTSTRAP_BLOCK,
     seed: int = BOOTSTRAP_SEED,
 ) -> dict:
-    """White's Reality Check: is the best-of-family result significant?
-
-    DSR and PBO each correct a single strategy's Sharpe. Neither answers the
-    family question the audit actually asks: given that the best of these N was
-    chosen after the fact, is its superiority over "no strategy here has an
-    edge" still significant? Reality Check resamples the whole panel, so the
-    cross-sectional dependence between strategies is preserved (the same day
-    indices are drawn for every strategy), and compares the observed best Sharpe
-    against the distribution of best Sharpes under the null that every strategy
-    has zero mean.
-    """
+    """White's Reality Check: is the best-of-family result significant?"""
     m = np.asarray(matrix, dtype=float)
     m = np.nan_to_num(m, nan=0.0)
     n_strats, t = m.shape
@@ -321,7 +264,6 @@ def white_reality_check(
         return float(np.nanmax(sr)) if np.any(np.isfinite(sr)) else float("nan")
 
     observed = best(m)
-    # Under the null of no edge, every strategy is recentred to zero mean.
     centred = m - m.mean(axis=1, keepdims=True)
     rng = np.random.default_rng(seed)
     n_blocks = int(math.ceil(t / block))
@@ -346,11 +288,7 @@ def white_reality_check(
 
 
 def tail_correlation(returns: np.ndarray, btc: np.ndarray, q: float = TAIL_QUANTILE) -> dict:
-    """Downside tail correlation with BTC over the worst-quantile BTC days.
-
-    The audit rejects H1 if this exceeds 0.50: a carry book that falls with BTC
-    on the worst 5% of days is not the market-neutral object it claims to be.
-    """
+    """Downside tail correlation with BTC over the worst-quantile BTC days."""
     x = np.asarray(returns, dtype=float)
     b = np.asarray(btc, dtype=float)
     mask = np.isfinite(x) & np.isfinite(b)
@@ -384,52 +322,66 @@ def plateau_rerun(name: str, panel: run_grid.Panel, params: dict, train_slice: s
         res = h1.backtest(
             h1.build_positions(panel.funding, **params), panel.perp_returns, panel.funding
         )
+    elif name == "H1_G1":
+        res = h1.backtest(
+            h1.build_positions_g1(panel.funding, panel.perp_returns, **params),
+            panel.perp_returns,
+            panel.funding,
+        )
     elif name == "H2":
         res = h2.evaluate(
             h2.build_positions(panel.perp_close, **params), panel.perp_returns, panel.funding
         )
-    else:
+    elif name == "H2_G1":
+        res = h2.evaluate(
+            h2.build_positions_g1(panel.perp_close, **params), panel.perp_returns, panel.funding
+        )
+    elif name == "H3":
         res = h3.evaluate(
             h3.build_positions(panel.basis, panel.funding, **params),
             panel.perp_returns,
             panel.spot_returns,
             panel.funding,
         )
+    elif name == "H3_MAKER":
+        safe_params = dict(params)
+        if "p_fill" in safe_params:
+            safe_params["p_fill"] = min(1.0, max(0.05, float(safe_params["p_fill"])))
+        res = h3.evaluate_maker(
+            h3.build_positions_maker(panel.basis, panel.funding, **safe_params),
+            panel.perp_returns,
+            panel.spot_returns,
+            panel.funding,
+        )
+    else:
+        raise KeyError(f"unknown hypothesis {name!r}")
     return res["net"][train_slice]
 
 
 def plateau_check(
     name: str, panel: run_grid.Panel, params: dict, base_train_sr: float, split: int
 ) -> dict:
-    """Shift every parameter +/-20% and require net Sharpe not to collapse.
-
-    The audit's probe is continuous, not a walk over the searched grid: "dịch
-    chuyển mọi tham số +-20% không làm Net Sharpe giảm quá 25%". A grid walk
-    would answer a weaker question, because the grid is what was optimised and
-    its neighbours are the friendliest possible shifts. Continuous shifts can
-    land between grid points, which is where a genuine plateau and a spike
-    diverge.
-
-    Integer parameters (bar counts) are shifted proportionally and rounded to at
-    least one bar; the rounding is recorded, because a lookback of 3 can only
-    move to 2 or 4 and that is a coarser test than 20%.
-    """
+    """Shift every parameter +/-20% and require net Sharpe not to collapse."""
     probes = []
     window = slice(0, split)
     combos = []
-    # One-at-a-time +/-20% nudges on each parameter individually.
     for key, value in params.items():
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
         for sign, suffix in ((0.8, "minus20"), (1.2, "plus20")):
             shifted = dict(params)
             raw = value * sign
             shifted[key] = max(1, int(round(raw))) if isinstance(value, int) else float(raw)
             combos.append((f"{key}_{suffix}", shifted))
-    # Every parameter moved at once, in the same direction: the harshest corners.
     combos.append(
         (
             "all_minus20",
             {
-                k: max(1, int(round(v * 0.8))) if isinstance(v, int) else float(v * 0.8)
+                k: (
+                    v
+                    if isinstance(v, bool) or not isinstance(v, (int, float))
+                    else (max(1, int(round(v * 0.8))) if isinstance(v, int) else float(v * 0.8))
+                )
                 for k, v in params.items()
             },
         )
@@ -438,7 +390,11 @@ def plateau_check(
         (
             "all_plus20",
             {
-                k: max(1, int(round(v * 1.2))) if isinstance(v, int) else float(v * 1.2)
+                k: (
+                    v
+                    if isinstance(v, bool) or not isinstance(v, (int, float))
+                    else (max(1, int(round(v * 1.2))) if isinstance(v, int) else float(v * 1.2))
+                )
                 for k, v in params.items()
             },
         )
@@ -505,7 +461,6 @@ def cost_of(run: dict) -> np.ndarray:
 
 
 def _per_period_sr_variance(runs: list[dict], split: int) -> float | None:
-    """Empirical cross-trial variance of per-period train Sharpe ratios."""
     vals: list[float] = []
     for r in runs:
         seg = np.asarray(net_of(r)[:split], dtype=float)
@@ -536,6 +491,8 @@ def evaluate_hypothesis(
     panel: run_grid.Panel,
     *,
     trial_sr_variance: float | None = None,
+    regimes: list[str] | None = None,
+    batch_label: str = "batch1_core19",
 ) -> dict:
     """Score one hypothesis end to end against the audit's gates."""
     train_srs = [sharpe_ratio(net_of(r)[:split], PERIODS) for r in runs]
@@ -543,6 +500,7 @@ def evaluate_hypothesis(
     net = net_of(runs[winner_index])
     gross = gross_of(runs[winner_index])
     cost = cost_of(runs[winner_index])
+    turnover = np.asarray(runs[winner_index]["result"]["turnover"], dtype=float)
     lookback = int(runs[winner_index]["params"]["lookback"])
     embargo_days = 2 * lookback
     oos_slice = slice(split + embargo_days, None)
@@ -554,8 +512,6 @@ def evaluate_hypothesis(
     grid_n = len(runs)
     own_sr_var = _per_period_sr_variance(runs, split)
     effective_full_var = own_sr_var if trial_sr_variance is None else trial_sr_variance
-    # The gate uses the full recorded total: an analyst who ran every grid in
-    # the lab has searched across all of them, not just the surviving one.
     dsr = deflated_sharpe(
         train,
         n_trials=full_n,
@@ -575,9 +531,6 @@ def evaluate_hypothesis(
         trial_sr_variance=effective_full_var,
     )
 
-    # Selection diagnostics (PBO, CPCV, White Reality Check) are restricted to
-    # the train window so the locked out-of-sample segment stays genuinely
-    # untouched until its single post-embargo evaluation below.
     train_matrix = run_grid.return_matrix(runs)[:, :split]
     pbo = probability_of_backtest_overfitting(train_matrix)
     cpcv_embargo = min(lookback, max(1, (split // 8) - 16))
@@ -627,6 +580,9 @@ def evaluate_hypothesis(
 
     result = {
         "hypothesis": name,
+        "batch": batch_label,
+        "panel_universe": getattr(panel, "universe", "CORE_19"),
+        "n_symbols": len([c for c in panel.perp_close.columns if c != "day"]),
         "n_trials_full_recorded": full_n,
         "n_trials_own_grid": grid_n,
         "winner_params": runs[winner_index]["params"],
@@ -674,7 +630,7 @@ def evaluate_hypothesis(
             "calmar": (
                 round(calmar(net), 4) if math.isfinite(calmar(net)) else None
             ),
-            "mean_turnover": round(float(np.mean(runs[winner_index]["result"]["turnover"])), 4),
+            "mean_turnover": round(float(np.mean(turnover)), 4),
         },
         "deflated_sharpe": {
             "dsr": round(dsr.dsr, 6),
@@ -727,7 +683,15 @@ def evaluate_hypothesis(
         "parameter_plateau": plateau,
     }
 
-    if name == "H1":
+    if regimes is not None:
+        result["regime_attribution"] = {
+            "full_sample": regimes_mod.attribute_by_regime(regimes, net, turnover),
+            "locked_oos": regimes_mod.attribute_by_regime(
+                regimes[oos_slice], oos, turnover[oos_slice]
+            ),
+        }
+
+    if name in ("H1", "H1_G1"):
         result["btc_tail_correlation"] = tail_correlation(oos, btc_returns[oos_slice])
         result["btc_tail_correlation_full_sample"] = tail_correlation(net, btc_returns)
 
@@ -749,14 +713,7 @@ def build_gates(
     plateau: dict,
     break_even: float,
 ) -> dict:
-    """Normalise every threshold decision into one block.
-
-    Keeping the comparisons here, on scalars, means the gate directions can be
-    checked against the audit's numbers without building a panel. A gate that
-    points the wrong way is invisible in the artifact: the report would say PASS
-    in the same format with the same confidence, so each clause is decided once,
-    here, and reported with the threshold it was measured against.
-    """
+    """Normalise every threshold decision into one block."""
     return {
         "dsr": {"value": round(dsr_value, 4), "min": DSR_MIN, "pass": bool(dsr_value >= DSR_MIN)},
         "pbo": {
@@ -809,9 +766,7 @@ def rejection_reasons(name: str, h: dict) -> list[str]:
             f"< {COST_STRESS_MULTIPLE}x survival bar"
         )
 
-    if name == "H1":
-        # The audit states one threshold per clause: the Sharpe floor applies to
-        # the out-of-sample record, the sign test to the 2.0x cost scenario.
+    if name in ("H1", "H1_G1"):
         oos_sr = h["locked_oos"]["sharpe"]
         if oos_sr < H1_NET_SHARPE_FLOOR:
             reasons.append(
@@ -831,73 +786,212 @@ def rejection_reasons(name: str, h: dict) -> list[str]:
     return reasons
 
 
-def open_registry(trials: dict[str, list[dict]], panel, expected: int) -> TrialRegistry:
-    """Reuse a verified registry; rebuild only when absent or out of step."""
-    if REGISTRY.exists():
-        try:
-            existing = TrialRegistry(REGISTRY)
-        except RuntimeError as exc:
-            print(f"  registry present but unreadable ({exc}); rebuilding", file=sys.stderr)
-        else:
-            if existing.verify() and existing.count == expected:
-                print(f"  reusing verified registry: {existing.count} trials")
-                return existing
-            print(
-                f"  registry out of step (count {existing.count} vs expected {expected}); rebuilding",
-                file=sys.stderr,
-            )
-    if REGISTRY.exists():
-        REGISTRY.unlink()
-    registry = TrialRegistry(REGISTRY)
-    run_grid.log_trials(registry, trials, panel, train_fraction=TRAIN_FRACTION)
+def open_registry(
+    batch2_trials: dict[str, list[dict]],
+    panel_surv: run_grid.Panel,
+    expected_total: int,
+    *,
+    registry_path: Path | None = None,
+    batch1_count: int = BATCH1_COUNT,
+    batch1_head_hash: str = BATCH1_HEAD_HASH,
+) -> TrialRegistry:
+    """Verify immutable lines `1..93` (`head == 0efe8164...`) and append Batch 2 once.
+
+    NEVER unlinks or overwrites `trial_registry.jsonl`: deleting prior trials to
+    reset `N` would falsify the multiple-testing ledger.
+    """
+    target_path = REGISTRY if registry_path is None else registry_path
+    if not target_path.exists():
+        raise RuntimeError(
+            f"REFUSING: {target_path} missing; Batch 1 (seq 1..{batch1_count}) must exist intact"
+        )
+
+    registry = TrialRegistry(target_path)
+    if not registry.verify():
+        raise RuntimeError(f"REFUSING: {target_path} hash chain failed verification")
+    if registry.count < batch1_count:
+        raise RuntimeError(
+            f"REFUSING: {target_path} holds {registry.count} < {batch1_count} Batch-1 trials"
+        )
+
+    records = registry.records()
+    seq93_hash = records[batch1_count - 1].get("hash")
+    if seq93_hash != batch1_head_hash:
+        raise RuntimeError(
+            f"REFUSING: seq {batch1_count} hash {seq93_hash} != pinned {batch1_head_hash}"
+        )
+
+    if registry.count == batch1_count:
+        appended_expected = sum(len(v) for v in batch2_trials.values())
+        print(
+            f"  verified Batch 1 (seq 1..{batch1_count}, head {batch1_head_hash[:16]}...); "
+            f"appending {appended_expected} Batch-2 trials"
+        )
+        run_grid.log_trials(
+            registry,
+            batch2_trials,
+            panel_surv,
+            train_fraction=TRAIN_FRACTION,
+            note=BATCH2_NOTE,
+        )
+    elif registry.count == expected_total:
+        print(f"  reusing verified cumulative registry: {registry.count} trials")
+    else:
+        raise RuntimeError(
+            f"REFUSING: registry holds {registry.count} trials (expected {batch1_count} or {expected_total}); "
+            "refusing to unlink or overwrite append-only ledger"
+        )
+
+    if not registry.verify() or registry.count != expected_total:
+        raise RuntimeError("REFUSING: post-append registry verification or count mismatch")
     return registry
 
 
+def _survivorship_fixed_param_comparison(
+    winners_core: dict[str, dict],
+    panel_core: run_grid.Panel,
+    panel_surv: run_grid.Panel,
+    split: int,
+) -> dict[str, dict]:
+    """Compare locked Batch-1 winners on `CORE_19` vs `SURVIVORSHIP_23` with zero search."""
+    out: dict[str, dict] = {}
+    for name in ("H1", "H2", "H3"):
+        params = winners_core[name]
+        embargo = 2 * int(params["lookback"])
+        oos_s = slice(split + embargo, None)
+
+        def _score(p: run_grid.Panel) -> dict:
+            if name == "H1":
+                res = h1.backtest(h1.build_positions(p.funding, **params), p.perp_returns, p.funding)
+            elif name == "H2":
+                res = h2.evaluate(h2.build_positions(p.perp_close, **params), p.perp_returns, p.funding)
+            else:
+                res = h3.evaluate(
+                    h3.build_positions(p.basis, p.funding, **params),
+                    p.perp_returns,
+                    p.spot_returns,
+                    p.funding,
+                )
+            net = res["net"]
+            return {
+                "full_sharpe": round(sharpe_ratio(net, PERIODS), 4),
+                "full_cum_net": round(float(np.nansum(net)), 6),
+                "locked_oos_sharpe": round(sharpe_ratio(net[oos_s], PERIODS), 4),
+                "locked_oos_cum_net": round(float(np.nansum(net[oos_s])), 6),
+                "locked_oos_max_drawdown": round(max_drawdown(net[oos_s]), 6),
+            }
+
+        c19 = _score(panel_core)
+        s23 = _score(panel_surv)
+        out[name] = {
+            "params": params,
+            "core_19_repaired": c19,
+            "survivorship_23": s23,
+            "delta_survivorship_minus_core19": {
+                "full_sharpe": round(s23["full_sharpe"] - c19["full_sharpe"], 4),
+                "full_cum_net": round(s23["full_cum_net"] - c19["full_cum_net"], 6),
+                "locked_oos_sharpe": round(s23["locked_oos_sharpe"] - c19["locked_oos_sharpe"], 4),
+                "locked_oos_cum_net": round(s23["locked_oos_cum_net"] - c19["locked_oos_cum_net"], 6),
+            },
+        }
+    return out
+
+
 def main() -> int:
-    panel = run_grid.build_panel()
-    days = len(panel.days)
+    panel_core = run_grid.build_panel("CORE_19")
+    panel_surv = run_grid.build_panel("SURVIVORSHIP_23")
+    days = len(panel_core.days)
     split = int(days * TRAIN_FRACTION)
-    btc = panel.perp_returns["BTCUSDT"].cast(float).to_numpy() if "BTCUSDT" in panel.perp_returns.columns else None
+    btc = (
+        panel_core.perp_returns["BTCUSDT"].cast(float).to_numpy()
+        if "BTCUSDT" in panel_core.perp_returns.columns
+        else None
+    )
     if btc is None:
         print("REFUSING: BTCUSDT absent from the panel; H1's tail rule cannot be applied", file=sys.stderr)
         return 2
 
+    # Build causal USD volume panel for 7-regime classification.
+    perp_1d_raw = L.load("perp_1d").filter(pl.col("volume") > 0.0)
+    tv_wide = (
+        market.traded_value(perp_1d_raw.filter(pl.col("symbol").is_in(list(L.SURVIVORSHIP_23))))
+        .pivot(values="value", index="day", on="symbol", aggregate_function="last")
+        .sort("day")
+    )
+    regimes = regimes_mod.classify_regimes(
+        panel_surv.perp_close,
+        panel_surv.perp_returns,
+        panel_surv.basis,
+        perp_volume_usd=tv_wide,
+    )
+
     OUT.mkdir(exist_ok=True)
-    trials = run_grid.enumerate_all(panel)
-    expected = sum(len(v) for v in trials.values())
-    registry = open_registry(trials, panel, expected)
+    batch1_trials = run_grid.enumerate_all(panel_core)
+    batch2_trials = run_grid.enumerate_batch2(panel_surv)
+    expected_total = BATCH1_COUNT + sum(len(v) for v in batch2_trials.values())
+
+    try:
+        registry = open_registry(batch2_trials, panel_surv, expected_total)
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
 
     chain_ok = registry.verify()
     if not chain_ok:
         print("REFUSING: trial registry hash chain does not verify", file=sys.stderr)
         return 2
-    if registry.count != expected:
-        print(
-            f"REFUSING: registry holds {registry.count} trials but {expected} were run",
-            file=sys.stderr,
-        )
-        return 2
 
-    counts = {h: len(registry.for_hypothesis(h)) for h in ("H1", "H2", "H3")}
+    all_hyp_names = ("H1", "H2", "H3", "H1_G1", "H2_G1", "H3_MAKER")
+    counts = {h: len(registry.for_hypothesis(h)) for h in all_hyp_names}
     total_n = registry.count
-    all_runs = [r for h in ("H1", "H2", "H3") for r in trials[h]]
+
+    all_runs = [r for h in ("H1", "H2", "H3") for r in batch1_trials[h]] + [
+        r for h in ("H1_G1", "H2_G1", "H3_MAKER") for r in batch2_trials[h]
+    ]
     full_sr_var = _per_period_sr_variance(all_runs, split)
 
-    results = [
-        evaluate_hypothesis(
-            name,
-            trials[name],
-            total_n,
-            split,
-            btc,
-            panel,
-            trial_sr_variance=full_sr_var,
+    results = []
+    for name in ("H1", "H2", "H3"):
+        results.append(
+            evaluate_hypothesis(
+                name,
+                batch1_trials[name],
+                total_n,
+                split,
+                btc,
+                panel_core,
+                trial_sr_variance=full_sr_var,
+                regimes=regimes,
+                batch_label="batch1_core19_repaired",
+            )
         )
-        for name in ("H1", "H2", "H3")
-    ]
+    for name in ("H1_G1", "H2_G1", "H3_MAKER"):
+        results.append(
+            evaluate_hypothesis(
+                name,
+                batch2_trials[name],
+                total_n,
+                split,
+                btc,
+                panel_surv,
+                trial_sr_variance=full_sr_var,
+                regimes=regimes,
+                batch_label="batch2_survivorship23",
+            )
+        )
+
+    winners_core = {r["hypothesis"]: r["winner_params"] for r in results if r["hypothesis"] in ("H1", "H2", "H3")}
+    surv_comparison = _survivorship_fixed_param_comparison(winners_core, panel_core, panel_surv, split)
+
+    reg_arr = np.asarray(regimes, dtype=object)
+    regime_counts = {
+        "full_sample": {r: int(np.sum(reg_arr == r)) for r in regimes_mod.REGIME_ORDER},
+        "train": {r: int(np.sum(reg_arr[:split] == r)) for r in regimes_mod.REGIME_ORDER},
+        "raw_locked_oos": {r: int(np.sum(reg_arr[split:] == r)) for r in regimes_mod.REGIME_ORDER},
+    }
 
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "commit": subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True, text=True, check=True
@@ -905,6 +999,10 @@ def main() -> int:
         "trial_registry": {
             "path": "artifacts/trial_registry.jsonl",
             "n_trials_total": total_n,
+            "batch1_trials_preserved": BATCH1_COUNT,
+            "batch1_seq93_hash": BATCH1_HEAD_HASH,
+            "batch1_seq93_verified": registry.records()[BATCH1_COUNT - 1]["hash"] == BATCH1_HEAD_HASH,
+            "batch2_trials_appended": total_n - BATCH1_COUNT,
             "n_trials_by_hypothesis": counts,
             "hash_chain_verified": chain_ok,
             "head_hash": registry.head,
@@ -914,12 +1012,17 @@ def main() -> int:
                 for r in registry.records()
             ),
             "note": (
-                "N is the number of configurations actually run, read from the "
-                "hash-chained registry rather than estimated. Every configuration is "
-                "recorded whether it won or lost, because a Sharpe deflated by a "
-                "hand-picked N is a fiction."
+                "Batch 1 (seq 1..93, head 0efe8164...) is preserved byte-for-bit; "
+                "Batch 2 (seq 94..185) appends pre-registered survivorship-23 G1 overlay "
+                "and H3_MAKER FIFO passive-quoting grids, and DSR deflates against N_total=185."
             ),
         },
+        "regime_classification": {
+            "regimes_order": list(regimes_mod.REGIME_ORDER),
+            "causality": "strictly t-1 shifted features and post-onset (onset+1) disruption aftermath windows",
+            "day_counts": regime_counts,
+        },
+        "survivorship_attribution_fixed_batch1_winners": surv_comparison,
         "methodology": {
             "train_fraction": TRAIN_FRACTION,
             "train_days": split,
@@ -930,7 +1033,10 @@ def main() -> int:
                 "and parameter plateau; locked OOS is scored once after embargo"
             ),
             "periods_per_year": PERIODS,
-            "returns_are_net": "daily net of 6 bps per unit turnover, both legs where applicable",
+            "returns_are_net": (
+                "daily net of 6 bps/turn on H1/H2/H1_G1/H2_G1, 12 bps/pair-turn on H3, and "
+                "8.90 bps/pair-turn calibrated maker+adverse-selection+leg-miss midpoint on H3_MAKER"
+            ),
             "bootstrap": {
                 "scheme": "circular block",
                 "block_days": BOOTSTRAP_BLOCK,
@@ -947,10 +1053,8 @@ def main() -> int:
                 "h1_btc_tail_corr_max": H1_TAIL_CORR_MAX,
             },
             "not_implemented": [
-                "Hansen's SPA test (White's Reality Check is used instead, as the "
-                "audit permits either)",
+                "Hansen's SPA test (White's Reality Check is used instead, as the audit permits either)",
                 "Monte Carlo path perturbation beyond block bootstrap",
-                "regime-conditional scoring across the 7 regimes",
             ],
         },
         "hypotheses": results,
@@ -964,7 +1068,7 @@ def main() -> int:
     for h in results:
         g = h["gates"]
         print(
-            f"  {h['hypothesis']} {h['verdict']:6s} DSR {g['dsr']['value']} "
+            f"  {h['hypothesis']:8s} {h['verdict']:6s} DSR {g['dsr']['value']} "
             f"PBO {g['pbo']['value']} PSR_oos {g['psr_oos']['value']} "
             f"RC p={g['white_reality_check']['p_value']} "
             f"BE {g['break_even_cost_multiple']['value']}x plateau {g['plateau']['value']}"
@@ -973,13 +1077,6 @@ def main() -> int:
             f"    train SR {h['train']['sharpe']:+.3f} -> locked OOS SR "
             f"{h['locked_oos']['sharpe']:+.3f} (cum {h['locked_oos']['cum_net']:+.4f}) "
             f"full SR {h['full_sample']['sharpe']:+.3f}"
-        )
-        print(
-            f"    observed SR {h['deflated_sharpe']['observed_sharpe']:+.3f} vs deflated "
-            f"{h['deflated_sharpe']['expected_max_sharpe_under_null']:+.3f}; "
-            f"MinTRL {h['min_track_record_length_days']} "
-            f"(have {h['train']['days']}d train / {h['full_sample']['days']}d full); "
-            f"flat days {h['sparse_diagnostic']['flat_fraction']:.1%}"
         )
         if h["rejection_reasons"]:
             for reason in h["rejection_reasons"]:

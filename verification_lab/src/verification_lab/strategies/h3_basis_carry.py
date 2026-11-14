@@ -21,6 +21,7 @@ from __future__ import annotations
 import numpy as np
 import polars as pl
 
+from ..execution import maker_queue
 from .common import break_even_multiple
 
 
@@ -159,3 +160,88 @@ GRID = {
     "entry_annual_bps": [150.0, 300.0, 500.0, 800.0],
     "exit_annual_bps": [75.0, 150.0, 250.0],
 }
+
+MAKER_GRID = {
+    "lookback": [14, 21, 30],
+    "entry_annual_bps": [300.0, 500.0, 800.0],
+    "exit_annual_bps": [150.0, 250.0],
+    "p_fill": [0.55, 0.70],
+}
+
+
+def build_positions_maker(
+    basis: pl.DataFrame,
+    funding: pl.DataFrame,
+    *,
+    lookback: int = 14,
+    entry_annual_bps: float = 300.0,
+    exit_annual_bps: float = 150.0,
+    p_fill: float = 0.65,
+    causal_shift: bool = True,
+) -> pl.DataFrame:
+    """H3 carry pair executed via passive maker orders with FIFO partial-fill lag `p_fill`."""
+    ideal = build_positions(
+        basis,
+        funding,
+        lookback=lookback,
+        entry_annual_bps=entry_annual_bps,
+        exit_annual_bps=exit_annual_bps,
+        causal_shift=causal_shift,
+    )
+    symbols = [c for c in ideal.columns if c != "day"]
+    b_mat = basis.select(symbols).cast(pl.Float64).to_numpy()
+    f_mat = funding.select(symbols).cast(pl.Float64).to_numpy()
+    present = (~np.isnan(b_mat)) & (~np.isnan(f_mat))
+    # Causal tradability: bar `t` may hold a position only if the contract was active
+    # when bar `t`'s position was decided (`t-1` when `causal_shift=True`). Once a
+    # contract settles (`present[t-1] == False` on `day >= last_active_day + 2`),
+    # mandatory exchange settlement flattens any residual FIFO position immediately.
+    tradable = (
+        np.vstack([np.zeros((1, present.shape[1]), dtype=bool), present[:-1]])
+        if causal_shift
+        else present
+    )
+    realised = maker_queue.apply_fifo_partial_fills(
+        ideal.select(symbols).cast(pl.Float64).to_numpy(),
+        p_fill=p_fill,
+        tradable_mask=tradable,
+    )
+    return pl.DataFrame({"day": ideal["day"], **{s: realised[:, i] for i, s in enumerate(symbols)}})
+
+
+def evaluate_maker(
+    positions: pl.DataFrame,
+    perp_returns: pl.DataFrame,
+    spot_returns: pl.DataFrame,
+    funding: pl.DataFrame,
+    *,
+    venue_name: str = "binance",
+    adverse_selection_bps: float = maker_queue.ADVERSE_SELECTION_MID_BPS,
+    p_leg_miss: float = maker_queue.LEG_MISS_MID,
+    taker_half_spread_bps: float = 3.0,
+    latency_slippage_bps: float = 1.0,
+    cost_multiplier: float = 1.0,
+) -> dict:
+    """Backtest H3 passive maker book with adverse selection & single-leg miss taker fallback."""
+    per_leg = maker_queue.blended_pair_bps_per_leg(
+        venue_name,
+        adverse_selection_bps=adverse_selection_bps,
+        p_leg_miss=p_leg_miss,
+        taker_half_spread_bps=taker_half_spread_bps,
+        latency_slippage_bps=latency_slippage_bps,
+    )
+    # `evaluate` multiplies |dw| by 2.0 (`turnover = 2 * |dw|`), so each unit of `turnover`
+    # equals half a pair rebalance; the equivalent per-leg average rate is mean(spot, perp) / 2?
+    # Wait: on a unit pair rebalance `|dw| = 1`, spot trades 0.5 at `per_leg['spot']` bps and
+    # perp trades 0.5 at `per_leg['perp']` bps -> total pair cost bps = 0.5 * (spot + perp).
+    # Since `turnover = 2.0 * |dw| = 2.0`, `cost = turnover * (bps_per_turn / 1e4)` equals
+    # `0.5 * (spot + perp) / 1e4` iff `bps_per_turn = 0.25 * (spot + perp)`.
+    eff_bps_per_leg_turn = 0.25 * (per_leg["spot"] + per_leg["perp"])
+    return evaluate(
+        positions,
+        perp_returns,
+        spot_returns,
+        funding,
+        cost_bps_per_turn=eff_bps_per_leg_turn,
+        cost_multiplier=cost_multiplier,
+    )

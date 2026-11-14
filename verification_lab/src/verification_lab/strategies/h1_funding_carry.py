@@ -20,6 +20,7 @@ import numpy as np
 import polars as pl
 
 from .common import summary
+from .overlay_g1 import compute_defensive_scalar, compute_negative_funding_freeze
 
 
 def _trailing_mean(f: np.ndarray, lookback: int) -> np.ndarray:
@@ -154,3 +155,74 @@ GRID = {
     "entry_band": [0.5, 0.6, 0.7],
     "exit_band": [0.3, 0.4],
 }
+
+G1_GRID = {
+    "lookback": [3, 5, 7, 14],
+    "entry_band": [0.6, 0.7],
+    "exit_band": [0.3, 0.4],
+    "corr_threshold": [0.75, 0.80],
+}
+
+
+def build_positions_g1(
+    funding_wide: pl.DataFrame,
+    returns_wide: pl.DataFrame,
+    *,
+    lookback: int = 7,
+    entry_band: float = 0.6,
+    exit_band: float = 0.4,
+    corr_threshold: float = 0.80,
+) -> pl.DataFrame:
+    """H1 with G1 causal defensive hysteresis overlay and negative-funding entry freeze."""
+    symbols = [c for c in funding_wide.columns if c != "day"]
+    f = funding_wide.select(symbols).cast(pl.Float64).to_numpy()
+    t_len, n = f.shape
+
+    trail = _trailing_mean(f, lookback)
+    freeze = compute_negative_funding_freeze(funding_wide)
+    scalar = compute_defensive_scalar(
+        returns_wide.select(["day", *symbols]),
+        corr_threshold=corr_threshold,
+    )["scale"]
+
+    rank = np.full((t_len, n), np.nan)
+    for t in range(1, t_len):
+        row = trail[t]
+        valid = (~np.isnan(row)) & (~np.isnan(f[t - 1]))
+        k = int(valid.sum())
+        if k < 4:
+            continue
+        valid_idx = np.flatnonzero(valid)
+        order = valid_idx[np.argsort(row[valid_idx], kind="mergesort")]
+        rank[t, order] = np.arange(k, dtype=float) / (k - 1)
+
+    w = np.zeros((t_len, n))
+    state = np.zeros(n)
+    for t in range(t_len):
+        rk = rank[t]
+        fresh = ~np.isnan(rk)
+        allow_entry = not bool(freeze[t])
+        with np.errstate(invalid="ignore"):
+            short_enter = fresh & allow_entry & (rk >= entry_band) & (rk > 0.5)
+            long_enter = fresh & allow_entry & (rk <= 1.0 - entry_band) & (rk < 0.5)
+            short_hold = fresh & (rk >= exit_band)
+            long_hold = fresh & (rk <= 1.0 - exit_band)
+
+        from_short = np.where(short_hold, -1.0, np.where(long_enter, 1.0, 0.0))
+        from_long = np.where(long_hold, 1.0, np.where(short_enter, -1.0, 0.0))
+        from_flat = np.where(short_enter, -1.0, np.where(long_enter, 1.0, 0.0))
+        state = np.where(
+            ~fresh,
+            0.0,
+            np.where(state < 0.0, from_short, np.where(state > 0.0, from_long, from_flat)),
+        )
+        longs = state > 0.0
+        shorts = state < 0.0
+        n_long = int(longs.sum())
+        n_short = int(shorts.sum())
+        if n_long > 0 and n_short > 0:
+            gross_half = 0.5 * float(scalar[t])
+            w[t, longs] = gross_half / n_long
+            w[t, shorts] = -gross_half / n_short
+
+    return pl.DataFrame({"day": funding_wide["day"], **{s: w[:, i] for i, s in enumerate(symbols)}})

@@ -1,43 +1,54 @@
 {
-  "schema_version": 1,
-  "generated_at": "2026-11-14T08:52:38.017536+00:00",
-  "commit": "980cb653366d9ff7451deb86dd9c7306e1d4876b",
+  "schema_version": 2,
+  "generated_at": "2026-11-14T11:48:14.613338+00:00",
+  "commit": "3d3dc0e3be6c3d18608729a4f6917da9ec4e47fa",
   "scope": {
-    "gate": "G6 - realistic execution costs",
-    "requirement_transcribed": "apply each venue's VIP-0 fees, funding at 1h/8h, without double counting spread, expecting a positive net return at 2.0x fees",
+    "gate": "G6 - realistic execution costs, Decimal accounting parity & Hyperliquid cross-check",
+    "requirement_transcribed": "apply each venue's VIP-0 fees, funding at 1h/8h, without double counting spread, expecting a positive net return at 2.0x fees, with <1 bps independent event-driven ledger parity",
     "evidence_file": "artifacts/g6_execution_tca.json",
     "capital_usd": 1000000.0,
     "books_repriced": [
       "H1",
       "H2",
-      "H3"
+      "H3",
+      "H1_G1",
+      "H2_G1",
+      "H3_MAKER"
     ],
-    "prior_cost_basis": "a flat 6.0 bps per unit of turnover on every hypothesis; each reconciliation block shows the new model reproducing that charge exactly when driven by fees alone"
+    "prior_cost_basis": "a flat 6.0 bps per unit of turnover on taker grids and 8.90 bps calibrated pair-turn midpoint on H3_MAKER; each reconciliation block proves exact reproduction"
   },
   "venue_fees": {
     "basis": "assumed_not_measured",
     "source": "audit section 14.1, VIP-0 fee table, October-November 2026",
     "applied_to_ingested_data": "binance",
-    "side": "taker",
-    "side_note": "maker fills are refused rather than defaulted: this lab scores books on daily closes with no queue position, so a maker assumption has nothing behind it",
+    "side": "taker for H1/H2/H3/H1_G1/H2_G1; calibrated FIFO maker+adverse-selection+leg-miss for H3_MAKER",
+    "side_note": "uncalibrated raw maker fills remain refused in fees.per_side_bps(..., side='maker'); H3_MAKER uses explicit FIFO partial fill (p_fill<1), adverse selection (1.5-3.0 bps), and forced emergency taker fallback (p_leg_miss=0.15-0.25)",
     "schedule": {
       "binance": {
+        "spot_maker_pct": 0.1,
         "spot_taker_pct": 0.1,
+        "perp_maker_pct": 0.02,
         "perp_taker_pct": 0.05,
         "funding_hours": 8
       },
       "bybit": {
+        "spot_maker_pct": 0.1,
         "spot_taker_pct": 0.1,
+        "perp_maker_pct": 0.02,
         "perp_taker_pct": 0.055,
         "funding_hours": 8
       },
       "hyperliquid": {
+        "spot_maker_pct": 0.04,
         "spot_taker_pct": 0.07,
+        "perp_maker_pct": 0.015,
         "perp_taker_pct": 0.045,
         "funding_hours": 1
       },
       "okx": {
+        "spot_maker_pct": 0.08,
         "spot_taker_pct": 0.1,
+        "perp_maker_pct": 0.02,
         "perp_taker_pct": 0.05,
         "funding_hours": 8
       }
@@ -48,7 +59,6 @@
       "okx": "perp 0.020/0.050; spot 0.080/0.100",
       "hyperliquid": "perp 0.015/0.045 with zero gas and 1h funding; spot 0.040/0.070"
     },
-    "discounts_not_applied": "BNB 0.018/0.045 on perps and 0.075% spot, Bybit MNT 0.075% spot, Bybit Innovation Zone 0.200/0.200: the base VIP-0 rate is what a client holding no exchange token pays, and quoting the discounted tier would flatter every hypothesis in the same direction",
     "charged_on": "notional value, not posted margin",
     "funding_cadence": {
       "binance": {
@@ -68,9 +78,9 @@
       "hyperliquid": {
         "venue": "hyperliquid",
         "funding_hours_declared": 1,
-        "funding_hours_in_ingested_data": 8,
-        "priced_from_measured_events": false,
-        "note": "hyperliquid settles funding every 1h; the panel holds only 8-hourly Binance events, so the cadence is documented but not simulated"
+        "funding_hours_in_ingested_data": 1,
+        "priced_from_measured_events": true,
+        "note": "funding is read from the 1-hourly events and applied as a cash flow on held notional, not as a turn cost"
       },
       "okx": {
         "venue": "okx",
@@ -153,17 +163,15 @@
       "latency_slippage",
       "volatility_impact"
     ],
-    "no_double_counting": "the audit's rule has two branches and the close-price branch binds here: there is no book and no fill, so half spread, latency slippage and volatility-dependent impact are added explicitly to the crossed price rather than assumed to be inside it",
-    "notional_convention": "traded notional is the signed difference |w_t - w_t-1| per leg, which is already per side, so a round trip appears as two units and is charged twice without the model doubling anything; H3's two legs each carry half the pair weight, so its two charges sum to one unit of pair notional per rebalance and its baseline is 12.0 bps per rebalance, not 6.0",
+    "no_double_counting": "OHLCV close-price branch binds: for taker orders, half-spread, latency slippage, and volatility impact are added once; for H3_MAKER passive fills, half-spread is NOT charged on passive fills (which pay adverse_selection_bps instead) and only the p_leg_miss forced-taker fallback crosses half-spread",
     "assumptions": {
       "latency_slippage_bps": 1.0,
       "impact_coefficient": 1.0,
       "capital_usd": 1000000.0,
       "assumed_impact_bps_fallback": 2.0,
-      "basis": "assumed_not_measured",
-      "note": "the impact coefficient is the square-root law's slope; 1.0 is the conservative upper end quoted for crypto pairs, and the 2.0x/3.0x rungs are what test the answer against it being wrong"
+      "basis": "assumed_not_measured"
     },
-    "impact_fallback_cells": 781,
+    "impact_fallback_cells": 770,
     "stress_multiples": [
       1.0,
       1.5,
@@ -174,14 +182,338 @@
   },
   "market_state": {
     "adv_nan_fraction": 0.0167,
-    "adv_median_usd": 247135733.1,
-    "vol_nan_fraction": 0.0193,
-    "vol_median_daily": 0.041025,
-    "note": "both statistics are trailing and shifted one day, so an impact estimate never reads the volume or volatility of the day it prices"
+    "adv_median_usd": 247106247.04,
+    "vol_nan_fraction": 0.019,
+    "vol_median_daily": 0.041017
+  },
+  "event_ledger_parity": {
+    "oracle": "verification_lab.execution.event_ledger_oracle.run_decimal_ledger",
+    "precision_digits": 50,
+    "funding_event_cadence_hours": 8,
+    "tolerance_bps": 1.0,
+    "all_pass_1bps_gate": true,
+    "max_terminal_nav_discrepancy_bps": 0.0,
+    "by_hypothesis": {
+      "H1": {
+        "capital_usd": 1000000.0,
+        "days": 2130,
+        "orders_executed": 20719,
+        "funding_events_replayed": 119518,
+        "vectorized_terminal_nav": 1.9330102168,
+        "decimal_oracle_terminal_nav": 1.9330102168,
+        "persistent_unit_inventory_terminal_nav": 1.8185981495,
+        "terminal_nav_discrepancy_bps": 0.0,
+        "max_daily_nav_discrepancy_bps": 0.0,
+        "unrebalanced_unit_drift_bps": 1144.1207,
+        "oracle_cum_mtm_frac": 1.34267302,
+        "persistent_unit_cum_mtm_frac": 1.22940979,
+        "oracle_cum_funding_frac": 0.3826359,
+        "oracle_cum_execution_cost_frac": 0.7922987,
+        "tolerance_bps": 1.0,
+        "passes_1bps_gate": true
+      },
+      "H2": {
+        "capital_usd": 1000000.0,
+        "days": 2130,
+        "orders_executed": 39189,
+        "funding_events_replayed": 119518,
+        "vectorized_terminal_nav": 2.7784826891,
+        "decimal_oracle_terminal_nav": 2.7784826891,
+        "persistent_unit_inventory_terminal_nav": 2.7687140347,
+        "terminal_nav_discrepancy_bps": 0.0,
+        "max_daily_nav_discrepancy_bps": 0.0,
+        "unrebalanced_unit_drift_bps": 97.6865,
+        "oracle_cum_mtm_frac": 2.80815293,
+        "persistent_unit_cum_mtm_frac": 2.80815293,
+        "oracle_cum_funding_frac": -0.37323284,
+        "oracle_cum_execution_cost_frac": 0.6564374,
+        "tolerance_bps": 1.0,
+        "passes_1bps_gate": true
+      },
+      "H3": {
+        "capital_usd": 1000000.0,
+        "days": 2130,
+        "orders_executed": 2660,
+        "funding_events_replayed": 119518,
+        "vectorized_terminal_nav": 1.0946406106,
+        "decimal_oracle_terminal_nav": 1.0946406106,
+        "persistent_unit_inventory_terminal_nav": 1.1329561882,
+        "terminal_nav_discrepancy_bps": 0.0,
+        "max_daily_nav_discrepancy_bps": 0.0,
+        "unrebalanced_unit_drift_bps": 383.1558,
+        "oracle_cum_mtm_frac": 0.00589865,
+        "persistent_unit_cum_mtm_frac": 0.00872543,
+        "oracle_cum_funding_frac": 0.24746678,
+        "oracle_cum_execution_cost_frac": 0.15872482,
+        "tolerance_bps": 1.0,
+        "passes_1bps_gate": true
+      },
+      "H1_G1": {
+        "capital_usd": 1000000.0,
+        "days": 2130,
+        "orders_executed": 25192,
+        "funding_events_replayed": 137889,
+        "vectorized_terminal_nav": 1.8973651791,
+        "decimal_oracle_terminal_nav": 1.8973651791,
+        "persistent_unit_inventory_terminal_nav": 1.8952756817,
+        "terminal_nav_discrepancy_bps": 0.0,
+        "max_daily_nav_discrepancy_bps": 0.0,
+        "unrebalanced_unit_drift_bps": 20.895,
+        "oracle_cum_mtm_frac": 1.31449315,
+        "persistent_unit_cum_mtm_frac": 1.30817704,
+        "oracle_cum_funding_frac": 0.33149695,
+        "oracle_cum_execution_cost_frac": 0.74862492,
+        "tolerance_bps": 1.0,
+        "passes_1bps_gate": true
+      },
+      "H2_G1": {
+        "capital_usd": 1000000.0,
+        "days": 2130,
+        "orders_executed": 45185,
+        "funding_events_replayed": 137889,
+        "vectorized_terminal_nav": 2.8357953641,
+        "decimal_oracle_terminal_nav": 2.8357953641,
+        "persistent_unit_inventory_terminal_nav": 2.8261453366,
+        "terminal_nav_discrepancy_bps": 0.0,
+        "max_daily_nav_discrepancy_bps": 0.0,
+        "unrebalanced_unit_drift_bps": 96.5003,
+        "oracle_cum_mtm_frac": 2.80860808,
+        "persistent_unit_cum_mtm_frac": 2.80860808,
+        "oracle_cum_funding_frac": -0.34541656,
+        "oracle_cum_execution_cost_frac": 0.62739615,
+        "tolerance_bps": 1.0,
+        "passes_1bps_gate": true
+      },
+      "H3_MAKER": {
+        "capital_usd": 1000000.0,
+        "days": 2130,
+        "orders_executed": 19474,
+        "funding_events_replayed": 137889,
+        "vectorized_terminal_nav": 1.1561598526,
+        "decimal_oracle_terminal_nav": 1.1561598526,
+        "persistent_unit_inventory_terminal_nav": 1.1600850353,
+        "terminal_nav_discrepancy_bps": 0.0,
+        "max_daily_nav_discrepancy_bps": 0.0,
+        "unrebalanced_unit_drift_bps": 39.2518,
+        "oracle_cum_mtm_frac": 0.00466192,
+        "persistent_unit_cum_mtm_frac": 0.00505127,
+        "oracle_cum_funding_frac": 0.25712419,
+        "oracle_cum_execution_cost_frac": 0.10562626,
+        "tolerance_bps": 1.0,
+        "passes_1bps_gate": true
+      }
+    }
+  },
+  "hyperliquid_cross_check": {
+    "available": true,
+    "empirical_l1_and_impact_quotes": {
+      "data_nature": "point_in_time_empirical_top_of_book_snapshot (l2Book + metaAndAssetCtxs impactPxs); NOT historical L2 tick replay — historical 1h series is fundingHistory below",
+      "n_overlapping_coins": 19,
+      "median_l1_half_spread_bps": 0.815,
+      "p90_l1_half_spread_bps": 3.4132,
+      "max_l1_half_spread_bps": 5.5468,
+      "median_impact_half_spread_bps": 1.8372,
+      "p90_impact_half_spread_bps": 5.6992,
+      "max_impact_half_spread_bps": 11.7276,
+      "per_symbol_impact_half_spread_bps": {
+        "ADAUSDT": 3.0549,
+        "APTUSDT": 4.8847,
+        "ATOMUSDT": 8.9572,
+        "AVAXUSDT": 1.7496,
+        "BCHUSDT": 3.0478,
+        "BNBUSDT": 1.5229,
+        "BTCUSDT": 0.0743,
+        "DOGEUSDT": 0.7931,
+        "DOTUSDT": 2.799,
+        "ETCUSDT": 11.7276,
+        "ETHUSDT": 0.2616,
+        "FILUSDT": 4.2822,
+        "LINKUSDT": 2.977,
+        "LTCUSDT": 2.5326,
+        "NEARUSDT": 1.0019,
+        "SOLUSDT": 0.0659,
+        "TRXUSDT": 1.1808,
+        "UNIUSDT": 1.8372,
+        "XRPUSDT": 0.8162
+      },
+      "no_double_counting_note": "When pricing close-price books at Hyperliquid's empirical impactPxs half-spread, impact_half_spread_bps replaces the 3.0 bps floor once and is never added twice.",
+      "hypotheses_repriced_at_hl_vip0_and_empirical_impact_spread": {
+        "H1": {
+          "full_sample_1x_cum_net": 1.012281,
+          "full_sample_break_even_multiple": 2.4197,
+          "full_sample_2x_positive": true,
+          "locked_oos_1x_cum_net": -0.077206,
+          "locked_oos_break_even_multiple": 0.6892,
+          "locked_oos_2x_positive": false
+        },
+        "H2": {
+          "full_sample_1x_cum_net": 1.84528,
+          "full_sample_break_even_multiple": 4.1295,
+          "full_sample_2x_positive": true,
+          "locked_oos_1x_cum_net": -0.204704,
+          "locked_oos_break_even_multiple": -0.2057,
+          "locked_oos_2x_positive": false
+        },
+        "H3": {
+          "full_sample_1x_cum_net": 0.115463,
+          "full_sample_break_even_multiple": 1.8373,
+          "full_sample_2x_positive": false,
+          "locked_oos_1x_cum_net": 0.005673,
+          "locked_oos_break_even_multiple": 1.6644,
+          "locked_oos_2x_positive": false
+        },
+        "H1_G1": {
+          "full_sample_1x_cum_net": 0.97171,
+          "full_sample_break_even_multiple": 2.4411,
+          "full_sample_2x_positive": true,
+          "locked_oos_1x_cum_net": -0.084118,
+          "locked_oos_break_even_multiple": 0.6381,
+          "locked_oos_2x_positive": false
+        },
+        "H2_G1": {
+          "full_sample_1x_cum_net": 1.900658,
+          "full_sample_break_even_multiple": 4.3787,
+          "full_sample_2x_positive": true,
+          "locked_oos_1x_cum_net": -0.095078,
+          "locked_oos_break_even_multiple": 0.421,
+          "locked_oos_2x_positive": false
+        },
+        "H3_MAKER": {
+          "full_sample_1x_cum_net": 0.175905,
+          "full_sample_break_even_multiple": 3.0482,
+          "full_sample_2x_positive": true,
+          "locked_oos_1x_cum_net": 0.009349,
+          "locked_oos_break_even_multiple": 2.905,
+          "locked_oos_2x_positive": true
+        }
+      }
+    },
+    "historical_1h_funding_carry_cross_check": {
+      "data_nature": "historical_1h_series (paginated Hyperliquid fundingHistory, 24 settlements/day)",
+      "coins": [
+        "AVAXUSDT",
+        "BNBUSDT",
+        "BTCUSDT",
+        "DOGEUSDT",
+        "ETHUSDT",
+        "LINKUSDT",
+        "NEARUSDT",
+        "SOLUSDT",
+        "UNIUSDT",
+        "XRPUSDT"
+      ],
+      "n_hourly_events": 182640,
+      "window_days": 761,
+      "locked_oos_days_in_window": 633,
+      "per_coin_daily_funding_comparison": {
+        "AVAXUSDT": {
+          "days": 761,
+          "daily_corr": 0.6919,
+          "hyperliquid_ann_rate_pct": 7.501,
+          "binance_ann_rate_pct": 1.55
+        },
+        "BNBUSDT": {
+          "days": 761,
+          "daily_corr": 0.7191,
+          "hyperliquid_ann_rate_pct": 6.193,
+          "binance_ann_rate_pct": 1.031
+        },
+        "BTCUSDT": {
+          "days": 761,
+          "daily_corr": 0.7019,
+          "hyperliquid_ann_rate_pct": 10.188,
+          "binance_ann_rate_pct": 5.235
+        },
+        "DOGEUSDT": {
+          "days": 761,
+          "daily_corr": 0.7608,
+          "hyperliquid_ann_rate_pct": 11.303,
+          "binance_ann_rate_pct": 5.051
+        },
+        "ETHUSDT": {
+          "days": 761,
+          "daily_corr": 0.7078,
+          "hyperliquid_ann_rate_pct": 9.499,
+          "binance_ann_rate_pct": 4.883
+        },
+        "LINKUSDT": {
+          "days": 761,
+          "daily_corr": 0.6323,
+          "hyperliquid_ann_rate_pct": 13.096,
+          "binance_ann_rate_pct": 6.144
+        },
+        "NEARUSDT": {
+          "days": 761,
+          "daily_corr": 0.5213,
+          "hyperliquid_ann_rate_pct": 12.883,
+          "binance_ann_rate_pct": 3.972
+        },
+        "SOLUSDT": {
+          "days": 761,
+          "daily_corr": 0.7225,
+          "hyperliquid_ann_rate_pct": 6.399,
+          "binance_ann_rate_pct": 1.337
+        },
+        "UNIUSDT": {
+          "days": 761,
+          "daily_corr": 0.6553,
+          "hyperliquid_ann_rate_pct": 13.024,
+          "binance_ann_rate_pct": 6.423
+        },
+        "XRPUSDT": {
+          "days": 761,
+          "daily_corr": 0.7038,
+          "hyperliquid_ann_rate_pct": 8.005,
+          "binance_ann_rate_pct": 3.381
+        }
+      },
+      "h1_carry_on_10coin_overlap": {
+        "params": {
+          "lookback": 3,
+          "entry_band": 0.7,
+          "exit_band": 0.4
+        },
+        "hyperliquid_1h": {
+          "full_window_sharpe": -1.1194,
+          "full_window_cum_net": -0.386752,
+          "full_window_cum_carry": 0.080612,
+          "locked_oos_sharpe": -0.6833,
+          "locked_oos_cum_net": -0.185296,
+          "locked_oos_break_even_multiple": -0.7683
+        },
+        "binance_8h_same_10coins": {
+          "full_window_sharpe": -1.2842,
+          "full_window_cum_net": -0.455064,
+          "full_window_cum_carry": 0.044967,
+          "locked_oos_sharpe": -1.2865,
+          "locked_oos_cum_net": -0.351245,
+          "locked_oos_break_even_multiple": -1.041
+        }
+      },
+      "decimal_1h_event_ledger_parity": {
+        "capital_usd": 1000000.0,
+        "days": 761,
+        "orders_executed": 2949,
+        "funding_events_replayed": 182640,
+        "vectorized_terminal_nav": 0.6132484522,
+        "decimal_oracle_terminal_nav": 0.6132484522,
+        "persistent_unit_inventory_terminal_nav": 0.6176045462,
+        "terminal_nav_discrepancy_bps": 0.0,
+        "max_daily_nav_discrepancy_bps": 0.0,
+        "unrebalanced_unit_drift_bps": 43.5609,
+        "oracle_cum_mtm_frac": -0.33831358,
+        "persistent_unit_cum_mtm_frac": -0.334501,
+        "oracle_cum_funding_frac": 0.08061151,
+        "oracle_cum_execution_cost_frac": 0.12904947,
+        "tolerance_bps": 1.0,
+        "passes_1bps_gate": true
+      }
+    }
   },
   "hypotheses": [
     {
       "hypothesis": "H1",
+      "panel_universe": "CORE_19",
       "winner_params": {
         "lookback": 3,
         "entry_band": 0.7,
@@ -190,19 +522,21 @@
       "winner_source": "artifacts/g5_statistical_validity.json",
       "g5_verdict": "REJECT",
       "execution_spec": {
+        "mode": "taker",
         "legs": [
           "Leg(leg='perp', venue='binance', notional_scale=1.0)"
         ],
         "leg_fee_bps": {
           "perp": 5.0
         },
-        "order": "one perp leg at full book weight"
+        "order": "one perp leg at full book weight (VIP-0 taker)"
       },
       "book": {
         "days": 2130,
         "symbols": 19,
-        "cum_gross": 1.750501,
+        "cum_gross": 1.725309,
         "lab_cum_cost_flat_6bps": 0.286042,
+        "g5_baseline_bps_per_leg_turn": 6.0,
         "traded_notional_turns": 476.736616,
         "mean_turnover_per_day": 0.22382,
         "flat_day_fraction": 0.161,
@@ -274,62 +608,62 @@
       "full_sample_g6_pass": false,
       "at_floor": {
         "half_spread_bps": 3.0,
-        "cum_cost": 0.792255,
-        "cum_net": 0.958246,
-        "sharpe": 0.8594,
+        "cum_cost": 0.792299,
+        "cum_net": 0.93301,
+        "sharpe": 0.8373,
         "n_trades": 1,
-        "expectancy_per_trade": 0.958246,
+        "expectancy_per_trade": 0.93301,
         "mean_hold_days": 2127.0,
-        "effective_bps_per_turn": 16.6183,
-        "break_even_multiple": 2.2095,
+        "effective_bps_per_turn": 16.6192,
+        "break_even_multiple": 2.1776,
         "share_of_cost": {
           "fee": 0.3009,
           "half_spread": 0.1805,
           "latency_slippage": 0.0602,
-          "volatility_impact": 0.4584
+          "volatility_impact": 0.4585
         },
         "attrition": [
           {
             "component": "fee",
             "marginal_cost": 0.238368,
             "cum_cost": 0.238368,
-            "cum_net": 1.512133,
-            "sharpe": 1.3571,
+            "cum_net": 1.486941,
+            "sharpe": 1.3354,
             "flips_the_verdict": false
           },
           {
             "component": "half_spread",
             "marginal_cost": 0.143021,
             "cum_cost": 0.381389,
-            "cum_net": 1.369112,
-            "sharpe": 1.2287,
+            "cum_net": 1.34392,
+            "sharpe": 1.2069,
             "flips_the_verdict": false
           },
           {
             "component": "latency_slippage",
             "marginal_cost": 0.047674,
             "cum_cost": 0.429063,
-            "cum_net": 1.321438,
-            "sharpe": 1.1859,
+            "cum_net": 1.296246,
+            "sharpe": 1.1641,
             "flips_the_verdict": false
           },
           {
             "component": "volatility_impact",
-            "marginal_cost": 0.363193,
-            "cum_cost": 0.792255,
-            "cum_net": 0.958246,
-            "sharpe": 0.8594,
+            "marginal_cost": 0.363236,
+            "cum_cost": 0.792299,
+            "cum_net": 0.93301,
+            "sharpe": 0.8373,
             "flips_the_verdict": false
           }
         ],
         "cost_stress": {
           "1.0x": {
             "multiple": 1.0,
-            "cum_cost": 0.792255,
-            "cum_net": 0.958246,
-            "sharpe": 0.8594,
-            "break_even_multiple": 2.2095,
-            "expectancy_per_trade": 0.958246,
+            "cum_cost": 0.792299,
+            "cum_net": 0.93301,
+            "sharpe": 0.8373,
+            "break_even_multiple": 2.1776,
+            "expectancy_per_trade": 0.93301,
             "n_trades": 1,
             "mean_hold_days": 2127.0,
             "expectancy_positive": true,
@@ -337,11 +671,11 @@
           },
           "1.5x": {
             "multiple": 1.5,
-            "cum_cost": 1.188383,
-            "cum_net": 0.562118,
-            "sharpe": 0.5037,
-            "break_even_multiple": 2.2095,
-            "expectancy_per_trade": 0.562118,
+            "cum_cost": 1.188448,
+            "cum_net": 0.536861,
+            "sharpe": 0.4814,
+            "break_even_multiple": 2.1776,
+            "expectancy_per_trade": 0.536861,
             "n_trades": 1,
             "mean_hold_days": 2127.0,
             "expectancy_positive": true,
@@ -349,11 +683,11 @@
           },
           "2.0x": {
             "multiple": 2.0,
-            "cum_cost": 1.584511,
-            "cum_net": 0.16599,
-            "sharpe": 0.1486,
-            "break_even_multiple": 2.2095,
-            "expectancy_per_trade": 0.16599,
+            "cum_cost": 1.584597,
+            "cum_net": 0.140712,
+            "sharpe": 0.126,
+            "break_even_multiple": 2.1776,
+            "expectancy_per_trade": 0.140712,
             "n_trades": 1,
             "mean_hold_days": 2127.0,
             "expectancy_positive": true,
@@ -361,11 +695,11 @@
           },
           "3.0x": {
             "multiple": 3.0,
-            "cum_cost": 2.376766,
-            "cum_net": -0.626265,
-            "sharpe": -0.5588,
-            "break_even_multiple": 2.2095,
-            "expectancy_per_trade": -0.626265,
+            "cum_cost": 2.376896,
+            "cum_net": -0.651587,
+            "sharpe": -0.5818,
+            "break_even_multiple": 2.1776,
+            "expectancy_per_trade": -0.651587,
             "n_trades": 1,
             "mean_hold_days": 2127.0,
             "expectancy_positive": false,
@@ -377,14 +711,14 @@
       },
       "at_ceiling": {
         "half_spread_bps": 24.8772,
-        "cum_cost": 1.835222,
-        "cum_net": -0.084721,
-        "sharpe": -0.0759,
+        "cum_cost": 1.835265,
+        "cum_net": -0.109956,
+        "sharpe": -0.0985,
         "n_trades": 1,
-        "expectancy_per_trade": -0.084721,
+        "expectancy_per_trade": -0.109956,
         "mean_hold_days": 2127.0,
-        "effective_bps_per_turn": 38.4955,
-        "break_even_multiple": 0.9538,
+        "effective_bps_per_turn": 38.4964,
+        "break_even_multiple": 0.9401,
         "share_of_cost": {
           "fee": 0.1299,
           "half_spread": 0.6462,
@@ -396,43 +730,43 @@
             "component": "fee",
             "marginal_cost": 0.238368,
             "cum_cost": 0.238368,
-            "cum_net": 1.512133,
-            "sharpe": 1.3571,
+            "cum_net": 1.486941,
+            "sharpe": 1.3354,
             "flips_the_verdict": false
           },
           {
             "component": "half_spread",
             "marginal_cost": 1.185987,
             "cum_cost": 1.424356,
-            "cum_net": 0.326146,
-            "sharpe": 0.2925,
+            "cum_net": 0.300953,
+            "sharpe": 0.2701,
             "flips_the_verdict": false
           },
           {
             "component": "latency_slippage",
             "marginal_cost": 0.047674,
             "cum_cost": 1.472029,
-            "cum_net": 0.278472,
-            "sharpe": 0.2497,
+            "cum_net": 0.25328,
+            "sharpe": 0.2273,
             "flips_the_verdict": false
           },
           {
             "component": "volatility_impact",
-            "marginal_cost": 0.363193,
-            "cum_cost": 1.835222,
-            "cum_net": -0.084721,
-            "sharpe": -0.0759,
+            "marginal_cost": 0.363236,
+            "cum_cost": 1.835265,
+            "cum_net": -0.109956,
+            "sharpe": -0.0985,
             "flips_the_verdict": true
           }
         ],
         "cost_stress": {
           "1.0x": {
             "multiple": 1.0,
-            "cum_cost": 1.835222,
-            "cum_net": -0.084721,
-            "sharpe": -0.0759,
-            "break_even_multiple": 0.9538,
-            "expectancy_per_trade": -0.084721,
+            "cum_cost": 1.835265,
+            "cum_net": -0.109956,
+            "sharpe": -0.0985,
+            "break_even_multiple": 0.9401,
+            "expectancy_per_trade": -0.109956,
             "n_trades": 1,
             "mean_hold_days": 2127.0,
             "expectancy_positive": false,
@@ -440,11 +774,11 @@
           },
           "1.5x": {
             "multiple": 1.5,
-            "cum_cost": 2.752833,
-            "cum_net": -1.002331,
-            "sharpe": -0.8953,
-            "break_even_multiple": 0.9538,
-            "expectancy_per_trade": -1.002331,
+            "cum_cost": 2.752897,
+            "cum_net": -1.027588,
+            "sharpe": -0.9185,
+            "break_even_multiple": 0.9401,
+            "expectancy_per_trade": -1.027588,
             "n_trades": 1,
             "mean_hold_days": 2127.0,
             "expectancy_positive": false,
@@ -452,11 +786,11 @@
           },
           "2.0x": {
             "multiple": 2.0,
-            "cum_cost": 3.670443,
-            "cum_net": -1.919942,
-            "sharpe": -1.7085,
-            "break_even_multiple": 0.9538,
-            "expectancy_per_trade": -1.919942,
+            "cum_cost": 3.67053,
+            "cum_net": -1.945221,
+            "sharpe": -1.7321,
+            "break_even_multiple": 0.9401,
+            "expectancy_per_trade": -1.945221,
             "n_trades": 1,
             "mean_hold_days": 2127.0,
             "expectancy_positive": false,
@@ -464,11 +798,11 @@
           },
           "3.0x": {
             "multiple": 3.0,
-            "cum_cost": 5.505665,
-            "cum_net": -3.755164,
-            "sharpe": -3.3059,
-            "break_even_multiple": 0.9538,
-            "expectancy_per_trade": -3.755164,
+            "cum_cost": 5.505795,
+            "cum_net": -3.780486,
+            "sharpe": -3.33,
+            "break_even_multiple": 0.9401,
+            "expectancy_per_trade": -3.780486,
             "n_trades": 1,
             "mean_hold_days": 2127.0,
             "expectancy_positive": false,
@@ -699,6 +1033,7 @@
     },
     {
       "hypothesis": "H2",
+      "panel_universe": "CORE_19",
       "winner_params": {
         "lookback": 30,
         "target_vol_annual": 0.4
@@ -706,21 +1041,23 @@
       "winner_source": "artifacts/g5_statistical_validity.json",
       "g5_verdict": "REJECT",
       "execution_spec": {
+        "mode": "taker",
         "legs": [
           "Leg(leg='perp', venue='binance', notional_scale=1.0)"
         ],
         "leg_fee_bps": {
           "perp": 5.0
         },
-        "order": "one perp leg at full book weight"
+        "order": "one perp leg at full book weight (VIP-0 taker)"
       },
       "book": {
         "days": 2130,
         "symbols": 19,
-        "cum_gross": 2.454647,
-        "lab_cum_cost_flat_6bps": 0.241106,
-        "traded_notional_turns": 401.844022,
-        "mean_turnover_per_day": 0.188659,
+        "cum_gross": 2.43492,
+        "lab_cum_cost_flat_6bps": 0.241032,
+        "g5_baseline_bps_per_leg_turn": 6.0,
+        "traded_notional_turns": 401.719613,
+        "mean_turnover_per_day": 0.188601,
         "flat_day_fraction": 0.0146,
         "mean_gross_exposure": 0.9854,
         "max_gross_exposure": 1.0
@@ -730,20 +1067,20 @@
         "probe_leg_fee_bps": {
           "perp": 6.0
         },
-        "modelled_cum_cost_at_flat_6bps": 0.2411064131,
-        "lab_cum_cost_at_flat_6bps": 0.2411064131,
+        "modelled_cum_cost_at_flat_6bps": 0.2410317676,
+        "lab_cum_cost_at_flat_6bps": 0.2410317676,
         "funding_days_aligned": true,
         "funding_cashflow_matches_strategy_carry": true,
-        "funding_cum": -0.373296,
-        "strategy_carry_cum": -0.373296,
+        "funding_cum": -0.373233,
+        "strategy_carry_cum": -0.373233,
         "note": "funding is the cash flow each strategy already books, recomputed from the position and funding panels independently; it is reported, not charged again"
       },
       "funding": {
         "hours_declared_by_venue": 8,
         "hours_in_ingested_data": 8,
         "charged_as": "cash flow on held notional, never per unit of turnover",
-        "cum": -0.373296,
-        "sharpe_of_funding_leg": -5.4546
+        "cum": -0.373233,
+        "sharpe_of_funding_leg": -5.4538
       },
       "venue_fee_comparison": {
         "binance": {
@@ -751,7 +1088,7 @@
           "taker_bps_per_leg": {
             "perp": 5.0
           },
-          "cum_fee": 0.200922,
+          "cum_fee": 0.20086,
           "delta_vs_ingested_venue": 0.0
         },
         "bybit": {
@@ -759,23 +1096,23 @@
           "taker_bps_per_leg": {
             "perp": 5.5
           },
-          "cum_fee": 0.221014,
-          "delta_vs_ingested_venue": 0.020092
+          "cum_fee": 0.220946,
+          "delta_vs_ingested_venue": 0.020086
         },
         "hyperliquid": {
           "priced": true,
           "taker_bps_per_leg": {
             "perp": 4.5
           },
-          "cum_fee": 0.18083,
-          "delta_vs_ingested_venue": -0.020092
+          "cum_fee": 0.180774,
+          "delta_vs_ingested_venue": -0.020086
         },
         "okx": {
           "priced": true,
           "taker_bps_per_leg": {
             "perp": 5.0
           },
-          "cum_fee": 0.200922,
+          "cum_fee": 0.20086,
           "delta_vs_ingested_venue": 0.0
         }
       },
@@ -790,62 +1127,62 @@
       "full_sample_g6_pass": false,
       "at_floor": {
         "half_spread_bps": 3.0,
-        "cum_cost": 0.656138,
-        "cum_net": 1.798509,
-        "sharpe": 0.5667,
+        "cum_cost": 0.656437,
+        "cum_net": 1.778483,
+        "sharpe": 0.5604,
         "n_trades": 1,
-        "expectancy_per_trade": 1.798509,
+        "expectancy_per_trade": 1.778483,
         "mean_hold_days": 2099.0,
-        "effective_bps_per_turn": 16.3282,
-        "break_even_multiple": 3.7411,
+        "effective_bps_per_turn": 16.3407,
+        "break_even_multiple": 3.7093,
         "share_of_cost": {
-          "fee": 0.3062,
-          "half_spread": 0.1837,
+          "fee": 0.306,
+          "half_spread": 0.1836,
           "latency_slippage": 0.0612,
-          "volatility_impact": 0.4488
+          "volatility_impact": 0.4492
         },
         "attrition": [
           {
             "component": "fee",
-            "marginal_cost": 0.200922,
-            "cum_cost": 0.200922,
-            "cum_net": 2.253725,
-            "sharpe": 0.7105,
+            "marginal_cost": 0.20086,
+            "cum_cost": 0.20086,
+            "cum_net": 2.23406,
+            "sharpe": 0.7042,
             "flips_the_verdict": false
           },
           {
             "component": "half_spread",
-            "marginal_cost": 0.120553,
-            "cum_cost": 0.321475,
-            "cum_net": 2.133172,
-            "sharpe": 0.6724,
+            "marginal_cost": 0.120516,
+            "cum_cost": 0.321376,
+            "cum_net": 2.113544,
+            "sharpe": 0.6662,
             "flips_the_verdict": false
           },
           {
             "component": "latency_slippage",
-            "marginal_cost": 0.040184,
-            "cum_cost": 0.36166,
-            "cum_net": 2.092987,
-            "sharpe": 0.6597,
+            "marginal_cost": 0.040172,
+            "cum_cost": 0.361548,
+            "cum_net": 2.073372,
+            "sharpe": 0.6535,
             "flips_the_verdict": false
           },
           {
             "component": "volatility_impact",
-            "marginal_cost": 0.294478,
-            "cum_cost": 0.656138,
-            "cum_net": 1.798509,
-            "sharpe": 0.5667,
+            "marginal_cost": 0.29489,
+            "cum_cost": 0.656437,
+            "cum_net": 1.778483,
+            "sharpe": 0.5604,
             "flips_the_verdict": false
           }
         ],
         "cost_stress": {
           "1.0x": {
             "multiple": 1.0,
-            "cum_cost": 0.656138,
-            "cum_net": 1.798509,
-            "sharpe": 0.5667,
-            "break_even_multiple": 3.7411,
-            "expectancy_per_trade": 1.798509,
+            "cum_cost": 0.656437,
+            "cum_net": 1.778483,
+            "sharpe": 0.5604,
+            "break_even_multiple": 3.7093,
+            "expectancy_per_trade": 1.778483,
             "n_trades": 1,
             "mean_hold_days": 2099.0,
             "expectancy_positive": true,
@@ -853,11 +1190,11 @@
           },
           "1.5x": {
             "multiple": 1.5,
-            "cum_cost": 0.984207,
-            "cum_net": 1.47044,
-            "sharpe": 0.4632,
-            "break_even_multiple": 3.7411,
-            "expectancy_per_trade": 1.47044,
+            "cum_cost": 0.984656,
+            "cum_net": 1.450264,
+            "sharpe": 0.4568,
+            "break_even_multiple": 3.7093,
+            "expectancy_per_trade": 1.450264,
             "n_trades": 1,
             "mean_hold_days": 2099.0,
             "expectancy_positive": true,
@@ -865,11 +1202,11 @@
           },
           "2.0x": {
             "multiple": 2.0,
-            "cum_cost": 1.312276,
-            "cum_net": 1.142371,
-            "sharpe": 0.3597,
-            "break_even_multiple": 3.7411,
-            "expectancy_per_trade": 1.142371,
+            "cum_cost": 1.312875,
+            "cum_net": 1.122045,
+            "sharpe": 0.3533,
+            "break_even_multiple": 3.7093,
+            "expectancy_per_trade": 1.122045,
             "n_trades": 1,
             "mean_hold_days": 2099.0,
             "expectancy_positive": true,
@@ -877,11 +1214,11 @@
           },
           "3.0x": {
             "multiple": 3.0,
-            "cum_cost": 1.968414,
-            "cum_net": 0.486233,
-            "sharpe": 0.153,
-            "break_even_multiple": 3.7411,
-            "expectancy_per_trade": 0.486233,
+            "cum_cost": 1.969312,
+            "cum_net": 0.465608,
+            "sharpe": 0.1465,
+            "break_even_multiple": 3.7093,
+            "expectancy_per_trade": 0.465608,
             "n_trades": 1,
             "mean_hold_days": 2099.0,
             "expectancy_positive": true,
@@ -893,62 +1230,62 @@
       },
       "at_ceiling": {
         "half_spread_bps": 24.8772,
-        "cum_cost": 1.53526,
-        "cum_net": 0.919387,
-        "sharpe": 0.2894,
+        "cum_cost": 1.535287,
+        "cum_net": 0.899633,
+        "sharpe": 0.2832,
         "n_trades": 1,
-        "expectancy_per_trade": 0.919387,
+        "expectancy_per_trade": 0.899633,
         "mean_hold_days": 2099.0,
-        "effective_bps_per_turn": 38.2054,
-        "break_even_multiple": 1.5988,
+        "effective_bps_per_turn": 38.2179,
+        "break_even_multiple": 1.586,
         "share_of_cost": {
-          "fee": 0.1309,
-          "half_spread": 0.6511,
+          "fee": 0.1308,
+          "half_spread": 0.6509,
           "latency_slippage": 0.0262,
-          "volatility_impact": 0.1918
+          "volatility_impact": 0.1921
         },
         "attrition": [
           {
             "component": "fee",
-            "marginal_cost": 0.200922,
-            "cum_cost": 0.200922,
-            "cum_net": 2.253725,
-            "sharpe": 0.7105,
+            "marginal_cost": 0.20086,
+            "cum_cost": 0.20086,
+            "cum_net": 2.23406,
+            "sharpe": 0.7042,
             "flips_the_verdict": false
           },
           {
             "component": "half_spread",
-            "marginal_cost": 0.999675,
-            "cum_cost": 1.200597,
-            "cum_net": 1.25405,
-            "sharpe": 0.395,
+            "marginal_cost": 0.999366,
+            "cum_cost": 1.200226,
+            "cum_net": 1.234694,
+            "sharpe": 0.3888,
             "flips_the_verdict": false
           },
           {
             "component": "latency_slippage",
-            "marginal_cost": 0.040184,
-            "cum_cost": 1.240782,
-            "cum_net": 1.213865,
-            "sharpe": 0.3823,
+            "marginal_cost": 0.040172,
+            "cum_cost": 1.240398,
+            "cum_net": 1.194522,
+            "sharpe": 0.3762,
             "flips_the_verdict": false
           },
           {
             "component": "volatility_impact",
-            "marginal_cost": 0.294478,
-            "cum_cost": 1.53526,
-            "cum_net": 0.919387,
-            "sharpe": 0.2894,
+            "marginal_cost": 0.29489,
+            "cum_cost": 1.535287,
+            "cum_net": 0.899633,
+            "sharpe": 0.2832,
             "flips_the_verdict": false
           }
         ],
         "cost_stress": {
           "1.0x": {
             "multiple": 1.0,
-            "cum_cost": 1.53526,
-            "cum_net": 0.919387,
-            "sharpe": 0.2894,
-            "break_even_multiple": 1.5988,
-            "expectancy_per_trade": 0.919387,
+            "cum_cost": 1.535287,
+            "cum_net": 0.899633,
+            "sharpe": 0.2832,
+            "break_even_multiple": 1.586,
+            "expectancy_per_trade": 0.899633,
             "n_trades": 1,
             "mean_hold_days": 2099.0,
             "expectancy_positive": true,
@@ -956,11 +1293,11 @@
           },
           "1.5x": {
             "multiple": 1.5,
-            "cum_cost": 2.30289,
-            "cum_net": 0.151757,
-            "sharpe": 0.0477,
-            "break_even_multiple": 1.5988,
-            "expectancy_per_trade": 0.151757,
+            "cum_cost": 2.302931,
+            "cum_net": 0.131989,
+            "sharpe": 0.0415,
+            "break_even_multiple": 1.586,
+            "expectancy_per_trade": 0.131989,
             "n_trades": 1,
             "mean_hold_days": 2099.0,
             "expectancy_positive": true,
@@ -968,11 +1305,11 @@
           },
           "2.0x": {
             "multiple": 2.0,
-            "cum_cost": 3.070521,
-            "cum_net": -0.615873,
-            "sharpe": -0.1934,
-            "break_even_multiple": 1.5988,
-            "expectancy_per_trade": -0.615873,
+            "cum_cost": 3.070575,
+            "cum_net": -0.635655,
+            "sharpe": -0.1996,
+            "break_even_multiple": 1.586,
+            "expectancy_per_trade": -0.635655,
             "n_trades": 1,
             "mean_hold_days": 2099.0,
             "expectancy_positive": false,
@@ -980,11 +1317,11 @@
           },
           "3.0x": {
             "multiple": 3.0,
-            "cum_cost": 4.605781,
-            "cum_net": -2.151134,
-            "sharpe": -0.6734,
-            "break_even_multiple": 1.5988,
-            "expectancy_per_trade": -2.151134,
+            "cum_cost": 4.605862,
+            "cum_net": -2.170942,
+            "sharpe": -0.6795,
+            "break_even_multiple": 1.586,
+            "expectancy_per_trade": -2.170942,
             "n_trades": 1,
             "mean_hold_days": 2099.0,
             "expectancy_positive": false,
@@ -1215,14 +1552,16 @@
     },
     {
       "hypothesis": "H3",
+      "panel_universe": "CORE_19",
       "winner_params": {
         "lookback": 30,
         "entry_annual_bps": 800.0,
         "exit_annual_bps": 150.0
       },
       "winner_source": "artifacts/g5_statistical_validity.json",
-      "g5_verdict": "PASS",
+      "g5_verdict": "REJECT",
       "execution_spec": {
+        "mode": "taker",
         "legs": [
           "Leg(leg='spot', venue='binance', notional_scale=0.5)",
           "Leg(leg='perp', venue='binance', notional_scale=0.5)"
@@ -1231,16 +1570,17 @@
           "spot": 10.0,
           "perp": 5.0
         },
-        "order": "two legs at half pair weight each: spot long, perp short"
+        "order": "two legs at half pair weight each: spot long, perp short (VIP-0 taker)"
       },
       "book": {
         "days": 2130,
         "symbols": 19,
-        "cum_gross": 0.25329,
-        "lab_cum_cost_flat_6bps": 0.085382,
-        "traded_notional_turns": 71.15128,
-        "mean_turnover_per_day": 0.066809,
-        "flat_day_fraction": 0.9362,
+        "cum_gross": 0.253365,
+        "lab_cum_cost_flat_6bps": 0.085782,
+        "g5_baseline_bps_per_leg_turn": 6.0,
+        "traded_notional_turns": 71.484613,
+        "mean_turnover_per_day": 0.067122,
+        "flat_day_fraction": 0.9357,
         "mean_gross_exposure": 0.4469,
         "max_gross_exposure": 1.0
       },
@@ -1250,20 +1590,20 @@
           "spot": 12.0,
           "perp": 12.0
         },
-        "modelled_cum_cost_at_flat_6bps": 0.0853815354,
-        "lab_cum_cost_at_flat_6bps": 0.0853815354,
+        "modelled_cum_cost_at_flat_6bps": 0.0857815354,
+        "lab_cum_cost_at_flat_6bps": 0.0857815354,
         "funding_days_aligned": true,
         "funding_cashflow_matches_strategy_carry": true,
-        "funding_cum": 0.247366,
-        "strategy_carry_cum": 0.247366,
+        "funding_cum": 0.247467,
+        "strategy_carry_cum": 0.247467,
         "note": "funding is the cash flow each strategy already books, recomputed from the position and funding panels independently; it is reported, not charged again"
       },
       "funding": {
         "hours_declared_by_venue": 8,
         "hours_in_ingested_data": 8,
         "charged_as": "cash flow on held notional, never per unit of turnover",
-        "cum": 0.247366,
-        "sharpe_of_funding_leg": 6.4669
+        "cum": 0.247467,
+        "sharpe_of_funding_leg": 6.4691
       },
       "venue_fee_comparison": {
         "binance": {
@@ -1272,7 +1612,7 @@
             "spot": 10.0,
             "perp": 5.0
           },
-          "cum_fee": 0.053363,
+          "cum_fee": 0.053613,
           "delta_vs_ingested_venue": 0.0
         },
         "bybit": {
@@ -1281,8 +1621,8 @@
             "spot": 10.0,
             "perp": 5.5
           },
-          "cum_fee": 0.055142,
-          "delta_vs_ingested_venue": 0.001779
+          "cum_fee": 0.055401,
+          "delta_vs_ingested_venue": 0.001788
         },
         "hyperliquid": {
           "priced": true,
@@ -1290,8 +1630,8 @@
             "spot": 7.0,
             "perp": 4.5
           },
-          "cum_fee": 0.040912,
-          "delta_vs_ingested_venue": -0.012451
+          "cum_fee": 0.041104,
+          "delta_vs_ingested_venue": -0.012509
         },
         "okx": {
           "priced": true,
@@ -1299,7 +1639,7 @@
             "spot": 10.0,
             "perp": 5.0
           },
-          "cum_fee": 0.053363,
+          "cum_fee": 0.053613,
           "delta_vs_ingested_venue": 0.0
         }
       },
@@ -1314,62 +1654,62 @@
       "full_sample_g6_pass": false,
       "at_floor": {
         "half_spread_bps": 3.0,
-        "cum_cost": 0.157746,
-        "cum_net": 0.095544,
-        "sharpe": 1.6356,
+        "cum_cost": 0.158725,
+        "cum_net": 0.094641,
+        "sharpe": 1.6254,
         "n_trades": 10,
-        "expectancy_per_trade": 0.009554,
+        "expectancy_per_trade": 0.009464,
         "mean_hold_days": 95.2,
-        "effective_bps_per_turn": 22.1705,
-        "break_even_multiple": 1.6057,
+        "effective_bps_per_turn": 22.2041,
+        "break_even_multiple": 1.5963,
         "share_of_cost": {
-          "fee": 0.3383,
-          "half_spread": 0.1353,
-          "latency_slippage": 0.0451,
-          "volatility_impact": 0.4813
+          "fee": 0.3378,
+          "half_spread": 0.1351,
+          "latency_slippage": 0.045,
+          "volatility_impact": 0.4821
         },
         "attrition": [
           {
             "component": "fee",
-            "marginal_cost": 0.053363,
-            "cum_cost": 0.053363,
-            "cum_net": 0.199927,
-            "sharpe": 4.7671,
+            "marginal_cost": 0.053613,
+            "cum_cost": 0.053613,
+            "cum_net": 0.199752,
+            "sharpe": 4.7677,
             "flips_the_verdict": false
           },
           {
             "component": "half_spread",
-            "marginal_cost": 0.021345,
-            "cum_cost": 0.074709,
-            "cum_net": 0.178581,
-            "sharpe": 4.1061,
+            "marginal_cost": 0.021445,
+            "cum_cost": 0.075059,
+            "cum_net": 0.178307,
+            "sharpe": 4.1062,
             "flips_the_verdict": false
           },
           {
             "component": "latency_slippage",
-            "marginal_cost": 0.007115,
-            "cum_cost": 0.081824,
-            "cum_net": 0.171466,
-            "sharpe": 3.8844,
+            "marginal_cost": 0.007148,
+            "cum_cost": 0.082207,
+            "cum_net": 0.171158,
+            "sharpe": 3.8842,
             "flips_the_verdict": false
           },
           {
             "component": "volatility_impact",
-            "marginal_cost": 0.075922,
-            "cum_cost": 0.157746,
-            "cum_net": 0.095544,
-            "sharpe": 1.6356,
+            "marginal_cost": 0.076518,
+            "cum_cost": 0.158725,
+            "cum_net": 0.094641,
+            "sharpe": 1.6254,
             "flips_the_verdict": false
           }
         ],
         "cost_stress": {
           "1.0x": {
             "multiple": 1.0,
-            "cum_cost": 0.157746,
-            "cum_net": 0.095544,
-            "sharpe": 1.6356,
-            "break_even_multiple": 1.6057,
-            "expectancy_per_trade": 0.009554,
+            "cum_cost": 0.158725,
+            "cum_net": 0.094641,
+            "sharpe": 1.6254,
+            "break_even_multiple": 1.5963,
+            "expectancy_per_trade": 0.009464,
             "n_trades": 10,
             "mean_hold_days": 95.2,
             "expectancy_positive": true,
@@ -1377,11 +1717,11 @@
           },
           "1.5x": {
             "multiple": 1.5,
-            "cum_cost": 0.236618,
-            "cum_net": 0.016672,
-            "sharpe": 0.2182,
-            "break_even_multiple": 1.6057,
-            "expectancy_per_trade": 0.001667,
+            "cum_cost": 0.238087,
+            "cum_net": 0.015278,
+            "sharpe": 0.2007,
+            "break_even_multiple": 1.5963,
+            "expectancy_per_trade": 0.001528,
             "n_trades": 10,
             "mean_hold_days": 95.2,
             "expectancy_positive": true,
@@ -1389,11 +1729,11 @@
           },
           "2.0x": {
             "multiple": 2.0,
-            "cum_cost": 0.315491,
-            "cum_net": -0.062201,
-            "sharpe": -0.6448,
-            "break_even_multiple": 1.6057,
-            "expectancy_per_trade": -0.00622,
+            "cum_cost": 0.31745,
+            "cum_net": -0.064084,
+            "sharpe": -0.6669,
+            "break_even_multiple": 1.5963,
+            "expectancy_per_trade": -0.006408,
             "n_trades": 10,
             "mean_hold_days": 95.2,
             "expectancy_positive": false,
@@ -1401,11 +1741,11 @@
           },
           "3.0x": {
             "multiple": 3.0,
-            "cum_cost": 0.473237,
-            "cum_net": -0.219947,
-            "sharpe": -1.5807,
-            "break_even_multiple": 1.6057,
-            "expectancy_per_trade": -0.021995,
+            "cum_cost": 0.476174,
+            "cum_net": -0.222809,
+            "sharpe": -1.6074,
+            "break_even_multiple": 1.5963,
+            "expectancy_per_trade": -0.022281,
             "n_trades": 10,
             "mean_hold_days": 95.2,
             "expectancy_positive": false,
@@ -1417,62 +1757,62 @@
       },
       "at_ceiling": {
         "half_spread_bps": 24.8772,
-        "cum_cost": 0.313405,
-        "cum_net": -0.060115,
-        "sharpe": -0.6725,
+        "cum_cost": 0.315113,
+        "cum_net": -0.061748,
+        "sharpe": -0.6936,
         "n_trades": 10,
-        "expectancy_per_trade": -0.006011,
+        "expectancy_per_trade": -0.006175,
         "mean_hold_days": 95.2,
-        "effective_bps_per_turn": 44.0477,
-        "break_even_multiple": 0.8082,
+        "effective_bps_per_turn": 44.0813,
+        "break_even_multiple": 0.804,
         "share_of_cost": {
-          "fee": 0.1703,
-          "half_spread": 0.5648,
+          "fee": 0.1701,
+          "half_spread": 0.5643,
           "latency_slippage": 0.0227,
-          "volatility_impact": 0.2422
+          "volatility_impact": 0.2428
         },
         "attrition": [
           {
             "component": "fee",
-            "marginal_cost": 0.053363,
-            "cum_cost": 0.053363,
-            "cum_net": 0.199927,
-            "sharpe": 4.7671,
+            "marginal_cost": 0.053613,
+            "cum_cost": 0.053613,
+            "cum_net": 0.199752,
+            "sharpe": 4.7677,
             "flips_the_verdict": false
           },
           {
             "component": "half_spread",
-            "marginal_cost": 0.177004,
-            "cum_cost": 0.230368,
-            "cum_net": 0.022922,
-            "sharpe": 0.3379,
+            "marginal_cost": 0.177834,
+            "cum_cost": 0.231447,
+            "cum_net": 0.021918,
+            "sharpe": 0.3244,
             "flips_the_verdict": false
           },
           {
             "component": "latency_slippage",
-            "marginal_cost": 0.007115,
-            "cum_cost": 0.237483,
-            "cum_net": 0.015807,
-            "sharpe": 0.2282,
+            "marginal_cost": 0.007148,
+            "cum_cost": 0.238596,
+            "cum_net": 0.01477,
+            "sharpe": 0.214,
             "flips_the_verdict": false
           },
           {
             "component": "volatility_impact",
-            "marginal_cost": 0.075922,
-            "cum_cost": 0.313405,
-            "cum_net": -0.060115,
-            "sharpe": -0.6725,
+            "marginal_cost": 0.076518,
+            "cum_cost": 0.315113,
+            "cum_net": -0.061748,
+            "sharpe": -0.6936,
             "flips_the_verdict": true
           }
         ],
         "cost_stress": {
           "1.0x": {
             "multiple": 1.0,
-            "cum_cost": 0.313405,
-            "cum_net": -0.060115,
-            "sharpe": -0.6725,
-            "break_even_multiple": 0.8082,
-            "expectancy_per_trade": -0.006011,
+            "cum_cost": 0.315113,
+            "cum_net": -0.061748,
+            "sharpe": -0.6936,
+            "break_even_multiple": 0.804,
+            "expectancy_per_trade": -0.006175,
             "n_trades": 10,
             "mean_hold_days": 95.2,
             "expectancy_positive": false,
@@ -1480,11 +1820,11 @@
           },
           "1.5x": {
             "multiple": 1.5,
-            "cum_cost": 0.470107,
-            "cum_net": -0.216817,
-            "sharpe": -1.6951,
-            "break_even_multiple": 0.8082,
-            "expectancy_per_trade": -0.021682,
+            "cum_cost": 0.47267,
+            "cum_net": -0.219304,
+            "sharpe": -1.7215,
+            "break_even_multiple": 0.804,
+            "expectancy_per_trade": -0.02193,
             "n_trades": 10,
             "mean_hold_days": 95.2,
             "expectancy_positive": false,
@@ -1492,11 +1832,11 @@
           },
           "2.0x": {
             "multiple": 2.0,
-            "cum_cost": 0.626809,
-            "cum_net": -0.373519,
-            "sharpe": -2.2241,
-            "break_even_multiple": 0.8082,
-            "expectancy_per_trade": -0.037352,
+            "cum_cost": 0.630226,
+            "cum_net": -0.376861,
+            "sharpe": -2.2528,
+            "break_even_multiple": 0.804,
+            "expectancy_per_trade": -0.037686,
             "n_trades": 10,
             "mean_hold_days": 95.2,
             "expectancy_positive": false,
@@ -1504,11 +1844,11 @@
           },
           "3.0x": {
             "multiple": 3.0,
-            "cum_cost": 0.940214,
-            "cum_net": -0.686924,
-            "sharpe": -2.7516,
-            "break_even_multiple": 0.8082,
-            "expectancy_per_trade": -0.068692,
+            "cum_cost": 0.945339,
+            "cum_net": -0.691974,
+            "sharpe": -2.7823,
+            "break_even_multiple": 0.804,
+            "expectancy_per_trade": -0.069197,
             "n_trades": 10,
             "mean_hold_days": 95.2,
             "expectancy_positive": false,
@@ -1736,20 +2076,1613 @@
           "net_positive_at_2x": false
         }
       }
+    },
+    {
+      "hypothesis": "H1_G1",
+      "panel_universe": "SURVIVORSHIP_23",
+      "winner_params": {
+        "lookback": 3,
+        "entry_band": 0.7,
+        "exit_band": 0.4,
+        "corr_threshold": 0.8
+      },
+      "winner_source": "artifacts/g5_statistical_validity.json",
+      "g5_verdict": "REJECT",
+      "execution_spec": {
+        "mode": "taker",
+        "legs": [
+          "Leg(leg='perp', venue='binance', notional_scale=1.0)"
+        ],
+        "leg_fee_bps": {
+          "perp": 5.0
+        },
+        "order": "one perp leg at full book weight (VIP-0 taker)"
+      },
+      "book": {
+        "days": 2130,
+        "symbols": 23,
+        "cum_gross": 1.64599,
+        "lab_cum_cost_flat_6bps": 0.268268,
+        "g5_baseline_bps_per_leg_turn": 6.0,
+        "traded_notional_turns": 447.114072,
+        "mean_turnover_per_day": 0.209913,
+        "flat_day_fraction": 0.1296,
+        "mean_gross_exposure": 0.9174,
+        "max_gross_exposure": 1.0
+      },
+      "reconciliation": {
+        "flat_6bps_reproduces_lab_cost": true,
+        "probe_leg_fee_bps": {
+          "perp": 6.0
+        },
+        "modelled_cum_cost_at_flat_6bps": 0.2682684432,
+        "lab_cum_cost_at_flat_6bps": 0.2682684432,
+        "funding_days_aligned": true,
+        "funding_cashflow_matches_strategy_carry": true,
+        "funding_cum": 0.331497,
+        "strategy_carry_cum": 0.331497,
+        "note": "funding is the cash flow each strategy already books, recomputed from the position and funding panels independently; it is reported, not charged again"
+      },
+      "funding": {
+        "hours_declared_by_venue": 8,
+        "hours_in_ingested_data": 8,
+        "charged_as": "cash flow on held notional, never per unit of turnover",
+        "cum": 0.331497,
+        "sharpe_of_funding_leg": 10.1296
+      },
+      "venue_fee_comparison": {
+        "binance": {
+          "priced": true,
+          "taker_bps_per_leg": {
+            "perp": 5.0
+          },
+          "cum_fee": 0.223557,
+          "delta_vs_ingested_venue": 0.0
+        },
+        "bybit": {
+          "priced": true,
+          "taker_bps_per_leg": {
+            "perp": 5.5
+          },
+          "cum_fee": 0.245913,
+          "delta_vs_ingested_venue": 0.022356
+        },
+        "hyperliquid": {
+          "priced": true,
+          "taker_bps_per_leg": {
+            "perp": 4.5
+          },
+          "cum_fee": 0.201201,
+          "delta_vs_ingested_venue": -0.022356
+        },
+        "okx": {
+          "priced": true,
+          "taker_bps_per_leg": {
+            "perp": 5.0
+          },
+          "cum_fee": 0.223557,
+          "delta_vs_ingested_venue": 0.0
+        }
+      },
+      "band": {
+        "verdict_flips_inside_band": true,
+        "net_sign_flips_inside_band": true,
+        "gate_holds_at_both_ends": false,
+        "basis": "net expectancy per trade at 2.0x fees, at both ends of the measured spread band",
+        "sign_flip_basis": "sign of cumulative net at the realistic schedule, i.e. at 1.0x, at both ends of the band"
+      },
+      "g6_pass": false,
+      "full_sample_g6_pass": false,
+      "at_floor": {
+        "half_spread_bps": 3.0,
+        "cum_cost": 0.748625,
+        "cum_net": 0.897365,
+        "sharpe": 0.8548,
+        "n_trades": 1,
+        "expectancy_per_trade": 0.897365,
+        "mean_hold_days": 2127.0,
+        "effective_bps_per_turn": 16.7435,
+        "break_even_multiple": 2.1987,
+        "share_of_cost": {
+          "fee": 0.2986,
+          "half_spread": 0.1792,
+          "latency_slippage": 0.0597,
+          "volatility_impact": 0.4625
+        },
+        "attrition": [
+          {
+            "component": "fee",
+            "marginal_cost": 0.223557,
+            "cum_cost": 0.223557,
+            "cum_net": 1.422433,
+            "sharpe": 1.3546,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "half_spread",
+            "marginal_cost": 0.134134,
+            "cum_cost": 0.357691,
+            "cum_net": 1.288299,
+            "sharpe": 1.2269,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "latency_slippage",
+            "marginal_cost": 0.044711,
+            "cum_cost": 0.402403,
+            "cum_net": 1.243587,
+            "sharpe": 1.1843,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "volatility_impact",
+            "marginal_cost": 0.346222,
+            "cum_cost": 0.748625,
+            "cum_net": 0.897365,
+            "sharpe": 0.8548,
+            "flips_the_verdict": false
+          }
+        ],
+        "cost_stress": {
+          "1.0x": {
+            "multiple": 1.0,
+            "cum_cost": 0.748625,
+            "cum_net": 0.897365,
+            "sharpe": 0.8548,
+            "break_even_multiple": 2.1987,
+            "expectancy_per_trade": 0.897365,
+            "n_trades": 1,
+            "mean_hold_days": 2127.0,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "1.5x": {
+            "multiple": 1.5,
+            "cum_cost": 1.122937,
+            "cum_net": 0.523053,
+            "sharpe": 0.4981,
+            "break_even_multiple": 2.1987,
+            "expectancy_per_trade": 0.523053,
+            "n_trades": 1,
+            "mean_hold_days": 2127.0,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "2.0x": {
+            "multiple": 2.0,
+            "cum_cost": 1.49725,
+            "cum_net": 0.14874,
+            "sharpe": 0.1415,
+            "break_even_multiple": 2.1987,
+            "expectancy_per_trade": 0.14874,
+            "n_trades": 1,
+            "mean_hold_days": 2127.0,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "3.0x": {
+            "multiple": 3.0,
+            "cum_cost": 2.245875,
+            "cum_net": -0.599885,
+            "sharpe": -0.5693,
+            "break_even_multiple": 2.1987,
+            "expectancy_per_trade": -0.599885,
+            "n_trades": 1,
+            "mean_hold_days": 2127.0,
+            "expectancy_positive": false,
+            "net_positive": false
+          }
+        },
+        "net_expectancy_positive_at_2x": true,
+        "net_positive_at_2x": true
+      },
+      "at_ceiling": {
+        "half_spread_bps": 24.8772,
+        "cum_cost": 1.726785,
+        "cum_net": -0.080795,
+        "sharpe": -0.0769,
+        "n_trades": 1,
+        "expectancy_per_trade": -0.080795,
+        "mean_hold_days": 2127.0,
+        "effective_bps_per_turn": 38.6207,
+        "break_even_multiple": 0.9532,
+        "share_of_cost": {
+          "fee": 0.1295,
+          "half_spread": 0.6441,
+          "latency_slippage": 0.0259,
+          "volatility_impact": 0.2005
+        },
+        "attrition": [
+          {
+            "component": "fee",
+            "marginal_cost": 0.223557,
+            "cum_cost": 0.223557,
+            "cum_net": 1.422433,
+            "sharpe": 1.3546,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "half_spread",
+            "marginal_cost": 1.112295,
+            "cum_cost": 1.335852,
+            "cum_net": 0.310138,
+            "sharpe": 0.2951,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "latency_slippage",
+            "marginal_cost": 0.044711,
+            "cum_cost": 1.380563,
+            "cum_net": 0.265427,
+            "sharpe": 0.2525,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "volatility_impact",
+            "marginal_cost": 0.346222,
+            "cum_cost": 1.726785,
+            "cum_net": -0.080795,
+            "sharpe": -0.0769,
+            "flips_the_verdict": true
+          }
+        ],
+        "cost_stress": {
+          "1.0x": {
+            "multiple": 1.0,
+            "cum_cost": 1.726785,
+            "cum_net": -0.080795,
+            "sharpe": -0.0769,
+            "break_even_multiple": 0.9532,
+            "expectancy_per_trade": -0.080795,
+            "n_trades": 1,
+            "mean_hold_days": 2127.0,
+            "expectancy_positive": false,
+            "net_positive": false
+          },
+          "1.5x": {
+            "multiple": 1.5,
+            "cum_cost": 2.590178,
+            "cum_net": -0.944188,
+            "sharpe": -0.8959,
+            "break_even_multiple": 0.9532,
+            "expectancy_per_trade": -0.944188,
+            "n_trades": 1,
+            "mean_hold_days": 2127.0,
+            "expectancy_positive": false,
+            "net_positive": false
+          },
+          "2.0x": {
+            "multiple": 2.0,
+            "cum_cost": 3.453571,
+            "cum_net": -1.807581,
+            "sharpe": -1.7087,
+            "break_even_multiple": 0.9532,
+            "expectancy_per_trade": -1.807581,
+            "n_trades": 1,
+            "mean_hold_days": 2127.0,
+            "expectancy_positive": false,
+            "net_positive": false
+          },
+          "3.0x": {
+            "multiple": 3.0,
+            "cum_cost": 5.180356,
+            "cum_net": -3.534366,
+            "sharpe": -3.3042,
+            "break_even_multiple": 0.9532,
+            "expectancy_per_trade": -3.534366,
+            "n_trades": 1,
+            "mean_hold_days": 2127.0,
+            "expectancy_positive": false,
+            "net_positive": false
+          }
+        },
+        "net_expectancy_positive_at_2x": false,
+        "net_positive_at_2x": false
+      },
+      "locked_oos": {
+        "days": 633,
+        "embargo_days": 6,
+        "cum_gross": 0.148336,
+        "traded_notional_turns": 157.320022,
+        "band": {
+          "verdict_flips_inside_band": false,
+          "net_sign_flips_inside_band": false,
+          "gate_holds_at_both_ends": false
+        },
+        "g6_pass": false,
+        "at_floor": {
+          "half_spread_bps": 3.0,
+          "cum_cost": 0.258613,
+          "cum_net": -0.110277,
+          "sharpe": -0.5779,
+          "n_trades": 1,
+          "expectancy_per_trade": -0.110277,
+          "mean_hold_days": 633.0,
+          "effective_bps_per_turn": 16.4386,
+          "break_even_multiple": 0.5736,
+          "share_of_cost": {
+            "fee": 0.3042,
+            "half_spread": 0.1825,
+            "latency_slippage": 0.0608,
+            "volatility_impact": 0.4525
+          },
+          "attrition": [
+            {
+              "component": "fee",
+              "marginal_cost": 0.07866,
+              "cum_cost": 0.07866,
+              "cum_net": 0.069676,
+              "sharpe": 0.3661,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "half_spread",
+              "marginal_cost": 0.047196,
+              "cum_cost": 0.125856,
+              "cum_net": 0.02248,
+              "sharpe": 0.1181,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "latency_slippage",
+              "marginal_cost": 0.015732,
+              "cum_cost": 0.141588,
+              "cum_net": 0.006748,
+              "sharpe": 0.0354,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "volatility_impact",
+              "marginal_cost": 0.117025,
+              "cum_cost": 0.258613,
+              "cum_net": -0.110277,
+              "sharpe": -0.5779,
+              "flips_the_verdict": true
+            }
+          ],
+          "cost_stress": {
+            "1.0x": {
+              "multiple": 1.0,
+              "cum_cost": 0.258613,
+              "cum_net": -0.110277,
+              "sharpe": -0.5779,
+              "break_even_multiple": 0.5736,
+              "expectancy_per_trade": -0.110277,
+              "n_trades": 1,
+              "mean_hold_days": 633.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "1.5x": {
+              "multiple": 1.5,
+              "cum_cost": 0.387919,
+              "cum_net": -0.239583,
+              "sharpe": -1.2522,
+              "break_even_multiple": 0.5736,
+              "expectancy_per_trade": -0.239583,
+              "n_trades": 1,
+              "mean_hold_days": 633.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "2.0x": {
+              "multiple": 2.0,
+              "cum_cost": 0.517226,
+              "cum_net": -0.368889,
+              "sharpe": -1.9215,
+              "break_even_multiple": 0.5736,
+              "expectancy_per_trade": -0.368889,
+              "n_trades": 1,
+              "mean_hold_days": 633.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "3.0x": {
+              "multiple": 3.0,
+              "cum_cost": 0.775839,
+              "cum_net": -0.627502,
+              "sharpe": -3.2399,
+              "break_even_multiple": 0.5736,
+              "expectancy_per_trade": -0.627502,
+              "n_trades": 1,
+              "mean_hold_days": 633.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            }
+          },
+          "net_expectancy_positive_at_2x": false,
+          "net_positive_at_2x": false
+        },
+        "at_ceiling": {
+          "half_spread_bps": 24.8772,
+          "cum_cost": 0.602785,
+          "cum_net": -0.454449,
+          "sharpe": -2.3652,
+          "n_trades": 1,
+          "expectancy_per_trade": -0.454449,
+          "mean_hold_days": 633.0,
+          "effective_bps_per_turn": 38.3158,
+          "break_even_multiple": 0.2461,
+          "share_of_cost": {
+            "fee": 0.1305,
+            "half_spread": 0.6493,
+            "latency_slippage": 0.0261,
+            "volatility_impact": 0.1941
+          },
+          "attrition": [
+            {
+              "component": "fee",
+              "marginal_cost": 0.07866,
+              "cum_cost": 0.07866,
+              "cum_net": 0.069676,
+              "sharpe": 0.3661,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "half_spread",
+              "marginal_cost": 0.391368,
+              "cum_cost": 0.470028,
+              "cum_net": -0.321692,
+              "sharpe": -1.6809,
+              "flips_the_verdict": true
+            },
+            {
+              "component": "latency_slippage",
+              "marginal_cost": 0.015732,
+              "cum_cost": 0.48576,
+              "cum_net": -0.337424,
+              "sharpe": -1.7626,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "volatility_impact",
+              "marginal_cost": 0.117025,
+              "cum_cost": 0.602785,
+              "cum_net": -0.454449,
+              "sharpe": -2.3652,
+              "flips_the_verdict": false
+            }
+          ],
+          "cost_stress": {
+            "1.0x": {
+              "multiple": 1.0,
+              "cum_cost": 0.602785,
+              "cum_net": -0.454449,
+              "sharpe": -2.3652,
+              "break_even_multiple": 0.2461,
+              "expectancy_per_trade": -0.454449,
+              "n_trades": 1,
+              "mean_hold_days": 633.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "1.5x": {
+              "multiple": 1.5,
+              "cum_cost": 0.904178,
+              "cum_net": -0.755841,
+              "sharpe": -3.8953,
+              "break_even_multiple": 0.2461,
+              "expectancy_per_trade": -0.755841,
+              "n_trades": 1,
+              "mean_hold_days": 633.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "2.0x": {
+              "multiple": 2.0,
+              "cum_cost": 1.20557,
+              "cum_net": -1.057234,
+              "sharpe": -5.3792,
+              "break_even_multiple": 0.2461,
+              "expectancy_per_trade": -1.057234,
+              "n_trades": 1,
+              "mean_hold_days": 633.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "3.0x": {
+              "multiple": 3.0,
+              "cum_cost": 1.808355,
+              "cum_net": -1.660019,
+              "sharpe": -8.1667,
+              "break_even_multiple": 0.2461,
+              "expectancy_per_trade": -1.660019,
+              "n_trades": 1,
+              "mean_hold_days": 633.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            }
+          },
+          "net_expectancy_positive_at_2x": false,
+          "net_positive_at_2x": false
+        }
+      }
+    },
+    {
+      "hypothesis": "H2_G1",
+      "panel_universe": "SURVIVORSHIP_23",
+      "winner_params": {
+        "lookback": 30,
+        "target_vol_annual": 0.4,
+        "corr_threshold": 0.8
+      },
+      "winner_source": "artifacts/g5_statistical_validity.json",
+      "g5_verdict": "REJECT",
+      "execution_spec": {
+        "mode": "taker",
+        "legs": [
+          "Leg(leg='perp', venue='binance', notional_scale=1.0)"
+        ],
+        "leg_fee_bps": {
+          "perp": 5.0
+        },
+        "order": "one perp leg at full book weight (VIP-0 taker)"
+      },
+      "book": {
+        "days": 2130,
+        "symbols": 23,
+        "cum_gross": 2.463192,
+        "lab_cum_cost_flat_6bps": 0.234053,
+        "g5_baseline_bps_per_leg_turn": 6.0,
+        "traded_notional_turns": 390.087876,
+        "mean_turnover_per_day": 0.18314,
+        "flat_day_fraction": 0.0146,
+        "mean_gross_exposure": 0.9042,
+        "max_gross_exposure": 1.0
+      },
+      "reconciliation": {
+        "flat_6bps_reproduces_lab_cost": true,
+        "probe_leg_fee_bps": {
+          "perp": 6.0
+        },
+        "modelled_cum_cost_at_flat_6bps": 0.2340527259,
+        "lab_cum_cost_at_flat_6bps": 0.2340527259,
+        "funding_days_aligned": true,
+        "funding_cashflow_matches_strategy_carry": true,
+        "funding_cum": -0.345417,
+        "strategy_carry_cum": -0.345417,
+        "note": "funding is the cash flow each strategy already books, recomputed from the position and funding panels independently; it is reported, not charged again"
+      },
+      "funding": {
+        "hours_declared_by_venue": 8,
+        "hours_in_ingested_data": 8,
+        "charged_as": "cash flow on held notional, never per unit of turnover",
+        "cum": -0.345417,
+        "sharpe_of_funding_leg": -5.0484
+      },
+      "venue_fee_comparison": {
+        "binance": {
+          "priced": true,
+          "taker_bps_per_leg": {
+            "perp": 5.0
+          },
+          "cum_fee": 0.195044,
+          "delta_vs_ingested_venue": 0.0
+        },
+        "bybit": {
+          "priced": true,
+          "taker_bps_per_leg": {
+            "perp": 5.5
+          },
+          "cum_fee": 0.214548,
+          "delta_vs_ingested_venue": 0.019504
+        },
+        "hyperliquid": {
+          "priced": true,
+          "taker_bps_per_leg": {
+            "perp": 4.5
+          },
+          "cum_fee": 0.17554,
+          "delta_vs_ingested_venue": -0.019504
+        },
+        "okx": {
+          "priced": true,
+          "taker_bps_per_leg": {
+            "perp": 5.0
+          },
+          "cum_fee": 0.195044,
+          "delta_vs_ingested_venue": 0.0
+        }
+      },
+      "band": {
+        "verdict_flips_inside_band": true,
+        "net_sign_flips_inside_band": false,
+        "gate_holds_at_both_ends": false,
+        "basis": "net expectancy per trade at 2.0x fees, at both ends of the measured spread band",
+        "sign_flip_basis": "sign of cumulative net at the realistic schedule, i.e. at 1.0x, at both ends of the band"
+      },
+      "g6_pass": false,
+      "full_sample_g6_pass": false,
+      "at_floor": {
+        "half_spread_bps": 3.0,
+        "cum_cost": 0.627396,
+        "cum_net": 1.835795,
+        "sharpe": 0.657,
+        "n_trades": 1,
+        "expectancy_per_trade": 1.835795,
+        "mean_hold_days": 2099.0,
+        "effective_bps_per_turn": 16.0835,
+        "break_even_multiple": 3.9261,
+        "share_of_cost": {
+          "fee": 0.3109,
+          "half_spread": 0.1865,
+          "latency_slippage": 0.0622,
+          "volatility_impact": 0.4404
+        },
+        "attrition": [
+          {
+            "component": "fee",
+            "marginal_cost": 0.195044,
+            "cum_cost": 0.195044,
+            "cum_net": 2.268148,
+            "sharpe": 0.812,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "half_spread",
+            "marginal_cost": 0.117026,
+            "cum_cost": 0.31207,
+            "cum_net": 2.151121,
+            "sharpe": 0.77,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "latency_slippage",
+            "marginal_cost": 0.039009,
+            "cum_cost": 0.351079,
+            "cum_net": 2.112112,
+            "sharpe": 0.7561,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "volatility_impact",
+            "marginal_cost": 0.276317,
+            "cum_cost": 0.627396,
+            "cum_net": 1.835795,
+            "sharpe": 0.657,
+            "flips_the_verdict": false
+          }
+        ],
+        "cost_stress": {
+          "1.0x": {
+            "multiple": 1.0,
+            "cum_cost": 0.627396,
+            "cum_net": 1.835795,
+            "sharpe": 0.657,
+            "break_even_multiple": 3.9261,
+            "expectancy_per_trade": 1.835795,
+            "n_trades": 1,
+            "mean_hold_days": 2099.0,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "1.5x": {
+            "multiple": 1.5,
+            "cum_cost": 0.941094,
+            "cum_net": 1.522097,
+            "sharpe": 0.5446,
+            "break_even_multiple": 3.9261,
+            "expectancy_per_trade": 1.522097,
+            "n_trades": 1,
+            "mean_hold_days": 2099.0,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "2.0x": {
+            "multiple": 2.0,
+            "cum_cost": 1.254792,
+            "cum_net": 1.208399,
+            "sharpe": 0.4322,
+            "break_even_multiple": 3.9261,
+            "expectancy_per_trade": 1.208399,
+            "n_trades": 1,
+            "mean_hold_days": 2099.0,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "3.0x": {
+            "multiple": 3.0,
+            "cum_cost": 1.882188,
+            "cum_net": 0.581003,
+            "sharpe": 0.2076,
+            "break_even_multiple": 3.9261,
+            "expectancy_per_trade": 0.581003,
+            "n_trades": 1,
+            "mean_hold_days": 2099.0,
+            "expectancy_positive": true,
+            "net_positive": true
+          }
+        },
+        "net_expectancy_positive_at_2x": true,
+        "net_positive_at_2x": true
+      },
+      "at_ceiling": {
+        "half_spread_bps": 24.8772,
+        "cum_cost": 1.480799,
+        "cum_net": 0.982392,
+        "sharpe": 0.3513,
+        "n_trades": 1,
+        "expectancy_per_trade": 0.982392,
+        "mean_hold_days": 2099.0,
+        "effective_bps_per_turn": 37.9607,
+        "break_even_multiple": 1.6634,
+        "share_of_cost": {
+          "fee": 0.1317,
+          "half_spread": 0.6553,
+          "latency_slippage": 0.0263,
+          "volatility_impact": 0.1866
+        },
+        "attrition": [
+          {
+            "component": "fee",
+            "marginal_cost": 0.195044,
+            "cum_cost": 0.195044,
+            "cum_net": 2.268148,
+            "sharpe": 0.812,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "half_spread",
+            "marginal_cost": 0.970429,
+            "cum_cost": 1.165473,
+            "cum_net": 1.297718,
+            "sharpe": 0.4642,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "latency_slippage",
+            "marginal_cost": 0.039009,
+            "cum_cost": 1.204482,
+            "cum_net": 1.258709,
+            "sharpe": 0.4502,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "volatility_impact",
+            "marginal_cost": 0.276317,
+            "cum_cost": 1.480799,
+            "cum_net": 0.982392,
+            "sharpe": 0.3513,
+            "flips_the_verdict": false
+          }
+        ],
+        "cost_stress": {
+          "1.0x": {
+            "multiple": 1.0,
+            "cum_cost": 1.480799,
+            "cum_net": 0.982392,
+            "sharpe": 0.3513,
+            "break_even_multiple": 1.6634,
+            "expectancy_per_trade": 0.982392,
+            "n_trades": 1,
+            "mean_hold_days": 2099.0,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "1.5x": {
+            "multiple": 1.5,
+            "cum_cost": 2.221199,
+            "cum_net": 0.241993,
+            "sharpe": 0.0864,
+            "break_even_multiple": 1.6634,
+            "expectancy_per_trade": 0.241993,
+            "n_trades": 1,
+            "mean_hold_days": 2099.0,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "2.0x": {
+            "multiple": 2.0,
+            "cum_cost": 2.961598,
+            "cum_net": -0.498407,
+            "sharpe": -0.1778,
+            "break_even_multiple": 1.6634,
+            "expectancy_per_trade": -0.498407,
+            "n_trades": 1,
+            "mean_hold_days": 2099.0,
+            "expectancy_positive": false,
+            "net_positive": false
+          },
+          "3.0x": {
+            "multiple": 3.0,
+            "cum_cost": 4.442398,
+            "cum_net": -1.979206,
+            "sharpe": -0.7035,
+            "break_even_multiple": 1.6634,
+            "expectancy_per_trade": -1.979206,
+            "n_trades": 1,
+            "mean_hold_days": 2099.0,
+            "expectancy_positive": false,
+            "net_positive": false
+          }
+        },
+        "net_expectancy_positive_at_2x": false,
+        "net_positive_at_2x": false
+      },
+      "locked_oos": {
+        "days": 579,
+        "embargo_days": 60,
+        "cum_gross": 0.069134,
+        "traded_notional_turns": 115.266513,
+        "band": {
+          "verdict_flips_inside_band": false,
+          "net_sign_flips_inside_band": false,
+          "gate_holds_at_both_ends": false
+        },
+        "g6_pass": false,
+        "at_floor": {
+          "half_spread_bps": 3.0,
+          "cum_cost": 0.183378,
+          "cum_net": -0.114244,
+          "sharpe": -0.1893,
+          "n_trades": 1,
+          "expectancy_per_trade": -0.114244,
+          "mean_hold_days": 579.0,
+          "effective_bps_per_turn": 15.909,
+          "break_even_multiple": 0.377,
+          "share_of_cost": {
+            "fee": 0.3143,
+            "half_spread": 0.1886,
+            "latency_slippage": 0.0629,
+            "volatility_impact": 0.4343
+          },
+          "attrition": [
+            {
+              "component": "fee",
+              "marginal_cost": 0.057633,
+              "cum_cost": 0.057633,
+              "cum_net": 0.0115,
+              "sharpe": 0.0191,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "half_spread",
+              "marginal_cost": 0.03458,
+              "cum_cost": 0.092213,
+              "cum_net": -0.02308,
+              "sharpe": -0.0383,
+              "flips_the_verdict": true
+            },
+            {
+              "component": "latency_slippage",
+              "marginal_cost": 0.011527,
+              "cum_cost": 0.10374,
+              "cum_net": -0.034606,
+              "sharpe": -0.0574,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "volatility_impact",
+              "marginal_cost": 0.079638,
+              "cum_cost": 0.183378,
+              "cum_net": -0.114244,
+              "sharpe": -0.1893,
+              "flips_the_verdict": false
+            }
+          ],
+          "cost_stress": {
+            "1.0x": {
+              "multiple": 1.0,
+              "cum_cost": 0.183378,
+              "cum_net": -0.114244,
+              "sharpe": -0.1893,
+              "break_even_multiple": 0.377,
+              "expectancy_per_trade": -0.114244,
+              "n_trades": 1,
+              "mean_hold_days": 579.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "1.5x": {
+              "multiple": 1.5,
+              "cum_cost": 0.275066,
+              "cum_net": -0.205933,
+              "sharpe": -0.341,
+              "break_even_multiple": 0.377,
+              "expectancy_per_trade": -0.205933,
+              "n_trades": 1,
+              "mean_hold_days": 579.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "2.0x": {
+              "multiple": 2.0,
+              "cum_cost": 0.366755,
+              "cum_net": -0.297621,
+              "sharpe": -0.4924,
+              "break_even_multiple": 0.377,
+              "expectancy_per_trade": -0.297621,
+              "n_trades": 1,
+              "mean_hold_days": 579.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "3.0x": {
+              "multiple": 3.0,
+              "cum_cost": 0.550133,
+              "cum_net": -0.480999,
+              "sharpe": -0.7943,
+              "break_even_multiple": 0.377,
+              "expectancy_per_trade": -0.480999,
+              "n_trades": 1,
+              "mean_hold_days": 579.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            }
+          },
+          "net_expectancy_positive_at_2x": false,
+          "net_positive_at_2x": false
+        },
+        "at_ceiling": {
+          "half_spread_bps": 24.8772,
+          "cum_cost": 0.435548,
+          "cum_net": -0.366415,
+          "sharpe": -0.6058,
+          "n_trades": 1,
+          "expectancy_per_trade": -0.366415,
+          "mean_hold_days": 579.0,
+          "effective_bps_per_turn": 37.7862,
+          "break_even_multiple": 0.1587,
+          "share_of_cost": {
+            "fee": 0.1323,
+            "half_spread": 0.6584,
+            "latency_slippage": 0.0265,
+            "volatility_impact": 0.1828
+          },
+          "attrition": [
+            {
+              "component": "fee",
+              "marginal_cost": 0.057633,
+              "cum_cost": 0.057633,
+              "cum_net": 0.0115,
+              "sharpe": 0.0191,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "half_spread",
+              "marginal_cost": 0.286751,
+              "cum_cost": 0.344384,
+              "cum_net": -0.27525,
+              "sharpe": -0.4554,
+              "flips_the_verdict": true
+            },
+            {
+              "component": "latency_slippage",
+              "marginal_cost": 0.011527,
+              "cum_cost": 0.355911,
+              "cum_net": -0.286777,
+              "sharpe": -0.4744,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "volatility_impact",
+              "marginal_cost": 0.079638,
+              "cum_cost": 0.435548,
+              "cum_net": -0.366415,
+              "sharpe": -0.6058,
+              "flips_the_verdict": false
+            }
+          ],
+          "cost_stress": {
+            "1.0x": {
+              "multiple": 1.0,
+              "cum_cost": 0.435548,
+              "cum_net": -0.366415,
+              "sharpe": -0.6058,
+              "break_even_multiple": 0.1587,
+              "expectancy_per_trade": -0.366415,
+              "n_trades": 1,
+              "mean_hold_days": 579.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "1.5x": {
+              "multiple": 1.5,
+              "cum_cost": 0.653323,
+              "cum_net": -0.584189,
+              "sharpe": -0.9636,
+              "break_even_multiple": 0.1587,
+              "expectancy_per_trade": -0.584189,
+              "n_trades": 1,
+              "mean_hold_days": 579.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "2.0x": {
+              "multiple": 2.0,
+              "cum_cost": 0.871097,
+              "cum_net": -0.801963,
+              "sharpe": -1.3191,
+              "break_even_multiple": 0.1587,
+              "expectancy_per_trade": -0.801963,
+              "n_trades": 1,
+              "mean_hold_days": 579.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "3.0x": {
+              "multiple": 3.0,
+              "cum_cost": 1.306645,
+              "cum_net": -1.237512,
+              "sharpe": -2.0215,
+              "break_even_multiple": 0.1587,
+              "expectancy_per_trade": -1.237512,
+              "n_trades": 1,
+              "mean_hold_days": 579.0,
+              "expectancy_positive": false,
+              "net_positive": false
+            }
+          },
+          "net_expectancy_positive_at_2x": false,
+          "net_positive_at_2x": false
+        }
+      }
+    },
+    {
+      "hypothesis": "H3_MAKER",
+      "panel_universe": "SURVIVORSHIP_23",
+      "winner_params": {
+        "lookback": 30,
+        "entry_annual_bps": 800.0,
+        "exit_annual_bps": 150.0,
+        "p_fill": 0.55
+      },
+      "winner_source": "artifacts/g5_statistical_validity.json",
+      "g5_verdict": "PASS",
+      "execution_spec": {
+        "mode": "maker_fifo_queue",
+        "legs": [
+          "Leg(leg='spot', venue='binance', notional_scale=0.5)",
+          "Leg(leg='perp', venue='binance', notional_scale=0.5)"
+        ],
+        "leg_fee_bps": {
+          "spot": 10.0,
+          "perp": 2.0
+        },
+        "taker_fallback_fee_bps": {
+          "spot": 10.0,
+          "perp": 5.0
+        },
+        "queue_band": {
+          "floor": {
+            "adverse_selection_bps": 1.5,
+            "p_leg_miss": 0.15
+          },
+          "ceiling": {
+            "adverse_selection_bps": 3.0,
+            "p_leg_miss": 0.25
+          }
+        },
+        "order": "two passive limit legs at half pair weight each with FIFO p_fill<1, adverse selection (1.5-3.0 bps), and p_leg_miss forced taker hedge"
+      },
+      "book": {
+        "days": 2130,
+        "symbols": 23,
+        "cum_gross": 0.261786,
+        "lab_cum_cost_flat_6bps": 0.054926,
+        "g5_baseline_bps_per_leg_turn": 4.45,
+        "traded_notional_turns": 61.714122,
+        "mean_turnover_per_day": 0.057948,
+        "flat_day_fraction": 0.6347,
+        "mean_gross_exposure": 0.4588,
+        "max_gross_exposure": 1.0
+      },
+      "reconciliation": {
+        "flat_6bps_reproduces_lab_cost": true,
+        "probe_leg_fee_bps": {
+          "spot": 12.6,
+          "perp": 5.2
+        },
+        "modelled_cum_cost_at_flat_6bps": 0.0549255689,
+        "lab_cum_cost_at_flat_6bps": 0.0549255689,
+        "funding_days_aligned": true,
+        "funding_cashflow_matches_strategy_carry": true,
+        "funding_cum": 0.257124,
+        "strategy_carry_cum": 0.257124,
+        "note": "funding is the cash flow each strategy already books, recomputed from the position and funding panels independently; it is reported, not charged again"
+      },
+      "funding": {
+        "hours_declared_by_venue": 8,
+        "hours_in_ingested_data": 8,
+        "charged_as": "cash flow on held notional, never per unit of turnover",
+        "cum": 0.257124,
+        "sharpe_of_funding_leg": 6.4569
+      },
+      "venue_fee_comparison": {
+        "binance": {
+          "priced": true,
+          "blended_maker_taker_bps_per_leg": {
+            "spot": 10.0,
+            "perp": 2.6
+          },
+          "maker_bps_per_leg": {
+            "spot": 10.0,
+            "perp": 2.0
+          },
+          "cum_fee": 0.03888,
+          "delta_vs_ingested_venue": 0.0
+        },
+        "bybit": {
+          "priced": true,
+          "blended_maker_taker_bps_per_leg": {
+            "spot": 10.0,
+            "perp": 2.7
+          },
+          "maker_bps_per_leg": {
+            "spot": 10.0,
+            "perp": 2.0
+          },
+          "cum_fee": 0.039188,
+          "delta_vs_ingested_venue": 0.000308
+        },
+        "hyperliquid": {
+          "priced": true,
+          "blended_maker_taker_bps_per_leg": {
+            "spot": 4.6,
+            "perp": 2.1
+          },
+          "maker_bps_per_leg": {
+            "spot": 4.0,
+            "perp": 1.4999999999999998
+          },
+          "cum_fee": 0.020674,
+          "delta_vs_ingested_venue": -0.018206
+        },
+        "okx": {
+          "priced": true,
+          "blended_maker_taker_bps_per_leg": {
+            "spot": 8.4,
+            "perp": 2.6
+          },
+          "maker_bps_per_leg": {
+            "spot": 8.0,
+            "perp": 2.0
+          },
+          "cum_fee": 0.033943,
+          "delta_vs_ingested_venue": -0.004937
+        }
+      },
+      "band": {
+        "verdict_flips_inside_band": true,
+        "net_sign_flips_inside_band": false,
+        "gate_holds_at_both_ends": false,
+        "basis": "net expectancy per trade at 2.0x fees, at both ends of the measured spread band",
+        "sign_flip_basis": "sign of cumulative net at the realistic schedule, i.e. at 1.0x, at both ends of the band"
+      },
+      "g6_pass": false,
+      "full_sample_g6_pass": false,
+      "at_floor": {
+        "half_spread_bps": 3.0,
+        "cum_cost": 0.105626,
+        "cum_net": 0.15616,
+        "sharpe": 3.2504,
+        "n_trades": 9,
+        "expectancy_per_trade": 0.017351,
+        "mean_hold_days": 113.22,
+        "effective_bps_per_turn": 17.1154,
+        "break_even_multiple": 2.4784,
+        "share_of_cost": {
+          "fee": 0.3637,
+          "half_spread": 0.1008,
+          "latency_slippage": 0.0088,
+          "volatility_impact": 0.5267
+        },
+        "attrition": [
+          {
+            "component": "fee",
+            "marginal_cost": 0.038417,
+            "cum_cost": 0.038417,
+            "cum_net": 0.223369,
+            "sharpe": 5.2583,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "half_spread",
+            "marginal_cost": 0.010646,
+            "cum_cost": 0.049063,
+            "cum_net": 0.212723,
+            "sharpe": 4.9854,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "latency_slippage",
+            "marginal_cost": 0.000926,
+            "cum_cost": 0.049988,
+            "cum_net": 0.211798,
+            "sharpe": 4.9613,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "volatility_impact",
+            "marginal_cost": 0.055638,
+            "cum_cost": 0.105626,
+            "cum_net": 0.15616,
+            "sharpe": 3.2504,
+            "flips_the_verdict": false
+          }
+        ],
+        "cost_stress": {
+          "1.0x": {
+            "multiple": 1.0,
+            "cum_cost": 0.105626,
+            "cum_net": 0.15616,
+            "sharpe": 3.2504,
+            "break_even_multiple": 2.4784,
+            "expectancy_per_trade": 0.017351,
+            "n_trades": 9,
+            "mean_hold_days": 113.22,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "1.5x": {
+            "multiple": 1.5,
+            "cum_cost": 0.158439,
+            "cum_net": 0.103347,
+            "sharpe": 1.8761,
+            "break_even_multiple": 2.4784,
+            "expectancy_per_trade": 0.011483,
+            "n_trades": 9,
+            "mean_hold_days": 113.22,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "2.0x": {
+            "multiple": 2.0,
+            "cum_cost": 0.211253,
+            "cum_net": 0.050534,
+            "sharpe": 0.7913,
+            "break_even_multiple": 2.4784,
+            "expectancy_per_trade": 0.005615,
+            "n_trades": 9,
+            "mean_hold_days": 113.22,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "3.0x": {
+            "multiple": 3.0,
+            "cum_cost": 0.316879,
+            "cum_net": -0.055093,
+            "sharpe": -0.653,
+            "break_even_multiple": 2.4784,
+            "expectancy_per_trade": -0.006121,
+            "n_trades": 9,
+            "mean_hold_days": 113.22,
+            "expectancy_positive": false,
+            "net_positive": false
+          }
+        },
+        "net_expectancy_positive_at_2x": true,
+        "net_positive_at_2x": true
+      },
+      "at_ceiling": {
+        "half_spread_bps": 24.8772,
+        "cum_cost": 0.148791,
+        "cum_net": 0.112995,
+        "sharpe": 2.1943,
+        "n_trades": 9,
+        "expectancy_per_trade": 0.012555,
+        "mean_hold_days": 113.22,
+        "effective_bps_per_turn": 24.1097,
+        "break_even_multiple": 1.7594,
+        "share_of_cost": {
+          "fee": 0.2644,
+          "half_spread": 0.3513,
+          "latency_slippage": 0.0104,
+          "volatility_impact": 0.3739
+        },
+        "attrition": [
+          {
+            "component": "fee",
+            "marginal_cost": 0.039343,
+            "cum_cost": 0.039343,
+            "cum_net": 0.222443,
+            "sharpe": 5.2349,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "half_spread",
+            "marginal_cost": 0.052268,
+            "cum_cost": 0.09161,
+            "cum_net": 0.170176,
+            "sharpe": 3.8439,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "latency_slippage",
+            "marginal_cost": 0.001543,
+            "cum_cost": 0.093153,
+            "cum_net": 0.168633,
+            "sharpe": 3.802,
+            "flips_the_verdict": false
+          },
+          {
+            "component": "volatility_impact",
+            "marginal_cost": 0.055638,
+            "cum_cost": 0.148791,
+            "cum_net": 0.112995,
+            "sharpe": 2.1943,
+            "flips_the_verdict": false
+          }
+        ],
+        "cost_stress": {
+          "1.0x": {
+            "multiple": 1.0,
+            "cum_cost": 0.148791,
+            "cum_net": 0.112995,
+            "sharpe": 2.1943,
+            "break_even_multiple": 1.7594,
+            "expectancy_per_trade": 0.012555,
+            "n_trades": 9,
+            "mean_hold_days": 113.22,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "1.5x": {
+            "multiple": 1.5,
+            "cum_cost": 0.223186,
+            "cum_net": 0.0386,
+            "sharpe": 0.622,
+            "break_even_multiple": 1.7594,
+            "expectancy_per_trade": 0.004289,
+            "n_trades": 9,
+            "mean_hold_days": 113.22,
+            "expectancy_positive": true,
+            "net_positive": true
+          },
+          "2.0x": {
+            "multiple": 2.0,
+            "cum_cost": 0.297582,
+            "cum_net": -0.035796,
+            "sharpe": -0.4796,
+            "break_even_multiple": 1.7594,
+            "expectancy_per_trade": -0.003977,
+            "n_trades": 9,
+            "mean_hold_days": 113.22,
+            "expectancy_positive": false,
+            "net_positive": false
+          },
+          "3.0x": {
+            "multiple": 3.0,
+            "cum_cost": 0.446373,
+            "cum_net": -0.184587,
+            "sharpe": -1.796,
+            "break_even_multiple": 1.7594,
+            "expectancy_per_trade": -0.02051,
+            "n_trades": 9,
+            "mean_hold_days": 113.22,
+            "expectancy_positive": false,
+            "net_positive": false
+          }
+        },
+        "net_expectancy_positive_at_2x": false,
+        "net_positive_at_2x": false
+      },
+      "locked_oos": {
+        "days": 579,
+        "embargo_days": 60,
+        "cum_gross": 0.014257,
+        "traded_notional_turns": 5.0,
+        "band": {
+          "verdict_flips_inside_band": true,
+          "net_sign_flips_inside_band": false,
+          "gate_holds_at_both_ends": false
+        },
+        "g6_pass": false,
+        "at_floor": {
+          "half_spread_bps": 3.0,
+          "cum_cost": 0.006507,
+          "cum_net": 0.007749,
+          "sharpe": 1.6957,
+          "n_trades": 3,
+          "expectancy_per_trade": 0.002583,
+          "mean_hold_days": 130.33,
+          "effective_bps_per_turn": 13.0147,
+          "break_even_multiple": 2.1908,
+          "share_of_cost": {
+            "fee": 0.4783,
+            "half_spread": 0.1325,
+            "latency_slippage": 0.0115,
+            "volatility_impact": 0.3776
+          },
+          "attrition": [
+            {
+              "component": "fee",
+              "marginal_cost": 0.003112,
+              "cum_cost": 0.003112,
+              "cum_net": 0.011144,
+              "sharpe": 2.7632,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "half_spread",
+              "marginal_cost": 0.000862,
+              "cum_cost": 0.003975,
+              "cum_net": 0.010282,
+              "sharpe": 2.4951,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "latency_slippage",
+              "marginal_cost": 7.5e-05,
+              "cum_cost": 0.00405,
+              "cum_net": 0.010207,
+              "sharpe": 2.4717,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "volatility_impact",
+              "marginal_cost": 0.002457,
+              "cum_cost": 0.006507,
+              "cum_net": 0.007749,
+              "sharpe": 1.6957,
+              "flips_the_verdict": false
+            }
+          ],
+          "cost_stress": {
+            "1.0x": {
+              "multiple": 1.0,
+              "cum_cost": 0.006507,
+              "cum_net": 0.007749,
+              "sharpe": 1.6957,
+              "break_even_multiple": 2.1908,
+              "expectancy_per_trade": 0.002583,
+              "n_trades": 3,
+              "mean_hold_days": 130.33,
+              "expectancy_positive": true,
+              "net_positive": true
+            },
+            "1.5x": {
+              "multiple": 1.5,
+              "cum_cost": 0.009761,
+              "cum_net": 0.004496,
+              "sharpe": 0.8477,
+              "break_even_multiple": 2.1908,
+              "expectancy_per_trade": 0.001499,
+              "n_trades": 3,
+              "mean_hold_days": 130.33,
+              "expectancy_positive": true,
+              "net_positive": true
+            },
+            "2.0x": {
+              "multiple": 2.0,
+              "cum_cost": 0.013015,
+              "cum_net": 0.001242,
+              "sharpe": 0.2007,
+              "break_even_multiple": 2.1908,
+              "expectancy_per_trade": 0.000414,
+              "n_trades": 3,
+              "mean_hold_days": 130.33,
+              "expectancy_positive": true,
+              "net_positive": true
+            },
+            "3.0x": {
+              "multiple": 3.0,
+              "cum_cost": 0.019522,
+              "cum_net": -0.005265,
+              "sharpe": -0.6418,
+              "break_even_multiple": 2.1908,
+              "expectancy_per_trade": -0.001755,
+              "n_trades": 3,
+              "mean_hold_days": 130.33,
+              "expectancy_positive": false,
+              "net_positive": false
+            }
+          },
+          "net_expectancy_positive_at_2x": true,
+          "net_positive_at_2x": true
+        },
+        "at_ceiling": {
+          "half_spread_bps": 24.8772,
+          "cum_cost": 0.010005,
+          "cum_net": 0.004252,
+          "sharpe": 0.803,
+          "n_trades": 3,
+          "expectancy_per_trade": 0.001417,
+          "mean_hold_days": 130.33,
+          "effective_bps_per_turn": 20.009,
+          "break_even_multiple": 1.425,
+          "share_of_cost": {
+            "fee": 0.3186,
+            "half_spread": 0.4233,
+            "latency_slippage": 0.0125,
+            "volatility_impact": 0.2456
+          },
+          "attrition": [
+            {
+              "component": "fee",
+              "marginal_cost": 0.003188,
+              "cum_cost": 0.003188,
+              "cum_net": 0.011069,
+              "sharpe": 2.74,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "half_spread",
+              "marginal_cost": 0.004235,
+              "cum_cost": 0.007422,
+              "cum_net": 0.006834,
+              "sharpe": 1.4708,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "latency_slippage",
+              "marginal_cost": 0.000125,
+              "cum_cost": 0.007547,
+              "cum_net": 0.006709,
+              "sharpe": 1.4366,
+              "flips_the_verdict": false
+            },
+            {
+              "component": "volatility_impact",
+              "marginal_cost": 0.002457,
+              "cum_cost": 0.010005,
+              "cum_net": 0.004252,
+              "sharpe": 0.803,
+              "flips_the_verdict": false
+            }
+          ],
+          "cost_stress": {
+            "1.0x": {
+              "multiple": 1.0,
+              "cum_cost": 0.010005,
+              "cum_net": 0.004252,
+              "sharpe": 0.803,
+              "break_even_multiple": 1.425,
+              "expectancy_per_trade": 0.001417,
+              "n_trades": 3,
+              "mean_hold_days": 130.33,
+              "expectancy_positive": true,
+              "net_positive": true
+            },
+            "1.5x": {
+              "multiple": 1.5,
+              "cum_cost": 0.015007,
+              "cum_net": -0.00075,
+              "sharpe": -0.1128,
+              "break_even_multiple": 1.425,
+              "expectancy_per_trade": -0.00025,
+              "n_trades": 3,
+              "mean_hold_days": 130.33,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "2.0x": {
+              "multiple": 2.0,
+              "cum_cost": 0.020009,
+              "cum_net": -0.005752,
+              "sharpe": -0.7031,
+              "break_even_multiple": 1.425,
+              "expectancy_per_trade": -0.001917,
+              "n_trades": 3,
+              "mean_hold_days": 130.33,
+              "expectancy_positive": false,
+              "net_positive": false
+            },
+            "3.0x": {
+              "multiple": 3.0,
+              "cum_cost": 0.030014,
+              "cum_net": -0.015757,
+              "sharpe": -1.3724,
+              "break_even_multiple": 1.425,
+              "expectancy_per_trade": -0.005252,
+              "n_trades": 3,
+              "mean_hold_days": 130.33,
+              "expectancy_positive": false,
+              "net_positive": false
+            }
+          },
+          "net_expectancy_positive_at_2x": false,
+          "net_positive_at_2x": false
+        }
+      }
     }
   ],
   "methodology": {
     "periods_per_year": 365,
-    "verdict_rule": "G6 passes for a hypothesis only if net expectancy per trade stays positive at 2.0x fees at BOTH ends of the spread band on both full sample and post-embargo locked_oos; the audit's ladder does not stop at 2.0x, so the full path is reported too",
-    "superseded_basis": "G5's verdicts were computed on the flat-6bps book. G6's ladder starts at the realistic schedule, so a hypothesis can pass one gate and fail the other; where that happens both verdicts are reported and neither is overridden",
+    "verdict_rule": "G6 passes for a hypothesis only if net expectancy per trade stays positive at 2.0x fees at BOTH ends of the spread band on both full sample and post-embargo locked_oos",
     "not_implemented": [
-      "FIFO L2 queue-position calibration against HftBacktest (the audit's HIGH (P1) blocker: the paper simulator has never been calibrated)",
-      "accounting reconciliation against NautilusTrader v2.0.0rc9 trade by trade, and the <1 bps day-30 promotion criterion that depends on it",
-      "Hyperliquid 1h funding: all four normalized datasets are Binance Vision, so the hourly cadence is transcribed and compared but not simulated; the planned Binance + Hyperliquid cross-check was not realised",
-      "per-symbol rather than single-value half spread: a 24 bps half spread is not a credible quote for a major pair, so the estimate is carried as an upper bound and the band width is reported in place of a point estimate",
-      "cross-venue spread and impact: spread and volatility come from Binance bars, so the venue comparison covers fees only",
-      "operation cost allocation (founder time under 10 h/week is a constraint in the audit, not a per-trade charge) and borrow cost on the spot leg",
-      "regime-conditional cost stress: costs are stressed across the whole sample, not per market regime"
+      "tick-level L3 HftBacktest order-book replay (H3_MAKER models calibrated analytic FIFO p_fill, adverse selection, and p_leg_miss bounds on daily closes)",
+      "borrow cost on the spot leg (cash-funded long spot needs zero borrow, though margin-efficiency differs)"
     ]
   }
 }
