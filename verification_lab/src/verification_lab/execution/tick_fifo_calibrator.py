@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import io
 import math
+import re
 import time
 import zipfile
 from dataclasses import dataclass
@@ -28,6 +29,10 @@ import polars as pl
 import requests
 
 BASE_VISION_URL = "https://data.binance.vision/data"
+SYMBOL_RE = re.compile(r"^[A-Z0-9]{2,20}$")
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+MAX_HTTP_DOWNLOAD_BYTES = 256 * 1024 * 1024  # 256 MiB compressed archive ceiling
+MAX_UNCOMPRESSED_CSV_BYTES = 512 * 1024 * 1024  # 512 MiB uncompressed CSV ceiling
 MARKOUT_HORIZONS_MS: tuple[tuple[str, int], ...] = (
     ("1s", 1_000),
     ("5s", 5_000),
@@ -94,22 +99,73 @@ def parse_expected_checksum(checksum_text: str) -> str:
     return digest
 
 
-def _http_get_bytes(url: str, *, timeout: int = 45) -> bytes:
+def _validate_archive_identifiers(symbol: str, date: str) -> None:
+    if not SYMBOL_RE.fullmatch(symbol):
+        raise ValueError(f"Invalid archive symbol {symbol!r}; expected ^[A-Z0-9]{{2,20}}$")
+    if not DATE_RE.fullmatch(date):
+        raise ValueError(f"Invalid archive date {date!r}; expected YYYY-MM-DD")
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+    except ValueError as exc:
+        raise ValueError(f"Non-existent calendar date {date!r}") from exc
+
+
+def _http_get_bytes(
+    url: str,
+    *,
+    timeout: int = 45,
+    max_bytes: int = MAX_HTTP_DOWNLOAD_BYTES,
+) -> bytes:
     last_exc: Exception | None = None
     for attempt in range(1, MAX_HTTP_RETRIES + 1):
         try:
-            resp = requests.get(url, timeout=timeout)
+            with requests.get(url, timeout=timeout, stream=True) as resp:
+                if resp.status_code == 200:
+                    chunks: list[bytes] = []
+                    total = 0
+                    for chunk in resp.iter_content(chunk_size=65_536):
+                        if not chunk:
+                            continue
+                        total += len(chunk)
+                        if total > max_bytes:
+                            raise ValueError(
+                                f"HTTP download from {url} exceeded {max_bytes} byte ceiling"
+                            )
+                        chunks.append(chunk)
+                    return b"".join(chunks)
+                if resp.status_code not in RETRYABLE_HTTP:
+                    raise RuntimeError(f"HTTP {resp.status_code} fetching {url}")
         except requests.RequestException as exc:
             last_exc = exc
-            resp = None
-        else:
-            if resp.status_code == 200:
-                return resp.content
-            if resp.status_code not in RETRYABLE_HTTP:
-                raise RuntimeError(f"HTTP {resp.status_code} fetching {url}")
         if attempt < MAX_HTTP_RETRIES:
             time.sleep(min(15.0, 1.5 * attempt))
     raise RuntimeError(f"Failed fetching {url}: {last_exc}")
+
+
+def _read_bounded_single_csv_from_zip(
+    zip_bytes: bytes,
+    *,
+    max_uncompressed_bytes: int = MAX_UNCOMPRESSED_CSV_BYTES,
+) -> bytes:
+    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+        names = zf.namelist()
+        if len(names) != 1:
+            raise ValueError(f"Expected single-entry ZIP archive, got {len(names)} entries")
+        csv_name = names[0]
+        if "/" in csv_name or "\\" in csv_name or ".." in csv_name or ":" in csv_name:
+            raise ValueError(f"Unsafe ZIP entry path: {csv_name!r}")
+        info = zf.getinfo(csv_name)
+        if info.file_size > max_uncompressed_bytes:
+            raise ValueError(
+                f"ZIP entry {csv_name!r} declared size {info.file_size} exceeds {max_uncompressed_bytes} byte ceiling"
+            )
+        with zf.open(info, "r") as fp:
+            raw_csv = fp.read(max_uncompressed_bytes + 1)
+        if len(raw_csv) > max_uncompressed_bytes:
+            raise ValueError(
+                f"ZIP entry {csv_name!r} actual uncompressed size exceeds {max_uncompressed_bytes} byte ceiling"
+            )
+        return raw_csv
 
 
 def fetch_verified_vision_zip(
@@ -123,15 +179,26 @@ def fetch_verified_vision_zip(
     """Fetch or load a daily Binance Vision zip archive and verify its SHA-256 `.CHECKSUM`."""
     if dataset not in DATASET_URL_TEMPLATES:
         raise KeyError(f"Unknown tick calibration dataset {dataset!r}")
+    _validate_archive_identifiers(symbol, date)
     url = DATASET_URL_TEMPLATES[dataset].format(sym=symbol, date=date)
     checksum_url = url + ".CHECKSUM"
     filename = url.rsplit("/", 1)[-1]
-    target_dir = cache_root / dataset / symbol
+    resolved_cache_root = cache_root.resolve()
+    target_dir = (resolved_cache_root / dataset / symbol).resolve()
+    if not target_dir.is_relative_to(resolved_cache_root):
+        raise ValueError(f"Resolved cache directory {target_dir} escapes {resolved_cache_root}")
     zip_path = target_dir / filename
     chk_path = target_dir / f"{filename}.CHECKSUM"
 
+    zip_bytes = b""
+    actual_sha = ""
     cache_hit = zip_path.exists() and chk_path.exists()
     if cache_hit:
+        cached_size = zip_path.stat().st_size
+        if cached_size > MAX_HTTP_DOWNLOAD_BYTES:
+            raise ValueError(
+                f"Cached archive {zip_path} size {cached_size} exceeds {MAX_HTTP_DOWNLOAD_BYTES} byte ceiling"
+            )
         zip_bytes = zip_path.read_bytes()
         expected_sha = parse_expected_checksum(chk_path.read_text(encoding="utf-8"))
         actual_sha = hashlib.sha256(zip_bytes).hexdigest()
@@ -192,9 +259,7 @@ def _infer_tick_size(prices: np.ndarray) -> float:
 
 def parse_agg_trades_zip(zip_bytes: bytes, *, symbol: str, leg: str) -> TickStream:
     """Parse `futures/um` or `spot` daily `aggTrades` zip into chronological `TickStream`."""
-    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
-        csv_name = zf.namelist()[0]
-        raw_csv = zf.read(csv_name)
+    raw_csv = _read_bounded_single_csv_from_zip(zip_bytes)
 
     first_line = raw_csv.split(b"\n", 1)[0].decode("utf-8", "replace").strip()
     has_header = bool(first_line) and not (first_line[0].isdigit() or first_line[0] == "-")
@@ -246,9 +311,7 @@ def parse_agg_trades_zip(zip_bytes: bytes, *, symbol: str, leg: str) -> TickStre
 
 def parse_book_depth_zip(zip_bytes: bytes, *, symbol: str) -> BookDepthSnapshots:
     """Parse `futures/um/daily/bookDepth` zip into innermost bid/ask cumulative depth snapshots."""
-    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
-        csv_name = zf.namelist()[0]
-        raw_csv = zf.read(csv_name)
+    raw_csv = _read_bounded_single_csv_from_zip(zip_bytes)
 
     first_line = raw_csv.split(b"\n", 1)[0].decode("utf-8", "replace").strip()
     has_header = bool(first_line) and not first_line[0].isdigit()
