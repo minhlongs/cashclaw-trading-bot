@@ -2,6 +2,7 @@ import type { OrderRequest, OrderResult } from '../exchange/types';
 import { type OrderContext, orderResultToTrade } from './bot-order-executor-types';
 import { dispatchExchangeOrder } from './bot-order-executor-dispatch';
 import {
+  ensureDurableBotHydrated,
   releaseLifecycleOnDispatchThrow,
   settleLifecyclePostDispatch,
   submitLifecyclePreDispatch,
@@ -57,6 +58,7 @@ export async function executeOrder(
     throw new Error('Trading halted by killswitch');
   }
 
+  await ensureDurableBotHydrated(ctx);
   const nextCounter = orderCounter + 1;
   const effectivePrice = evaluatePreTradeProtection(ctx, req, nextCounter - 1);
   const submittedOrder = deps.lifecycleEngine

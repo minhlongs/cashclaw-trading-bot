@@ -89,11 +89,11 @@ function loadVerifiedGovernance(opts: CliOptions): VerifiedGovernance {
   return { spec: specRes.data, registry: regRes.data, rawSpecJson, rawRegistryJson };
 }
 
-function acquireMarketSnapshot(opts: CliOptions, pythonBin: string, snapTmp: string): PublicMarketSnapshot {
-  if (opts.snapshotIn) {
-    fs.copyFileSync(opts.snapshotIn, snapTmp);
-  } else {
-    const pySnap = spawnSync(pythonBin, [PY_SCRIPT_PATH, ...(opts.offline ? ['--offline'] : []), '--emit-snapshot-json', snapTmp], { cwd: REPO_ROOT, encoding: 'utf8' });
+function acquireMarketSnapshot(opts: CliOptions, pythonBin: string, snapTmp: string, effectiveStatePath?: string): PublicMarketSnapshot {
+  if (opts.snapshotIn) fs.copyFileSync(opts.snapshotIn, snapTmp);
+  else {
+    const stateArgs = effectiveStatePath && fs.existsSync(effectiveStatePath) ? ['--state-file', effectiveStatePath] : [];
+    const pySnap = spawnSync(pythonBin, [PY_SCRIPT_PATH, ...(opts.offline ? ['--offline'] : []), ...stateArgs, '--emit-snapshot-json', snapTmp], { cwd: REPO_ROOT, encoding: 'utf8' });
     if (pySnap.status !== 0) throw new Error((pySnap.stderr || 'Python snapshot acquisition failed').trim());
   }
   return PublicMarketSnapshotSchema.parse(JSON.parse(fs.readFileSync(snapTmp, 'utf8')) as unknown);
@@ -130,7 +130,8 @@ function stepRunnerThroughToday(
     verifyDay0ShadowTick(gov.spec, gov.registry, snapshot, genesisTsMs);
   } else if (!executedDays.some((d) => d.dayIndex === dayOffset)) {
     const prevTs = executedDays.length > 0 ? executedDays[executedDays.length - 1]!.timestampMs : genesisTsMs;
-    const todayStep = buildDayStepFromSnapshot(gov.spec, snapshot, dayOffset, Math.max(obsTsMs, prevTs + 1_000));
+    const heldSymbols = new Set(gov.spec.universe.filter((s) => runner.getLedger().getPosition(`${s}:SPOT`).signedQtyBase > ZERO_BIGINT));
+    const todayStep = buildDayStepFromSnapshot(gov.spec, snapshot, dayOffset, Math.max(obsTsMs, prevTs + 1_000), heldSymbols);
     runner.stepDay({ dayIndex: todayStep.dayIndex, timestampMs: todayStep.timestampMs, observations: todayStep.observations });
     executedDays.push(todayStep);
   }
@@ -141,9 +142,9 @@ function executeCheckpointPipeline(opts: CliOptions, tmpDir: string): void {
   const gov = loadVerifiedGovernance(opts);
   const pythonBin = resolvePython(opts.pythonBin);
   const outArtifactPath = opts.outPath ?? DEFAULT_G13_OUT_PATH;
-  const snapTmp = path.join(tmpDir, 'snapshot.json');
-  const snapshot = acquireMarketSnapshot(opts, pythonBin, snapTmp);
   const effectiveStatePath = opts.stateFile ?? (opts.offline ? path.join(tmpDir, 'offline-state.json') : DEFAULT_STATE_PATH);
+  const snapTmp = path.join(tmpDir, 'snapshot.json');
+  const snapshot = acquireMarketSnapshot(opts, pythonBin, snapTmp, effectiveStatePath);
   const priorState = loadPriorRunnerState(effectiveStatePath, gov.spec.payloadSha256);
   const genesisUtc = resolveGenesisUtc(gov.spec.payloadSha256, priorState, outArtifactPath, snapshot.observed_at_utc);
   const { runner, executedDays, genesisTsMs } = stepRunnerThroughToday(gov, snapshot, priorState, genesisUtc);
@@ -154,9 +155,7 @@ function executeCheckpointPipeline(opts: CliOptions, tmpDir: string): void {
     throw new Error('ledger double-entry or capital protection invariant breached');
   }
 
-  const latestMarks = executedDays.length > 0
-    ? new Map(Object.entries(executedDays[executedDays.length - 1]!.marks).map(([k, v]) => [k, { spotMidUsd: v.spotMidUsd, perpMidUsd: v.perpMidUsd }]))
-    : new Map<string, { spotMidUsd: number; perpMidUsd: number }>();
+  const latestMarks = executedDays.length > 0 ? new Map(Object.entries(executedDays[executedDays.length - 1]!.marks).map(([k, v]) => [k, { spotMidUsd: v.spotMidUsd, perpMidUsd: v.perpMidUsd }])) : new Map<string, { spotMidUsd: number; perpMidUsd: number }>();
   const val = valuePortfolioAtMarks(runner.getLedger(), gov.spec.universe, latestMarks);
   const paperNav = Number(val.navMicroUsd) / Number(BigInt(BRIDGE_INITIAL_CAPITAL_USD) * MICRO_USD_PER_USD);
   const positions = serializeOpenPositions(runner.getLedger(), gov.spec.universe);

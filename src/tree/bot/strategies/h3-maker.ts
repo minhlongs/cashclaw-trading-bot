@@ -10,9 +10,11 @@ export interface H3MakerCallbacks {
   onLog: (msg: string) => void;
 }
 
-function clampGrossLeverage(raw: number): number {
-  if (!Number.isFinite(raw) || raw <= 0) return 1.0;
-  return Math.min(1.5, raw);
+const SINGLE_PAIR_MAX_NAV_FRACTION = 0.2;
+
+function clampSinglePairAllocation(rawGrossLeverage: number): number {
+  const gross = !Number.isFinite(rawGrossLeverage) || rawGrossLeverage <= 0 ? 1.0 : Math.min(1.5, rawGrossLeverage);
+  return Math.min(SINGLE_PAIR_MAX_NAV_FRACTION, gross * SINGLE_PAIR_MAX_NAV_FRACTION);
 }
 
 function computeAnnualizedCarryBps(windowPrices: readonly number[], latestPrice: number): number {
@@ -92,7 +94,7 @@ export class H3MakerStrategy {
 
   private async submitMakerLeg(side: Side, limitPrice: number, annualBps: number): Promise<void> {
     const quantity = side === 'buy'
-      ? (this.config.capital * clampGrossLeverage(this.config.maxGrossLeverage)) / limitPrice
+      ? (this.config.capital * clampSinglePairAllocation(this.config.maxGrossLeverage)) / limitPrice
       : this.positionQty;
     const priorEntry = this.entryPrice;
     this.orderInFlight = true;

@@ -47,6 +47,7 @@ jobs:
         run: pip install -e "./verification_lab[dev]"
 
       - name: Restore rolling Gate G13 runner state and checkpoint cache
+        if: ${{ !inputs.offline_only }}
         uses: actions/cache@v4
         with:
           path: .g13-cache

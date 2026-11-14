@@ -145,27 +145,50 @@ describe('botListHandler', () => {
       expect(result.data![0].verificationTier).toBe('UNVERIFIED_RETAIL_SANDBOX');
     });
 
-    it('marks h3_maker bots as PAPER_FORWARD_ELIGIBLE', async () => {
-      mockListBots.mockResolvedValue([{
-        id: 'h3-bot-1',
-        name: 'H3 Maker Bot',
-        strategy: 'h3_maker',
-        pair: 'BTC/USDT',
-        exchange: 'binance',
-        status: 'running',
-        mode: 'paper',
-        config: { capital: 5000 },
-        metrics: {
-          totalPnl: 0, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0,
-          totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null,
+    it('marks h3_maker bots with verified specSha256 as PAPER_FORWARD_ELIGIBLE and downgrades unsigned ones', async () => {
+      mockListBots.mockResolvedValue([
+        {
+          id: 'h3-bot-verified',
+          name: 'H3 Maker Bot',
+          strategy: 'h3_maker',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          status: 'running',
+          mode: 'paper',
+          config: {
+            capital: 5000,
+            specSha256: '43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169',
+          },
+          metrics: {
+            totalPnl: 0, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0,
+            totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null,
+          },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         },
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }]);
+        {
+          id: 'h3-bot-unsigned',
+          name: 'H3 Maker Custom',
+          strategy: 'h3_maker',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          status: 'running',
+          mode: 'paper',
+          config: { capital: 5000 },
+          metrics: {
+            totalPnl: 0, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0,
+            totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null,
+          },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]);
 
       const result = await botListHandler();
       expect(result.data![0].strategy).toBe('h3_maker');
       expect(result.data![0].verificationTier).toBe('PAPER_FORWARD_ELIGIBLE');
+      expect(result.data![1].strategy).toBe('h3_maker');
+      expect(result.data![1].verificationTier).toBe('UNVERIFIED_RETAIL_SANDBOX');
     });
   });
 

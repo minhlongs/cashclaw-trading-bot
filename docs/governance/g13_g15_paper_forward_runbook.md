@@ -189,7 +189,7 @@ Passing Gate G13 **never** authorizes live capital deployment. Gate G15 is a str
    - Python tự tính toán độc lập `oracle_nav` ở độ chính xác 50 chữ số thập phân (`Decimal(prec=50)`), kiểm tra cân bằng sổ kế toán kép (`discrepancyMicroUsd === "0"`), xác nhận sai số bám sát `< 15.0 bps/tháng`, và nối thêm checkpoint ngày mới mà **tuyệt đối không giả mạo `elapsed_days` hay sửa đổi `genesis_utc`**.
 3. **Pipeline GitHub Actions hàng ngày (`.github/workflows/g13-paper-forward.yml`):**
    - Lịch chạy tự động lúc `00:15 UTC` mỗi ngày (`cron: '15 0 * * *'`) hoặc kích hoạt thủ công `workflow_dispatch` (có tùy chọn `offline_only`).
-   - Quyền tối thiểu `permissions: { contents: read }` (không bao giờ tự động đẩy commit lên `main`), khôi phục chuỗi lịch sử qua `actions/cache@v4` và lưu trữ tạo phẩm kiểm toán 90 ngày qua `actions/upload-artifact@v4`.
+   - Quyền tối thiểu `permissions: { contents: read }` (không bao giờ tự động đẩy commit lên `main`), khôi phục chuỗi lịch sử qua `actions/cache@v4` (bỏ qua ghi cache khi `offline_only == true`) và lưu trữ tạo phẩm kiểm toán 90 ngày qua `actions/upload-artifact@v4` (nếu cron dừng quá 7 ngày khiến cache hết hạn, chỉ cần tải hiện vật `g13-paper-forward-*` gần nhất vào `.g13-cache/` trước khi chạy tiếp).
    - **Bất biến khóa cứng Gate G15:** Dù đồng hồ G13 tích lũy qua 60–90 ngày, `live_trading_unlocked` luôn giữ giá trị `false` và Gate G15 luôn ở trạng thái `HARD-LOCKED`.
 
 ### English
@@ -210,7 +210,7 @@ To eliminate manual `--paper-nav` / `--oracle-nav` entry, CashClaw provides the 
    - Python independently replays fills and funding cashflows at `Decimal(prec=50)` precision to derive `oracle_nav` (never trusting a caller-supplied `oracle_nav`), asserts `discrepancyMicroUsd === "0"` and `< 15.0 bps/month` tracking error, and appends one checkpoint per new UTC calendar day without ever fabricating `elapsed_days` or mutating `genesis_utc`.
 3. **Daily GitHub Actions Workflow (`.github/workflows/g13-paper-forward.yml`):**
    - Runs daily at `00:15 UTC` (`cron: '15 0 * * *'`) and via `workflow_dispatch` (`offline_only` boolean input) under least-privilege `permissions: { contents: read }` (never auto-pushing to `main`).
-   - Accumulates multi-day state via rolling `actions/cache@v4` keys and publishes 90-day retention artifacts via `actions/upload-artifact@v4`.
+   - Accumulates multi-day state via rolling `actions/cache@v4` keys (skipped on `offline_only` dispatches) and publishes 90-day retention artifacts via `actions/upload-artifact@v4` (if scheduled runs pause `> 7` days past cache eviction, restore `.g13-cache/` from the latest uploaded workflow artifact).
    - **Gate G15 Hard-Lock Invariant:** Across all automated runs, `live_trading_unlocked` remains unconditionally `false` and Gate G15 stays `HARD-LOCKED`.
 
 ---

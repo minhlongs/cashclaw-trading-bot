@@ -6,6 +6,7 @@ import {
   type D1AtomicLedgerBatcher, type DurableOrderLifecycleState, type LedgerAccountBalances, type MicroDoubleEntryLedger,
 } from '../ledger';
 import { applyLegsToBalances, createZeroAccountBalances } from '../ledger/double-entry-math';
+import { restoreEngineFromDurableState } from './bot-ledger-hydration';
 import type { OrderContext } from './bot-order-executor-types';
 
 const BASE_SCALE = Number(BASE_UNITS_PER_ASSET);
@@ -28,25 +29,31 @@ function toOrderStateUpsert(ord: LifecycleOrderRecord, override?: DurableOrderLi
   };
 }
 
-async function ensureSyncCursor(
-  botId: string, ledger: MicroDoubleEntryLedger, batcher: D1AtomicLedgerBatcher, nowMs: number,
-): Promise<DurableLedgerSyncCursor> {
-  const existing = syncCursors.get(ledger);
-  if (existing?.initialized) return existing;
-  await batcher.initializeBotAccount(botId, nowMs, ledger.getFencingToken());
-  const loaded = await batcher.loadDurableBotState(botId);
-  const cursor: DurableLedgerSyncCursor = loaded && loaded.version > 0
-    ? { initialized: true, version: loaded.version, balances: loaded.balances }
-    : { initialized: true, version: 0, balances: createZeroAccountBalances() };
-  syncCursors.set(ledger, cursor);
-  return cursor;
+export async function ensureDurableBotHydrated(ctx: OrderContext): Promise<void> {
+  const { lifecycleEngine, ledgerBatcher } = ctx.deps;
+  if (!lifecycleEngine || !ledgerBatcher) return;
+  const ledger = lifecycleEngine.getLedger();
+  if (syncCursors.get(ledger)?.initialized) return;
+
+  const nowMs = Date.now();
+  await ledgerBatcher.initializeBotAccount(ctx.botId, nowMs, ledger.getFencingToken());
+  const loaded = await ledgerBatcher.loadDurableBotState(ctx.botId);
+  if (loaded && loaded.version > 0) {
+    const maxSeq = restoreEngineFromDurableState(lifecycleEngine, loaded);
+    const prevCounter = lifecycleAttemptCounters.get(lifecycleEngine) ?? 0;
+    if (maxSeq > prevCounter) lifecycleAttemptCounters.set(lifecycleEngine, maxSeq);
+    syncCursors.set(ledger, { initialized: true, version: loaded.version, balances: loaded.balances });
+  } else {
+    syncCursors.set(ledger, { initialized: true, version: 0, balances: createZeroAccountBalances() });
+  }
 }
 
 async function flushUncommittedJournalEntries(
   ctx: OrderContext, ledger: MicroDoubleEntryLedger, batcher: D1AtomicLedgerBatcher,
   nowMs: number, finalOrderUpsert?: AtomicOrderStateUpsert,
 ): Promise<boolean> {
-  const cursor = await ensureSyncCursor(ctx.botId, ledger, batcher, nowMs);
+  await ensureDurableBotHydrated(ctx);
+  const cursor = syncCursors.get(ledger)!;
   const pending = ledger.getJournalEntries().filter((e) => e.version > cursor.version);
   if (pending.length === 0) return false;
 
@@ -142,15 +149,10 @@ function applyFillResultToLifecycle(
 }
 
 function applyTerminalResultToLifecycle(
-  lifecycleEngine: PaperOrderLifecycleEngine, clientOrderId: string,
-  status: 'cancelled' | 'rejected' | 'expired', nowMs: number, fallback: LifecycleOrderRecord,
+  engine: PaperOrderLifecycleEngine, id: string, status: 'cancelled' | 'rejected' | 'expired', nowMs: number, fallback: LifecycleOrderRecord,
 ): LifecycleOrderRecord {
-  const termRes = status === 'cancelled'
-    ? lifecycleEngine.cancelOrder(clientOrderId, nowMs)
-    : status === 'rejected'
-      ? lifecycleEngine.rejectOrder(clientOrderId, nowMs)
-      : lifecycleEngine.expireOrder(clientOrderId, nowMs);
-  return termRes.ok ? termRes.data : fallback;
+  const res = status === 'cancelled' ? engine.cancelOrder(id, nowMs) : status === 'rejected' ? engine.rejectOrder(id, nowMs) : engine.expireOrder(id, nowMs);
+  return res.ok ? res.data : fallback;
 }
 
 export async function settleLifecyclePostDispatch(
@@ -181,16 +183,13 @@ export async function settleLifecyclePostDispatch(
   }
 }
 
-export async function releaseLifecycleOnDispatchThrow(
-  ctx: OrderContext, lifecycleEngine: PaperOrderLifecycleEngine, clientOrderId: string,
-): Promise<void> {
+export async function releaseLifecycleOnDispatchThrow(ctx: OrderContext, lifecycleEngine: PaperOrderLifecycleEngine, clientOrderId: string): Promise<void> {
   const nowMs = Date.now();
   const rej = lifecycleEngine.rejectOrder(clientOrderId, nowMs);
   if (rej.ok && ctx.deps.ledgerBatcher) {
     const ledger = lifecycleEngine.getLedger();
     const upsert = toOrderStateUpsert(rej.data);
-    const committed = await flushUncommittedJournalEntries(ctx, ledger, ctx.deps.ledgerBatcher, nowMs, upsert);
-    if (!committed) {
+    if (!(await flushUncommittedJournalEntries(ctx, ledger, ctx.deps.ledgerBatcher, nowMs, upsert))) {
       await ctx.deps.ledgerBatcher.writePendingOrderIntent(ctx.botId, ledger.getFencingToken(), upsert);
     }
   }

@@ -187,9 +187,20 @@ def _derive_causal_weights_from_prior_snapshot(
     universe: list[str],
     spec_params: dict[str, Any],
     per_symbol_quotes: dict[str, tuple[float, float, float]],
+    state_file: Path | None = None,
 ) -> dict[str, float]:
     prev_weights: dict[str, float] = {}
-    if G13_OUT_PATH.exists():
+    if state_file is not None and state_file.exists():
+        try:
+            st_doc = json.loads(state_file.read_text(encoding="utf-8"))
+            for pos in st_doc.get("positions", []):
+                sym = str(pos.get("symbol", ""))
+                qty = int(pos.get("signedQtyBase", "0") or "0")
+                if sym.endswith(":SPOT") and qty > 0:
+                    prev_weights[sym.split(":")[0]] = 1.0
+        except (OSError, ValueError, TypeError):
+            prev_weights = {}
+    elif G13_OUT_PATH.exists():
         try:
             prev_doc = json.loads(G13_OUT_PATH.read_text(encoding="utf-8"))
             prev_snap = prev_doc.get("day0_live_public_snapshot", {})
@@ -230,6 +241,7 @@ def fetch_or_load_day0_public_snapshot(
     *,
     cache_path: Path = DAY0_CACHE_PATH,
     offline: bool = False,
+    state_file: Path | None = None,
 ) -> dict[str, Any]:
     """Capture or replay `--offline` zero-auth public market & causal weight snapshot."""
     if offline:
@@ -333,7 +345,7 @@ def fetch_or_load_day0_public_snapshot(
         last_hist_row = pos_hist.tail(1).to_dicts()[0]
     else:
         last_hist_row = _derive_causal_weights_from_prior_snapshot(
-            universe, spec_params, per_symbol_quotes
+            universe, spec_params, per_symbol_quotes, state_file=state_file
         )
 
     per_symbol: dict[str, dict[str, Any]] = {}
@@ -1059,7 +1071,10 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
         else:
             current_snap = fetch_or_load_day0_public_snapshot(
-                spec["universe"], spec["parameters"], offline=args.offline
+                spec["universe"],
+                spec["parameters"],
+                offline=args.offline,
+                state_file=Path(args.state_file) if args.state_file else None,
             )
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"REFUSING: snapshot acquisition failed: {exc}", file=sys.stderr)

@@ -93,7 +93,7 @@ export function computeUtcCalendarDayOffset(genesisUtc: string, observedAtUtc: s
 }
 
 export function buildDayStepFromSnapshot(
-  spec: SignedStrategySpec, snapshot: PublicMarketSnapshot, dayIndex: number, timestampMs: number,
+  spec: SignedStrategySpec, snapshot: PublicMarketSnapshot, dayIndex: number, timestampMs: number, heldSymbols?: ReadonlySet<string>,
 ): PersistedBridgeDay {
   const observations: H3MakerSymbolObservation[] = [];
   const marks: Record<string, DayMarkRecord> = {};
@@ -103,9 +103,10 @@ export function buildDayStepFromSnapshot(
     if (!q || q.binance_spot_mid <= 0 || q.binance_perp_mark <= 0) continue;
     const rate8hBps = Number((q.binance_funding_8h_rate * 10_000).toFixed(6));
     const intervals = rate8hBps === 0 ? [0, 0, 0] : [rate8hBps, rate8hBps, rate8hBps];
+    const inHoldBand = (heldSymbols?.has(symbol) ?? false) && q.binance_instantaneous_annual_basis_bps > spec.parameters.exitAnnualBps;
     const carryBps = q.causal_target_pair_weight > 0
       ? Math.max(spec.parameters.entryAnnualBps + 25, q.binance_instantaneous_annual_basis_bps)
-      : q.exceeds_800bps_entry_hurdle_now
+      : inHoldBand || q.exceeds_800bps_entry_hurdle_now
         ? q.binance_instantaneous_annual_basis_bps
         : Math.min(spec.parameters.exitAnnualBps - 1, q.binance_instantaneous_annual_basis_bps);
     const spreadBps = 4.0;

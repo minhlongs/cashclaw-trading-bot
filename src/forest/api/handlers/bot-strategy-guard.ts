@@ -1,8 +1,10 @@
 // Forest API Guard: Archived-Strategy Kill Fence & Signed H3_MAKER Spec Verification.
-// Enforces Gate G13/G15 on bot creation and classifies strategy verification tiers.
+// Uses static bundled JSON imports so Cloudflare Workers edge runtime works with zero disk I/O,
+// while supporting explicit StrategyArtifactPaths overrides for tamper/missing unit tests.
 
 import * as fs from 'node:fs';
-import * as path from 'node:path';
+import bundledSpecArtifact from '../../../../artifacts/signed_strategy_spec_h3_maker.json';
+import bundledRegistryArtifact from '../../../../artifacts/strategy_lifecycle_registry.json';
 import {
   isArchivedFalsifiedFamily,
   validateSignedStrategySpec,
@@ -53,49 +55,22 @@ export interface StrategyArtifactPaths {
 
 const RETAIL_STRATEGIES = new Set<StrategyType>(['grid', 'mean_reversion', 'volatility_dca']);
 
-function resolveArtifactFile(relPath: string, explicitPath?: string): string {
-  if (explicitPath) return explicitPath;
-  const cwdCandidate = path.resolve(process.cwd(), relPath);
-  if (fs.existsSync(cwdCandidate)) return cwdCandidate;
-  return path.resolve(__dirname, '../../../../', relPath);
+function loadArtifactSource(overridePath: string | undefined, bundled: unknown): {
+  readonly parsed: unknown;
+  readonly rawJson?: string;
+} {
+  if (!overridePath) return { parsed: bundled };
+  const rawJson = fs.readFileSync(overridePath, 'utf8');
+  return { parsed: JSON.parse(rawJson) as unknown, rawJson };
 }
 
-export function resolveBotVerificationTier(
-  strategy: string,
-  config?: Record<string, unknown>,
-): StrategyVerificationTier {
-  if (strategy !== 'h3_maker') {
-    return getStrategyVerificationTier('grid');
-  }
-  if (config && 'specSha256' in config && typeof config.specSha256 !== 'string') {
-    return getStrategyVerificationTier('grid');
-  }
-  if (config && typeof config.specSha256 === 'string' && config.specSha256.length !== 64) {
-    return getStrategyVerificationTier('grid');
-  }
-  return getStrategyVerificationTier('h3_maker');
-}
-
-function verifyH3MakerArtifacts(paths?: StrategyArtifactPaths): BotStrategyGuardResult {
-  const specFile = resolveArtifactFile(
-    'artifacts/signed_strategy_spec_h3_maker.json',
-    paths?.specPath,
-  );
-  const regFile = resolveArtifactFile(
-    'artifacts/strategy_lifecycle_registry.json',
-    paths?.registryPath,
-  );
-
-  let rawSpecJson: string;
-  let rawRegistryJson: string;
-  let parsedSpec: unknown;
-  let parsedReg: unknown;
+export function getVerifiedH3SpecInfo(paths?: StrategyArtifactPaths): Extract<BotStrategyGuardResult, { ok: true }> | Extract<BotStrategyGuardResult, { ok: false }> {
+  let specSrc: { readonly parsed: unknown; readonly rawJson?: string };
+  let regSrc: { readonly parsed: unknown; readonly rawJson?: string };
 
   try {
-    rawSpecJson = fs.readFileSync(specFile, 'utf8');
-    rawRegistryJson = fs.readFileSync(regFile, 'utf8');
-    parsedSpec = JSON.parse(rawSpecJson) as unknown;
-    parsedReg = JSON.parse(rawRegistryJson) as unknown;
+    specSrc = loadArtifactSource(paths?.specPath, bundledSpecArtifact);
+    regSrc = loadArtifactSource(paths?.registryPath, bundledRegistryArtifact);
   } catch (err) {
     return {
       ok: false,
@@ -105,7 +80,7 @@ function verifyH3MakerArtifacts(paths?: StrategyArtifactPaths): BotStrategyGuard
     };
   }
 
-  const regRes = validateStrategyLifecycleRegistry(parsedReg, rawRegistryJson);
+  const regRes = validateStrategyLifecycleRegistry(regSrc.parsed, regSrc.rawJson);
   if (!regRes.ok) {
     return {
       ok: false,
@@ -115,10 +90,10 @@ function verifyH3MakerArtifacts(paths?: StrategyArtifactPaths): BotStrategyGuard
     };
   }
 
-  const specRes = validateSignedStrategySpec(parsedSpec, {
-    rawSpecJson,
-    registry: parsedReg,
-    rawRegistryJson,
+  const specRes = validateSignedStrategySpec(specSrc.parsed, {
+    ...(specSrc.rawJson ? { rawSpecJson: specSrc.rawJson } : {}),
+    registry: regSrc.parsed,
+    ...(regSrc.rawJson ? { rawRegistryJson: regSrc.rawJson } : {}),
   });
   if (!specRes.ok || specRes.data.strategyId !== 'H3_MAKER') {
     return {
@@ -148,6 +123,19 @@ function verifyH3MakerArtifacts(paths?: StrategyArtifactPaths): BotStrategyGuard
   };
 }
 
+export function resolveBotVerificationTier(
+  strategy: string,
+  config?: Record<string, unknown>,
+): StrategyVerificationTier {
+  if (strategy !== 'h3_maker') return getStrategyVerificationTier('grid');
+  if (!config || typeof config.specSha256 !== 'string') return getStrategyVerificationTier('grid');
+  const verified = getVerifiedH3SpecInfo();
+  if (!verified.ok || config.specSha256 !== verified.specSha256) {
+    return getStrategyVerificationTier('grid');
+  }
+  return getStrategyVerificationTier('h3_maker');
+}
+
 export function evaluateBotStrategyGuard(
   rawStrategy: unknown,
   paths?: StrategyArtifactPaths,
@@ -167,9 +155,7 @@ export function evaluateBotStrategyGuard(
   }
 
   const lower = trimmed.toLowerCase();
-  if (lower === 'h3_maker') {
-    return verifyH3MakerArtifacts(paths);
-  }
+  if (lower === 'h3_maker') return getVerifiedH3SpecInfo(paths);
 
   if (RETAIL_STRATEGIES.has(lower as StrategyType)) {
     const strategy = lower as StrategyType;

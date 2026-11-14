@@ -27,6 +27,13 @@ CREATE TABLE IF NOT EXISTS bots (
   win_count INTEGER DEFAULT 0,
   loss_count INTEGER DEFAULT 0,
   max_drawdown REAL DEFAULT 0,
+  total_trades INTEGER DEFAULT 0,
+  started_at INTEGER,
+  stopped_at INTEGER,
+  last_error TEXT,
+  last_tick_at INTEGER,
+  last_order_at INTEGER,
+  current_drawdown REAL DEFAULT 0,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 )`,

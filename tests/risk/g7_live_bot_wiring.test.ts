@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createServerClient } from '@/lib/db/client';
 import { BotManager, getBotManager, resetBotManager } from '@/tree/bot';
 import type { ExchangeOrchestrator } from '@/tree/bot/bot-manager-types';
-import type { GridBotConfig } from '@/tree/bot/types';
+import type { GridBotConfig, H3MakerBotConfig } from '@/tree/bot/types';
 import {
   BASE_UNITS_PER_ASSET, MICRO_USD_PER_USD, ZERO_BIGINT, computeBalanceSheet,
   type D1DatabaseLike, type D1PreparedStatementLike,
@@ -185,5 +185,40 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     expect(computeBalanceSheet(durable!.balances).discrepancyMicroUsd).toBe(ZERO_BIGINT);
     expect(BASE_UNITS_PER_ASSET).toBe(BigInt(100_000_000));
     mgr.destroy();
+  });
+
+  it('rehydrates durable D1 ledger/orders across BotManager cold restart without overwriting ord_1 and executes live H3MakerStrategy ticks', async () => {
+    const d1 = createSqliteD1();
+    const mgr1 = new BotManager({ getD1Database: () => d1 });
+    const bot1 = await mgr1.createBot({ id: 'bot-cold-rehydrate', config: makeGridBotConfig({ capital: 10_000 }), exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    expect((await bot1.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', price: 50_000, quantity: 0.04 })).status).toBe('filled');
+    mgr1.destroy();
+
+    const mgr2 = new BotManager({ getD1Database: () => d1 });
+    const bot2 = mgr2.createBotSync({ id: 'bot-cold-rehydrate', config: makeGridBotConfig({ capital: 10_000 }) });
+    expect((await bot2.placeOrder({ symbol: 'BTC/USDT', side: 'sell', type: 'market', price: 51_000, quantity: 0.04 })).status).toBe('filled');
+    const durable = await bot2.getLedgerBatcher()!.loadDurableBotState('bot-cold-rehydrate');
+    expect(durable?.orderIntents.map((o) => o.clientOrderId)).toEqual(['ord_bot-cold-rehydrate_1', 'ord_bot-cold-rehydrate_2']);
+    expect(durable?.balances.REALIZED_PNL).toBe(BigInt(40) * MICRO_USD_PER_USD);
+    expect(computeBalanceSheet(durable!.balances).discrepancyMicroUsd).toBe(ZERO_BIGINT);
+
+    let tickPx = 50_000;
+    const h3Orch = {
+      fetchTicker: vi.fn(async () => ({ ok: true as const, data: { symbol: 'BTC/USDT', last: tickPx, bid: tickPx - 1, ask: tickPx + 1, high24h: tickPx + 10, low24h: tickPx - 10, volume24h: 1000, timestamp: Date.now() } })),
+      placeOrder: vi.fn(async (_ex: string, r: { symbol: string; side: 'buy' | 'sell'; type: 'market' | 'limit'; price?: number; quantity: number }) => ({
+        ok: true as const, data: { id: `h3-${Date.now()}`, exchangeId: 'binance', symbol: r.symbol, side: r.side, type: r.type, price: r.price ?? tickPx, quantity: r.quantity, filled: r.quantity, fee: 0, pnl: 0, status: 'filled' as const, timestamp: Date.now() },
+      })),
+    } as unknown as ExchangeOrchestrator;
+    const mgrH3 = new BotManager({ getOrchestrator: () => h3Orch, getD1Database: () => d1 });
+    const h3Cfg: H3MakerBotConfig = { name: 'H3 Live', symbol: 'BTC/USDT', exchange: 'binance', mode: 'paper', strategy: 'h3_maker', capital: 10_000, maxDrawdownPct: 12, lookbackDays: 3, entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0 };
+    const h3Bot = await mgrH3.createBot({ id: 'bot-h3-live', config: h3Cfg, exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    await h3Bot.start();
+    tickPx = 50_200;
+    await h3Bot.tick();
+    await vi.waitFor(() => expect(h3Bot.getLifecycleEngine()!.getAllOrders()).toHaveLength(1));
+    expect(h3Bot.getLifecycleEngine()!.getAllOrders()[0]?.state).toBe('filled');
+    expect(h3Bot.getLifecycleEngine()!.getLedger().getBalanceSheet().discrepancyMicroUsd).toBe(ZERO_BIGINT);
+    mgr2.destroy();
+    mgrH3.destroy();
   });
 });
