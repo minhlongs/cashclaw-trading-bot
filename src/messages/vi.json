@@ -182,7 +182,8 @@
     "strategy": {
       "grid": "Grid",
       "mean_reversion": "Mean Reversion",
-      "volatility_dca": "DCA Biến Động"
+      "volatility_dca": "DCA Biến Động",
+      "h3_maker": "H3 Maker (Paper-Forward)"
     }
   },
   "botWizard": {
@@ -206,6 +207,7 @@
       "gridConfig": "Cấu hình Grid",
       "meanRevConfig": "Cấu hình Mean Reversion",
       "volatilityDcaConfig": "Cấu hình DCA Biến Động",
+      "h3MakerConfig": "Cấu hình H3 Maker Paper-Forward",
       "review": "Xác nhận"
     },
     "botName": "Tên bot",
@@ -230,7 +232,15 @@
       "volatility_dca": {
         "label": "DCA Tự Động Theo Biến Động",
         "desc": "Tự động điều chỉnh lệnh DCA theo biến động thực tế"
+      },
+      "h3_maker": {
+        "label": "H3 Maker Paper-Forward",
+        "desc": "Chiến lược maker thụ động H3_MAKER đã ký xác thực (PAPER_ONLY)"
       }
+    },
+    "verification": {
+      "retailNote": "Kỳ vọng ròng VIP-0 âm sau phí/trượt giá; chỉ dùng mô phỏng giấy học tập.",
+      "eligibleNote": "Đã xác thực chữ ký SignedStrategySpec (H3_MAKER) • Đủ điều kiện kiểm định G13 paper-forward."
     },
     "fields": {
       "spacingPct": "Khoảng cách (%)",
@@ -251,7 +261,11 @@
       "volBaseline": "Biến Động Cơ Sở (% năm)",
       "reboundTarget": "Mục Tiêu Phục Hồi (%)",
       "quantExecution": "Chia Lệnh QuantLib (Almgren-Chriss)",
-      "quantExecutionDesc": "Tự động phân mảnh lệnh DCA theo biến động & thanh khoản"
+      "quantExecutionDesc": "Tự động phân mảnh lệnh DCA theo biến động & thanh khoản",
+      "lookbackDays": "Chu Kỳ Quan Sát (ngày)",
+      "entryAnnualBps": "Ngưỡng Vào Lệnh Carry (bps/năm)",
+      "exitAnnualBps": "Ngưỡng Thoát Lệnh Carry (bps/năm)",
+      "maxGrossLeverage": "Đòn Bẩy Gộp Tối Đa (x)"
     },
     "enabled": "Đã bật",
     "disabled": "Đã tắt",

@@ -1,11 +1,19 @@
 import type { OrderRequest, OrderResult } from '../exchange/types';
-import type {
-  BotTrade, BotConfig, StrategyContext, GridBotConfig, MeanRevBotConfig, VolatilityDcaBotConfig,
+import {
+  type BotTrade,
+  type BotConfig,
+  type StrategyContext,
+  type GridBotConfig,
+  type MeanRevBotConfig,
+  type VolatilityDcaBotConfig,
+  type H3MakerBotConfig,
+  isH3MakerConfig,
 } from './types';
 import { type StrategyChain, buildDefaultChain } from './strategy-chain';
 import { GridStrategy } from './strategies/grid';
 import { MeanRevStrategy } from './strategies/mean-reversion';
 import { VolatilityDcaStrategy } from './strategies/volatility-dca';
+import { H3MakerStrategy } from './strategies/h3-maker';
 
 export interface StrategyBundle {
   strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy;
@@ -13,7 +21,7 @@ export interface StrategyBundle {
 }
 
 export function initializeStrategy(params: {
-  config: GridBotConfig | MeanRevBotConfig | VolatilityDcaBotConfig;
+  config: BotConfig;
   price: number;
   botId: string;
   placeOrder: (req: OrderRequest) => Promise<OrderResult>;
@@ -29,6 +37,19 @@ export function initializeStrategy(params: {
 
   const onLogWithId = (msg: string) => onLog(`[${botId}] ${msg}`);
   let strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy;
+
+  if (isH3MakerConfig(config)) {
+    const h3 = new H3MakerStrategy(config satisfies H3MakerBotConfig, {
+      placeOrder,
+      onTrade,
+      onLog: onLogWithId,
+    });
+    h3.start(price);
+    // H3MakerStrategy satisfies { start, stop, onTicker } used by BotInstance/tick;
+    // cast avoids editing Stream-1 nominal class unions in bot-tick / bot-instance-ops.
+    strategy = h3 as unknown as VolatilityDcaStrategy;
+    return { strategy, strategyChain };
+  }
 
   switch (config.strategy) {
     case 'grid': {

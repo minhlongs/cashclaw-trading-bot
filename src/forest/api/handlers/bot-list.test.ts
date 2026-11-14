@@ -61,6 +61,7 @@ describe('botListHandler', () => {
         id: expect.any(String),
         name: expect.any(String),
         strategy: 'grid',
+        verificationTier: 'UNVERIFIED_RETAIL_SANDBOX',
         pair: 'BTC/USDT',
         exchange: 'binance',
         status: 'running',
@@ -141,6 +142,30 @@ describe('botListHandler', () => {
       const result = await botListHandler();
 
       expect(result.data![0].strategy).toBe('mean_reversion');
+      expect(result.data![0].verificationTier).toBe('UNVERIFIED_RETAIL_SANDBOX');
+    });
+
+    it('marks h3_maker bots as PAPER_FORWARD_ELIGIBLE', async () => {
+      mockListBots.mockResolvedValue([{
+        id: 'h3-bot-1',
+        name: 'H3 Maker Bot',
+        strategy: 'h3_maker',
+        pair: 'BTC/USDT',
+        exchange: 'binance',
+        status: 'running',
+        mode: 'paper',
+        config: { capital: 5000 },
+        metrics: {
+          totalPnl: 0, winCount: 0, lossCount: 0, maxDrawdown: 0, currentDrawdown: 0,
+          totalTrades: 0, startedAt: null, stoppedAt: null, lastTickAt: null, lastOrderAt: null, lastError: null,
+        },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }]);
+
+      const result = await botListHandler();
+      expect(result.data![0].strategy).toBe('h3_maker');
+      expect(result.data![0].verificationTier).toBe('PAPER_FORWARD_ELIGIBLE');
     });
   });
 

@@ -4,8 +4,8 @@ import { ChevronLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
   type ReviewStepProps,
-  GRID_FIELDS, MEANREV_FIELDS, VOLATILITY_DCA_FIELDS,
-  GRID_DEFAULTS, MEANREV_DEFAULTS, VOLATILITY_DCA_DEFAULTS,
+  GRID_FIELDS, MEANREV_FIELDS, VOLATILITY_DCA_FIELDS, H3_MAKER_FIELDS,
+  GRID_DEFAULTS, MEANREV_DEFAULTS, VOLATILITY_DCA_DEFAULTS, H3_MAKER_DEFAULTS,
   STRATEGY_KEY_MAP, FIELD_KEY_MAP,
 } from './wizard-types';
 
@@ -16,12 +16,16 @@ export function ReviewStep({ form, submitting, submitError, submitSuccess, onSub
       ? GRID_FIELDS
       : form.strategy === 'mean_reversion'
       ? MEANREV_FIELDS
+      : form.strategy === 'h3_maker'
+      ? H3_MAKER_FIELDS
       : VOLATILITY_DCA_FIELDS;
   const defaults =
     form.strategy === 'grid'
       ? GRID_DEFAULTS
       : form.strategy === 'mean_reversion'
       ? MEANREV_DEFAULTS
+      : form.strategy === 'h3_maker'
+      ? H3_MAKER_DEFAULTS
       : VOLATILITY_DCA_DEFAULTS;
 
   const configSummary = form.strategy

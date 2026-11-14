@@ -195,5 +195,18 @@ describe('bot-manager-helpers', () => {
         expect(cfg.maxSteps).toBe(6);
       }
     });
+
+    it('returns a valid h3_maker config', () => {
+      const cfg = defaultConfigFromRow({
+        name: 'H3', pair: 'BTC/USDT', exchange: 'binance', strategy: 'h3_maker', capital_allocated: 5000,
+      });
+      expect(cfg.strategy).toBe('h3_maker');
+      if (cfg.strategy === 'h3_maker') {
+        expect(cfg.lookbackDays).toBe(30);
+        expect(cfg.entryAnnualBps).toBe(800);
+        expect(cfg.exitAnnualBps).toBe(150);
+        expect(cfg.maxGrossLeverage).toBe(1.0);
+      }
+    });
   });
 });

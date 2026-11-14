@@ -14,6 +14,15 @@ export interface DebateTurn {
   readonly entryHash: string;
 }
 
+export const G12_GOVERNANCE_NOTICE = {
+  roleBadge: 'READ-ONLY STRATEGY CRITIC — ZERO ORDER AUTHORITY',
+  ablationVerdict:
+    'MULTI_AGENT_DEBATE NET ROI NEGATIVE (-$89.68 net drag — DISABLE_NEGATIVE_NET_ROI)',
+  defaultTerminalVerdict: 'DISABLE_NEGATIVE_NET_ROI',
+  summary:
+    'Gate G12 3-arm empirical ablation confirmed LLM multi-agent debate adds -$89.68 net ROI drag vs deterministic rules. Disabled on live/paper order paths; available strictly for manual offline post-mortem critique.',
+} as const;
+
 export const DEBATE_LOG: readonly DebateTurn[] = [
   {
     turnId: 'TURN-01',
