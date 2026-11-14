@@ -1,3 +1,4 @@
+import { createServerClient } from '@/lib/db/client';
 import { BotManagerCache } from './bot-manager-cache';
 import { BotManagerLifecycle } from './bot-manager-lifecycle';
 import { BotManagerFactory } from './bot-manager-factory';
@@ -5,9 +6,16 @@ import { createManagerKillswitch } from './bot-manager-killswitch';
 import { BotManagerLifecycleDelegate } from './bot-manager-lifecycle-delegate';
 import type { Killswitch } from './killswitch';
 import type { RequestQueue } from '../exchange/queue';
+import type { D1DatabaseLike } from '../ledger';
 import type { BotConfig } from './types';
 import type { BotInstance } from './bot-instance';
 import type { BotManagerDependencies, CreateBotRequest, BotFactoryDelegate, BotEmitTelemetryFn } from './bot-manager-types';
+
+function resolveDefaultD1Database(): D1DatabaseLike | null {
+  const db = createServerClient();
+  if (!db || typeof db.batch !== 'function') return null;
+  return db as unknown as D1DatabaseLike;
+}
 
 export class BotManager implements BotFactoryDelegate {
   private killswitch: Killswitch; private cache: BotManagerCache;
@@ -20,6 +28,7 @@ export class BotManager implements BotFactoryDelegate {
     this.deps = {
       onLog: deps.onLog ?? (() => {}), onError: deps.onError ?? (() => {}), onBotEvent: deps.onBotEvent ?? (() => {}),
       telemetry: deps.telemetry, userId: deps.userId, getOrchestrator: deps.getOrchestrator,
+      getD1Database: deps.getD1Database ?? resolveDefaultD1Database,
     };
     this.cache = new BotManagerCache(this.deps.userId, (err, ctx) => this.deps.onError(err, ctx));
     const emit: BotEmitTelemetryFn = (t, d) => this.deps.telemetry && this.cache.getBotIds().forEach((id) => this.deps.telemetry!.emit(id, t, d));

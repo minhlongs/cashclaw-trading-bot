@@ -1,5 +1,6 @@
 import type { BotConfig, BotStatus } from './types';
 import type { ExchangeConfig } from '../exchange/types';
+import type { D1DatabaseLike } from '../ledger';
 import type { TelemetryWriter, TradeEventType } from '../telemetry';
 import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
 import type { BotInstance } from './bot-instance';
@@ -14,6 +15,7 @@ export interface BotManagerDependencies {
   telemetry?: TelemetryWriter;
   userId?: string;
   getOrchestrator?: () => ExchangeOrchestrator | null;
+  getD1Database?: () => D1DatabaseLike | null;
 }
 
 export interface CreateBotRequest {
