@@ -195,5 +195,81 @@ describe('/api/bots route', () => {
         }),
       );
     });
+
+    it.each(['H1', 'h2', 'H3', 'h1_g1', 'H2_G1'])(
+      'rejects archived falsified strategy %s with 403 STRATEGY_ARCHIVED_FALSIFIED before Zod enum check',
+      async (archivedStrategy) => {
+        mockCheckRateLimit.mockReturnValue({ allowed: true });
+        const req = new Request('http://localhost/api/bots', {
+          method: 'POST',
+          body: JSON.stringify({
+            id: 'bot-archived',
+            name: 'Archived Bot',
+            strategy: archivedStrategy,
+            pair: 'BTC/USDT',
+            exchange: 'binance',
+            capital: 1000,
+          }),
+        });
+        const res = await POST(req);
+        expect(res.status).toBe(403);
+        const body = (await res.json()) as { ok: boolean; code: string; error: string };
+        expect(body.ok).toBe(false);
+        expect(body.code).toBe('STRATEGY_ARCHIVED_FALSIFIED');
+        expect(mockBotCreateHandler).not.toHaveBeenCalled();
+      },
+    );
+
+    it('accepts signed h3_maker strategy creation', async () => {
+      mockCheckRateLimit.mockReturnValue({ allowed: true });
+      mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
+      mockBotCreateHandler.mockResolvedValue({
+        ok: true,
+        data: { id: 'bot-h3', verificationTier: 'PAPER_FORWARD_ELIGIBLE', specSha256: 'a'.repeat(64) },
+      });
+
+      const req = new Request('http://localhost/api/bots', {
+        method: 'POST',
+        body: JSON.stringify({
+          id: 'bot-h3',
+          name: 'H3 Maker Paper',
+          strategy: 'h3_maker',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          capital: 5000,
+          config: { lookbackDays: 30, entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0 },
+        }),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      expect(mockBotCreateHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ strategy: 'h3_maker' }),
+      );
+    });
+
+    it('rejects cross-workspace IDOR on POST /api/bots with 403 WORKSPACE_FORBIDDEN', async () => {
+      mockCheckRateLimit.mockReturnValue({ allowed: true });
+      const req = new Request('http://localhost/api/bots', {
+        method: 'POST',
+        headers: {
+          'x-user-id': 'usr_alice',
+          'x-cashclaw-workspace': 'ws_foreign_victim',
+        },
+        body: JSON.stringify({
+          id: 'bot-idor',
+          name: 'IDOR Bot',
+          strategy: 'grid',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          capital: 1000,
+        }),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(403);
+      const body = (await res.json()) as { ok: boolean; code: string };
+      expect(body.ok).toBe(false);
+      expect(body.code).toBe('WORKSPACE_FORBIDDEN');
+      expect(mockBotCreateHandler).not.toHaveBeenCalled();
+    });
   });
 });

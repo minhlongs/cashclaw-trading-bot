@@ -52,6 +52,7 @@ export class PaperOrderLifecycleEngine {
   public getLedger(): MicroDoubleEntryLedger { return this.ledger; }
   public getOrder(clientOrderId: string): LifecycleOrderRecord | undefined { return this.orders.get(clientOrderId); }
   public getAllOrders(): readonly LifecycleOrderRecord[] { return Array.from(this.orders.values()); }
+  public hydrateOrderRecord(record: LifecycleOrderRecord): void { this.orders.set(record.clientOrderId, record); }
 
   public submitOrder(input: SubmitLifecycleOrderInput): Result<SubmitLifecycleOrderOutcome> {
     const key = input.idempotencyKey.trim();

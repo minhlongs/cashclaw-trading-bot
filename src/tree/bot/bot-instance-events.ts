@@ -54,9 +54,9 @@ export function buildLifecycleContext(
   id: string, config: BotConfig, deps: BotDependencies, callbacks: BotCallbacks,
   state: BotState, placeOrder: (req: OrderRequest) => Promise<OrderResult>,
   emitTelemetry: (type: TradeEventType, details?: Record<string, unknown>) => void,
-  emitState: () => void, startTicking: () => void,
+  emitState: () => void, startTicking: () => void, hasStrategy = true,
 ): StartLifecycleContext {
-  return { id, config, deps, callbacks, state, placeOrder, emitTelemetry, emitState, startTicking };
+  return { id, config, deps, callbacks, state, hasStrategy, placeOrder, emitTelemetry, emitState, startTicking };
 }
 
 export function startBotTicking(interval: ReturnType<typeof setInterval> | null, tick: () => void): ReturnType<typeof setInterval> {

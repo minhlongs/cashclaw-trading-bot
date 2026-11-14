@@ -22,6 +22,14 @@ vi.mock('@/tree/bot/strategies/volatility-dca', () => ({
   })),
 }));
 
+vi.mock('@/tree/bot/strategies/h3-maker', () => ({
+  H3MakerStrategy: vi.fn().mockImplementation((_cfg, cbs: { onLog: (msg: string) => void }) => ({
+    start: vi.fn(() => cbs.onLog('started')),
+    stop: vi.fn(),
+    onTicker: vi.fn(),
+  })),
+}));
+
 vi.mock('@/tree/bot/strategy-chain', () => ({
   buildDefaultChain: vi.fn().mockReturnValue([
     {
@@ -32,7 +40,13 @@ vi.mock('@/tree/bot/strategy-chain', () => ({
 }));
 
 import { initializeStrategy, evaluateChain } from './bot-strategy';
-import type { GridBotConfig, MeanRevBotConfig, VolatilityDcaBotConfig, StrategyChain } from './types';
+import type {
+  GridBotConfig,
+  MeanRevBotConfig,
+  VolatilityDcaBotConfig,
+  H3MakerBotConfig,
+  StrategyChain,
+} from './types';
 
 function makeGridConfig(overrides: Partial<GridBotConfig> = {}): GridBotConfig {
   return {
@@ -103,6 +117,26 @@ describe('bot-strategy', () => {
         placeOrder: vi.fn().mockResolvedValue({ id: 'o3', status: 'filled' }),
         onTrade: vi.fn(),
         onLog: vi.fn(),
+      });
+
+      expect(bundle.strategy).toBeDefined();
+      expect(bundle.strategyChain).toBeNull();
+    });
+
+    it('creates h3_maker strategy', () => {
+      const h3Config: H3MakerBotConfig = {
+        strategy: 'h3_maker', symbol: 'BTC/USDT', exchange: 'binance', mode: 'paper',
+        capital: 5000, maxDrawdownPct: 12, lookbackDays: 30, entryAnnualBps: 800,
+        exitAnnualBps: 150, maxGrossLeverage: 1.0,
+      };
+      const onLog = vi.fn();
+      const bundle = initializeStrategy({
+        config: h3Config,
+        price: 50000,
+        botId: 'h3-1',
+        placeOrder: vi.fn().mockResolvedValue({ id: 'o4', status: 'filled' }),
+        onTrade: vi.fn(),
+        onLog,
       });
 
       expect(bundle.strategy).toBeDefined();

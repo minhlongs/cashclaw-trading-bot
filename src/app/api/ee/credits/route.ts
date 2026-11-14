@@ -19,6 +19,7 @@ const DebitSchema = z.object({
   modelTier: z.enum(['FAST', 'REASONING', 'LOCAL']),
   promptTokens: z.number().int().nonnegative(),
   completionTokens: z.number().int().nonnegative(),
+  allowNegativeRoiResearch: z.boolean().optional().default(false),
 });
 
 export async function GET(req: Request) {
@@ -93,6 +94,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'Invalid workspaceId' }, { status: 400 });
     }
 
+    if (parsed.data.modelTier === 'REASONING' && parsed.data.allowNegativeRoiResearch !== true) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'MULTI_AGENT_DEBATE_DISABLED_NEGATIVE_ROI',
+          error:
+            'Multi-agent REASONING debate is disabled by default per Gate G12 ablation (-$89.68 net ROI drag). Pass allowNegativeRoiResearch: true only for manual offline critique.',
+        },
+        { status: 403 },
+      );
+    }
+
     const debitReq = {
       workspaceId: effectiveWorkspaceId,
       modelTier: parsed.data.modelTier as DeliberationModelTier,
@@ -111,6 +124,9 @@ export async function POST(req: Request) {
       modelTier: parsed.data.modelTier,
       costCredits: debitResult.data.debited,
       account: debitResult.data.updated,
+      ...(parsed.data.modelTier === 'REASONING' && parsed.data.allowNegativeRoiResearch
+        ? { researchOverrideApplied: true }
+        : {}),
     });
   } catch {
     return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });

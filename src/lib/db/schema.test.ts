@@ -53,7 +53,7 @@ describe('SQL CREATE TABLE content', () => {
 
   it('bots table restricts strategy via CHECK', () => {
     expect(SQL.CREATE_BOTS).toContain(
-      "CHECK (strategy IN ('grid', 'mean_reversion', 'volatility_dca'))",
+      "CHECK (strategy IN ('grid', 'mean_reversion', 'volatility_dca', 'h3_maker'))",
     );
   });
 

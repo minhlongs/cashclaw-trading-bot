@@ -3,7 +3,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { type Step, type FormState, GRID_DEFAULTS, MEANREV_DEFAULTS, VOLATILITY_DCA_DEFAULTS } from './wizard-types';
+import {
+  type Step,
+  type FormState,
+  type WizardStrategyId,
+  GRID_DEFAULTS,
+  MEANREV_DEFAULTS,
+  VOLATILITY_DCA_DEFAULTS,
+  H3_MAKER_DEFAULTS,
+} from './wizard-types';
 import { BasicStep } from './basic-step';
 import { StrategyStep } from './strategy-step';
 import { ConfigStep } from './config-step';
@@ -30,8 +38,15 @@ export function BotWizardClient() {
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((prev) => ({ ...prev, [key]: value }));
   const updateConfig = (key: string, value: number) => setForm((prev) => ({ ...prev, config: { ...prev.config, [key]: value } }));
-  const setStrategyDefaults = (strategy: 'grid' | 'mean_reversion' | 'volatility_dca') => {
-    const defaults = strategy === 'grid' ? GRID_DEFAULTS : strategy === 'mean_reversion' ? MEANREV_DEFAULTS : VOLATILITY_DCA_DEFAULTS;
+  const setStrategyDefaults = (strategy: WizardStrategyId) => {
+    const defaults =
+      strategy === 'grid'
+        ? GRID_DEFAULTS
+        : strategy === 'mean_reversion'
+        ? MEANREV_DEFAULTS
+        : strategy === 'h3_maker'
+        ? H3_MAKER_DEFAULTS
+        : VOLATILITY_DCA_DEFAULTS;
     setForm((prev) => ({ ...prev, strategy, config: { ...defaults } }));
   };
   const goToNext = () => { const idx = STEPS.indexOf(step); if (idx < STEPS.length - 1) setStep(STEPS[idx + 1]); };
@@ -67,7 +82,7 @@ export function BotWizardClient() {
   const stepContent = {
     basic: <BasicStep form={form} update={update} onNext={goToNext} />,
     strategy: <StrategyStep form={form} setStrategyDefaults={setStrategyDefaults} onNext={goToNext} onPrev={goToPrev} />,
-    config: <ConfigStep form={form} updateConfig={updateConfig} strategy={form.strategy as 'grid' | 'mean_reversion' | 'volatility_dca'} onNext={goToNext} onPrev={goToPrev} />,
+    config: <ConfigStep form={form} updateConfig={updateConfig} strategy={form.strategy as WizardStrategyId} onNext={goToNext} onPrev={goToPrev} />,
     review: <ReviewStep form={form} submitting={submitting} submitError={submitError} submitSuccess={submitSuccess} onSubmit={handleSubmit} onPrev={goToPrev} />,
   }[step];
 

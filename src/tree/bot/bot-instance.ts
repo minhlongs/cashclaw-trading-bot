@@ -1,4 +1,7 @@
 import type { OrderRequest, OrderResult } from '../exchange/types';
+import type { PaperOrderLifecycleEngine } from '../execution/lifecycle';
+import type { D1AtomicLedgerBatcher } from '../ledger';
+import type { CapitalProtectionEngine } from '../protection';
 import type { BotState, BotConfig, BotCallbacks, BotDependencies } from './types';
 import type { TradeEventType } from '../telemetry/types';
 import { createInitialState } from './bot-state';
@@ -21,6 +24,10 @@ export class BotInstance {
   getConfig(): BotConfig { return { ...this.c.config }; }
   updateConfig(p: Partial<BotConfig>): void { this.config = this.c.config = updateBotConfig(this.c.config, p, this.c.state); }
   hasStrategy(): boolean { return this.c.strategy !== null; }
+  getLastTickPrice(): number | null { return this.c.lastTickPrice; }
+  getProtectionEngine(): CapitalProtectionEngine | undefined { return this.deps.protectionEngine; }
+  getLifecycleEngine(): PaperOrderLifecycleEngine | undefined { return this.deps.lifecycleEngine; }
+  getLedgerBatcher(): D1AtomicLedgerBatcher | undefined { return this.deps.ledgerBatcher; }
   async start(): Promise<void> { await runBotStart(this.c, (r) => this.placeOrder(r), (t, d) => this.emitTelemetry(t, d), () => this.emitState(), () => this.startTicking()); }
   pause(): void { handleBotPause(this.c.state, this.id, this.callbacks, () => this.stopTicking(), (t, d) => this.emitTelemetry(t, d), () => this.emitState()); }
   resume(): void { handleBotResume(this.c.state, this.id, this.callbacks, () => this.startTicking(), (t, d) => this.emitTelemetry(t, d), () => this.emitState()); }

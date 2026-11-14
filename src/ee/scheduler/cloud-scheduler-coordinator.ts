@@ -120,7 +120,15 @@ export class CloudSchedulerCoordinator {
   ): Promise<Result<boolean>> {
     const store = dbOverride ? new D1LeaseStore(dbOverride) : this.leaseStore;
     if (!store) return err('DURABLE_LEASE_STORE_UNCONFIGURED: D1 database required');
-    return store.releaseCasLease(botId, isolateId, fencingToken, nowMs);
+    const res = await store.releaseCasLease(botId, isolateId, fencingToken, nowMs);
+    if (res.ok && res.data) {
+      for (const [key, lease] of this.leases.entries()) {
+        if (lease.botId === botId && lease.isolateId === isolateId && lease.fencingToken === fencingToken) {
+          this.leases.set(key, { ...lease, expiresAtMs: Math.min(lease.expiresAtMs, nowMs) });
+        }
+      }
+    }
+    return res;
   }
 
   public validateFencingToken(workspaceId: string, botId: string, token: number): Result<true> {

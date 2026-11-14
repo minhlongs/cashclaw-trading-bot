@@ -2,9 +2,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConfigStep } from './config-step';
-import { type FormState } from './wizard-types';
+import { type FormState, type WizardStrategyId } from './wizard-types';
 
-function makeForm(strategy: 'grid' | 'mean_reversion' | 'volatility_dca'): FormState {
+function makeForm(strategy: WizardStrategyId): FormState {
   return {
     name: 'Bot',
     strategy,
@@ -15,6 +15,8 @@ function makeForm(strategy: 'grid' | 'mean_reversion' | 'volatility_dca'): FormS
       ? { levels: 10, capital_per_level_pct: 10, max_drawdown_pct: 5 }
       : strategy === 'mean_reversion'
       ? { bb_period: 20, bb_std: 2, rsi_period: 14, rsi_buy: 30, rsi_sell: 70, volume_multiplier: 1.5, position_size_pct: 10, max_drawdown_pct: 5 }
+      : strategy === 'h3_maker'
+      ? { lookbackDays: 30, entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0, max_drawdown_pct: 12 }
       : { priceDropStep: 1.5, maxSteps: 6, baseOrderSizePct: 10, volatilityWindow: 20, volBaseline: 50, reboundTarget: 1.0 },
   };
 }
@@ -44,6 +46,13 @@ describe('ConfigStep', () => {
     expect(checkbox).toBeInTheDocument();
     await user.click(checkbox);
     expect(updateConfig).toHaveBeenCalledWith('quantExecution', 1);
+  });
+
+  it('shows h3_maker fields when strategy is h3_maker', () => {
+    render(<ConfigStep form={makeForm('h3_maker')} strategy="h3_maker" {...defaults} />);
+    expect(screen.getByText('H3 Maker Paper-Forward Config')).toBeInTheDocument();
+    expect(screen.getByText('Lookback Window (days)')).toBeInTheDocument();
+    expect(screen.getByText('Entry Carry Threshold (bps/yr)')).toBeInTheDocument();
   });
 
   it('calls onNext when next is clicked', async () => {

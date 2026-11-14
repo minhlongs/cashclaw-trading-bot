@@ -4,11 +4,14 @@
  */
 
 import { BotQueryService } from '@/forest/bot/d1-adapter';
+import type { StrategyType, StrategyVerificationTier } from '@/tree/bot/config-types';
+import { resolveBotVerificationTier } from './bot-strategy-guard';
 
 export interface BotListItem {
   id: string;
   name: string;
-  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
+  strategy: StrategyType;
+  verificationTier: StrategyVerificationTier;
   pair: string;
   exchange: string;
   status: string;
@@ -32,7 +35,12 @@ export async function botListHandler(userId?: string): Promise<{
     const items: BotListItem[] = bots.map((bot) => ({
       id: bot.id,
       name: bot.name || bot.id,
-      strategy: bot.strategy as 'grid' | 'mean_reversion' | 'volatility_dca',
+      strategy: bot.strategy as StrategyType,
+      verificationTier: resolveBotVerificationTier(
+        bot.strategy,
+        bot.config as unknown as Record<string, unknown>,
+        bot.pair,
+      ),
       pair: bot.pair,
       exchange: bot.exchange,
       status: bot.status,

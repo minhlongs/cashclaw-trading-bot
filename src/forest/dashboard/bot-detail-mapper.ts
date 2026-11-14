@@ -1,4 +1,5 @@
 import { isGridConfig, isMeanRevConfig, isVolatilityDcaConfig } from '@/tree/bot';
+import { isH3MakerConfig } from '@/tree/bot/config-types';
 import type { BotSummary } from '@/forest/bot/d1-adapter';
 import type { BotDetailData } from './bot-detail-types';
 
@@ -31,6 +32,14 @@ export function botToDetail(bot: BotSummary): BotDetailData {
         volatilityWindow: cfg.volatilityWindow,
         volBaseline: cfg.volBaseline,
         reboundTarget: cfg.reboundTarget,
+        maxDrawdownPct: cfg.maxDrawdownPct,
+      }
+    : isH3MakerConfig(cfg)
+    ? {
+        lookbackDays: cfg.lookbackDays,
+        entryAnnualBps: cfg.entryAnnualBps,
+        exitAnnualBps: cfg.exitAnnualBps,
+        maxGrossLeverage: cfg.maxGrossLeverage,
         maxDrawdownPct: cfg.maxDrawdownPct,
       }
     : {};

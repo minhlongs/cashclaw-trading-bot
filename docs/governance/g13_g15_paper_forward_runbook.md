@@ -1,8 +1,8 @@
 # Gate G13 Paper-Forward & Gate G15 Governance Hard-Lock Runbook / Sổ Tay Vận Hành Cổng G13 Paper-Forward & Khóa Cứng Quản Trị G15
 
-- **Document Version / Phiên bản:** `1.0.0`
-- **Effective Date / Ngày hiệu lực:** `2026-11-14`
-- **Issue Reference / Tham chiếu:** `#63`
+- **Document Version / Phiên bản:** `1.1.0`
+- **Effective Date / Ngày hiệu lực:** `2026-11-15`
+- **Issue Reference / Tham chiếu:** `#63`, `#66`
 - **System Posture / Trạng thái Hệ thống:** `PAPER_ONLY` (`liveTradingUnlocked = false`, `G15 = HARD-LOCKED`)
 
 ---
@@ -169,11 +169,59 @@ Passing Gate G13 **never** authorizes live capital deployment. Gate G15 is a str
 
 ---
 
-## 6. Verification Commands / Lệnh Kiểm Chứng Định Kỳ
+## 6. Automated TS <-> Python Bridge & Daily CI Pipeline / Cầu Nối Tự Động TS <-> Python & Quy Trình CI Hàng Ngày
+
+### Tiếng Việt
+Để loại bỏ hoàn toàn việc nhập tay `--paper-nav` và `--oracle-nav`, CashClaw cung cấp trình điều phối khép kín `scripts/g13-checkpoint.ts` (`npm run g13:checkpoint`) kết nối trực tiếp bộ chạy TypeScript `PaperForwardRunner` (`MicroDoubleEntryLedger`) với bộ kiểm chứng độc lập Python `Decimal(prec=50)` trong `verification_lab/scripts/g13_paper_forward.py`:
+
+1. **Chế độ kiểm chứng ngoại tuyến tất định (`--offline`):**
+   ```bash
+   npm run g13:checkpoint -- --offline
+   npm run g13:checkpoint -- --offline --out /tmp/g13_offline_check.json
+   ```
+   - Xác thực chữ ký SHA-256 trên `artifacts/strategy_lifecycle_registry.json` và `artifacts/signed_strategy_spec_h3_maker.json` (từ chối `fail-closed` với mã thoát `2` nếu bất kỳ họ `ARCHIVED_FALSIFIED` nào xuất hiện).
+   - Chạy thử nghiệm ngoại tuyến không chạm mạng trên ảnh chụp Ngày 0, giữ nguyên vẹn tệp đã commit `artifacts/g13_paper_tracking_error.json` (`elapsed_days: 0`, `live_trading_unlocked: false`).
+2. **Chế độ quan sát thị trường công khai không khóa API (Live Zero-Auth Mode):**
+   ```bash
+   npm run g13:checkpoint -- --state-file verification_lab/data/g13_runner_state.json --out verification_lab/data/g13_paper_tracking_error.json
+   ```
+   - Khôi phục trạng thái sổ cái nhiều ngày từ `--state-file`, lấy báo giá công khai zero-auth từ `data-api.binance.vision` và `api.hyperliquid.xyz/info` (tự động dự phòng sang `www.binance.com/fapi` hoặc `Hyperliquid metaAndAssetCtxs` kèm nhãn `perp_source` khi `fapi.binance.com` trả về mã chặn vùng `HTTP 451`/`403` trên máy chủ CI tại Mỹ).
+   - Python tự tính toán độc lập `oracle_nav` ở độ chính xác 50 chữ số thập phân (`Decimal(prec=50)`), kiểm tra cân bằng sổ kế toán kép (`discrepancyMicroUsd === "0"`), xác nhận sai số bám sát `< 15.0 bps/tháng`, và nối thêm checkpoint ngày mới mà **tuyệt đối không giả mạo `elapsed_days` hay sửa đổi `genesis_utc`**.
+3. **Pipeline GitHub Actions hàng ngày (`.github/workflows/g13-paper-forward.yml`):**
+   - Lịch chạy tự động lúc `00:15 UTC` mỗi ngày (`cron: '15 0 * * *'`) hoặc kích hoạt thủ công `workflow_dispatch` (có tùy chọn `offline_only`).
+   - Quyền tối thiểu `permissions: { contents: read }` (không bao giờ tự động đẩy commit lên `main`), khôi phục chuỗi lịch sử qua `actions/cache@v4` (bỏ qua ghi cache khi `offline_only == true`) và lưu trữ tạo phẩm kiểm toán 90 ngày qua `actions/upload-artifact@v4` (nếu cron dừng quá 7 ngày khiến cache hết hạn, chỉ cần tải hiện vật `g13-paper-forward-*` gần nhất vào `.g13-cache/` trước khi chạy tiếp).
+   - **Bất biến khóa cứng Gate G15:** Dù đồng hồ G13 tích lũy qua 60–90 ngày, `live_trading_unlocked` luôn giữ giá trị `false` và Gate G15 luôn ở trạng thái `HARD-LOCKED`.
+
+### English
+To eliminate manual `--paper-nav` / `--oracle-nav` entry, CashClaw provides the deterministic fail-closed bridge `scripts/g13-checkpoint.ts` (`npm run g13:checkpoint`), coupling the TypeScript `PaperForwardRunner` (`MicroDoubleEntryLedger`) directly with the independent Python `Decimal(prec=50)` oracle in `verification_lab/scripts/g13_paper_forward.py`:
+
+1. **Deterministic Offline Mode (`--offline`):**
+   ```bash
+   npm run g13:checkpoint -- --offline
+   npm run g13:checkpoint -- --offline --out /tmp/g13_offline_check.json
+   ```
+   - Cryptographically verifies `artifacts/strategy_lifecycle_registry.json` and `artifacts/signed_strategy_spec_h3_maker.json` (exiting `2` fail-closed if `H3_MAKER` is ineligible or any `ARCHIVED_FALSIFIED` strategy is supplied).
+   - Replays the cached Day-0 snapshot with zero network calls while keeping committed `artifacts/g13_paper_tracking_error.json` byte-clean (`elapsed_days: 0`, `live_trading_unlocked: false`).
+2. **Live Zero-Auth Public Snapshot Mode:**
+   ```bash
+   npm run g13:checkpoint -- --state-file verification_lab/data/g13_runner_state.json --out verification_lab/data/g13_paper_tracking_error.json
+   ```
+   - Restores multi-day causal ledger positions from `--state-file` and fetches zero-auth public quotes from `data-api.binance.vision` + `api.hyperliquid.xyz/info` (falling back transparently to `www.binance.com/fapi` or Hyperliquid `metaAndAssetCtxs` with `perp_source` metadata when `fapi.binance.com` returns `HTTP 451`/`403` geo-blocks on US-hosted runners).
+   - Python independently replays fills and funding cashflows at `Decimal(prec=50)` precision to derive `oracle_nav` (never trusting a caller-supplied `oracle_nav`), asserts `discrepancyMicroUsd === "0"` and `< 15.0 bps/month` tracking error, and appends one checkpoint per new UTC calendar day without ever fabricating `elapsed_days` or mutating `genesis_utc`.
+3. **Daily GitHub Actions Workflow (`.github/workflows/g13-paper-forward.yml`):**
+   - Runs daily at `00:15 UTC` (`cron: '15 0 * * *'`) and via `workflow_dispatch` (`offline_only` boolean input) under least-privilege `permissions: { contents: read }` (never auto-pushing to `main`).
+   - Accumulates multi-day state via rolling `actions/cache@v4` keys (skipped on `offline_only` dispatches) and publishes 90-day retention artifacts via `actions/upload-artifact@v4` (if scheduled runs pause `> 7` days past cache eviction, restore `.g13-cache/` from the latest uploaded workflow artifact).
+   - **Gate G15 Hard-Lock Invariant:** Across all automated runs, `live_trading_unlocked` remains unconditionally `false` and Gate G15 stays `HARD-LOCKED`.
+
+---
+
+## 7. Verification Commands / Lệnh Kiểm Chứng Định Kỳ
 
 ```bash
-npx vitest run tests/paper-forward/g13_paper_forward.test.ts tests/architecture/arch_boundary_check.test.ts src/tree/__tests__/open-core-boundary.test.ts --coverage
-npx tsc --noEmit
+npm run g13:checkpoint -- --offline
+verification_lab/.labenv/bin/pytest verification_lab/tests -q
+npx vitest run tests/paper-forward/ tests/architecture/arch_boundary_check.test.ts src/tree/__tests__/open-core-boundary.test.ts --coverage
+npm run type-check
 npx eslint src/tree/paper-forward/ tests/paper-forward/ tests/architecture/ --max-warnings 0
 npx knip
 ```

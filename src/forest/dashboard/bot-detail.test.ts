@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('@/tree/bot', () => ({
   isGridConfig: vi.fn((cfg: { strategy?: string }) => cfg.strategy === 'grid'),
   isMeanRevConfig: vi.fn((cfg: { strategy?: string }) => cfg.strategy === 'mean_reversion'),
+  isVolatilityDcaConfig: vi.fn((cfg: { strategy?: string }) => cfg.strategy === 'volatility_dca'),
 }));
 
 vi.mock('@/lib/db/client', () => ({
@@ -104,6 +105,28 @@ describe('bot-detail', () => {
       mockGetBot.mockResolvedValue(mockGridSummary());
       const { getBotDetail } = await import('./bot-detail');
       expect((await getBotDetail('bot-1'))!.capitalUsed).toBe(2450);
+    });
+
+    it('maps h3_maker config parameters in getBotDetail', async () => {
+      mockGetBot.mockResolvedValue({
+        id: 'h3-bot', name: 'H3 Bot', status: 'running', pair: 'BTC/USDT',
+        strategy: 'h3_maker', exchange: 'binance', mode: 'paper',
+        config: {
+          name: 'H3 Bot', strategy: 'h3_maker', symbol: 'BTC/USDT', exchange: 'binance', mode: 'paper',
+          capital: 10000, maxDrawdownPct: 12, lookbackDays: 30, entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0,
+        },
+        metrics: {
+          totalPnl: 25, winCount: 2, lossCount: 0, maxDrawdown: 1, currentDrawdown: 0,
+          totalTrades: 2, startedAt: 1000, stoppedAt: null, lastTickAt: 2000, lastOrderAt: 2000, lastError: null,
+        },
+        createdAt: 500, updatedAt: 2000,
+      });
+      const { getBotDetail } = await import('./bot-detail');
+      const detail = await getBotDetail('h3-bot');
+      expect(detail?.strategy).toBe('h3_maker');
+      expect(detail?.config).toEqual({
+        lookbackDays: 30, entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0, maxDrawdownPct: 12,
+      });
     });
 
     it('forwards userId to BotQueryService.getBot and returns null when foreign', async () => {

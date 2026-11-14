@@ -3,8 +3,11 @@ import {
   type GridBotConfig,
   type MeanRevBotConfig,
   type VolatilityDcaBotConfig,
+  type H3MakerBotConfig,
+  getStrategyVerificationTier,
   hasStrategyChain,
   isGridConfig,
+  isH3MakerConfig,
   isMeanRevConfig,
   isVolatilityDcaConfig,
 } from './types';
@@ -110,5 +113,32 @@ describe('isVolatilityDcaConfig', () => {
 
   it('returns false for mean-reversion config', () => {
     expect(isVolatilityDcaConfig(makeMeanRevConfig())).toBe(false);
+  });
+});
+
+describe('isH3MakerConfig and getStrategyVerificationTier', () => {
+  const makeH3Config = (): H3MakerBotConfig => ({
+    symbol: 'BTC/USDT',
+    exchange: 'binance',
+    mode: 'paper',
+    capital: 1000,
+    maxDrawdownPct: 12,
+    strategy: 'h3_maker',
+    lookbackDays: 30,
+    entryAnnualBps: 800,
+    exitAnnualBps: 150,
+    maxGrossLeverage: 1.0,
+  });
+
+  it('identifies h3_maker config accurately', () => {
+    expect(isH3MakerConfig(makeH3Config())).toBe(true);
+    expect(isH3MakerConfig(makeGridConfig())).toBe(false);
+  });
+
+  it('maps strategy verification tiers cleanly', () => {
+    expect(getStrategyVerificationTier('h3_maker')).toBe('PAPER_FORWARD_ELIGIBLE');
+    expect(getStrategyVerificationTier('grid')).toBe('UNVERIFIED_RETAIL_SANDBOX');
+    expect(getStrategyVerificationTier('mean_reversion')).toBe('UNVERIFIED_RETAIL_SANDBOX');
+    expect(getStrategyVerificationTier('volatility_dca')).toBe('UNVERIFIED_RETAIL_SANDBOX');
   });
 });

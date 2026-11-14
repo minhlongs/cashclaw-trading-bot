@@ -147,4 +147,27 @@ describe('botUpdateConfigHandler', () => {
     expect(result.ok).toBe(false);
     expect(result.error).toBe('D1 write timeout');
   });
+
+  it('rejects unknown config keys and strips specSha256 when h3_maker parameters diverge from SignedStrategySpec', async () => {
+    const { botUpdateConfigHandler } = await import('./bot-config-update');
+    const badKey = await botUpdateConfigHandler('bot-1', { unknownRogueKey: 42 });
+    expect(badKey.ok).toBe(false);
+
+    mockBot.getConfig.mockReturnValue({
+      strategy: 'h3_maker', symbol: 'BTC/USDT', exchange: 'binance', mode: 'paper',
+      capital: 5000, maxDrawdownPct: 12, lookbackDays: 30, entryAnnualBps: 800,
+      exitAnnualBps: 150, maxGrossLeverage: 1.0,
+      specSha256: '43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169',
+    });
+    const exactRes = await botUpdateConfigHandler('bot-1', { lookbackDays: 30 });
+    expect(exactRes.ok).toBe(true);
+    expect((exactRes.data?.config as { specSha256?: string }).specSha256).toHaveLength(64);
+
+    const driftedRes = await botUpdateConfigHandler('bot-1', { lookbackDays: 14, maxDrawdownPct: 35, exitAnnualBps: 900 });
+    expect(driftedRes.ok).toBe(true);
+    const driftedCfg = driftedRes.data?.config as { specSha256?: string; maxDrawdownPct: number; exitAnnualBps: number };
+    expect(driftedCfg.specSha256).toBeUndefined();
+    expect(driftedCfg.maxDrawdownPct).toBe(12);
+    expect(driftedCfg.exitAnnualBps).toBe(799);
+  });
 });

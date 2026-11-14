@@ -41,4 +41,20 @@ describe('StrategyStep', () => {
     await user.click(screen.getByRole('button', { name: /back/i }));
     expect(defaults.onPrev).toHaveBeenCalled();
   });
+
+  it('renders UNVERIFIED_RETAIL_SANDBOX badges for retail strategies and PAPER_FORWARD_ELIGIBLE badge for h3_maker', async () => {
+    const setStrategyDefaults = vi.fn();
+    const user = userEvent.setup();
+    render(<StrategyStep form={baseForm} {...defaults} setStrategyDefaults={setStrategyDefaults} />);
+
+    expect(screen.getByTestId('tier-badge-grid')).toHaveTextContent('UNVERIFIED_RETAIL_SANDBOX');
+    expect(screen.getByTestId('tier-badge-mean_reversion')).toHaveTextContent('UNVERIFIED_RETAIL_SANDBOX');
+    expect(screen.getByTestId('tier-badge-volatility_dca')).toHaveTextContent('UNVERIFIED_RETAIL_SANDBOX');
+    expect(screen.getByTestId('tier-badge-h3_maker')).toHaveTextContent('PAPER_FORWARD_ELIGIBLE');
+    expect(screen.getByTestId('tier-badge-h3_maker')).toHaveTextContent('SignedStrategySpec • H3_MAKER');
+    expect(screen.getAllByText(/Negative VIP-0 net expectancy/i)).toHaveLength(3);
+
+    await user.click(screen.getByText(/H3 Maker Paper-Forward/i));
+    expect(setStrategyDefaults).toHaveBeenCalledWith('h3_maker');
+  });
 });

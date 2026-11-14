@@ -8,6 +8,9 @@ import type { GridStrategy } from './strategies/grid';
 import type { MeanRevStrategy } from './strategies/mean-reversion';
 import type { VolatilityDcaStrategy } from './strategies/volatility-dca';
 import type { TradeEventType } from '../telemetry/types';
+import { BASE_UNITS_PER_ASSET, MICRO_USD_PER_USD, ZERO_BIGINT } from '../ledger';
+import { ensureDurableBotHydrated } from './bot-order-lifecycle-bridge';
+import { buildOrderContext } from './bot-instance-events';
 import { initializeStrategy } from './bot-strategy';
 
 export interface StartLifecycleContext {
@@ -16,6 +19,7 @@ export interface StartLifecycleContext {
   deps: BotDependencies;
   callbacks: BotCallbacks;
   state: BotState;
+  hasStrategy?: boolean;
   placeOrder: (req: OrderRequest) => Promise<OrderResult>;
   emitTelemetry: (type: TradeEventType, details?: Record<string, unknown>) => void;
   emitState: () => void;
@@ -52,25 +56,40 @@ export async function fetchStartPrice(deps: BotDependencies, symbol: string): Pr
  * Execute start lifecycle: fetch price, initialize strategy, emit telemetry/state, and start ticks.
  */
 export async function startBotLifecycle(ctx: StartLifecycleContext): Promise<StartLifecycleResult> {
-  const { id, config, deps, callbacks, state, placeOrder, emitTelemetry, emitState, startTicking } = ctx;
+  const { id, config, deps, callbacks, state, hasStrategy = true, placeOrder, emitTelemetry, emitState, startTicking } = ctx;
 
-  if (state.status === 'running') {
+  if (state.status === 'running' && hasStrategy) {
     return { strategy: null, strategyChain: null };
   }
 
   try {
+    await ensureDurableBotHydrated(
+      buildOrderContext(deps, config, state, id, (t) => callbacks.onTrade(t), emitTelemetry, emitState),
+    );
     const price = await fetchStartPrice(deps, config.symbol);
+    const getPositionSnapshot = () => {
+      const pos = deps.lifecycleEngine?.getLedger().getPosition(config.symbol);
+      if (!pos || pos.signedQtyBase <= ZERO_BIGINT) return null;
+      const qty = Number(pos.signedQtyBase) / Number(BASE_UNITS_PER_ASSET);
+      const entryPrice = Number(pos.openNotionalMicroUsd) / Number(MICRO_USD_PER_USD) / qty;
+      return { qty, entryPrice };
+    };
     const bundle = initializeStrategy({
       config,
       price,
       botId: id,
       placeOrder,
+      cancelOrder: (orderId, sym) => deps.exchange.cancelOrder(orderId, sym ?? config.symbol),
+      getPositionSnapshot,
       onTrade: (trade: BotTrade) => callbacks.onTrade(trade),
       onLog: (msg: string) => callbacks.onLog(`[${id}] ${msg}`),
     });
 
+    const wasAlreadyRunning = state.status === 'running';
+    const now = Date.now();
     state.status = 'running';
-    state.startedAt = state.updatedAt = Date.now();
+    state.startedAt = wasAlreadyRunning && state.startedAt ? state.startedAt : now;
+    state.updatedAt = now;
     emitTelemetry('start', { strategy: config.strategy, symbol: config.symbol, price });
     emitState();
     startTicking();

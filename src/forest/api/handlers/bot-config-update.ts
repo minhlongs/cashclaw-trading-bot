@@ -1,6 +1,8 @@
-/** Backend handler for bot configuration updates (bounds validation, anti-IDOR, paper-mode invariant). */
+/** Backend handler for bot configuration updates (bounds validation, anti-IDOR, paper-mode & signed-spec invariants). */
 import { getBotManager, type BotConfig } from '@/tree/bot';
+import { isH3MakerConfig, type H3MakerBotConfig } from '@/tree/bot/config-types';
 import { patchBot } from '@/forest/bot/d1-adapter';
+import { getVerifiedH3SpecInfo, isExactVerifiedH3Config } from './bot-strategy-guard';
 
 interface BoundRule { min: number; max: number; integer?: boolean; }
 
@@ -16,14 +18,24 @@ const BOUNDS: Record<string, BoundRule> = {
   rsiPeriod: { min: 2, max: 100, integer: true },
   rsiBuyThreshold: { min: 1, max: 50 },
   rsiSellThreshold: { min: 50, max: 99 },
+  volumeMultiplier: { min: 0.1, max: 10 },
+  positionSizePct: { min: 1, max: 100 },
+  cooldownMinutes: { min: 0, max: 60, integer: true },
   priceDropStep: { min: 0.1, max: 50 },
   maxSteps: { min: 1, max: 50, integer: true },
   baseOrderSizePct: { min: 1, max: 100 },
+  volatilityWindow: { min: 5, max: 200, integer: true },
+  volBaseline: { min: 1, max: 200 },
+  reboundTarget: { min: 0.1, max: 50 },
+  lookbackDays: { min: 2, max: 180, integer: true },
+  entryAnnualBps: { min: 50, max: 5000 },
+  exitAnnualBps: { min: 0, max: 2000 },
+  maxGrossLeverage: { min: 0.1, max: 1.5 },
 };
 
-function coerceBound(key: string, value: number): number {
+function coerceBound(key: string, value: number): number | null {
   const rule = BOUNDS[key];
-  if (!rule) return value;
+  if (!rule) return null;
   const clamped = Math.min(Math.max(value, rule.min), rule.max);
   return rule.integer ? Math.round(clamped) : clamped;
 }
@@ -40,9 +52,42 @@ function validateAndSanitizePatch(
     if (typeof val !== 'number' || !Number.isFinite(val) || val < 0) {
       return { valid: false, error: 'Invalid configuration values' };
     }
-    patch[key] = coerceBound(key, val);
+    const coerced = coerceBound(key, val);
+    if (coerced === null) {
+      return { valid: false, error: 'Invalid configuration values' };
+    }
+    patch[key] = coerced;
   }
   return { valid: true, patch };
+}
+
+function reconcileH3MakerSpecParity(cfg: H3MakerBotConfig): H3MakerBotConfig {
+  const verified = getVerifiedH3SpecInfo();
+  const d = verified.ok && verified.verifiedDefaults
+    ? verified.verifiedDefaults
+    : { lookbackDays: 30, entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0, maxDrawdownHardPct: 12, universe: [] };
+  const exitAnnualBps = Math.min(cfg.entryAnnualBps - 1, cfg.exitAnnualBps);
+  const maxDrawdownPct = Math.min(d.maxDrawdownHardPct, cfg.maxDrawdownPct);
+  const baseCfg: Omit<H3MakerBotConfig, 'specSha256'> = {
+    name: cfg.name,
+    symbol: cfg.symbol,
+    exchange: cfg.exchange,
+    mode: 'paper',
+    capital: cfg.capital,
+    maxDrawdownPct,
+    strategy: 'h3_maker',
+    lookbackDays: cfg.lookbackDays,
+    entryAnnualBps: cfg.entryAnnualBps,
+    exitAnnualBps,
+    maxGrossLeverage: cfg.maxGrossLeverage,
+    ...(cfg.strategyChain ? { strategyChain: cfg.strategyChain } : {}),
+  };
+  const matchesSpec =
+    verified.ok &&
+    isExactVerifiedH3Config(baseCfg as unknown as Record<string, unknown>, d);
+  return matchesSpec && verified.ok && verified.specSha256
+    ? { ...baseCfg, specSha256: verified.specSha256 }
+    : baseCfg;
 }
 
 export async function botUpdateConfigHandler(
@@ -52,34 +97,26 @@ export async function botUpdateConfigHandler(
 ): Promise<{ ok: boolean; data?: { id: string; config: BotConfig }; error?: string }> {
   try {
     const validated = validateAndSanitizePatch(configPatch);
-    if (!validated.valid) {
-      return { ok: false, error: validated.error };
-    }
+    if (!validated.valid) return { ok: false, error: validated.error };
 
     const manager = getBotManager();
     const bot = manager.getBot(id, userId) ?? (await manager.getOrCreateBot(id, userId));
-    if (!bot) {
-      return { ok: false, error: `Bot not found: ${id}` };
-    }
+    if (!bot) return { ok: false, error: `Bot not found: ${id}` };
 
     const ownerId = manager.getBotOwnerId(id);
-    if (userId && ownerId && ownerId !== userId) {
-      return { ok: false, error: `Bot not found: ${id}` };
-    }
+    if (userId && ownerId && ownerId !== userId) return { ok: false, error: `Bot not found: ${id}` };
 
-    const updatedConfig: BotConfig = {
+    const merged: BotConfig = {
       ...bot.getConfig(),
       ...validated.patch,
       mode: 'paper', // ADR-001 paper-only invariant
     };
+    const updatedConfig: BotConfig = isH3MakerConfig(merged) ? reconcileH3MakerSpecParity(merged) : merged;
 
     await patchBot(id, { config_json: JSON.stringify(updatedConfig) }, userId);
     bot.updateConfig(updatedConfig);
 
-    return {
-      ok: true,
-      data: { id, config: updatedConfig },
-    };
+    return { ok: true, data: { id, config: updatedConfig } };
   } catch (error) {
     return {
       ok: false,

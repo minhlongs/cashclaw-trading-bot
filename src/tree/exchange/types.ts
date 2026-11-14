@@ -29,6 +29,7 @@ export interface OrderRequest {
   price?: number; // required for limit orders
   timeInForce?: TimeInForce;
   exchange?: string; // for strategy callbacks context
+  reduceOnly?: boolean;
 }
 
 export interface OrderResult {

@@ -4,6 +4,7 @@ export const STRATEGIES: StrategyDef[] = [
   { value: 'grid', label: 'Grid Trading', desc: 'Multi-level limit orders / Dat lenh nhieu muc gia' },
   { value: 'mean_reversion', label: 'Mean Reversion', desc: 'Bollinger Bands + RSI' },
   { value: 'volatility_dca', label: 'Volatility-Adjusted DCA', desc: 'DCA Tự Động Theo Biến Động' },
+  { value: 'h3_maker', label: 'H3 Maker Paper-Forward', desc: 'SignedStrategySpec • H3_MAKER passive maker carry' },
 ];
 
 export const EXCHANGES = [
@@ -26,6 +27,11 @@ export const MEANREV_DEFAULTS: Record<string, number> = {
 export const VOLATILITY_DCA_DEFAULTS: Record<string, number> = {
   priceDropStep: 1.5, maxSteps: 6, baseOrderSizePct: 10,
   volatilityWindow: 20, volBaseline: 50, reboundTarget: 1.0, quantExecution: 0,
+};
+
+export const H3_MAKER_DEFAULTS: Record<string, number> = {
+  lookbackDays: 30, entryAnnualBps: 800, exitAnnualBps: 150,
+  maxGrossLeverage: 1.0, max_drawdown_pct: 12,
 };
 
 export const GRID_FIELDS: FieldDef[] = [
@@ -56,10 +62,19 @@ export const VOLATILITY_DCA_FIELDS: FieldDef[] = [
   { key: 'quantExecution', label: 'QuantLib Execution', type: 'checkbox' },
 ];
 
+export const H3_MAKER_FIELDS: FieldDef[] = [
+  { key: 'lookbackDays', label: 'Lookback Window (days)', step: '1' },
+  { key: 'entryAnnualBps', label: 'Entry Carry Threshold (bps/yr)', step: '10' },
+  { key: 'exitAnnualBps', label: 'Exit Carry Threshold (bps/yr)', step: '10' },
+  { key: 'maxGrossLeverage', label: 'Max Gross Leverage (x)', step: '0.1' },
+  { key: 'max_drawdown_pct', label: 'Max Drawdown (%)', step: '1' },
+];
+
 export const STRATEGY_KEY_MAP: Record<string, string> = {
   grid: 'strategies.grid',
   mean_reversion: 'strategies.mean_reversion',
   volatility_dca: 'strategies.volatility_dca',
+  h3_maker: 'strategies.h3_maker',
 };
 
 export const FIELD_KEY_MAP: Record<string, string> = {
@@ -83,4 +98,8 @@ export const FIELD_KEY_MAP: Record<string, string> = {
   volBaseline: 'fields.volBaseline',
   reboundTarget: 'fields.reboundTarget',
   quantExecution: 'fields.quantExecution',
+  lookbackDays: 'fields.lookbackDays',
+  entryAnnualBps: 'fields.entryAnnualBps',
+  exitAnnualBps: 'fields.exitAnnualBps',
+  maxGrossLeverage: 'fields.maxGrossLeverage',
 };
