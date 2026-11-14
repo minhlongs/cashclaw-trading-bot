@@ -19,6 +19,10 @@ const BOUNDS: Record<string, BoundRule> = {
   priceDropStep: { min: 0.1, max: 50 },
   maxSteps: { min: 1, max: 50, integer: true },
   baseOrderSizePct: { min: 1, max: 100 },
+  lookbackDays: { min: 2, max: 180, integer: true },
+  entryAnnualBps: { min: 50, max: 5000 },
+  exitAnnualBps: { min: 0, max: 2000 },
+  maxGrossLeverage: { min: 0.1, max: 1.5 },
 };
 
 function coerceBound(key: string, value: number): number {

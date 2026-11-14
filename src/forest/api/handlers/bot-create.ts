@@ -10,6 +10,7 @@ import type {
 } from '@/tree/bot/types';
 import { normalizeWizardConfig, coerceNum } from './bot-create.normalize';
 import {
+  RETAIL_SANDBOX_WARNING,
   evaluateBotStrategyGuard,
   type BotStrategyGuardErrorCode,
   type StrategyArtifactPaths,
@@ -86,15 +87,32 @@ function buildStrategyConfig(
   }
 
   if (payload.strategy === 'h3_maker') {
-    const d = h3Defaults ?? { lookbackDays: 30, entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0 };
+    const d = h3Defaults ?? {
+      lookbackDays: 30, entryAnnualBps: 800, exitAnnualBps: 150,
+      maxGrossLeverage: 1.0, maxDrawdownHardPct: 12, universe: [],
+    };
+    const lookbackDays = Math.round(coerceNum({ config: cfg, key: 'lookbackDays', defaultValue: d.lookbackDays, min: 2, max: 180 }));
+    const entryAnnualBps = coerceNum({ config: cfg, key: 'entryAnnualBps', defaultValue: d.entryAnnualBps, min: 50, max: 5000 });
+    const exitAnnualBps = Math.min(entryAnnualBps - 1, coerceNum({ config: cfg, key: 'exitAnnualBps', defaultValue: d.exitAnnualBps, min: 0, max: 2000 }));
+    const maxGrossLeverage = coerceNum({ config: cfg, key: 'maxGrossLeverage', defaultValue: d.maxGrossLeverage, min: 0.1, max: 1.5 });
+    const maxDrawdownPct = coerceNum({ config: cfg, key: 'maxDrawdownPct', defaultValue: d.maxDrawdownHardPct, min: 1, max: d.maxDrawdownHardPct });
+    const normalizedPair = payload.pair.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const pairInUniverse = d.universe.length === 0 || d.universe.includes(normalizedPair);
+    const exactSpecMatch =
+      pairInUniverse &&
+      lookbackDays === d.lookbackDays &&
+      entryAnnualBps === d.entryAnnualBps &&
+      exitAnnualBps === d.exitAnnualBps &&
+      maxGrossLeverage === d.maxGrossLeverage;
     return {
       ...base,
+      maxDrawdownPct,
       strategy: 'h3_maker' as const,
-      lookbackDays: Math.round(coerceNum({ config: cfg, key: 'lookbackDays', defaultValue: d.lookbackDays, min: 2, max: 180 })),
-      entryAnnualBps: coerceNum({ config: cfg, key: 'entryAnnualBps', defaultValue: d.entryAnnualBps, min: 50, max: 5000 }),
-      exitAnnualBps: coerceNum({ config: cfg, key: 'exitAnnualBps', defaultValue: d.exitAnnualBps, min: 0, max: 2000 }),
-      maxGrossLeverage: coerceNum({ config: cfg, key: 'maxGrossLeverage', defaultValue: d.maxGrossLeverage, min: 0.1, max: 1.5 }),
-      ...(specSha256 ? { specSha256 } : {}),
+      lookbackDays,
+      entryAnnualBps,
+      exitAnnualBps,
+      maxGrossLeverage,
+      ...(specSha256 && exactSpecMatch ? { specSha256 } : {}),
     } satisfies H3MakerBotConfig;
   }
 
@@ -152,13 +170,24 @@ export async function botCreateHandler(
       await getBotManager().createBot(botConfig);
     }
 
+    const hasVerifiedSpec =
+      strategyConfig.strategy === 'h3_maker' && Boolean(strategyConfig.specSha256);
+    const effectiveTier: StrategyVerificationTier =
+      strategyConfig.strategy === 'h3_maker' && !hasVerifiedSpec
+        ? 'UNVERIFIED_RETAIL_SANDBOX'
+        : guard.verificationTier;
+    const effectiveWarning =
+      effectiveTier === 'UNVERIFIED_RETAIL_SANDBOX'
+        ? guard.warning ?? RETAIL_SANDBOX_WARNING
+        : undefined;
+
     return {
       ok: true,
       data: {
         id: normalizedPayload.id,
-        verificationTier: guard.verificationTier,
-        ...(guard.warning ? { warning: guard.warning } : {}),
-        ...(guard.specSha256 ? { specSha256: guard.specSha256 } : {}),
+        verificationTier: effectiveTier,
+        ...(effectiveWarning ? { warning: effectiveWarning } : {}),
+        ...(hasVerifiedSpec && guard.specSha256 ? { specSha256: guard.specSha256 } : {}),
       },
     };
   } catch (e) {

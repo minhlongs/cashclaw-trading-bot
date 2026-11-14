@@ -25,6 +25,7 @@ function computeAnnualizedCarryBps(windowPrices: readonly number[], latestPrice:
 export class H3MakerStrategy {
   private readonly config: H3MakerBotConfig;
   private readonly callbacks: H3MakerCallbacks;
+  private readonly botId: string;
   private priceWindow: number[] = [];
   private running = false;
   private orderInFlight = false;
@@ -32,9 +33,10 @@ export class H3MakerStrategy {
   private entryPrice = 0;
   private positionQty = 0;
 
-  constructor(config: H3MakerBotConfig, callbacks: H3MakerCallbacks) {
+  constructor(config: H3MakerBotConfig, callbacks: H3MakerCallbacks, botId?: string) {
     this.config = config;
     this.callbacks = callbacks;
+    this.botId = botId ?? config.name ?? 'h3_maker';
   }
 
   start(initialPrice: number): void {
@@ -65,7 +67,7 @@ export class H3MakerStrategy {
       return;
     }
     const price = ticker.last;
-    const maxLen = Math.max(2, Math.trunc(this.config.lookbackDays));
+    const maxLen = Math.min(180, Math.max(2, Math.trunc(this.config.lookbackDays)));
     this.priceWindow.push(price);
     if (this.priceWindow.length > maxLen) {
       this.priceWindow = this.priceWindow.slice(-maxLen);
@@ -96,6 +98,7 @@ export class H3MakerStrategy {
     this.orderInFlight = true;
     try {
       let fillPrice = limitPrice;
+      let filledQty = quantity;
       let fee = 0;
       let orderId = `h3-${side}-${Date.now()}`;
       if (this.callbacks.placeOrder) {
@@ -103,19 +106,20 @@ export class H3MakerStrategy {
           symbol: this.config.symbol, exchange: this.config.exchange,
           side, type: 'limit', price: limitPrice, quantity, timeInForce: 'GTC',
         });
-        if (res.status === 'rejected' || res.status === 'cancelled') return;
+        if (res.status !== 'filled' || res.filled <= 0) return;
         if (res.price > 0) fillPrice = res.price;
+        filledQty = res.filled;
         fee = res.fee ?? 0;
         orderId = res.id;
       }
-      const pnl = side === 'sell' ? (fillPrice - priorEntry) * quantity - fee : 0;
+      const pnl = side === 'sell' ? (fillPrice - priorEntry) * filledQty - fee : 0;
       this.positionSide = side === 'buy' ? 'long' : 'flat';
       this.entryPrice = side === 'buy' ? fillPrice : 0;
-      this.positionQty = side === 'buy' ? quantity : 0;
+      this.positionQty = side === 'buy' ? filledQty : 0;
       this.callbacks.onTrade?.({
-        id: orderId, botId: this.config.name ?? 'h3_maker', exchangeId: this.config.exchange,
+        id: orderId, botId: this.botId, exchangeId: this.config.exchange,
         symbol: this.config.symbol, side, type: 'limit', price: fillPrice,
-        quantity, filled: quantity, fee, pnl, status: 'filled', timestamp: Date.now(),
+        quantity, filled: filledQty, fee, pnl, status: 'filled', timestamp: Date.now(),
       });
       this.callbacks.onLog(`H3_MAKER ${side} @ ${fillPrice.toFixed(2)} (${annualBps.toFixed(1)} bps)`);
     } catch (err) {

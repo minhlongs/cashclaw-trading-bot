@@ -57,9 +57,10 @@ export async function executeOrder(
     throw new Error('Trading halted by killswitch');
   }
 
-  const effectivePrice = evaluatePreTradeProtection(ctx, req, orderCounter);
+  const nextCounter = orderCounter + 1;
+  const effectivePrice = evaluatePreTradeProtection(ctx, req, nextCounter - 1);
   const submittedOrder = deps.lifecycleEngine
-    ? await submitLifecyclePreDispatch(ctx, deps.lifecycleEngine, req, orderCounter, effectivePrice)
+    ? await submitLifecyclePreDispatch(ctx, deps.lifecycleEngine, req, nextCounter - 1, effectivePrice)
     : undefined;
 
   let result: OrderResult;
@@ -77,7 +78,7 @@ export async function executeOrder(
   }
 
   state.lastOrderAt = Date.now();
-  orderCounter++;
+  orderCounter = nextCounter;
   state.totalTrades++;
 
   const trade = orderResultToTrade(result, botId, orderCounter);

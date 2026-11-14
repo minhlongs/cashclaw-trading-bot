@@ -40,8 +40,16 @@ async function runScheduledMicroIngest(
     const store = createD1MicroStore(db);
     const ingestReport = await runMicroIngest({
       store,
-      fetchDepth: (symbol) => fetchDepth({ symbol }),
-      fetchTrades: (symbol, startMs, endMs) => fetchAggTrades({ symbol, startMs, endMs }),
+      fetchDepth: async (symbol) => {
+        const b = budgetGuard.recordAdapterCall(1);
+        if (!b.ok) throw new Error(b.error);
+        return fetchDepth({ symbol });
+      },
+      fetchTrades: async (symbol, startMs, endMs) => {
+        const b = budgetGuard.recordAdapterCall(1);
+        if (!b.ok) throw new Error(b.error);
+        return fetchAggTrades({ symbol, startMs, endMs });
+      },
       now: () => Date.now(),
       symbols,
       gitSha: env.VERSION ?? undefined,

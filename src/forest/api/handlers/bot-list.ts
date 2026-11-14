@@ -36,7 +36,10 @@ export async function botListHandler(userId?: string): Promise<{
       id: bot.id,
       name: bot.name || bot.id,
       strategy: bot.strategy as StrategyType,
-      verificationTier: resolveBotVerificationTier(bot.strategy),
+      verificationTier: resolveBotVerificationTier(
+        bot.strategy,
+        bot.config as unknown as Record<string, unknown>,
+      ),
       pair: bot.pair,
       exchange: bot.exchange,
       status: bot.status,

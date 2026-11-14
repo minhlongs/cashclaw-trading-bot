@@ -39,11 +39,11 @@ export function initializeStrategy(params: {
   let strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy;
 
   if (isH3MakerConfig(config)) {
-    const h3 = new H3MakerStrategy(config satisfies H3MakerBotConfig, {
-      placeOrder,
-      onTrade,
-      onLog: onLogWithId,
-    });
+    const h3 = new H3MakerStrategy(
+      config satisfies H3MakerBotConfig,
+      { placeOrder, onLog: onLogWithId },
+      botId,
+    );
     h3.start(price);
     // H3MakerStrategy satisfies { start, stop, onTicker } used by BotInstance/tick;
     // cast avoids editing Stream-1 nominal class unions in bot-tick / bot-instance-ops.

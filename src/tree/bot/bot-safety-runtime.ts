@@ -64,24 +64,32 @@ function mapLedgerPositions(records: readonly LedgerPositionRecord[], primarySym
   return exposures;
 }
 
-function resolveMidPrice(lastTickPrice: number | null, orderHint?: ProtectionOrderHint): number {
-  if (lastTickPrice !== null && Number.isFinite(lastTickPrice) && lastTickPrice > 0) return lastTickPrice;
-  if (lastTickPrice === null && orderHint?.price !== undefined && Number.isFinite(orderHint.price) && orderHint.price > 0) {
+function resolveMidPrice(
+  lastTickPrice: number | null,
+  configSymbol: string,
+  orderHint?: ProtectionOrderHint,
+): number {
+  const sameSymbol = !orderHint?.symbol || orderHint.symbol === configSymbol;
+  if (sameSymbol && lastTickPrice !== null && Number.isFinite(lastTickPrice) && lastTickPrice > 0) {
+    return lastTickPrice;
+  }
+  const canUseHint = !sameSymbol || lastTickPrice === null;
+  if (canUseHint && orderHint?.price !== undefined && Number.isFinite(orderHint.price) && orderHint.price > 0) {
     return orderHint.price;
   }
   return 0;
 }
 
 function buildMarketsRecord(
-  targetSymbol: string, configSymbol: string, midPrice: number,
+  targetSymbol: string, configSymbol: string, midPrice: number, lastTickPrice: number | null,
   positions: readonly PositionExposure[], equityUsd: number, nowMs: number,
 ): Record<string, MarketMicrostructureSnapshot> {
   const markets: Record<string, MarketMicrostructureSnapshot> = {};
   if (midPrice > 0) {
     markets[targetSymbol] = buildFreshMarketSnapshot(targetSymbol, midPrice, equityUsd, nowMs);
-    if (configSymbol !== targetSymbol) {
-      markets[configSymbol] = buildFreshMarketSnapshot(configSymbol, midPrice, equityUsd, nowMs);
-    }
+  }
+  if (configSymbol !== targetSymbol && lastTickPrice !== null && Number.isFinite(lastTickPrice) && lastTickPrice > 0) {
+    markets[configSymbol] = buildFreshMarketSnapshot(configSymbol, lastTickPrice, equityUsd, nowMs);
   }
   for (const pos of positions) {
     if (!markets[pos.symbol] && pos.markPrice > 0) {
@@ -117,20 +125,27 @@ export function createBotSafetyRuntime(input: BuildBotSafetyRuntimeInput): BotSa
     const baseCapitalUsd = Math.max(0.01, Number(balances.INITIAL_CAPITAL) / MICRO_SCALE_NUM);
     const hasLedgerRealized =
       balances.REALIZED_PNL !== ZERO_BIGINT || balances.FEES_EXPENSE !== ZERO_BIGINT || balances.FUNDING_NET !== ZERO_BIGINT;
-    const rolling24hPnlUsd = hasLedgerRealized ? Number(sheet.equityMicroUsd) / MICRO_SCALE_NUM - baseCapitalUsd : state.totalPnl;
+    const targetSymbol = orderHint?.symbol ?? config.symbol;
+    const lastTick = getLastTickPrice();
+    const midPrice = resolveMidPrice(lastTick, config.symbol, orderHint);
+    const positions = mapLedgerPositions(ledger.exportSnapshot().positions, targetSymbol, midPrice);
+    const unrealizedPnlUsd = positions.reduce(
+      (sum, p) => sum + (p.signedNotionalUsd / (p.markPrice || 1)) * (p.markPrice - p.entryPrice),
+      0,
+    );
+    const realizedPnlUsd = hasLedgerRealized
+      ? Number(sheet.equityMicroUsd) / MICRO_SCALE_NUM - baseCapitalUsd
+      : state.totalPnl;
+    const rolling24hPnlUsd = realizedPnlUsd + unrealizedPnlUsd;
     const equityUsd = Math.max(0.01, baseCapitalUsd + rolling24hPnlUsd);
     if (equityUsd > peakEquityUsd) peakEquityUsd = equityUsd;
-
-    const targetSymbol = orderHint?.symbol ?? config.symbol;
-    const midPrice = resolveMidPrice(getLastTickPrice(), orderHint);
-    const positions = mapLedgerPositions(ledger.exportSnapshot().positions, targetSymbol, midPrice);
     const assetsMicroUsd = Number(sheet.assetsMicroUsd);
     const equityMicroUsd = Number(sheet.equityMicroUsd);
 
     return {
       nowMs, equityUsd, peakEquityUsd, rolling24hPnlUsd, rolling24hRefEquityUsd: baseCapitalUsd,
       positions,
-      markets: buildMarketsRecord(targetSymbol, config.symbol, midPrice, positions, equityUsd, nowMs),
+      markets: buildMarketsRecord(targetSymbol, config.symbol, midPrice, lastTick, positions, equityUsd, nowMs),
       ledger: {
         assetsMicroUsd, liabilitiesMicroUsd: Number(sheet.liabilitiesMicroUsd), equityMicroUsd,
         assetsUsd: assetsMicroUsd / MICRO_SCALE_NUM, liabilitiesUsd: 0, equityUsd: equityMicroUsd / MICRO_SCALE_NUM,

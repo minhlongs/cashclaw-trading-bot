@@ -140,7 +140,7 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     const debitRes = await postCredits(
       new Request('http://localhost/api/ee/credits', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workspaceId: 'ws_live_tenant', modelTier: 'REASONING', promptTokens: 500, completionTokens: 500 }),
+        body: JSON.stringify({ workspaceId: 'ws_live_tenant', modelTier: 'FAST', promptTokens: 500, completionTokens: 500 }),
       }),
     );
     expect(debitRes.status).toBe(200);

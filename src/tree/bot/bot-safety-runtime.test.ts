@@ -78,7 +78,7 @@ describe('createBotSafetyRuntime — context provider & exposure mapping', () =>
     const hintCtx = runtime.protectionContextProvider({ symbol: 'ETH/USDT', price: 3_000 });
     expect(hintCtx.peakEquityUsd).toBe(10_500);
     expect(hintCtx.markets['ETH/USDT']?.midPrice).toBe(3_000);
-    expect(hintCtx.markets['BTC/USDT']?.midPrice).toBe(3_000);
+    expect(hintCtx.markets['BTC/USDT']).toBeUndefined();
 
     runtime.ledger.applyFill({
       eventHash: 'eth-open', symbol: 'ETH/USDT', side: 'buy', fillQtyBase: BASE_UNITS_PER_ASSET,
@@ -99,6 +99,9 @@ describe('createBotSafetyRuntime — context provider & exposure mapping', () =>
 
     lastTick = 52_000;
     expect(runtime.protectionContextProvider({ symbol: 'BTC/USDT', price: 49_000 }).markets['BTC/USDT']?.midPrice).toBe(52_000);
+    const crossHintCtx = runtime.protectionContextProvider({ symbol: 'ETH/USDT', price: 3_100 });
+    expect(crossHintCtx.markets['ETH/USDT']?.midPrice).toBe(3_100);
+    expect(crossHintCtx.markets['BTC/USDT']?.midPrice).toBe(52_000);
   });
 });
 

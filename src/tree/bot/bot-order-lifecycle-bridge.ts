@@ -1,27 +1,22 @@
 // Bridge between BotOrderExecutor, PaperOrderLifecycleEngine, and D1AtomicLedgerBatcher.
-// Pure Apache-2.0 open-core runtime safety synchronization.
-
 import type { OrderRequest, OrderResult } from '../exchange/types';
 import type { LifecycleOrderRecord, PaperOrderLifecycleEngine } from '../execution/lifecycle';
 import {
-  BASE_UNITS_PER_ASSET, MICRO_USD_PER_USD, ZERO_BIGINT,
-  type AtomicOrderStateUpsert, type D1AtomicLedgerBatcher,
-  type DurableOrderLifecycleState, type LedgerAccountBalances, type MicroDoubleEntryLedger,
+  BASE_UNITS_PER_ASSET, MICRO_USD_PER_USD, ZERO_BIGINT, type AtomicOrderStateUpsert,
+  type D1AtomicLedgerBatcher, type DurableOrderLifecycleState, type LedgerAccountBalances, type MicroDoubleEntryLedger,
 } from '../ledger';
 import { applyLegsToBalances, createZeroAccountBalances } from '../ledger/double-entry-math';
 import type { OrderContext } from './bot-order-executor-types';
 
 const BASE_SCALE = Number(BASE_UNITS_PER_ASSET);
 const MICRO_SCALE = Number(MICRO_USD_PER_USD);
-
 const DURABLE_STATE_MAP: Record<LifecycleOrderRecord['state'], DurableOrderLifecycleState> = {
-  PENDING_ACK: 'PENDING_ACK', RECONCILING: 'RECONCILING', open: 'OPEN',
-  partially_filled: 'PARTIALLY_FILLED', filled: 'FILLED',
-  cancelled: 'CANCELLED', rejected: 'REJECTED', expired: 'EXPIRED',
+  PENDING_ACK: 'PENDING_ACK', RECONCILING: 'RECONCILING', open: 'OPEN', partially_filled: 'PARTIALLY_FILLED',
+  filled: 'FILLED', cancelled: 'CANCELLED', rejected: 'REJECTED', expired: 'EXPIRED',
 };
-
 interface DurableLedgerSyncCursor { initialized: boolean; version: number; balances: LedgerAccountBalances; }
 const syncCursors = new WeakMap<MicroDoubleEntryLedger, DurableLedgerSyncCursor>();
+const lifecycleAttemptCounters = new WeakMap<PaperOrderLifecycleEngine, number>();
 type RequestWithOptionalClientOrderId = OrderRequest & { readonly clientOrderId?: string };
 
 function toOrderStateUpsert(ord: LifecycleOrderRecord, override?: DurableOrderLifecycleState): AtomicOrderStateUpsert {
@@ -75,13 +70,19 @@ async function flushUncommittedJournalEntries(
   return true;
 }
 
+function allocateDefaultOrderId(lifecycleEngine: PaperOrderLifecycleEngine, botId: string, orderCounter: number): string {
+  const nextAttempt = Math.max(orderCounter + 1, (lifecycleAttemptCounters.get(lifecycleEngine) ?? 0) + 1);
+  lifecycleAttemptCounters.set(lifecycleEngine, nextAttempt);
+  return `ord_${botId}_${nextAttempt}`;
+}
+
 export async function submitLifecyclePreDispatch(
   ctx: OrderContext, lifecycleEngine: PaperOrderLifecycleEngine,
   req: OrderRequest, orderCounter: number, effectivePrice: number,
 ): Promise<LifecycleOrderRecord> {
   const rawClientId = (req as RequestWithOptionalClientOrderId).clientOrderId;
   const idempotencyKey = rawClientId && rawClientId.trim().length > 0
-    ? rawClientId.trim() : `ord_${ctx.botId}_${orderCounter + 1}`;
+    ? rawClientId.trim() : allocateDefaultOrderId(lifecycleEngine, ctx.botId, orderCounter);
   const quantityBase = BigInt(Math.max(1, Math.round(req.quantity * BASE_SCALE)));
   const priceMicroUsd = BigInt(Math.max(1, Math.round(effectivePrice * MICRO_SCALE)));
   const nowMs = Date.now();
@@ -93,17 +94,26 @@ export async function submitLifecyclePreDispatch(
     ctx.emitTelemetry('error', { error: sub.error, context: 'bot.lifecycleEngine' });
     throw new Error(`Order rejected by PaperOrderLifecycleEngine: ${sub.error}`);
   }
+  if (sub.data.deduplicated) {
+    ctx.emitTelemetry('error', { error: `DUPLICATE_CLIENT_ORDER_ID: ${idempotencyKey}`, context: 'bot.lifecycleEngine' });
+    throw new Error(`Order rejected by PaperOrderLifecycleEngine: DUPLICATE_CLIENT_ORDER_ID (${idempotencyKey})`);
+  }
 
   const batcher = ctx.deps.ledgerBatcher;
   if (batcher) {
-    const ledger = lifecycleEngine.getLedger();
-    await flushUncommittedJournalEntries(ctx, ledger, batcher, nowMs);
-    const intentRes = await batcher.writePendingOrderIntent(
-      ctx.botId, ledger.getFencingToken(), toOrderStateUpsert(sub.data.order, 'PENDING_INTENT'),
-    );
-    if (!intentRes.ok) {
-      ctx.emitTelemetry('error', { error: intentRes.error, context: 'bot.ledgerBatcher' });
-      throw new Error(`Durable pending order intent failed: ${intentRes.error}`);
+    try {
+      const ledger = lifecycleEngine.getLedger();
+      await flushUncommittedJournalEntries(ctx, ledger, batcher, nowMs);
+      const intentRes = await batcher.writePendingOrderIntent(
+        ctx.botId, ledger.getFencingToken(), toOrderStateUpsert(sub.data.order, 'PENDING_INTENT'),
+      );
+      if (!intentRes.ok) {
+        ctx.emitTelemetry('error', { error: intentRes.error, context: 'bot.ledgerBatcher' });
+        throw new Error(`Durable pending order intent failed: ${intentRes.error}`);
+      }
+    } catch (persistErr) {
+      lifecycleEngine.rejectOrder(sub.data.order.clientOrderId, nowMs);
+      throw persistErr;
     }
   }
   return sub.data.order;
@@ -161,7 +171,13 @@ export async function settleLifecyclePostDispatch(
     const ledger = lifecycleEngine.getLedger();
     const upsert = toOrderStateUpsert(updatedOrder);
     const committed = await flushUncommittedJournalEntries(ctx, ledger, batcher, nowMs, upsert);
-    if (!committed) await batcher.writePendingOrderIntent(ctx.botId, ledger.getFencingToken(), upsert);
+    if (!committed) {
+      const intentRes = await batcher.writePendingOrderIntent(ctx.botId, ledger.getFencingToken(), upsert);
+      if (!intentRes.ok) {
+        ctx.emitTelemetry('error', { error: intentRes.error, context: 'bot.ledgerBatcher' });
+        throw new Error(`Durable order state update failed: ${intentRes.error}`);
+      }
+    }
   }
 }
 
@@ -171,6 +187,11 @@ export async function releaseLifecycleOnDispatchThrow(
   const nowMs = Date.now();
   const rej = lifecycleEngine.rejectOrder(clientOrderId, nowMs);
   if (rej.ok && ctx.deps.ledgerBatcher) {
-    await flushUncommittedJournalEntries(ctx, lifecycleEngine.getLedger(), ctx.deps.ledgerBatcher, nowMs, toOrderStateUpsert(rej.data));
+    const ledger = lifecycleEngine.getLedger();
+    const upsert = toOrderStateUpsert(rej.data);
+    const committed = await flushUncommittedJournalEntries(ctx, ledger, ctx.deps.ledgerBatcher, nowMs, upsert);
+    if (!committed) {
+      await ctx.deps.ledgerBatcher.writePendingOrderIntent(ctx.botId, ledger.getFencingToken(), upsert);
+    }
   }
 }

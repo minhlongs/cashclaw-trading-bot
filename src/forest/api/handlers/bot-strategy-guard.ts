@@ -26,6 +26,8 @@ export interface VerifiedH3Defaults {
   readonly entryAnnualBps: number;
   readonly exitAnnualBps: number;
   readonly maxGrossLeverage: number;
+  readonly maxDrawdownHardPct: number;
+  readonly universe: readonly string[];
 }
 
 export type BotStrategyGuardResult =
@@ -58,10 +60,20 @@ function resolveArtifactFile(relPath: string, explicitPath?: string): string {
   return path.resolve(__dirname, '../../../../', relPath);
 }
 
-export function resolveBotVerificationTier(strategy: string): StrategyVerificationTier {
-  return strategy === 'h3_maker'
-    ? getStrategyVerificationTier('h3_maker')
-    : getStrategyVerificationTier('grid');
+export function resolveBotVerificationTier(
+  strategy: string,
+  config?: Record<string, unknown>,
+): StrategyVerificationTier {
+  if (strategy !== 'h3_maker') {
+    return getStrategyVerificationTier('grid');
+  }
+  if (config && 'specSha256' in config && typeof config.specSha256 !== 'string') {
+    return getStrategyVerificationTier('grid');
+  }
+  if (config && typeof config.specSha256 === 'string' && config.specSha256.length !== 64) {
+    return getStrategyVerificationTier('grid');
+  }
+  return getStrategyVerificationTier('h3_maker');
 }
 
 function verifyH3MakerArtifacts(paths?: StrategyArtifactPaths): BotStrategyGuardResult {
@@ -130,6 +142,8 @@ function verifyH3MakerArtifacts(paths?: StrategyArtifactPaths): BotStrategyGuard
       entryAnnualBps: params.entryAnnualBps,
       exitAnnualBps: params.exitAnnualBps,
       maxGrossLeverage: params.maxGrossLeverage,
+      maxDrawdownHardPct: specRes.data.riskGates.maxDrawdownHardPct,
+      universe: specRes.data.universe,
     },
   };
 }
