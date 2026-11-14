@@ -1,0 +1,400 @@
+{
+  "schema_version": "1.0.0",
+  "gate": "G13",
+  "status": "OBSERVATION_ACTIVE_INCONCLUSIVE",
+  "g13_pass": false,
+  "live_trading_unlocked": false,
+  "spec_path": "artifacts/signed_strategy_spec_h3_maker.json",
+  "spec_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+  "genesis_utc": "2026-11-14T13:07:31.631351Z",
+  "latest_checkpoint_utc": "2026-11-14T13:07:31.631351Z",
+  "elapsed_days": 0,
+  "min_required_days": 60,
+  "target_days": 90,
+  "max_allowed_tracking_error_bps_per_month": 15.0,
+  "realized_tracking_error_bps_per_month": null,
+  "harness_shadow_parity_check": {
+    "window_days": 90,
+    "window_start_epoch_day": 20387,
+    "window_end_epoch_day": 20476,
+    "orders_reconciled": 106,
+    "funding_events_reconciled": 5130,
+    "double_entry_discrepancy_micro_usd": 0,
+    "paper_micro_ledger_terminal_nav": 0.9993346972,
+    "decimal_oracle_terminal_nav": 0.9993346972,
+    "cumulative_90d_nav_diff_bps": 1.7e-07,
+    "harness_shadow_tracking_error_bps_per_month": 6e-08,
+    "max_allowed_tracking_error_bps_per_month": 15.0,
+    "passes_15bps_per_month_gate": true
+  },
+  "day0_live_public_snapshot": {
+    "observed_at_utc": "2026-11-14T13:07:31.631351Z",
+    "mode": "READ_ONLY_PUBLIC_ZERO_AUTH",
+    "orders_submitted": 0,
+    "universe_count": 19,
+    "active_causal_positions_count": 1,
+    "gross_target_pair_weight": 1.0,
+    "causal_target_weights": {
+      "ADAUSDT": 0.0,
+      "APTUSDT": 0.0,
+      "ATOMUSDT": 0.0,
+      "AVAXUSDT": 0.0,
+      "BCHUSDT": 0.0,
+      "BNBUSDT": 1.0,
+      "BTCUSDT": 0.0,
+      "DOGEUSDT": 0.0,
+      "DOTUSDT": 0.0,
+      "ETCUSDT": 0.0,
+      "ETHUSDT": 0.0,
+      "FILUSDT": 0.0,
+      "LINKUSDT": 0.0,
+      "LTCUSDT": 0.0,
+      "NEARUSDT": 0.0,
+      "SOLUSDT": 0.0,
+      "TRXUSDT": 0.0,
+      "UNIUSDT": 0.0,
+      "XRPUSDT": 0.0
+    },
+    "symbols": {
+      "ADAUSDT": {
+        "binance_spot_mid": 0.16145,
+        "binance_perp_mark": 0.1613,
+        "binance_funding_8h_rate": -0.00012347,
+        "binance_spot_perp_basis_bps": -9.2908,
+        "binance_instantaneous_annual_basis_bps": -3391.14,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 0.161295,
+          "mark_px": 0.16126,
+          "oracle_px": 0.16145,
+          "funding_1h_rate": -2.905e-05,
+          "annualised_funding_bps": -2545.0,
+          "perp_vs_oracle_basis_bps": -11.7683
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "APTUSDT": {
+        "binance_spot_mid": 0.50665,
+        "binance_perp_mark": 0.5064,
+        "binance_funding_8h_rate": -0.0002104,
+        "binance_spot_perp_basis_bps": -4.9344,
+        "binance_instantaneous_annual_basis_bps": -1801.05,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 0.5064,
+          "mark_px": 0.5065,
+          "oracle_px": 0.5069,
+          "funding_1h_rate": 1.25e-05,
+          "annualised_funding_bps": 1095.0,
+          "perp_vs_oracle_basis_bps": -7.8911
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "ATOMUSDT": {
+        "binance_spot_mid": 1.3455,
+        "binance_perp_mark": 1.344962,
+        "binance_funding_8h_rate": 4.477e-05,
+        "binance_spot_perp_basis_bps": -3.9993,
+        "binance_instantaneous_annual_basis_bps": -1459.73,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 1.345,
+          "mark_px": 1.3445,
+          "oracle_px": 1.346,
+          "funding_1h_rate": 1.25e-05,
+          "annualised_funding_bps": 1095.0,
+          "perp_vs_oracle_basis_bps": -11.1441
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "AVAXUSDT": {
+        "binance_spot_mid": 7.9935,
+        "binance_perp_mark": 7.988555,
+        "binance_funding_8h_rate": -0.00011239,
+        "binance_spot_perp_basis_bps": -6.1862,
+        "binance_instantaneous_annual_basis_bps": -2257.96,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 7.9877,
+          "mark_px": 7.9875,
+          "oracle_px": 7.993,
+          "funding_1h_rate": -7.46e-06,
+          "annualised_funding_bps": -653.78,
+          "perp_vs_oracle_basis_bps": -6.881
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "BCHUSDT": {
+        "binance_spot_mid": 215.85,
+        "binance_perp_mark": 215.701454,
+        "binance_funding_8h_rate": 2.88e-05,
+        "binance_spot_perp_basis_bps": -6.8819,
+        "binance_instantaneous_annual_basis_bps": -2511.9,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 215.705,
+          "mark_px": 215.69,
+          "oracle_px": 215.88,
+          "funding_1h_rate": -1.072e-05,
+          "annualised_funding_bps": -939.0,
+          "perp_vs_oracle_basis_bps": -8.8012
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "BNBUSDT": {
+        "binance_spot_mid": 611.365,
+        "binance_perp_mark": 611.564682,
+        "binance_funding_8h_rate": 0.0,
+        "binance_spot_perp_basis_bps": 3.2662,
+        "binance_instantaneous_annual_basis_bps": 1192.15,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 610.925,
+          "mark_px": 611.098,
+          "oracle_px": 611.5,
+          "funding_1h_rate": -7.17e-06,
+          "annualised_funding_bps": -628.42,
+          "perp_vs_oracle_basis_bps": -6.574
+        },
+        "causal_target_pair_weight": 1.0
+      },
+      "BTCUSDT": {
+        "binance_spot_mid": 66838.805,
+        "binance_perp_mark": 66819.5,
+        "binance_funding_8h_rate": 3.061e-05,
+        "binance_spot_perp_basis_bps": -2.8883,
+        "binance_instantaneous_annual_basis_bps": -1054.23,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 66813.5,
+          "mark_px": 66814.0,
+          "oracle_px": 66846.6,
+          "funding_1h_rate": 3.89e-06,
+          "annualised_funding_bps": 340.64,
+          "perp_vs_oracle_basis_bps": -4.8768
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "DOGEUSDT": {
+        "binance_spot_mid": 0.062525,
+        "binance_perp_mark": 0.06249,
+        "binance_funding_8h_rate": -4.938e-05,
+        "binance_spot_perp_basis_bps": -5.5978,
+        "binance_instantaneous_annual_basis_bps": -2043.18,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 0.062469,
+          "mark_px": 0.062481,
+          "oracle_px": 0.062534,
+          "funding_1h_rate": -3.569e-05,
+          "annualised_funding_bps": -3126.86,
+          "perp_vs_oracle_basis_bps": -8.4754
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "DOTUSDT": {
+        "binance_spot_mid": 0.7825,
+        "binance_perp_mark": 0.781706,
+        "binance_funding_8h_rate": -8.331e-05,
+        "binance_spot_perp_basis_bps": -10.1511,
+        "binance_instantaneous_annual_basis_bps": -3705.13,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 0.78169,
+          "mark_px": 0.78172,
+          "oracle_px": 0.7824,
+          "funding_1h_rate": 8.36e-06,
+          "annualised_funding_bps": 732.15,
+          "perp_vs_oracle_basis_bps": -8.6912
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "ETCUSDT": {
+        "binance_spot_mid": 6.295,
+        "binance_perp_mark": 6.292366,
+        "binance_funding_8h_rate": -8.463e-05,
+        "binance_spot_perp_basis_bps": -4.1846,
+        "binance_instantaneous_annual_basis_bps": -1527.39,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 6.2859,
+          "mark_px": 6.2863,
+          "oracle_px": 6.296,
+          "funding_1h_rate": 1.25e-05,
+          "annualised_funding_bps": 1095.0,
+          "perp_vs_oracle_basis_bps": -15.4066
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "ETHUSDT": {
+        "binance_spot_mid": 1894.415,
+        "binance_perp_mark": 1893.6,
+        "binance_funding_8h_rate": 4.587e-05,
+        "binance_spot_perp_basis_bps": -4.3021,
+        "binance_instantaneous_annual_basis_bps": -1570.27,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 1893.15,
+          "mark_px": 1893.3,
+          "oracle_px": 1894.4,
+          "funding_1h_rate": -6.82e-06,
+          "annualised_funding_bps": -597.58,
+          "perp_vs_oracle_basis_bps": -5.8066
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "FILUSDT": {
+        "binance_spot_mid": 0.6822,
+        "binance_perp_mark": 0.6816,
+        "binance_funding_8h_rate": 1.506e-05,
+        "binance_spot_perp_basis_bps": -8.7951,
+        "binance_instantaneous_annual_basis_bps": -3210.2,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 0.68165,
+          "mark_px": 0.68162,
+          "oracle_px": 0.68218,
+          "funding_1h_rate": 2.53e-06,
+          "annualised_funding_bps": 221.65,
+          "perp_vs_oracle_basis_bps": -8.209
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "LINKUSDT": {
+        "binance_spot_mid": 9.5375,
+        "binance_perp_mark": 9.531,
+        "binance_funding_8h_rate": -5.78e-06,
+        "binance_spot_perp_basis_bps": -6.8152,
+        "binance_instantaneous_annual_basis_bps": -2487.55,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 9.5295,
+          "mark_px": 9.5305,
+          "oracle_px": 9.53745,
+          "funding_1h_rate": -5.28e-06,
+          "annualised_funding_bps": -462.86,
+          "perp_vs_oracle_basis_bps": -7.2871
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "LTCUSDT": {
+        "binance_spot_mid": 47.805,
+        "binance_perp_mark": 47.775637,
+        "binance_funding_8h_rate": -7.244e-05,
+        "binance_spot_perp_basis_bps": -6.1422,
+        "binance_instantaneous_annual_basis_bps": -2241.9,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 47.7715,
+          "mark_px": 47.77,
+          "oracle_px": 47.805,
+          "funding_1h_rate": -3.69e-06,
+          "annualised_funding_bps": -322.98,
+          "perp_vs_oracle_basis_bps": -7.3214
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "NEARUSDT": {
+        "binance_spot_mid": 3.3125,
+        "binance_perp_mark": 3.311,
+        "binance_funding_8h_rate": 0.0001,
+        "binance_spot_perp_basis_bps": -4.5283,
+        "binance_instantaneous_annual_basis_bps": -1652.83,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 3.31055,
+          "mark_px": 3.3115,
+          "oracle_px": 3.31287,
+          "funding_1h_rate": 1.25e-05,
+          "annualised_funding_bps": 1095.0,
+          "perp_vs_oracle_basis_bps": -4.1354
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "SOLUSDT": {
+        "binance_spot_mid": 75.505,
+        "binance_perp_mark": 75.45,
+        "binance_funding_8h_rate": -6.696e-05,
+        "binance_spot_perp_basis_bps": -7.2843,
+        "binance_instantaneous_annual_basis_bps": -2658.76,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 75.4475,
+          "mark_px": 75.449,
+          "oracle_px": 75.495,
+          "funding_1h_rate": -8.21e-06,
+          "annualised_funding_bps": -719.38,
+          "perp_vs_oracle_basis_bps": -6.0931
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "TRXUSDT": {
+        "binance_spot_mid": 0.31275,
+        "binance_perp_mark": 0.31249,
+        "binance_funding_8h_rate": -3.875e-05,
+        "binance_spot_perp_basis_bps": -8.3133,
+        "binance_instantaneous_annual_basis_bps": -3034.37,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 0.31244,
+          "mark_px": 0.31243,
+          "oracle_px": 0.3127,
+          "funding_1h_rate": -3.069e-05,
+          "annualised_funding_bps": -2688.29,
+          "perp_vs_oracle_basis_bps": -8.6345
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "UNIUSDT": {
+        "binance_spot_mid": 5.4165,
+        "binance_perp_mark": 5.414,
+        "binance_funding_8h_rate": -6.41e-06,
+        "binance_spot_perp_basis_bps": -4.6155,
+        "binance_instantaneous_annual_basis_bps": -1684.67,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 5.41215,
+          "mark_px": 5.41272,
+          "oracle_px": 5.4175,
+          "funding_1h_rate": -2.094e-05,
+          "annualised_funding_bps": -1834.19,
+          "perp_vs_oracle_basis_bps": -8.8233
+        },
+        "causal_target_pair_weight": 0.0
+      },
+      "XRPUSDT": {
+        "binance_spot_mid": 0.98935,
+        "binance_perp_mark": 0.9889,
+        "binance_funding_8h_rate": 2.947e-05,
+        "binance_spot_perp_basis_bps": -4.5484,
+        "binance_instantaneous_annual_basis_bps": -1660.18,
+        "exceeds_800bps_entry_hurdle_now": false,
+        "hyperliquid": {
+          "mid_px": 0.988675,
+          "mark_px": 0.98875,
+          "oracle_px": 0.98945,
+          "funding_1h_rate": -2.2e-05,
+          "annualised_funding_bps": -1927.49,
+          "perp_vs_oracle_basis_bps": -7.0746
+        },
+        "causal_target_pair_weight": 0.0
+      }
+    },
+    "snapshot_sha256": "5473c709303135d0252e6b99d511e0f45d1feb68482b82a296a3af35aa4e2122",
+    "cache_hit": true
+  },
+  "checkpoints": [
+    {
+      "checkpoint_index": 0,
+      "day_offset": 0,
+      "observed_at_utc": "2026-11-14T13:07:31.631351Z",
+      "paper_nav": 1.0,
+      "oracle_nav": 1.0,
+      "tracking_error_bps_cum": 0.0,
+      "active_positions": 1,
+      "gross_target_weight": 1.0,
+      "snapshot_sha256": "5473c709303135d0252e6b99d511e0f45d1feb68482b82a296a3af35aa4e2122",
+      "note": "Day-0 genesis checkpoint recorded; real-time 60-90d clock started."
+    }
+  ]
+}

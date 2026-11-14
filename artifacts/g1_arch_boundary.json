@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-14T11:52:50.454830+00:00",
-  "commit": "3d3dc0e3be6c3d18608729a4f6917da9ec4e47fa",
+  "generated_at": "2026-11-14T13:21:35.787020+00:00",
+  "commit": "3d56c1ed5fb371a4ee36665a6ce6654330ffef41",
   "planes": {
     "research_offline": {
       "location": "verification_lab/ (this lab) + src/forest/alpha/research-agent/",
@@ -683,6 +683,12 @@
     "src/tree/execution/lifecycle/paper-order-lifecycle-engine.ts": [
       56,
       151
+    ],
+    "src/tree/paper-forward/paper-forward-leg-order.ts": [
+      128,
+      142,
+      158,
+      162
     ]
   },
   "assertions": {

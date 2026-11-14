@@ -1,0 +1,57 @@
+{
+  "aiOrderAuthority": false,
+  "executionMode": "PAPER_ONLY",
+  "liveOrderAuthority": false,
+  "observationWindow": {
+    "minRequiredDays": 60,
+    "targetDays": 90
+  },
+  "parameters": {
+    "adverseSelectionBps": 3.2334,
+    "entryAnnualBps": 800,
+    "exitAnnualBps": 150,
+    "fifoFillProbability": 0.55,
+    "lookbackDays": 30,
+    "maxGrossLeverage": 1,
+    "singleLegMissProbability": 0.375
+  },
+  "riskGates": {
+    "maxDailyLossPct": 2.5,
+    "maxDrawdownHardPct": 12,
+    "maxDrawdownSoftPct": 8,
+    "maxTrackingErrorBpsPerMonth": 15,
+    "staleDataCutoffMs": 15000
+  },
+  "specVersion": "1.0.0",
+  "strategyId": "H3_MAKER",
+  "universe": [
+    "ADAUSDT",
+    "APTUSDT",
+    "ATOMUSDT",
+    "AVAXUSDT",
+    "BCHUSDT",
+    "BNBUSDT",
+    "BTCUSDT",
+    "DOGEUSDT",
+    "DOTUSDT",
+    "ETCUSDT",
+    "ETHUSDT",
+    "FILUSDT",
+    "LINKUSDT",
+    "LTCUSDT",
+    "NEARUSDT",
+    "SOLUSDT",
+    "TRXUSDT",
+    "UNIUSDT",
+    "XRPUSDT"
+  ],
+  "venueSchedule": {
+    "benchmarkVenue": "binance",
+    "perpMakerBps": 1.5,
+    "perpTakerBps": 4.5,
+    "primaryVenue": "hyperliquid",
+    "spotMakerBps": 4,
+    "spotTakerBps": 7
+  },
+  "payloadSha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169"
+}
