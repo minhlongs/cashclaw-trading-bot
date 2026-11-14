@@ -85,8 +85,11 @@ export async function startBotLifecycle(ctx: StartLifecycleContext): Promise<Sta
       onLog: (msg: string) => callbacks.onLog(`[${id}] ${msg}`),
     });
 
+    const wasAlreadyRunning = state.status === 'running';
+    const now = Date.now();
     state.status = 'running';
-    state.startedAt = state.updatedAt = Date.now();
+    state.startedAt = wasAlreadyRunning && state.startedAt ? state.startedAt : now;
+    state.updatedAt = now;
     emitTelemetry('start', { strategy: config.strategy, symbol: config.symbol, price });
     emitState();
     startTicking();
