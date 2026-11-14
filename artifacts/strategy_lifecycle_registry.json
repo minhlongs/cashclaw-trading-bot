@@ -1,0 +1,69 @@
+{
+  "commit": "3d56c1ed5fb371a4ee36665a6ce6654330ffef41",
+  "generated_at": "2026-11-14T13:07:31.608581+00:00",
+  "live_trading_locked": true,
+  "schema_version": "1.0.0",
+  "strategies": [
+    {
+      "archive_reason": "DSR 0.0000 < 0.95 at N=185 (train SR 1.5645 < SR0 4.7672); PBO=0.2700; G6 OOS BE 0.6195x..0.266x < 2.0x; Hyperliquid VIP-0 impactPxs OOS BE 0.6892x < 2.0x; negative Hyperliquid 1h carry cross-check (OOS SR -0.6833, cum_net -0.185296)",
+      "dsr_at_n185": 0,
+      "g5_verdict": "REJECT",
+      "locked_oos_sharpe": 0.3289,
+      "paper_forward_allowed": false,
+      "pbo": 0.27,
+      "status": "ARCHIVED_FALSIFIED",
+      "strategy_id": "H1"
+    },
+    {
+      "archive_reason": "DSR 0.0000 < 0.95 at N=185 (train SR 0.9621 < SR0 4.7672); PBO=0.1200; G6 OOS BE -0.1844x..-0.0782x < 2.0x; Hyperliquid VIP-0 impactPxs OOS BE -0.2057x < 2.0x",
+      "dsr_at_n185": 0,
+      "g5_verdict": "REJECT",
+      "locked_oos_sharpe": -0.1536,
+      "paper_forward_allowed": false,
+      "pbo": 0.12,
+      "status": "ARCHIVED_FALSIFIED",
+      "strategy_id": "H2"
+    },
+    {
+      "archive_reason": "DSR 0.1827 < 0.95 at N=185 (train SR 4.4275 < SR0 4.7672); PBO=0.0267; G6 OOS BE 1.4219x..0.6789x < 2.0x; Hyperliquid VIP-0 impactPxs OOS BE 1.6644x < 2.0x",
+      "dsr_at_n185": 0.182713,
+      "g5_verdict": "REJECT",
+      "locked_oos_sharpe": 1.5871,
+      "paper_forward_allowed": false,
+      "pbo": 0.0267,
+      "status": "ARCHIVED_FALSIFIED",
+      "strategy_id": "H3"
+    },
+    {
+      "archive_reason": "DSR 0.0000 < 0.95 at N=185 (train SR 1.5960 < SR0 4.7672); PBO=0.3500; G6 OOS BE 0.5736x..0.2461x < 2.0x; Hyperliquid VIP-0 impactPxs OOS BE 0.6381x < 2.0x; negative Hyperliquid 1h carry cross-check (OOS SR -0.6833, cum_net -0.185296)",
+      "dsr_at_n185": 0,
+      "g5_verdict": "REJECT",
+      "locked_oos_sharpe": 0.2834,
+      "paper_forward_allowed": false,
+      "pbo": 0.35,
+      "status": "ARCHIVED_FALSIFIED",
+      "strategy_id": "H1_G1"
+    },
+    {
+      "archive_reason": "DSR 0.0000 < 0.95 at N=185 (train SR 1.0389 < SR0 4.7672); PBO=0.2167; G6 OOS BE 0.377x..0.1587x < 2.0x; Hyperliquid VIP-0 impactPxs OOS BE 0.421x < 2.0x",
+      "dsr_at_n185": 0,
+      "g5_verdict": "REJECT",
+      "locked_oos_sharpe": 0,
+      "paper_forward_allowed": false,
+      "pbo": 0.2167,
+      "status": "ARCHIVED_FALSIFIED",
+      "strategy_id": "H2_G1"
+    },
+    {
+      "archive_reason": null,
+      "dsr_at_n185": 0.998772,
+      "g5_verdict": "PASS",
+      "locked_oos_sharpe": 2.3476,
+      "paper_forward_allowed": true,
+      "pbo": 0.0333,
+      "status": "PAPER_FORWARD_ELIGIBLE",
+      "strategy_id": "H3_MAKER"
+    }
+  ],
+  "registry_sha256": "18797c8cb4bd2da0fdcd9a106691f816e6837c1c144ae9ee46a9f429e7400576"
+}

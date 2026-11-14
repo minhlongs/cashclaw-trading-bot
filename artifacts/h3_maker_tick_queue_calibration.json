@@ -1,0 +1,850 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-11-14T13:15:20.877494+00:00",
+  "commit": "3d56c1ed5fb371a4ee36665a6ce6654330ffef41",
+  "strategy_id": "H3_MAKER",
+  "methodology": {
+    "simulator": "verification_lab.execution.tick_fifo_calibrator (HftBacktest FIFO queue & two-leg sync physics)",
+    "capital_usd": 1000000.0,
+    "twap_slices_per_rebalance_day": 24,
+    "passive_slice_clip_usd_band": [
+      25000.0,
+      50000.0
+    ],
+    "passive_quoting_horizon_sec": 300,
+    "sensitivity_passive_horizon_sec": 900,
+    "synchronized_hedge_window_sec": 30,
+    "hedge_window_sensitivity_sec": [
+      5,
+      10,
+      30,
+      60
+    ],
+    "markout_horizons_sec": [
+      1,
+      5,
+      10,
+      30,
+      60
+    ],
+    "zero_oos_leakage_invariant": "All train calibration dates are <= 2024-12-31 (strictly inside train split 0..1491). Locked-OOS dates (>= 2025-07-26) are evaluated once for out-of-sample microstructure verification and NEVER enter train_calibrated_bounds."
+  },
+  "provenance": {
+    "source": "https://data.binance.vision/data (futures/um bookDepth + futures/um aggTrades + spot aggTrades)",
+    "cache_dir": "verification_lab/data/raw/tick_calibration",
+    "n_archives": 21,
+    "total_archive_bytes": 32197472,
+    "total_archive_mb": 32.197,
+    "all_sha256_checksums_verified": true,
+    "files": [
+      {
+        "dataset": "perp_book_depth",
+        "symbol": "BNBUSDT",
+        "date": "2023-10-17",
+        "url": "https://data.binance.vision/data/futures/um/daily/bookDepth/BNBUSDT/BNBUSDT-bookDepth-2023-10-17.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/bookDepth/BNBUSDT/BNBUSDT-bookDepth-2023-10-17.zip.CHECKSUM",
+        "bytes": 432663,
+        "sha256": "51c5634d380376b5ce3cd98f8a991a3e746b06c0e885acffd57c402d1d8ec8e6",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_agg_trades",
+        "symbol": "BNBUSDT",
+        "date": "2023-10-17",
+        "url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2023-10-17.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2023-10-17.zip.CHECKSUM",
+        "bytes": 1494406,
+        "sha256": "1587c1720bcd77f29e1a410cbbb737711627a052d13942ac777d7d9beb1a9289",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "spot_agg_trades",
+        "symbol": "BNBUSDT",
+        "date": "2023-10-17",
+        "url": "https://data.binance.vision/data/spot/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2023-10-17.zip",
+        "checksum_url": "https://data.binance.vision/data/spot/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2023-10-17.zip.CHECKSUM",
+        "bytes": 1234189,
+        "sha256": "2421fed8e23eb79c28ec02e6c4ae088d521dd4d6558ee157523bbe3be90c2eb2",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_book_depth",
+        "symbol": "BNBUSDT",
+        "date": "2023-10-18",
+        "url": "https://data.binance.vision/data/futures/um/daily/bookDepth/BNBUSDT/BNBUSDT-bookDepth-2023-10-18.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/bookDepth/BNBUSDT/BNBUSDT-bookDepth-2023-10-18.zip.CHECKSUM",
+        "bytes": 431525,
+        "sha256": "31f2ecc89cbd14ffb7dc63e78dc4994638fade6ff9bb74e1cd48f78466523c0c",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_agg_trades",
+        "symbol": "BNBUSDT",
+        "date": "2023-10-18",
+        "url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2023-10-18.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2023-10-18.zip.CHECKSUM",
+        "bytes": 1068166,
+        "sha256": "ea609dce3c872bbc710155869b785d4d88a4d473e72b0f6fd7b24579c7f3a7dd",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "spot_agg_trades",
+        "symbol": "BNBUSDT",
+        "date": "2023-10-18",
+        "url": "https://data.binance.vision/data/spot/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2023-10-18.zip",
+        "checksum_url": "https://data.binance.vision/data/spot/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2023-10-18.zip.CHECKSUM",
+        "bytes": 1031984,
+        "sha256": "292ac8b64bb6432e82e589d2cf9f80d44404f9645d2274d50c9d4e218e78a7c0",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_book_depth",
+        "symbol": "UNIUSDT",
+        "date": "2023-11-12",
+        "url": "https://data.binance.vision/data/futures/um/daily/bookDepth/UNIUSDT/UNIUSDT-bookDepth-2023-11-12.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/bookDepth/UNIUSDT/UNIUSDT-bookDepth-2023-11-12.zip.CHECKSUM",
+        "bytes": 392545,
+        "sha256": "5c21cdee80fe3c7fdd41abd52c6631a126756714ece34f831d015eb7f4aa3150",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_agg_trades",
+        "symbol": "UNIUSDT",
+        "date": "2023-11-12",
+        "url": "https://data.binance.vision/data/futures/um/daily/aggTrades/UNIUSDT/UNIUSDT-aggTrades-2023-11-12.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/aggTrades/UNIUSDT/UNIUSDT-aggTrades-2023-11-12.zip.CHECKSUM",
+        "bytes": 1107231,
+        "sha256": "d63411c72d116cd211db6097e60c3e433a4e7a1bdf255cfbc909c0905fcdc0c9",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "spot_agg_trades",
+        "symbol": "UNIUSDT",
+        "date": "2023-11-12",
+        "url": "https://data.binance.vision/data/spot/daily/aggTrades/UNIUSDT/UNIUSDT-aggTrades-2023-11-12.zip",
+        "checksum_url": "https://data.binance.vision/data/spot/daily/aggTrades/UNIUSDT/UNIUSDT-aggTrades-2023-11-12.zip.CHECKSUM",
+        "bytes": 791397,
+        "sha256": "55156185937451803eefdf05747c414118518c7381996db83f5126c2482da1b2",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_book_depth",
+        "symbol": "LINKUSDT",
+        "date": "2024-04-28",
+        "url": "https://data.binance.vision/data/futures/um/daily/bookDepth/LINKUSDT/LINKUSDT-bookDepth-2024-04-28.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/bookDepth/LINKUSDT/LINKUSDT-bookDepth-2024-04-28.zip.CHECKSUM",
+        "bytes": 460797,
+        "sha256": "362469723dffb7636597cba73c75bf477a964444164c8922e827fb9593343d8e",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_agg_trades",
+        "symbol": "LINKUSDT",
+        "date": "2024-04-28",
+        "url": "https://data.binance.vision/data/futures/um/daily/aggTrades/LINKUSDT/LINKUSDT-aggTrades-2024-04-28.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/aggTrades/LINKUSDT/LINKUSDT-aggTrades-2024-04-28.zip.CHECKSUM",
+        "bytes": 1276397,
+        "sha256": "bb6160827ca1019b2e834cc801a02a4fb0351529cb78cb229a6454fab1400947",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "spot_agg_trades",
+        "symbol": "LINKUSDT",
+        "date": "2024-04-28",
+        "url": "https://data.binance.vision/data/spot/daily/aggTrades/LINKUSDT/LINKUSDT-aggTrades-2024-04-28.zip",
+        "checksum_url": "https://data.binance.vision/data/spot/daily/aggTrades/LINKUSDT/LINKUSDT-aggTrades-2024-04-28.zip.CHECKSUM",
+        "bytes": 765666,
+        "sha256": "397e9c0e3e045e6a09adae935b266e890f2565cabc14c2c491eda163ca163775",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_book_depth",
+        "symbol": "FILUSDT",
+        "date": "2024-06-08",
+        "url": "https://data.binance.vision/data/futures/um/daily/bookDepth/FILUSDT/FILUSDT-bookDepth-2024-06-08.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/bookDepth/FILUSDT/FILUSDT-bookDepth-2024-06-08.zip.CHECKSUM",
+        "bytes": 437856,
+        "sha256": "c9e8d0459fb5692c0df3123823d3ff2f042a53a4162e9bf27644a21f0c3f57d2",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_agg_trades",
+        "symbol": "FILUSDT",
+        "date": "2024-06-08",
+        "url": "https://data.binance.vision/data/futures/um/daily/aggTrades/FILUSDT/FILUSDT-aggTrades-2024-06-08.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/aggTrades/FILUSDT/FILUSDT-aggTrades-2024-06-08.zip.CHECKSUM",
+        "bytes": 3508292,
+        "sha256": "aacda4ee7f69c593cca91530614b32e6b5c4ad84a96868720969e24064e0a1bd",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "spot_agg_trades",
+        "symbol": "FILUSDT",
+        "date": "2024-06-08",
+        "url": "https://data.binance.vision/data/spot/daily/aggTrades/FILUSDT/FILUSDT-aggTrades-2024-06-08.zip",
+        "checksum_url": "https://data.binance.vision/data/spot/daily/aggTrades/FILUSDT/FILUSDT-aggTrades-2024-06-08.zip.CHECKSUM",
+        "bytes": 1803950,
+        "sha256": "ff526313296387aebe16a2a6c869e18dbd54661cce741edeb083501b1edf5bcf",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_book_depth",
+        "symbol": "BNBUSDT",
+        "date": "2025-07-26",
+        "url": "https://data.binance.vision/data/futures/um/daily/bookDepth/BNBUSDT/BNBUSDT-bookDepth-2025-07-26.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/bookDepth/BNBUSDT/BNBUSDT-bookDepth-2025-07-26.zip.CHECKSUM",
+        "bytes": 429581,
+        "sha256": "f473ded4f3ce358eabd8f9d67f1c8330f82af70a2458907f1f24feea1a234366",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_agg_trades",
+        "symbol": "BNBUSDT",
+        "date": "2025-07-26",
+        "url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2025-07-26.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2025-07-26.zip.CHECKSUM",
+        "bytes": 2442645,
+        "sha256": "e881aa95c4ba5e6027807471f5f23671b0b19ca1c3e8d52196ebedf14e3861a5",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "spot_agg_trades",
+        "symbol": "BNBUSDT",
+        "date": "2025-07-26",
+        "url": "https://data.binance.vision/data/spot/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2025-07-26.zip",
+        "checksum_url": "https://data.binance.vision/data/spot/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2025-07-26.zip.CHECKSUM",
+        "bytes": 3746315,
+        "sha256": "71e22912214983b745764ac570859f315667cf3d28682c88e05a62891b61d560",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_book_depth",
+        "symbol": "BNBUSDT",
+        "date": "2026-03-06",
+        "url": "https://data.binance.vision/data/futures/um/daily/bookDepth/BNBUSDT/BNBUSDT-bookDepth-2026-03-06.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/bookDepth/BNBUSDT/BNBUSDT-bookDepth-2026-03-06.zip.CHECKSUM",
+        "bytes": 483341,
+        "sha256": "e551fbb77ad42188f37a1421d4133e1097338414634c7c39771908009b839b60",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "perp_agg_trades",
+        "symbol": "BNBUSDT",
+        "date": "2026-03-06",
+        "url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2026-03-06.zip",
+        "checksum_url": "https://data.binance.vision/data/futures/um/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2026-03-06.zip.CHECKSUM",
+        "bytes": 4343894,
+        "sha256": "51b4036544cc68552b73ad486203e2d081a94754527eefcdf5efbba7d1772f87",
+        "checksum_verified": true,
+        "cache_hit": true
+      },
+      {
+        "dataset": "spot_agg_trades",
+        "symbol": "BNBUSDT",
+        "date": "2026-03-06",
+        "url": "https://data.binance.vision/data/spot/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2026-03-06.zip",
+        "checksum_url": "https://data.binance.vision/data/spot/daily/aggTrades/BNBUSDT/BNBUSDT-aggTrades-2026-03-06.zip.CHECKSUM",
+        "bytes": 4514632,
+        "sha256": "bb0152afc6bb57ad69b1222ded6d368fadf8c31fe4a9e098dda1d54f7c1c1857",
+        "checksum_verified": true,
+        "cache_hit": true
+      }
+    ]
+  },
+  "train_calibration": {
+    "summary": {
+      "split": "train",
+      "n_rebalance_days": 5,
+      "symbols": [
+        "BNBUSDT",
+        "FILUSDT",
+        "LINKUSDT",
+        "UNIUSDT"
+      ],
+      "dates": [
+        "BNBUSDT:2023-10-17",
+        "BNBUSDT:2023-10-18",
+        "UNIUSDT:2023-11-12",
+        "LINKUSDT:2024-04-28",
+        "FILUSDT:2024-06-08"
+      ],
+      "empirical_p_fill": 0.775,
+      "empirical_p_fill_900s": 0.8667,
+      "empirical_p_fill_min_day": 0.7083,
+      "empirical_adverse_selection_bps": 3.2334,
+      "empirical_adverse_selection_ceiling_bps": 5.7149,
+      "markout_curve_mid_adverse_bps": {
+        "1s": 1.0454,
+        "5s": 1.5184,
+        "10s": 1.7359,
+        "30s": 3.2334,
+        "60s": 2.985
+      },
+      "markout_curve_vs_fill_px_bps": {
+        "1s": 1.1764,
+        "5s": 1.6495,
+        "10s": 1.8671,
+        "30s": 3.3645,
+        "60s": 3.1162
+      },
+      "empirical_p_leg_miss": 0.375,
+      "empirical_p_leg_miss_ceiling": 0.5,
+      "pair_single_leg_miss_event_rate": 0.75,
+      "empirical_emergency_taker_half_spread_bps": 1.0373,
+      "empirical_emergency_taker_mean_half_spread_bps": 1.031,
+      "empirical_emergency_taker_ceiling_half_spread_bps": 3.0422
+    },
+    "days": [
+      {
+        "split": "train",
+        "symbol": "BNBUSDT",
+        "date": "2023-10-17",
+        "direction": "entry",
+        "pair_weight_delta": 0.55,
+        "leg_target_notional_usd": 275000.0,
+        "slice_clip_usd": 25000.0,
+        "n_slices": 24,
+        "n_active_slices": 24,
+        "perp_trades_count": 103620,
+        "spot_trades_count": 84820,
+        "book_depth_snapshots_count": 2880,
+        "perp_tick_size": 0.01,
+        "spot_tick_size": 0.1,
+        "median_spot_queue_ahead_usd": 200473.65,
+        "median_perp_queue_ahead_usd": 40344.04,
+        "empirical_p_fill_300s": 0.7083,
+        "empirical_p_fill_900s": 0.7917,
+        "spot_p_fill_300s": 0.5833,
+        "perp_p_fill_300s": 0.8333,
+        "empirical_adverse_selection_mid_markout_bps": {
+          "1s": 0.9195,
+          "5s": 1.4328,
+          "10s": 1.8212,
+          "30s": 2.4412,
+          "60s": 1.3933
+        },
+        "empirical_adverse_selection_vs_fill_px_bps": {
+          "1s": 1.2576,
+          "5s": 1.771,
+          "10s": 2.1594,
+          "30s": 2.7792,
+          "60s": 1.7314
+        },
+        "empirical_p_leg_miss_30s": 0.4583,
+        "pair_leg_miss_event_rate_30s": 0.9167,
+        "hedge_window_per_leg_miss_sensitivity": {
+          "5s": 0.4792,
+          "10s": 0.4792,
+          "30s": 0.4583,
+          "60s": 0.3958
+        },
+        "perp_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.2414,
+          "vwap_60s_p90_half_spread_bps": 0.8171,
+          "sign_flip_median_half_spread_bps": 0.2352,
+          "sign_flip_mean_half_spread_bps": 0.2617,
+          "sign_flip_p90_half_spread_bps": 0.2372,
+          "effective_half_spread_bps": 0.2617,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 38643
+        },
+        "spot_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 2.3326,
+          "vwap_60s_p90_half_spread_bps": 2.3669,
+          "sign_flip_median_half_spread_bps": 2.3535,
+          "sign_flip_mean_half_spread_bps": 2.325,
+          "sign_flip_p90_half_spread_bps": 2.3702,
+          "effective_half_spread_bps": 2.3326,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 30275
+        },
+        "empirical_emergency_taker_half_spread_bps": 1.2971,
+        "empirical_emergency_taker_p90_half_spread_bps": 1.5937
+      },
+      {
+        "split": "train",
+        "symbol": "BNBUSDT",
+        "date": "2023-10-18",
+        "direction": "entry",
+        "pair_weight_delta": 0.2475,
+        "leg_target_notional_usd": 123750.0,
+        "slice_clip_usd": 25000.0,
+        "n_slices": 24,
+        "n_active_slices": 24,
+        "perp_trades_count": 74162,
+        "spot_trades_count": 70844,
+        "book_depth_snapshots_count": 2879,
+        "perp_tick_size": 0.01,
+        "spot_tick_size": 0.1,
+        "median_spot_queue_ahead_usd": 239128.92,
+        "median_perp_queue_ahead_usd": 42930.16,
+        "empirical_p_fill_300s": 0.7083,
+        "empirical_p_fill_900s": 0.8125,
+        "spot_p_fill_300s": 0.5,
+        "perp_p_fill_300s": 0.9167,
+        "empirical_adverse_selection_mid_markout_bps": {
+          "1s": 0.4795,
+          "5s": 1.0013,
+          "10s": 1.1192,
+          "30s": 1.4101,
+          "60s": 1.5277
+        },
+        "empirical_adverse_selection_vs_fill_px_bps": {
+          "1s": 0.8684,
+          "5s": 1.3903,
+          "10s": 1.5081,
+          "30s": 1.799,
+          "60s": 1.9166
+        },
+        "empirical_p_leg_miss_30s": 0.5,
+        "pair_leg_miss_event_rate_30s": 1.0,
+        "hedge_window_per_leg_miss_sensitivity": {
+          "5s": 0.5,
+          "10s": 0.5,
+          "30s": 0.5,
+          "60s": 0.4375
+        },
+        "perp_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.2374,
+          "vwap_60s_p90_half_spread_bps": 0.7723,
+          "sign_flip_median_half_spread_bps": 0.2357,
+          "sign_flip_mean_half_spread_bps": 0.2245,
+          "sign_flip_p90_half_spread_bps": 0.2375,
+          "effective_half_spread_bps": 0.2374,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 27964
+        },
+        "spot_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 2.3513,
+          "vwap_60s_p90_half_spread_bps": 2.3759,
+          "sign_flip_median_half_spread_bps": 2.359,
+          "sign_flip_mean_half_spread_bps": 2.3352,
+          "sign_flip_p90_half_spread_bps": 2.3747,
+          "effective_half_spread_bps": 2.3513,
+          "n_60s_windows": 1438,
+          "n_sign_flips": 24027
+        },
+        "empirical_emergency_taker_half_spread_bps": 1.2944,
+        "empirical_emergency_taker_p90_half_spread_bps": 1.5741
+      },
+      {
+        "split": "train",
+        "symbol": "UNIUSDT",
+        "date": "2023-11-12",
+        "direction": "entry",
+        "pair_weight_delta": 0.0786,
+        "leg_target_notional_usd": 39300.0,
+        "slice_clip_usd": 25000.0,
+        "n_slices": 24,
+        "n_active_slices": 24,
+        "perp_trades_count": 77086,
+        "spot_trades_count": 50646,
+        "book_depth_snapshots_count": 2880,
+        "perp_tick_size": 0.001,
+        "spot_tick_size": 0.001,
+        "median_spot_queue_ahead_usd": 9762.67,
+        "median_perp_queue_ahead_usd": 42458.31,
+        "empirical_p_fill_300s": 0.7292,
+        "empirical_p_fill_900s": 0.875,
+        "spot_p_fill_300s": 0.7917,
+        "perp_p_fill_300s": 0.6667,
+        "empirical_adverse_selection_mid_markout_bps": {
+          "1s": 1.0092,
+          "5s": 1.3273,
+          "10s": 1.6911,
+          "30s": 2.5221,
+          "60s": 4.4763
+        },
+        "empirical_adverse_selection_vs_fill_px_bps": {
+          "1s": 0.957,
+          "5s": 1.2755,
+          "10s": 1.6398,
+          "30s": 2.4711,
+          "60s": 4.4253
+        },
+        "empirical_p_leg_miss_30s": 0.3542,
+        "pair_leg_miss_event_rate_30s": 0.7083,
+        "hedge_window_per_leg_miss_sensitivity": {
+          "5s": 0.4583,
+          "10s": 0.4167,
+          "30s": 0.3542,
+          "60s": 0.3542
+        },
+        "perp_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.982,
+          "vwap_60s_p90_half_spread_bps": 2.6668,
+          "sign_flip_median_half_spread_bps": 0.916,
+          "sign_flip_mean_half_spread_bps": 0.6233,
+          "sign_flip_p90_half_spread_bps": 0.9462,
+          "effective_half_spread_bps": 0.982,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 27216
+        },
+        "spot_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 1.0926,
+          "vwap_60s_p90_half_spread_bps": 3.1117,
+          "sign_flip_median_half_spread_bps": 0.9276,
+          "sign_flip_mean_half_spread_bps": 0.9749,
+          "sign_flip_p90_half_spread_bps": 1.8811,
+          "effective_half_spread_bps": 1.0926,
+          "n_60s_windows": 1425,
+          "n_sign_flips": 10272
+        },
+        "empirical_emergency_taker_half_spread_bps": 1.0373,
+        "empirical_emergency_taker_p90_half_spread_bps": 2.8892
+      },
+      {
+        "split": "train",
+        "symbol": "LINKUSDT",
+        "date": "2024-04-28",
+        "direction": "exit",
+        "pair_weight_delta": -0.0262,
+        "leg_target_notional_usd": 13100.0,
+        "slice_clip_usd": 25000.0,
+        "n_slices": 24,
+        "n_active_slices": 24,
+        "perp_trades_count": 82197,
+        "spot_trades_count": 49794,
+        "book_depth_snapshots_count": 2880,
+        "perp_tick_size": 0.001,
+        "spot_tick_size": 0.001,
+        "median_spot_queue_ahead_usd": 8809.07,
+        "median_perp_queue_ahead_usd": 41858.99,
+        "empirical_p_fill_300s": 0.8542,
+        "empirical_p_fill_900s": 0.9167,
+        "spot_p_fill_300s": 0.75,
+        "perp_p_fill_300s": 0.9583,
+        "empirical_adverse_selection_mid_markout_bps": {
+          "1s": 0.9648,
+          "5s": 1.8842,
+          "10s": 2.3223,
+          "30s": 4.0785,
+          "60s": 3.3997
+        },
+        "empirical_adverse_selection_vs_fill_px_bps": {
+          "1s": 0.5975,
+          "5s": 1.5168,
+          "10s": 1.9549,
+          "30s": 3.7112,
+          "60s": 3.0326
+        },
+        "empirical_p_leg_miss_30s": 0.2917,
+        "pair_leg_miss_event_rate_30s": 0.5833,
+        "hedge_window_per_leg_miss_sensitivity": {
+          "5s": 0.4375,
+          "10s": 0.375,
+          "30s": 0.2917,
+          "60s": 0.1875
+        },
+        "perp_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.4501,
+          "vwap_60s_p90_half_spread_bps": 1.4749,
+          "sign_flip_median_half_spread_bps": 0.3523,
+          "sign_flip_mean_half_spread_bps": 0.3039,
+          "sign_flip_p90_half_spread_bps": 0.3624,
+          "effective_half_spread_bps": 0.4501,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 27306
+        },
+        "spot_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.5838,
+          "vwap_60s_p90_half_spread_bps": 1.8825,
+          "sign_flip_median_half_spread_bps": 0.3501,
+          "sign_flip_mean_half_spread_bps": 0.2564,
+          "sign_flip_p90_half_spread_bps": 0.3622,
+          "effective_half_spread_bps": 0.5838,
+          "n_60s_windows": 1394,
+          "n_sign_flips": 8253
+        },
+        "empirical_emergency_taker_half_spread_bps": 0.517,
+        "empirical_emergency_taker_p90_half_spread_bps": 1.6787
+      },
+      {
+        "split": "train",
+        "symbol": "FILUSDT",
+        "date": "2024-06-08",
+        "direction": "entry",
+        "pair_weight_delta": 0.275,
+        "leg_target_notional_usd": 137500.0,
+        "slice_clip_usd": 25000.0,
+        "n_slices": 24,
+        "n_active_slices": 24,
+        "perp_trades_count": 235790,
+        "spot_trades_count": 122949,
+        "book_depth_snapshots_count": 2880,
+        "perp_tick_size": 0.001,
+        "spot_tick_size": 0.001,
+        "median_spot_queue_ahead_usd": 9923.02,
+        "median_perp_queue_ahead_usd": 52450.43,
+        "empirical_p_fill_300s": 0.875,
+        "empirical_p_fill_900s": 0.9375,
+        "spot_p_fill_300s": 0.9167,
+        "perp_p_fill_300s": 0.8333,
+        "empirical_adverse_selection_mid_markout_bps": {
+          "1s": 1.8538,
+          "5s": 1.9463,
+          "10s": 1.7259,
+          "30s": 5.7149,
+          "60s": 4.1279
+        },
+        "empirical_adverse_selection_vs_fill_px_bps": {
+          "1s": 2.2014,
+          "5s": 2.294,
+          "10s": 2.0735,
+          "30s": 6.0622,
+          "60s": 4.475
+        },
+        "empirical_p_leg_miss_30s": 0.2708,
+        "pair_leg_miss_event_rate_30s": 0.5417,
+        "hedge_window_per_leg_miss_sensitivity": {
+          "5s": 0.375,
+          "10s": 0.3125,
+          "30s": 0.2708,
+          "60s": 0.2292
+        },
+        "perp_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.8998,
+          "vwap_60s_p90_half_spread_bps": 2.4822,
+          "sign_flip_median_half_spread_bps": 0.7956,
+          "sign_flip_mean_half_spread_bps": 0.7087,
+          "sign_flip_p90_half_spread_bps": 0.8242,
+          "effective_half_spread_bps": 0.8998,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 107807
+        },
+        "spot_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 1.1188,
+          "vwap_60s_p90_half_spread_bps": 3.6021,
+          "sign_flip_median_half_spread_bps": 0.7936,
+          "sign_flip_mean_half_spread_bps": 0.7647,
+          "sign_flip_p90_half_spread_bps": 1.5796,
+          "effective_half_spread_bps": 1.1188,
+          "n_60s_windows": 1438,
+          "n_sign_flips": 25938
+        },
+        "empirical_emergency_taker_half_spread_bps": 1.0093,
+        "empirical_emergency_taker_p90_half_spread_bps": 3.0422
+      }
+    ]
+  },
+  "locked_oos_verification": {
+    "summary": {
+      "split": "locked_oos",
+      "n_rebalance_days": 2,
+      "symbols": [
+        "BNBUSDT"
+      ],
+      "dates": [
+        "BNBUSDT:2025-07-26",
+        "BNBUSDT:2026-03-06"
+      ],
+      "empirical_p_fill": 0.875,
+      "empirical_p_fill_900s": 0.9166,
+      "empirical_p_fill_min_day": 0.8125,
+      "empirical_adverse_selection_bps": 1.7409,
+      "empirical_adverse_selection_ceiling_bps": 1.7908,
+      "markout_curve_mid_adverse_bps": {
+        "1s": 0.5266,
+        "5s": 0.8018,
+        "10s": 1.0751,
+        "30s": 1.521,
+        "60s": 1.7409
+      },
+      "markout_curve_vs_fill_px_bps": {
+        "1s": 0.5012,
+        "5s": 0.7765,
+        "10s": 1.0497,
+        "30s": 1.4956,
+        "60s": 1.7155
+      },
+      "empirical_p_leg_miss": 0.3125,
+      "empirical_p_leg_miss_ceiling": 0.3958,
+      "pair_single_leg_miss_event_rate": 0.625,
+      "empirical_emergency_taker_half_spread_bps": 0.2816,
+      "empirical_emergency_taker_mean_half_spread_bps": 0.2816,
+      "empirical_emergency_taker_ceiling_half_spread_bps": 1.1679
+    },
+    "days": [
+      {
+        "split": "locked_oos",
+        "symbol": "BNBUSDT",
+        "date": "2025-07-26",
+        "direction": "entry",
+        "pair_weight_delta": 0.2475,
+        "leg_target_notional_usd": 123750.0,
+        "slice_clip_usd": 25000.0,
+        "n_slices": 24,
+        "n_active_slices": 24,
+        "perp_trades_count": 178826,
+        "spot_trades_count": 229820,
+        "book_depth_snapshots_count": 2838,
+        "perp_tick_size": 0.01,
+        "spot_tick_size": 0.01,
+        "median_spot_queue_ahead_usd": 22461.93,
+        "median_perp_queue_ahead_usd": 74886.65,
+        "empirical_p_fill_300s": 0.8125,
+        "empirical_p_fill_900s": 0.875,
+        "spot_p_fill_300s": 0.7917,
+        "perp_p_fill_300s": 0.8333,
+        "empirical_adverse_selection_mid_markout_bps": {
+          "1s": 0.593,
+          "5s": 1.0545,
+          "10s": 1.2777,
+          "30s": 1.6999,
+          "60s": 1.6909
+        },
+        "empirical_adverse_selection_vs_fill_px_bps": {
+          "1s": 0.5963,
+          "5s": 1.0578,
+          "10s": 1.281,
+          "30s": 1.7032,
+          "60s": 1.6942
+        },
+        "empirical_p_leg_miss_30s": 0.3958,
+        "pair_leg_miss_event_rate_30s": 0.7917,
+        "hedge_window_per_leg_miss_sensitivity": {
+          "5s": 0.4792,
+          "10s": 0.4792,
+          "30s": 0.3958,
+          "60s": 0.25
+        },
+        "perp_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.2718,
+          "vwap_60s_p90_half_spread_bps": 0.9524,
+          "sign_flip_median_half_spread_bps": 0.0638,
+          "sign_flip_mean_half_spread_bps": 0.0725,
+          "sign_flip_p90_half_spread_bps": 0.0641,
+          "effective_half_spread_bps": 0.2718,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 59832
+        },
+        "spot_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.2071,
+          "vwap_60s_p90_half_spread_bps": 0.8094,
+          "sign_flip_median_half_spread_bps": 0.0639,
+          "sign_flip_mean_half_spread_bps": 0.0618,
+          "sign_flip_p90_half_spread_bps": 0.0641,
+          "effective_half_spread_bps": 0.2071,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 66586
+        },
+        "empirical_emergency_taker_half_spread_bps": 0.2394,
+        "empirical_emergency_taker_p90_half_spread_bps": 0.8809
+      },
+      {
+        "split": "locked_oos",
+        "symbol": "BNBUSDT",
+        "date": "2026-03-06",
+        "direction": "entry",
+        "pair_weight_delta": 0.55,
+        "leg_target_notional_usd": 275000.0,
+        "slice_clip_usd": 25000.0,
+        "n_slices": 24,
+        "n_active_slices": 24,
+        "perp_trades_count": 325025,
+        "spot_trades_count": 280428,
+        "book_depth_snapshots_count": 2658,
+        "perp_tick_size": 0.01,
+        "spot_tick_size": 0.01,
+        "median_spot_queue_ahead_usd": 6300.93,
+        "median_perp_queue_ahead_usd": 29065.35,
+        "empirical_p_fill_300s": 0.9375,
+        "empirical_p_fill_900s": 0.9583,
+        "spot_p_fill_300s": 0.9167,
+        "perp_p_fill_300s": 0.9583,
+        "empirical_adverse_selection_mid_markout_bps": {
+          "1s": 0.4602,
+          "5s": 0.5491,
+          "10s": 0.8724,
+          "30s": 1.342,
+          "60s": 1.7908
+        },
+        "empirical_adverse_selection_vs_fill_px_bps": {
+          "1s": 0.4062,
+          "5s": 0.4951,
+          "10s": 0.8184,
+          "30s": 1.288,
+          "60s": 1.7368
+        },
+        "empirical_p_leg_miss_30s": 0.2292,
+        "pair_leg_miss_event_rate_30s": 0.4583,
+        "hedge_window_per_leg_miss_sensitivity": {
+          "5s": 0.375,
+          "10s": 0.3333,
+          "30s": 0.2292,
+          "60s": 0.1667
+        },
+        "perp_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.2892,
+          "vwap_60s_p90_half_spread_bps": 1.0529,
+          "sign_flip_median_half_spread_bps": 0.0782,
+          "sign_flip_mean_half_spread_bps": 0.0841,
+          "sign_flip_p90_half_spread_bps": 0.0797,
+          "effective_half_spread_bps": 0.2892,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 98591
+        },
+        "spot_tick_half_spread": {
+          "vwap_60s_median_half_spread_bps": 0.3584,
+          "vwap_60s_p90_half_spread_bps": 1.283,
+          "sign_flip_median_half_spread_bps": 0.0782,
+          "sign_flip_mean_half_spread_bps": 0.0784,
+          "sign_flip_p90_half_spread_bps": 0.0797,
+          "effective_half_spread_bps": 0.3584,
+          "n_60s_windows": 1440,
+          "n_sign_flips": 47516
+        },
+        "empirical_emergency_taker_half_spread_bps": 0.3238,
+        "empirical_emergency_taker_p90_half_spread_bps": 1.1679
+      }
+    ]
+  },
+  "train_calibrated_bounds_for_g6": {
+    "empirical_p_fill": 0.775,
+    "empirical_p_fill_900s": 0.8667,
+    "floor": {
+      "adverse_selection_bps": 3.2334,
+      "p_leg_miss": 0.375,
+      "emergency_taker_half_spread_bps": 1.0373
+    },
+    "ceiling": {
+      "adverse_selection_bps": 5.7149,
+      "p_leg_miss": 0.5,
+      "emergency_taker_half_spread_bps": 3.0422
+    },
+    "prior_analytic_band_reference": {
+      "adverse_selection_bps": [
+        1.5,
+        3.0
+      ],
+      "p_leg_miss": [
+        0.15,
+        0.25
+      ],
+      "ohlcv_corwin_schultz_half_spread_bps": [
+        3.0,
+        24.8772
+      ],
+      "ceiling_overstatement_ratio_vs_tick_median": 23.98
+    }
+  }
+}
