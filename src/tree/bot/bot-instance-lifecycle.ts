@@ -19,6 +19,7 @@ export interface StartLifecycleContext {
   deps: BotDependencies;
   callbacks: BotCallbacks;
   state: BotState;
+  hasStrategy?: boolean;
   placeOrder: (req: OrderRequest) => Promise<OrderResult>;
   emitTelemetry: (type: TradeEventType, details?: Record<string, unknown>) => void;
   emitState: () => void;
@@ -55,9 +56,9 @@ export async function fetchStartPrice(deps: BotDependencies, symbol: string): Pr
  * Execute start lifecycle: fetch price, initialize strategy, emit telemetry/state, and start ticks.
  */
 export async function startBotLifecycle(ctx: StartLifecycleContext): Promise<StartLifecycleResult> {
-  const { id, config, deps, callbacks, state, placeOrder, emitTelemetry, emitState, startTicking } = ctx;
+  const { id, config, deps, callbacks, state, hasStrategy = true, placeOrder, emitTelemetry, emitState, startTicking } = ctx;
 
-  if (state.status === 'running') {
+  if (state.status === 'running' && hasStrategy) {
     return { strategy: null, strategyChain: null };
   }
 

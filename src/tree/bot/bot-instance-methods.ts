@@ -10,7 +10,7 @@ export interface BotContext {
 }
 
 export async function runBotStart(ctx: BotContext, placeOrder: (r: OrderRequest) => Promise<OrderResult>, emitTelem: (t: TradeEventType, d?: Record<string, unknown>) => void, emitSt: () => void, startTick: () => void): Promise<void> {
-  const res = await executeBotStart(ctx.id, ctx.config, ctx.deps, ctx.callbacks, ctx.state, placeOrder, emitTelem, emitSt, startTick);
+  const res = await executeBotStart(ctx.id, ctx.config, ctx.deps, ctx.callbacks, ctx.state, placeOrder, emitTelem, emitSt, startTick, ctx.strategy !== null);
   if (res.strategy) { ctx.strategy = res.strategy; ctx.strategyChain = res.strategyChain; }
 }
 

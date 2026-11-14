@@ -14,9 +14,9 @@ export type BotStrategy = GridStrategy | MeanRevStrategy | VolatilityDcaStrategy
 export async function executeBotStart(
   id: string, config: BotConfig, deps: BotDependencies, callbacks: BotCallbacks, state: BotState,
   placeOrder: (r: OrderRequest) => Promise<OrderResult>, emitTelem: (t: TradeEventType, d?: Record<string, unknown>) => void,
-  emitSt: () => void, startTick: () => void,
+  emitSt: () => void, startTick: () => void, hasStrategy = true,
 ): Promise<{ strategy: BotStrategy; strategyChain: StrategyChain | null }> {
-  return startBotLifecycle(buildLifecycleContext(id, config, deps, callbacks, state, placeOrder, emitTelem, emitSt, startTick));
+  return startBotLifecycle(buildLifecycleContext(id, config, deps, callbacks, state, placeOrder, emitTelem, emitSt, startTick, hasStrategy));
 }
 export async function executeBotTick(
   id: string, config: BotConfig, deps: BotDependencies, callbacks: BotCallbacks, state: BotState,

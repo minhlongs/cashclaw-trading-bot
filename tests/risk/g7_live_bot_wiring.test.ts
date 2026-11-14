@@ -301,9 +301,13 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
 
     const mgr2 = new BotManager({ getD1Database: () => d1 });
     const bot2 = mgr2.createBotSync({ id: 'bot-h3-atomic', config: h3Cfg });
+    bot2.patchState({ status: 'running', startedAt: Date.now() - 60_000 });
+    expect(bot2.getSnapshot().status).toBe('running');
+    expect(bot2.hasStrategy()).toBe(false);
     vi.spyOn((bot2 as unknown as { deps: { exchange: { fetchTicker: (s: string) => Promise<unknown> } } }).deps.exchange, 'fetchTicker')
       .mockImplementation(async (symbol: string) => ({ symbol, last: px, bid: px - 1, ask: px + 1, high24h: px + 5, low24h: px - 5, volume24h: 1000, timestamp: Date.now() }));
     await bot2.start();
+    expect(bot2.hasStrategy()).toBe(true);
     await bot2.tick();
     await vi.waitFor(() => expect(bot2.getLifecycleEngine()!.getAllOrders()[1]?.state).toBe('filled'));
     expect(bot2.getLifecycleEngine()!.getAllOrders()[1]?.side).toBe('sell');
