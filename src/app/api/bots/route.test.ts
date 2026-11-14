@@ -246,5 +246,30 @@ describe('/api/bots route', () => {
         expect.objectContaining({ strategy: 'h3_maker' }),
       );
     });
+
+    it('rejects cross-workspace IDOR on POST /api/bots with 403 WORKSPACE_FORBIDDEN', async () => {
+      mockCheckRateLimit.mockReturnValue({ allowed: true });
+      const req = new Request('http://localhost/api/bots', {
+        method: 'POST',
+        headers: {
+          'x-user-id': 'usr_alice',
+          'x-cashclaw-workspace': 'ws_foreign_victim',
+        },
+        body: JSON.stringify({
+          id: 'bot-idor',
+          name: 'IDOR Bot',
+          strategy: 'grid',
+          pair: 'BTC/USDT',
+          exchange: 'binance',
+          capital: 1000,
+        }),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(403);
+      const body = (await res.json()) as { ok: boolean; code: string };
+      expect(body.ok).toBe(false);
+      expect(body.code).toBe('WORKSPACE_FORBIDDEN');
+      expect(mockBotCreateHandler).not.toHaveBeenCalled();
+    });
   });
 });

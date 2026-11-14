@@ -109,18 +109,20 @@ export async function submitLifecyclePreDispatch(
 
   const batcher = ctx.deps.ledgerBatcher;
   if (batcher) {
+    const ledger = lifecycleEngine.getLedger();
+    const pendingIntent = toOrderStateUpsert(sub.data.order, 'PENDING_INTENT');
     try {
-      const ledger = lifecycleEngine.getLedger();
-      await flushUncommittedJournalEntries(ctx, ledger, batcher, nowMs);
-      const intentRes = await batcher.writePendingOrderIntent(
-        ctx.botId, ledger.getFencingToken(), toOrderStateUpsert(sub.data.order, 'PENDING_INTENT'),
-      );
-      if (!intentRes.ok) {
-        ctx.emitTelemetry('error', { error: intentRes.error, context: 'bot.ledgerBatcher' });
-        throw new Error(`Durable pending order intent failed: ${intentRes.error}`);
+      const committed = await flushUncommittedJournalEntries(ctx, ledger, batcher, nowMs, pendingIntent);
+      if (!committed) {
+        const intentRes = await batcher.writePendingOrderIntent(ctx.botId, ledger.getFencingToken(), pendingIntent);
+        if (!intentRes.ok) {
+          ctx.emitTelemetry('error', { error: intentRes.error, context: 'bot.ledgerBatcher' });
+          throw new Error(`Durable pending order intent failed: ${intentRes.error}`);
+        }
       }
     } catch (persistErr) {
       lifecycleEngine.rejectOrder(sub.data.order.clientOrderId, nowMs);
+      await flushUncommittedJournalEntries(ctx, ledger, batcher, nowMs).catch(() => {});
       throw persistErr;
     }
   }

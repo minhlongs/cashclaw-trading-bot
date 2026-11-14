@@ -156,8 +156,10 @@ describe('bot-order-lifecycle-bridge — partial fills, open/expired orders, dis
 
     const badIntentLedger = new MicroDoubleEntryLedger('bot-u');
     badIntentLedger.depositCapital('init_dep', BigInt(5_000) * MICRO_USD_PER_USD, 1_000);
-    const badIntentCtx = makeOrderCtx(new PaperOrderLifecycleEngine({ botId: 'bot-u', ledger: badIntentLedger }), new D1AtomicLedgerBatcher(createPassThroughMockD1({ intentChanges: 0 })));
-    await expect(executeOrder(badIntentCtx, { symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50_000, quantity: 0.01 }, 0)).rejects.toThrow(/Durable pending order intent failed/);
+    const badIntentEngine = new PaperOrderLifecycleEngine({ botId: 'bot-u', ledger: badIntentLedger });
+    const openBuyCtx = makeOrderCtx(badIntentEngine, new D1AtomicLedgerBatcher(createPassThroughMockD1({ intentChanges: 0 })));
+    await executeOrder(openBuyCtx, { symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50_000, quantity: 0.01 }, 0);
+    await expect(executeOrder(openBuyCtx, { symbol: 'BTC/USDT', side: 'sell', type: 'limit', price: 50_000, quantity: 0.01, reduceOnly: true }, 1)).rejects.toThrow(/Durable pending order intent failed/);
 
     const tightLedger = new MicroDoubleEntryLedger('bot-u');
     tightLedger.depositCapital('init_dep', BigInt(500) * MICRO_USD_PER_USD, 1_000);

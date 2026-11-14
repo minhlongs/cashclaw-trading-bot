@@ -4,6 +4,7 @@ import { evaluateBotStrategyGuard } from '@/forest/api/handlers/bot-strategy-gua
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
 import { enforceWorkspaceQuota } from '@/ee/billing/quota-guard';
 import {
+  detectCrossWorkspaceIdor,
   resolveActiveBotCount,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
@@ -95,7 +96,15 @@ export async function POST(req: Request) {
     );
   }
 
-  const { tier } = await resolveWorkspaceTierContext(req);
+  const tierContext = await resolveWorkspaceTierContext(req);
+  const idorViolation = detectCrossWorkspaceIdor(req, tierContext);
+  if (idorViolation) {
+    return NextResponse.json(
+      { ok: false, code: idorViolation.code, error: idorViolation.error },
+      { status: idorViolation.status },
+    );
+  }
+  const { tier } = tierContext;
   const currentBotCount = await resolveActiveBotCount(() =>
     userId ? botListHandler(userId) : botListHandler(),
   );

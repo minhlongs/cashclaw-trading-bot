@@ -139,13 +139,10 @@ describe('H3MakerStrategy', () => {
 
   it('handles rejected/cancelled orders and order errors gracefully without crashing', async () => {
     const onLog = vi.fn();
+    let resolveFirst!: (val: unknown) => void;
     const placeOrder = vi
       .fn()
-      .mockResolvedValueOnce({
-        id: 'rej-1', exchangeId: 'binance', symbol: 'BTC/USDT',
-        side: 'buy', type: 'limit', price: 0, quantity: 1, filled: 0,
-        status: 'rejected', timestamp: Date.now(),
-      })
+      .mockImplementationOnce(() => new Promise((r) => { resolveFirst = r; }))
       .mockRejectedValueOnce(new Error('maker post-only rejected'))
       .mockRejectedValueOnce('raw failure');
 
@@ -153,7 +150,13 @@ describe('H3MakerStrategy', () => {
     strat.start(1000);
 
     strat.onTicker(makeTicker(1020));
-    await vi.waitFor(() => expect(placeOrder).toHaveBeenCalledTimes(1));
+    expect(placeOrder).toHaveBeenCalledTimes(1);
+    resolveFirst({
+      id: 'rej-1', exchangeId: 'binance', symbol: 'BTC/USDT',
+      side: 'buy', type: 'limit', price: 0, quantity: 1, filled: 0,
+      status: 'rejected', timestamp: Date.now(),
+    });
+    await new Promise((r) => setTimeout(r, 0));
     expect(strat.getPositionSide()).toBe('flat');
 
     strat.onTicker(makeTicker(1040));
@@ -161,5 +164,47 @@ describe('H3MakerStrategy', () => {
 
     strat.onTicker(makeTicker(1060));
     await vi.waitFor(() => expect(onLog).toHaveBeenCalledWith(expect.stringContaining('unknown')));
+  });
+
+  it('cancels prior resting open order, books partial fills, and hydrates existing position on start', async () => {
+    const onLog = vi.fn();
+    const cancelOrder = vi.fn().mockResolvedValue(true);
+    let resolveOpen!: (val: unknown) => void;
+    const placeOrder = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise((r) => { resolveOpen = r; }))
+      .mockResolvedValueOnce({
+        id: 'part-1', exchangeId: 'binance', symbol: 'BTC/USDT',
+        side: 'buy', type: 'limit', price: 1019, quantity: 0.2, filled: 0.1,
+        status: 'partially_filled', fee: 0.01, timestamp: Date.now(),
+      });
+
+    const strat = new H3MakerStrategy(
+      makeConfig({ lookbackDays: 5 }),
+      { onLog, placeOrder, cancelOrder },
+    );
+    strat.start(1000);
+    strat.onTicker(makeTicker(1010));
+    resolveOpen({
+      id: 'open-1', exchangeId: 'binance', symbol: 'BTC/USDT',
+      side: 'buy', type: 'limit', price: 1009, quantity: 0.2, filled: 0,
+      status: 'open', timestamp: Date.now(),
+    });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(strat.getPositionSide()).toBe('flat');
+
+    strat.onTicker(makeTicker(1020));
+    await vi.waitFor(() => expect(strat.getPositionSide()).toBe('long'));
+    expect(cancelOrder).toHaveBeenCalledWith('open-1', 'BTC/USDT');
+    expect(strat.getPositionQty()).toBe(0.1);
+
+    const hydratedStrat = new H3MakerStrategy(
+      makeConfig({ lookbackDays: 2 }),
+      { onLog, getPositionSnapshot: () => ({ qty: 0.05, entryPrice: 49800 }) },
+    );
+    hydratedStrat.start(50000);
+    expect(hydratedStrat.getPositionSide()).toBe('long');
+    expect(hydratedStrat.getPositionQty()).toBe(0.05);
+    expect(hydratedStrat.getEntryPrice()).toBe(49800);
   });
 });

@@ -73,7 +73,8 @@ function toLifecycleRecord(row: DurableOrderIntentRow): LifecycleOrderRecord {
 
 function reconstructPositionsFromOrderIntents(intents: readonly DurableOrderIntentRow[]): LedgerPositionRecord[] {
   const bySymbol = new Map<string, LedgerPositionRecord>();
-  for (const row of intents) {
+  const chronological = [...intents].sort((a, b) => a.updatedAtMs - b.updatedAtMs || a.createdAtMs - b.createdAtMs);
+  for (const row of chronological) {
     if (row.filledQtyBase <= ZERO_BIGINT) continue;
     const prev = bySymbol.get(row.symbol) ?? {
       symbol: row.symbol,

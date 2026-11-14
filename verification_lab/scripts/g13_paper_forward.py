@@ -332,7 +332,7 @@ def fetch_or_load_day0_public_snapshot(
     if valid_symbols == 0:
         raise RuntimeError("REFUSING: zero valid CORE_19 symbol quotes from public venues")
 
-    if _has_normalized_parquets():
+    if _has_normalized_parquets() and (state_file is None or not state_file.exists()):
         panel = run_grid.build_panel("CORE_19")
         pos_hist = h3.build_positions_maker(
             panel.basis,

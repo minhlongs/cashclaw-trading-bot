@@ -215,8 +215,7 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     await h3Bot.start();
     tickPx = 50_200;
     await h3Bot.tick();
-    await vi.waitFor(() => expect(h3Bot.getLifecycleEngine()!.getAllOrders()).toHaveLength(1));
-    expect(h3Bot.getLifecycleEngine()!.getAllOrders()[0]?.state).toBe('filled');
+    await vi.waitFor(() => expect(h3Bot.getLifecycleEngine()!.getAllOrders()[0]?.state).toBe('filled'));
     expect(h3Bot.getLifecycleEngine()!.getLedger().getBalanceSheet().discrepancyMicroUsd).toBe(ZERO_BIGINT);
     mgr2.destroy();
     mgrH3.destroy();
@@ -239,13 +238,11 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     await h3DefaultBot.start();
     feedPx = 50_200;
     await h3DefaultBot.tick();
-    await vi.waitFor(() => expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()).toHaveLength(1));
-    expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()[0]?.state).toBe('filled');
+    await vi.waitFor(() => expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()[0]?.state).toBe('filled'));
     expect(h3DefaultBot.getLifecycleEngine()!.getLedger().getPosition('BTC/USDT').signedQtyBase).toBeGreaterThan(ZERO_BIGINT);
 
     await h3DefaultBot.tick();
-    await vi.waitFor(() => expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()).toHaveLength(2));
-    expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()[1]?.state).toBe('filled');
+    await vi.waitFor(() => expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()[1]?.state).toBe('filled'));
     expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()[1]?.reduceOnly).toBe(true);
     expect(h3DefaultBot.getLifecycleEngine()!.getLedger().getPosition('BTC/USDT').signedQtyBase).toBe(ZERO_BIGINT);
     expect(h3DefaultBot.getLifecycleEngine()!.getLedger().getBalanceSheet().discrepancyMicroUsd).toBe(ZERO_BIGINT);
@@ -276,5 +273,43 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     expect(durableDrift?.orderIntents[0]?.limitPriceMicroUsd).toBe(BigInt(49_500) * MICRO_USD_PER_USD);
     expect(computeBalanceSheet(durableDrift!.balances).discrepancyMicroUsd).toBe(ZERO_BIGINT);
     mgrDrift2.destroy();
+  });
+
+  it('commits RESERVE_MARGIN + PENDING_INTENT atomically in one D1 batch and rehydrates open H3MakerStrategy position across cold restart', async () => {
+    const d1 = createSqliteD1();
+    const batchSpy = vi.spyOn(d1, 'batch');
+    const mgr1 = new BotManager({ getD1Database: () => d1 });
+    const h3Cfg: H3MakerBotConfig = {
+      name: 'H3 Cold Resume', symbol: 'BTC/USDT', exchange: 'binance', mode: 'paper',
+      strategy: 'h3_maker', capital: 10_000, maxDrawdownPct: 12, lookbackDays: 3,
+      entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0,
+    };
+    const bot1 = await mgr1.createBot({ id: 'bot-h3-atomic', config: h3Cfg, exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    let px = 50_000;
+    vi.spyOn((bot1 as unknown as { deps: { exchange: { fetchTicker: (s: string) => Promise<unknown> } } }).deps.exchange, 'fetchTicker')
+      .mockImplementation(async (symbol: string) => ({ symbol, last: px, bid: px - 1, ask: px + 1, high24h: px + 5, low24h: px - 5, volume24h: 1000, timestamp: Date.now() }));
+    await bot1.start();
+    px = 50_200;
+    batchSpy.mockClear();
+    const runSpy = vi.spyOn(d1, 'prepare');
+    await bot1.tick();
+    await vi.waitFor(() => expect(bot1.getLifecycleEngine()!.getAllOrders()[0]?.state).toBe('filled'));
+    expect(batchSpy.mock.calls.length).toBe(3);
+    expect(batchSpy.mock.calls[1]?.[0]).toHaveLength(5);
+    expect(runSpy).toHaveBeenCalled();
+    mgr1.destroy();
+
+    const mgr2 = new BotManager({ getD1Database: () => d1 });
+    const bot2 = mgr2.createBotSync({ id: 'bot-h3-atomic', config: h3Cfg });
+    vi.spyOn((bot2 as unknown as { deps: { exchange: { fetchTicker: (s: string) => Promise<unknown> } } }).deps.exchange, 'fetchTicker')
+      .mockImplementation(async (symbol: string) => ({ symbol, last: px, bid: px - 1, ask: px + 1, high24h: px + 5, low24h: px - 5, volume24h: 1000, timestamp: Date.now() }));
+    await bot2.start();
+    await bot2.tick();
+    await vi.waitFor(() => expect(bot2.getLifecycleEngine()!.getAllOrders()[1]?.state).toBe('filled'));
+    expect(bot2.getLifecycleEngine()!.getAllOrders()[1]?.side).toBe('sell');
+    expect(bot2.getLifecycleEngine()!.getAllOrders()[1]?.reduceOnly).toBe(true);
+    expect(bot2.getLifecycleEngine()!.getLedger().getPosition('BTC/USDT').signedQtyBase).toBe(ZERO_BIGINT);
+    expect(bot2.getLifecycleEngine()!.getLedger().getBalanceSheet().discrepancyMicroUsd).toBe(ZERO_BIGINT);
+    mgr2.destroy();
   });
 });

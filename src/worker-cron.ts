@@ -12,6 +12,7 @@ import type { D1Database } from '@/lib/db/types';
 
 export const cronSchedulerCoordinator = defaultCloudSchedulerCoordinator;
 type CronLogger = ReturnType<typeof import('@/lib/logger').createLogger>;
+const DEFAULT_ISOLATE_ID = `worker-isolate-${typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().slice(0, 8) : 'local'}`;
 
 async function runScheduledMicroIngest(
   env: WorkerEnv,
@@ -87,7 +88,7 @@ export async function scheduled(
     const leaseInput = {
       botId: 'cron-queue-drainer',
       workspaceId: 'global-cloud',
-      isolateId: env.ISOLATE_ID ?? 'worker-isolate-1',
+      isolateId: env.ISOLATE_ID ?? DEFAULT_ISOLATE_ID,
       nowMs,
     };
     const leaseResult = d1Db

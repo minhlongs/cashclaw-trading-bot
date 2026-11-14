@@ -25,10 +25,12 @@ export function initializeStrategy(params: {
   price: number;
   botId: string;
   placeOrder: (req: OrderRequest) => Promise<OrderResult>;
+  cancelOrder?: (orderId: string, symbol?: string) => Promise<boolean>;
+  getPositionSnapshot?: () => { qty: number; entryPrice: number } | null;
   onTrade: (trade: BotTrade) => void;
   onLog: (msg: string) => void;
 }): StrategyBundle {
-  const { config, price, botId, placeOrder, onTrade, onLog } = params;
+  const { config, price, botId, placeOrder, cancelOrder, getPositionSnapshot, onTrade, onLog } = params;
   let strategyChain: StrategyChain | null = null;
 
   if (config.strategyChain) {
@@ -41,7 +43,7 @@ export function initializeStrategy(params: {
   if (isH3MakerConfig(config)) {
     const h3 = new H3MakerStrategy(
       config satisfies H3MakerBotConfig,
-      { placeOrder, onLog: onLogWithId },
+      { placeOrder, cancelOrder, getPositionSnapshot, onLog: onLogWithId },
       botId,
     );
     h3.start(price);
