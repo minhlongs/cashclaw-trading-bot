@@ -19,12 +19,20 @@ export async function scheduled(
 
   if (env.CLOUD_LEASE_ENABLED === 'true') {
     const nowMs = event.scheduledTime || Date.now();
-    const leaseResult = cronSchedulerCoordinator.acquireTickLease({
+    const leaseInput = {
       botId: 'cron-queue-drainer',
       workspaceId: 'global-cloud',
       isolateId: env.ISOLATE_ID ?? 'worker-isolate-1',
       nowMs,
-    });
+    };
+    const d1Db = env.DB as unknown as import('./ee/scheduler/cloud-scheduler-coordinator').LeaseD1DatabaseLike | undefined;
+    const leaseResult = d1Db
+      ? await cronSchedulerCoordinator.acquireDurableTickLease(leaseInput, d1Db).then((res) =>
+          res.ok || res.error.startsWith('DUPLICATE_TICK_GUARD')
+            ? res
+            : cronSchedulerCoordinator.acquireTickLease(leaseInput),
+        )
+      : cronSchedulerCoordinator.acquireTickLease(leaseInput);
     if (!leaseResult.ok) {
       log.warn(leaseResult.error, { action: 'cron-lease-skip' });
       return;

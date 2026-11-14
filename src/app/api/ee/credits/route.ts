@@ -5,16 +5,17 @@ import {
   type DeliberationModelTier,
 } from '@/ee/deliberation-cloud/llm-credit-ledger';
 import {
+  detectCrossWorkspaceIdor,
   resolveEffectiveWorkspaceId,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
 
 const QuerySchema = z.object({
-  workspaceId: z.string().min(1),
+  workspaceId: z.string().trim().min(1).optional(),
 });
 
 const DebitSchema = z.object({
-  workspaceId: z.string().min(1),
+  workspaceId: z.string().trim().min(1).optional(),
   modelTier: z.enum(['FAST', 'REASONING', 'LOCAL']),
   promptTokens: z.number().int().nonnegative(),
   completionTokens: z.number().int().nonnegative(),
@@ -23,23 +24,38 @@ const DebitSchema = z.object({
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
+    const rawWorkspace = url.searchParams.get('workspaceId');
     const parsed = QuerySchema.safeParse({
-      workspaceId: url.searchParams.get('workspaceId') ?? '',
+      workspaceId: rawWorkspace && rawWorkspace.trim().length > 0 ? rawWorkspace : undefined,
     });
     if (!parsed.success) {
       return NextResponse.json({ ok: false, error: 'Invalid workspaceId' }, { status: 400 });
     }
 
-    // The tier is read from the workspace's D1 entitlement, never from `?tier=`.
-    const { workspaceId: resolvedWorkspaceId, tier: resolvedTier } =
-      await resolveWorkspaceTierContext(req, {
-        explicitWorkspaceId: parsed.data.workspaceId,
-      });
-    const effectiveWorkspaceId =
-      resolveEffectiveWorkspaceId(req, resolvedWorkspaceId, parsed.data.workspaceId) ??
-      parsed.data.workspaceId;
+    const tierContext = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: parsed.data.workspaceId,
+    });
+    const idor = detectCrossWorkspaceIdor(req, tierContext, parsed.data.workspaceId);
+    if (idor) {
+      return NextResponse.json(
+        { ok: false, code: idor.code, error: idor.error },
+        { status: idor.status },
+      );
+    }
 
-    const account = defaultCreditLedgerStore.getOrCreateAccount(effectiveWorkspaceId, resolvedTier);
+    const effectiveWorkspaceId = resolveEffectiveWorkspaceId(
+      req,
+      tierContext.workspaceId,
+      parsed.data.workspaceId,
+    );
+    if (!effectiveWorkspaceId) {
+      return NextResponse.json({ ok: false, error: 'Invalid workspaceId' }, { status: 400 });
+    }
+
+    const account = defaultCreditLedgerStore.getOrCreateAccount(
+      effectiveWorkspaceId,
+      tierContext.tier,
+    );
     return NextResponse.json({ ok: true, account });
   } catch {
     return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
@@ -57,14 +73,25 @@ export async function POST(req: Request) {
       );
     }
 
-    // The tier is read from the workspace's D1 entitlement, never from the request body.
-    const { workspaceId: resolvedWorkspaceId, tier: resolvedTier } =
-      await resolveWorkspaceTierContext(req, {
-        explicitWorkspaceId: parsed.data.workspaceId,
-      });
-    const effectiveWorkspaceId =
-      resolveEffectiveWorkspaceId(req, resolvedWorkspaceId, parsed.data.workspaceId) ??
-      parsed.data.workspaceId;
+    const tierContext = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: parsed.data.workspaceId,
+    });
+    const idor = detectCrossWorkspaceIdor(req, tierContext, parsed.data.workspaceId);
+    if (idor) {
+      return NextResponse.json(
+        { ok: false, code: idor.code, error: idor.error },
+        { status: idor.status },
+      );
+    }
+
+    const effectiveWorkspaceId = resolveEffectiveWorkspaceId(
+      req,
+      tierContext.workspaceId,
+      parsed.data.workspaceId,
+    );
+    if (!effectiveWorkspaceId) {
+      return NextResponse.json({ ok: false, error: 'Invalid workspaceId' }, { status: 400 });
+    }
 
     const debitReq = {
       workspaceId: effectiveWorkspaceId,
@@ -73,7 +100,7 @@ export async function POST(req: Request) {
       completionTokens: parsed.data.completionTokens,
     };
 
-    const debitResult = defaultCreditLedgerStore.debit(debitReq, resolvedTier);
+    const debitResult = defaultCreditLedgerStore.debit(debitReq, tierContext.tier);
     if (!debitResult.ok) {
       return NextResponse.json({ ok: false, error: debitResult.error }, { status: 402 });
     }

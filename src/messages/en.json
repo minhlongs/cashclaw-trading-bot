@@ -131,6 +131,20 @@
       "all": "All Overview",
       "trading": "Live Trading",
       "telemetry": "Quant Telemetry"
+    },
+    "paperSimulationBadge": "SIMULATED PAPER PnL — NOT REAL FUNDS",
+    "paperCapitalNotice": "Virtual paper simulation only — separated from SaaS billing",
+    "kpi": {
+      "totalBalance": "Total Balance",
+      "winRate": "Win Rate",
+      "activeBots": "Active Bots",
+      "activeRate": "Active rate",
+      "totalCapital": "Total Capital",
+      "acrossBots": "Across {count} bots",
+      "totalTrades": "Total Trades",
+      "overBots": "Over {count} bots",
+      "totalPnl": "Total PnL",
+      "realizedPaperAcrossBots": "Simulated paper PnL across all bots"
     }
   },
   "bots": {
@@ -634,6 +648,62 @@
       "colSharpe": "Out-of-Sample Sharpe",
       "colDrawdown": "Max Drawdown",
       "colGate": "Survival Gate"
+    }
+  },
+  "billing": {
+    "paperSimulationBadge": "SIMULATED PAPER PnL — NOT REAL FUNDS",
+    "nonCustodialBadge": "NON-CUSTODIAL CLOUD SAAS — SOFTWARE QUOTA ONLY",
+    "separationNotice": "Subscription fees cover non-custodial cloud compute & LLM credits only — never trading capital or financial custody.",
+    "quota": {
+      "title": "Tier Quota Usage",
+      "subtitle": "Real-time resource allocation for current billing cycle",
+      "planLabel": "{tier} Plan",
+      "activePaperBots": "Active Paper Bots",
+      "durableCronCadence": "Durable Cron Cadence",
+      "everyMinutes": "Every {minutes} min",
+      "workersExecution": "Cloudflare Workers isolate execution",
+      "llmCredits": "LLM Deliberation Credits"
+    },
+    "tiers": {
+      "title": "CashClaw SaaS Tiers & Entitlements",
+      "subtitle": "Choose the right plan to scale your 24/7 cloud paper trading operations",
+      "current": "Current",
+      "perMonth": " / month",
+      "maxBots": "Max Bots:",
+      "cron": "Cron:",
+      "cloudAlphaFeed": "Cloud Alpha Feed",
+      "managedLlmKeys": "Managed LLM Keys",
+      "activePlan": "Active Plan",
+      "downgrade": "Downgrade",
+      "upgradePlan": "Upgrade Plan"
+    },
+    "sync": {
+      "title": "1-Click Local-to-Cloud Sync Bridge",
+      "subtitle": "Export SHA-256 signed paper bot configurations from local CLI directly to your Cloud SaaS isolate",
+      "copied": "Copied!",
+      "copyCommand": "Copy Command",
+      "footerPrefix": "Preserves ADR-001 paper-only invariants. Cloud import endpoint:"
+    },
+    "checkout": {
+      "upgradeTo": "Upgrade to {tier}",
+      "workspace": "Workspace:",
+      "planAmount": "Plan Amount:",
+      "perMonthAmount": "${price} / month",
+      "maxBots": "Max Bots:",
+      "botsCloud": "{count} Bots (24/7 Cloud)",
+      "selectCurrency": "Select Crypto Currency",
+      "creatingInvoice": "Creating invoice...",
+      "payWith": "Pay ${price} with {currency}",
+      "invoiceCreated": "Invoice Created",
+      "redirectingDesc": "Redirecting you to NOWPayments to pay ${price}. Your tier upgrades automatically once the payment confirms.",
+      "openPaymentPage": "Open payment page",
+      "unavailableTitle": "Card / crypto checkout unavailable",
+      "unavailableDesc": "Automatic invoicing is not configured on this deployment. Please contact support to arrange payment for the {tier} plan (${price}/month).",
+      "vnBlockedTitle": "Cryptocurrency Checkout Restricted in Vietnam (VN)",
+      "vnBlockedDesc": "Per Vietnam Law 71/2025/QH15, Decree 284/2026/ND-CP, and SBV domestic payment rules, cryptocurrency settlement is disabled in VN. Please contact enterprise billing for lawful VND/USD bank invoice settlement.",
+      "failedTitle": "Checkout failed",
+      "tryAgain": "Try again",
+      "close": "Close"
     }
   }
 }

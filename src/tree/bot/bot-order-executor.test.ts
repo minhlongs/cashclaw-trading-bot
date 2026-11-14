@@ -4,6 +4,7 @@ import {
   executeOrder,
   type OrderContext,
 } from './bot-order-executor';
+import { CapitalProtectionEngine } from '../protection';
 import type { OrderRequest, OrderResult } from '../exchange/types';
 import type { BotState } from './types';
 
@@ -187,5 +188,47 @@ describe('executeOrder — core execution & state mutations', () => {
     });
     expect(ctx.emitState).toHaveBeenCalledTimes(1);
     expect(orderCounter).toBe(11);
+  });
+
+  it('enforces CapitalProtectionEngine pre-trade veto and allows valid orders when wired', async () => {
+    const protectionEngine = new CapitalProtectionEngine();
+    protectionEngine.setGlobalKillSwitch(true);
+    const baseTick = {
+      nowMs: 1_700_000_000_000,
+      equityUsd: 100_000,
+      peakEquityUsd: 100_000,
+      rolling24hPnlUsd: 0,
+      rolling24hRefEquityUsd: 100_000,
+      positions: [],
+      markets: {
+        'BTC/USDT': {
+          symbol: 'BTC/USDT',
+          timestampMs: 1_700_000_000_000,
+          midPrice: 60_000,
+          bestBid: 59_995,
+          bestAsk: 60_005,
+          spreadBps: 1.67,
+          bookDepthUsd: 5_000_000,
+          barVolumeUsd: 25_000_000,
+          barReturnSigma: 0.5,
+          jumpShockBps: 5,
+        },
+      },
+      ledger: { assetsUsd: 100_000, liabilitiesUsd: 0, equityUsd: 100_000 },
+    };
+    ctx.deps.protectionEngine = protectionEngine;
+    ctx.deps.protectionContextProvider = () => baseTick;
+
+    await expect(executeOrder(ctx, req, 0)).rejects.toThrow('GLOBAL_KILL_SWITCH');
+    expect(ctx.deps.exchange.placeOrder).not.toHaveBeenCalled();
+
+    const cleanEngine = new CapitalProtectionEngine();
+    ctx.deps.protectionEngine = cleanEngine;
+    const marketReq: OrderRequest = { ...req, side: 'sell', type: 'market', price: undefined };
+    const { orderCounter } = await executeOrder(ctx, marketReq, 1);
+    expect(orderCounter).toBe(2);
+
+    ctx.deps.protectionContextProvider = () => ({ ...baseTick, markets: {} });
+    await expect(executeOrder(ctx, marketReq, 2)).rejects.toThrow('REJECT_PRETRADE');
   });
 });

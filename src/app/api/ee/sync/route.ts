@@ -6,6 +6,7 @@ import {
 } from '@/ee/sync/local-to-cloud-sync';
 import { enforceWorkspaceQuota } from '@/ee/billing/quota-guard';
 import {
+  detectCrossWorkspaceIdor,
   resolveActiveBotCount,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
@@ -56,8 +57,23 @@ function buildSyncBotConfig(
 
 export async function POST(req: Request) {
   try {
+    const rawBundle = (await req.json()) as SignedCloudSyncBundle & { workspaceId?: unknown };
+    const bodyWorkspaceId =
+      typeof rawBundle?.workspaceId === 'string' ? rawBundle.workspaceId : undefined;
+
     const userId = req.headers.get('x-user-id')?.trim() || undefined;
-    const { tier } = await resolveWorkspaceTierContext(req);
+    const tierContext = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: bodyWorkspaceId,
+    });
+    const idor = detectCrossWorkspaceIdor(req, tierContext, bodyWorkspaceId);
+    if (idor) {
+      return NextResponse.json(
+        { ok: false, code: idor.code, error: idor.error },
+        { status: idor.status },
+      );
+    }
+
+    const { tier } = tierContext;
     const activeRunningBots = await resolveActiveBotCount(() =>
       userId ? botListHandler(userId) : botListHandler(),
     );
@@ -74,9 +90,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const rawBundle = (await req.json()) as SignedCloudSyncBundle;
     const importResult = await verifyAndImportCloudSyncBundle(rawBundle);
-
     if (!importResult.ok) {
       return NextResponse.json(
         { ok: false, error: importResult.error },

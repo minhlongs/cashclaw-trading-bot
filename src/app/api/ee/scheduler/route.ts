@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { defaultCloudSchedulerCoordinator } from '@/ee/scheduler/cloud-scheduler-coordinator';
 import {
+  detectCrossWorkspaceIdor,
   resolveEffectiveWorkspaceId,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
@@ -21,12 +22,19 @@ export async function GET(req: Request) {
   const parsedNow = rawNow ? Number(rawNow) : Date.now();
   const nowMs = Number.isFinite(parsedNow) && parsedNow > 0 ? parsedNow : Date.now();
 
-  const { workspaceId: resolvedWorkspaceId } = await resolveWorkspaceTierContext(req, {
+  const tierContext = await resolveWorkspaceTierContext(req, {
     explicitWorkspaceId: queryWorkspaceId,
   });
+  const idor = detectCrossWorkspaceIdor(req, tierContext, queryWorkspaceId);
+  if (idor) {
+    return NextResponse.json(
+      { ok: false, code: idor.code, error: idor.error },
+      { status: idor.status },
+    );
+  }
   const effectiveWorkspaceId = resolveEffectiveWorkspaceId(
     req,
-    resolvedWorkspaceId,
+    tierContext.workspaceId,
     queryWorkspaceId,
   );
 
@@ -53,11 +61,18 @@ export async function POST(req: Request) {
       );
     }
 
-    const { workspaceId: resolvedWorkspaceId } = await resolveWorkspaceTierContext(req, {
+    const tierContext = await resolveWorkspaceTierContext(req, {
       explicitWorkspaceId: parsed.data.workspaceId,
     });
+    const idor = detectCrossWorkspaceIdor(req, tierContext, parsed.data.workspaceId);
+    if (idor) {
+      return NextResponse.json(
+        { ok: false, code: idor.code, error: idor.error },
+        { status: idor.status },
+      );
+    }
     const effectiveWorkspaceId =
-      resolveEffectiveWorkspaceId(req, resolvedWorkspaceId, parsed.data.workspaceId) ??
+      resolveEffectiveWorkspaceId(req, tierContext.workspaceId, parsed.data.workspaceId) ??
       parsed.data.workspaceId;
 
     const result = defaultCloudSchedulerCoordinator.acquireTickLease({

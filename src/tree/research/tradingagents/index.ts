@@ -13,3 +13,5 @@ export * from './decision-log';
 export * from './calibration';
 export * from './debate-quality';
 export * from './model-provenance';
+export * from './net-roi-types';
+export * from './net-roi-ablation';

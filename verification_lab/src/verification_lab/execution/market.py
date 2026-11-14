@@ -78,7 +78,12 @@ def volatility_panel(
     return pl.DataFrame(out).sort("day")
 
 
-def funding_cashflow(funding: pl.DataFrame, perp_positions: pl.DataFrame) -> np.ndarray:
+def funding_cashflow(
+    funding: pl.DataFrame,
+    perp_positions: pl.DataFrame,
+    *,
+    delisted_last_active_days: dict[str, int] | None = None,
+) -> np.ndarray:
     """Per-day funding paid by the held perp leg, on portfolio notional.
 
     A long perp pays funding when the rate is positive, so the cash flow is
@@ -86,16 +91,15 @@ def funding_cashflow(funding: pl.DataFrame, perp_positions: pl.DataFrame) -> np.
     notional, not a turn cost: it accrues while the position sits still, so
     charging it per unit of turnover would price a flat book at zero.
 
-    Callers pass the *perp leg's* weight, not the book's. The carry pair holds
-    spot long and perp short, so its perp weight is the negative half of the
-    pair weight; passing the pair weight would flip the sign of the only cash
-    flow the strategy is built to collect.
+    When `delisted_last_active_days` is supplied on a survivorship panel, a
+    strictly causal strategy carried from `last_active_day` into the single
+    contract-settlement bar `last_active_day + 1` accrues `0.0` post-settlement
+    funding on that settlement bar while still failing closed if any position
+    remains open on `day >= last_active_day + 2` or on any live contract with a
+    missing funding observation.
     """
     days = perp_positions["day"]
     symbols = [c for c in perp_positions.columns if c != "day"]
-    # Rename before joining: both frames carry the same symbol name, and polars
-    # keeps both columns on a same-name join, so a later select would read the
-    # position twice and price -w*w instead of -w*funding.
     frame = perp_positions.select(["day", *symbols]).join(
         funding.select(["day", *symbols]).rename({s: f"f_{s}" for s in symbols}),
         on="day",
@@ -106,15 +110,17 @@ def funding_cashflow(funding: pl.DataFrame, perp_positions: pl.DataFrame) -> np.
             f"funding panel covered {frame.height} of {days.len()} book days; "
             "a partial join would silently undercount the cash flow"
         )
-    # A left join preserves every book day, so the height check above cannot
-    # notice a missing funding day -- it shows up as a null. Nulls would then be
-    # coerced to zero and the cash flow would be quietly understated, which is
-    # exactly the failure the height check was written to prevent. Only a held
-    # position with no funding observation is an error; a flat book earns
-    # nothing and needs no rate.
     held = np.nan_to_num(frame.select(symbols).cast(pl.Float64).to_numpy(), nan=0.0) != 0.0
     missing = np.isnan(frame.select([f"f_{s}" for s in symbols]).cast(pl.Float64).to_numpy())
-    unpriced = int(np.sum(held & missing))
+    if delisted_last_active_days:
+        day_arr = frame["day"].to_numpy()
+        settlement_exempt = np.zeros_like(held)
+        for j, sym in enumerate(symbols):
+            if sym in delisted_last_active_days:
+                settlement_exempt[:, j] = day_arr == (int(delisted_last_active_days[sym]) + 1)
+        unpriced = int(np.sum(held & missing & ~settlement_exempt))
+    else:
+        unpriced = int(np.sum(held & missing))
     if unpriced:
         raise ValueError(
             f"{unpriced} held position-days have no funding observation; "

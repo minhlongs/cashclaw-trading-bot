@@ -21,6 +21,71 @@ export interface WorkspaceTierContext {
   readonly memberWorkspaceIds?: readonly string[];
 }
 
+export interface WorkspaceAccessViolation {
+  readonly code: 'WORKSPACE_FORBIDDEN';
+  readonly status: 403;
+  readonly error: string;
+}
+
+export function extractRequestedWorkspaceId(
+  req: Request,
+  explicitWorkspaceId?: string | null,
+): string | undefined {
+  let queryWorkspace: string | null = null;
+  try {
+    const url = new URL(req.url);
+    queryWorkspace = url.searchParams.get('workspaceId');
+  } catch {
+    // Ignore malformed URLs in synthetic Request mocks
+  }
+  const headerWorkspace = req.headers.get('x-cashclaw-workspace');
+  const clean = (val?: string | null): string | undefined => {
+    const trimmed = val?.trim();
+    return trimmed && trimmed.length > 0 ? trimmed : undefined;
+  };
+  return clean(explicitWorkspaceId) ?? clean(queryWorkspace) ?? clean(headerWorkspace);
+}
+
+export function derivePersonalWorkspaceId(userId: string): string {
+  const safeId = userId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return `ws_${safeId}`;
+}
+
+/**
+ * Enforces explicit cross-tenant anti-IDOR isolation on HTTP routes.
+ * When a session-verified `x-user-id` explicitly names a `workspaceId` (via body,
+ * query `?workspaceId=`, or `x-cashclaw-workspace` header) that belongs neither to
+ * `memberWorkspaceIds` nor to their deterministic personal workspace `ws_<userId>`,
+ * the request is rejected with 403 WORKSPACE_FORBIDDEN / IDOR_VIOLATION.
+ */
+export function detectCrossWorkspaceIdor(
+  req: Request,
+  ctx: WorkspaceTierContext,
+  explicitWorkspaceId?: string | null,
+): WorkspaceAccessViolation | null {
+  const userId = req.headers.get('x-user-id')?.trim();
+  if (!userId) return null;
+
+  const namedWorkspaceId = extractRequestedWorkspaceId(req, explicitWorkspaceId);
+  if (!namedWorkspaceId) return null;
+
+  const personalWorkspaceId = derivePersonalWorkspaceId(userId);
+  const allowedWorkspaces = new Set<string>([
+    personalWorkspaceId,
+    ...(ctx.memberWorkspaceIds ?? []),
+  ]);
+
+  if (allowedWorkspaces.has(namedWorkspaceId)) {
+    return null;
+  }
+
+  return {
+    code: 'WORKSPACE_FORBIDDEN',
+    status: 403,
+    error: `WORKSPACE_FORBIDDEN: IDOR_VIOLATION — user is not authorized for workspace '${namedWorkspaceId}'`,
+  };
+}
+
 /**
  * Resolves the effective workspaceId and SaaS tier from an HTTP request.
  *
@@ -38,17 +103,7 @@ export async function resolveWorkspaceTierContext(
   req: Request,
   options?: WorkspaceTierResolutionOptions,
 ): Promise<WorkspaceTierContext> {
-  let queryWorkspace: string | null = null;
-  try {
-    const url = new URL(req.url);
-    queryWorkspace = url.searchParams.get('workspaceId');
-  } catch {
-    // Ignore malformed URLs in synthetic Request mocks
-  }
-
-  const headerWorkspace = req.headers.get('x-cashclaw-workspace');
-  const namedWorkspaceId =
-    (options?.explicitWorkspaceId ?? queryWorkspace ?? headerWorkspace)?.trim() || undefined;
+  const namedWorkspaceId = extractRequestedWorkspaceId(req, options?.explicitWorkspaceId);
 
   // `x-user-id` is written by the middleware from the validated D1 session and
   // stripped of any client value first, so a request cannot pick another user.
@@ -81,16 +136,6 @@ export async function resolveWorkspaceTierContext(
 
 /**
  * Resolves the effective workspace identifier for a route after `resolveWorkspaceTierContext`.
- *
- * When a verified session user (`x-user-id`) is present, the route must never fall
- * back to an unowned `explicitWorkspaceId` from the query string or request body —
- * even when the user has zero rows in `saas_workspace_members` (`resolvedWorkspaceId === undefined`).
- * In that unenrolled-session case, this helper derives the user's deterministic
- * personal workspace (`ws_<safeUserId>`), matching `ensureUserWorkspaceMembership`.
- *
- * Only when no `x-user-id` header is present (local OSS / synthetic unit-test calls
- * that invoke route handlers directly without session middleware) does it fall back
- * to `explicitWorkspaceId`.
  */
 export function resolveEffectiveWorkspaceId(
   req: Request,
@@ -102,8 +147,7 @@ export function resolveEffectiveWorkspaceId(
   }
   const userId = req.headers.get('x-user-id')?.trim();
   if (userId) {
-    const safeId = userId.replace(/[^a-zA-Z0-9_-]/g, '_');
-    return `ws_${safeId}`;
+    return derivePersonalWorkspaceId(userId);
   }
   const trimmedExplicit = explicitWorkspaceId?.trim();
   return trimmedExplicit && trimmedExplicit.length > 0 ? trimmedExplicit : undefined;

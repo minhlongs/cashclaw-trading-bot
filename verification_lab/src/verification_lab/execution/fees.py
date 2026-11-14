@@ -42,6 +42,15 @@ class VenueFees:
     def taker_bps(self, leg: str) -> float:
         return self.taker(leg) * 1e4
 
+    def maker(self, leg: str) -> float:
+        rate = self.spot_maker if leg == "spot" else self.perp_maker
+        if rate is None:
+            raise ValueError(f"{self.venue} publishes no {leg} maker fee; the leg cannot be priced")
+        return rate
+
+    def maker_bps(self, leg: str) -> float:
+        return self.maker(leg) * 1e4
+
     def available(self, leg: str) -> bool:
         return (self.spot_taker if leg == "spot" else self.perp_taker) is not None
 
@@ -98,14 +107,10 @@ def per_side_bps(legs: tuple[str, ...], venue_name: str, side: str = "taker") ->
     return float(sum(fees.taker_bps(leg) for leg in legs))
 
 
-def funding_cadence(venue_name: str) -> dict:
-    """What the ingested data can and cannot say about this venue's funding cadence.
-
-    The normalized funding panel holds Binance Vision 8-hourly events only, so a
-    venue that settles hourly is described here but not priced from it.
-    """
+def funding_cadence(venue_name: str, *, hyperliquid_ingested: bool = False) -> dict:
+    """What the ingested data can and cannot say about this venue's funding cadence."""
     hours = venue(venue_name).funding_hours
-    measured = 8
+    measured = 1 if (venue_name == "hyperliquid" and hyperliquid_ingested) else 8
     matches = hours == measured
     return {
         "venue": venue_name,
@@ -113,12 +118,12 @@ def funding_cadence(venue_name: str) -> dict:
         "funding_hours_in_ingested_data": measured,
         "priced_from_measured_events": matches,
         "note": (
-            "funding is read from the 8-hourly events and applied as a cash flow on held "
+            f"funding is read from the {measured}-hourly events and applied as a cash flow on held "
             "notional, not as a turn cost"
             if matches
             else (
-                f"{venue_name} settles funding every {hours}h; the panel holds only 8-hourly "
-                "Binance events, so the cadence is documented but not simulated"
+                f"{venue_name} settles funding every {hours}h; the primary panel holds 8-hourly "
+                "Binance events, so the cadence is documented unless cross-checked separately"
             )
         ),
     }

@@ -18,6 +18,7 @@ import polars as pl
 
 from .common import apply_costs, break_even_multiple
 from .loaders import returns_from_wide
+from .overlay_g1 import compute_defensive_scalar
 
 
 def _guarded_returns(close_wide: pl.DataFrame, symbols: list[str]) -> np.ndarray:
@@ -181,3 +182,31 @@ def benchmark_costs(close_wide: pl.DataFrame, target_vol_annual: float = 0.25) -
 
 
 GRID = {"lookback": [30, 60, 90, 120, 180], "target_vol_annual": [0.15, 0.25, 0.40]}
+
+G1_GRID = {
+    "lookback": [30, 60, 90, 120],
+    "target_vol_annual": [0.15, 0.25, 0.40],
+    "corr_threshold": [0.75, 0.80],
+}
+
+
+def build_positions_g1(
+    close_wide: pl.DataFrame,
+    *,
+    lookback: int = 90,
+    target_vol_annual: float = 0.25,
+    corr_threshold: float = 0.80,
+    causal_shift: bool = True,
+) -> pl.DataFrame:
+    """H2 with G1 causal volatility & correlation hysteresis scale-down overlay."""
+    base = build_positions(
+        close_wide,
+        lookback=lookback,
+        target_vol_annual=target_vol_annual,
+        causal_shift=causal_shift,
+    )
+    symbols = [c for c in base.columns if c != "day"]
+    rets_wide = returns_from_wide(close_wide.select(["day", *symbols]), max_stale_days=2)
+    scalar = compute_defensive_scalar(rets_wide, corr_threshold=corr_threshold)["scale"]
+    w = base.select(symbols).cast(pl.Float64).to_numpy() * scalar[:, None]
+    return pl.DataFrame({"day": base["day"], **{s: w[:, i] for i, s in enumerate(symbols)}})

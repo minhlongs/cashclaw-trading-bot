@@ -1,4 +1,4 @@
-"""Enumerate every configuration of H1/H2/H3 and log each one to the registry.
+"""Enumerate every configuration of H1/H2/H3 (and Batch-2 overlays) and log to the registry.
 
 Why a full enumeration rather than a shortlist: the audit's objection is that a
 presented Sharpe has no search behind it. The only honest answer is to run the
@@ -39,22 +39,24 @@ class Panel:
     spot_returns: pl.DataFrame
     funding: pl.DataFrame
     basis: pl.DataFrame
+    universe: str = "CORE_19"
 
     @property
     def days(self) -> np.ndarray:
         return self.perp_close["day"].to_numpy()
 
 
-def build_panel() -> Panel:
-    perp_close = L.wide_close("perp_1d")
-    spot_close = L.wide_close("spot_1d")
+def build_panel(universe: str | None = "CORE_19") -> Panel:
+    perp_close = L.wide_close("perp_1d", symbols=universe)
+    spot_close = L.wide_close("spot_1d", symbols=universe)
     return Panel(
         perp_close=perp_close,
         perp_returns=L.returns_from_wide(perp_close, max_stale_days=2),
         spot_close=spot_close,
         spot_returns=L.returns_from_wide(spot_close, max_stale_days=2),
-        funding=L.wide_funding(perp_close["day"]),
+        funding=L.wide_funding(perp_close["day"], symbols=universe, perp_close_wide=perp_close),
         basis=h3.basis_wide(perp_close, spot_close),
+        universe=str(universe or "ALL"),
     )
 
 
@@ -95,8 +97,49 @@ def run_h3(panel: Panel) -> list[dict]:
     return out
 
 
+def run_h1_g1(panel: Panel) -> list[dict]:
+    keys = list(h1.G1_GRID)
+    out = []
+    for values in itertools.product(*(h1.G1_GRID[k] for k in keys)):
+        cfg = dict(zip(keys, values))
+        pos = h1.build_positions_g1(panel.funding, panel.perp_returns, **cfg)
+        res = h1.backtest(pos, panel.perp_returns, panel.funding)
+        out.append({"params": cfg, "result": res, "net": res["net"], "positions": pos})
+    return out
+
+
+def run_h2_g1(panel: Panel) -> list[dict]:
+    keys = list(h2.G1_GRID)
+    out = []
+    for values in itertools.product(*(h2.G1_GRID[k] for k in keys)):
+        cfg = dict(zip(keys, values))
+        pos = h2.build_positions_g1(panel.perp_close, **cfg)
+        res = h2.evaluate(pos, panel.perp_returns, panel.funding)
+        out.append({"params": cfg, "result": res, "net": res["net"], "positions": pos})
+    return out
+
+
+def run_h3_maker(panel: Panel) -> list[dict]:
+    keys = list(h3.MAKER_GRID)
+    out = []
+    for values in itertools.product(*(h3.MAKER_GRID[k] for k in keys)):
+        cfg = dict(zip(keys, values))
+        pos = h3.build_positions_maker(panel.basis, panel.funding, **cfg)
+        res = h3.evaluate_maker(pos, panel.perp_returns, panel.spot_returns, panel.funding)
+        out.append({"params": cfg, "result": res, "net": res["net"], "positions": pos})
+    return out
+
+
 def enumerate_all(panel: Panel) -> dict[str, list[dict]]:
     return {"H1": run_h1(panel), "H2": run_h2(panel), "H3": run_h3(panel)}
+
+
+def enumerate_batch2(panel: Panel) -> dict[str, list[dict]]:
+    return {
+        "H1_G1": run_h1_g1(panel),
+        "H2_G1": run_h2_g1(panel),
+        "H3_MAKER": run_h3_maker(panel),
+    }
 
 
 def log_trials(
@@ -104,6 +147,8 @@ def log_trials(
     trials: dict[str, list[dict]],
     panel: Panel,
     train_fraction: float = 0.7,
+    *,
+    note: str = "",
 ) -> int:
     days = len(panel.days)
     split = int(days * train_fraction)
@@ -132,6 +177,7 @@ def log_trials(
                     mean_turnover=float(np.nanmean(turn_tr)),
                     days=int(split),
                     status="completed",
+                    note=note,
                 )
             )
     return registry.count

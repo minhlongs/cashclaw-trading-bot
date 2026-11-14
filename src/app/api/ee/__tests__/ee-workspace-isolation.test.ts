@@ -30,7 +30,7 @@ vi.mock('@/lib/db/client', () => ({
             meta: { duration: 1 },
           };
         },
-        async run() { return { meta: { changes: 0, last_row_id: 0, duration: 1 } }; },
+        async run() { return { meta: { changes: 1, last_row_id: 1, duration: 1 } }; },
       };
       return stmt;
     };
@@ -86,12 +86,12 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
     expect(resolveEffectiveWorkspaceId(unauthedReq, undefined, '   ')).toBeUndefined();
   });
 
-  it('POST /api/ee/alerts signs envelope with session-authorized workspaceId instead of spoofed body workspaceId', async () => {
+  it('POST /api/ee/alerts rejects spoofed cross-tenant workspaceId with 403 WORKSPACE_FORBIDDEN and allows own workspace', async () => {
     await seedWorkspaceTier('ws_attacker', 'PREMIUM');
     await seedWorkspaceTier('ws_victim', 'MASTER');
     mockMembershipRows.push({ user_id: 'usr_attacker', workspace_id: 'ws_attacker', role: 'OWNER', created_at_ms: 100 });
 
-    const res = await postCloudAlert(
+    const spoofRes = await postCloudAlert(
       new Request('http://localhost/api/ee/alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': 'usr_attacker' },
@@ -106,19 +106,45 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
       }),
     );
 
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { ok: boolean; tier: string; envelope: { payloadJson: string } };
+    expect(spoofRes.status).toBe(403);
+    const spoofBody = (await spoofRes.json()) as { ok: boolean; code: string };
+    expect(spoofBody.ok).toBe(false);
+    expect(spoofBody.code).toBe('WORKSPACE_FORBIDDEN');
+
+    const ownRes = await postCloudAlert(
+      new Request('http://localhost/api/ee/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': 'usr_attacker' },
+        body: JSON.stringify({
+          eventId: 'evt_own_ws_1',
+          workspaceId: 'ws_attacker',
+          botId: 'bot_1',
+          channel: 'WEBHOOK',
+          message: 'Authorized tenant alert',
+          timestampMs: 1_770_000_100_000,
+        }),
+      }),
+    );
+    expect(ownRes.status).toBe(200);
+    const body = (await ownRes.json()) as { ok: boolean; tier: string; envelope: { payloadJson: string } };
     expect(body.tier).toBe('PREMIUM');
     const signedEvent = JSON.parse(body.envelope.payloadJson) as { workspaceId: string };
     expect(signedEvent.workspaceId).toBe('ws_attacker');
   });
 
-  it('GET and POST /api/ee/credits isolate unenrolled session users from reading or debiting another tenant workspace', async () => {
+  it('GET and POST /api/ee/credits reject cross-tenant workspaceId with 403 and scope omitted workspaceId to personal workspace', async () => {
     await seedWorkspaceTier('ws_victim_credits', 'ENTERPRISE');
     defaultCreditLedgerStore.getOrCreateAccount('ws_victim_credits', 'ENTERPRISE');
 
-    const getRes = await getCredits(
+    const spoofGetRes = await getCredits(
       new Request('http://localhost/api/ee/credits?workspaceId=ws_victim_credits', {
+        headers: { 'x-user-id': 'usr_zero_rows' },
+      }),
+    );
+    expect(spoofGetRes.status).toBe(403);
+
+    const getRes = await getCredits(
+      new Request('http://localhost/api/ee/credits', {
         headers: { 'x-user-id': 'usr_zero_rows' },
       }),
     );
@@ -130,12 +156,25 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
     expect(getBody.account.tier).toBe('BASIC');
     expect(getBody.account.balanceCredits).toBe(1_000);
 
-    const postRes = await postCredits(
+    const spoofPostRes = await postCredits(
       new Request('http://localhost/api/ee/credits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': 'usr_zero_rows' },
         body: JSON.stringify({
           workspaceId: 'ws_victim_credits',
+          modelTier: 'REASONING',
+          promptTokens: 1_500,
+          completionTokens: 500,
+        }),
+      }),
+    );
+    expect(spoofPostRes.status).toBe(403);
+
+    const postRes = await postCredits(
+      new Request('http://localhost/api/ee/credits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': 'usr_zero_rows' },
+        body: JSON.stringify({
           modelTier: 'REASONING',
           promptTokens: 1_500,
           completionTokens: 500,
@@ -155,27 +194,46 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
     expect(victimAccount.consumedCredits).toBe(0);
   });
 
-  it('GET and POST /api/ee/scheduler scope lease inspection and acquisition to the session user workspace', async () => {
+  it('GET and POST /api/ee/scheduler reject cross-tenant workspaceId with 403 and scope own workspace cleanly', async () => {
     mockMembershipRows.push({ user_id: 'usr_attacker', workspace_id: 'ws_attacker_sched', role: 'OWNER', created_at_ms: 100 });
     defaultCloudSchedulerCoordinator.acquireTickLease({
       botId: 'bot_victim_1', workspaceId: 'ws_victim_sched', isolateId: 'iso_victim', nowMs: 1_770_000_000_000,
     });
 
-    const getRes = await getScheduler(
+    const spoofGetRes = await getScheduler(
       new Request('http://localhost/api/ee/scheduler?nowMs=1770000005000&workspaceId=ws_victim_sched', {
         headers: { 'x-user-id': 'usr_attacker' },
       }),
     );
+    expect(spoofGetRes.status).toBe(403);
+
+    const getRes = await getScheduler(
+      new Request('http://localhost/api/ee/scheduler?nowMs=1770000005000', {
+        headers: { 'x-user-id': 'usr_attacker' },
+      }),
+    );
+    expect(getRes.status).toBe(200);
     const getBody = (await getRes.json()) as { workspaceId: string; activeLeaseCount: number };
     expect(getBody.workspaceId).toBe('ws_attacker_sched');
     expect(getBody.activeLeaseCount).toBe(0);
+
+    const spoofPostRes = await postScheduler(
+      new Request('http://localhost/api/ee/scheduler', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': 'usr_attacker' },
+        body: JSON.stringify({
+          botId: 'bot_victim_2', workspaceId: 'ws_victim_sched', isolateId: 'iso_attacker', nowMs: 1_770_000_005_000,
+        }),
+      }),
+    );
+    expect(spoofPostRes.status).toBe(403);
 
     const postRes = await postScheduler(
       new Request('http://localhost/api/ee/scheduler', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': 'usr_attacker' },
         body: JSON.stringify({
-          botId: 'bot_victim_2', workspaceId: 'ws_victim_sched', isolateId: 'iso_attacker', nowMs: 1_770_000_005_000,
+          botId: 'bot_victim_2', workspaceId: 'ws_attacker_sched', isolateId: 'iso_attacker', nowMs: 1_770_000_005_000,
         }),
       }),
     );

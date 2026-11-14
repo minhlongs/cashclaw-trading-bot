@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-14T06:16:13.661383+00:00",
-  "commit": "980cb653366d9ff7451deb86dd9c7306e1d4876b",
+  "generated_at": "2026-11-14T11:52:50.454830+00:00",
+  "commit": "3d3dc0e3be6c3d18608729a4f6917da9ec4e47fa",
   "planes": {
     "research_offline": {
       "location": "verification_lab/ (this lab) + src/forest/alpha/research-agent/",
@@ -241,23 +241,27 @@
     ],
     "src/tree/bot/bot-order-executor.test.ts": [
       4,
-      40,
-      103,
-      121,
+      41,
+      104,
       122,
-      125,
-      127,
+      123,
+      126,
       128,
-      137,
-      139,
-      148,
+      129,
+      138,
+      140,
       149,
-      156,
+      150,
       157,
-      164,
+      158,
       165,
-      173,
-      177
+      166,
+      174,
+      178,
+      222,
+      223,
+      228,
+      232
     ],
     "src/tree/bot/bot-order-executor.ts": [
       8,
@@ -675,6 +679,10 @@
     "src/tree/exchange/types.ts": [
       65,
       66
+    ],
+    "src/tree/execution/lifecycle/paper-order-lifecycle-engine.ts": [
+      56,
+      151
     ]
   },
   "assertions": {
