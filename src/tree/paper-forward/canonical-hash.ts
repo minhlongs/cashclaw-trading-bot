@@ -30,9 +30,16 @@ export function stripHashKey(
   record: Readonly<Record<string, unknown>>,
   hashKey: string,
 ): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
+  const out = Object.create(null) as Record<string, unknown>;
   for (const key of Object.keys(record)) {
-    if (key !== hashKey && record[key] !== undefined) out[key] = record[key];
+    if (key !== hashKey && record[key] !== undefined) {
+      Object.defineProperty(out, key, {
+        value: record[key],
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
+    }
   }
   return out;
 }
@@ -100,17 +107,27 @@ export function verifyCanonicalPayloadSha256(
   const normalizedExpected = expectedSha256.trim().toLowerCase();
   if (!/^[0-9a-f]{64}$/.test(normalizedExpected)) return false;
 
+  const stripped = stripHashKey(record, hashKey);
   if (rawJson !== undefined) {
     try {
-      if (sha256HexSync(canonicalizeRawJsonPayload(rawJson, hashKey)) === normalizedExpected) {
-        return true;
+      const rawCanonical = canonicalizeRawJsonPayload(rawJson, hashKey);
+      const parsedRaw = JSON.parse(rawJson) as unknown;
+      if (parsedRaw === null || typeof parsedRaw !== 'object' || Array.isArray(parsedRaw)) {
+        return false;
       }
+      const strippedRaw = stripHashKey(parsedRaw as Record<string, unknown>, hashKey);
+      if (
+        serializeCanonicalWithFloatSet(strippedRaw, new Set()) !==
+        serializeCanonicalWithFloatSet(stripped, new Set())
+      ) {
+        return false;
+      }
+      return sha256HexSync(rawCanonical) === normalizedExpected;
     } catch {
       return false;
     }
   }
 
-  const stripped = stripHashKey(record, hashKey);
   if (sha256HexSync(serializeCanonicalWithFloatSet(stripped, new Set())) === normalizedExpected) {
     return true;
   }

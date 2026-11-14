@@ -118,12 +118,15 @@ export class PaperForwardRunner {
     }
 
     if (validObs.length > 0) {
-      const preVal = valuePortfolioAtMarks(this.ledger, this.spec.universe, this.latestMarks);
-      const tickCtx = buildProtectionContext({
-        nowMs: input.timestampMs, valuation: preVal,
-        peakNavUsd: this.peakNavUsd, prevNavUsd: this.prevNavUsd,
-        ledger: this.ledger, observations: validObs,
-      });
+      const refreshTickCtx = () => {
+        const liveVal = valuePortfolioAtMarks(this.ledger, this.spec.universe, this.latestMarks);
+        return buildProtectionContext({
+          nowMs: input.timestampMs, valuation: liveVal,
+          peakNavUsd: this.peakNavUsd, prevNavUsd: this.prevNavUsd,
+          ledger: this.ledger, observations: validObs,
+        });
+      };
+      const tickCtx = refreshTickCtx();
       if (tickCtx.ledger && !this.protection.reconcileLedger(tickCtx.ledger)) {
         this.ledgerBreachCount += 1;
       }
@@ -131,13 +134,14 @@ export class PaperForwardRunner {
       if (!tickDec.allowed) this.protectionViolationCount += 1;
 
       for (const obs of validObs) {
+        const symCtx = refreshTickCtx();
         const res = executeH3MakerSymbolStep({
           botId: this.botId, dayIndex: input.dayIndex, nowMs: input.timestampMs,
-          navUsd: preVal.navUsd, allowNewEntries: tickDec.allowed,
+          navUsd: symCtx.equityUsd, allowNewEntries: tickDec.allowed,
           forceUnwind: tickDec.unwindStage !== 'NONE',
           spec: this.spec, obs, ledger: this.ledger,
           lifecycle: this.lifecycle, protection: this.protection,
-          prng: this.prng, tickCtx,
+          prng: this.prng, tickCtx: symCtx, refreshTickCtx,
         });
         this.cumulativeExecutedOrders += res.executedOrders;
         this.protectionViolationCount += res.protectionViolations;

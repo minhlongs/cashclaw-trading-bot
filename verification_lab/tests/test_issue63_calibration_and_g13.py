@@ -388,3 +388,42 @@ def test_g13_state_machine_fails_closed_under_60d_passes_low_te_at_60d_and_fails
     assert res_60d_fail["status"] == "FAIL_TRACKING_ERROR_EXCEEDED"
     assert res_60d_fail["g13_pass"] is False
     assert res_60d_fail["live_trading_unlocked"] is False
+
+
+def test_archive_ingestion_blocks_path_traversal_and_oversized_zip_entries(tmp_path):
+    with pytest.raises(ValueError, match="Invalid archive symbol"):
+        tfc.fetch_verified_vision_zip("spot_agg_trades", "../etc", "2024-03-04", tmp_path, offline=True)
+    with pytest.raises(ValueError, match="Invalid archive date"):
+        tfc.fetch_verified_vision_zip("spot_agg_trades", "BTCUSDT", "2024-03-04/../../x", tmp_path, offline=True)
+    with pytest.raises(ValueError, match="Non-existent calendar date"):
+        tfc.fetch_verified_vision_zip("spot_agg_trades", "BTCUSDT", "2024-02-31", tmp_path, offline=True)
+
+    # Unsafe `../` ZIP entry path must be rejected before decompression.
+    traversal_buf = io.BytesIO()
+    with zipfile.ZipFile(traversal_buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("../escape.csv", b"1,100,1,1,1,1700000000000,true\n")
+    with pytest.raises(ValueError, match="Unsafe ZIP entry path"):
+        tfc.parse_agg_trades_zip(traversal_buf.getvalue(), symbol="BTCUSDT", leg="spot")
+
+    # Bounded uncompressed byte ceiling rejects oversized payloads cleanly.
+    bomb_buf = io.BytesIO()
+    with zipfile.ZipFile(bomb_buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("BTCUSDT-aggTrades-2024-03-04.csv", b"0" * 4096)
+    with pytest.raises(ValueError, match="ceiling"):
+        tfc._read_bounded_single_csv_from_zip(bomb_buf.getvalue(), max_uncompressed_bytes=1024)
+
+    # Multi-entry ZIPs and Windows backslash paths are rejected.
+    multi_buf = io.BytesIO()
+    with zipfile.ZipFile(multi_buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("a.csv", b"1,100,1,1,1,1700000000000,true\n")
+        zf.writestr("b.csv", b"1,100,1,1,1,1700000000000,true\n")
+    with pytest.raises(ValueError, match="single-entry"):
+        tfc.parse_book_depth_zip(multi_buf.getvalue(), symbol="BTCUSDT")
+
+    win_buf = io.BytesIO()
+    with zipfile.ZipFile(win_buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("sub\\escape.csv", b"1,100,1,1,1,1700000000000,true\n")
+    with pytest.raises(ValueError, match="Unsafe ZIP entry path"):
+        tfc.parse_book_depth_zip(win_buf.getvalue(), symbol="BTCUSDT")
+
+

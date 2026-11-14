@@ -18,6 +18,7 @@ import {
   perpLegSymbol,
   spotLegSymbol,
   toBaseUnits,
+  toMicroUsd,
 } from './paper-forward-math';
 import type { H3MakerSymbolObservation, SignedStrategySpec } from './spec-types';
 
@@ -35,6 +36,11 @@ export interface PairRebalanceContext {
   readonly protection: CapitalProtectionEngine;
   readonly prng: DeterministicPrng;
   readonly tickCtx: ProtectionTickContext;
+  readonly refreshTickCtx?: () => ProtectionTickContext;
+}
+
+function currentTickCtx(ctx: PairRebalanceContext): ProtectionTickContext {
+  return ctx.refreshTickCtx ? ctx.refreshTickCtx() : ctx.tickCtx;
 }
 
 function executePairExit(ctx: PairRebalanceContext, spotQty: bigint, perpQty: bigint): LegExecutionOutcome {
@@ -51,7 +57,7 @@ function executePairExit(ctx: PairRebalanceContext, spotQty: bigint, perpQty: bi
       fillPriceUsd: applyAdversePriceUsd(ctx.obs.spotMidUsd, 'sell', halfAdv),
       feeBps: ctx.spec.venueSchedule.spotMakerBps, marginRateBps: SPOT_MARGIN_RATE_BPS,
       reduceOnly: true, nowMs: ctx.nowMs,
-      protection: ctx.protection, lifecycle: ctx.lifecycle, tickCtx: ctx.tickCtx,
+      protection: ctx.protection, lifecycle: ctx.lifecycle, tickCtx: currentTickCtx(ctx),
     });
     executed += res.executedOrders;
     violations += res.protectionViolations;
@@ -66,7 +72,7 @@ function executePairExit(ctx: PairRebalanceContext, spotQty: bigint, perpQty: bi
       fillPriceUsd: applyAdversePriceUsd(ctx.obs.perpMidUsd, 'buy', halfAdv),
       feeBps: ctx.spec.venueSchedule.perpMakerBps, marginRateBps: PERP_MARGIN_RATE_BPS,
       reduceOnly: true, nowMs: ctx.nowMs,
-      protection: ctx.protection, lifecycle: ctx.lifecycle, tickCtx: ctx.tickCtx,
+      protection: ctx.protection, lifecycle: ctx.lifecycle, tickCtx: currentTickCtx(ctx),
     });
     executed += res.executedOrders;
     violations += res.protectionViolations;
@@ -91,8 +97,27 @@ function resolvePerpEntryLegConfig(
 }
 
 function executePairEntry(ctx: PairRebalanceContext): LegExecutionOutcome {
-  const perLegCapPct = Math.min(0.20, ctx.spec.parameters.maxGrossLeverage / (2 * ctx.spec.universe.length));
-  const qtyBase = toBaseUnits((ctx.navUsd * perLegCapPct) / ctx.obs.spotMidUsd);
+  const spotTickCtx = ctx.tickCtx;
+  const perLegCapPct = Math.min(
+    0.20,
+    (ctx.spec.parameters.maxGrossLeverage * 0.995) / (2 * ctx.spec.universe.length),
+  );
+  const usedGrossUsd = spotTickCtx.positions.reduce(
+    (sum, p) => sum + Math.abs(p.signedNotionalUsd),
+    0,
+  );
+  const availPairGrossUsd = Math.max(
+    0,
+    spotTickCtx.equityUsd * ctx.spec.parameters.maxGrossLeverage * 0.99 - usedGrossUsd,
+  );
+  const pairUnitUsd = ctx.obs.spotMidUsd + ctx.obs.perpMidUsd;
+  const targetSpotUsd = Math.min(
+    spotTickCtx.equityUsd * perLegCapPct,
+    pairUnitUsd > 0 ? availPairGrossUsd * (ctx.obs.spotMidUsd / pairUnitUsd) : 0,
+  );
+  if (targetSpotUsd < 25) return { executedOrders: 0, protectionViolations: 0 };
+
+  const qtyBase = toBaseUnits(targetSpotUsd / ctx.obs.spotMidUsd);
   const uFifo = ctx.obs.fifoUniformDraw ?? ctx.prng.nextUnit();
   const queueFilled = ctx.spec.parameters.fifoFillProbability > 0 && uFifo <= ctx.spec.parameters.fifoFillProbability;
   const frac = Math.min(1, Math.max(0.05, ctx.obs.fifoFillFraction ?? 1.0));
@@ -107,26 +132,41 @@ function executePairEntry(ctx: PairRebalanceContext): LegExecutionOutcome {
     limitPriceUsd: ctx.obs.spotMidUsd,
     fillPriceUsd: applyAdversePriceUsd(ctx.obs.spotMidUsd, 'buy', halfAdv),
     feeBps: ctx.spec.venueSchedule.spotMakerBps, marginRateBps: SPOT_MARGIN_RATE_BPS,
-    reduceOnly: false, nowMs: ctx.nowMs, protection: ctx.protection, lifecycle: ctx.lifecycle, tickCtx: ctx.tickCtx,
+    reduceOnly: false, nowMs: ctx.nowMs, protection: ctx.protection, lifecycle: ctx.lifecycle, tickCtx: spotTickCtx,
   });
   if (!queueFilled || spotRes.executedOrders === 0) return spotRes;
 
-  ctx.lifecycle.registerPairedLegs({
-    pairId: `pair_d${ctx.dayIndex}_${ctx.obs.symbol}`,
-    symbol: ctx.obs.symbol,
-    legAClientOrderId: spotId,
-    legBClientOrderId: perpId,
-  });
+  const pairId = `pair_d${ctx.dayIndex}_${ctx.obs.symbol}`;
   const perpCfg = resolvePerpEntryLegConfig(ctx, perpId, halfAdv);
+  ctx.lifecycle.registerPairedLegs({
+    pairId, symbol: ctx.obs.symbol, legAClientOrderId: spotId, legBClientOrderId: perpCfg.idempotencyKey,
+  });
   const perpRes = executeSingleLegLifecycle({
-    botId: ctx.botId, strategyId: ctx.spec.strategyId,
-    idempotencyKey: perpCfg.idempotencyKey,
+    botId: ctx.botId, strategyId: ctx.spec.strategyId, idempotencyKey: perpCfg.idempotencyKey,
     legSymbol: perpLegSymbol(ctx.obs.symbol), side: 'sell', qtyBase: fillQty, fillQtyBase: fillQty,
     limitPriceUsd: ctx.obs.perpMidUsd,
     fillPriceUsd: applyAdversePriceUsd(ctx.obs.perpMidUsd, 'sell', perpCfg.slipBps),
     feeBps: perpCfg.feeBps, marginRateBps: PERP_MARGIN_RATE_BPS,
-    reduceOnly: false, nowMs: ctx.nowMs, protection: ctx.protection, lifecycle: ctx.lifecycle, tickCtx: ctx.tickCtx,
+    reduceOnly: false, nowMs: ctx.nowMs, protection: ctx.protection, lifecycle: ctx.lifecycle,
+    tickCtx: currentTickCtx(ctx),
   });
+  const pairEval = ctx.lifecycle.evaluatePairedLegs(pairId, toMicroUsd(ctx.obs.spotMidUsd), ctx.nowMs + 4_000);
+  if (perpRes.executedOrders === 0 || (pairEval.ok && pairEval.data.unhedgedQtyBase > ZERO_BIGINT)) {
+    const unwindQty = pairEval.ok && pairEval.data.unhedgedQtyBase > ZERO_BIGINT ? pairEval.data.unhedgedQtyBase : fillQty;
+    const unwindSlip = ((ctx.obs.spreadBps ?? 4) / 2) + halfAdv;
+    const unwindRes = executeSingleLegLifecycle({
+      botId: ctx.botId, strategyId: ctx.spec.strategyId, idempotencyKey: `${spotId}_emerg_unwind`,
+      legSymbol: spotLegSymbol(ctx.obs.symbol), side: 'sell', qtyBase: unwindQty, fillQtyBase: unwindQty,
+      limitPriceUsd: ctx.obs.spotMidUsd, fillPriceUsd: applyAdversePriceUsd(ctx.obs.spotMidUsd, 'sell', unwindSlip),
+      feeBps: ctx.spec.venueSchedule.spotTakerBps, marginRateBps: SPOT_MARGIN_RATE_BPS,
+      reduceOnly: true, nowMs: ctx.nowMs + 20, protection: ctx.protection, lifecycle: ctx.lifecycle,
+      tickCtx: currentTickCtx(ctx),
+    });
+    return {
+      executedOrders: spotRes.executedOrders + perpRes.executedOrders + unwindRes.executedOrders,
+      protectionViolations: spotRes.protectionViolations + perpRes.protectionViolations + unwindRes.protectionViolations,
+    };
+  }
   return {
     executedOrders: spotRes.executedOrders + perpRes.executedOrders,
     protectionViolations: spotRes.protectionViolations + perpRes.protectionViolations,

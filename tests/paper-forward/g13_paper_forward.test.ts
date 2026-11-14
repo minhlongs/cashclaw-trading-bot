@@ -291,6 +291,9 @@ describe('Gate G13 Archived-Strategy Kill Fence & SignedStrategySpec Verifier', 
     expect(verifyCanonicalPayloadSha256(parsedByJs, 'payloadSha256', allFloatDigest)).toBe(true);
 
     expect(verifyCanonicalPayloadSha256(parsedByJs, 'payloadSha256', pythonDigest, '{broken json')).toBe(false);
+    expect(verifyCanonicalPayloadSha256(parsedByJs, 'payloadSha256', pythonDigest, '["array-root"]')).toBe(false);
+    const divergedRecord = { ...parsedByJs, strategyId: 'H1' };
+    expect(verifyCanonicalPayloadSha256(divergedRecord, 'payloadSha256', pythonDigest, rawPythonFormattedJson)).toBe(false);
     expect(() => canonicalizeRawJsonPayload('{"a":"unterminated}', 'x')).toThrow();
     expect(() => canonicalizeRawJsonPayload('["unterminated', 'x')).toThrow();
     expect(() => canonicalizeRawJsonPayload('[1 2]', 'x')).toThrow();
@@ -298,8 +301,14 @@ describe('Gate G13 Archived-Strategy Kill Fence & SignedStrategySpec Verifier', 
     expect(() => canonicalizeRawJsonPayload('{"a" 1}', 'x')).toThrow();
     expect(() => canonicalizeRawJsonPayload('{"a":1', 'x')).toThrow();
     expect(() => canonicalizeRawJsonPayload('{"a":1} extra', 'x')).toThrow();
+    expect(() => canonicalizeRawJsonPayload('{"dup":1,"dup":2}', 'none')).toThrow(/Duplicate JSON key/);
+    expect(() => canonicalizeRawJsonPayload('{"nested":{"k":1,"k":2}}', 'none')).toThrow(/Duplicate JSON key/);
+    expect(() => canonicalizeRawJsonPayload('{"__proto__":1}', 'none')).toThrow(/__proto__/);
+    const protoInjected = Object.create(null) as Record<string, unknown>;
+    Object.assign(protoInjected, parsedByJs);
+    Object.defineProperty(protoInjected, '__proto__', { value: { evil: 1 }, enumerable: true, configurable: true, writable: true });
+    expect(verifyCanonicalPayloadSha256(protoInjected, 'payloadSha256', pythonDigest, rawPythonFormattedJson)).toBe(false);
     expect(canonicalizeRawJsonPayload('{"b":[1, 2],"a":"x\\"y","drop":9}', 'drop')).toBe('{"a":"x\\"y","b":[1,2]}');
-    expect(canonicalizeRawJsonPayload('{"dup":1,"dup":2}', 'none')).toBe('{"dup":1,"dup":2}');
     expect(canonicalizeRawJsonPayload('{"emptyArr":[],"emptyObj":{}}', 'none')).toBe('{"emptyArr":[],"emptyObj":{}}');
   });
 });
@@ -593,8 +602,86 @@ describe('Gate G13 PaperForwardRunner, TrackingErrorReconciler & Gate G15 Hard-L
       ],
     });
     viCorruptLedgerAndStep(defaultGenesisRunner);
+    verifyOrphanSpotUnwindOnPerpReject();
+    verifyFullUniverseHeadroomClamp();
   });
 });
+
+function verifyFullUniverseHeadroomClamp(): void {
+  const core19 = [
+    'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT', 'ADAUSDT',
+    'AVAXUSDT', 'DOTUSDT', 'LINKUSDT', 'TRXUSDT', 'LTCUSDT', 'NEARUSDT', 'ATOMUSDT',
+    'UNIUSDT', 'APTUSDT', 'ARBUSDT', 'OPUSDT', 'INJUSDT',
+  ];
+  const spec = makeSignedSpec({ universe: core19 });
+  const runner = new PaperForwardRunner({ spec, initialCapitalUsd: 100_000, genesisTimestampMs: GENESIS_MS });
+  runner.recordGenesisCheckpoint(GENESIS_MS);
+  runner.stepDay({
+    dayIndex: 1,
+    timestampMs: GENESIS_MS + DAY_MS,
+    observations: core19.map((symbol) => ({
+      symbol,
+      spotMidUsd: 100,
+      perpMidUsd: 101.5,
+      impliedCarryAnnualBps: 980,
+      fundingIntervalsBps: [1.0, 1.0, 1.0],
+      fifoUniformDraw: 0.1,
+      legMissUniformDraw: 0.5,
+    })),
+  });
+  runner.stepDay({
+    dayIndex: 2,
+    timestampMs: GENESIS_MS + 2 * DAY_MS,
+    observations: core19.map((symbol) => ({
+      symbol,
+      spotMidUsd: 106,
+      perpMidUsd: 107.6,
+      impliedCarryAnnualBps: 980,
+      fundingIntervalsBps: [1.0, 1.0, 1.0],
+      fifoUniformDraw: 0.1,
+      legMissUniformDraw: 0.5,
+    })),
+  });
+  expect(runner.getViolationSummary()).toEqual({ ledgerBreachCount: 0, protectionViolationCount: 0 });
+}
+
+function verifyOrphanSpotUnwindOnPerpReject(): void {
+  const spec = makeSignedSpec();
+  const runner = new PaperForwardRunner({ spec, initialCapitalUsd: 100_000, genesisTimestampMs: GENESIS_MS });
+  runner.recordGenesisCheckpoint(GENESIS_MS);
+  const origPre = runner.getProtectionEngine().evaluatePreTrade.bind(runner.getProtectionEngine());
+  runner.getProtectionEngine().evaluatePreTrade = (order, ctx) => {
+    const baseDec = origPre(order, ctx);
+    if (order.symbol === 'BNBUSDT:PERP' && !order.reduceOnly) {
+      return {
+        ...baseDec,
+        allowed: false,
+        action: 'REJECT_PRETRADE',
+        controlId: 4,
+        reason: 'simulated perp leg pre-trade veto',
+      };
+    }
+    return baseDec;
+  };
+  runner.stepDay({
+    dayIndex: 1,
+    timestampMs: GENESIS_MS + DAY_MS,
+    observations: [
+      {
+        symbol: 'BNBUSDT',
+        spotMidUsd: 600,
+        perpMidUsd: 602,
+        impliedCarryAnnualBps: 950,
+        fundingIntervalsBps: [],
+        fifoUniformDraw: 0.1,
+        legMissUniformDraw: 0.5,
+      },
+    ],
+  });
+  expect(runner.getLedger().getPosition('BNBUSDT:SPOT').signedQtyBase).toBe(BigInt(0));
+  expect(runner.getLedger().getPosition('BNBUSDT:PERP').signedQtyBase).toBe(BigInt(0));
+  expect(runner.getViolationSummary().protectionViolationCount).toBeGreaterThanOrEqual(1);
+}
 
 function viCorruptLedgerAndStep(runner: PaperForwardRunner): void {
   const orig = runner.getLedger().getBalanceSheet.bind(runner.getLedger());

@@ -47,10 +47,18 @@ function parseRawArrayCanonical(c: RawCursor): string {
 function parseRawObjectCanonical(c: RawCursor, excludeRootKey?: string): string {
   c.idx += 1;
   skipWs(c);
+  const seenKeys = new Set<string>();
   const entries: Array<{ key: string; val: string }> = [];
   while (c.idx < c.src.length && c.src[c.idx] !== '}') {
     skipWs(c);
     const keyTok = readJsonStringToken(c);
+    if (keyTok.decoded === '__proto__') {
+      throw new Error('Forbidden __proto__ JSON key');
+    }
+    if (seenKeys.has(keyTok.decoded)) {
+      throw new Error(`Duplicate JSON key forbidden: ${keyTok.decoded}`);
+    }
+    seenKeys.add(keyTok.decoded);
     skipWs(c);
     if (c.src[c.idx] !== ':') throw new Error('Expected :');
     c.idx += 1;
