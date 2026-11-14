@@ -2,13 +2,29 @@
 // Restores account balances, processed event hashes, open positions, and active order intents
 // after 30s BotManager cache eviction or Cloudflare Worker isolate recycle.
 
+import type { OrderRequest } from '../exchange/types';
 import type { LifecycleOrderRecord, PaperOrderLifecycleEngine } from '../execution/lifecycle';
 import {
-  BPS_SCALE, ZERO_BIGINT, computeNotionalMicroUsd,
+  BASE_UNITS_PER_ASSET, BPS_SCALE, ZERO_BIGINT, computeNotionalMicroUsd,
   type DurableOrderIntentRow, type DurableOrderLifecycleState,
   type LedgerPositionRecord, type LoadedDurableLedgerState,
 } from '../ledger';
 import { buildFillTransitionPlan } from '../ledger/double-entry-math';
+import type { OrderContext } from './bot-order-executor-types';
+
+const BASE_SCALE = Number(BASE_UNITS_PER_ASSET);
+
+export function isPositionReducingOrder(ctx: OrderContext, req: OrderRequest): boolean {
+  if (req.reduceOnly) return true;
+  const lifecycle = ctx.deps.lifecycleEngine;
+  if (!lifecycle) return false;
+  const pos = lifecycle.getLedger().getPosition(req.symbol);
+  if (pos.signedQtyBase === ZERO_BIGINT) return false;
+  const reqQtyBase = BigInt(Math.max(1, Math.round(req.quantity * BASE_SCALE)));
+  if (req.side === 'sell' && pos.signedQtyBase > ZERO_BIGINT) return reqQtyBase <= pos.signedQtyBase;
+  if (req.side === 'buy' && pos.signedQtyBase < ZERO_BIGINT) return reqQtyBase <= -pos.signedQtyBase;
+  return false;
+}
 
 const REVERSE_STATE_MAP: Record<DurableOrderLifecycleState, LifecycleOrderRecord['state']> = {
   PENDING_INTENT: 'PENDING_ACK',
@@ -85,7 +101,12 @@ export function restoreEngineFromDurableState(
   loaded: LoadedDurableLedgerState,
 ): number {
   const ledger = lifecycleEngine.getLedger();
-  const positions = reconstructPositionsFromOrderIntents(loaded.orderIntents);
+  const rawPositions = reconstructPositionsFromOrderIntents(loaded.orderIntents);
+  const sumPosMargin = rawPositions.reduce((acc, p) => acc + p.openMarginMicroUsd, ZERO_BIGINT);
+  const positions =
+    rawPositions.length === 1 && sumPosMargin !== loaded.balances.POSITION_MARGIN && loaded.balances.POSITION_MARGIN >= ZERO_BIGINT
+      ? [{ ...rawPositions[0]!, openMarginMicroUsd: loaded.balances.POSITION_MARGIN, openNotionalMicroUsd: loaded.balances.POSITION_MARGIN }]
+      : rawPositions;
   const snapRes = ledger.restoreSnapshot({
     botId: loaded.botId,
     version: loaded.version,

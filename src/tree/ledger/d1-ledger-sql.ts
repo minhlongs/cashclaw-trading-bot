@@ -131,6 +131,7 @@ export const UPSERT_ORDER_STATE_SQL = `
    )
   ON CONFLICT(bot_id, client_order_id) DO UPDATE SET
     filled_qty_base = excluded.filled_qty_base,
+    limit_price_micro_usd = CASE WHEN excluded.filled_qty_base > 0 THEN excluded.limit_price_micro_usd ELSE paper_order_intents.limit_price_micro_usd END,
     reserved_margin_micro_usd = excluded.reserved_margin_micro_usd,
     lifecycle_state = excluded.lifecycle_state,
     fencing_token = excluded.fencing_token,

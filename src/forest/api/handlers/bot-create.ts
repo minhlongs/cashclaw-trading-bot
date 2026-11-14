@@ -12,6 +12,7 @@ import { normalizeWizardConfig, coerceNum } from './bot-create.normalize';
 import {
   RETAIL_SANDBOX_WARNING,
   evaluateBotStrategyGuard,
+  isExactVerifiedH3Config,
   type BotStrategyGuardErrorCode,
   type StrategyArtifactPaths,
   type VerifiedH3Defaults,
@@ -96,15 +97,7 @@ function buildStrategyConfig(
     const exitAnnualBps = Math.min(entryAnnualBps - 1, coerceNum({ config: cfg, key: 'exitAnnualBps', defaultValue: d.exitAnnualBps, min: 0, max: 2000 }));
     const maxGrossLeverage = coerceNum({ config: cfg, key: 'maxGrossLeverage', defaultValue: d.maxGrossLeverage, min: 0.1, max: 1.5 });
     const maxDrawdownPct = coerceNum({ config: cfg, key: 'maxDrawdownPct', defaultValue: d.maxDrawdownHardPct, min: 1, max: d.maxDrawdownHardPct });
-    const normalizedPair = payload.pair.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    const pairInUniverse = d.universe.length === 0 || d.universe.includes(normalizedPair);
-    const exactSpecMatch =
-      pairInUniverse &&
-      lookbackDays === d.lookbackDays &&
-      entryAnnualBps === d.entryAnnualBps &&
-      exitAnnualBps === d.exitAnnualBps &&
-      maxGrossLeverage === d.maxGrossLeverage;
-    return {
+    const candidate: H3MakerBotConfig = {
       ...base,
       maxDrawdownPct,
       strategy: 'h3_maker' as const,
@@ -112,8 +105,14 @@ function buildStrategyConfig(
       entryAnnualBps,
       exitAnnualBps,
       maxGrossLeverage,
-      ...(specSha256 && exactSpecMatch ? { specSha256 } : {}),
-    } satisfies H3MakerBotConfig;
+    };
+    const exactSpecMatch = isExactVerifiedH3Config(
+      candidate as unknown as Record<string, unknown>,
+      d,
+      undefined,
+      payload.pair,
+    );
+    return exactSpecMatch && specSha256 ? { ...candidate, specSha256 } : candidate;
   }
 
   return {

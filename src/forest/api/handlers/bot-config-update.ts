@@ -2,7 +2,7 @@
 import { getBotManager, type BotConfig } from '@/tree/bot';
 import { isH3MakerConfig, type H3MakerBotConfig } from '@/tree/bot/config-types';
 import { patchBot } from '@/forest/bot/d1-adapter';
-import { getVerifiedH3SpecInfo } from './bot-strategy-guard';
+import { getVerifiedH3SpecInfo, isExactVerifiedH3Config } from './bot-strategy-guard';
 
 interface BoundRule { min: number; max: number; integer?: boolean; }
 
@@ -68,16 +68,6 @@ function reconcileH3MakerSpecParity(cfg: H3MakerBotConfig): H3MakerBotConfig {
     : { lookbackDays: 30, entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0, maxDrawdownHardPct: 12, universe: [] };
   const exitAnnualBps = Math.min(cfg.entryAnnualBps - 1, cfg.exitAnnualBps);
   const maxDrawdownPct = Math.min(d.maxDrawdownHardPct, cfg.maxDrawdownPct);
-  const normalizedSymbol = cfg.symbol.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-  const inUniverse = d.universe.length === 0 || d.universe.includes(normalizedSymbol);
-  const matchesSpec =
-    verified.ok &&
-    inUniverse &&
-    cfg.lookbackDays === d.lookbackDays &&
-    cfg.entryAnnualBps === d.entryAnnualBps &&
-    exitAnnualBps === d.exitAnnualBps &&
-    cfg.maxGrossLeverage === d.maxGrossLeverage;
-
   const baseCfg: Omit<H3MakerBotConfig, 'specSha256'> = {
     name: cfg.name,
     symbol: cfg.symbol,
@@ -92,6 +82,9 @@ function reconcileH3MakerSpecParity(cfg: H3MakerBotConfig): H3MakerBotConfig {
     maxGrossLeverage: cfg.maxGrossLeverage,
     ...(cfg.strategyChain ? { strategyChain: cfg.strategyChain } : {}),
   };
+  const matchesSpec =
+    verified.ok &&
+    isExactVerifiedH3Config(baseCfg as unknown as Record<string, unknown>, d);
   return matchesSpec && verified.ok && verified.specSha256
     ? { ...baseCfg, specSha256: verified.specSha256 }
     : baseCfg;

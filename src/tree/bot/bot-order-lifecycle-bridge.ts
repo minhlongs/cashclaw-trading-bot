@@ -21,9 +21,10 @@ const lifecycleAttemptCounters = new WeakMap<PaperOrderLifecycleEngine, number>(
 type RequestWithOptionalClientOrderId = OrderRequest & { readonly clientOrderId?: string };
 
 function toOrderStateUpsert(ord: LifecycleOrderRecord, override?: DurableOrderLifecycleState): AtomicOrderStateUpsert {
+  const effectiveFillOrLimitPx = ord.avgFillPriceMicroUsd > ZERO_BIGINT ? ord.avgFillPriceMicroUsd : ord.priceMicroUsd;
   return {
     clientOrderId: ord.clientOrderId, symbol: ord.symbol, side: ord.side, orderType: ord.type,
-    quantityBase: ord.effectiveQtyBase, filledQtyBase: ord.filledQtyBase, limitPriceMicroUsd: ord.priceMicroUsd,
+    quantityBase: ord.effectiveQtyBase, filledQtyBase: ord.filledQtyBase, limitPriceMicroUsd: effectiveFillOrLimitPx,
     reservedMarginMicroUsd: ord.reservedMicroUsd, reduceOnly: ord.reduceOnly,
     lifecycleState: override ?? DURABLE_STATE_MAP[ord.state], createdAtMs: ord.createdAtMs, updatedAtMs: ord.updatedAtMs,
   };
@@ -85,7 +86,7 @@ function allocateDefaultOrderId(lifecycleEngine: PaperOrderLifecycleEngine, botI
 
 export async function submitLifecyclePreDispatch(
   ctx: OrderContext, lifecycleEngine: PaperOrderLifecycleEngine,
-  req: OrderRequest, orderCounter: number, effectivePrice: number,
+  req: OrderRequest, orderCounter: number, effectivePrice: number, reduceOnly = false,
 ): Promise<LifecycleOrderRecord> {
   const rawClientId = (req as RequestWithOptionalClientOrderId).clientOrderId;
   const idempotencyKey = rawClientId && rawClientId.trim().length > 0
@@ -95,7 +96,7 @@ export async function submitLifecyclePreDispatch(
   const nowMs = Date.now();
 
   const sub = lifecycleEngine.submitOrder({
-    idempotencyKey, symbol: req.symbol, side: req.side, type: req.type, quantityBase, priceMicroUsd, nowMs,
+    idempotencyKey, symbol: req.symbol, side: req.side, type: req.type, quantityBase, priceMicroUsd, reduceOnly, nowMs,
   });
   if (!sub.ok) {
     ctx.emitTelemetry('error', { error: sub.error, context: 'bot.lifecycleEngine' });

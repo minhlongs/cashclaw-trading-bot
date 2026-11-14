@@ -2,7 +2,10 @@
 
 import type { ExchangeAdapter, ExchangeId, OrderRequest, OrderResult, Ticker, OrderBook, Balance } from '../exchange/types';
 
-export interface PaperAdapterOptions { tickerFetcher?: (symbol: string) => Promise<Ticker>; }
+export interface PaperAdapterOptions {
+  tickerFetcher?: (symbol: string) => Promise<Ticker>;
+  autoFillLimitOrders?: boolean;
+}
 
 export function createPaperAdapter(capital: number, options?: PaperAdapterOptions): ExchangeAdapter {
   const balances = new Map<string, { free: number; used: number }>();
@@ -39,6 +42,9 @@ export function createPaperAdapter(capital: number, options?: PaperAdapterOption
 
     async placeOrder(request: OrderRequest): Promise<OrderResult> {
       const orderId = `paper_${++orderCounter}_${Date.now()}`;
+      const isFilled =
+        request.type === 'market' ||
+        Boolean(options?.autoFillLimitOrders && (request.price ?? 0) > 0);
       const trade: OrderResult = {
         id: orderId,
         exchangeId: 'paper',
@@ -47,8 +53,8 @@ export function createPaperAdapter(capital: number, options?: PaperAdapterOption
         type: request.type,
         price: request.price ?? 0,
         quantity: request.quantity,
-        filled: request.type === 'market' ? request.quantity : 0,
-        status: request.type === 'market' ? 'filled' : 'open',
+        filled: isFilled ? request.quantity : 0,
+        status: isFilled ? 'filled' : 'open',
         fee: request.quantity * 0.001,
         timestamp: Date.now(),
         pnl: 0,

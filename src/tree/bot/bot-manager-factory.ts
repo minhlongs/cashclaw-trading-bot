@@ -39,7 +39,7 @@ export class BotManagerFactory implements BotFactoryDelegate {
     let exchange = this.exchanges.get(modeKey);
     if (!exchange) {
       if (mode !== 'paper') throw new Error('Live trading not available — this system is paper/backtest only. See docs/DEPLOYMENT-SAFETY.md');
-      const raw = Object.assign(createPaperAdapter(capital), { id: exchangeId, name: `${exchangeId}-paper` });
+      const raw = Object.assign(createPaperAdapter(capital, { autoFillLimitOrders: true }), { id: exchangeId, name: `${exchangeId}-paper` });
       let queue = this.queues.get(exchangeId);
       if (!queue) { queue = new RequestQueue(); this.queues.set(exchangeId, queue); }
       exchange = new QueuedExchangeAdapter({ inner: raw, queue });

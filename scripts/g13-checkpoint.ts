@@ -25,22 +25,17 @@ const DEFAULT_STATE_PATH = path.join(REPO_ROOT, 'verification_lab', 'data', 'g13
 const PY_SCRIPT_PATH = path.join(REPO_ROOT, 'verification_lab', 'scripts', 'g13_paper_forward.py');
 
 interface CliOptions {
-  offline: boolean; stateFile?: string; outPath?: string; pythonBin?: string;
-  specPath: string; registryPath: string; snapshotIn?: string;
+  offline: boolean; stateFile?: string; outPath?: string; pythonBin?: string; specPath: string; registryPath: string; snapshotIn?: string;
 }
 
 interface VerifiedGovernance {
-  readonly spec: SignedStrategySpec; readonly registry: StrategyLifecycleRegistry;
-  readonly rawSpecJson: string; readonly rawRegistryJson: string;
+  readonly spec: SignedStrategySpec; readonly registry: StrategyLifecycleRegistry; readonly rawSpecJson: string; readonly rawRegistryJson: string;
 }
 
 const VALUE_FLAG_HANDLERS: Readonly<Record<string, (opts: CliOptions, val: string) => void>> = {
-  '--state-file': (o, v) => { o.stateFile = path.resolve(v); },
-  '--out': (o, v) => { o.outPath = path.resolve(v); },
-  '--python': (o, v) => { o.pythonBin = v; },
-  '--spec': (o, v) => { o.specPath = path.resolve(v); },
-  '--registry': (o, v) => { o.registryPath = path.resolve(v); },
-  '--snapshot-in': (o, v) => { o.snapshotIn = path.resolve(v); },
+  '--state-file': (o, v) => { o.stateFile = path.resolve(v); }, '--out': (o, v) => { o.outPath = path.resolve(v); },
+  '--python': (o, v) => { o.pythonBin = v; }, '--spec': (o, v) => { o.specPath = path.resolve(v); },
+  '--registry': (o, v) => { o.registryPath = path.resolve(v); }, '--snapshot-in': (o, v) => { o.snapshotIn = path.resolve(v); },
 };
 
 function parseArgs(argv: readonly string[]): CliOptions {
@@ -69,8 +64,12 @@ function resolveGenesisUtc(specSha: string, state: PersistedRunnerState | null, 
   if (state) return state.genesisUtc;
   for (const candidate of [outPath, DEFAULT_G13_OUT_PATH]) {
     if (!fs.existsSync(candidate)) continue;
-    const doc = JSON.parse(fs.readFileSync(candidate, 'utf8')) as Record<string, unknown>;
-    if (doc.spec_sha256 === specSha && typeof doc.genesis_utc === 'string') return doc.genesis_utc;
+    try {
+      const raw = fs.readFileSync(candidate, 'utf8').trim();
+      if (!raw) continue;
+      const doc = JSON.parse(raw) as Record<string, unknown>;
+      if (doc.spec_sha256 === specSha && typeof doc.genesis_utc === 'string') return doc.genesis_utc;
+    } catch { continue; }
   }
   return fallbackUtc;
 }
@@ -162,13 +161,13 @@ function executeCheckpointPipeline(opts: CliOptions, tmpDir: string): void {
   const fills = extractSerializedFills(runner, gov.spec, new Map(executedDays.map((d) => [d.dayIndex, d])));
   const fundingEvents = runner.getLedger().getJournalEntries().filter((e) => e.eventType === 'FUNDING_CASHFLOW').length;
 
-  const nextState: PersistedRunnerState = {
+  const nextStateJson = `${JSON.stringify({
     schemaVersion: '1.0.0', specSha256: gov.spec.payloadSha256, genesisUtc, genesisTimestampMs: genesisTsMs,
     initialCapitalUsd: BRIDGE_INITIAL_CAPITAL_USD, seed: BRIDGE_SEED, days: executedDays,
     ledgerVersion: runner.getLedger().getVersion(), equityMicroUsd: sheet.equityMicroUsd.toString(), positions,
-  };
-  fs.mkdirSync(path.dirname(effectiveStatePath), { recursive: true });
-  fs.writeFileSync(effectiveStatePath, `${JSON.stringify(nextState, null, 2)}\n`, 'utf8');
+  } satisfies PersistedRunnerState, null, 2)}\n`;
+  const stagedStateTmp = path.join(tmpDir, 'staged-runner-state.json');
+  fs.writeFileSync(stagedStateTmp, nextStateJson, 'utf8');
 
   const reconTmp = path.join(tmpDir, 'ts-reconciliation.json');
   fs.writeFileSync(reconTmp, `${JSON.stringify({
@@ -181,9 +180,11 @@ function executeCheckpointPipeline(opts: CliOptions, tmpDir: string): void {
     positions, fills, days: executedDays, liveTradingUnlocked: false,
   }, null, 2)}\n`, 'utf8');
 
-  const pyArgs = [PY_SCRIPT_PATH, '--ts-reconciliation-json', reconTmp, '--snapshot-json', snapTmp, ...(opts.offline ? ['--offline'] : []), '--out-g13', outArtifactPath, '--state-file', effectiveStatePath];
+  const pyArgs = [PY_SCRIPT_PATH, '--ts-reconciliation-json', reconTmp, '--snapshot-json', snapTmp, ...(opts.offline ? ['--offline'] : []), '--out-g13', outArtifactPath, '--state-file', stagedStateTmp];
   const pyRecon = spawnSync(pythonBin, pyArgs, { cwd: REPO_ROOT, encoding: 'utf8' });
   if (pyRecon.status !== 0) throw new Error((pyRecon.stderr || 'Python Decimal(prec=50) reconciliation failed').trim());
+  fs.mkdirSync(path.dirname(effectiveStatePath), { recursive: true });
+  fs.copyFileSync(stagedStateTmp, effectiveStatePath);
 
   const g13 = G13TrackingArtifactSchema.parse(JSON.parse(fs.readFileSync(outArtifactPath, 'utf8')) as unknown);
   process.stdout.write(`${JSON.stringify({

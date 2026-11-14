@@ -155,7 +155,23 @@ describe('botCreateHandler', () => {
         entryAnnualBps: 800,
         exitAnnualBps: 150,
         maxGrossLeverage: 1.0,
+        maxDrawdownPct: 12,
       });
+
+      const customDd = await botCreateHandler(
+        paperPayload({ id: 'h3-custom-dd', strategy: 'h3_maker', config: { maxDrawdownPct: 6 } }),
+      );
+      expect(customDd.ok).toBe(true);
+      expect(customDd.data?.verificationTier).toBe('UNVERIFIED_RETAIL_SANDBOX');
+      expect(customDd.data?.specSha256).toBeUndefined();
+      expect(customDd.data?.warning).toBe(RETAIL_SANDBOX_WARNING);
+
+      const outsideUniverse = await botCreateHandler(
+        paperPayload({ id: 'h3-shib', strategy: 'h3_maker', pair: 'SHIB/USDT', config: {} }),
+      );
+      expect(outsideUniverse.ok).toBe(true);
+      expect(outsideUniverse.data?.verificationTier).toBe('UNVERIFIED_RETAIL_SANDBOX');
+      expect(outsideUniverse.data?.specSha256).toBeUndefined();
     });
   });
 

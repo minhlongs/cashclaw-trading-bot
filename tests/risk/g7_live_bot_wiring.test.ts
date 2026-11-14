@@ -221,4 +221,60 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     mgr2.destroy();
     mgrH3.destroy();
   });
+
+  it('completes unmocked H3MakerStrategy buy + reduceOnly sell cycle via default PaperExchangeAdapter, rehydrates fill-vs-limit price drift cleanly, and permits reduceOnly exit during EMERGENCY_HALT', async () => {
+    const d1 = createSqliteD1();
+    const mgrDefault = new BotManager({ getD1Database: () => d1 });
+    const h3Cfg: H3MakerBotConfig = {
+      name: 'H3 Unmocked Paper', symbol: 'BTC/USDT', exchange: 'binance', mode: 'paper',
+      strategy: 'h3_maker', capital: 10_000, maxDrawdownPct: 12, lookbackDays: 3,
+      entryAnnualBps: 800, exitAnnualBps: 150, maxGrossLeverage: 1.0,
+    };
+    const h3DefaultBot = await mgrDefault.createBot({ id: 'bot-h3-unmocked', config: h3Cfg, exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    let feedPx = 50_000;
+    const rawEx = (h3DefaultBot as unknown as { deps: { exchange: { fetchTicker: (s: string) => Promise<unknown> } } }).deps.exchange;
+    vi.spyOn(rawEx, 'fetchTicker').mockImplementation(async (symbol: string) => ({
+      symbol, last: feedPx, bid: feedPx - 1, ask: feedPx + 1, high24h: feedPx + 10, low24h: feedPx - 10, volume24h: 1000, timestamp: Date.now(),
+    }));
+    await h3DefaultBot.start();
+    feedPx = 50_200;
+    await h3DefaultBot.tick();
+    await vi.waitFor(() => expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()).toHaveLength(1));
+    expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()[0]?.state).toBe('filled');
+    expect(h3DefaultBot.getLifecycleEngine()!.getLedger().getPosition('BTC/USDT').signedQtyBase).toBeGreaterThan(ZERO_BIGINT);
+
+    await h3DefaultBot.tick();
+    await vi.waitFor(() => expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()).toHaveLength(2));
+    expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()[1]?.state).toBe('filled');
+    expect(h3DefaultBot.getLifecycleEngine()!.getAllOrders()[1]?.reduceOnly).toBe(true);
+    expect(h3DefaultBot.getLifecycleEngine()!.getLedger().getPosition('BTC/USDT').signedQtyBase).toBe(ZERO_BIGINT);
+    expect(h3DefaultBot.getLifecycleEngine()!.getLedger().getBalanceSheet().discrepancyMicroUsd).toBe(ZERO_BIGINT);
+    mgrDefault.destroy();
+
+    let fillPx = 49_500;
+    const priceImprovementOrch = {
+      fetchTicker: vi.fn(),
+      placeOrder: vi.fn(async (_ex: string, r: { symbol: string; side: 'buy' | 'sell'; type: 'market' | 'limit'; price?: number; quantity: number }) => ({
+        ok: true as const,
+        data: { id: `imp-${Date.now()}-${Math.random()}`, exchangeId: 'binance', symbol: r.symbol, side: r.side, type: r.type, price: fillPx, quantity: r.quantity, filled: r.quantity, fee: 0, pnl: 0, status: 'filled' as const, timestamp: Date.now() },
+      })),
+    } as unknown as ExchangeOrchestrator;
+
+    const mgrDrift1 = new BotManager({ getOrchestrator: () => priceImprovementOrch, getD1Database: () => d1 });
+    const driftBot1 = await mgrDrift1.createBot({ id: 'bot-fill-drift', config: makeGridBotConfig({ capital: 10_000 }), exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    await driftBot1.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50_000, quantity: 0.04 });
+    mgrDrift1.destroy();
+
+    fillPx = 43_000;
+    const mgrDrift2 = new BotManager({ getOrchestrator: () => priceImprovementOrch, getD1Database: () => d1 });
+    const driftBot2 = mgrDrift2.createBotSync({ id: 'bot-fill-drift', config: makeGridBotConfig({ capital: 1_000, maxDrawdownPct: 5 }) });
+    const closeUnderHalt = await driftBot2.placeOrder({ symbol: 'BTC/USDT', side: 'sell', type: 'limit', price: 43_000, quantity: 0.04 });
+    expect(closeUnderHalt.status).toBe('filled');
+    expect(driftBot2.getLifecycleEngine()!.getLedger().getPosition('BTC/USDT').signedQtyBase).toBe(ZERO_BIGINT);
+    expect(driftBot2.getLifecycleEngine()!.getLedger().getBalanceSheet().discrepancyMicroUsd).toBe(ZERO_BIGINT);
+    const durableDrift = await driftBot2.getLedgerBatcher()!.loadDurableBotState('bot-fill-drift');
+    expect(durableDrift?.orderIntents[0]?.limitPriceMicroUsd).toBe(BigInt(49_500) * MICRO_USD_PER_USD);
+    expect(computeBalanceSheet(durableDrift!.balances).discrepancyMicroUsd).toBe(ZERO_BIGINT);
+    mgrDrift2.destroy();
+  });
 });

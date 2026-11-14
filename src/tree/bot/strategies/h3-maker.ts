@@ -31,6 +31,7 @@ export class H3MakerStrategy {
   private priceWindow: number[] = [];
   private running = false;
   private orderInFlight = false;
+  private restingOpenSide: Side | null = null;
   private positionSide: 'flat' | 'long' = 'flat';
   private entryPrice = 0;
   private positionQty = 0;
@@ -50,6 +51,7 @@ export class H3MakerStrategy {
     }
     this.running = true;
     this.orderInFlight = false;
+    this.restingOpenSide = null;
     this.positionSide = 'flat';
     this.entryPrice = 0;
     this.positionQty = 0;
@@ -77,10 +79,10 @@ export class H3MakerStrategy {
     if (this.priceWindow.length < 2) return;
 
     const annualBps = computeAnnualizedCarryBps(this.priceWindow, price);
-    if (this.positionSide === 'flat' && annualBps >= this.config.entryAnnualBps) {
+    if (this.positionSide === 'flat' && this.restingOpenSide !== 'buy' && annualBps >= this.config.entryAnnualBps) {
       const makerBuyPx = ticker.bid > 0 ? Math.min(ticker.bid, price) : price;
       void this.submitMakerLeg('buy', makerBuyPx, annualBps);
-    } else if (this.positionSide === 'long' && annualBps <= this.config.exitAnnualBps) {
+    } else if (this.positionSide === 'long' && this.restingOpenSide !== 'sell' && annualBps <= this.config.exitAnnualBps) {
       const makerSellPx = ticker.ask > 0 ? Math.max(ticker.ask, price) : price;
       void this.submitMakerLeg('sell', makerSellPx, annualBps);
     }
@@ -107,8 +109,11 @@ export class H3MakerStrategy {
         const res = await this.callbacks.placeOrder({
           symbol: this.config.symbol, exchange: this.config.exchange,
           side, type: 'limit', price: limitPrice, quantity, timeInForce: 'GTC',
+          ...(side === 'sell' ? { reduceOnly: true } : {}),
         });
-        if (res.status !== 'filled' || res.filled <= 0) return;
+        if (res.status === 'open') { this.restingOpenSide = side; return; }
+        if (res.status !== 'filled' || res.filled <= 0) { this.restingOpenSide = null; return; }
+        this.restingOpenSide = null;
         if (res.price > 0) fillPrice = res.price;
         filledQty = res.filled;
         fee = res.fee ?? 0;

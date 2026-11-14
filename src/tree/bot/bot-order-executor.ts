@@ -1,6 +1,7 @@
 import type { OrderRequest, OrderResult } from '../exchange/types';
 import { type OrderContext, orderResultToTrade } from './bot-order-executor-types';
 import { dispatchExchangeOrder } from './bot-order-executor-dispatch';
+import { isPositionReducingOrder } from './bot-ledger-hydration';
 import {
   ensureDurableBotHydrated,
   releaseLifecycleOnDispatchThrow,
@@ -11,7 +12,9 @@ import {
 export type { OrderContext };
 export { orderResultToTrade };
 
-function evaluatePreTradeProtection(ctx: OrderContext, req: OrderRequest, orderCounter: number): number {
+function evaluatePreTradeProtection(
+  ctx: OrderContext, req: OrderRequest, orderCounter: number, reduceOnly: boolean,
+): number {
   const { deps, botId, emitTelemetry } = ctx;
   if (!deps.protectionEngine || !deps.protectionContextProvider) {
     return req.price ?? 0;
@@ -29,7 +32,7 @@ function evaluatePreTradeProtection(ctx: OrderContext, req: OrderRequest, orderC
       orderType: req.type === 'market' ? 'MARKET' : 'LIMIT',
       price: candidatePrice,
       quantity: req.quantity,
-      reduceOnly: false,
+      reduceOnly,
       timestampMs: tickCtx.nowMs,
     },
     tickCtx,
@@ -60,9 +63,10 @@ export async function executeOrder(
 
   await ensureDurableBotHydrated(ctx);
   const nextCounter = orderCounter + 1;
-  const effectivePrice = evaluatePreTradeProtection(ctx, req, nextCounter - 1);
+  const reduceOnly = isPositionReducingOrder(ctx, req);
+  const effectivePrice = evaluatePreTradeProtection(ctx, req, nextCounter - 1, reduceOnly);
   const submittedOrder = deps.lifecycleEngine
-    ? await submitLifecyclePreDispatch(ctx, deps.lifecycleEngine, req, nextCounter - 1, effectivePrice)
+    ? await submitLifecyclePreDispatch(ctx, deps.lifecycleEngine, req, nextCounter - 1, effectivePrice, reduceOnly)
     : undefined;
 
   let result: OrderResult;

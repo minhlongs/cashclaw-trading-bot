@@ -143,5 +143,22 @@ describe('Gate G13 End-to-End TS <-> Python Checkpoint CLI Bridge', () => {
     ], { cwd: REPO_ROOT, encoding: 'utf8' });
     expect(rArchived.status).toBe(2);
     expect(rArchived.stderr).toContain('STRATEGY_ARCHIVED_FALSIFIED');
+
+    const zeroByteOut = path.join(tmpDir, 'empty_out.json');
+    fs.writeFileSync(zeroByteOut, '', 'utf8');
+    const cleanStatePath = path.join(tmpDir, 'atomic_state.json');
+    const rZero = spawnSync(process.execPath, [
+      VITE_NODE_BIN, '-c', VITEST_CFG, CHECKPOINT_SCRIPT, '--offline', '--state-file', cleanStatePath, '--out', zeroByteOut,
+    ], { cwd: REPO_ROOT, encoding: 'utf8' });
+    expect(rZero.status).toBe(0);
+    expect(fs.existsSync(cleanStatePath)).toBe(true);
+    const savedBeforeFail = fs.readFileSync(cleanStatePath, 'utf8');
+
+    const rBadPy = spawnSync(process.execPath, [
+      VITE_NODE_BIN, '-c', VITEST_CFG, CHECKPOINT_SCRIPT, '--snapshot-in', snapDay1,
+      '--state-file', cleanStatePath, '--out', zeroByteOut, '--python', '/nonexistent/python-bin',
+    ], { cwd: REPO_ROOT, encoding: 'utf8' });
+    expect(rBadPy.status).toBe(2);
+    expect(fs.readFileSync(cleanStatePath, 'utf8')).toBe(savedBeforeFail);
   }, 30_000);
 });

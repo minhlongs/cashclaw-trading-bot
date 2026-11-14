@@ -33,32 +33,14 @@ export interface VerifiedH3Defaults {
 }
 
 export type BotStrategyGuardResult =
-  | {
-      readonly ok: true;
-      readonly strategy: StrategyType;
-      readonly verificationTier: StrategyVerificationTier;
-      readonly warning?: string;
-      readonly specSha256?: string;
-      readonly verifiedDefaults?: VerifiedH3Defaults;
-    }
-  | {
-      readonly ok: false;
-      readonly status: 403;
-      readonly code: BotStrategyGuardErrorCode;
-      readonly error: string;
-    };
+  | { readonly ok: true; readonly strategy: StrategyType; readonly verificationTier: StrategyVerificationTier; readonly warning?: string; readonly specSha256?: string; readonly verifiedDefaults?: VerifiedH3Defaults }
+  | { readonly ok: false; readonly status: 403; readonly code: BotStrategyGuardErrorCode; readonly error: string };
 
-export interface StrategyArtifactPaths {
-  readonly specPath?: string;
-  readonly registryPath?: string;
-}
+export interface StrategyArtifactPaths { readonly specPath?: string; readonly registryPath?: string; }
 
 const RETAIL_STRATEGIES = new Set<StrategyType>(['grid', 'mean_reversion', 'volatility_dca']);
 
-function loadArtifactSource(overridePath: string | undefined, bundled: unknown): {
-  readonly parsed: unknown;
-  readonly rawJson?: string;
-} {
+function loadArtifactSource(overridePath: string | undefined, bundled: unknown): { readonly parsed: unknown; readonly rawJson?: string } {
   if (!overridePath) return { parsed: bundled };
   const rawJson = fs.readFileSync(overridePath, 'utf8');
   return { parsed: JSON.parse(rawJson) as unknown, rawJson };
@@ -123,14 +105,45 @@ export function getVerifiedH3SpecInfo(paths?: StrategyArtifactPaths): Extract<Bo
   };
 }
 
+export function isExactVerifiedH3Config(
+  config: Record<string, unknown>,
+  defaults: VerifiedH3Defaults,
+  expectedSpecSha256?: string,
+  pairOverride?: string,
+): boolean {
+  if (expectedSpecSha256 && config.specSha256 !== expectedSpecSha256) return false;
+  const rawPair = typeof pairOverride === 'string'
+    ? pairOverride
+    : typeof config.symbol === 'string'
+      ? config.symbol
+      : '';
+  const normalizedPair = rawPair.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  const inUniverse =
+    defaults.universe.length === 0 ||
+    (normalizedPair.length > 0 && defaults.universe.includes(normalizedPair));
+  return (
+    inUniverse &&
+    config.lookbackDays === defaults.lookbackDays &&
+    config.entryAnnualBps === defaults.entryAnnualBps &&
+    config.exitAnnualBps === defaults.exitAnnualBps &&
+    config.maxGrossLeverage === defaults.maxGrossLeverage &&
+    config.maxDrawdownPct === defaults.maxDrawdownHardPct
+  );
+}
+
 export function resolveBotVerificationTier(
   strategy: string,
   config?: Record<string, unknown>,
+  pair?: string,
 ): StrategyVerificationTier {
   if (strategy !== 'h3_maker') return getStrategyVerificationTier('grid');
   if (!config || typeof config.specSha256 !== 'string') return getStrategyVerificationTier('grid');
   const verified = getVerifiedH3SpecInfo();
-  if (!verified.ok || config.specSha256 !== verified.specSha256) {
+  if (
+    !verified.ok ||
+    !verified.verifiedDefaults ||
+    !isExactVerifiedH3Config(config, verified.verifiedDefaults, verified.specSha256, pair)
+  ) {
     return getStrategyVerificationTier('grid');
   }
   return getStrategyVerificationTier('h3_maker');
