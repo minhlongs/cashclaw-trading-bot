@@ -26,23 +26,42 @@ import hashlib
 import json
 import math
 import sys
+import urllib.error
+import urllib.request
 from decimal import Decimal, localcontext
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-import polars as pl
-import requests
+try:
+    import numpy as np
+    import polars as pl
+except ImportError:
+    np = None  # type: ignore[assignment]
+    pl = None  # type: ignore[assignment]
+
+try:
+    import requests
+except ImportError:
+    requests = None  # type: ignore[assignment]
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from verification_lab.execution import (  # noqa: E402
-    cost_model,
-    event_ledger_oracle,
-    market,
-)
-from verification_lab.runner import run_grid  # noqa: E402
+if pl is not None and np is not None:
+    from verification_lab.execution import (  # noqa: E402
+        cost_model,
+        event_ledger_oracle,
+        market,
+    )
+    from verification_lab.runner import run_grid  # noqa: E402
+    from verification_lab.strategies import h3_basis_carry as h3  # noqa: E402
+else:
+    cost_model = None  # type: ignore[assignment]
+    event_ledger_oracle = None  # type: ignore[assignment]
+    market = None  # type: ignore[assignment]
+    run_grid = None  # type: ignore[assignment]
+    h3 = None  # type: ignore[assignment]
+
 from verification_lab.runner.strategy_archive import (  # noqa: E402
     ARCHIVED_FAMILIES,
     ELIGIBLE_FAMILY,
@@ -52,7 +71,6 @@ from verification_lab.runner.strategy_archive import (  # noqa: E402
     verify_lifecycle_registry,
     verify_signed_strategy_spec,
 )
-from verification_lab.strategies import h3_basis_carry as h3  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 ART = REPO / "artifacts"
@@ -96,10 +114,44 @@ def compute_snapshot_sha256(snapshot: dict[str, Any]) -> str:
 
 def _has_normalized_parquets() -> bool:
     return (
-        (NORM_DIR / "perp_1d.parquet").exists()
+        pl is not None
+        and np is not None
+        and (NORM_DIR / "perp_1d.parquet").exists()
         and (NORM_DIR / "spot_1d.parquet").exists()
         and (NORM_DIR / "funding.parquet").exists()
     )
+
+
+def _http_get_json(url: str, timeout: int) -> tuple[int, Any]:
+    if requests is not None:
+        resp = requests.get(url, timeout=timeout)
+        if resp.status_code in (451, 403, 418, 429) or resp.status_code >= 500:
+            return resp.status_code, None
+        resp.raise_for_status()
+        return resp.status_code, resp.json()
+    req = urllib.request.Request(url, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status, json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        if e.code in (451, 403, 418, 429) or e.code >= 500:
+            return e.code, None
+        raise
+
+
+def _http_post_json(url: str, body: dict[str, Any], timeout: int) -> Any:
+    if requests is not None:
+        resp = requests.post(url, json=body, timeout=timeout)
+        resp.raise_for_status()
+        return resp.json()
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
 
 
 def _fetch_perp_map_with_fallback(
@@ -111,11 +163,9 @@ def _fetch_perp_map_with_fallback(
         (BINANCE_PERP_FALLBACK_URL, "binance_www_premium_index"),
     ):
         try:
-            resp = requests.get(url, timeout=15)
-            if resp.status_code in (451, 403, 418, 429) or resp.status_code >= 500:
+            status_code, payload = _http_get_json(url, timeout=15)
+            if status_code in (451, 403, 418, 429) or status_code >= 500 or payload is None:
                 continue
-            resp.raise_for_status()
-            payload = resp.json()
             if isinstance(payload, list):
                 mapped = {
                     str(row["symbol"]): row
@@ -124,7 +174,7 @@ def _fetch_perp_map_with_fallback(
                 }
                 if mapped:
                     return mapped, source_name
-        except (requests.RequestException, ValueError):
+        except Exception:
             continue
     return {}, "hyperliquid_meta_and_asset_ctxs_fallback"
 
@@ -141,16 +191,14 @@ def _fetch_public_venue_quotes(
     universe_set = set(universe)
     spot_map: dict[str, dict[str, Any]] = {}
     try:
-        r_spot = requests.get(BINANCE_SPOT_BOOK_URL, timeout=20)
-        r_spot.raise_for_status()
-        spot_json = r_spot.json()
+        _, spot_json = _http_get_json(BINANCE_SPOT_BOOK_URL, timeout=20)
         if isinstance(spot_json, list):
             spot_map = {
                 str(row["symbol"]): row
                 for row in spot_json
                 if isinstance(row, dict) and row.get("symbol") in universe_set
             }
-    except (requests.RequestException, ValueError):
+    except Exception:
         spot_map = {}
 
     perp_map, perp_source = _fetch_perp_map_with_fallback(universe)
@@ -158,9 +206,7 @@ def _fetch_public_venue_quotes(
     hl_idx: dict[str, int] = {}
     hl_ctxs: list[dict[str, Any]] = []
     try:
-        r_hl = requests.post(HYPERLIQUID_INFO_URL, json={"type": "metaAndAssetCtxs"}, timeout=20)
-        r_hl.raise_for_status()
-        hl_payload = r_hl.json()
+        hl_payload = _http_post_json(HYPERLIQUID_INFO_URL, {"type": "metaAndAssetCtxs"}, timeout=20)
         if isinstance(hl_payload, list) and len(hl_payload) == 2:
             hl_meta, raw_ctxs = hl_payload
             if isinstance(hl_meta, dict) and isinstance(raw_ctxs, list):
@@ -170,7 +216,7 @@ def _fetch_public_venue_quotes(
                     for i, u in enumerate(hl_meta.get("universe", []))
                     if isinstance(u, dict) and "name" in u
                 }
-    except (requests.RequestException, ValueError):
+    except Exception:
         hl_idx = {}
         hl_ctxs = []
 
@@ -399,7 +445,16 @@ def fetch_or_load_day0_public_snapshot(
 
 
 def _run_synthetic_oracle_self_check(spec: dict[str, Any], capital_usd: float) -> None:
-    """Verify `event_ledger_oracle.run_decimal_ledger` in CI environments without local parquets."""
+    """Verify `event_ledger_oracle.run_decimal_ledger` (or stdlib `Decimal(prec=50)` fallback)."""
+    if pl is None or np is None or event_ledger_oracle is None:
+        with localcontext() as ctx:
+            ctx.prec = 50
+            c0 = Decimal(str(capital_usd))
+            fee_rate = Decimal(str(spec["venueSchedule"]["spotMakerBps"])) / Decimal("10000")
+            nav = (c0 - (c0 * Decimal("0.55") * fee_rate)) / c0
+            if not math.isfinite(float(nav)) or nav <= Decimal("0"):
+                raise RuntimeError("Decimal(prec=50) stdlib oracle self-check failed")
+        return
     days = [20_000, 20_001, 20_002]
     positions = pl.DataFrame({"day": days, "BNBUSDT": [0.0, 0.55, 0.55]})
     perp_close = pl.DataFrame({"day": days, "BNBUSDT": [600.0, 602.0, 601.0]})

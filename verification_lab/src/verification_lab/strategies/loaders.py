@@ -17,8 +17,15 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import polars as pl
+if TYPE_CHECKING:
+    import polars as pl
+else:
+    try:
+        import polars as pl
+    except ImportError:
+        pl = None  # type: ignore[assignment]
 
 LAB = Path(__file__).resolve().parents[3]
 NORM = LAB / "data" / "normalized"
