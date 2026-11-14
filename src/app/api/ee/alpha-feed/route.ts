@@ -4,11 +4,22 @@
 import { NextResponse } from 'next/server';
 import { getCloudAlphaFeedForTier } from '@/ee/alpha-cloud/alpha-feed-service';
 import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
-import { resolveWorkspaceTierContext } from '@/ee/tenancy/workspace-request-context';
+import {
+  detectCrossWorkspaceIdor,
+  resolveWorkspaceTierContext,
+} from '@/ee/tenancy/workspace-request-context';
 
 export async function GET(req: Request) {
   try {
-    const { workspaceId, tier } = await resolveWorkspaceTierContext(req);
+    const tierContext = await resolveWorkspaceTierContext(req);
+    const idor = detectCrossWorkspaceIdor(req, tierContext);
+    if (idor) {
+      return NextResponse.json(
+        { ok: false, code: idor.code, error: idor.error },
+        { status: idor.status },
+      );
+    }
+    const { workspaceId, tier } = tierContext;
 
     const entitlements = getEntitlementsForTier(tier);
     const items = getCloudAlphaFeedForTier(tier);

@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export interface CliSyncBridgeProps {
   workspaceId: string;
 }
 
 export function CliSyncBridgeCard({ workspaceId }: CliSyncBridgeProps) {
+  const t = useTranslations('billing.sync');
   const [copied, setCopied] = useState(false);
   const syncCommand = `npx cashclaw export-sync --workspace=${workspaceId} --target=cloud`;
 
@@ -20,10 +22,8 @@ export function CliSyncBridgeCard({ workspaceId }: CliSyncBridgeProps) {
     <div className="panel">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-base font-semibold">1-Click Local-to-Cloud Sync Bridge</h3>
-          <p className="meta text-xs">
-            Export SHA-256 signed paper bot configurations from local CLI directly to your Cloud SaaS isolate
-          </p>
+          <h3 className="text-base font-semibold">{t('title')}</h3>
+          <p className="meta text-xs">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -34,12 +34,12 @@ export function CliSyncBridgeCard({ workspaceId }: CliSyncBridgeProps) {
           onClick={handleCopy}
           className="shrink-0 text-xs px-3 py-1.5 rounded bg-primary text-white hover:bg-primary/90 transition"
         >
-          {copied ? 'Copied!' : 'Copy Command'}
+          {copied ? t('copied') : t('copyCommand')}
         </button>
       </div>
 
       <p className="meta text-xs mt-3">
-        Preserves ADR-001 paper-only invariants. Cloud import endpoint: <code>/api/ee/sync</code>
+        {t('footerPrefix')} <code>/api/ee/sync</code>
       </p>
     </div>
   );

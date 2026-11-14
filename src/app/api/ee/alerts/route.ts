@@ -1,11 +1,14 @@
 // Step 15 HTTP Endpoint: POST /api/ee/alerts
-// Validates CloudAlertEvent, checks optional SaaS tier entitlement, suppresses
-// duplicates within cooldown, and signs webhook payloads with WebCrypto HMAC-SHA256.
+// Validates CloudAlertEvent, enforces cross-workspace anti-IDOR (403), checks SaaS tier entitlement,
+// suppresses duplicates within cooldown, and signs webhook payloads with WebCrypto HMAC-SHA256.
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
-  CloudAlertDeduplicator, signAlertWebhookPayload, type CloudAlertEvent, type SignedWebhookEnvelope,
+  CloudAlertDeduplicator,
+  signAlertWebhookPayload,
+  type CloudAlertEvent,
+  type SignedWebhookEnvelope,
 } from '@/ee/alerts/cloud-alert-dispatcher';
 import {
   ALERT_MISSING_SECRET_ERROR,
@@ -13,6 +16,7 @@ import {
 } from '@/ee/alerts/alert-webhook-secret';
 import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
 import {
+  detectCrossWorkspaceIdor,
   resolveEffectiveWorkspaceId,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
@@ -41,16 +45,24 @@ export async function POST(req: Request) {
       );
     }
 
-    // The tier comes from the workspace's D1 entitlement, never from the request body.
     const tierContext = await resolveWorkspaceTierContext(req, {
       explicitWorkspaceId: parsed.data.workspaceId,
     });
+    const idor = detectCrossWorkspaceIdor(req, tierContext, parsed.data.workspaceId);
+    if (idor) {
+      return NextResponse.json(
+        { ok: false, code: idor.code, error: idor.error },
+        { status: idor.status },
+      );
+    }
 
     const entitlements = getEntitlementsForTier(tierContext.tier);
     if (parsed.data.channel === 'WEBHOOK' && !entitlements.customWebhookAlertsAllowed) {
       return NextResponse.json(
         {
-          ok: false, code: 'QUOTA_EXCEEDED', tier: tierContext.tier,
+          ok: false,
+          code: 'QUOTA_EXCEEDED',
+          tier: tierContext.tier,
           error: `Custom webhook alerts require PREMIUM or higher (current tier: ${tierContext.tier})`,
         },
         { status: 402 },
@@ -70,15 +82,23 @@ export async function POST(req: Request) {
       parsed.data.workspaceId;
 
     const event: CloudAlertEvent = {
-      eventId: parsed.data.eventId, workspaceId: effectiveWorkspaceId, botId: parsed.data.botId,
-      channel: parsed.data.channel, message: parsed.data.message, timestampMs: parsed.data.timestampMs,
+      eventId: parsed.data.eventId,
+      workspaceId: effectiveWorkspaceId,
+      botId: parsed.data.botId,
+      channel: parsed.data.channel,
+      message: parsed.data.message,
+      timestampMs: parsed.data.timestampMs,
     };
 
     const shouldSend = defaultAlertDeduplicator.shouldDispatch(event, parsed.data.cooldownMs ?? 60_000);
     if (!shouldSend) {
       return NextResponse.json({
-        ok: true, dispatched: false, deduplicated: true, suppressed: true,
-        eventId: event.eventId, tier: tierContext.tier,
+        ok: true,
+        dispatched: false,
+        deduplicated: true,
+        suppressed: true,
+        eventId: event.eventId,
+        tier: tierContext.tier,
       });
     }
 
@@ -87,8 +107,13 @@ export async function POST(req: Request) {
     const envelope: SignedWebhookEnvelope = { eventId: event.eventId, signatureHex, payloadJson };
 
     return NextResponse.json({
-      ok: true, dispatched: true, deduplicated: false, suppressed: false,
-      tier: tierContext.tier, signatureHex, envelope,
+      ok: true,
+      dispatched: true,
+      deduplicated: false,
+      suppressed: false,
+      tier: tierContext.tier,
+      signatureHex,
+      envelope,
     });
   } catch {
     return NextResponse.json({ ok: false, error: 'Failed to dispatch cloud alert' }, { status: 500 });

@@ -131,6 +131,20 @@
       "all": "Toàn cảnh",
       "trading": "Giao dịch",
       "telemetry": "Giám sát Định lượng"
+    },
+    "paperSimulationBadge": "MÔ PHỎNG GIẤY — KHÔNG PHẢI TIỀN THẬT",
+    "paperCapitalNotice": "Số liệu mô phỏng ảo — tách biệt hoàn toàn với phí phần mềm SaaS",
+    "kpi": {
+      "totalBalance": "Tổng số dư mô phỏng",
+      "winRate": "Tỷ lệ thắng",
+      "activeBots": "Bot hoạt động",
+      "activeRate": "Tỷ lệ chạy",
+      "totalCapital": "Tổng vốn mô phỏng",
+      "acrossBots": "Trên {count} bot",
+      "totalTrades": "Tổng giao dịch",
+      "overBots": "Qua {count} bot",
+      "totalPnl": "Tổng PnL mô phỏng",
+      "realizedPaperAcrossBots": "Lãi/lỗ mô phỏng giấy trên toàn bộ bot"
     }
   },
   "bots": {
@@ -634,6 +648,62 @@
       "colSharpe": "Sharpe Ngoài Mẫu",
       "colDrawdown": "Drawdown Tối Đa",
       "colGate": "Cổng Sinh Tồn"
+    }
+  },
+  "billing": {
+    "paperSimulationBadge": "MÔ PHỎNG GIẤY — KHÔNG PHẢI TIỀN THẬT",
+    "nonCustodialBadge": "SAAS ĐÁM MÂY KHÔNG LƯU KÝ — CHỈ THU PHÍ HẠ TẦNG PHẦN MỀM",
+    "separationNotice": "Phí thuê bao chỉ chi trả tài nguyên tính toán đám mây & tín dụng LLM không lưu ký — tuyệt đối không phải vốn đầu tư hay nhận ủy thác tài sản.",
+    "quota": {
+      "title": "Mức Sử Dụng Hạn Ngạch Gói Cước",
+      "subtitle": "Phân bổ tài nguyên thời gian thực trong chu kỳ thanh toán hiện tại",
+      "planLabel": "Gói {tier}",
+      "activePaperBots": "Bot Mô Phỏng Đang Chạy",
+      "durableCronCadence": "Chu Kỳ Cron Bền Vững",
+      "everyMinutes": "Mỗi {minutes} phút",
+      "workersExecution": "Thực thi cô lập trên Cloudflare Workers",
+      "llmCredits": "Tín Dụng Thẩm Định LLM"
+    },
+    "tiers": {
+      "title": "Các Gói Cước & Quyền Lợi CashClaw SaaS",
+      "subtitle": "Chọn gói hạ tầng phù hợp để mở rộng vận hành mô phỏng Paper 24/7 trên đám mây",
+      "current": "Hiện tại",
+      "perMonth": " / tháng",
+      "maxBots": "Số Bot tối đa:",
+      "cron": "Chu kỳ:",
+      "cloudAlphaFeed": "Luồng Cloud Alpha Feed",
+      "managedLlmKeys": "Khóa LLM Quản Lý Sẵn",
+      "activePlan": "Gói Đang Dùng",
+      "downgrade": "Hạ Gói",
+      "upgradePlan": "Nâng Cấp Gói"
+    },
+    "sync": {
+      "title": "Cầu Đồng Bộ 1-Chạm Từ CLI Lên Cloud",
+      "subtitle": "Xuất cấu hình bot mô phỏng ký SHA-256 từ CLI cục bộ lên vùng cô lập Cloud SaaS của bạn",
+      "copied": "Đã sao chép!",
+      "copyCommand": "Sao Chép Lệnh",
+      "footerPrefix": "Bảo toàn bất biến Paper-Only ADR-001. Điểm cuối nhập Cloud:"
+    },
+    "checkout": {
+      "upgradeTo": "Nâng cấp lên {tier}",
+      "workspace": "Không gian làm việc:",
+      "planAmount": "Phí gói cước:",
+      "perMonthAmount": "${price} / tháng",
+      "maxBots": "Số Bot tối đa:",
+      "botsCloud": "{count} Bot (Cloud 24/7)",
+      "selectCurrency": "Chọn Đồng Thanh Toán Quốc Tế",
+      "creatingInvoice": "Đang tạo hóa đơn...",
+      "payWith": "Thanh toán ${price} bằng {currency}",
+      "invoiceCreated": "Đã Tạo Hóa Đơn",
+      "redirectingDesc": "Đang chuyển hướng tới NOWPayments để thanh toán ${price}. Gói cước sẽ tự động nâng cấp sau khi giao dịch hoàn tất.",
+      "openPaymentPage": "Mở trang thanh toán",
+      "unavailableTitle": "Cổng thanh toán tự động chưa khả dụng",
+      "unavailableDesc": "Hệ thống chưa cấu hình khóa xuất hóa đơn tự động trên môi trường này. Vui lòng liên hệ bộ phận hỗ trợ cho gói {tier} (${price}/tháng).",
+      "vnBlockedTitle": "Chặn Thanh Toán Tài Sản Mã Hóa Nội Địa Việt Nam (VN)",
+      "vnBlockedDesc": "Theo Luật Công nghiệp Công nghệ số 71/2025/QH15, Nghị định 284/2026/NĐ-CP và quy định của NHNN, thanh toán gói cước bằng tài sản mã hóa bị vô hiệu hóa tại lãnh thổ Việt Nam. Vui lòng liên hệ xuất hóa đơn chuyển khoản VND/USD hợp pháp.",
+      "failedTitle": "Thanh toán thất bại",
+      "tryAgain": "Thử lại",
+      "close": "Đóng"
     }
   }
 }

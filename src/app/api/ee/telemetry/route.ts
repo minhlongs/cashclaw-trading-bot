@@ -6,13 +6,28 @@ import {
   recordOptInFunnelEvent,
   summarizeConversionFunnel,
 } from '@/ee/telemetry/conversion-funnel';
+import {
+  detectCrossWorkspaceIdor,
+  resolveWorkspaceTierContext,
+} from '@/ee/tenancy/workspace-request-context';
 
 const TelemetryPayloadSchema = z.object({
+  workspaceId: z.string().trim().min(1).optional(),
   telemetryOptIn: z.boolean().default(false),
   event: FunnelEventSchema,
 });
 
-export async function GET() {
+export async function GET(req?: Request) {
+  if (req) {
+    const tierContext = await resolveWorkspaceTierContext(req);
+    const idor = detectCrossWorkspaceIdor(req, tierContext);
+    if (idor) {
+      return NextResponse.json(
+        { ok: false, code: idor.code, error: idor.error },
+        { status: idor.status },
+      );
+    }
+  }
   return NextResponse.json({
     ok: true,
     totalEvents: defaultFunnelSink.length,
@@ -29,6 +44,17 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { ok: false, error: 'Invalid telemetry payload', details: parsed.error.format() },
         { status: 400 },
+      );
+    }
+
+    const tierContext = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: parsed.data.workspaceId,
+    });
+    const idor = detectCrossWorkspaceIdor(req, tierContext, parsed.data.workspaceId);
+    if (idor) {
+      return NextResponse.json(
+        { ok: false, code: idor.code, error: idor.error },
+        { status: idor.status },
       );
     }
 

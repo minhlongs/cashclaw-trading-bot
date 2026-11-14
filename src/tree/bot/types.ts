@@ -5,6 +5,9 @@ export * from './strategy-chain-types';
 export * from './config-types';
 
 import type { ExchangeAdapter } from '../exchange/types';
+import type { PaperOrderLifecycleEngine } from '../execution/lifecycle';
+import type { D1AtomicLedgerBatcher } from '../ledger';
+import type { CapitalProtectionEngine, ProtectionTickContext } from '../protection';
 import type { Killswitch } from './killswitch';
 import type { TelemetryWriter } from '../telemetry/writer';
 import type { ExchangeOrchestrator } from '@/land/exchange-orchestration';
@@ -77,4 +80,8 @@ export interface BotDependencies {
   killswitch: Killswitch;
   telemetry?: TelemetryWriter;
   exchangeOrchestrator?: ExchangeOrchestrator;
+  protectionEngine?: CapitalProtectionEngine;
+  protectionContextProvider?: () => ProtectionTickContext;
+  lifecycleEngine?: PaperOrderLifecycleEngine;
+  ledgerBatcher?: D1AtomicLedgerBatcher;
 }

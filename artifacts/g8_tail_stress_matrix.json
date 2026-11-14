@@ -1,0 +1,309 @@
+{
+  "schemaVersion": 1,
+  "gate": "G8",
+  "generatedAt": "2026-11-14T00:00:00.000Z",
+  "seed": 42,
+  "matrixSha256": "f3faf894350f75893b93ebda4313482c7a846df11ef1dbedd03bd75fb7adaac7",
+  "scenarios": [
+    {
+      "scenarioId": "G8-S01",
+      "name": "Gap jump -35% honest post-gap stop fill",
+      "injectedFault": "Instantaneous -35% bar-open price discontinuity + 65 bps stressed slippage",
+      "protectionAction": "CONTROLLED_LIQUIDATION",
+      "posture": "REDUCE_ONLY_TWAP",
+      "mddPct": 8.8556,
+      "cvar99Pct": 10.2424,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 62.4,
+      "details": {
+        "stopPrice": 92000,
+        "postGapOpen": 65000,
+        "honestFillPrice": 64577.5,
+        "counterfactual3xLossPct": 106.2675,
+        "overLeverageBlocked": true
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S02",
+      "name": "Deep negative funding flip > 72h (-0.15% / 8h for 80h)",
+      "injectedFault": "10 consecutive 8h intervals (80h) at -0.15% funding debit",
+      "protectionAction": "EMERGENCY_HALT",
+      "posture": "HALT_ONLY",
+      "mddPct": 1.35,
+      "cvar99Pct": 1.5525,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 68,
+      "details": {
+        "fundingPeriods": 10,
+        "elapsedHours": 80,
+        "totalFundingDebitUsd": 1350,
+        "carryUnwindTriggeredHour": 48
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S03",
+      "name": "90% L2 orderbook depth evaporation",
+      "injectedFault": "L2 book depth depleted 90% ($1,000,000 -> $100,000) during soft MDD unwind",
+      "protectionAction": "CONTROLLED_LIQUIDATION",
+      "posture": "REDUCE_ONLY_TWAP",
+      "mddPct": 9,
+      "cvar99Pct": 9.65,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 58,
+      "details": {
+        "stressedDepthUsd": 100000,
+        "sliceNotionalUsd": 1000,
+        "participationRate": 0.01,
+        "emptyBookFallbackPosture": "HALT_ONLY"
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S04",
+      "name": "15x bid-ask spread blowout (180 bps)",
+      "injectedFault": "Bid-ask spread widened 15x from 12 bps to 180 bps",
+      "protectionAction": "MARKET_ORDER_BAN",
+      "posture": "HALT_ONLY",
+      "mddPct": 0.4,
+      "cvar99Pct": 0.9,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 80,
+      "details": {
+        "spreadBps": 180,
+        "marketOrderBlocked": true,
+        "takerLimitBlocked": true
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S05",
+      "name": "HTTP 502/504 3-strike exchange gateway outage",
+      "injectedFault": "3 consecutive HTTP 502/504 upstream gateway errors",
+      "protectionAction": "DEGRADED_HALT",
+      "posture": "HALT_ONLY",
+      "mddPct": 0,
+      "cvar99Pct": 0,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 85,
+      "details": {
+        "errorStrikes": 3,
+        "haltedOnStrikeThree": true
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S06",
+      "name": "Worker <-> D1 partition mid-intent (PENDING_INTENT)",
+      "injectedFault": "D1 write partition leaving unconfirmed PENDING_INTENT record",
+      "protectionAction": "RECONCILING",
+      "posture": "HALT_ONLY",
+      "mddPct": 0,
+      "cvar99Pct": 0,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 85,
+      "details": {
+        "duplicateBlockedWhilePartitioned": true,
+        "resumedAfterReconcile": true
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S07",
+      "name": "Market-data feed lag > 15s (18,500 ms)",
+      "injectedFault": "18,500 ms stale ticker/book feed latency",
+      "protectionAction": "STALE_DATA_FAIL_CLOSED",
+      "posture": "HALT_ONLY",
+      "mddPct": 0,
+      "cvar99Pct": 0,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 85,
+      "details": {
+        "feedAgeMs": 18500,
+        "maxAllowedAgeMs": 15000,
+        "blocked100Pct": true
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S08",
+      "name": "Cross-venue price dislocation > 200 bps (245 bps)",
+      "injectedFault": "245 bps cross-venue basis divergence ($60,000 vs $61,488.24)",
+      "protectionAction": "SEV1_VENUE_DISLOCATION",
+      "posture": "HALT_ONLY",
+      "mddPct": 0,
+      "cvar99Pct": 0,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 85,
+      "details": {
+        "dislocationBps": 245,
+        "bogusArbTradesExecuted": 0
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S09",
+      "name": "Stablecoin collateral depeg (USDC = $0.912)",
+      "injectedFault": "USDC mark price drops to $0.912 outside [0.985, 1.015] peg band",
+      "protectionAction": "COLLATERAL_DEPEG",
+      "posture": "HALT_ONLY",
+      "mddPct": 0,
+      "cvar99Pct": 2.1,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 64,
+      "details": {
+        "usdcPrice": 0.912,
+        "effectiveCollateralUsd": 77520
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S10",
+      "name": "Open Interest > 20% cascade drop (-28% OI + vol spike)",
+      "injectedFault": "-28% Open Interest liquidation cascade + 3.4 sigma volatility expansion",
+      "protectionAction": "CONTROLLED_LIQUIDATION",
+      "posture": "REDUCE_ONLY_TWAP",
+      "mddPct": 3.2,
+      "cvar99Pct": 6.4,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 100,
+      "details": {
+        "oiChangePct": -0.28,
+        "unwindStage": "BUFFER_DEFENSE",
+        "sliceCount": 1
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S11",
+      "name": "Pairwise correlation convergence -> 1.0 (corr = 0.98)",
+      "injectedFault": "Cross-asset pairwise correlation spikes from 0.25 to 0.98 across 4 sleeves",
+      "protectionAction": "CONTROLLED_LIQUIDATION",
+      "posture": "REDUCE_ONLY_TWAP",
+      "mddPct": 8.5,
+      "cvar99Pct": 10.4348,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 55,
+      "details": {
+        "covarianceRatio": 1.5005,
+        "exposureScaleFactor": 0.6363,
+        "unscaledCvar99Pct": 16.4
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S12",
+      "name": "Violent V-reversal whipsaw (-18% then +22%)",
+      "injectedFault": "Rapid -18% crash followed by immediate +22% snapback across 2 ticks",
+      "protectionAction": "HYSTERESIS_HOLD",
+      "posture": "PASS",
+      "mddPct": 3.6,
+      "cvar99Pct": 4.2,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 72,
+      "details": {
+        "crashTickRebalanced": false,
+        "snapbackTickRebalanced": false,
+        "whipsawChurnTrades": 0
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S13",
+      "name": "Paired-trade broken leg (> 3,000 ms + > 5% adverse move)",
+      "injectedFault": "Leg A filled, Leg B rejected for 3,500 ms with -5.8% adverse move on Leg A",
+      "protectionAction": "UNWIND_AND_SUSPEND_STRATEGY",
+      "posture": "HALT_ONLY",
+      "mddPct": 1.45,
+      "cvar99Pct": 2.1,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 74,
+      "details": {
+        "unwindOrphanLeg": true,
+        "adverseExcursionPct": 0.058,
+        "strategySuspended": true
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S14",
+      "name": "10x parallel duplicate webhook / fill burst",
+      "injectedFault": "10 identical concurrent fill webhooks for (binance, ord-burst-77, fill-9001)",
+      "protectionAction": "IDEMPOTENT_DEDUP",
+      "posture": "PASS",
+      "mddPct": 0,
+      "cvar99Pct": 0,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 85,
+      "details": {
+        "acceptedCount": 1,
+        "duplicateCount": 9,
+        "netPositionQty": 0.1
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S15",
+      "name": "DO / Scheduler lease contention & runaway tick loop",
+      "injectedFault": "Competing worker lease request + 100-iteration runaway tick loop vs 25 budget",
+      "protectionAction": "LEASE_FENCE_AND_BUDGET_ABORT",
+      "posture": "HALT_ONLY",
+      "mddPct": 0,
+      "cvar99Pct": 0,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 85,
+      "details": {
+        "workerAAcquired": true,
+        "workerBRejected": true,
+        "executedSteps": 25,
+        "budgetAborted": true
+      },
+      "passed": true
+    },
+    {
+      "scenarioId": "G8-S16",
+      "name": "D1 double-entry LEDGER_INVARIANT_BREACH ($0.05 mismatch)",
+      "injectedFault": "$0.05 (50,000 micro-USD) assets - liabilities - equity accounting mismatch",
+      "protectionAction": "QUARANTINED_SAFE_MODE",
+      "posture": "HALT_ONLY",
+      "mddPct": 0,
+      "cvar99Pct": 0,
+      "phantomTrades": 0,
+      "blindRetries": 0,
+      "liqBufferMinPct": 85,
+      "details": {
+        "mismatchUsd": 0.05,
+        "toleranceUsd": 0.01,
+        "ordersPermitted": 0
+      },
+      "passed": true
+    }
+  ],
+  "summary": {
+    "totalScenarios": 16,
+    "passedScenarios": 16,
+    "failedScenarios": 0,
+    "phantomTradesTotal": 0,
+    "blindRetriesTotal": 0,
+    "worstMddPct": 9,
+    "worstCvar99Pct": 10.4348,
+    "minLiqBufferPct": 55,
+    "verdict": "PASS"
+  }
+}

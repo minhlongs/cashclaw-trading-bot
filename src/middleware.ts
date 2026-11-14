@@ -82,12 +82,16 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // No DB available (local dev only) — accept with valid cookie
+  // No DB available (local dev only) — accept with valid cookie,
+  // but ALWAYS pass sanitizedHeaders and bind a deterministic dev user identity
+  // from the session cookie so client-forged x-user-id headers can never pass through.
   // In production this should never happen; fail-closed.
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ ok: false, error: 'Session store unavailable' }, { status: 503 });
   }
-  return NextResponse.next();
+  const safeDevSession = sessionId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64) || 'local';
+  sanitizedHeaders.set('x-user-id', `dev_${safeDevSession}`);
+  return NextResponse.next({ request: { headers: sanitizedHeaders } });
 }
 
 export const config = {

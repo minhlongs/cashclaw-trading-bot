@@ -16,6 +16,34 @@ export async function executeOrder(
     throw new Error('Trading halted by killswitch');
   }
 
+  if (deps.protectionEngine && deps.protectionContextProvider) {
+    const tickCtx = deps.protectionContextProvider();
+    const gateDecision = deps.protectionEngine.evaluatePreTrade(
+      {
+        orderId: `pre_${botId}_${orderCounter + 1}`,
+        botId,
+        strategyId: botId,
+        symbol: req.symbol,
+        side: req.side === 'buy' ? 'BUY' : 'SELL',
+        orderType: req.type === 'market' ? 'MARKET' : 'LIMIT',
+        price: req.price ?? tickCtx.markets[req.symbol]?.midPrice ?? 0,
+        quantity: req.quantity,
+        reduceOnly: false,
+        timestampMs: tickCtx.nowMs,
+      },
+      tickCtx,
+    );
+    if (!gateDecision.allowed) {
+      emitTelemetry('error', {
+        error: gateDecision.reason,
+        action: gateDecision.action,
+        posture: gateDecision.posture,
+        context: 'bot.protectionEngine',
+      });
+      throw new Error(`Order blocked by CapitalProtectionEngine (${gateDecision.action}): ${gateDecision.reason}`);
+    }
+  }
+
   const result = await dispatchExchangeOrder(ctx, req);
   state.lastOrderAt = Date.now();
   orderCounter++;

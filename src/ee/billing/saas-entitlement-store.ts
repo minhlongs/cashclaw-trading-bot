@@ -1,55 +1,69 @@
 // Step 16 & 18 Runtime Seam: Cloudflare D1 + In-Memory SaaS Entitlement & IPN Store
 // Persists saas_workspace_entitlements and saas_nowpayments_ipn_events (Migration 0013).
+// Includes atomic synchronous in-flight + D1 persisted replay lock for 10x parallel IPN bursts.
 
 import type { D1Database } from '@/lib/db/types';
 import { createServerClient } from '@/lib/db/client';
 import type { SaasTier } from '../tenancy/tenant-policy';
 import { getEntitlementsForTier } from './tier-entitlements';
+import { isActivatingIpnStatus, type NowPaymentsIpnPayload } from './nowpayments-ipn';
 import {
-  fetchD1WorkspaceEntitlement, fetchD1WorkspaceOwner, hasD1ProcessedPayment, insertD1IpnEvent, upsertD1WorkspaceEntitlement,
+  fetchD1WorkspaceEntitlement,
+  fetchD1WorkspaceOwner,
+  hasD1ProcessedPayment,
+  insertD1IpnEvent,
+  upsertD1WorkspaceEntitlement,
 } from './saas-entitlement-d1';
 
 export interface IpnActivationRecord {
-  readonly paymentId: string; readonly workspaceId: string; readonly ownerUserId?: string;
-  readonly targetTier: SaasTier; readonly paymentStatus: string; readonly payAmount: number;
-  readonly payCurrency: string; readonly processedAtMs?: number;
+  readonly paymentId: string;
+  readonly workspaceId: string;
+  readonly ownerUserId?: string;
+  readonly targetTier: SaasTier;
+  readonly paymentStatus: string;
+  readonly payAmount: number;
+  readonly payCurrency: string;
+  readonly processedAtMs?: number;
 }
 
 export interface WorkspaceEntitlementRow {
-  readonly workspaceId: string; readonly ownerUserId: string; readonly tier: SaasTier;
-  readonly maxRunningBots: number; readonly maxWalkForwardWindows: number;
-  readonly monthlyLlmCredits: number; readonly managedLlmPoolEnabled: boolean; readonly updatedAtMs: number;
+  readonly workspaceId: string;
+  readonly ownerUserId: string;
+  readonly tier: SaasTier;
+  readonly maxRunningBots: number;
+  readonly maxWalkForwardWindows: number;
+  readonly monthlyLlmCredits: number;
+  readonly managedLlmPoolEnabled: boolean;
+  readonly updatedAtMs: number;
 }
 
 export class SaasEntitlementStore {
   private db?: D1Database;
   private readonly processedPayments = new Set<string>();
+  private readonly processedOrders = new Set<string>();
+  private readonly inFlightPayments = new Set<string>();
+  private readonly inFlightOrders = new Set<string>();
   private readonly workspaceEntitlements = new Map<string, WorkspaceEntitlementRow>();
 
   constructor(db?: D1Database) { this.db = db; }
   public setDatabase(db: D1Database | undefined): void { this.db = db; }
-  public resetMemoryForTesting(): void { this.processedPayments.clear(); this.workspaceEntitlements.clear(); }
 
-  /**
-   * The D1 binding for this request, resolved lazily because the singleton is
-   * created at module load — long before any request context exists. Without
-   * this the store never sees D1, and every paid workspace reads back as BASIC,
-   * so a customer who paid for MASTER is silently kept on the free tier.
-   * Resolved per call: `getCloudflareContext()` is request-scoped, so a single
-   * cached value would only ever be correct for the first request.
-   */
+  public resetMemoryForTesting(): void {
+    this.processedPayments.clear();
+    this.processedOrders.clear();
+    this.inFlightPayments.clear();
+    this.inFlightOrders.clear();
+    this.workspaceEntitlements.clear();
+  }
+
   private resolveDb(): D1Database | undefined {
     if (this.db) return this.db;
-    try {
-      return createServerClient() ?? undefined;
-    } catch {
-      return undefined;
-    }
+    try { return createServerClient() ?? undefined; } catch { return undefined; }
   }
 
   public async hasProcessedPayment(paymentId: string): Promise<boolean> {
+    if (this.processedPayments.has(paymentId) || this.inFlightPayments.has(paymentId)) return true;
     const db = this.resolveDb();
-    if (this.processedPayments.has(paymentId)) return true;
     if (db && (await hasD1ProcessedPayment(db, paymentId))) {
       this.processedPayments.add(paymentId);
       return true;
@@ -57,12 +71,52 @@ export class SaasEntitlementStore {
     return false;
   }
 
+  /** Synchronously claims an in-flight payment + order lock BEFORE awaiting D1. */
+  public async tryClaimPaymentActivation(
+    paymentId: string,
+    orderId?: string,
+  ): Promise<'ACQUIRED' | 'DUPLICATE'> {
+    if (this.processedPayments.has(paymentId) || this.inFlightPayments.has(paymentId)) return 'DUPLICATE';
+    if (orderId && (this.processedOrders.has(orderId) || this.inFlightOrders.has(orderId))) return 'DUPLICATE';
+
+    this.inFlightPayments.add(paymentId);
+    if (orderId) this.inFlightOrders.add(orderId);
+
+    const db = this.resolveDb();
+    if (db) {
+      try {
+        if (await hasD1ProcessedPayment(db, paymentId)) {
+          this.finalizePaymentClaim(paymentId, orderId, true);
+          return 'DUPLICATE';
+        }
+      } catch (cause) {
+        this.finalizePaymentClaim(paymentId, orderId, false);
+        throw cause;
+      }
+    }
+    return 'ACQUIRED';
+  }
+
+  public finalizePaymentClaim(paymentId: string, orderId: string | undefined, markProcessed: boolean): void {
+    if (markProcessed) {
+      this.processedPayments.add(paymentId);
+      if (orderId) this.processedOrders.add(orderId);
+    }
+    this.inFlightPayments.delete(paymentId);
+    if (orderId) this.inFlightOrders.delete(orderId);
+  }
+
   public async recordIpnAndUpgradeTier(record: IpnActivationRecord): Promise<WorkspaceEntitlementRow> {
     const nowMs = record.processedAtMs ?? Date.now();
-    const isActivated = record.paymentStatus === 'finished' || record.paymentStatus === 'confirmed';
+    const isActivated = isActivatingIpnStatus(record.paymentStatus as NowPaymentsIpnPayload['payment_status']);
     if (isActivated) this.processedPayments.add(record.paymentId);
     const db = this.resolveDb();
-    if (db) await insertD1IpnEvent(db, record, nowMs);
+    if (db) {
+      const outcome = await insertD1IpnEvent(db, record, nowMs);
+      if (outcome === 'DUPLICATE_FINALIZED') {
+        return this.getWorkspaceEntitlement(record.workspaceId);
+      }
+    }
     if (!isActivated) return this.getWorkspaceEntitlement(record.workspaceId);
 
     const spec = getEntitlementsForTier(record.targetTier);
@@ -101,21 +155,10 @@ export class SaasEntitlementStore {
     return (await this.getWorkspaceEntitlement(workspaceId)).tier;
   }
 
-  /**
-   * The signed-in user who owns this workspace, or undefined when the workspace
-   * has no member row yet. The IPN handler uses this to stop writing the
-   * 'system' sentinel into `owner_user_id`, which made upgraded workspaces
-   * impossible to trace back to a real account. When no owner is known the
-   * caller keeps the existing sentinel and records it, rather than guessing.
-   */
   public async resolveWorkspaceOwner(workspaceId: string): Promise<string | undefined> {
     const db = this.resolveDb();
     if (!db) return undefined;
-    try {
-      return await fetchD1WorkspaceOwner(db, workspaceId);
-    } catch {
-      return undefined;
-    }
+    try { return await fetchD1WorkspaceOwner(db, workspaceId); } catch { return undefined; }
   }
 }
 

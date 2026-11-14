@@ -38,15 +38,35 @@ export async function hasD1ProcessedPayment(db: D1Database, paymentId: string): 
   return Boolean(row?.payment_id);
 }
 
-export async function insertD1IpnEvent(db: D1Database, record: IpnActivationRecord, nowMs: number): Promise<void> {
-  await db
+export async function insertD1IpnEvent(
+  db: D1Database,
+  record: IpnActivationRecord,
+  nowMs: number,
+): Promise<'INSERTED' | 'DUPLICATE_FINALIZED'> {
+  const res = await db
     .prepare(
-      `INSERT OR REPLACE INTO saas_nowpayments_ipn_events
+      `INSERT INTO saas_nowpayments_ipn_events
        (payment_id, workspace_id, target_tier, payment_status, pay_amount, pay_currency, signature_verified, processed_at_ms)
-       VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+       ON CONFLICT(payment_id) DO UPDATE SET
+         payment_status = excluded.payment_status,
+         pay_amount = excluded.pay_amount,
+         pay_currency = excluded.pay_currency,
+         processed_at_ms = excluded.processed_at_ms
+       WHERE saas_nowpayments_ipn_events.payment_status NOT IN ('finished', 'confirmed')`,
     )
-    .bind(record.paymentId, record.workspaceId, record.targetTier, record.paymentStatus, record.payAmount, record.payCurrency, nowMs)
+    .bind(
+      record.paymentId,
+      record.workspaceId,
+      record.targetTier,
+      record.paymentStatus,
+      record.payAmount,
+      record.payCurrency,
+      nowMs,
+    )
     .run();
+  const changes = res?.meta?.changes;
+  return typeof changes === 'number' && changes === 0 ? 'DUPLICATE_FINALIZED' : 'INSERTED';
 }
 
 export async function upsertD1WorkspaceEntitlement(
