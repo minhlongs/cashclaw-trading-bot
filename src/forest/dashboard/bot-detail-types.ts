@@ -1,7 +1,7 @@
 export interface BotDetailData {
   id: string;
   name: string;
-  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
+  strategy: 'grid' | 'mean_reversion' | 'volatility_dca' | 'h3_maker';
   pair: string;
   exchange: string;
   botStatus: string;

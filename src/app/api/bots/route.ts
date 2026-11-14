@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { botListHandler, botCreateHandler } from '@/forest/api/routes';
+import { evaluateBotStrategyGuard } from '@/forest/api/handlers/bot-strategy-guard';
 import { checkRateLimit, getRateLimitHeaders } from '@/forest/api/rate-limiter';
 import { enforceWorkspaceQuota } from '@/ee/billing/quota-guard';
 import {
@@ -22,12 +23,16 @@ const createBotConfigSchema = z.object({
   volBaseline: z.number().positive().max(500).optional(),
   reboundTarget: z.number().positive().max(100).optional(),
   quantExecution: z.union([z.boolean(), z.number()]).optional(),
+  lookbackDays: z.number().int().min(2).max(180).optional(),
+  entryAnnualBps: z.number().positive().max(5000).optional(),
+  exitAnnualBps: z.number().nonnegative().max(2000).optional(),
+  maxGrossLeverage: z.number().positive().max(1.5).optional(),
 });
 
 const CreateBotSchema = z.object({
   id: z.string().min(1).max(64),
   name: z.string().min(1).max(128),
-  strategy: z.enum(['grid', 'mean_reversion', 'volatility_dca']),
+  strategy: z.enum(['grid', 'mean_reversion', 'volatility_dca', 'h3_maker']),
   pair: z.string().min(1).max(20),
   exchange: z.enum(['binance', 'bybit', 'okx']),
   capital: z.number().positive().max(1_000_000),
@@ -62,6 +67,15 @@ export async function POST(req: Request) {
   }
 
   const raw = await req.json().catch(() => ({}));
+  const rawRecord = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+  const strategyGuard = evaluateBotStrategyGuard(rawRecord.strategy);
+  if (strategyGuard && !strategyGuard.ok) {
+    return NextResponse.json(
+      { ok: false, code: strategyGuard.code, error: strategyGuard.error },
+      { status: strategyGuard.status },
+    );
+  }
+
   const parsed = CreateBotSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(
@@ -87,5 +101,8 @@ export async function POST(req: Request) {
   const result = userId
     ? await botCreateHandler(parsed.data, userId)
     : await botCreateHandler(parsed.data);
-  return NextResponse.json(result, result.ok ? undefined : { status: 400 });
+  if (!result.ok) {
+    return NextResponse.json(result, { status: result.status === 403 ? 403 : 400 });
+  }
+  return NextResponse.json(result);
 }

@@ -83,7 +83,11 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
 
     const resPost = await creditsPost(
       postJson('http://localhost/api/ee/credits', {
-        workspaceId: 'ws_123', modelTier: 'REASONING', promptTokens: 1500, completionTokens: 500,
+        workspaceId: 'ws_123',
+        modelTier: 'REASONING',
+        promptTokens: 1500,
+        completionTokens: 500,
+        allowNegativeRoiResearch: true,
       }),
     );
     const dataPost = (await resPost.json()) as {
@@ -129,7 +133,7 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     const res = await creditsPost(
       postJson('http://localhost/api/ee/credits', {
         workspaceId: 'ws_credits_body', tier: 'MASTER', modelTier: 'REASONING',
-        promptTokens: 1500, completionTokens: 500,
+        promptTokens: 1500, completionTokens: 500, allowNegativeRoiResearch: true,
       }),
     );
     const data = (await res.json()) as { ok: boolean; account: { tier: string; balanceCredits: number } };

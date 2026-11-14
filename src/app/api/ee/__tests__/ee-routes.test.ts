@@ -3,6 +3,8 @@ import { GET as getQuotas } from '../quotas/route';
 import { POST as postIpn } from '../billing/ipn/route';
 import { POST as postNowPaymentsIpn } from '../billing/nowpayments-ipn/route';
 import { POST as postSync } from '../sync/route';
+import { POST as postCredits } from '../credits/route';
+import { defaultCreditLedgerStore } from '@/ee/deliberation-cloud/llm-credit-ledger';
 import {
   canonicalizeNowPaymentsJson,
   computeNowPaymentsHmacSha512,
@@ -34,6 +36,7 @@ describe('Phase 1: SaaS API Routes Integration', () => {
   beforeEach(() => {
     defaultSaasEntitlementStore.setDatabase(undefined);
     defaultSaasEntitlementStore.resetMemoryForTesting();
+    defaultCreditLedgerStore.resetMemoryForTesting();
     vi.clearAllMocks();
     mockBotListHandler.mockResolvedValue({ ok: true, data: [] });
     mockBotCreateHandler.mockResolvedValue({ ok: true, data: { id: 'sync_test_01' } });
@@ -331,6 +334,75 @@ describe('Phase 1: SaaS API Routes Integration', () => {
         expect.objectContaining({ capital: 1000 }),
         'user_sync_1',
       );
+    });
+  });
+
+  describe('POST /api/ee/credits — Gate G12 Negative-ROI Guard', () => {
+    it('blocks REASONING debate by default with 403 MULTI_AGENT_DEBATE_DISABLED_NEGATIVE_ROI before debiting', async () => {
+      await seedWorkspaceTier('ws_g12_guard', 'PREMIUM');
+
+      const blockedRes = await postCredits(
+        new Request('http://localhost/api/ee/credits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workspaceId: 'ws_g12_guard',
+            modelTier: 'REASONING',
+            promptTokens: 1500,
+            completionTokens: 500,
+          }),
+        }),
+      );
+      expect(blockedRes.status).toBe(403);
+      const blockedBody = (await blockedRes.json()) as { ok: boolean; code: string; error: string };
+      expect(blockedBody.ok).toBe(false);
+      expect(blockedBody.code).toBe('MULTI_AGENT_DEBATE_DISABLED_NEGATIVE_ROI');
+      expect(blockedBody.error).toContain('-$89.68');
+
+      const account = defaultCreditLedgerStore.getOrCreateAccount('ws_g12_guard', 'PREMIUM');
+      expect(account.consumedCredits).toBe(0);
+      expect(account.balanceCredits).toBe(10_000);
+    });
+
+    it('allows FAST and LOCAL tiers unchanged and permits REASONING only when allowNegativeRoiResearch: true', async () => {
+      await seedWorkspaceTier('ws_g12_override', 'PREMIUM');
+
+      const fastRes = await postCredits(
+        new Request('http://localhost/api/ee/credits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workspaceId: 'ws_g12_override',
+            modelTier: 'FAST',
+            promptTokens: 1000,
+            completionTokens: 500,
+          }),
+        }),
+      );
+      expect(fastRes.status).toBe(200);
+
+      const overrideRes = await postCredits(
+        new Request('http://localhost/api/ee/credits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workspaceId: 'ws_g12_override',
+            modelTier: 'REASONING',
+            promptTokens: 1500,
+            completionTokens: 500,
+            allowNegativeRoiResearch: true,
+          }),
+        }),
+      );
+      expect(overrideRes.status).toBe(200);
+      const overrideBody = (await overrideRes.json()) as {
+        ok: boolean;
+        researchOverrideApplied?: boolean;
+        costCredits: number;
+      };
+      expect(overrideBody.ok).toBe(true);
+      expect(overrideBody.researchOverrideApplied).toBe(true);
+      expect(overrideBody.costCredits).toBe(8);
     });
   });
 });

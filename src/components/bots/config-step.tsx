@@ -2,7 +2,14 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type ConfigStepProps, GRID_FIELDS, MEANREV_FIELDS, VOLATILITY_DCA_FIELDS, FIELD_KEY_MAP } from './wizard-types';
+import {
+  type ConfigStepProps,
+  GRID_FIELDS,
+  MEANREV_FIELDS,
+  VOLATILITY_DCA_FIELDS,
+  H3_MAKER_FIELDS,
+  FIELD_KEY_MAP,
+} from './wizard-types';
 
 export function ConfigStep({ form, updateConfig, strategy, onNext, onPrev }: ConfigStepProps) {
   const t = useTranslations('botWizard');
@@ -11,17 +18,22 @@ export function ConfigStep({ form, updateConfig, strategy, onNext, onPrev }: Con
       ? GRID_FIELDS
       : strategy === 'mean_reversion'
       ? MEANREV_FIELDS
+      : strategy === 'h3_maker'
+      ? H3_MAKER_FIELDS
       : VOLATILITY_DCA_FIELDS;
+
+  const titleKey =
+    strategy === 'grid'
+      ? 'title.gridConfig'
+      : strategy === 'mean_reversion'
+      ? 'title.meanRevConfig'
+      : strategy === 'h3_maker'
+      ? 'title.h3MakerConfig'
+      : 'title.volatilityDcaConfig';
 
   return (
     <div className="space-y-4">
-      <h3 className="card-title">
-        {strategy === 'grid'
-          ? t('title.gridConfig')
-          : strategy === 'mean_reversion'
-          ? t('title.meanRevConfig')
-          : t('title.volatilityDcaConfig')}
-      </h3>
+      <h3 className="card-title">{t(titleKey)}</h3>
       {fields.map((field) => {
         const key = FIELD_KEY_MAP[field.key] ?? field.key;
         const inputId = `config-${field.key}`;

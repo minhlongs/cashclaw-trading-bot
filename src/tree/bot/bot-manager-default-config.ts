@@ -1,4 +1,4 @@
-import type { BotConfig, VolatilityDcaBotConfig } from './types';
+import type { BotConfig, H3MakerBotConfig, VolatilityDcaBotConfig } from './types';
 
 export function defaultConfigFromRow(row: { name: string; pair: string; exchange: string; strategy: string; capital_allocated: number }): BotConfig {
   const base = { name: row.name, symbol: row.pair, exchange: row.exchange, mode: 'paper' as const, capital: row.capital_allocated, maxDrawdownPct: 15 };
@@ -17,6 +17,16 @@ export function defaultConfigFromRow(row: { name: string; pair: string; exchange
       volBaseline: 50,
       reboundTarget: 1.0,
     } satisfies VolatilityDcaBotConfig;
+  }
+  if (row.strategy === 'h3_maker') {
+    return {
+      ...base,
+      strategy: 'h3_maker' as const,
+      lookbackDays: 30,
+      entryAnnualBps: 800,
+      exitAnnualBps: 150,
+      maxGrossLeverage: 1.0,
+    } satisfies H3MakerBotConfig;
   }
   return { ...base, strategy: 'grid' as const, gridSpacingPct: 0.5, gridLevels: 5, capitalPerLevelPct: 20, takeProfitPct: 1, stopLossPct: 1, rebalanceOnFill: false };
 }

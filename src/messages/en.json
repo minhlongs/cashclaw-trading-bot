@@ -182,7 +182,8 @@
     "strategy": {
       "grid": "Grid",
       "mean_reversion": "Mean Reversion",
-      "volatility_dca": "Volatility DCA"
+      "volatility_dca": "Volatility DCA",
+      "h3_maker": "H3 Maker (Paper-Forward)"
     }
   },
   "botWizard": {
@@ -206,6 +207,7 @@
       "gridConfig": "Grid Config",
       "meanRevConfig": "Mean Reversion Config",
       "volatilityDcaConfig": "Volatility DCA Config",
+      "h3MakerConfig": "H3 Maker Paper-Forward Config",
       "review": "Review"
     },
     "botName": "Bot Name",
@@ -230,7 +232,15 @@
       "volatility_dca": {
         "label": "Volatility-Adjusted DCA",
         "desc": "Dynamically sizes DCA entries based on realized volatility"
+      },
+      "h3_maker": {
+        "label": "H3 Maker Paper-Forward",
+        "desc": "Signed H3_MAKER passive maker carry specification (PAPER_ONLY)"
       }
+    },
+    "verification": {
+      "retailNote": "Negative VIP-0 net expectancy after fees/slippage; educational paper simulation only.",
+      "eligibleNote": "Cryptographically verified SignedStrategySpec (H3_MAKER) • G13 paper-forward eligible."
     },
     "fields": {
       "spacingPct": "Spacing (%)",
@@ -251,7 +261,11 @@
       "volBaseline": "Vol Baseline (% annualized)",
       "reboundTarget": "Rebound Target (%)",
       "quantExecution": "QuantLib Execution (Almgren-Chriss)",
-      "quantExecutionDesc": "Slice DCA entries by realized volatility & liquidity"
+      "quantExecutionDesc": "Slice DCA entries by realized volatility & liquidity",
+      "lookbackDays": "Lookback Window (days)",
+      "entryAnnualBps": "Entry Carry Threshold (bps/yr)",
+      "exitAnnualBps": "Exit Carry Threshold (bps/yr)",
+      "maxGrossLeverage": "Max Gross Leverage (x)"
     },
     "enabled": "Enabled",
     "disabled": "Disabled",

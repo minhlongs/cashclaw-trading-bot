@@ -169,6 +169,8 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
       }),
     );
     expect(spoofPostRes.status).toBe(403);
+    const spoofPostBody = (await spoofPostRes.json()) as { code: string };
+    expect(spoofPostBody.code).toBe('WORKSPACE_FORBIDDEN');
 
     const postRes = await postCredits(
       new Request('http://localhost/api/ee/credits', {
@@ -178,6 +180,7 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
           modelTier: 'REASONING',
           promptTokens: 1_500,
           completionTokens: 500,
+          allowNegativeRoiResearch: true,
         }),
       }),
     );

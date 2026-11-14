@@ -4,7 +4,19 @@
 import type { ChainLeg } from './strategy-chain-types';
 
 export type BotMode = 'paper' | 'live';
-export type StrategyType = 'grid' | 'mean_reversion' | 'volatility_dca';
+export type StrategyType = 'grid' | 'mean_reversion' | 'volatility_dca' | 'h3_maker';
+
+export type StrategyVerificationTier =
+  | 'UNVERIFIED_RETAIL_SANDBOX'
+  | 'PAPER_FORWARD_ELIGIBLE';
+
+export function getStrategyVerificationTier(
+  strategy: StrategyType,
+): StrategyVerificationTier {
+  return strategy === 'h3_maker'
+    ? 'PAPER_FORWARD_ELIGIBLE'
+    : 'UNVERIFIED_RETAIL_SANDBOX';
+}
 
 export interface BaseBotConfig {
   name?: string;
@@ -51,7 +63,20 @@ export interface VolatilityDcaBotConfig extends BaseBotConfig {
   quantExecution?: boolean;
 }
 
-export type BotConfig = GridBotConfig | MeanRevBotConfig | VolatilityDcaBotConfig;
+export interface H3MakerBotConfig extends BaseBotConfig {
+  strategy: 'h3_maker';
+  lookbackDays: number;
+  entryAnnualBps: number;
+  exitAnnualBps: number;
+  maxGrossLeverage: number;
+  specSha256?: string;
+}
+
+export type BotConfig =
+  | GridBotConfig
+  | MeanRevBotConfig
+  | VolatilityDcaBotConfig
+  | H3MakerBotConfig;
 
 export type GridLevelStatus = 'pending' | 'open' | 'filled' | 'cancelled';
 
@@ -82,4 +107,8 @@ export function isMeanRevConfig(config: BotConfig): config is MeanRevBotConfig {
 
 export function isVolatilityDcaConfig(config: BotConfig): config is VolatilityDcaBotConfig {
   return config.strategy === 'volatility_dca';
+}
+
+export function isH3MakerConfig(config: BotConfig): config is H3MakerBotConfig {
+  return config.strategy === 'h3_maker';
 }

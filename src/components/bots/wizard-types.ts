@@ -1,7 +1,9 @@
 export type Step = 'basic' | 'strategy' | 'config' | 'review';
 
+export type WizardStrategyId = 'grid' | 'mean_reversion' | 'volatility_dca' | 'h3_maker';
+
 export interface StrategyDef {
-  value: 'grid' | 'mean_reversion' | 'volatility_dca';
+  value: WizardStrategyId;
   label: string;
   desc: string;
 }
@@ -15,7 +17,7 @@ export interface FieldDef {
 
 export interface FormState {
   name: string;
-  strategy: '' | 'grid' | 'mean_reversion' | 'volatility_dca';
+  strategy: '' | WizardStrategyId;
   pair: string;
   exchange: string;
   capital: number;
@@ -30,7 +32,7 @@ export interface BasicStepProps {
 
 export interface StrategyStepProps {
   form: FormState;
-  setStrategyDefaults: (strategy: 'grid' | 'mean_reversion' | 'volatility_dca') => void;
+  setStrategyDefaults: (strategy: WizardStrategyId) => void;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -38,7 +40,7 @@ export interface StrategyStepProps {
 export interface ConfigStepProps {
   form: FormState;
   updateConfig: (key: string, value: number) => void;
-  strategy: 'grid' | 'mean_reversion' | 'volatility_dca';
+  strategy: WizardStrategyId;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -59,9 +61,11 @@ export {
   GRID_DEFAULTS,
   MEANREV_DEFAULTS,
   VOLATILITY_DCA_DEFAULTS,
+  H3_MAKER_DEFAULTS,
   GRID_FIELDS,
   MEANREV_FIELDS,
   VOLATILITY_DCA_FIELDS,
+  H3_MAKER_FIELDS,
   STRATEGY_KEY_MAP,
   FIELD_KEY_MAP,
 } from './wizard-defaults';
