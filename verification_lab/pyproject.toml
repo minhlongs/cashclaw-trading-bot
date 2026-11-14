@@ -1,0 +1,27 @@
+[project]
+name = "verification-lab"
+version = "0.1.0"
+description = "Isolated statistical verification of ranked alpha hypotheses"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "duckdb>=1.1,<2",
+    "polars>=1.17,<2",
+    "numpy>=2,<3",
+    "pyarrow>=18,<22",
+    "requests>=2.31,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

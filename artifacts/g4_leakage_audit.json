@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-14T08:11:42.420797+00:00",
+  "commit": "980cb653366d9ff7451deb86dd9c7306e1d4876b",
+  "negative_control": {
+    "H1": {
+      "gross_sharpe": {
+        "mean": -0.2099,
+        "std": 0.5815,
+        "min": -1.1589,
+        "max": 0.7846,
+        "n_seeds": 10
+      },
+      "net_sharpe": {
+        "mean": -0.6256,
+        "std": 0.5769,
+        "min": -1.5615,
+        "max": 0.3575,
+        "n_seeds": 10
+      },
+      "gross_mean_two_se_band": [
+        -0.5777,
+        0.1579
+      ],
+      "verdict": "PASS"
+    },
+    "H2": {
+      "gross_sharpe": {
+        "mean": 0.3303,
+        "std": 0.5326,
+        "min": -0.1703,
+        "max": 1.422,
+        "n_seeds": 10
+      },
+      "net_sharpe": {
+        "mean": 0.0919,
+        "std": 0.5371,
+        "min": -0.4066,
+        "max": 1.1952,
+        "n_seeds": 10
+      },
+      "gross_mean_two_se_band": [
+        -0.0065,
+        0.6671
+      ],
+      "verdict": "PASS"
+    },
+    "H3": {
+      "gross_sharpe": {
+        "mean": 0.0857,
+        "std": 0.4671,
+        "min": -0.5509,
+        "max": 1.0146,
+        "n_seeds": 10
+      },
+      "net_sharpe": {
+        "mean": -2.5167,
+        "std": 0.3458,
+        "min": -3.1566,
+        "max": -1.9191,
+        "n_seeds": 10
+      },
+      "gross_mean_two_se_band": [
+        -0.2097,
+        0.3811
+      ],
+      "verdict": "PASS"
+    },
+    "_note": "A causal strategy cannot earn a positive Sharpe on driftless data. The band reported here is the mean gross Sharpe across independent noise seeds plus and minus two standard errors; a mean landing above that band means the backtest is manufacturing return from structureless input. Net Sharpe is reported separately because a large negative net number on noise is cost drag (high turnover against zero edge), which is expected and not a leak."
+  },
+  "leak_quantification": {
+    "H2": {
+      "causal_sharpe": 0.0555,
+      "leaky_sharpe": 2.2236,
+      "fabricated_sharpe": 2.1681,
+      "causal_cum_net": 0.1711,
+      "leaky_cum_net": 6.6234,
+      "verdict": "CONFIRMED-LEAK"
+    },
+    "H3": {
+      "causal_sharpe": 2.5424,
+      "leaky_sharpe": 2.5086,
+      "fabricated_sharpe": -0.0338,
+      "causal_cum_net": 0.1306,
+      "leaky_cum_net": 0.1326,
+      "verdict": "NO-MATERIAL-LEAK"
+    },
+    "_note": "H1 has no shift to remove: its trailing-mean window already ends at t-1, so it is causal by construction and is not part of this comparison. The difference between the two columns is what a same-bar signal would have added, and it is the evidence for keeping the shift."
+  },
+  "signal_lag_probe": {
+    "validated_on_noise": {
+      "H1": {
+        "noise_mean_aligned": -0.6894,
+        "noise_mean_future": -0.2675,
+        "noise_gap": 0.4219,
+        "verdict": "PASS"
+      },
+      "H2": {
+        "noise_mean_aligned": 0.6945,
+        "noise_mean_future": 0.7538,
+        "noise_gap": 0.0593,
+        "verdict": "PASS"
+      },
+      "H3": {
+        "noise_mean_aligned": -0.0437,
+        "noise_mean_future": -0.0647,
+        "noise_gap": -0.021,
+        "verdict": "PASS"
+      }
+    },
+    "real_panel_context": {
+      "H1": {
+        "future_returns": 1.1264,
+        "aligned": 1.3352,
+        "delayed_returns": 1.2693
+      },
+      "H2": {
+        "future_returns": 1.0934,
+        "aligned": 0.7739,
+        "delayed_returns": 4.23
+      },
+      "H3": {
+        "future_returns": 6.2324,
+        "aligned": 6.5632,
+        "delayed_returns": 6.5687
+      }
+    },
+    "_note": "The gate is `validated_on_noise`: with no serial dependence in the input, handing the strategy next-bar returns must score the same as the aligned mapping. `real_panel_context` shows the future-return variant scoring higher, which on real data reflects genuine momentum persistence rather than a leak -- the strategy reads only past closes, so it can benefit from persistence one day further out without having seen the future. It is reported for transparency, not as a gate."
+  },
+  "staleness_guard": {
+    "gap_days": 6,
+    "missing_bars": 5,
+    "max_stale_days": 2,
+    "adjacent_return": 0.01,
+    "two_day_gap_return": 0.019608,
+    "return_before_gap": 0.009434,
+    "return_after_gap": null,
+    "real_panel_uniusdt_2023_01_resumed_return": null,
+    "real_panel_uniusdt_2023_01_day_after_resume": 0.04643,
+    "verdict": "PASS",
+    "detail": "The bar after a multi-day price gap exceeding max_stale_days must have a null return, while 1-day and 2-day steps remain valid; verified on both synthetic integer-day bars and UNIUSDT's 2023-01 archive gap."
+  },
+  "embargo": {
+    "rule": "embargo_days = 2 x slowest feature memory, applied after the train block",
+    "grid_max_lookback": {
+      "H1": 14,
+      "H2": 180,
+      "H3": 30
+    },
+    "embargo_days_grid_max": {
+      "H1": 28,
+      "H2": 360,
+      "H3": 60
+    },
+    "embargo_days_selected": {
+      "H1": 6,
+      "H2": 60,
+      "H3": 60
+    },
+    "total_days": 2130,
+    "oos_days": 639,
+    "usable_oos_after_embargo": {
+      "H1": 633,
+      "H2": 579,
+      "H3": 579
+    },
+    "grid_max_embargo_exceeds_oos": {
+      "H1": false,
+      "H2": false,
+      "H3": false
+    },
+    "note": "The 180-day momentum lookback in H2's grid requires a 360-day embargo, which is more than half the 639-day locked out-of-sample window. That configuration therefore cannot be honestly scored on the locked set at all; only configurations with a short enough memory survive the rule."
+  },
+  "overall": "PASS",
+  "checks_passed": 7,
+  "checks_total": 7
+}
