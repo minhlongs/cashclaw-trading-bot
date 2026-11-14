@@ -1,0 +1,77 @@
+name: Gate G13 Paper-Forward Daily Checkpoint
+
+on:
+  schedule:
+    - cron: '15 0 * * *'
+  workflow_dispatch:
+    inputs:
+      offline_only:
+        description: 'Run deterministic offline Day-0 parity check only (skip live public venue quotes)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: g13-paper-forward-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  g13-checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'verification_lab/pyproject.toml'
+
+      - name: Install verification_lab package
+        run: pip install -e "./verification_lab[dev]"
+
+      - name: Restore rolling Gate G13 runner state and checkpoint cache
+        uses: actions/cache@v4
+        with:
+          path: .g13-cache
+          key: g13-paper-forward-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            g13-paper-forward-${{ github.ref_name }}-
+            g13-paper-forward-main-
+
+      - name: Ensure cache directory exists
+        run: mkdir -p .g13-cache
+
+      - name: Run offline determinism sanity check
+        run: G13_PYTHON_BIN=python3 npm run g13:checkpoint -- --offline --out /tmp/g13_offline_check.json
+
+      - name: Run live zero-auth public snapshot G13 checkpoint
+        if: ${{ !inputs.offline_only }}
+        run: G13_PYTHON_BIN=python3 npm run g13:checkpoint -- --state-file .g13-cache/runner-state.json --out .g13-cache/g13_paper_tracking_error.json
+
+      - name: Upload Gate G13 checkpoint artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g13-paper-forward-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .g13-cache/
+            /tmp/g13_offline_check.json
+          retention-days: 90
+          if-no-files-found: error

@@ -27,6 +27,7 @@ tsconfig.tsbuildinfo
 !.dev.vars.example
 coverage/
 .cache/
+.g13-cache/
 archive/
 test-results/
 playwright-report/
