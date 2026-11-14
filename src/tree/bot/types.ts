@@ -75,13 +75,18 @@ export interface BotCallbacks {
   onError: (error: Error, context: string) => void;
 }
 
+export interface ProtectionOrderHint {
+  readonly symbol: string;
+  readonly price?: number;
+}
+
 export interface BotDependencies {
   exchange: ExchangeAdapter;
   killswitch: Killswitch;
   telemetry?: TelemetryWriter;
   exchangeOrchestrator?: ExchangeOrchestrator;
   protectionEngine?: CapitalProtectionEngine;
-  protectionContextProvider?: () => ProtectionTickContext;
+  protectionContextProvider?: (orderHint?: ProtectionOrderHint) => ProtectionTickContext;
   lifecycleEngine?: PaperOrderLifecycleEngine;
   ledgerBatcher?: D1AtomicLedgerBatcher;
 }
