@@ -1,0 +1,1276 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-14T08:52:37.472895+00:00",
+  "commit": "980cb653366d9ff7451deb86dd9c7306e1d4876b",
+  "trial_registry": {
+    "path": "artifacts/trial_registry.jsonl",
+    "n_trials_total": 93,
+    "n_trials_by_hypothesis": {
+      "H1": 30,
+      "H2": 15,
+      "H3": 48
+    },
+    "hash_chain_verified": true,
+    "head_hash": "0efe8164eff07606be76d6b243a5d28cdce1ac265b546f4f442b1942768dca10",
+    "append_only": true,
+    "contains_failures": true,
+    "note": "N is the number of configurations actually run, read from the hash-chained registry rather than estimated. Every configuration is recorded whether it won or lost, because a Sharpe deflated by a hand-picked N is a fiction."
+  },
+  "methodology": {
+    "train_fraction": 0.7,
+    "train_days": 1491,
+    "locked_oos_days": 639,
+    "embargo_rule": "2 x winner lookback days purged between train and locked OOS",
+    "selection_diagnostics_window": "train_only (0..split) for DSR, MinTRL, PBO, CPCV, White Reality Check, and parameter plateau; locked OOS is scored once after embargo",
+    "periods_per_year": 365,
+    "returns_are_net": "daily net of 6 bps per unit turnover, both legs where applicable",
+    "bootstrap": {
+      "scheme": "circular block",
+      "block_days": 20,
+      "n_bootstrap": 2000
+    },
+    "gates_from_audit": {
+      "dsr_min": 0.95,
+      "pbo_reject_at_or_above": 0.1523,
+      "psr_locked_oos_min": 0.95,
+      "white_reality_check_p_max": 0.05,
+      "plateau_tolerance_pct": 25.0,
+      "cost_stress_multiple": 2.0,
+      "h1_net_sharpe_floor": 0.8,
+      "h1_btc_tail_corr_max": 0.5
+    },
+    "not_implemented": [
+      "Hansen's SPA test (White's Reality Check is used instead, as the audit permits either)",
+      "Monte Carlo path perturbation beyond block bootstrap",
+      "regime-conditional scoring across the 7 regimes"
+    ]
+  },
+  "hypotheses": [
+    {
+      "hypothesis": "H1",
+      "n_trials_full_recorded": 93,
+      "n_trials_own_grid": 30,
+      "winner_params": {
+        "lookback": 3,
+        "entry_band": 0.7,
+        "exit_band": 0.4
+      },
+      "winner_selected_on": "net Sharpe over the first 70% of days (train)",
+      "train": {
+        "days": 1491,
+        "sharpe": 1.5922,
+        "cum_net": 1.387
+      },
+      "locked_oos": {
+        "days": 633,
+        "embargo_days": 6,
+        "raw_oos_days_before_embargo": 639,
+        "sharpe": 0.3289,
+        "cum_net": 0.0705,
+        "cum_gross": 0.1712,
+        "cum_cost": 0.1007,
+        "break_even_multiple": 1.6996,
+        "max_drawdown": 0.154508,
+        "compounded_max_drawdown": 0.173897,
+        "calmar": 0.263,
+        "note": "scored once after a 2x-lookback post-train embargo, after the registry was sealed; never part of the search, PBO, CPCV, or WRC"
+      },
+      "full_sample": {
+        "days": 2130,
+        "sharpe": 1.3143,
+        "annualised_net_return": 0.251,
+        "cum_net": 1.4645,
+        "cum_gross": 1.7505,
+        "cum_cost": 0.286,
+        "break_even_multiple": 6.1197,
+        "max_drawdown": 0.091818,
+        "compounded_max_drawdown": 0.178033,
+        "calmar": 2.7332,
+        "mean_turnover": 0.2238
+      },
+      "deflated_sharpe": {
+        "dsr": 1.1e-05,
+        "observed_sharpe": 1.5922,
+        "expected_max_sharpe_under_null": 3.4508,
+        "n_trials_used": 93,
+        "n_observations": 1491,
+        "sharpe_standard_error": 0.4385,
+        "trial_sr_variance_per_period": 0.00519928,
+        "passes_95": false,
+        "dsr_if_own_grid_only": 0.990066
+      },
+      "min_track_record_length_days": null,
+      "min_track_record_length_note": "infinite: the observed Sharpe does not exceed the deflated benchmark, so no amount of additional data would reject the null",
+      "pbo": {
+        "pbo": 0.25333333333333335,
+        "n_combinations": 300,
+        "n_splits": 16,
+        "n_strategies": 30,
+        "n_observations": 1491
+      },
+      "cpcv": {
+        "n_paths": 28,
+        "purge_bars": 1,
+        "embargo_bars": 3,
+        "periods_per_year": 365,
+        "winner_mean_path_sharpe": 1.3751,
+        "winner_p05_path_sharpe": -0.0015,
+        "winner_p95_path_sharpe": 3.1864,
+        "winner_std_path_sharpe": 1.143
+      },
+      "white_reality_check": {
+        "observed_best_sharpe": 1.5922,
+        "null_best_sharpe_mean": 0.2654,
+        "null_best_sharpe_p95": 1.1286,
+        "p_value": 0.004,
+        "n_bootstrap": 1000,
+        "block_days": 20,
+        "verdict": "PASS",
+        "rule": "reject the family as having no edge when p >= 0.05"
+      },
+      "psr_locked_oos": {
+        "psr": 0.6680161190842411,
+        "sharpe_annualised": 0.3289,
+        "skew": 0.4841,
+        "kurtosis": 7.771,
+        "n": 633
+      },
+      "psr_full_sample": {
+        "psr": 0.9997829498917867,
+        "sharpe_annualised": 1.3143,
+        "skew": 4.1642,
+        "kurtosis": 85.8403,
+        "n": 2130
+      },
+      "sparse_diagnostic": {
+        "days": 2130,
+        "flat_days": 3,
+        "flat_fraction": 0.0014,
+        "sharpe_all_days": 1.3143,
+        "sharpe_active_days_only": 1.3152,
+        "sparse": false
+      },
+      "bootstrap_ci": {
+        "n_days": 633,
+        "n_bootstrap": 2000,
+        "block_days": 20,
+        "sharpe": {
+          "point": 0.3289,
+          "n_valid": 2000,
+          "ci90": [
+            -0.8548,
+            1.5144
+          ],
+          "ci95": [
+            -1.1308,
+            1.7265
+          ],
+          "median": 0.3476
+        },
+        "calmar": {
+          "point": 0.263,
+          "n_valid": 2000,
+          "ci90": [
+            -0.4202,
+            2.3604
+          ],
+          "ci95": [
+            -0.4672,
+            3.0124
+          ],
+          "median": 0.2937
+        },
+        "annualised_net_return": {
+          "point": 0.0406,
+          "n_valid": 2000,
+          "ci90": [
+            -0.1037,
+            0.191
+          ],
+          "ci95": [
+            -0.1328,
+            0.2163
+          ],
+          "median": 0.042
+        },
+        "point": 0.3289,
+        "ci90": [
+          -0.8548,
+          1.5144
+        ],
+        "ci95": [
+          -1.1308,
+          1.7265
+        ]
+      },
+      "bootstrap_ci_full_sample": {
+        "n_days": 2130,
+        "n_bootstrap": 2000,
+        "block_days": 20,
+        "sharpe": {
+          "point": 1.3143,
+          "n_valid": 2000,
+          "ci90": [
+            0.5785,
+            1.9448
+          ],
+          "ci95": [
+            0.4047,
+            2.0591
+          ],
+          "median": 1.3205
+        },
+        "calmar": {
+          "point": 2.7332,
+          "n_valid": 2000,
+          "ci90": [
+            0.3938,
+            4.5431
+          ],
+          "ci95": [
+            0.2631,
+            5.2719
+          ],
+          "median": 1.6579
+        },
+        "annualised_net_return": {
+          "point": 0.251,
+          "n_valid": 2000,
+          "ci90": [
+            0.0995,
+            0.4113
+          ],
+          "ci95": [
+            0.0699,
+            0.4447
+          ],
+          "median": 0.2469
+        },
+        "point": 1.3143,
+        "ci90": [
+          0.5785,
+          1.9448
+        ],
+        "ci95": [
+          0.4047,
+          2.0591
+        ]
+      },
+      "trades": {
+        "n_trades": 1,
+        "expectancy": 0.07046,
+        "median": 0.07046,
+        "hit_rate": 1.0,
+        "best": 0.07046,
+        "worst": 0.07046,
+        "mean_hold_days": 633.0
+      },
+      "trades_full_sample": {
+        "n_trades": 1,
+        "expectancy": 1.464459,
+        "median": 1.464459,
+        "hit_rate": 1.0,
+        "best": 1.464459,
+        "worst": 1.464459,
+        "mean_hold_days": 2127.0
+      },
+      "max_drawdown": 0.154508,
+      "compounded_max_drawdown": 0.173897,
+      "calmar": 0.263,
+      "cost_stress": {
+        "1.0x": {
+          "cum_net": 0.0705,
+          "sharpe": 0.3289,
+          "positive": true
+        },
+        "1.5x": {
+          "cum_net": 0.0201,
+          "sharpe": 0.0938,
+          "positive": true
+        },
+        "2.0x": {
+          "cum_net": -0.0303,
+          "sharpe": -0.1411,
+          "positive": false
+        },
+        "3.0x": {
+          "cum_net": -0.131,
+          "sharpe": -0.6096,
+          "positive": false
+        }
+      },
+      "cost_stress_full_sample": {
+        "1.0x": {
+          "cum_net": 1.4645,
+          "sharpe": 1.3143,
+          "positive": true
+        },
+        "1.5x": {
+          "cum_net": 1.3214,
+          "sharpe": 1.1859,
+          "positive": true
+        },
+        "2.0x": {
+          "cum_net": 1.1784,
+          "sharpe": 1.0575,
+          "positive": true
+        },
+        "3.0x": {
+          "cum_net": 0.8924,
+          "sharpe": 0.8007,
+          "positive": true
+        }
+      },
+      "parameter_plateau": {
+        "base_params": {
+          "lookback": 3,
+          "entry_band": 0.7,
+          "exit_band": 0.4
+        },
+        "base_train_sharpe": 1.5922,
+        "probes": [
+          {
+            "probe": "lookback_minus20",
+            "params": {
+              "lookback": 2,
+              "entry_band": 0.7,
+              "exit_band": 0.4
+            },
+            "sharpe": 1.3701,
+            "drop_pct": 13.95
+          },
+          {
+            "probe": "lookback_plus20",
+            "params": {
+              "lookback": 4,
+              "entry_band": 0.7,
+              "exit_band": 0.4
+            },
+            "sharpe": 1.7574,
+            "drop_pct": -10.37
+          },
+          {
+            "probe": "entry_band_minus20",
+            "params": {
+              "lookback": 3,
+              "entry_band": 0.5599999999999999,
+              "exit_band": 0.4
+            },
+            "sharpe": 1.4541,
+            "drop_pct": 8.68
+          },
+          {
+            "probe": "entry_band_plus20",
+            "params": {
+              "lookback": 3,
+              "entry_band": 0.84,
+              "exit_band": 0.4
+            },
+            "sharpe": 1.1938,
+            "drop_pct": 25.03
+          },
+          {
+            "probe": "exit_band_minus20",
+            "params": {
+              "lookback": 3,
+              "entry_band": 0.7,
+              "exit_band": 0.32000000000000006
+            },
+            "sharpe": 1.5093,
+            "drop_pct": 5.21
+          },
+          {
+            "probe": "exit_band_plus20",
+            "params": {
+              "lookback": 3,
+              "entry_band": 0.7,
+              "exit_band": 0.48
+            },
+            "sharpe": 1.6094,
+            "drop_pct": -1.08
+          },
+          {
+            "probe": "all_minus20",
+            "params": {
+              "lookback": 2,
+              "entry_band": 0.5599999999999999,
+              "exit_band": 0.32000000000000006
+            },
+            "sharpe": 1.3408,
+            "drop_pct": 15.79
+          },
+          {
+            "probe": "all_plus20",
+            "params": {
+              "lookback": 4,
+              "entry_band": 0.84,
+              "exit_band": 0.48
+            },
+            "sharpe": 1.1063,
+            "drop_pct": 30.52
+          }
+        ],
+        "worst_probe": "all_plus20",
+        "worst_drop_pct": 30.52,
+        "verdict": "SPIKE",
+        "rule": "shifting every parameter +/-20% must not drop net Sharpe by more than 25.0%",
+        "integer_rounding_note": "bar-count parameters are rounded to the nearest whole bar, so short lookbacks are probed more coarsely than 20%"
+      },
+      "btc_tail_correlation": {
+        "n": 633,
+        "n_tail_days": 31,
+        "tail_quantile": 0.05,
+        "tail_correlation": -0.1386,
+        "full_sample_correlation": -0.1994,
+        "btc_mean_return_in_tail": -0.050476,
+        "strategy_mean_return_in_btc_tail": 0.004282
+      },
+      "btc_tail_correlation_full_sample": {
+        "n": 2129,
+        "n_tail_days": 106,
+        "tail_quantile": 0.05,
+        "tail_correlation": 0.0859,
+        "full_sample_correlation": -0.0808,
+        "btc_mean_return_in_tail": -0.068397,
+        "strategy_mean_return_in_btc_tail": 0.003429
+      },
+      "gates": {
+        "dsr": {
+          "value": 0.0,
+          "min": 0.95,
+          "pass": false
+        },
+        "pbo": {
+          "value": 0.2533,
+          "reject_at_or_above": 0.1523,
+          "pass": false
+        },
+        "psr_oos": {
+          "value": 0.668,
+          "min": 0.95,
+          "pass": false
+        },
+        "white_reality_check": {
+          "p_value": 0.004,
+          "pass": true
+        },
+        "plateau": {
+          "value": "SPIKE",
+          "pass": false
+        },
+        "break_even_cost_multiple": {
+          "value": 1.7,
+          "min": 2.0,
+          "pass": false
+        }
+      },
+      "rejection_reasons": [
+        "DSR 0.0 < 0.95 (observed SR 1.5922 vs deflated benchmark 3.4508 at N=93)",
+        "PBO 0.2533 >= 0.1523",
+        "PSR on locked OOS 0.668 < 0.95",
+        "parameter sits on a spike: all_plus20 neighbour drops Sharpe 30.52%",
+        "break-even cost multiple 1.7x < 2.0x survival bar",
+        "H1 rule: net out-of-sample Sharpe 0.3289 < 0.8",
+        "H1 rule: net PnL turns negative at 2.0x cost (cum -0.0303)"
+      ],
+      "verdict": "REJECT"
+    },
+    {
+      "hypothesis": "H2",
+      "n_trials_full_recorded": 93,
+      "n_trials_own_grid": 15,
+      "winner_params": {
+        "lookback": 30,
+        "target_vol_annual": 0.4
+      },
+      "winner_selected_on": "net Sharpe over the first 70% of days (train)",
+      "train": {
+        "days": 1491,
+        "sharpe": 0.9705,
+        "cum_net": 2.2856
+      },
+      "locked_oos": {
+        "days": 579,
+        "embargo_days": 60,
+        "raw_oos_days_before_embargo": 639,
+        "sharpe": -0.1536,
+        "cum_net": -0.1055,
+        "cum_gross": -0.0349,
+        "cum_cost": 0.0706,
+        "break_even_multiple": -0.495,
+        "max_drawdown": 0.384623,
+        "compounded_max_drawdown": 0.423248,
+        "calmar": -0.1729,
+        "note": "scored once after a 2x-lookback post-train embargo, after the registry was sealed; never part of the search, PBO, CPCV, or WRC"
+      },
+      "full_sample": {
+        "days": 2130,
+        "sharpe": 0.6978,
+        "annualised_net_return": 0.3793,
+        "cum_net": 2.2135,
+        "cum_gross": 2.4546,
+        "cum_cost": 0.2411,
+        "break_even_multiple": 10.1808,
+        "max_drawdown": 0.224149,
+        "compounded_max_drawdown": 0.560255,
+        "calmar": 1.6922,
+        "mean_turnover": 0.1887
+      },
+      "deflated_sharpe": {
+        "dsr": 0.0,
+        "observed_sharpe": 0.9705,
+        "expected_max_sharpe_under_null": 3.4508,
+        "n_trials_used": 93,
+        "n_observations": 1491,
+        "sharpe_standard_error": 0.498,
+        "trial_sr_variance_per_period": 0.00519928,
+        "passes_95": false,
+        "dsr_if_own_grid_only": 0.653599
+      },
+      "min_track_record_length_days": null,
+      "min_track_record_length_note": "infinite: the observed Sharpe does not exceed the deflated benchmark, so no amount of additional data would reject the null",
+      "pbo": {
+        "pbo": 0.10333333333333333,
+        "n_combinations": 300,
+        "n_splits": 16,
+        "n_strategies": 15,
+        "n_observations": 1491
+      },
+      "cpcv": {
+        "n_paths": 28,
+        "purge_bars": 1,
+        "embargo_bars": 30,
+        "periods_per_year": 365,
+        "winner_mean_path_sharpe": 0.8647,
+        "winner_p05_path_sharpe": -0.6311,
+        "winner_p95_path_sharpe": 1.9809,
+        "winner_std_path_sharpe": 0.8152
+      },
+      "white_reality_check": {
+        "observed_best_sharpe": 0.9705,
+        "null_best_sharpe_mean": 0.3764,
+        "null_best_sharpe_p95": 1.0335,
+        "p_value": 0.0749,
+        "n_bootstrap": 1000,
+        "block_days": 20,
+        "verdict": "FAIL",
+        "rule": "reject the family as having no edge when p >= 0.05"
+      },
+      "psr_locked_oos": {
+        "psr": 0.4233827487811039,
+        "sharpe_annualised": -0.1536,
+        "skew": -0.0432,
+        "kurtosis": 9.7241,
+        "n": 579
+      },
+      "psr_full_sample": {
+        "psr": 0.9534203521047147,
+        "sharpe_annualised": 0.6978,
+        "skew": -0.1189,
+        "kurtosis": 10.3183,
+        "n": 2130
+      },
+      "sparse_diagnostic": {
+        "days": 2130,
+        "flat_days": 31,
+        "flat_fraction": 0.0146,
+        "sharpe_all_days": 0.6978,
+        "sharpe_active_days_only": 0.7029,
+        "sparse": false
+      },
+      "bootstrap_ci": {
+        "n_days": 579,
+        "n_bootstrap": 2000,
+        "block_days": 20,
+        "sharpe": {
+          "point": -0.1536,
+          "n_valid": 2000,
+          "ci90": [
+            -1.2774,
+            0.8653
+          ],
+          "ci95": [
+            -1.4912,
+            1.0395
+          ],
+          "median": -0.1704
+        },
+        "calmar": {
+          "point": -0.1729,
+          "n_valid": 2000,
+          "ci90": [
+            -0.5911,
+            1.5923
+          ],
+          "ci95": [
+            -0.6154,
+            2.2022
+          ],
+          "median": -0.154
+        },
+        "annualised_net_return": {
+          "point": -0.0665,
+          "n_valid": 2000,
+          "ci90": [
+            -0.5201,
+            0.3845
+          ],
+          "ci95": [
+            -0.5855,
+            0.479
+          ],
+          "median": -0.0698
+        },
+        "point": -0.1536,
+        "ci90": [
+          -1.2774,
+          0.8653
+        ],
+        "ci95": [
+          -1.4912,
+          1.0395
+        ]
+      },
+      "bootstrap_ci_full_sample": {
+        "n_days": 2130,
+        "n_bootstrap": 2000,
+        "block_days": 20,
+        "sharpe": {
+          "point": 0.6978,
+          "n_valid": 2000,
+          "ci90": [
+            -0.0017,
+            1.375
+          ],
+          "ci95": [
+            -0.1189,
+            1.4956
+          ],
+          "median": 0.6633
+        },
+        "calmar": {
+          "point": 1.6922,
+          "n_valid": 2000,
+          "ci90": [
+            -0.0008,
+            3.2018
+          ],
+          "ci95": [
+            -0.0632,
+            3.8209
+          ],
+          "median": 0.8168
+        },
+        "annualised_net_return": {
+          "point": 0.3793,
+          "n_valid": 2000,
+          "ci90": [
+            -0.0009,
+            0.7507
+          ],
+          "ci95": [
+            -0.061,
+            0.8206
+          ],
+          "median": 0.3576
+        },
+        "point": 0.6978,
+        "ci90": [
+          -0.0017,
+          1.375
+        ],
+        "ci95": [
+          -0.1189,
+          1.4956
+        ]
+      },
+      "trades": {
+        "n_trades": 1,
+        "expectancy": -0.105472,
+        "median": -0.105472,
+        "hit_rate": 0.0,
+        "best": -0.105472,
+        "worst": -0.105472,
+        "mean_hold_days": 579.0
+      },
+      "trades_full_sample": {
+        "n_trades": 1,
+        "expectancy": 2.213541,
+        "median": 2.213541,
+        "hit_rate": 1.0,
+        "best": 2.213541,
+        "worst": 2.213541,
+        "mean_hold_days": 2099.0
+      },
+      "max_drawdown": 0.384623,
+      "compounded_max_drawdown": 0.423248,
+      "calmar": -0.1729,
+      "cost_stress": {
+        "1.0x": {
+          "cum_net": -0.1055,
+          "sharpe": -0.1536,
+          "positive": false
+        },
+        "1.5x": {
+          "cum_net": -0.1407,
+          "sharpe": -0.2049,
+          "positive": false
+        },
+        "2.0x": {
+          "cum_net": -0.176,
+          "sharpe": -0.2562,
+          "positive": false
+        },
+        "3.0x": {
+          "cum_net": -0.2466,
+          "sharpe": -0.3587,
+          "positive": false
+        }
+      },
+      "cost_stress_full_sample": {
+        "1.0x": {
+          "cum_net": 2.2135,
+          "sharpe": 0.6978,
+          "positive": true
+        },
+        "1.5x": {
+          "cum_net": 2.093,
+          "sharpe": 0.6597,
+          "positive": true
+        },
+        "2.0x": {
+          "cum_net": 1.9724,
+          "sharpe": 0.6217,
+          "positive": true
+        },
+        "3.0x": {
+          "cum_net": 1.7313,
+          "sharpe": 0.5455,
+          "positive": true
+        }
+      },
+      "parameter_plateau": {
+        "base_params": {
+          "lookback": 30,
+          "target_vol_annual": 0.4
+        },
+        "base_train_sharpe": 0.9705,
+        "probes": [
+          {
+            "probe": "lookback_minus20",
+            "params": {
+              "lookback": 24,
+              "target_vol_annual": 0.4
+            },
+            "sharpe": 0.3299,
+            "drop_pct": 66.0
+          },
+          {
+            "probe": "lookback_plus20",
+            "params": {
+              "lookback": 36,
+              "target_vol_annual": 0.4
+            },
+            "sharpe": 0.9509,
+            "drop_pct": 2.02
+          },
+          {
+            "probe": "target_vol_annual_minus20",
+            "params": {
+              "lookback": 30,
+              "target_vol_annual": 0.32000000000000006
+            },
+            "sharpe": 0.9704,
+            "drop_pct": 0.02
+          },
+          {
+            "probe": "target_vol_annual_plus20",
+            "params": {
+              "lookback": 30,
+              "target_vol_annual": 0.48
+            },
+            "sharpe": 0.9709,
+            "drop_pct": -0.03
+          },
+          {
+            "probe": "all_minus20",
+            "params": {
+              "lookback": 24,
+              "target_vol_annual": 0.32000000000000006
+            },
+            "sharpe": 0.3301,
+            "drop_pct": 65.99
+          },
+          {
+            "probe": "all_plus20",
+            "params": {
+              "lookback": 36,
+              "target_vol_annual": 0.48
+            },
+            "sharpe": 0.9502,
+            "drop_pct": 2.09
+          }
+        ],
+        "worst_probe": "lookback_minus20",
+        "worst_drop_pct": 66.0,
+        "verdict": "SPIKE",
+        "rule": "shifting every parameter +/-20% must not drop net Sharpe by more than 25.0%",
+        "integer_rounding_note": "bar-count parameters are rounded to the nearest whole bar, so short lookbacks are probed more coarsely than 20%"
+      },
+      "gates": {
+        "dsr": {
+          "value": 0.0,
+          "min": 0.95,
+          "pass": false
+        },
+        "pbo": {
+          "value": 0.1033,
+          "reject_at_or_above": 0.1523,
+          "pass": true
+        },
+        "psr_oos": {
+          "value": 0.4234,
+          "min": 0.95,
+          "pass": false
+        },
+        "white_reality_check": {
+          "p_value": 0.0749,
+          "pass": false
+        },
+        "plateau": {
+          "value": "SPIKE",
+          "pass": false
+        },
+        "break_even_cost_multiple": {
+          "value": -0.49,
+          "min": 2.0,
+          "pass": false
+        }
+      },
+      "rejection_reasons": [
+        "DSR 0.0 < 0.95 (observed SR 0.9705 vs deflated benchmark 3.4508 at N=93)",
+        "PSR on locked OOS 0.4234 < 0.95",
+        "White Reality Check p=0.0749 >= 0.05",
+        "parameter sits on a spike: lookback_minus20 neighbour drops Sharpe 66.0%",
+        "break-even cost multiple -0.49x < 2.0x survival bar"
+      ],
+      "verdict": "REJECT"
+    },
+    {
+      "hypothesis": "H3",
+      "n_trials_full_recorded": 93,
+      "n_trials_own_grid": 48,
+      "winner_params": {
+        "lookback": 30,
+        "entry_annual_bps": 800.0,
+        "exit_annual_bps": 150.0
+      },
+      "winner_selected_on": "net Sharpe over the first 70% of days (train)",
+      "train": {
+        "days": 1491,
+        "sharpe": 4.428,
+        "cum_net": 0.1597
+      },
+      "locked_oos": {
+        "days": 579,
+        "embargo_days": 60,
+        "raw_oos_days_before_embargo": 639,
+        "sharpe": 1.5871,
+        "cum_net": 0.0082,
+        "cum_gross": 0.0142,
+        "cum_cost": 0.006,
+        "break_even_multiple": 2.3687,
+        "max_drawdown": 0.004662,
+        "compounded_max_drawdown": 0.004669,
+        "calmar": 1.1105,
+        "note": "scored once after a 2x-lookback post-train embargo, after the registry was sealed; never part of the search, PBO, CPCV, or WRC"
+      },
+      "full_sample": {
+        "days": 2130,
+        "sharpe": 3.774,
+        "annualised_net_return": 0.0288,
+        "cum_net": 0.1679,
+        "cum_gross": 0.2533,
+        "cum_cost": 0.0854,
+        "break_even_multiple": 2.9666,
+        "max_drawdown": 0.012215,
+        "compounded_max_drawdown": 0.014236,
+        "calmar": 2.3555,
+        "mean_turnover": 0.0668
+      },
+      "deflated_sharpe": {
+        "dsr": 0.995203,
+        "observed_sharpe": 4.428,
+        "expected_max_sharpe_under_null": 3.4508,
+        "n_trials_used": 93,
+        "n_observations": 1491,
+        "sharpe_standard_error": 0.3773,
+        "trial_sr_variance_per_period": 0.00519928,
+        "passes_95": true,
+        "dsr_if_own_grid_only": 1.0
+      },
+      "min_track_record_length_days": 601.9,
+      "min_track_record_length_note": "days of observations needed to reject SR <= SR0 at 95% confidence",
+      "pbo": {
+        "pbo": 0.02666666666666667,
+        "n_combinations": 300,
+        "n_splits": 16,
+        "n_strategies": 48,
+        "n_observations": 1491
+      },
+      "cpcv": {
+        "n_paths": 28,
+        "purge_bars": 1,
+        "embargo_bars": 30,
+        "periods_per_year": 365,
+        "winner_mean_path_sharpe": 4.4041,
+        "winner_p05_path_sharpe": -0.9291,
+        "winner_p95_path_sharpe": 9.0723,
+        "winner_std_path_sharpe": 3.3501
+      },
+      "white_reality_check": {
+        "observed_best_sharpe": 4.428,
+        "null_best_sharpe_mean": 0.4042,
+        "null_best_sharpe_p95": 2.5729,
+        "p_value": 0.002,
+        "n_bootstrap": 1000,
+        "block_days": 20,
+        "verdict": "PASS",
+        "rule": "reject the family as having no edge when p >= 0.05"
+      },
+      "psr_locked_oos": {
+        "psr": 0.960975157751037,
+        "sharpe_annualised": 1.5871,
+        "skew": -2.9577,
+        "kurtosis": 23.5321,
+        "n": 579
+      },
+      "psr_full_sample": {
+        "psr": 1.0,
+        "sharpe_annualised": 3.774,
+        "skew": 3.4264,
+        "kurtosis": 29.4735,
+        "n": 2130
+      },
+      "sparse_diagnostic": {
+        "days": 2130,
+        "flat_days": 1170,
+        "flat_fraction": 0.5493,
+        "sharpe_all_days": 3.774,
+        "sharpe_active_days_only": 5.7587,
+        "sparse": true,
+        "interpretation": "Over half the days are flat, so the all-days Sharpe is a diluted ratio: flat days add zero return and zero variance, and the ratio says nothing about how much capital the strategy actually put to work. Compare it against the active-day Sharpe to see the direction of the dilution, and decide on the annualised net return -- a high ratio on a tiny return stream is not a deployable edge."
+      },
+      "bootstrap_ci": {
+        "n_days": 579,
+        "n_bootstrap": 2000,
+        "block_days": 20,
+        "sharpe": {
+          "point": 1.5871,
+          "n_valid": 2000,
+          "ci90": [
+            -0.0072,
+            3.5123
+          ],
+          "ci95": [
+            -0.3256,
+            4.0314
+          ],
+          "median": 1.6324
+        },
+        "calmar": {
+          "point": 1.1105,
+          "n_valid": 2000,
+          "ci90": [
+            -0.0057,
+            5.9343
+          ],
+          "ci95": [
+            -0.207,
+            7.4394
+          ],
+          "median": 1.6717
+        },
+        "annualised_net_return": {
+          "point": 0.0052,
+          "n_valid": 2000,
+          "ci90": [
+            -0.0,
+            0.0099
+          ],
+          "ci95": [
+            -0.0012,
+            0.0109
+          ],
+          "median": 0.0053
+        },
+        "point": 1.5871,
+        "ci90": [
+          -0.0072,
+          3.5123
+        ],
+        "ci95": [
+          -0.3256,
+          4.0314
+        ]
+      },
+      "bootstrap_ci_full_sample": {
+        "n_days": 2130,
+        "n_bootstrap": 2000,
+        "block_days": 20,
+        "sharpe": {
+          "point": 3.774,
+          "n_valid": 2000,
+          "ci90": [
+            2.298,
+            5.0347
+          ],
+          "ci95": [
+            2.0448,
+            5.2847
+          ],
+          "median": 3.764
+        },
+        "calmar": {
+          "point": 2.3555,
+          "n_valid": 2000,
+          "ci90": [
+            1.0927,
+            7.3662
+          ],
+          "ci95": [
+            0.8045,
+            8.9598
+          ],
+          "median": 3.1207
+        },
+        "annualised_net_return": {
+          "point": 0.0288,
+          "n_valid": 2000,
+          "ci90": [
+            0.0138,
+            0.046
+          ],
+          "ci95": [
+            0.0115,
+            0.0502
+          ],
+          "median": 0.0279
+        },
+        "point": 3.774,
+        "ci90": [
+          2.298,
+          5.0347
+        ],
+        "ci95": [
+          2.0448,
+          5.2847
+        ],
+        "expectancy_per_trade": {
+          "point": 0.016791,
+          "n_trades": 10,
+          "ci90": [
+            0.002652,
+            0.036572
+          ],
+          "ci95": [
+            0.001416,
+            0.040288
+          ]
+        }
+      },
+      "trades": {
+        "n_trades": 3,
+        "expectancy": 0.002737,
+        "median": -0.000136,
+        "hit_rate": 0.3333,
+        "best": 0.00895,
+        "worst": -0.000602,
+        "mean_hold_days": 127.0
+      },
+      "trades_full_sample": {
+        "n_trades": 10,
+        "expectancy": 0.016791,
+        "median": 0.004407,
+        "hit_rate": 0.5,
+        "best": 0.111667,
+        "worst": -0.006311,
+        "mean_hold_days": 95.2
+      },
+      "max_drawdown": 0.004662,
+      "compounded_max_drawdown": 0.004669,
+      "calmar": 1.1105,
+      "cost_stress": {
+        "1.0x": {
+          "cum_net": 0.0082,
+          "sharpe": 1.5871,
+          "positive": true
+        },
+        "1.5x": {
+          "cum_net": 0.0052,
+          "sharpe": 0.8134,
+          "positive": true
+        },
+        "2.0x": {
+          "cum_net": 0.0022,
+          "sharpe": 0.2832,
+          "positive": true
+        },
+        "3.0x": {
+          "cum_net": -0.0038,
+          "sharpe": -0.3488,
+          "positive": false
+        }
+      },
+      "cost_stress_full_sample": {
+        "1.0x": {
+          "cum_net": 0.1679,
+          "sharpe": 3.774,
+          "positive": true
+        },
+        "1.5x": {
+          "cum_net": 0.1252,
+          "sharpe": 2.5169,
+          "positive": true
+        },
+        "2.0x": {
+          "cum_net": 0.0825,
+          "sharpe": 1.4586,
+          "positive": true
+        },
+        "3.0x": {
+          "cum_net": -0.0029,
+          "sharpe": -0.039,
+          "positive": false
+        }
+      },
+      "parameter_plateau": {
+        "base_params": {
+          "lookback": 30,
+          "entry_annual_bps": 800.0,
+          "exit_annual_bps": 150.0
+        },
+        "base_train_sharpe": 4.428,
+        "probes": [
+          {
+            "probe": "lookback_minus20",
+            "params": {
+              "lookback": 24,
+              "entry_annual_bps": 800.0,
+              "exit_annual_bps": 150.0
+            },
+            "sharpe": 3.8399,
+            "drop_pct": 13.28
+          },
+          {
+            "probe": "lookback_plus20",
+            "params": {
+              "lookback": 36,
+              "entry_annual_bps": 800.0,
+              "exit_annual_bps": 150.0
+            },
+            "sharpe": 4.4707,
+            "drop_pct": -0.97
+          },
+          {
+            "probe": "entry_annual_bps_minus20",
+            "params": {
+              "lookback": 30,
+              "entry_annual_bps": 640.0,
+              "exit_annual_bps": 150.0
+            },
+            "sharpe": 4.2573,
+            "drop_pct": 3.86
+          },
+          {
+            "probe": "entry_annual_bps_plus20",
+            "params": {
+              "lookback": 30,
+              "entry_annual_bps": 960.0,
+              "exit_annual_bps": 150.0
+            },
+            "sharpe": 4.3911,
+            "drop_pct": 0.83
+          },
+          {
+            "probe": "exit_annual_bps_minus20",
+            "params": {
+              "lookback": 30,
+              "entry_annual_bps": 800.0,
+              "exit_annual_bps": 120.0
+            },
+            "sharpe": 4.41,
+            "drop_pct": 0.41
+          },
+          {
+            "probe": "exit_annual_bps_plus20",
+            "params": {
+              "lookback": 30,
+              "entry_annual_bps": 800.0,
+              "exit_annual_bps": 180.0
+            },
+            "sharpe": 4.3932,
+            "drop_pct": 0.79
+          },
+          {
+            "probe": "all_minus20",
+            "params": {
+              "lookback": 24,
+              "entry_annual_bps": 640.0,
+              "exit_annual_bps": 120.0
+            },
+            "sharpe": 3.8728,
+            "drop_pct": 12.54
+          },
+          {
+            "probe": "all_plus20",
+            "params": {
+              "lookback": 36,
+              "entry_annual_bps": 960.0,
+              "exit_annual_bps": 180.0
+            },
+            "sharpe": 4.5351,
+            "drop_pct": -2.42
+          }
+        ],
+        "worst_probe": "lookback_minus20",
+        "worst_drop_pct": 13.28,
+        "verdict": "PLATEAU",
+        "rule": "shifting every parameter +/-20% must not drop net Sharpe by more than 25.0%",
+        "integer_rounding_note": "bar-count parameters are rounded to the nearest whole bar, so short lookbacks are probed more coarsely than 20%"
+      },
+      "gates": {
+        "dsr": {
+          "value": 0.9952,
+          "min": 0.95,
+          "pass": true
+        },
+        "pbo": {
+          "value": 0.0267,
+          "reject_at_or_above": 0.1523,
+          "pass": true
+        },
+        "psr_oos": {
+          "value": 0.961,
+          "min": 0.95,
+          "pass": true
+        },
+        "white_reality_check": {
+          "p_value": 0.002,
+          "pass": true
+        },
+        "plateau": {
+          "value": "PLATEAU",
+          "pass": true
+        },
+        "break_even_cost_multiple": {
+          "value": 2.37,
+          "min": 2.0,
+          "pass": true
+        }
+      },
+      "rejection_reasons": [],
+      "verdict": "PASS"
+    }
+  ]
+}

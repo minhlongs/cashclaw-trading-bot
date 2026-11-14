@@ -1,0 +1,689 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-14T06:16:13.661383+00:00",
+  "commit": "980cb653366d9ff7451deb86dd9c7306e1d4876b",
+  "planes": {
+    "research_offline": {
+      "location": "verification_lab/ (this lab) + src/forest/alpha/research-agent/",
+      "writes_orders": false,
+      "evidence": {
+        "file": "src/forest/alpha/research-agent/agent.ts",
+        "public_methods": [
+          "generateHypotheses",
+          "proposeFeatureCombinations",
+          "explainFailure",
+          "clusterHypotheses",
+          "recommendNextExperiments"
+        ],
+        "order_methods_exposed": []
+      }
+    },
+    "edge_paper_runtime": {
+      "location": "src/tree, src/land, src/worker*.ts",
+      "note": "Execution surface. Out of scope for this run; not modified."
+    },
+    "ai_authority": {
+      "role": "read-only at compile level",
+      "writes_orders": false
+    }
+  },
+  "ci_governance_gate": {
+    "file": ".github/workflows/open-core-ci.yml",
+    "tracks_main": true,
+    "has_typecheck_and_lint": true,
+    "has_secret_scan": true,
+    "has_paper_only_suite": true
+  },
+  "order_writing_method_hits_across_src": {
+    "src/forest/alpha/data-quality-eval/__tests__/isolation.test.ts": [
+      32,
+      33,
+      35
+    ],
+    "src/forest/alpha/observability-eval/__tests__/adversarial-boundary.test.ts": [
+      33,
+      34
+    ],
+    "src/forest/alpha/observability-eval/__tests__/adversarial-stress.test.ts": [
+      41,
+      52,
+      55,
+      58
+    ],
+    "src/forest/alpha/observability-eval/__tests__/isolation.test.ts": [
+      31,
+      32
+    ],
+    "src/forest/alpha/observability-eval/__tests__/schemas.test.ts": [
+      39,
+      163
+    ],
+    "src/forest/alpha/observability-eval/__tests__/slippage-cost-stress.test.ts": [
+      135
+    ],
+    "src/forest/alpha/research-agent/__tests__/e2e-tier2-part1.test.ts": [
+      31
+    ],
+    "src/forest/alpha/research-agent/__tests__/schemas.test.ts": [
+      48
+    ],
+    "src/forest/backtest/paper-exchange.ts": [
+      41,
+      42,
+      43,
+      44
+    ],
+    "src/land/exchange-orchestration/index.test.ts": [
+      22,
+      27,
+      102,
+      116,
+      126,
+      131,
+      136,
+      182,
+      183
+    ],
+    "src/land/exchange-orchestration/orchestration-extended.test.ts": [
+      1,
+      23,
+      24,
+      79,
+      81,
+      86,
+      87,
+      88,
+      91,
+      109,
+      110,
+      111,
+      116,
+      120,
+      127,
+      129,
+      135,
+      136,
+      137,
+      140,
+      164,
+      166
+    ],
+    "src/land/exchange-orchestration/orchestrator-class.ts": [
+      50,
+      59,
+      61
+    ],
+    "src/land/exchange-orchestration/orchestrator-helpers.ts": [
+      74,
+      80,
+      83,
+      86
+    ],
+    "src/land/exchange-orchestration/orchestrator-routing.ts": [
+      10,
+      11
+    ],
+    "src/land/exchange-orchestration/routed-execution.core.ts": [
+      26,
+      29
+    ],
+    "src/land/exchange-orchestration/routed-order-handler.ts": [
+      22
+    ],
+    "src/land/exchange-orchestration/routed-order-lookup.ts": [
+      16
+    ],
+    "src/tree/alpha/observability/__tests__/isolation.test.ts": [
+      44,
+      45,
+      91
+    ],
+    "src/tree/alpha/observability/__tests__/schemas-adversarial.test.ts": [
+      66,
+      67
+    ],
+    "src/tree/alpha/observability/__tests__/tree-isolation-adversarial.test.ts": [
+      41,
+      42,
+      85
+    ],
+    "src/tree/bot/__tests__/bot-instance-strategy.test.ts": [
+      48
+    ],
+    "src/tree/bot/__tests__/bot-instance-test-utils.ts": [
+      31,
+      33
+    ],
+    "src/tree/bot/__tests__/bot-manager-test-utils.ts": [
+      54,
+      55
+    ],
+    "src/tree/bot/bot-instance-branches.test.ts": [
+      24,
+      27
+    ],
+    "src/tree/bot/bot-instance-events.ts": [
+      37,
+      41,
+      55,
+      59
+    ],
+    "src/tree/bot/bot-instance-extended.test.ts": [
+      1,
+      10,
+      39,
+      46,
+      141,
+      142,
+      149,
+      161,
+      175
+    ],
+    "src/tree/bot/bot-instance-lifecycle.test.ts": [
+      120,
+      149
+    ],
+    "src/tree/bot/bot-instance-lifecycle.ts": [
+      19,
+      55,
+      67
+    ],
+    "src/tree/bot/bot-instance-methods.ts": [
+      12,
+      13,
+      17,
+      18
+    ],
+    "src/tree/bot/bot-instance-ops.ts": [
+      8,
+      16,
+      19,
+      24,
+      27
+    ],
+    "src/tree/bot/bot-instance.ts": [
+      24,
+      30,
+      31
+    ],
+    "src/tree/bot/bot-order-executor-dispatch.ts": [
+      6,
+      8,
+      11
+    ],
+    "src/tree/bot/bot-order-executor-orchestrator.test.ts": [
+      2,
+      37,
+      60,
+      77,
+      81,
+      90,
+      91,
+      92,
+      94,
+      96,
+      97,
+      104,
+      107,
+      117,
+      123,
+      128,
+      138,
+      140,
+      147,
+      148,
+      151,
+      153,
+      158,
+      159,
+      161,
+      162
+    ],
+    "src/tree/bot/bot-order-executor.test.ts": [
+      4,
+      40,
+      103,
+      121,
+      122,
+      125,
+      127,
+      128,
+      137,
+      139,
+      148,
+      149,
+      156,
+      157,
+      164,
+      165,
+      173,
+      177
+    ],
+    "src/tree/bot/bot-order-executor.ts": [
+      8,
+      15
+    ],
+    "src/tree/bot/bot-strategy.test.ts": [
+      69,
+      84,
+      103,
+      118
+    ],
+    "src/tree/bot/bot-strategy.ts": [
+      19,
+      23,
+      36,
+      42,
+      48
+    ],
+    "src/tree/bot/bot-tick-orchestrator.test.ts": [
+      82,
+      115
+    ],
+    "src/tree/bot/bot-tick.test.ts": [
+      37,
+      39,
+      54,
+      146,
+      147,
+      152,
+      155,
+      159,
+      160,
+      165
+    ],
+    "src/tree/bot/bot-tick.ts": [
+      19,
+      30,
+      71
+    ],
+    "src/tree/bot/paper-adapter.test.ts": [
+      55,
+      58,
+      68,
+      75,
+      77,
+      84,
+      87,
+      95,
+      101,
+      104,
+      105,
+      113,
+      114,
+      120,
+      128,
+      143,
+      144,
+      152,
+      153
+    ],
+    "src/tree/bot/paper-adapter.ts": [
+      40,
+      60
+    ],
+    "src/tree/bot/strategies/grid-actions.ts": [
+      15,
+      53
+    ],
+    "src/tree/bot/strategies/grid-extended.test.ts": [
+      27,
+      32,
+      38,
+      83
+    ],
+    "src/tree/bot/strategies/grid.test.ts": [
+      24,
+      28,
+      33,
+      48,
+      55,
+      60,
+      67,
+      69,
+      72,
+      148,
+      149,
+      155,
+      156
+    ],
+    "src/tree/bot/strategies/grid.trailing.test.ts": [
+      26
+    ],
+    "src/tree/bot/strategies/grid.ts": [
+      11
+    ],
+    "src/tree/bot/strategies/mean-reversion-extended.test.ts": [
+      30,
+      35,
+      41,
+      126,
+      129,
+      136,
+      149,
+      152,
+      176,
+      183
+    ],
+    "src/tree/bot/strategies/mean-reversion-orders.ts": [
+      40,
+      64
+    ],
+    "src/tree/bot/strategies/mean-reversion-types.ts": [
+      15
+    ],
+    "src/tree/bot/strategies/mean-reversion.test.ts": [
+      29,
+      33,
+      36,
+      63,
+      71,
+      79,
+      85,
+      95,
+      96,
+      108,
+      111,
+      118,
+      119,
+      125,
+      134
+    ],
+    "src/tree/bot/strategies/quantlib-execution-sizer.test.ts": [
+      82,
+      85,
+      97,
+      108,
+      117,
+      118,
+      125,
+      143,
+      165
+    ],
+    "src/tree/bot/strategies/volatility-dca-execution.ts": [
+      18,
+      20
+    ],
+    "src/tree/bot/strategies/volatility-dca-math.ts": [
+      7
+    ],
+    "src/tree/bot/strategies/volatility-dca-orders.test.ts": [
+      36,
+      38,
+      39,
+      50,
+      68,
+      69,
+      80,
+      88,
+      104,
+      106,
+      119,
+      138,
+      141,
+      158,
+      173,
+      174,
+      181
+    ],
+    "src/tree/bot/strategy-chain/strategies/grid.test.ts": [
+      10,
+      15,
+      133,
+      145
+    ],
+    "src/tree/bot/strategy-chain/strategies/grid.ts": [
+      16
+    ],
+    "src/tree/bot/strategy-chain/strategies/mean-reversion.test.ts": [
+      10,
+      15,
+      135,
+      146
+    ],
+    "src/tree/bot/strategy-chain/strategies/mean-reversion.ts": [
+      18
+    ],
+    "src/tree/exchange/ccxt/client-balances-orders.test.ts": [
+      6,
+      7,
+      15,
+      16
+    ],
+    "src/tree/exchange/ccxt/client-extended.test.ts": [
+      7,
+      8,
+      18,
+      19,
+      138,
+      140,
+      151,
+      164,
+      166,
+      167
+    ],
+    "src/tree/exchange/ccxt/client-order-ops.ts": [
+      9,
+      15,
+      18
+    ],
+    "src/tree/exchange/ccxt/client.test.ts": [
+      6,
+      7,
+      15,
+      16,
+      114,
+      116,
+      118,
+      137,
+      141,
+      143,
+      150,
+      152,
+      160,
+      163,
+      168,
+      170,
+      172,
+      174,
+      178,
+      180
+    ],
+    "src/tree/exchange/ccxt/client.ts": [
+      15,
+      16
+    ],
+    "src/tree/exchange/live/index.test.ts": [
+      13,
+      14,
+      91,
+      94,
+      95,
+      101,
+      107,
+      108,
+      111,
+      113,
+      117,
+      124,
+      129,
+      133,
+      134,
+      141,
+      144,
+      145,
+      148,
+      149,
+      150,
+      153,
+      157,
+      160,
+      161,
+      201,
+      202,
+      204
+    ],
+    "src/tree/exchange/live/index.ts": [
+      32,
+      36
+    ],
+    "src/tree/exchange/live/live-exchange-orders.ts": [
+      57,
+      62,
+      74,
+      76
+    ],
+    "src/tree/exchange/paper/paper-exchange-direct.test.ts": [
+      66
+    ],
+    "src/tree/exchange/paper/paper-exchange.test.ts": [
+      14,
+      16,
+      57,
+      83,
+      100,
+      103,
+      108,
+      110,
+      115,
+      166,
+      177
+    ],
+    "src/tree/exchange/paper/paper-exchange.ts": [
+      5,
+      22,
+      24,
+      29
+    ],
+    "src/tree/exchange/paper/paper-order-execution.ts": [
+      15,
+      26
+    ],
+    "src/tree/exchange/provider/paper-provider-adapter.test.ts": [
+      20,
+      46,
+      48,
+      50
+    ],
+    "src/tree/exchange/provider/paper-provider-adapter.ts": [
+      32,
+      33
+    ],
+    "src/tree/exchange/provider/paper-provider-extended.test.ts": [
+      93,
+      95,
+      104,
+      109,
+      117,
+      119,
+      127,
+      128,
+      129,
+      133,
+      139,
+      143,
+      145,
+      153,
+      183,
+      185
+    ],
+    "src/tree/exchange/provider/paper-provider-orders.ts": [
+      10,
+      11,
+      14,
+      15
+    ],
+    "src/tree/exchange/provider/paper-provider.ts": [
+      12,
+      13,
+      85,
+      86
+    ],
+    "src/tree/exchange/provider/provider.test.ts": [
+      16,
+      37,
+      38,
+      40,
+      43,
+      44,
+      48,
+      49,
+      52,
+      60,
+      63,
+      66,
+      72,
+      74,
+      78,
+      92,
+      93,
+      95,
+      104,
+      105,
+      107,
+      114,
+      115,
+      118,
+      127,
+      129,
+      133
+    ],
+    "src/tree/exchange/provider/provider.ts": [
+      34
+    ],
+    "src/tree/exchange/provider/routing-chain.test.ts": [
+      17,
+      49,
+      50,
+      53,
+      59,
+      60,
+      132,
+      133,
+      136
+    ],
+    "src/tree/exchange/provider/routing-paper-only.test.ts": [
+      60,
+      61
+    ],
+    "src/tree/exchange/queue/queued-adapter-cost.ts": [
+      8,
+      9
+    ],
+    "src/tree/exchange/queue/queued-adapter.test.ts": [
+      19,
+      24,
+      69,
+      74,
+      75,
+      79,
+      81,
+      82,
+      117,
+      134,
+      136,
+      186,
+      188
+    ],
+    "src/tree/exchange/queue/queued-adapter.ts": [
+      23,
+      24
+    ],
+    "src/tree/exchange/queue/types.ts": [
+      11
+    ],
+    "src/tree/exchange/types.ts": [
+      65,
+      66
+    ]
+  },
+  "assertions": {
+    "research_agent_has_zero_order_methods": true,
+    "artifact_written_by_this_run_requires_no_src_change": true
+  },
+  "unverified_in_this_run": [
+    "Durable Object SQLite ledger isolation (G7-G10, out of scope)",
+    "Fail-closed risk engine behaviour under load (G7, out of scope)",
+    "Multi-tenant E2E isolation (G11, out of scope)"
+  ]
+}

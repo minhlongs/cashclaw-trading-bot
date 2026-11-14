@@ -28,3 +28,16 @@ tsconfig.tsbuildinfo
 coverage/
 .cache/
 archive/
+
+# Verification lab (isolated quant research sandbox)
+.pytest_cache/
+**/__pycache__/
+verification_lab/.labenv/
+verification_lab/data/
+verification_lab/**/__pycache__/
+verification_lab/**/*.egg-info/
+verification_lab/.pytest_cache/
+*.parquet
+# The G2 data-provenance table is the lineage record, not bulk data: it is a
+# small table that has to travel with the report that cites it.
+!artifacts/*.parquet
