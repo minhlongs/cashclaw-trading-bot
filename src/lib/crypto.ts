@@ -100,6 +100,6 @@ export async function decrypt(ciphertext: string): Promise<string> {
     );
     return new TextDecoder().decode(decrypted);
   } catch {
-    return ciphertext;
+    throw new Error('CRYPTO_DECRYPT_ERROR: AES-GCM decryption failed — possible data corruption or key mismatch');
   }
 }

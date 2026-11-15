@@ -102,27 +102,45 @@ describe('runBacktestAction', () => {
     mockRun.mockReturnValue(mockResult);
 
     const mockRunDb = vi.fn().mockResolvedValue({ success: true });
-    const mockBind = vi.fn().mockReturnValue({ run: mockRunDb });
+    const mockFirstDb = vi.fn().mockResolvedValue({ id: 'b1', user_id: 'user_1' });
+    const mockBind = vi.fn().mockReturnValue({ run: mockRunDb, first: mockFirstDb });
     const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
     mockDb.mockReturnValue({ prepare: mockPrepare } as unknown as ReturnType<typeof createServerClient>);
 
-    const res = await runBacktestAction({
-      ...BASE_INPUT,
-      strategy: 'volatility_dca',
-      config: BASE_VDCA,
-    });
+    const res = await runBacktestAction(
+      {
+        ...BASE_INPUT,
+        strategy: 'volatility_dca',
+        config: BASE_VDCA,
+      },
+      'user_1',
+    );
     expect(res.success).toBe(true);
     expect(res.result).toEqual(mockResult);
     expect(mockPrepare).toHaveBeenCalled();
   });
 
-  it('fetches backtest results from D1', async () => {
+  it('rejects unauthenticated backtest execution and result queries fail-closed', async () => {
+    const unauthRun = await runBacktestAction({
+      ...BASE_INPUT,
+      strategy: 'volatility_dca',
+      config: BASE_VDCA,
+    });
+    expect(unauthRun.success).toBe(false);
+    expect(unauthRun.error).toBe('Authentication required');
+
+    const unauthResults = await getBacktestResults('b1');
+    expect(unauthResults).toEqual([]);
+  });
+
+  it('fetches backtest results from D1 scoped to authenticated owner', async () => {
     const mockAll = vi.fn().mockResolvedValue({ results: [{ id: 'bt_1' }] });
-    const mockBind = vi.fn().mockReturnValue({ all: mockAll });
+    const mockFirst = vi.fn().mockResolvedValue({ id: 'b1', user_id: 'user_1' });
+    const mockBind = vi.fn().mockReturnValue({ all: mockAll, first: mockFirst });
     const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
     mockDb.mockReturnValue({ prepare: mockPrepare } as unknown as ReturnType<typeof createServerClient>);
 
-    const res = await getBacktestResults('b1');
+    const res = await getBacktestResults('b1', 'user_1');
     expect(res).toEqual([{ id: 'bt_1' }]);
   });
 });

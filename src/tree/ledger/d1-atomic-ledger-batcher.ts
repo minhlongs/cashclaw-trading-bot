@@ -24,6 +24,11 @@ import {
   toSqlIntegers,
   type LoadedDurableLedgerState,
 } from './d1-ledger-sql';
+import {
+  buildPositionBatchStatements,
+  hasPositionsTableInDb,
+  loadPositionsIfTablePresent,
+} from './d1-positions-sql';
 
 function classifyBatchError(rawError: unknown): string {
   const msg = rawError instanceof Error ? rawError.message : String(rawError);
@@ -143,9 +148,17 @@ export class D1AtomicLedgerBatcher {
     }
     const stmtsRes = buildBatchStatements(this.db, input);
     if (!stmtsRes.ok) return stmtsRes;
+    const statements = [...stmtsRes.data];
+    if (input.positions !== undefined && (await hasPositionsTableInDb(this.db))) {
+      const posRes = buildPositionBatchStatements(
+        this.db, input.botId, input.fencingToken, input.entry.timestampMs, input.positions,
+      );
+      if (!posRes.ok) return posRes;
+      statements.push(...posRes.data);
+    }
 
     try {
-      const batchRes = await this.db.batch(stmtsRes.data);
+      const batchRes = await this.db.batch(statements);
       if (batchRes[1]?.meta?.changes === 0) {
         return err('OPTIMISTIC_CONCURRENCY_OR_CASH_GUARD_FAILED: 0 account rows updated');
       }
@@ -160,6 +173,7 @@ export class D1AtomicLedgerBatcher {
     if (!row) return null;
     const hashRows = await this.db.prepare(SELECT_EVENT_HASHES_SQL).bind(botId).all<{ event_hash: string }>();
     const orderRows = await this.db.prepare(SELECT_ORDER_INTENTS_SQL).bind(botId).all<Record<string, number | string>>();
+    const posState = await loadPositionsIfTablePresent(this.db, botId);
     return {
       botId,
       version: Number(row.version),
@@ -175,6 +189,8 @@ export class D1AtomicLedgerBatcher {
       },
       processedEventHashes: hashRows.results.map((h) => h.event_hash),
       orderIntents: orderRows.results.map(mapOrderIntentRow),
+      hasDurablePositionsTable: posState.hasTable,
+      ...(posState.positions !== undefined ? { positions: posState.positions } : {}),
     };
   }
 }

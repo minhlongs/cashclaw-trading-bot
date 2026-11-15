@@ -41,16 +41,25 @@ function readServerAdminToken(): string | null {
   return null;
 }
 
-function hasServerResearchAuthorization(req: Request): boolean {
+async function sha256Bytes(value: string): Promise<Uint8Array> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return new Uint8Array(digest);
+}
+
+async function hasServerResearchAuthorization(req: Request): Promise<boolean> {
   const expected = readServerAdminToken();
   if (!expected) return false;
   const authHeader = req.headers.get('authorization') ?? '';
   if (!authHeader.startsWith('Bearer ')) return false;
   const supplied = authHeader.slice('Bearer '.length);
-  if (supplied.length !== expected.length) return false;
+  if (!supplied) return false;
+  const [suppliedHash, expectedHash] = await Promise.all([
+    sha256Bytes(supplied),
+    sha256Bytes(expected),
+  ]);
   let diff = 0;
-  for (let i = 0; i < expected.length; i += 1) {
-    diff |= supplied.charCodeAt(i) ^ expected.charCodeAt(i);
+  for (let i = 0; i < expectedHash.length; i += 1) {
+    diff |= suppliedHash[i]! ^ expectedHash[i]!;
   }
   return diff === 0;
 }
@@ -128,7 +137,7 @@ export async function POST(req: Request) {
     }
 
     const serverAuthorizedOverride =
-      parsed.data.allowNegativeRoiResearch === true && hasServerResearchAuthorization(req);
+      parsed.data.allowNegativeRoiResearch === true && (await hasServerResearchAuthorization(req));
     if (parsed.data.modelTier === 'REASONING' && !serverAuthorizedOverride) {
       return NextResponse.json(
         {

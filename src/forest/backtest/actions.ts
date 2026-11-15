@@ -23,14 +23,12 @@ export async function runBacktestAction(
   const session = explicitUserId
     ? { inRequestScope: true, userId: explicitUserId }
     : await resolveBacktestSessionUser();
-  if (session.inRequestScope && !session.userId) {
+  if (!session.userId) {
     return { success: false, error: 'Authentication required', candlesFetched: 0 };
   }
-  if (session.userId) {
-    const ownsBot = await verifyBacktestBotOwnership(input.botId, session.userId);
-    if (!ownsBot) {
-      return { success: false, error: `Bot not found: ${input.botId}`, candlesFetched: 0 };
-    }
+  const ownsBot = await verifyBacktestBotOwnership(input.botId, session.userId);
+  if (!ownsBot) {
+    return { success: false, error: `Bot not found: ${input.botId}`, candlesFetched: 0 };
   }
 
   const sim = await fetchAndSimulateBacktest(input, interval);
@@ -45,6 +43,6 @@ export async function getBacktestResults(botId: string, explicitUserId?: string)
   const session = explicitUserId
     ? { inRequestScope: true, userId: explicitUserId }
     : await resolveBacktestSessionUser();
-  if (session.inRequestScope && !session.userId) return [];
+  if (!session.userId) return [];
   return getBacktestResultsFromD1(botId, session.userId);
 }

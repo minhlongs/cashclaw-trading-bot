@@ -72,6 +72,10 @@ export class MicroDoubleEntryLedger {
     );
   }
 
+  public getAllPositions(): readonly LedgerPositionRecord[] {
+    return Array.from(this.positions.values()).filter((p) => p.signedQtyBase !== ZERO_BIGINT);
+  }
+
   public postJournalEntry(params: {
     readonly eventHash: string;
     readonly eventType: string;

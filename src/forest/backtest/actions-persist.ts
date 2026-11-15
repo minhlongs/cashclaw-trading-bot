@@ -102,25 +102,19 @@ export async function persistBacktestResultToD1(result: BacktestResult): Promise
 
 export async function getBacktestResultsFromD1(
   botId: string,
-  userId?: string,
+  userId: string,
 ): Promise<BacktestResultRow[]> {
+  if (!userId.trim()) return [];
   const db = createServerClient();
   if (!db) return [];
   try {
-    if (userId) {
-      const bot = await findBotById(db, botId);
-      if (!bot || bot.user_id !== userId) return [];
-      const { results } = await db
-        .prepare(
-          'SELECT br.* FROM backtest_results br INNER JOIN bots b ON br.bot_id = b.id WHERE br.bot_id = ? AND b.user_id = ? ORDER BY br.created_at DESC',
-        )
-        .bind(botId, userId)
-        .all<BacktestResultRow>();
-      return results;
-    }
+    const bot = await findBotById(db, botId);
+    if (!bot || bot.user_id !== userId) return [];
     const { results } = await db
-      .prepare('SELECT * FROM backtest_results WHERE bot_id = ? ORDER BY created_at DESC')
-      .bind(botId)
+      .prepare(
+        'SELECT br.* FROM backtest_results br INNER JOIN bots b ON br.bot_id = b.id WHERE br.bot_id = ? AND b.user_id = ? ORDER BY br.created_at DESC',
+      )
+      .bind(botId, userId)
       .all<BacktestResultRow>();
     return results;
   } catch (error) {

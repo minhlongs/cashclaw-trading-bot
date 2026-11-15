@@ -137,4 +137,5 @@ export interface AtomicLedgerCommitInput {
   readonly nextBalances: LedgerAccountBalances;
   readonly entry: JournalEntry;
   readonly orderUpsert?: AtomicOrderStateUpsert;
+  readonly positions?: readonly LedgerPositionRecord[];
 }

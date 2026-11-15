@@ -75,12 +75,22 @@ function resolveGenesisUtc(specSha: string, state: PersistedRunnerState | null, 
 }
 
 function loadVerifiedGovernance(opts: CliOptions): VerifiedGovernance {
-  if (!fs.existsSync(opts.registryPath) || !fs.existsSync(opts.specPath)) throw new Error('missing lifecycle registry or signed strategy spec');
+  if (!fs.existsSync(opts.registryPath) || !fs.existsSync(opts.specPath)) {
+    throw new Error('missing lifecycle registry or signed strategy spec');
+  }
+  const sigPath = `${opts.specPath}.sig`;
   const rawRegistryJson = fs.readFileSync(opts.registryPath, 'utf8');
   const rawSpecJson = fs.readFileSync(opts.specPath, 'utf8');
+  const ed25519Signature = fs.existsSync(sigPath) ? fs.readFileSync(sigPath, 'utf8').trim() : undefined;
   const regRes = validateStrategyLifecycleRegistry(JSON.parse(rawRegistryJson) as unknown, rawRegistryJson);
   if (!regRes.ok) throw new Error(`${regRes.code}: ${regRes.error}`);
-  const specRes = validateSignedStrategySpec(JSON.parse(rawSpecJson) as unknown, { registry: regRes.data, rawSpecJson, rawRegistryJson });
+  const specRes = validateSignedStrategySpec(JSON.parse(rawSpecJson) as unknown, {
+    registry: regRes.data,
+    rawSpecJson,
+    rawRegistryJson,
+    requireEd25519Signature: true,
+    ...(ed25519Signature !== undefined ? { ed25519Signature } : {}),
+  });
   if (!specRes.ok) throw new Error(`${specRes.code}: ${specRes.error}`);
   if (specRes.data.strategyId !== 'H3_MAKER' || ARCHIVED_FALSIFIED_FAMILIES.some((f) => !isArchivedFalsifiedFamily(f))) {
     throw new Error('Only H3_MAKER is eligible for Gate G13');

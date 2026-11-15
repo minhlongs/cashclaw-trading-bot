@@ -5,6 +5,15 @@
 
 export { CapitalProtectionEngine } from './capital-protection-engine';
 export {
+  FOUNDER_ED25519_PUBLIC_KEY_B64,
+  canonicalizeOwnerOverrideMessage,
+  canonicalizeSpecSignatureMessage,
+  resolveTrustedEd25519PublicKeyB64,
+  signEd25519MessageSync,
+  signOwnerOverrideToken,
+  verifyEd25519SignatureSync,
+} from './ed25519-verifier';
+export {
   AtomicFillDeduplicator,
   DeterministicLeaseCoordinator,
   ExecutionBudgetGuard,

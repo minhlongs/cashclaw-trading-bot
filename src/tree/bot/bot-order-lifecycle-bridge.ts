@@ -65,10 +65,12 @@ async function flushOrWriteUpsert(
     const entry = pending[i]!;
     const nextBalances = applyLegsToBalances(cursor.balances, entry.legs);
     const cashOutflow = cursor.balances.CASH_AVAILABLE - nextBalances.CASH_AVAILABLE;
+    const isLast = i === pending.length - 1;
     const commitRes = await batcher.commitAtomicBatch({
       botId: ctx.botId, expectedVersion: cursor.version, fencingToken: ledger.getFencingToken(),
       requiredCashMicroUsd: cashOutflow > ZERO_BIGINT ? cashOutflow : ZERO_BIGINT, nextBalances, entry,
-      ...(i === pending.length - 1 && upsert ? { orderUpsert: upsert } : {}),
+      ...(isLast && upsert ? { orderUpsert: upsert } : {}),
+      ...(isLast ? { positions: ledger.getAllPositions() } : {}),
     });
     if (!commitRes.ok) {
       ctx.emitTelemetry('error', { error: commitRes.error, context: 'bot.ledgerBatcher' });

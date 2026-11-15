@@ -98,7 +98,12 @@ export function resolveAuditedOverrideOwner(
   config: ProtectionEngineConfig,
 ): { ownerId: string | null; rejectedDecision: ProtectionDecision | null } {
   if (ctx.ownerOverride !== undefined) {
-    const check = validateOwnerOverride(ctx.ownerOverride, ctx.nowMs, config.maxOwnerOverrideTtlMs);
+    const check = validateOwnerOverride(
+      ctx.ownerOverride,
+      ctx.nowMs,
+      config.maxOwnerOverrideTtlMs,
+      config.ownerPublicKeyB64,
+    );
     if (!check.valid) {
       return {
         ownerId: null,
@@ -115,7 +120,12 @@ export function resolveAuditedOverrideOwner(
   }
 
   if (state.activeOwnerOverride !== null) {
-    const check = validateOwnerOverride(state.activeOwnerOverride, ctx.nowMs, config.maxOwnerOverrideTtlMs);
+    const check = validateOwnerOverride(
+      state.activeOwnerOverride,
+      ctx.nowMs,
+      config.maxOwnerOverrideTtlMs,
+      config.ownerPublicKeyB64,
+    );
     return { ownerId: check.valid ? check.ownerId : null, rejectedDecision: null };
   }
 

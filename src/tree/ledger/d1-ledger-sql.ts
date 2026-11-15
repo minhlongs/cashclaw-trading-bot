@@ -1,7 +1,7 @@
 // Gate G10: Parameterized SQL Statements & Safe Integer Binding for D1 Ledger Batcher.
 
 import { ok, err, type Result } from '@/lib/result';
-import type { DurableOrderLifecycleState, LedgerAccountBalances } from './ledger-types';
+import type { DurableOrderLifecycleState, LedgerAccountBalances, LedgerPositionRecord } from './ledger-types';
 
 export interface DurableOrderIntentRow {
   readonly clientOrderId: string;
@@ -26,6 +26,8 @@ export interface LoadedDurableLedgerState {
   readonly balances: LedgerAccountBalances;
   readonly processedEventHashes: readonly string[];
   readonly orderIntents: readonly DurableOrderIntentRow[];
+  readonly positions?: readonly LedgerPositionRecord[];
+  readonly hasDurablePositionsTable?: boolean;
 }
 
 export function mapOrderIntentRow(r: Record<string, number | string>): DurableOrderIntentRow {

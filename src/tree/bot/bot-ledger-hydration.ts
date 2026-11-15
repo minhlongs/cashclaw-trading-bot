@@ -112,12 +112,15 @@ export function restoreEngineFromDurableState(
   loaded: LoadedDurableLedgerState,
 ): number {
   const ledger = lifecycleEngine.getLedger();
-  const rawPositions = reconstructPositionsFromOrderIntents(loaded.orderIntents);
-  const sumPosMargin = rawPositions.reduce((acc, p) => acc + p.openMarginMicroUsd, ZERO_BIGINT);
-  const positions =
-    rawPositions.length === 1 && sumPosMargin !== loaded.balances.POSITION_MARGIN && loaded.balances.POSITION_MARGIN >= ZERO_BIGINT
-      ? [{ ...rawPositions[0]!, openMarginMicroUsd: loaded.balances.POSITION_MARGIN, openNotionalMicroUsd: loaded.balances.POSITION_MARGIN }]
-      : rawPositions;
+  const positions = loaded.hasDurablePositionsTable && loaded.positions
+    ? [...loaded.positions]
+    : (() => {
+        const rawPositions = reconstructPositionsFromOrderIntents(loaded.orderIntents);
+        const sumPosMargin = rawPositions.reduce((acc, p) => acc + p.openMarginMicroUsd, ZERO_BIGINT);
+        return rawPositions.length === 1 && sumPosMargin !== loaded.balances.POSITION_MARGIN && loaded.balances.POSITION_MARGIN >= ZERO_BIGINT
+          ? [{ ...rawPositions[0]!, openMarginMicroUsd: loaded.balances.POSITION_MARGIN, openNotionalMicroUsd: loaded.balances.POSITION_MARGIN }]
+          : rawPositions;
+      })();
   const snapRes = ledger.restoreSnapshot({
     botId: loaded.botId,
     version: loaded.version,

@@ -179,4 +179,5 @@ export interface ProtectionEngineConfig {
   readonly depegStressHaircut: number;
   readonly minLiquidationBufferPct: number;
   readonly oiCascadeDropThresholdPct: number;
+  readonly ownerPublicKeyB64?: string;
 }

@@ -3,6 +3,10 @@
  * cross-venue price dislocation guard, and stablecoin collateral depeg haircut evaluator.
  */
 
+import {
+  canonicalizeOwnerOverrideMessage,
+  verifyEd25519SignatureSync,
+} from './ed25519-verifier';
 import type {
   CollateralPriceSample,
   LedgerSnapshot,
@@ -73,6 +77,7 @@ export function validateOwnerOverride(
   override: OwnerOverrideToken,
   nowMs: number,
   maxTtlMs = 3_600_000,
+  trustedPublicKeyB64?: string,
 ): OwnerOverrideValidation {
   if (!Number.isFinite(nowMs) || !hasValidOverrideFields(override)) {
     return {
@@ -96,6 +101,15 @@ export function validateOwnerOverride(
       valid: false,
       ownerId: null,
       reason: `Owner override expired fail-closed at ${override.expiresAtMs} (now=${nowMs})`,
+    };
+  }
+
+  const message = canonicalizeOwnerOverrideMessage(override);
+  if (!verifyEd25519SignatureSync(message, override.signatureToken, trustedPublicKeyB64)) {
+    return {
+      valid: false,
+      ownerId: null,
+      reason: 'OWNER_OVERRIDE_SIGNATURE_INVALID: Ed25519 cryptographic signature verification failed',
     };
   }
 
