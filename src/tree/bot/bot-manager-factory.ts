@@ -55,6 +55,7 @@ export class BotManagerFactory implements BotFactoryDelegate {
       getConfig: () => bot.getConfig(),
       getState: () => bot.getSnapshot(),
       getLastTickPrice: () => bot.getLastTickPrice(),
+      getLastTickTimestampMs: () => bot.getLastTickTimestampMs(),
       getD1Database: this.deps.getD1Database,
     });
     const bot = new BotInstance(

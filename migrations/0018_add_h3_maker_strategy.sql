@@ -1,7 +1,7 @@
 -- Migration 0018: Expand bots.strategy CHECK to include 'h3_maker'
 -- SQLite requires table recreation to alter CHECK constraints.
 
-PRAGMA foreign_keys=OFF;
+DROP TABLE IF EXISTS bots_dg_tmp;
 
 CREATE TABLE bots_dg_tmp (
   id TEXT PRIMARY KEY,
@@ -47,5 +47,3 @@ ALTER TABLE bots_dg_tmp RENAME TO bots;
 
 CREATE INDEX IF NOT EXISTS idx_bots_user_id ON bots(user_id);
 CREATE INDEX IF NOT EXISTS idx_bots_status ON bots(status);
-
-PRAGMA foreign_keys=ON;

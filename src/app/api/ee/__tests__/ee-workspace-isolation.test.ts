@@ -172,15 +172,15 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
     const spoofPostBody = (await spoofPostRes.json()) as { code: string };
     expect(spoofPostBody.code).toBe('WORKSPACE_FORBIDDEN');
 
+    await seedWorkspaceTier('ws_usr_zero_rows', 'PREMIUM');
     const postRes = await postCredits(
       new Request('http://localhost/api/ee/credits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': 'usr_zero_rows' },
         body: JSON.stringify({
-          modelTier: 'REASONING',
+          modelTier: 'FAST',
           promptTokens: 1_500,
           completionTokens: 500,
-          allowNegativeRoiResearch: true,
         }),
       }),
     );
@@ -190,7 +190,7 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
       account: { workspaceId: string; balanceCredits: number };
     };
     expect(postBody.workspaceId).toBe('ws_usr_zero_rows');
-    expect(postBody.account.balanceCredits).toBe(992);
+    expect(postBody.account.balanceCredits).toBe(9_998);
 
     const victimAccount = defaultCreditLedgerStore.getOrCreateAccount('ws_victim_credits', 'ENTERPRISE');
     expect(victimAccount.balanceCredits).toBe(50_000);

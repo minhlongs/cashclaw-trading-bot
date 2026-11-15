@@ -64,10 +64,20 @@ function alignAndComputeReturnDiffs(
     return makeInvalidStats('Paper and oracle checkpoint sequences must be non-empty and equal length');
   }
   const sortedPaper = [...paper].sort((a, b) => a.dayIndex - b.dayIndex);
+  if ((sortedPaper[0] as PaperForwardCheckpoint).dayIndex !== 0) {
+    return makeInvalidStats('Paper checkpoint sequence must start at dayIndex=0');
+  }
   const oracleByDay = new Map(oracle.map((o) => [o.dayIndex, o.oracleNav]));
   let checkpointLedgerBreaches = 0;
-  for (const cp of sortedPaper) {
+  for (let i = 0; i < sortedPaper.length; i += 1) {
+    const cp = sortedPaper[i] as PaperForwardCheckpoint;
     if (!cp.ledgerBalanced) checkpointLedgerBreaches += 1;
+    if (i > 0 && cp.dayIndex !== (sortedPaper[i - 1] as PaperForwardCheckpoint).dayIndex + 1) {
+      return makeInvalidStats(
+        `Non-contiguous checkpoint dayIndex jump from ${(sortedPaper[i - 1] as PaperForwardCheckpoint).dayIndex} to ${cp.dayIndex}`,
+        checkpointLedgerBreaches,
+      );
+    }
     if (!isPositiveFiniteNav(oracleByDay.get(cp.dayIndex)) || !isPositiveFiniteNav(cp.paperNav)) {
       return makeInvalidStats(`Missing or non-positive NAV at dayIndex=${cp.dayIndex}`, checkpointLedgerBreaches);
     }

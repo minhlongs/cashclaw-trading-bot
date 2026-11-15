@@ -112,7 +112,10 @@ export async function resolveWorkspaceTierContext(
     const memberships = await listWorkspaceMemberships(userId, createServerClient() ?? undefined);
     const active = pickActiveMembership(memberships);
     if (!active) {
-      return { workspaceId: undefined, tier: 'BASIC' };
+      const personalTier = await defaultSaasEntitlementStore.getWorkspaceTier(
+        derivePersonalWorkspaceId(userId),
+      );
+      return { workspaceId: undefined, tier: personalTier };
     }
     const memberWorkspaceIds = memberships.map((membership) => membership.workspaceId);
     const selectedWorkspaceId =

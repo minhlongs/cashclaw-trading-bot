@@ -13,16 +13,26 @@ import type { Candle } from '@/forest/backtest/ohlcv';
 import { computeRegimeContext } from '@/tree/regime/bot-context';
 
 export interface TickContext {
-  id: string; config: BotConfig; deps: BotDependencies; callbacks: BotCallbacks; state: BotState;
+  id: string;
+  config: BotConfig;
+  deps: BotDependencies;
+  callbacks: BotCallbacks;
+  state: BotState;
   strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy | null;
-  strategyChain: StrategyChain | null; lastTickPrice: number | null;
+  strategyChain: StrategyChain | null;
+  lastTickPrice: number | null;
+  lastTickTimestampMs?: number | null;
   placeOrder: (req: OrderRequest) => Promise<import('../exchange/types').OrderResult>;
   pause: () => void;
   emitTelemetry: (eventType: TradeEventType, details: Record<string, unknown>) => void;
-  emitState: () => void; recentCandles?: Candle[];
+  emitState: () => void;
+  recentCandles?: Candle[];
 }
 
-export interface TickResult { lastTickPrice: number | null; }
+export interface TickResult {
+  lastTickPrice: number | null;
+  lastTickTimestampMs?: number | null;
+}
 
 export async function tick(ctx: TickContext): Promise<TickResult> {
   const {
@@ -32,12 +42,13 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
   } = ctx;
 
   let lastTickPrice = ctx.lastTickPrice;
+  let lastTickTimestampMs = ctx.lastTickTimestampMs ?? null;
 
-  if (state.status !== 'running') return { lastTickPrice };
+  if (state.status !== 'running') return { lastTickPrice, lastTickTimestampMs };
   if (!deps.killswitch.isTradingEnabled()) {
     callbacks.onLog(`Bot ${id} halted by killswitch: ${deps.killswitch.haltReason}`);
     pause();
-    return { lastTickPrice };
+    return { lastTickPrice, lastTickTimestampMs };
   }
 
   try {
@@ -52,13 +63,26 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
       throw new Error(`Failed to fetch ticker for ${config.symbol}`);
     }
     const price = ticker.last;
-    if (price <= 0) return { lastTickPrice };
+    if (price <= 0) return { lastTickPrice, lastTickTimestampMs };
 
+    const nowMs = Date.now();
+    const rawTs = ticker.timestamp;
+    const effectiveTickTs = Number.isFinite(rawTs) && rawTs > 0 ? rawTs : nowMs;
     lastTickPrice = price;
-    state.lastTickAt = Date.now();
-    state.updatedAt = Date.now();
+    lastTickTimestampMs = effectiveTickTs;
+    state.lastTickAt = nowMs;
+    state.updatedAt = nowMs;
 
-    // Regime context: read-only, informational — no execution decisions are gated on this
+    if (nowMs - effectiveTickTs > 15_000) {
+      emitTelemetry('error', {
+        error: `Stale market ticker ageMs=${nowMs - effectiveTickTs} exceeds 15000ms fence`,
+        action: 'STALE_DATA_FAIL_CLOSED',
+        context: 'bot.tick',
+      });
+      emitState();
+      return { lastTickPrice, lastTickTimestampMs };
+    }
+
     const regimeCtx = computeRegimeContext(config.symbol, recentCandles);
 
     const chainOrder = evaluateChain({
@@ -86,5 +110,5 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
     callbacks.onError(error instanceof Error ? error : new Error(String(error)), 'bot.tick');
   }
 
-  return { lastTickPrice };
+  return { lastTickPrice, lastTickTimestampMs };
 }

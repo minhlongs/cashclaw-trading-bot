@@ -57,13 +57,13 @@ export async function POST(req: Request) {
     }
 
     const entitlements = getEntitlementsForTier(tierContext.tier);
-    if (parsed.data.channel === 'WEBHOOK' && !entitlements.customWebhookAlertsAllowed) {
+    if (!entitlements.customWebhookAlertsAllowed) {
       return NextResponse.json(
         {
           ok: false,
           code: 'QUOTA_EXCEEDED',
           tier: tierContext.tier,
-          error: `Custom webhook alerts require PREMIUM or higher (current tier: ${tierContext.tier})`,
+          error: `Signed cloud alert dispatch requires PREMIUM or higher (current tier: ${tierContext.tier})`,
         },
         { status: 402 },
       );

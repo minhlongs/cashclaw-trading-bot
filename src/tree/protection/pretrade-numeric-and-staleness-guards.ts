@@ -5,6 +5,7 @@
 
 import type {
   MarketMicrostructureSnapshot,
+  PositionExposure,
   PreTradeOrderCandidate,
   ProtectionActionCode,
   ProtectionEngineConfig,
@@ -21,11 +22,26 @@ function isPositiveFinite(value: number): boolean {
   return Number.isFinite(value) && value > 0;
 }
 
+function isGenuinePositionReducingClose(
+  order: PreTradeOrderCandidate,
+  orderNotionalUsd: number,
+  positions?: readonly PositionExposure[],
+): boolean {
+  if (!order.reduceOnly || !positions || positions.length === 0) return false;
+  const existing = positions.find((p) => p.symbol === order.symbol);
+  if (!existing) return false;
+  const closesLong = existing.signedNotionalUsd > 0 && order.side === 'SELL';
+  const closesShort = existing.signedNotionalUsd < 0 && order.side === 'BUY';
+  if (!closesLong && !closesShort) return false;
+  return orderNotionalUsd <= Math.abs(existing.signedNotionalUsd) * 1.001 + 1e-6;
+}
+
 export function evaluateOrderNumericAndNotional(
   order: PreTradeOrderCandidate,
   equityUsd: number,
   nowMs: number,
   config: ProtectionEngineConfig,
+  positions?: readonly PositionExposure[],
 ): GuardCheckFailure | null {
   const validCoreNumbers =
     isPositiveFinite(order.price) &&
@@ -54,7 +70,10 @@ export function evaluateOrderNumericAndNotional(
   }
 
   const orderNotionalUsd = order.price * order.quantity;
-  if (orderNotionalUsd > equityUsd * config.maxSingleOrderNotionalPct) {
+  if (
+    orderNotionalUsd > equityUsd * config.maxSingleOrderNotionalPct &&
+    !isGenuinePositionReducingClose(order, orderNotionalUsd, positions)
+  ) {
     return {
       action: 'REJECT_PRETRADE',
       controlId: 1,

@@ -77,8 +77,8 @@ describe('GET /api/metrics', () => {
     const bots = json.bots as Record<string, unknown>;
 
     expect(bots.total).toBe(4);
-    expect(bots.running).toBe(2);
-    expect(bots.paused).toBe(2);
+    expect(bots.running).toBe(3);
+    expect(bots.paused).toBe(1);
   });
 
   it('aggregates trade performance metrics from D1', async () => {

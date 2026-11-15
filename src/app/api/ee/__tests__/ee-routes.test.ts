@@ -364,8 +364,9 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       expect(account.balanceCredits).toBe(10_000);
     });
 
-    it('allows FAST and LOCAL tiers unchanged and permits REASONING only when allowNegativeRoiResearch: true', async () => {
+    it('allows FAST and LOCAL tiers unchanged and permits REASONING only when allowNegativeRoiResearch: true with server operator authorization', async () => {
       await seedWorkspaceTier('ws_g12_override', 'PREMIUM');
+      vi.stubEnv('ADMIN_TOKEN', 'ee-routes-operator-token');
 
       const fastRes = await postCredits(
         new Request('http://localhost/api/ee/credits', {
@@ -384,7 +385,10 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       const overrideRes = await postCredits(
         new Request('http://localhost/api/ee/credits', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ee-routes-operator-token',
+          },
           body: JSON.stringify({
             workspaceId: 'ws_g12_override',
             modelTier: 'REASONING',

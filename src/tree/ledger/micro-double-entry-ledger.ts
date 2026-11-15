@@ -172,7 +172,7 @@ export class MicroDoubleEntryLedger {
     if (!computeBalanceSheet(snapshot.balances).balanced) return err('CORRUPT_LEDGER_SNAPSHOT: unbalanced');
     this.balances = { ...snapshot.balances };
     this.version = snapshot.version;
-    this.fencingToken = snapshot.fencingToken;
+    this.fencingToken = Math.max(this.fencingToken, snapshot.fencingToken);
     this.positions.clear();
     for (const pos of snapshot.positions) this.positions.set(pos.symbol, { ...pos });
     this.processedEventHashes.clear();

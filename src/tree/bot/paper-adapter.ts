@@ -7,6 +7,8 @@ export interface PaperAdapterOptions {
   autoFillLimitOrders?: boolean;
 }
 
+const PAPER_FEE_RATE = 0.001;
+
 export function createPaperAdapter(capital: number, options?: PaperAdapterOptions): ExchangeAdapter {
   const balances = new Map<string, { free: number; used: number }>();
   const orders = new Map<string, OrderResult>();
@@ -42,20 +44,30 @@ export function createPaperAdapter(capital: number, options?: PaperAdapterOption
 
     async placeOrder(request: OrderRequest): Promise<OrderResult> {
       const orderId = `paper_${++orderCounter}_${Date.now()}`;
+      let effectivePrice = request.price ?? 0;
+      if (effectivePrice <= 0 && options?.tickerFetcher) {
+        try {
+          const ticker = await options.tickerFetcher(request.symbol);
+          if (ticker && Number.isFinite(ticker.last) && ticker.last > 0) effectivePrice = ticker.last;
+        } catch {
+          // Fallback to 0 when tickerFetcher fails
+        }
+      }
       const isFilled =
         request.type === 'market' ||
-        Boolean(options?.autoFillLimitOrders && (request.price ?? 0) > 0);
+        Boolean(options?.autoFillLimitOrders && effectivePrice > 0);
+      const filledQty = isFilled ? request.quantity : 0;
       const trade: OrderResult = {
         id: orderId,
         exchangeId: 'paper',
         symbol: request.symbol,
         side: request.side,
         type: request.type,
-        price: request.price ?? 0,
+        price: effectivePrice,
         quantity: request.quantity,
-        filled: isFilled ? request.quantity : 0,
+        filled: filledQty,
         status: isFilled ? 'filled' : 'open',
-        fee: request.quantity * 0.001,
+        fee: isFilled ? effectivePrice * filledQty * PAPER_FEE_RATE : 0,
         timestamp: Date.now(),
         pnl: 0,
       };

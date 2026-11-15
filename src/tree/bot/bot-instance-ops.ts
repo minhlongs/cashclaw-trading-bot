@@ -6,8 +6,8 @@ import type { MeanRevStrategy } from './strategies/mean-reversion';
 import type { VolatilityDcaStrategy } from './strategies/volatility-dca';
 import type { TradeEventType } from '../telemetry/types';
 import { executeOrder as execOrder } from './bot-order-executor';
-import { tick as execTick } from './bot-tick';
-import { startBotLifecycle } from './bot-instance-lifecycle';
+import { tick as execTick, type TickResult } from './bot-tick';
+import { startBotLifecycle, type StartLifecycleResult } from './bot-instance-lifecycle';
 import { buildTickContext, buildOrderContext, buildLifecycleContext } from './bot-instance-events';
 export type BotStrategy = GridStrategy | MeanRevStrategy | VolatilityDcaStrategy | null;
 
@@ -15,7 +15,7 @@ export async function executeBotStart(
   id: string, config: BotConfig, deps: BotDependencies, callbacks: BotCallbacks, state: BotState,
   placeOrder: (r: OrderRequest) => Promise<OrderResult>, emitTelem: (t: TradeEventType, d?: Record<string, unknown>) => void,
   emitSt: () => void, startTick: () => void, hasStrategy = true,
-): Promise<{ strategy: BotStrategy; strategyChain: StrategyChain | null }> {
+): Promise<StartLifecycleResult> {
   return startBotLifecycle(buildLifecycleContext(id, config, deps, callbacks, state, placeOrder, emitTelem, emitSt, startTick, hasStrategy));
 }
 export async function executeBotTick(
@@ -23,8 +23,9 @@ export async function executeBotTick(
   strat: BotStrategy, chain: StrategyChain | null, lastPrice: number | null,
   placeOrder: (r: OrderRequest) => Promise<OrderResult>, pause: () => void,
   emitTelem: (t: TradeEventType, d: Record<string, unknown>) => void, emitSt: () => void,
-): Promise<number | null> {
-  return (await execTick(buildTickContext(id, config, deps, callbacks, state, strat, chain, lastPrice, placeOrder, pause, emitTelem, emitSt))).lastTickPrice;
+  lastTickTs: number | null = null,
+): Promise<TickResult> {
+  return execTick(buildTickContext(id, config, deps, callbacks, state, strat, chain, lastPrice, placeOrder, pause, emitTelem, emitSt, lastTickTs));
 }
 export async function executeBotOrder(
   id: string, config: BotConfig, deps: BotDependencies, callbacks: BotCallbacks, state: BotState,

@@ -116,7 +116,7 @@ describe('BotDetailClient', () => {
     expect(fetchSpy).toHaveBeenCalledWith('/api/bots/bot-1', expect.objectContaining({
       method: 'POST', body: JSON.stringify({ action: 'resume' }),
     }));
-    expect(screen.getAllByText('live_running').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('paper_test').length).toBeGreaterThanOrEqual(1);
     unmount();
     render(<BotDetailClient bot={bot} />);
     await user.click(screen.getByRole('button', { name: /pause/i }));

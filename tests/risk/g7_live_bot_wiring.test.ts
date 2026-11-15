@@ -83,6 +83,24 @@ function makeGridBotConfig(overrides: Partial<GridBotConfig> = {}): GridBotConfi
 }
 const PAPER_EXCHANGE_CFG = { apiKey: '', apiSecret: '', testnet: true, sandbox: true, rateLimitMs: 50 };
 
+// Seed a fresh market ticker so direct placeOrder calls do not rely on synthesizing midPrice when lastTickPrice is null.
+async function seedFreshBotTick(bot: { start: () => Promise<void>; pause: () => void }, price = 50_000): Promise<void> {
+  interface TickerCapableExchange {
+    fetchTicker: (symbol: string) => Promise<{
+      symbol: string; last: number; bid: number; ask: number;
+      high24h: number; low24h: number; volume24h: number; timestamp: number;
+    }>;
+  }
+  const internalDeps = (bot as unknown as { deps: { exchange?: Partial<TickerCapableExchange> } }).deps;
+  if (internalDeps.exchange && typeof internalDeps.exchange.fetchTicker === 'function') {
+    vi.spyOn(internalDeps.exchange as TickerCapableExchange, 'fetchTicker').mockResolvedValueOnce({
+      symbol: 'BTC/USDT', last: price, bid: price - 1, ask: price + 1, high24h: price + 10, low24h: price - 10, volume24h: 1000, timestamp: Date.now(),
+    });
+  }
+  await bot.start();
+  bot.pause();
+}
+
 describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Factory)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -114,6 +132,7 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     vi.mocked(createServerClient).mockReturnValue(d1 as unknown as ReturnType<typeof createServerClient>);
     const mgr = new BotManager();
     const bot = await mgr.createBot({ id: 'bot-d1-wired', config: makeGridBotConfig({ capital: 10_000 }), exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    await seedFreshBotTick(bot, 50_000);
     const batcher = bot.getLedgerBatcher();
     expect(batcher).toBeDefined();
 
@@ -141,9 +160,17 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
 
   it('vetoes oversized (> 25% NAV) orders and global kill-switch pre-trade before exchange.placeOrder is ever called', async () => {
     const placeOrderSpy = vi.fn();
-    const orchestrator = { placeOrder: placeOrderSpy, fetchTicker: vi.fn() } as unknown as ExchangeOrchestrator;
+    const orchestrator = {
+      placeOrder: placeOrderSpy,
+      fetchTicker: vi.fn(async () => ({
+        ok: true as const,
+        data: { symbol: 'BTC/USDT', last: 50_000, bid: 49_999, ask: 50_001, high24h: 50_100, low24h: 49_900, volume24h: 1000, timestamp: Date.now() },
+      })),
+    } as unknown as ExchangeOrchestrator;
     const mgr = new BotManager({ getOrchestrator: () => orchestrator, getD1Database: () => null });
     const bot = await mgr.createBot({ id: 'bot-veto-guard', config: makeGridBotConfig({ capital: 10_000 }), exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    await bot.start();
+    bot.pause();
 
     await expect(bot.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50_000, quantity: 0.06 })).rejects.toThrow(/CapitalProtectionEngine \(REJECT_PRETRADE\)/);
     expect(placeOrderSpy).not.toHaveBeenCalled();
@@ -160,6 +187,10 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     const d1 = createSqliteD1();
     let nextStatus: 'rejected' | 'cancelled' = 'rejected';
     const orchestrator = {
+      fetchTicker: vi.fn(async () => ({
+        ok: true as const,
+        data: { symbol: 'BTC/USDT', last: 50_000, bid: 49_999, ask: 50_001, high24h: 50_100, low24h: 49_900, volume24h: 1000, timestamp: Date.now() },
+      })),
       placeOrder: vi.fn(async (_ex: string, req: { symbol: string; side: 'buy' | 'sell'; type: 'market' | 'limit'; price?: number; quantity: number }) =>
         nextStatus === 'rejected'
           ? { ok: false as const, error: 'venue rejected order' }
@@ -169,6 +200,8 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
 
     const mgr = new BotManager({ getOrchestrator: () => orchestrator, getD1Database: () => d1 });
     const bot = await mgr.createBot({ id: 'bot-margin-release', config: makeGridBotConfig({ capital: 10_000 }), exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    await bot.start();
+    bot.pause();
 
     expect((await bot.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50_000, quantity: 0.02 })).status).toBe('rejected');
     nextStatus = 'cancelled';
@@ -191,11 +224,13 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     const d1 = createSqliteD1();
     const mgr1 = new BotManager({ getD1Database: () => d1 });
     const bot1 = await mgr1.createBot({ id: 'bot-cold-rehydrate', config: makeGridBotConfig({ capital: 10_000 }), exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    await seedFreshBotTick(bot1, 50_000);
     expect((await bot1.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', price: 50_000, quantity: 0.04 })).status).toBe('filled');
     mgr1.destroy();
 
     const mgr2 = new BotManager({ getD1Database: () => d1 });
     const bot2 = mgr2.createBotSync({ id: 'bot-cold-rehydrate', config: makeGridBotConfig({ capital: 10_000 }) });
+    await seedFreshBotTick(bot2, 51_000);
     expect((await bot2.placeOrder({ symbol: 'BTC/USDT', side: 'sell', type: 'market', price: 51_000, quantity: 0.04 })).status).toBe('filled');
     const durable = await bot2.getLedgerBatcher()!.loadDurableBotState('bot-cold-rehydrate');
     expect(durable?.orderIntents.map((o) => o.clientOrderId)).toEqual(['ord_bot-cold-rehydrate_1', 'ord_bot-cold-rehydrate_2']);
@@ -250,7 +285,10 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
 
     let fillPx = 49_500;
     const priceImprovementOrch = {
-      fetchTicker: vi.fn(),
+      fetchTicker: vi.fn(async () => ({
+        ok: true as const,
+        data: { symbol: 'BTC/USDT', last: fillPx, bid: fillPx - 1, ask: fillPx + 1, high24h: fillPx + 10, low24h: fillPx - 10, volume24h: 1000, timestamp: Date.now() },
+      })),
       placeOrder: vi.fn(async (_ex: string, r: { symbol: string; side: 'buy' | 'sell'; type: 'market' | 'limit'; price?: number; quantity: number }) => ({
         ok: true as const,
         data: { id: `imp-${Date.now()}-${Math.random()}`, exchangeId: 'binance', symbol: r.symbol, side: r.side, type: r.type, price: fillPx, quantity: r.quantity, filled: r.quantity, fee: 0, pnl: 0, status: 'filled' as const, timestamp: Date.now() },
@@ -259,12 +297,16 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
 
     const mgrDrift1 = new BotManager({ getOrchestrator: () => priceImprovementOrch, getD1Database: () => d1 });
     const driftBot1 = await mgrDrift1.createBot({ id: 'bot-fill-drift', config: makeGridBotConfig({ capital: 10_000 }), exchangeConfig: PAPER_EXCHANGE_CFG, mode: 'paper' });
+    await driftBot1.start();
+    driftBot1.pause();
     await driftBot1.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'limit', price: 50_000, quantity: 0.04 });
     mgrDrift1.destroy();
 
     fillPx = 43_000;
     const mgrDrift2 = new BotManager({ getOrchestrator: () => priceImprovementOrch, getD1Database: () => d1 });
     const driftBot2 = mgrDrift2.createBotSync({ id: 'bot-fill-drift', config: makeGridBotConfig({ capital: 1_000, maxDrawdownPct: 5 }) });
+    await driftBot2.start();
+    driftBot2.pause();
     const closeUnderHalt = await driftBot2.placeOrder({ symbol: 'BTC/USDT', side: 'sell', type: 'limit', price: 43_000, quantity: 0.04 });
     expect(closeUnderHalt.status).toBe('filled');
     expect(driftBot2.getLifecycleEngine()!.getLedger().getPosition('BTC/USDT').signedQtyBase).toBe(ZERO_BIGINT);

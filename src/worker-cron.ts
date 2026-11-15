@@ -82,8 +82,10 @@ export async function scheduled(
 
   const d1Db = env.DB ? (env.DB as unknown as LeaseD1DatabaseLike) : undefined;
   let activeDurableLease: BotTickLease | null = null;
+  const shouldAcquireLease =
+    env.CLOUD_LEASE_ENABLED !== 'false' && (Boolean(d1Db) || env.CLOUD_LEASE_ENABLED === 'true');
 
-  if (env.CLOUD_LEASE_ENABLED === 'true') {
+  if (shouldAcquireLease) {
     const nowMs = event.scheduledTime || Date.now();
     const leaseInput = {
       botId: 'cron-queue-drainer',

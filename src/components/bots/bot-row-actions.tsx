@@ -33,7 +33,7 @@ export function BotRowActions({ bot, locale, onStatusChange, onError }: BotRowAc
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (res.ok && data.ok) {
-        const nextStatus = action === 'pause' ? 'paused' : 'live_running';
+        const nextStatus = action === 'pause' ? 'paused' : 'paper_test';
         onStatusChange(bot.id, nextStatus);
       } else {
         onError(data.error || t('bots.actions.actionFailed', { error: 'Unknown' }));

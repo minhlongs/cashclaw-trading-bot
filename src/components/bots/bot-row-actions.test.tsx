@@ -100,7 +100,7 @@ describe('BotRowActions', () => {
     expect(onStatusChange).toHaveBeenCalledWith('b-99', 'paused');
   });
 
-  it('dispatches resume action and calls onStatusChange with live_running', async () => {
+  it('dispatches resume action and calls onStatusChange with paper_test', async () => {
     fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true }) });
     const onStatusChange = vi.fn();
     const user = userEvent.setup();
@@ -113,7 +113,7 @@ describe('BotRowActions', () => {
         body: JSON.stringify({ action: 'resume' }),
       }));
     });
-    expect(onStatusChange).toHaveBeenCalledWith('b-99', 'live_running');
+    expect(onStatusChange).toHaveBeenCalledWith('b-99', 'paper_test');
   });
 
   it('shows Loader2 and disables button while action is in-flight', async () => {

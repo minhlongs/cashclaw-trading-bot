@@ -53,12 +53,12 @@ describe('createPaperAdapter', () => {
   });
 
   describe('placeOrder - market orders', () => {
-    it('fills market buy immediately with correct fee', async () => {
+    it('fills market buy immediately with correct quote-USD fee', async () => {
       const adapter = createPaperAdapter(10000);
-      const result = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', quantity: 0.5 });
+      const result = await adapter.placeOrder({ symbol: 'BTC/USDT', side: 'buy', type: 'market', price: 50000, quantity: 0.5 });
       expect(result.status).toBe('filled');
       expect(result.filled).toBe(0.5);
-      expect(result.fee).toBeCloseTo(0.0005); // 0.5 * 0.001
+      expect(result.fee).toBeCloseTo(25); // 50_000 * 0.5 * 0.001 quote USD
       expect(result.exchangeId).toBe('paper');
       expect(result.side).toBe('buy');
     });

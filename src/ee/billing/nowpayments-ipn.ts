@@ -67,7 +67,8 @@ export function isActivatingIpnStatus(status: NowPaymentsIpnPayload['payment_sta
 }
 
 function isUsdPeggedCurrency(currency?: string): boolean {
-  return !currency || /^(usd|usdt|usdc|busd|dai|fdusd)/i.test(currency.trim());
+  if (!currency) return false;
+  return /^(usd|usdt|usdc|busd|dai|fdusd)/i.test(currency.trim());
 }
 
 export function detectNowPaymentsUnderpayment(
@@ -79,7 +80,8 @@ export function detectNowPaymentsUnderpayment(
     return `IPN_AMOUNT_MISMATCH: actually_paid ${payload.actually_paid} ${payload.pay_currency} < required pay_amount ${payload.pay_amount}`;
   }
   if (typeof expectedAmountUsd !== 'number' || expectedAmountUsd <= 0) return null;
-  if (isUsdPeggedCurrency(payload.pay_currency)) {
+  const payIsUsdPegged = isUsdPeggedCurrency(payload.pay_currency);
+  if (payIsUsdPegged) {
     if (payload.pay_amount + eps < expectedAmountUsd) {
       return `IPN_AMOUNT_MISMATCH: paid ${payload.pay_amount} ${payload.pay_currency} < expected ${expectedAmountUsd} USD`;
     }
@@ -87,18 +89,15 @@ export function detectNowPaymentsUnderpayment(
       return `IPN_AMOUNT_MISMATCH: actually_paid ${payload.actually_paid} ${payload.pay_currency} < expected ${expectedAmountUsd} USD`;
     }
   }
-  if (
-    typeof payload.outcome_amount === 'number' &&
-    isUsdPeggedCurrency(payload.outcome_currency) &&
-    payload.outcome_amount + eps < expectedAmountUsd
-  ) {
+  const hasUsdOutcome = typeof payload.outcome_amount === 'number' && isUsdPeggedCurrency(payload.outcome_currency);
+  const hasUsdPrice = typeof payload.price_amount === 'number' && isUsdPeggedCurrency(payload.price_currency);
+  if (!payIsUsdPegged && !hasUsdOutcome && !hasUsdPrice) {
+    return `IPN_AMOUNT_MISMATCH: non-USD currency ${payload.pay_currency} missing verified USD outcome_amount or price_amount`;
+  }
+  if (hasUsdOutcome && (payload.outcome_amount as number) + eps < expectedAmountUsd) {
     return `IPN_AMOUNT_MISMATCH: outcome_amount ${payload.outcome_amount} < expected ${expectedAmountUsd} USD`;
   }
-  if (
-    typeof payload.price_amount === 'number' &&
-    isUsdPeggedCurrency(payload.price_currency) &&
-    payload.price_amount + eps < expectedAmountUsd
-  ) {
+  if (hasUsdPrice && (payload.price_amount as number) + eps < expectedAmountUsd) {
     return `IPN_AMOUNT_MISMATCH: price_amount ${payload.price_amount} < expected ${expectedAmountUsd} USD`;
   }
   return null;

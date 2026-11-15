@@ -1,7 +1,7 @@
 // Test suite for newly expanded Cloud SaaS EE API routes
 // Covers /api/ee/alpha-feed, /api/ee/credits, /api/ee/alerts, /api/ee/scheduler, /api/ee/telemetry
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GET as alphaFeedGet } from '../alpha-feed/route';
 import { GET as creditsGet, POST as creditsPost } from '../credits/route';
 import { POST as alertsPost } from '../alerts/route';
@@ -33,6 +33,11 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     defaultSaasEntitlementStore.setDatabase(undefined);
     defaultSaasEntitlementStore.resetMemoryForTesting();
     defaultCreditLedgerStore.resetMemoryForTesting();
+    vi.stubEnv('ADMIN_TOKEN', 'expanded-routes-operator-token');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('GET /api/ee/alpha-feed returns tier-gated curated alpha list', async () => {
@@ -82,12 +87,19 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(dataGet.account.balanceCredits).toBe(10_000);
 
     const resPost = await creditsPost(
-      postJson('http://localhost/api/ee/credits', {
-        workspaceId: 'ws_123',
-        modelTier: 'REASONING',
-        promptTokens: 1500,
-        completionTokens: 500,
-        allowNegativeRoiResearch: true,
+      new Request('http://localhost/api/ee/credits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer expanded-routes-operator-token',
+        },
+        body: JSON.stringify({
+          workspaceId: 'ws_123',
+          modelTier: 'REASONING',
+          promptTokens: 1500,
+          completionTokens: 500,
+          allowNegativeRoiResearch: true,
+        }),
       }),
     );
     const dataPost = (await resPost.json()) as {
@@ -127,19 +139,19 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(data.account.balanceCredits).toBe(1_000);
   });
 
-  it('POST /api/ee/credits ignores a self-declared tier in the request body', async () => {
+  it('POST /api/ee/credits ignores a self-declared tier in the request body and rejects BASIC tier', async () => {
     await seedWorkspaceTier('ws_credits_body', 'BASIC');
 
     const res = await creditsPost(
       postJson('http://localhost/api/ee/credits', {
-        workspaceId: 'ws_credits_body', tier: 'MASTER', modelTier: 'REASONING',
-        promptTokens: 1500, completionTokens: 500, allowNegativeRoiResearch: true,
+        workspaceId: 'ws_credits_body', tier: 'MASTER', modelTier: 'FAST',
+        promptTokens: 1500, completionTokens: 500,
       }),
     );
-    const data = (await res.json()) as { ok: boolean; account: { tier: string; balanceCredits: number } };
-    expect(res.status).toBe(200);
-    expect(data.account.tier).toBe('BASIC');
-    expect(data.account.balanceCredits).toBe(992);
+    const data = (await res.json()) as { ok: boolean; tier: string; code: string };
+    expect(res.status).toBe(403);
+    expect(data.tier).toBe('BASIC');
+    expect(data.code).toBe('MANAGED_LLM_POOL_FORBIDDEN');
   });
 
   it('POST /api/ee/alerts handles alert signing, deduplication, and unconditional WEBHOOK tier gating', async () => {
@@ -172,7 +184,7 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
         ...payload, eventId: 'evt_telegram_basic', workspaceId: 'ws_basic_alerts', channel: 'TELEGRAM',
       }),
     );
-    expect(resTelegramBasic.status).toBe(200);
+    expect(resTelegramBasic.status).toBe(402);
   });
 
   it('POST /api/ee/alerts ignores a self-declared tier in the request body', async () => {

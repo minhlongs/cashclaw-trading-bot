@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { z } from 'zod';
+import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
 import {
   defaultCreditLedgerStore,
   type DeliberationModelTier,
@@ -22,6 +24,37 @@ const DebitSchema = z.object({
   allowNegativeRoiResearch: z.boolean().optional().default(false),
 });
 
+function readServerAdminToken(): string | null {
+  try {
+    const { env } = getCloudflareContext();
+    const bound = (env as unknown as { ADMIN_TOKEN?: string }).ADMIN_TOKEN;
+    if (typeof bound === 'string' && bound.trim().length >= 8 && !/\s/.test(bound.trim())) {
+      return bound.trim();
+    }
+  } catch {
+    // Fallback to process.env outside Cloudflare request context
+  }
+  const proc = typeof process !== 'undefined' ? process.env.ADMIN_TOKEN : undefined;
+  if (typeof proc === 'string' && proc.trim().length >= 8 && !/\s/.test(proc.trim())) {
+    return proc.trim();
+  }
+  return null;
+}
+
+function hasServerResearchAuthorization(req: Request): boolean {
+  const expected = readServerAdminToken();
+  if (!expected) return false;
+  const authHeader = req.headers.get('authorization') ?? '';
+  if (!authHeader.startsWith('Bearer ')) return false;
+  const supplied = authHeader.slice('Bearer '.length);
+  if (supplied.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i += 1) {
+    diff |= supplied.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -38,25 +71,17 @@ export async function GET(req: Request) {
     });
     const idor = detectCrossWorkspaceIdor(req, tierContext, parsed.data.workspaceId);
     if (idor) {
-      return NextResponse.json(
-        { ok: false, code: idor.code, error: idor.error },
-        { status: idor.status },
-      );
+      return NextResponse.json({ ok: false, code: idor.code, error: idor.error }, { status: idor.status });
     }
 
     const effectiveWorkspaceId = resolveEffectiveWorkspaceId(
-      req,
-      tierContext.workspaceId,
-      parsed.data.workspaceId,
+      req, tierContext.workspaceId, parsed.data.workspaceId,
     );
     if (!effectiveWorkspaceId) {
       return NextResponse.json({ ok: false, error: 'Invalid workspaceId' }, { status: 400 });
     }
 
-    const account = defaultCreditLedgerStore.getOrCreateAccount(
-      effectiveWorkspaceId,
-      tierContext.tier,
-    );
+    const account = defaultCreditLedgerStore.getOrCreateAccount(effectiveWorkspaceId, tierContext.tier);
     return NextResponse.json({ ok: true, account });
   } catch {
     return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 });
@@ -79,28 +104,38 @@ export async function POST(req: Request) {
     });
     const idor = detectCrossWorkspaceIdor(req, tierContext, parsed.data.workspaceId);
     if (idor) {
-      return NextResponse.json(
-        { ok: false, code: idor.code, error: idor.error },
-        { status: idor.status },
-      );
+      return NextResponse.json({ ok: false, code: idor.code, error: idor.error }, { status: idor.status });
     }
 
     const effectiveWorkspaceId = resolveEffectiveWorkspaceId(
-      req,
-      tierContext.workspaceId,
-      parsed.data.workspaceId,
+      req, tierContext.workspaceId, parsed.data.workspaceId,
     );
     if (!effectiveWorkspaceId) {
       return NextResponse.json({ ok: false, error: 'Invalid workspaceId' }, { status: 400 });
     }
 
-    if (parsed.data.modelTier === 'REASONING' && parsed.data.allowNegativeRoiResearch !== true) {
+    const entitlements = getEntitlementsForTier(tierContext.tier);
+    if (!entitlements.managedLlmPoolAllowed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'MANAGED_LLM_POOL_FORBIDDEN',
+          tier: tierContext.tier,
+          error: `Managed LLM credit pool requires PREMIUM or higher (current tier: ${tierContext.tier}). Use BYOK local configuration instead.`,
+        },
+        { status: 403 },
+      );
+    }
+
+    const serverAuthorizedOverride =
+      parsed.data.allowNegativeRoiResearch === true && hasServerResearchAuthorization(req);
+    if (parsed.data.modelTier === 'REASONING' && !serverAuthorizedOverride) {
       return NextResponse.json(
         {
           ok: false,
           code: 'MULTI_AGENT_DEBATE_DISABLED_NEGATIVE_ROI',
           error:
-            'Multi-agent REASONING debate is disabled by default per Gate G12 ablation (-$89.68 net ROI drag). Pass allowNegativeRoiResearch: true only for manual offline critique.',
+            'Multi-agent REASONING debate is disabled by default per Gate G12 ablation (-$89.68 net ROI drag). Requires server operator authorization for manual offline critique.',
         },
         { status: 403 },
       );
@@ -124,7 +159,7 @@ export async function POST(req: Request) {
       modelTier: parsed.data.modelTier,
       costCredits: debitResult.data.debited,
       account: debitResult.data.updated,
-      ...(parsed.data.modelTier === 'REASONING' && parsed.data.allowNegativeRoiResearch
+      ...(parsed.data.modelTier === 'REASONING' && serverAuthorizedOverride
         ? { researchOverrideApplied: true }
         : {}),
     });
