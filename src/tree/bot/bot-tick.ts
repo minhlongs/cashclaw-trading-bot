@@ -34,6 +34,21 @@ export interface TickResult {
   lastTickTimestampMs?: number | null;
 }
 
+/** Maximum age of a venue ticker before the tick refuses to act on it. */
+const MAX_TICKER_AGE_MS = 15_000;
+
+async function fetchTickTicker(deps: BotDependencies, symbol: string) {
+  if (deps.exchangeOrchestrator) {
+    const r = await deps.exchangeOrchestrator.fetchTicker('paper', symbol);
+    return r.ok ? r.data : undefined;
+  }
+  return deps.exchange.fetchTicker(symbol);
+}
+
+function resolveTickTimestamp(rawTs: number | undefined, nowMs: number): number {
+  return Number.isFinite(rawTs) && (rawTs as number) > 0 ? (rawTs as number) : nowMs;
+}
+
 export async function tick(ctx: TickContext): Promise<TickResult> {
   const {
     id, config, deps, callbacks, state,
@@ -52,13 +67,7 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
   }
 
   try {
-    let ticker;
-    if (deps.exchangeOrchestrator) {
-      const r = await deps.exchangeOrchestrator.fetchTicker('paper', config.symbol);
-      ticker = r.ok ? r.data : undefined;
-    } else {
-      ticker = await deps.exchange.fetchTicker(config.symbol);
-    }
+    const ticker = await fetchTickTicker(deps, config.symbol);
     if (!ticker) {
       throw new Error(`Failed to fetch ticker for ${config.symbol}`);
     }
@@ -66,16 +75,15 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
     if (price <= 0) return { lastTickPrice, lastTickTimestampMs };
 
     const nowMs = Date.now();
-    const rawTs = ticker.timestamp;
-    const effectiveTickTs = Number.isFinite(rawTs) && rawTs > 0 ? rawTs : nowMs;
+    const effectiveTickTs = resolveTickTimestamp(ticker.timestamp, nowMs);
     lastTickPrice = price;
     lastTickTimestampMs = effectiveTickTs;
     state.lastTickAt = nowMs;
     state.updatedAt = nowMs;
 
-    if (nowMs - effectiveTickTs > 15_000) {
+    if (nowMs - effectiveTickTs > MAX_TICKER_AGE_MS) {
       emitTelemetry('error', {
-        error: `Stale market ticker ageMs=${nowMs - effectiveTickTs} exceeds 15000ms fence`,
+        error: `Stale market ticker ageMs=${nowMs - effectiveTickTs} exceeds ${MAX_TICKER_AGE_MS}ms fence`,
         action: 'STALE_DATA_FAIL_CLOSED',
         context: 'bot.tick',
       });

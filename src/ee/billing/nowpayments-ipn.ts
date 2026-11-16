@@ -71,24 +71,26 @@ function isUsdPeggedCurrency(currency?: string): boolean {
   return /^(usd|usdt|usdc|busd|dai|fdusd)/i.test(currency.trim());
 }
 
-export function detectNowPaymentsUnderpayment(
+function checkUsdPeggedUnderpayment(
   payload: NowPaymentsIpnPayload,
-  expectedAmountUsd?: number,
+  expectedAmountUsd: number,
+  eps: number,
 ): string | null {
-  const eps = 1e-9;
-  if (typeof payload.actually_paid === 'number' && payload.actually_paid + eps < payload.pay_amount) {
-    return `IPN_AMOUNT_MISMATCH: actually_paid ${payload.actually_paid} ${payload.pay_currency} < required pay_amount ${payload.pay_amount}`;
+  if (payload.pay_amount + eps < expectedAmountUsd) {
+    return `IPN_AMOUNT_MISMATCH: paid ${payload.pay_amount} ${payload.pay_currency} < expected ${expectedAmountUsd} USD`;
   }
-  if (typeof expectedAmountUsd !== 'number' || expectedAmountUsd <= 0) return null;
-  const payIsUsdPegged = isUsdPeggedCurrency(payload.pay_currency);
-  if (payIsUsdPegged) {
-    if (payload.pay_amount + eps < expectedAmountUsd) {
-      return `IPN_AMOUNT_MISMATCH: paid ${payload.pay_amount} ${payload.pay_currency} < expected ${expectedAmountUsd} USD`;
-    }
-    if (typeof payload.actually_paid === 'number' && payload.actually_paid + eps < expectedAmountUsd) {
-      return `IPN_AMOUNT_MISMATCH: actually_paid ${payload.actually_paid} ${payload.pay_currency} < expected ${expectedAmountUsd} USD`;
-    }
+  if (typeof payload.actually_paid === 'number' && payload.actually_paid + eps < expectedAmountUsd) {
+    return `IPN_AMOUNT_MISMATCH: actually_paid ${payload.actually_paid} ${payload.pay_currency} < expected ${expectedAmountUsd} USD`;
   }
+  return null;
+}
+
+function checkConvertedUnderpayment(
+  payload: NowPaymentsIpnPayload,
+  expectedAmountUsd: number,
+  eps: number,
+  payIsUsdPegged: boolean,
+): string | null {
   const hasUsdOutcome = typeof payload.outcome_amount === 'number' && isUsdPeggedCurrency(payload.outcome_currency);
   const hasUsdPrice = typeof payload.price_amount === 'number' && isUsdPeggedCurrency(payload.price_currency);
   if (!payIsUsdPegged && !hasUsdOutcome && !hasUsdPrice) {
@@ -101,6 +103,24 @@ export function detectNowPaymentsUnderpayment(
     return `IPN_AMOUNT_MISMATCH: price_amount ${payload.price_amount} < expected ${expectedAmountUsd} USD`;
   }
   return null;
+}
+
+export function detectNowPaymentsUnderpayment(
+  payload: NowPaymentsIpnPayload,
+  expectedAmountUsd?: number,
+): string | null {
+  const eps = 1e-9;
+  if (typeof payload.actually_paid === 'number' && payload.actually_paid + eps < payload.pay_amount) {
+    return `IPN_AMOUNT_MISMATCH: actually_paid ${payload.actually_paid} ${payload.pay_currency} < required pay_amount ${payload.pay_amount}`;
+  }
+  if (typeof expectedAmountUsd !== 'number' || expectedAmountUsd <= 0) return null;
+
+  const payIsUsdPegged = isUsdPeggedCurrency(payload.pay_currency);
+  if (payIsUsdPegged) {
+    const usdMismatch = checkUsdPeggedUnderpayment(payload, expectedAmountUsd, eps);
+    if (usdMismatch) return usdMismatch;
+  }
+  return checkConvertedUnderpayment(payload, expectedAmountUsd, eps, payIsUsdPegged);
 }
 
 const inFlightPureSets = new WeakMap<Set<string>, Set<string>>();
