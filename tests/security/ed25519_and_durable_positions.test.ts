@@ -22,6 +22,7 @@ import {
   validateSignedStrategySpec,
 } from '@/tree/paper-forward';
 import {
+  bytesToBase64,
   canonicalizeSpecSignatureMessage,
   signEd25519MessageSync,
   signOwnerOverrideToken,
@@ -100,7 +101,7 @@ describe('Ed25519 Governance Signatures & Durable Paper Positions (0019)', () =>
   it('verifies Ed25519 signatures on SignedStrategySpec and OwnerOverrideToken fail-closed', async () => {
     const kp = generateKeyPairSync('ed25519');
     const pubDer = kp.publicKey.export({ format: 'der', type: 'spki' }) as Buffer;
-    const pubB64 = pubDer.subarray(pubDer.length - 32).toString('base64');
+    const pubB64 = bytesToBase64(pubDer.subarray(pubDer.length - 32));
     const privPem = kp.privateKey.export({ format: 'pem', type: 'pkcs8' }) as string;
 
     const signedSpec = signStrategySpecPayload({

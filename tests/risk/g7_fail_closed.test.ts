@@ -4,6 +4,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   buildReduceOnlyTwapPlan,
+  bytesToBase64,
   CapitalProtectionEngine,
   DEFAULT_PROTECTION_CONFIG,
   evaluateCollateralPeg,
@@ -490,7 +491,7 @@ describe('Gate G7: CapitalProtectionEngine — 14 Fail-Closed Controls & HALT_ON
 
     const kp = generateKeyPairSync('ed25519');
     const pubDer = kp.publicKey.export({ format: 'der', type: 'spki' }) as Buffer;
-    const pubB64 = pubDer.subarray(pubDer.length - 32).toString('base64');
+    const pubB64 = bytesToBase64(pubDer.subarray(pubDer.length - 32));
     const privPem = kp.privateKey.export({ format: 'pem', type: 'pkcs8' }) as string;
 
     const engine = new CapitalProtectionEngine({ ownerPublicKeyB64: pubB64 });

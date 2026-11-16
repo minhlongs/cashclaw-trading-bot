@@ -6,6 +6,7 @@
 export { CapitalProtectionEngine } from './capital-protection-engine';
 export {
   FOUNDER_ED25519_PUBLIC_KEY_B64,
+  bytesToBase64,
   canonicalizeOwnerOverrideMessage,
   canonicalizeSpecSignatureMessage,
   resolveTrustedEd25519PublicKeyB64,

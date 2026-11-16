@@ -14,6 +14,19 @@ export const FOUNDER_ED25519_PUBLIC_KEY_B64 = 'KhczCfV0nwx37Q9IHLFc6nvl9QqUKBqgZ
 const ED25519_SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
 const BASE64_STRICT_RE = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 
+/**
+ * Base64-encode raw bytes without relying on `Buffer.prototype.toString(encoding)`.
+ * The runtime typing of values returned by `node:crypto` differs between TS configs
+ * (`Buffer` vs `Uint8Array`), and `Uint8Array#toString` takes no encoding argument,
+ * so calling `toString('base64')` directly type-checks in one environment and fails
+ * in another. `btoa` is available on Workers, Node 22+ and browsers.
+ */
+export function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]!);
+  return btoa(binary);
+}
+
 function decodeStrictBase64(b64: string, expectedBytes: number): Buffer | null {
   const trimmed = b64.trim();
   if (!trimmed || trimmed.length % 4 !== 0 || !BASE64_STRICT_RE.test(trimmed)) return null;
@@ -72,7 +85,7 @@ export function verifyEd25519SignatureSync(
 
 export function signEd25519MessageSync(message: string, privateKeyPem: string): string {
   const privKey = createPrivateKey(privateKeyPem);
-  return sign(null, Buffer.from(message, 'utf8'), privKey).toString('base64');
+  return bytesToBase64(sign(null, Buffer.from(message, 'utf8'), privKey));
 }
 
 export function signOwnerOverrideToken(
