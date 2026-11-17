@@ -101,7 +101,7 @@ describe('/api/bots route', () => {
 
       const basicReq = new Request('http://localhost/api/bots', {
         method: 'POST',
-        headers: { 'x-cashclaw-workspace': 'ws_bots_basic' },
+        headers: { 'x-user-id': 'bots_basic', 'x-cashclaw-workspace': 'ws_bots_basic' },
         body: JSON.stringify({
           id: 'bot-2',
           name: 'Second Bot',
@@ -118,7 +118,7 @@ describe('/api/bots route', () => {
 
       const premiumReq = new Request('http://localhost/api/bots', {
         method: 'POST',
-        headers: { 'x-cashclaw-workspace': 'ws_bots_premium' },
+        headers: { 'x-user-id': 'bots_premium', 'x-cashclaw-workspace': 'ws_bots_premium' },
         body: JSON.stringify({
           id: 'bot-2',
           name: 'Second Bot',
@@ -140,6 +140,7 @@ describe('/api/bots route', () => {
       const spoofedReq = new Request('http://localhost/api/bots', {
         method: 'POST',
         headers: {
+          'x-user-id': 'bots_basic',
           'x-cashclaw-workspace': 'ws_bots_basic',
           'x-cashclaw-tier': 'MASTER',
           'x-cashclaw-active-bots': '0',

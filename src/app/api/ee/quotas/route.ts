@@ -6,12 +6,21 @@ import {
 } from '@/ee/billing/subscriber-cogs-auditor';
 import {
   detectCrossWorkspaceIdor,
+  requireAuthenticatedUser,
   resolveEffectiveWorkspaceId,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
 
 export async function GET(req: Request) {
   try {
+    const auth = requireAuthenticatedUser(req);
+    if (!auth.ok) {
+      return NextResponse.json(
+        { ok: false, code: auth.violation.code, error: auth.violation.error },
+        { status: auth.violation.status },
+      );
+    }
+
     const context = await resolveWorkspaceTierContext(req);
     const idor = detectCrossWorkspaceIdor(req, context);
     if (idor) {

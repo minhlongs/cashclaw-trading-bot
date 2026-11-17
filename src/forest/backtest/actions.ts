@@ -14,15 +14,12 @@ export type { BacktestRunInput, BacktestRunOutput } from './actions.types';
 
 export async function runBacktestAction(
   input: BacktestRunInput,
-  explicitUserId?: string,
 ): Promise<BacktestRunOutput> {
   const interval = (input.interval ?? '1h') as CandleInterval;
   const validationError = validateBacktestInput(input, interval);
   if (validationError) return { success: false, error: validationError, candlesFetched: 0 };
 
-  const session = explicitUserId
-    ? { inRequestScope: true, userId: explicitUserId }
-    : await resolveBacktestSessionUser();
+  const session = await resolveBacktestSessionUser();
   if (!session.userId) {
     return { success: false, error: 'Authentication required', candlesFetched: 0 };
   }
@@ -39,10 +36,8 @@ export async function runBacktestAction(
   return { success: true, result: sim.result, candlesFetched: sim.candlesFetched };
 }
 
-export async function getBacktestResults(botId: string, explicitUserId?: string) {
-  const session = explicitUserId
-    ? { inRequestScope: true, userId: explicitUserId }
-    : await resolveBacktestSessionUser();
+export async function getBacktestResults(botId: string) {
+  const session = await resolveBacktestSessionUser();
   if (!session.userId) return [];
   return getBacktestResultsFromD1(botId, session.userId);
 }

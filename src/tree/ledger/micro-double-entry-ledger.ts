@@ -169,6 +169,7 @@ export class MicroDoubleEntryLedger {
       balances: { ...this.balances },
       positions: Array.from(this.positions.values()),
       processedEventHashes: Array.from(this.processedEventHashes),
+      journalEntries: this.journalEntries.map((e) => ({ ...e, legs: [...e.legs] })),
     };
   }
 
@@ -181,6 +182,11 @@ export class MicroDoubleEntryLedger {
     for (const pos of snapshot.positions) this.positions.set(pos.symbol, { ...pos });
     this.processedEventHashes.clear();
     for (const hash of snapshot.processedEventHashes) this.processedEventHashes.add(hash);
+    const retained = snapshot.journalEntries
+      ? snapshot.journalEntries.filter((e) => e.version <= snapshot.version && this.processedEventHashes.has(e.eventHash))
+      : this.journalEntries.filter((e) => e.version <= snapshot.version && this.processedEventHashes.has(e.eventHash));
+    this.journalEntries.length = 0;
+    for (const entry of retained) this.journalEntries.push({ ...entry, legs: [...entry.legs] });
     return ok(true);
   }
 }

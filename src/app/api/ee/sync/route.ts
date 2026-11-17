@@ -7,6 +7,7 @@ import {
 import { enforceWorkspaceQuota } from '@/ee/billing/quota-guard';
 import {
   detectCrossWorkspaceIdor,
+  requireAuthenticatedUser,
   resolveActiveBotCount,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
@@ -57,11 +58,19 @@ function buildSyncBotConfig(
 
 export async function POST(req: Request) {
   try {
+    const auth = requireAuthenticatedUser(req);
+    if (!auth.ok) {
+      return NextResponse.json(
+        { ok: false, code: auth.violation.code, error: auth.violation.error },
+        { status: auth.violation.status },
+      );
+    }
+    const { userId } = auth;
+
     const rawBundle = (await req.json()) as SignedCloudSyncBundle & { workspaceId?: unknown };
     const bodyWorkspaceId =
       typeof rawBundle?.workspaceId === 'string' ? rawBundle.workspaceId : undefined;
 
-    const userId = req.headers.get('x-user-id')?.trim() || undefined;
     const tierContext = await resolveWorkspaceTierContext(req, {
       explicitWorkspaceId: bodyWorkspaceId,
     });
@@ -74,9 +83,7 @@ export async function POST(req: Request) {
     }
 
     const { tier } = tierContext;
-    const activeRunningBots = await resolveActiveBotCount(() =>
-      userId ? botListHandler(userId) : botListHandler(),
-    );
+    const activeRunningBots = await resolveActiveBotCount(() => botListHandler(userId));
 
     const quotaCheck = enforceWorkspaceQuota({
       tier,
@@ -111,9 +118,7 @@ export async function POST(req: Request) {
       mode: 'paper',
     };
 
-    const created = userId
-      ? await botCreateHandler(payload, userId)
-      : await botCreateHandler(payload);
+    const created = await botCreateHandler(payload, userId);
     if (!created.ok) {
       return NextResponse.json(
         { ok: false, error: created.error ?? 'Failed to materialize synced bot' },

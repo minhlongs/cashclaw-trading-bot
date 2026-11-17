@@ -12,8 +12,15 @@ import { defaultCloudSchedulerCoordinator } from '@/ee/scheduler/cloud-scheduler
 import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
 import { defaultCreditLedgerStore } from '@/ee/deliberation-cloud/llm-credit-ledger';
 
-function postJson(url: string, body: unknown): Request {
-  return new Request(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+function postJson(url: string, body: unknown, userId?: string): Request {
+  return new Request(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(userId ? { 'x-user-id': userId } : {}),
+    },
+    body: JSON.stringify(body),
+  });
 }
 
 /** Seeds a workspace tier through the production path — a verified IPN upgrade. */
@@ -46,7 +53,7 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
 
     const resBasic = await alphaFeedGet(
       new Request('http://localhost/api/ee/alpha-feed', {
-        headers: { 'x-cashclaw-workspace': 'ws_feed_basic' },
+        headers: { 'x-user-id': 'feed_basic', 'x-cashclaw-workspace': 'ws_feed_basic' },
       }),
     );
     const dataBasic = (await resBasic.json()) as { ok: boolean; fullFeedAccess: boolean; feed: unknown[] };
@@ -56,7 +63,7 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
 
     const resEnterprise = await alphaFeedGet(
       new Request('http://localhost/api/ee/alpha-feed', {
-        headers: { 'x-cashclaw-workspace': 'ws_feed_enterprise' },
+        headers: { 'x-user-id': 'feed_enterprise', 'x-cashclaw-workspace': 'ws_feed_enterprise' },
       }),
     );
     const dataEnterprise = (await resEnterprise.json()) as { ok: boolean; fullFeedAccess: boolean; feed: unknown[] };
@@ -69,7 +76,9 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     await seedWorkspaceTier('ws_feed_premium', 'PREMIUM');
 
     const res = await alphaFeedGet(
-      new Request('http://localhost/api/ee/alpha-feed?workspaceId=ws_feed_premium&tier=MASTER'),
+      new Request('http://localhost/api/ee/alpha-feed?workspaceId=ws_feed_premium&tier=MASTER', {
+        headers: { 'x-user-id': 'feed_premium' },
+      }),
     );
     const data = (await res.json()) as { ok: boolean; tier: string; fullFeedAccess: boolean };
     expect(res.status).toBe(200);
@@ -80,7 +89,11 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
   it('GET and POST /api/ee/credits persists debits and reconciles upgrades from the D1 tier', async () => {
     await seedWorkspaceTier('ws_123', 'PREMIUM');
 
-    const resGet = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123'));
+    const resGet = await creditsGet(
+      new Request('http://localhost/api/ee/credits?workspaceId=ws_123', {
+        headers: { 'x-user-id': '123' },
+      }),
+    );
     const dataGet = (await resGet.json()) as { ok: boolean; account: { tier: string; balanceCredits: number } };
     expect(resGet.status).toBe(200);
     expect(dataGet.account.tier).toBe('PREMIUM');
@@ -91,6 +104,7 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': '123',
           Authorization: 'Bearer expanded-routes-operator-token',
         },
         body: JSON.stringify({
@@ -110,7 +124,11 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(dataPost.account.balanceCredits).toBe(9_992);
     expect(dataPost.account.consumedCredits).toBe(8);
 
-    const resGetAfter = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123'));
+    const resGetAfter = await creditsGet(
+      new Request('http://localhost/api/ee/credits?workspaceId=ws_123', {
+        headers: { 'x-user-id': '123' },
+      }),
+    );
     const dataGetAfter = (await resGetAfter.json()) as {
       ok: boolean; account: { balanceCredits: number; consumedCredits: number };
     };
@@ -118,7 +136,11 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     expect(dataGetAfter.account.consumedCredits).toBe(8);
 
     await seedWorkspaceTier('ws_123', 'ENTERPRISE');
-    const resUpgraded = await creditsGet(new Request('http://localhost/api/ee/credits?workspaceId=ws_123'));
+    const resUpgraded = await creditsGet(
+      new Request('http://localhost/api/ee/credits?workspaceId=ws_123', {
+        headers: { 'x-user-id': '123' },
+      }),
+    );
     const dataUpgraded = (await resUpgraded.json()) as {
       ok: boolean; account: { tier: string; balanceCredits: number; consumedCredits: number };
     };
@@ -131,7 +153,9 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     await seedWorkspaceTier('ws_credits_spoof', 'BASIC');
 
     const res = await creditsGet(
-      new Request('http://localhost/api/ee/credits?workspaceId=ws_credits_spoof&tier=MASTER'),
+      new Request('http://localhost/api/ee/credits?workspaceId=ws_credits_spoof&tier=MASTER', {
+        headers: { 'x-user-id': 'credits_spoof' },
+      }),
     );
     const data = (await res.json()) as { ok: boolean; account: { tier: string; balanceCredits: number } };
     expect(res.status).toBe(200);
@@ -143,10 +167,14 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     await seedWorkspaceTier('ws_credits_body', 'BASIC');
 
     const res = await creditsPost(
-      postJson('http://localhost/api/ee/credits', {
-        workspaceId: 'ws_credits_body', tier: 'MASTER', modelTier: 'FAST',
-        promptTokens: 1500, completionTokens: 500,
-      }),
+      postJson(
+        'http://localhost/api/ee/credits',
+        {
+          workspaceId: 'ws_credits_body', tier: 'MASTER', modelTier: 'FAST',
+          promptTokens: 1500, completionTokens: 500,
+        },
+        'credits_body',
+      ),
     );
     const data = (await res.json()) as { ok: boolean; tier: string; code: string };
     expect(res.status).toBe(403);
@@ -163,26 +191,34 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
       message: 'Grid rebalance complete', signingSecret: 'ultra-secure-hmac-secret-12345', timestampMs: 1700000000000,
     };
 
-    const res1 = await alertsPost(postJson('http://localhost/api/ee/alerts', payload));
+    const res1 = await alertsPost(postJson('http://localhost/api/ee/alerts', payload, 'abc'));
     const data1 = (await res1.json()) as { ok: boolean; suppressed: boolean; signatureHex?: string };
     expect(res1.status).toBe(200);
     expect(data1.suppressed).toBe(false);
     expect(typeof data1.signatureHex).toBe('string');
 
-    const res2 = await alertsPost(postJson('http://localhost/api/ee/alerts', payload));
+    const res2 = await alertsPost(postJson('http://localhost/api/ee/alerts', payload, 'abc'));
     const data2 = (await res2.json()) as { ok: boolean; suppressed: boolean };
     expect(res2.status).toBe(200);
     expect(data2.suppressed).toBe(true);
 
     const resBlocked = await alertsPost(
-      postJson('http://localhost/api/ee/alerts', { ...payload, eventId: 'evt_gated_01', workspaceId: 'ws_basic_alerts' }),
+      postJson(
+        'http://localhost/api/ee/alerts',
+        { ...payload, eventId: 'evt_gated_01', workspaceId: 'ws_basic_alerts' },
+        'basic_alerts',
+      ),
     );
     expect(resBlocked.status).toBe(402);
 
     const resTelegramBasic = await alertsPost(
-      postJson('http://localhost/api/ee/alerts', {
-        ...payload, eventId: 'evt_telegram_basic', workspaceId: 'ws_basic_alerts', channel: 'TELEGRAM',
-      }),
+      postJson(
+        'http://localhost/api/ee/alerts',
+        {
+          ...payload, eventId: 'evt_telegram_basic', workspaceId: 'ws_basic_alerts', channel: 'TELEGRAM',
+        },
+        'basic_alerts',
+      ),
     );
     expect(resTelegramBasic.status).toBe(402);
   });
@@ -191,11 +227,15 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     await seedWorkspaceTier('ws_alerts_spoof', 'BASIC');
 
     const res = await alertsPost(
-      postJson('http://localhost/api/ee/alerts', {
-        eventId: 'evt_alerts_spoof', workspaceId: 'ws_alerts_spoof', botId: 'bot_vol_2', channel: 'WEBHOOK',
-        message: 'Grid rebalance complete', signingSecret: 'ultra-secure-hmac-secret-12345',
-        timestampMs: 1700000000000, tier: 'MASTER',
-      }),
+      postJson(
+        'http://localhost/api/ee/alerts',
+        {
+          eventId: 'evt_alerts_spoof', workspaceId: 'ws_alerts_spoof', botId: 'bot_vol_2', channel: 'WEBHOOK',
+          message: 'Grid rebalance complete', signingSecret: 'ultra-secure-hmac-secret-12345',
+          timestampMs: 1700000000000, tier: 'MASTER',
+        },
+        'alerts_spoof',
+      ),
     );
     // A declaring body cannot buy the WEBHOOK entitlement a BASIC tier lacks.
     expect(res.status).toBe(402);
@@ -214,31 +254,37 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
       leaseDurationMs: 30000,
     };
 
-    const res1 = await schedulerPost(postJson('http://localhost/api/ee/scheduler', payload));
+    const res1 = await schedulerPost(postJson('http://localhost/api/ee/scheduler', payload, 'xyz'));
     const data1 = (await res1.json()) as { ok: boolean; lease: { botId: string } };
     expect(res1.status).toBe(200);
     expect(data1.lease.botId).toBe('bot_sched_1');
 
     const res2 = await schedulerPost(
-      postJson('http://localhost/api/ee/scheduler', { ...payload, isolateId: 'isolate_eu_west_1' }),
+      postJson('http://localhost/api/ee/scheduler', { ...payload, isolateId: 'isolate_eu_west_1' }, 'xyz'),
     );
     expect(res2.status).toBe(409);
 
     const resGet = await schedulerGet(
-      new Request('http://localhost/api/ee/scheduler?nowMs=1700000005000&workspaceId=ws_xyz'),
+      new Request('http://localhost/api/ee/scheduler?nowMs=1700000005000&workspaceId=ws_xyz', {
+        headers: { 'x-user-id': 'xyz' },
+      }),
     );
     const dataGet = (await resGet.json()) as { ok: boolean; activeLeaseCount: number };
     expect(resGet.status).toBe(200);
     expect(dataGet.activeLeaseCount).toBe(1);
 
     const resOtherWs = await schedulerGet(
-      new Request('http://localhost/api/ee/scheduler?nowMs=1700000005000&workspaceId=ws_other'),
+      new Request('http://localhost/api/ee/scheduler?nowMs=1700000005000&workspaceId=ws_other', {
+        headers: { 'x-user-id': 'other' },
+      }),
     );
     const dataOtherWs = (await resOtherWs.json()) as { ok: boolean; activeLeaseCount: number };
     expect(dataOtherWs.activeLeaseCount).toBe(0);
 
     const resExpired = await schedulerGet(
-      new Request('http://localhost/api/ee/scheduler?nowMs=1700000040000&workspaceId=ws_xyz'),
+      new Request('http://localhost/api/ee/scheduler?nowMs=1700000040000&workspaceId=ws_xyz', {
+        headers: { 'x-user-id': 'xyz' },
+      }),
     );
     const dataExpired = (await resExpired.json()) as { ok: boolean; activeLeaseCount: number };
     expect(dataExpired.activeLeaseCount).toBe(0);
@@ -252,20 +298,24 @@ describe('Expanded Cloud SaaS EE API Routes', () => {
     };
 
     const resDenied = await telemetryPost(
-      postJson('http://localhost/api/ee/telemetry', { telemetryOptIn: false, event }),
+      postJson('http://localhost/api/ee/telemetry', { telemetryOptIn: false, event }, 'telemetry_user'),
     );
     const dataDenied = (await resDenied.json()) as { ok: boolean; recorded: boolean };
     expect(resDenied.status).toBe(200);
     expect(dataDenied.recorded).toBe(false);
 
     const resAllowed = await telemetryPost(
-      postJson('http://localhost/api/ee/telemetry', { telemetryOptIn: true, event }),
+      postJson('http://localhost/api/ee/telemetry', { telemetryOptIn: true, event }, 'telemetry_user'),
     );
     const dataAllowed = (await resAllowed.json()) as { ok: boolean; recorded: boolean };
     expect(resAllowed.status).toBe(200);
     expect(dataAllowed.recorded).toBe(true);
 
-    const resSummary = await telemetryGet();
+    const resSummary = await telemetryGet(
+      new Request('http://localhost/api/ee/telemetry', {
+        headers: { 'x-user-id': 'telemetry_user' },
+      }),
+    );
     const dataSummary = (await resSummary.json()) as {
       ok: boolean;
       totalEvents: number;

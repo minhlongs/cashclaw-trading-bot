@@ -17,6 +17,7 @@ import {
 import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
 import {
   detectCrossWorkspaceIdor,
+  requireAuthenticatedUser,
   resolveEffectiveWorkspaceId,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
@@ -29,13 +30,21 @@ const CloudAlertEventSchema = z.object({
   message: z.string().min(1),
   timestampMs: z.number().int().positive(),
   cooldownMs: z.number().int().positive().optional(),
-  signingSecret: z.string().min(8).optional(),
+  signingSecret: z.string().trim().min(8).optional(),
 });
 
 export const defaultAlertDeduplicator = new CloudAlertDeduplicator();
 
 export async function POST(req: Request) {
   try {
+    const auth = requireAuthenticatedUser(req);
+    if (!auth.ok) {
+      return NextResponse.json(
+        { ok: false, code: auth.violation.code, error: auth.violation.error },
+        { status: auth.violation.status },
+      );
+    }
+
     const raw = await req.json().catch(() => ({}));
     const parsed = CloudAlertEventSchema.safeParse(raw);
     if (!parsed.success) {
@@ -69,6 +78,8 @@ export async function POST(req: Request) {
       );
     }
 
+    const callerSuppliedSecret =
+      typeof parsed.data.signingSecret === 'string' && parsed.data.signingSecret.length >= 8;
     const secret = readAlertWebhookSecret(parsed.data.signingSecret);
     if (!secret) {
       return NextResponse.json(
@@ -103,8 +114,24 @@ export async function POST(req: Request) {
     }
 
     const payloadJson = JSON.stringify(event);
-    const signatureHex = await signAlertWebhookPayload(payloadJson, secret);
-    const envelope: SignedWebhookEnvelope = { eventId: event.eventId, signatureHex, payloadJson };
+    const computedSignatureHex = await signAlertWebhookPayload(payloadJson, secret);
+    if (!callerSuppliedSecret) {
+      void computedSignatureHex;
+      return NextResponse.json({
+        ok: true,
+        dispatched: true,
+        deduplicated: false,
+        suppressed: false,
+        tier: tierContext.tier,
+        envelope: { eventId: event.eventId, payloadJson },
+      });
+    }
+
+    const envelope: SignedWebhookEnvelope = {
+      eventId: event.eventId,
+      signatureHex: computedSignatureHex,
+      payloadJson,
+    };
 
     return NextResponse.json({
       ok: true,
@@ -112,7 +139,7 @@ export async function POST(req: Request) {
       deduplicated: false,
       suppressed: false,
       tier: tierContext.tier,
-      signatureHex,
+      signatureHex: computedSignatureHex,
       envelope,
     });
   } catch {

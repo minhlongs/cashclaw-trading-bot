@@ -66,9 +66,12 @@ export function isActivatingIpnStatus(status: NowPaymentsIpnPayload['payment_sta
   return status === 'finished' || status === 'confirmed';
 }
 
-function isUsdPeggedCurrency(currency?: string): boolean {
+const USD_PEGGED_CURRENCY_RE =
+  /^(?:usd|(?:usdt|usdc|busd|dai|fdusd)(?:trc20|erc20|bep20|bsc|matic|polygon|sol|arb|arbitrum|op|optimism|avaxc?|ton|algo|near|celo|base|apt|sui|omni)?)$/i;
+
+export function isUsdPeggedCurrency(currency?: string): boolean {
   if (!currency) return false;
-  return /^(usd|usdt|usdc|busd|dai|fdusd)/i.test(currency.trim());
+  return USD_PEGGED_CURRENCY_RE.test(currency.trim());
 }
 
 function checkUsdPeggedUnderpayment(

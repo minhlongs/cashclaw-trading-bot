@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { defaultSaasEntitlementStore } from '../billing/saas-entitlement-store';
 import {
-  resolveWorkspaceTierContext,
+  detectCrossWorkspaceIdor,
+  requireAuthenticatedUser,
   resolveActiveBotCount,
+  resolveEffectiveWorkspaceId,
+  resolveWorkspaceTierContext,
 } from '../tenancy/workspace-request-context';
 import { listWorkspaceMemberships } from '../tenancy/workspace-membership';
 import type { D1Database, D1PreparedStatement } from '@/lib/db/types';
@@ -50,11 +53,43 @@ describe('workspace-request-context', () => {
     mockRows.length = 0;
   });
 
-  it('ignores a self-declared tier header and returns the D1 tier', async () => {
+  it('refuses to grant paid tier without x-user-id even when workspaceId is supplied via query, header, or options', async () => {
     await seedWorkspaceTier('ws_seed_premium', 'PREMIUM');
+    await seedWorkspaceTier('ws_upgraded', 'MASTER');
 
-    const req = new Request('http://localhost/api/ee/quotas?workspaceId=ws_seed_premium', {
+    const queryReq = new Request('http://localhost/api/ee/quotas?workspaceId=ws_seed_premium', {
       headers: { 'x-cashclaw-tier': 'MASTER' },
+    });
+    expect(await resolveWorkspaceTierContext(queryReq)).toEqual({
+      workspaceId: undefined,
+      tier: 'BASIC',
+    });
+    expect(detectCrossWorkspaceIdor(queryReq, { workspaceId: undefined, tier: 'BASIC' })).toMatchObject({
+      code: 'WORKSPACE_FORBIDDEN',
+      status: 403,
+    });
+    expect(resolveEffectiveWorkspaceId(queryReq, undefined, 'ws_seed_premium')).toBeUndefined();
+
+    const headerReq = new Request('http://localhost/api/ee/quotas', {
+      headers: { 'x-cashclaw-workspace': 'ws_upgraded', 'x-cashclaw-tier': 'MASTER' },
+    });
+    expect(await resolveWorkspaceTierContext(headerReq)).toEqual({
+      workspaceId: undefined,
+      tier: 'BASIC',
+    });
+
+    const explicitCtx = await resolveWorkspaceTierContext(headerReq, {
+      explicitWorkspaceId: 'ws_upgraded',
+    });
+    expect(explicitCtx).toEqual({ workspaceId: undefined, tier: 'BASIC' });
+  });
+
+  it('ignores self-declared tier header and query parameter for an authenticated member', async () => {
+    await seedWorkspaceTier('ws_seed_premium', 'PREMIUM');
+    mockRows.push({ user_id: 'usr_prem', workspace_id: 'ws_seed_premium', role: 'OWNER', created_at_ms: 10 });
+
+    const req = new Request('http://localhost/api/ee/quotas?workspaceId=ws_seed_premium&tier=MASTER', {
+      headers: { 'x-user-id': 'usr_prem', 'x-cashclaw-tier': 'MASTER' },
     });
     const ctx = await resolveWorkspaceTierContext(req);
 
@@ -62,22 +97,11 @@ describe('workspace-request-context', () => {
     expect(ctx.tier).toBe('PREMIUM');
   });
 
-  it('ignores a self-declared tier query parameter', async () => {
-    await seedWorkspaceTier('ws_seed_enterprise', 'ENTERPRISE');
-
-    const req = new Request(
-      'http://localhost/api/ee/quotas?workspaceId=ws_seed_enterprise&tier=MASTER',
-    );
-    const ctx = await resolveWorkspaceTierContext(req);
-
-    expect(ctx.workspaceId).toBe('ws_seed_enterprise');
-    expect(ctx.tier).toBe('ENTERPRISE');
-  });
-
-  it('ignores a self-declared tier on an unknown workspace', async () => {
+  it('ignores a self-declared tier on an unknown workspace for an authenticated member', async () => {
+    mockRows.push({ user_id: 'usr_basic', workspace_id: 'ws_never_paid', role: 'OWNER', created_at_ms: 10 });
     const req = new Request(
       'http://localhost/api/ee/quotas?workspaceId=ws_never_paid&tier=MASTER',
-      { headers: { 'x-cashclaw-tier': 'MASTER' } },
+      { headers: { 'x-user-id': 'usr_basic', 'x-cashclaw-tier': 'MASTER' } },
     );
     const ctx = await resolveWorkspaceTierContext(req);
 
@@ -85,30 +109,42 @@ describe('workspace-request-context', () => {
     expect(ctx.tier).toBe('BASIC');
   });
 
-  it('falls back to BASIC when no workspace is identified', async () => {
-    const ctx = await resolveWorkspaceTierContext(new Request('http://localhost/api/ee/quotas'));
+  it('falls back to BASIC and fails requireAuthenticatedUser when no user is identified', async () => {
+    const req = new Request('http://localhost/api/ee/quotas');
+    const ctx = await resolveWorkspaceTierContext(req);
     expect(ctx.workspaceId).toBeUndefined();
     expect(ctx.tier).toBe('BASIC');
-  });
-
-  it('reads the upgraded tier from the entitlement store via x-cashclaw-workspace', async () => {
-    await seedWorkspaceTier('ws_upgraded', 'MASTER');
-
-    const req = new Request('http://localhost/api/ee/quotas', {
-      headers: { 'x-cashclaw-workspace': 'ws_upgraded', 'x-cashclaw-tier': 'BASIC' },
+    expect(requireAuthenticatedUser(req)).toEqual({
+      ok: false,
+      violation: {
+        code: 'AUTH_REQUIRED',
+        status: 403,
+        error: 'AUTH_REQUIRED: session-verified x-user-id is required',
+      },
     });
-    const ctx = await resolveWorkspaceTierContext(req);
-
-    expect(ctx.workspaceId).toBe('ws_upgraded');
-    expect(ctx.tier).toBe('MASTER');
   });
 
-  it('prefers an explicit workspaceId over request-supplied identifiers', async () => {
+  it('allows trustedServerOperator option to resolve workspace tier for verified operator overrides', async () => {
+    await seedWorkspaceTier('ws_operator_target', 'ENTERPRISE');
+    const req = new Request('http://localhost/api/ee/credits');
+    const ctx = await resolveWorkspaceTierContext(req, {
+      explicitWorkspaceId: 'ws_operator_target',
+      trustedServerOperator: true,
+    });
+    expect(ctx).toEqual({ workspaceId: 'ws_operator_target', tier: 'ENTERPRISE' });
+  });
+
+  it('prefers an explicit workspaceId over query/header when user belongs to multiple workspaces', async () => {
     await seedWorkspaceTier('ws_from_option', 'ENTERPRISE');
+    await seedWorkspaceTier('ws_from_query', 'BASIC');
+    mockRows.push(
+      { user_id: 'usr_opt', workspace_id: 'ws_from_query', role: 'OWNER', created_at_ms: 20 },
+      { user_id: 'usr_opt', workspace_id: 'ws_from_option', role: 'ADMIN', created_at_ms: 10 },
+    );
 
     const req = new Request(
       'http://localhost/api/ee/quotas?workspaceId=ws_from_query&tier=MASTER',
-      { headers: { 'x-cashclaw-workspace': 'ws_from_header' } },
+      { headers: { 'x-user-id': 'usr_opt', 'x-cashclaw-workspace': 'ws_from_query' } },
     );
     const ctx = await resolveWorkspaceTierContext(req, { explicitWorkspaceId: 'ws_from_option' });
 

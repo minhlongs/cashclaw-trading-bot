@@ -46,8 +46,18 @@ describe('Phase 1: SaaS API Routes Integration', () => {
   });
 
   describe('GET /api/ee/quotas', () => {
-    it('returns workspace entitlements for default BASIC tier', async () => {
-      const req = new Request('http://localhost/api/ee/quotas');
+    it('fails closed with 403 AUTH_REQUIRED when x-user-id is missing', async () => {
+      const res = await getQuotas(new Request('http://localhost/api/ee/quotas'));
+      expect(res.status).toBe(403);
+      const body = (await res.json()) as { ok: boolean; code: string };
+      expect(body.ok).toBe(false);
+      expect(body.code).toBe('AUTH_REQUIRED');
+    });
+
+    it('returns workspace entitlements for default BASIC tier for authenticated user', async () => {
+      const req = new Request('http://localhost/api/ee/quotas', {
+        headers: { 'x-user-id': 'usr_basic_quota' },
+      });
       const res = await getQuotas(req);
       expect(res.status).toBe(200);
 
@@ -60,7 +70,9 @@ describe('Phase 1: SaaS API Routes Integration', () => {
     it('ignores a self-declared tier query parameter and returns the D1 tier', async () => {
       await seedWorkspaceTier('ws_quota_ignored', 'PREMIUM');
 
-      const req = new Request('http://localhost/api/ee/quotas?workspaceId=ws_quota_ignored&tier=BASIC');
+      const req = new Request('http://localhost/api/ee/quotas?workspaceId=ws_quota_ignored&tier=BASIC', {
+        headers: { 'x-user-id': 'quota_ignored' },
+      });
       const res = await getQuotas(req);
       expect(res.status).toBe(200);
 
@@ -103,7 +115,10 @@ describe('Phase 1: SaaS API Routes Integration', () => {
 
       const quotaRes = await getQuotas(
         new Request('http://localhost/api/ee/quotas', {
-          headers: { 'x-cashclaw-workspace': 'ws_quota_upgraded_01' },
+          headers: {
+            'x-user-id': 'quota_upgraded_01',
+            'x-cashclaw-workspace': 'ws_quota_upgraded_01',
+          },
         }),
       );
       expect(quotaRes.status).toBe(200);
@@ -246,6 +261,7 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       const res = await postSync(
         new Request('http://localhost/api/ee/sync', {
           method: 'POST',
+          headers: { 'x-user-id': 'user_sync_1' },
           body: JSON.stringify(bundleResult.data),
         }),
       );
@@ -371,7 +387,7 @@ describe('Phase 1: SaaS API Routes Integration', () => {
       const fastRes = await postCredits(
         new Request('http://localhost/api/ee/credits', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-user-id': 'g12_override' },
           body: JSON.stringify({
             workspaceId: 'ws_g12_override',
             modelTier: 'FAST',

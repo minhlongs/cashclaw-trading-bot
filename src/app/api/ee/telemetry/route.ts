@@ -8,6 +8,7 @@ import {
 } from '@/ee/telemetry/conversion-funnel';
 import {
   detectCrossWorkspaceIdor,
+  requireAuthenticatedUser,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
 
@@ -18,6 +19,13 @@ const TelemetryPayloadSchema = z.object({
 });
 
 export async function GET(req?: Request) {
+  const auth = requireAuthenticatedUser(req);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { ok: false, code: auth.violation.code, error: auth.violation.error },
+      { status: auth.violation.status },
+    );
+  }
   if (req) {
     const tierContext = await resolveWorkspaceTierContext(req);
     const idor = detectCrossWorkspaceIdor(req, tierContext);
@@ -37,6 +45,14 @@ export async function GET(req?: Request) {
 
 export async function POST(req: Request) {
   try {
+    const auth = requireAuthenticatedUser(req);
+    if (!auth.ok) {
+      return NextResponse.json(
+        { ok: false, code: auth.violation.code, error: auth.violation.error },
+        { status: auth.violation.status },
+      );
+    }
+
     const body = await req.json();
     const parsed = TelemetryPayloadSchema.safeParse(body);
 

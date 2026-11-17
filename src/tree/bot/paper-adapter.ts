@@ -9,6 +9,27 @@ export interface PaperAdapterOptions {
 
 const PAPER_FEE_RATE = 0.001;
 
+async function resolveExecutionPrice(request: OrderRequest, tickerFetcher?: PaperAdapterOptions['tickerFetcher']): Promise<number> {
+  let price = request.price ?? 0;
+  if ((!Number.isFinite(price) || price <= 0) && tickerFetcher) {
+    try {
+      const ticker = await tickerFetcher(request.symbol);
+      if (ticker && Number.isFinite(ticker.last) && ticker.last > 0) price = ticker.last;
+    } catch {
+      // The caller turns an unavailable price into a rejected order.
+    }
+  }
+  return price;
+}
+
+function rejectedMarketOrder(orderId: string, request: OrderRequest): OrderResult {
+  return {
+    id: orderId, exchangeId: 'paper', symbol: request.symbol, side: request.side,
+    type: request.type, price: 0, quantity: request.quantity, filled: 0,
+    status: 'rejected', fee: 0, timestamp: Date.now(), pnl: 0,
+  };
+}
+
 export function createPaperAdapter(capital: number, options?: PaperAdapterOptions): ExchangeAdapter {
   const balances = new Map<string, { free: number; used: number }>();
   const orders = new Map<string, OrderResult>();
@@ -44,19 +65,16 @@ export function createPaperAdapter(capital: number, options?: PaperAdapterOption
 
     async placeOrder(request: OrderRequest): Promise<OrderResult> {
       const orderId = `paper_${++orderCounter}_${Date.now()}`;
-      let effectivePrice = request.price ?? 0;
-      if (effectivePrice <= 0 && options?.tickerFetcher) {
-        try {
-          const ticker = await options.tickerFetcher(request.symbol);
-          if (ticker && Number.isFinite(ticker.last) && ticker.last > 0) effectivePrice = ticker.last;
-        } catch {
-          // Fallback to 0 when tickerFetcher fails
-        }
-      }
-      const isFilled =
+      const effectivePrice = await resolveExecutionPrice(request, options?.tickerFetcher);
+      const hasValidExecutionPrice = Number.isFinite(effectivePrice) && effectivePrice > 0;
+      const isFilled = hasValidExecutionPrice && (
         request.type === 'market' ||
-        Boolean(options?.autoFillLimitOrders && effectivePrice > 0);
+        Boolean(options?.autoFillLimitOrders)
+      );
       const filledQty = isFilled ? request.quantity : 0;
+      if (request.type === 'market' && !hasValidExecutionPrice) {
+        return rejectedMarketOrder(orderId, request);
+      }
       const trade: OrderResult = {
         id: orderId,
         exchangeId: 'paper',

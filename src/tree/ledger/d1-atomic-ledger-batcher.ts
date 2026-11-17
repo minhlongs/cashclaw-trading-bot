@@ -2,111 +2,25 @@
 
 import { ok, err, type Result } from '@/lib/result';
 import {
-  ZERO_BIGINT,
   type AtomicLedgerCommitInput,
+  type AtomicLedgerGroupCommitInput,
   type AtomicOrderStateUpsert,
   type D1DatabaseLike,
-  type D1PreparedStatementLike,
 } from './ledger-types';
-import { computeBalanceSheet, validateBalancedLegs } from './double-entry-math';
 import {
   INIT_BOT_ACCOUNT_SQL,
-  INSERT_FIRST_JOURNAL_LEG_GUARDED_SQL,
-  INSERT_PROCESSED_EVENT_HASH_SQL,
-  INSERT_SUBSEQUENT_JOURNAL_LEG_SQL,
   SELECT_ACCOUNT_ROW_SQL,
   SELECT_EVENT_HASHES_SQL,
   SELECT_ORDER_INTENTS_SQL,
-  UPDATE_ACCOUNT_BALANCES_OPTIMISTIC_SQL,
-  UPSERT_ORDER_STATE_SQL,
   mapOrderIntentRow,
-  toSqlInteger,
-  toSqlIntegers,
   type LoadedDurableLedgerState,
 } from './d1-ledger-sql';
+import { loadPositionsIfTablePresent } from './d1-positions-sql';
 import {
-  buildPositionBatchStatements,
-  hasPositionsTableInDb,
-  loadPositionsIfTablePresent,
-} from './d1-positions-sql';
-
-function classifyBatchError(rawError: unknown): string {
-  const msg = rawError instanceof Error ? rawError.message : String(rawError);
-  if (msg.includes('UNIQUE') && msg.includes('processed_event_hashes')) {
-    return `DUPLICATE_EVENT_HASH: ${msg}`;
-  }
-  if (msg.includes('paper_journal_entries.account_version') || msg.includes('CHECK constraint')) {
-    return `OPTIMISTIC_CONCURRENCY_OR_CASH_GUARD_FAILED: ${msg}`;
-  }
-  return `BATCH_ABORTED: ${msg}`;
-}
-
-function bindOrderUpsertStmt(
-  db: D1DatabaseLike,
-  botId: string,
-  fencingToken: number,
-  ord: AtomicOrderStateUpsert,
-): Result<D1PreparedStatementLike> {
-  const numsRes = toSqlIntegers([
-    ord.quantityBase,
-    ord.filledQtyBase,
-    ord.limitPriceMicroUsd,
-    ord.reservedMarginMicroUsd,
-  ]);
-  if (!numsRes.ok) return numsRes;
-  const nums = numsRes.data;
-  return ok(
-    db.prepare(UPSERT_ORDER_STATE_SQL).bind(
-      botId, ord.clientOrderId, ord.symbol, ord.side, ord.orderType,
-      nums[0], nums[1], nums[2], nums[3],
-      ord.reduceOnly ? 1 : 0, ord.lifecycleState, fencingToken, ord.createdAtMs, ord.updatedAtMs,
-    ),
-  );
-}
-
-function buildBatchStatements(
-  db: D1DatabaseLike,
-  input: AtomicLedgerCommitInput,
-): Result<D1PreparedStatementLike[]> {
-  const b = input.nextBalances;
-  const valsRes = toSqlIntegers([
-    b.CASH_AVAILABLE, b.MARGIN_RESERVED, b.POSITION_MARGIN, b.REALIZED_PNL,
-    b.FEES_EXPENSE, b.FUNDING_NET, b.INITIAL_CAPITAL, input.requiredCashMicroUsd,
-  ]);
-  if (!valsRes.ok) return valsRes;
-  const vals = valsRes.data;
-
-  const nextVersion = input.expectedVersion + 1;
-  const statements: D1PreparedStatementLike[] = [
-    db.prepare(INSERT_PROCESSED_EVENT_HASH_SQL).bind(
-      input.botId, input.entry.eventHash, input.entry.eventType, nextVersion, input.entry.timestampMs,
-    ),
-    db.prepare(UPDATE_ACCOUNT_BALANCES_OPTIMISTIC_SQL).bind(
-      vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6],
-      input.fencingToken, input.entry.timestampMs, input.botId, input.expectedVersion, vals[7],
-    ),
-  ];
-
-  for (let i = 0; i < input.entry.legs.length; i++) {
-    const leg = input.entry.legs[i];
-    const amt = toSqlInteger(leg.amountMicroUsd);
-    if (!amt.ok) return amt;
-    const sql = i === 0 ? INSERT_FIRST_JOURNAL_LEG_GUARDED_SQL : INSERT_SUBSEQUENT_JOURNAL_LEG_SQL;
-    statements.push(
-      db.prepare(sql).bind(
-        input.entry.entryId, input.botId, input.entry.eventHash, i,
-        leg.account, leg.direction, amt.data, nextVersion, input.entry.timestampMs,
-      ),
-    );
-  }
-
-  if (input.orderUpsert) {
-    const ordStmt = bindOrderUpsertStmt(db, input.botId, input.fencingToken, input.orderUpsert);
-    if (!ordStmt.ok) return ordStmt;
-    statements.push(ordStmt.data);
-  }
-  return ok(statements);
-}
+  bindOrderUpsertStmt,
+  buildGroupCommitPlan,
+  classifyBatchError,
+} from './d1-atomic-batch-builder';
 
 export class D1AtomicLedgerBatcher {
   private readonly db: D1DatabaseLike;
@@ -135,34 +49,64 @@ export class D1AtomicLedgerBatcher {
     }
   }
 
+  public async commitAtomicGroup(
+    input: AtomicLedgerGroupCommitInput,
+  ): Promise<Result<{ readonly committedVersion: number; readonly eventHashes: readonly string[] }>> {
+    for (let i = 0; i < input.steps.length; i++) {
+      const expectedStepVersion = input.expectedVersion + i + 1;
+      if (input.steps[i]!.entry.version !== expectedStepVersion) {
+        return err(
+          `NON_CONTIGUOUS_JOURNAL_VERSION: expected ${expectedStepVersion}, got ${input.steps[i]!.entry.version}`,
+        );
+      }
+    }
+    return this.executeGroupPlan(input);
+  }
+
   public async commitAtomicBatch(
     input: AtomicLedgerCommitInput,
   ): Promise<Result<{ readonly committedVersion: number; readonly eventHash: string }>> {
-    const legValid = validateBalancedLegs(input.entry.legs);
-    if (!legValid.ok) return legValid;
-    if (!computeBalanceSheet(input.nextBalances).balanced) {
-      return err('UNBALANCED_JOURNAL_ENTRY: target balance sheet violates Assets === Liabilities + Equity');
-    }
-    if (input.nextBalances.CASH_AVAILABLE < ZERO_BIGINT) {
-      return err('INSUFFICIENT_AVAILABLE_CASH: target cash balance is negative');
-    }
-    const stmtsRes = buildBatchStatements(this.db, input);
-    if (!stmtsRes.ok) return stmtsRes;
-    const statements = [...stmtsRes.data];
-    if (input.positions !== undefined && (await hasPositionsTableInDb(this.db))) {
-      const posRes = buildPositionBatchStatements(
-        this.db, input.botId, input.fencingToken, input.entry.timestampMs, input.positions,
-      );
-      if (!posRes.ok) return posRes;
-      statements.push(...posRes.data);
-    }
+    const groupRes = await this.executeGroupPlan({
+      botId: input.botId,
+      expectedVersion: input.expectedVersion,
+      fencingToken: input.fencingToken,
+      steps: [
+        {
+          entry: input.entry,
+          nextBalances: input.nextBalances,
+          requiredCashMicroUsd: input.requiredCashMicroUsd,
+        },
+      ],
+      ...(input.orderUpsert ? { orderUpserts: [input.orderUpsert] } : {}),
+      ...(input.positions !== undefined ? { positions: input.positions } : {}),
+    });
+    if (!groupRes.ok) return groupRes;
+    return ok({ committedVersion: groupRes.data.committedVersion, eventHash: input.entry.eventHash });
+  }
+
+  private async executeGroupPlan(
+    input: AtomicLedgerGroupCommitInput,
+  ): Promise<Result<{ readonly committedVersion: number; readonly eventHashes: readonly string[] }>> {
+    const planRes = await buildGroupCommitPlan(this.db, input);
+    if (!planRes.ok) return planRes;
+    const { statements, accountUpdateIndices, orderUpsertIndices } = planRes.data;
 
     try {
       const batchRes = await this.db.batch(statements);
-      if (batchRes[1]?.meta?.changes === 0) {
-        return err('OPTIMISTIC_CONCURRENCY_OR_CASH_GUARD_FAILED: 0 account rows updated');
+      for (const idx of accountUpdateIndices) {
+        if (batchRes[idx]?.meta?.changes === 0) {
+          return err('OPTIMISTIC_CONCURRENCY_OR_CASH_GUARD_FAILED: 0 account rows updated');
+        }
       }
-      return ok({ committedVersion: input.expectedVersion + 1, eventHash: input.entry.eventHash });
+      if (accountUpdateIndices.length === 0) {
+        for (const idx of orderUpsertIndices) {
+          if (batchRes[idx]?.meta?.changes === 0) return err('STALE_FENCING_TOKEN_ON_INTENT');
+        }
+      }
+      return ok({
+        committedVersion: input.expectedVersion + input.steps.length,
+        eventHashes: input.steps.map((s) => s.entry.eventHash),
+      });
     } catch (e) {
       return err(classifyBatchError(e));
     }

@@ -336,8 +336,9 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     const runSpy = vi.spyOn(d1, 'prepare');
     await bot1.tick();
     await vi.waitFor(() => expect(bot1.getLifecycleEngine()!.getAllOrders()[0]?.state).toBe('filled'));
-    expect(batchSpy.mock.calls.length).toBe(3);
-    expect(batchSpy.mock.calls[1]?.[0]).toHaveLength(5);
+    expect(batchSpy.mock.calls.length).toBe(2);
+    expect(batchSpy.mock.calls[0]?.[0]).toHaveLength(9);
+    expect(batchSpy.mock.calls[1]?.[0]).toHaveLength(9);
     expect(runSpy).toHaveBeenCalled();
     mgr1.destroy();
 

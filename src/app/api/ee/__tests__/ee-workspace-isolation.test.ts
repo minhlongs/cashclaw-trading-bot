@@ -82,7 +82,7 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
     expect(resolveEffectiveWorkspaceId(authedReq, 'ws_enrolled', 'ws_victim')).toBe('ws_enrolled');
 
     const unauthedReq = new Request('http://localhost/api/ee/credits?workspaceId=ws_local');
-    expect(resolveEffectiveWorkspaceId(unauthedReq, undefined, 'ws_local')).toBe('ws_local');
+    expect(resolveEffectiveWorkspaceId(unauthedReq, undefined, 'ws_local')).toBeUndefined();
     expect(resolveEffectiveWorkspaceId(unauthedReq, undefined, '   ')).toBeUndefined();
   });
 
@@ -126,8 +126,15 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
       }),
     );
     expect(ownRes.status).toBe(200);
-    const body = (await ownRes.json()) as { ok: boolean; tier: string; envelope: { payloadJson: string } };
+    const body = (await ownRes.json()) as {
+      ok: boolean;
+      tier: string;
+      signatureHex?: string;
+      envelope: { payloadJson: string; signatureHex?: string };
+    };
     expect(body.tier).toBe('PREMIUM');
+    expect(body.signatureHex).toBeUndefined();
+    expect(body.envelope.signatureHex).toBeUndefined();
     const signedEvent = JSON.parse(body.envelope.payloadJson) as { workspaceId: string };
     expect(signedEvent.workspaceId).toBe('ws_attacker');
   });

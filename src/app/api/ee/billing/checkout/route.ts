@@ -94,6 +94,12 @@ export async function POST(req: Request) {
     }
 
     const userId = req.headers.get('x-user-id')?.trim() || undefined;
+    if (!userId) {
+      return NextResponse.json(
+        { ok: false, code: 'AUTH_REQUIRED', error: 'WORKSPACE_UNRESOLVED: no workspace is bound to this session' },
+        { status: 401 },
+      );
+    }
     const workspaceId = await resolveCheckoutWorkspace(req, userId, tierContext);
     if (!workspaceId) {
       return NextResponse.json(
