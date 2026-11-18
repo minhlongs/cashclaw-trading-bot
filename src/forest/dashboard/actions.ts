@@ -1,8 +1,6 @@
-// Forest layer — Server Actions for dashboard data
+// Forest layer — Internal server service barrel for dashboard data
 // Barrel re-export for backward compatibility.
 // Actual implementations live in focused submodules.
-
-'use server';
 
 export type { BotCardData, DashboardKpis, DashboardData } from './bot-kpis';
 export { getDashboardData, getKpis, getBotCards } from './bot-kpis';

@@ -1,8 +1,6 @@
 // Forest layer — Trade event queries from D1
 // Fetches recent trade events for dashboard display.
 
-'use server';
-
 import { BotQueryService } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
 import type { TradeEvent, TradeEventType } from '@/tree/telemetry';

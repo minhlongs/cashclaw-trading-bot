@@ -1,95 +1,96 @@
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
+import { resolveServerSessionUser } from '@/lib/auth/session-resolver';
 import { createServerClient } from '@/lib/db/client';
 import { findBotById } from '@/lib/db/repositories';
 import type { BacktestResultRow, D1Database } from '@/lib/db/types';
-import type { BacktestResult } from './types';
 import { createLogger } from '@/lib/logger';
+import type { BacktestResult } from './types';
 
-const log = createLogger('backtest-actions-persist');
+const log = createLogger('backtest-actions');
 
 export interface RequestSessionResolution {
-  readonly inRequestScope: boolean;
-  readonly userId: string | undefined;
+  inRequestScope: boolean;
+  userId?: string;
 }
 
 export async function resolveBacktestSessionUser(
   db?: D1Database | null,
 ): Promise<RequestSessionResolution> {
-  let reqHeaders: Awaited<ReturnType<typeof headers>>;
+  let cookieStore: Awaited<ReturnType<typeof cookies>>;
   try {
-    reqHeaders = await headers();
+    cookieStore = await cookies();
   } catch {
     return { inRequestScope: false, userId: undefined };
   }
 
-  const verifiedHeaderUser = reqHeaders.get('x-user-id')?.trim();
-  if (verifiedHeaderUser) {
-    return { inRequestScope: true, userId: verifiedHeaderUser };
-  }
-
-  let sessionId: string | undefined;
-  try {
-    const cookieStore = await cookies();
-    sessionId = cookieStore.get('session_id')?.value?.trim();
-  } catch {
-    sessionId = undefined;
-  }
+  const sessionId = cookieStore.get('session_id')?.value?.trim();
   if (!sessionId) {
     return { inRequestScope: true, userId: undefined };
   }
 
-  const client = db ?? createServerClient();
-  if (client) {
-    try {
-      const now = Math.floor(Date.now() / 1000);
-      const { results } = await client
-        .prepare('SELECT user_id, expires_at FROM user_sessions WHERE id = ?')
-        .bind(sessionId)
-        .all<{ user_id: string; expires_at: number }>();
-      if (results.length > 0 && results[0]!.expires_at >= now) {
-        return { inRequestScope: true, userId: results[0]!.user_id };
-      }
-      return { inRequestScope: true, userId: undefined };
-    } catch {
-      return { inRequestScope: true, userId: undefined };
-    }
+  const resolved = await resolveServerSessionUser(sessionId, db);
+  if (resolved.status === 'valid') {
+    return { inRequestScope: true, userId: resolved.userId };
   }
-
-  if (process.env.NODE_ENV === 'production') {
-    return { inRequestScope: true, userId: undefined };
-  }
-  const safeDevSession = sessionId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64) || 'local';
-  return { inRequestScope: true, userId: `dev_${safeDevSession}` };
+  return { inRequestScope: true, userId: undefined };
 }
 
 export async function verifyBacktestBotOwnership(
   botId: string,
   userId: string,
 ): Promise<boolean> {
+  if (!userId.trim()) return false;
   const db = createServerClient();
-  if (!db) return false;
+  if (!db) {
+    return process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+  }
   try {
     const bot = await findBotById(db, botId);
     return Boolean(bot && bot.user_id === userId);
-  } catch {
+  } catch (error) {
+    log.error(
+      'Failed to verify bot ownership for backtest',
+      error instanceof Error ? error : new Error(String(error)),
+    );
     return false;
   }
 }
 
-export async function persistBacktestResultToD1(result: BacktestResult): Promise<void> {
+export async function persistBacktestResultToD1(
+  result: BacktestResult,
+  userId: string,
+): Promise<void> {
+  const trimmedUserId = userId?.trim();
+  if (!trimmedUserId) return;
   const db = createServerClient();
   if (!db) return;
   try {
+    const bot = await findBotById(db, result.bot_id);
+    if (!bot || bot.user_id !== trimmedUserId) return;
     await db
       .prepare(
-        `INSERT INTO backtest_results (id, bot_id, strategy, pair, exchange, start_date, end_date, total_trades, win_count, loss_count, win_rate, total_pnl, max_drawdown, sharpe_ratio, params_json, equity_curve_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO backtest_results (id, bot_id, strategy, pair, exchange, start_date, end_date, total_trades, win_count, loss_count, win_rate, total_pnl, max_drawdown, sharpe_ratio, params_json, equity_curve_json, created_at) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? FROM bots WHERE id = ? AND user_id = ?`,
       )
       .bind(
-        result.id, result.bot_id, result.strategy, result.pair, result.exchange,
-        result.start_date, result.end_date, result.total_trades, result.win_count,
-        result.loss_count, result.win_rate, result.total_pnl, result.max_drawdown,
-        result.sharpe_ratio, result.params_json, JSON.stringify(result.equity_curve_json),
+        result.id,
+        result.bot_id,
+        result.strategy,
+        result.pair,
+        result.exchange,
+        result.start_date,
+        result.end_date,
+        result.total_trades,
+        result.win_count,
+        result.loss_count,
+        result.win_rate,
+        result.total_pnl,
+        result.max_drawdown,
+        result.sharpe_ratio,
+        result.params_json,
+        JSON.stringify(result.equity_curve_json),
         result.created_at,
+        result.bot_id,
+        trimmedUserId,
       )
       .run();
   } catch (error) {
@@ -121,7 +122,6 @@ export async function getBacktestResultsFromD1(
     log.error(
       'Failed to fetch backtest results',
       error instanceof Error ? error : new Error(String(error)),
-      { action: 'getBacktestResults' },
     );
     return [];
   }

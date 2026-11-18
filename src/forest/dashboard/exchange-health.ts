@@ -1,8 +1,6 @@
 // Forest layer — Exchange health dashboard data
 // Provides per-exchange health metrics for the dashboard.
 
-'use server';
-
 import { getExchangeOrchestrator } from '@/land/exchange-orchestration';
 import type { ExchangeId } from '@/tree/exchange/types';
 import { createLogger } from '@/lib/logger';

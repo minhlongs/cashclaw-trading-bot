@@ -1,14 +1,16 @@
-import {getRequestConfig} from 'next-intl/server';
-import {locales, defaultLocale} from './config';
+import { notFound } from 'next/navigation';
+import { getRequestConfig } from 'next-intl/server';
+import { locales, defaultLocale, type Locale } from './config';
 
-export default getRequestConfig(async ({locale}) => {
-  // For static export, locale is resolved from params (not headers)
-  const validLocale = locales.includes(locale as 'vi' | 'en')
-    ? (locale as 'vi' | 'en')
-    : defaultLocale;
+export default getRequestConfig(async ({ locale, requestLocale }) => {
+  const candidate = locale ?? (await requestLocale);
+  if (candidate !== undefined && !locales.includes(candidate as Locale)) {
+    notFound();
+  }
+  const validLocale: Locale = candidate ? (candidate as Locale) : defaultLocale;
 
   return {
     locale: validLocale,
-    messages: (await import(`@/messages/${validLocale}.json`)).default
+    messages: (await import(`@/messages/${validLocale}.json`)).default,
   };
 });

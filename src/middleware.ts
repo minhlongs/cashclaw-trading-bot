@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/db/client';
+import { resolveServerSessionUser } from '@/lib/auth/session-resolver';
 
 const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
 const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops', '/api/ee'];
@@ -18,34 +18,6 @@ const PUBLIC_WEBHOOK_PATHS = ['/api/ee/billing/ipn', '/api/ee/billing/nowpayment
 
 function matchesWebhookPath(pathname: string): boolean {
   return PUBLIC_WEBHOOK_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-}
-
-async function resolveSessionUser(
-  sessionId: string,
-): Promise<{ status: 'valid'; userId: string } | { status: 'invalid' } | { status: 'unavailable' }> {
-  const db = createServerClient();
-  if (db) {
-    try {
-      const now = Math.floor(Date.now() / 1000);
-      const { results } = await db
-        .prepare('SELECT user_id, expires_at FROM user_sessions WHERE id = ?')
-        .bind(sessionId)
-        .all<{ user_id: string; expires_at: number }>();
-
-      if (!results.length || results[0]!.expires_at < now) {
-        return { status: 'invalid' };
-      }
-      return { status: 'valid', userId: results[0]!.user_id };
-    } catch {
-      return { status: 'invalid' };
-    }
-  }
-
-  if (process.env.NODE_ENV === 'production') {
-    return { status: 'unavailable' };
-  }
-  const safeDevSession = sessionId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64) || 'local';
-  return { status: 'valid', userId: `dev_${safeDevSession}` };
 }
 
 export async function middleware(req: NextRequest) {
@@ -71,7 +43,7 @@ export async function middleware(req: NextRequest) {
   const sessionId = req.cookies.get('session_id')?.value;
   if (!needsAuth) {
     if (sessionId) {
-      const resolved = await resolveSessionUser(sessionId);
+      const resolved = await resolveServerSessionUser(sessionId);
       if (resolved.status === 'valid') {
         sanitizedHeaders.set('x-user-id', resolved.userId);
       }
@@ -83,7 +55,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 });
   }
 
-  const resolved = await resolveSessionUser(sessionId);
+  const resolved = await resolveServerSessionUser(sessionId);
   if (resolved.status === 'unavailable') {
     return NextResponse.json({ ok: false, error: 'Session store unavailable' }, { status: 503 });
   }
@@ -96,5 +68,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)'],
+  matcher: ['/((?!_next/static(?:/|$)|_next/image(?:/|$)|favicon\\.ico$).*)'],
 };

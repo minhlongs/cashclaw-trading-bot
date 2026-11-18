@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { runBacktestAction, getBacktestResults, type BacktestRunInput, type BacktestRunOutput } from './actions';
+import {
+  persistBacktestResultToD1,
+  resolveBacktestSessionUser,
+  verifyBacktestBotOwnership,
+} from './actions-persist';
 import type { VolatilityDcaBotConfig, GridBotConfig } from '@/tree/bot/types';
 
 const mockHeaderMap = new Map<string, string>();
@@ -87,6 +92,34 @@ describe('runBacktestAction', () => {
   it('rejects unsupported intervals', async () => {
     const res = await runBacktestAction({ ...BASE_INPUT, interval: '2h' });
     expect(res).toEqual({ success: false, error: 'Unsupported interval: 2h', candlesFetched: 0 });
+  });
+
+  it('rejects malformed non-object or non-Date wire payloads without throwing TypeError', async () => {
+    expect(await runBacktestAction(null as unknown as BacktestRunInput)).toEqual({
+      success: false,
+      error: 'Invalid backtest input',
+      candlesFetched: 0,
+    });
+    expect(
+      await runBacktestAction({
+        ...BASE_INPUT,
+        startDate: 'not-a-date' as unknown as Date,
+      }),
+    ).toEqual({
+      success: false,
+      error: 'Invalid startDate or endDate',
+      candlesFetched: 0,
+    });
+    expect(
+      await runBacktestAction({
+        ...BASE_INPUT,
+        config: null as unknown as GridBotConfig,
+      }),
+    ).toEqual({
+      success: false,
+      error: 'Invalid strategy config',
+      candlesFetched: 0,
+    });
   });
 
   it('rejects invalid date range (endDate <= startDate)', async () => {
@@ -191,5 +224,107 @@ describe('runBacktestAction', () => {
     expect(mockRun).not.toHaveBeenCalled();
     expect(await invokeGetWithForgedArg('b_victim', 'user_victim')).toEqual([]);
     expect(await getBacktestResults('b_attacker')).toEqual([{ id: 'bt_attacker_own' }]);
+  });
+
+  it('P1-01: never trusts spoofed x-user-id header without valid session_id cookie', async () => {
+    const futureExpiry = Math.floor(Date.now() / 1000) + 3600;
+    setupMockD1({
+      sessions: { sess_victim: { user_id: 'user_victim', expires_at: futureExpiry } },
+      bots: { b_victim: { id: 'b_victim', user_id: 'user_victim' } },
+      resultsByBot: { b_victim: [{ id: 'bt_victim_secret' }] },
+    });
+
+    inRequestScope = true;
+    mockHeaderMap.set('x-user-id', 'user_victim');
+
+    expect(await resolveBacktestSessionUser()).toEqual({ inRequestScope: true, userId: undefined });
+    const victimInput = { ...BASE_INPUT, botId: 'b_victim', strategy: 'volatility_dca' as const, config: BASE_VDCA };
+    expect(await runBacktestAction(victimInput)).toEqual({
+      success: false,
+      error: 'Authentication required',
+      candlesFetched: 0,
+    });
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockRun).not.toHaveBeenCalled();
+    expect(await getBacktestResults('b_victim')).toEqual([]);
+  });
+
+  it('P1-01: resolves identity strictly from session_id cookie even if x-user-id claims another user', async () => {
+    const futureExpiry = Math.floor(Date.now() / 1000) + 3600;
+    setupMockD1({
+      sessions: { sess_attacker: { user_id: 'user_attacker', expires_at: futureExpiry } },
+      bots: {
+        b_victim: { id: 'b_victim', user_id: 'user_victim' },
+        b_attacker: { id: 'b_attacker', user_id: 'user_attacker' },
+      },
+      resultsByBot: {
+        b_victim: [{ id: 'bt_victim_secret' }],
+        b_attacker: [{ id: 'bt_attacker_own' }],
+      },
+    });
+
+    inRequestScope = true;
+    mockHeaderMap.set('x-user-id', 'user_victim');
+    mockCookieMap.set('session_id', 'sess_attacker');
+
+    expect(await resolveBacktestSessionUser()).toEqual({ inRequestScope: true, userId: 'user_attacker' });
+    const victimInput = { ...BASE_INPUT, botId: 'b_victim', strategy: 'volatility_dca' as const, config: BASE_VDCA };
+    expect(await runBacktestAction(victimInput)).toEqual({
+      success: false,
+      error: 'Bot not found: b_victim',
+      candlesFetched: 0,
+    });
+    expect(await getBacktestResults('b_victim')).toEqual([]);
+    expect(await getBacktestResults('b_attacker')).toEqual([{ id: 'bt_attacker_own' }]);
+  });
+
+  it('P1-01: rejects expired, revoked/deleted, or production-unavailable sessions despite x-user-id header', async () => {
+    const pastExpiry = Math.floor(Date.now() / 1000) - 60;
+    setupMockD1({
+      sessions: { sess_expired: { user_id: 'user_victim', expires_at: pastExpiry } },
+      bots: { b_victim: { id: 'b_victim', user_id: 'user_victim' } },
+      resultsByBot: { b_victim: [{ id: 'bt_victim_secret' }] },
+    });
+
+    inRequestScope = true;
+    mockHeaderMap.set('x-user-id', 'user_victim');
+
+    mockCookieMap.set('session_id', 'sess_expired');
+    expect(await resolveBacktestSessionUser()).toEqual({ inRequestScope: true, userId: undefined });
+    expect(await getBacktestResults('b_victim')).toEqual([]);
+
+    mockCookieMap.set('session_id', 'sess_revoked_deleted');
+    expect(await resolveBacktestSessionUser()).toEqual({ inRequestScope: true, userId: undefined });
+    expect(await getBacktestResults('b_victim')).toEqual([]);
+
+    mockDb.mockReturnValue(null as unknown as ReturnType<typeof createServerClient>);
+    for (const nonDevEnv of ['production', 'staging']) {
+      vi.stubEnv('NODE_ENV', nonDevEnv);
+      try {
+        mockCookieMap.set('session_id', 'sess_prod_no_db');
+        expect(await resolveBacktestSessionUser()).toEqual({ inRequestScope: true, userId: undefined });
+        expect(await verifyBacktestBotOwnership('b_victim', 'user_victim')).toBe(false);
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    }
+  });
+
+  it('P1-01: persistBacktestResultToD1 refuses cross-tenant or unverified writes', async () => {
+    const { mockRunDb } = setupMockD1({
+      bots: { b_victim: { id: 'b_victim', user_id: 'user_victim' } },
+    });
+    const forgedResult = {
+      id: 'bt_forged', bot_id: 'b_victim', strategy: 'volatility_dca', pair: 'BTC/USDT', exchange: 'binance',
+      start_date: 1000, end_date: 2000, total_trades: 1, win_count: 1, loss_count: 0,
+      win_rate: 100, total_pnl: 50, max_drawdown: 1.5, sharpe_ratio: 2.0, params_json: '{}',
+      equity_curve_json: [], trades_json: [], created_at: 3000,
+    };
+
+    await (persistBacktestResultToD1 as (r: typeof forgedResult, userId?: string) => Promise<void>)(
+      forgedResult,
+      'user_attacker',
+    );
+    expect(mockRunDb).not.toHaveBeenCalled();
   });
 });

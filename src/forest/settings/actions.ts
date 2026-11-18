@@ -1,5 +1,3 @@
-'use server';
-
 import { createLogger } from '@/lib/logger';
 import { err, type Result } from '@/lib/result';
 import type { SettingsData, RiskLimitsInput, KillswitchDailyInput, ExchangeKey } from './types';

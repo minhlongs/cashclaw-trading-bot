@@ -15,6 +15,9 @@ export type { BacktestRunInput, BacktestRunOutput } from './actions.types';
 export async function runBacktestAction(
   input: BacktestRunInput,
 ): Promise<BacktestRunOutput> {
+  if (!input || typeof input !== 'object' || typeof input.botId !== 'string' || !input.botId.trim()) {
+    return { success: false, error: 'Invalid backtest input', candlesFetched: 0 };
+  }
   const interval = (input.interval ?? '1h') as CandleInterval;
   const validationError = validateBacktestInput(input, interval);
   if (validationError) return { success: false, error: validationError, candlesFetched: 0 };
@@ -32,7 +35,7 @@ export async function runBacktestAction(
   if (sim.error || !sim.result) {
     return { success: false, error: sim.error, candlesFetched: sim.candlesFetched };
   }
-  await persistBacktestResultToD1(sim.result);
+  await persistBacktestResultToD1(sim.result, session.userId);
   return { success: true, result: sim.result, candlesFetched: sim.candlesFetched };
 }
 
