@@ -30,7 +30,7 @@ export async function resolveServerSessionUser(
 
       const row = results[0];
       const userId = row?.user_id?.trim();
-      if (!row || !userId || row.expires_at < now) {
+      if (!row || !userId || !Number.isFinite(row.expires_at) || row.expires_at < now) {
         return { status: 'invalid' };
       }
       return { status: 'valid', userId };

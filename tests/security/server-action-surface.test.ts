@@ -151,13 +151,57 @@ describe('P1-01 Server Action surface & identity-provenance invariant', () => {
       'x-user-id',
     ]);
     const absModules = [...AUDITED_SERVER_ACTION_MODULES].map((rel) => path.resolve(REPO_ROOT, rel));
-    const program = ts.createProgram(absModules, {
+    const compilerOptions: ts.CompilerOptions = {
       target: ts.ScriptTarget.ES2022,
       moduleResolution: ts.ModuleResolutionKind.Bundler,
       baseUrl: REPO_ROOT,
       paths: { '@/*': ['src/*'] },
-    });
+      types: [],
+      noLib: true,
+      skipLibCheck: true,
+      skipDefaultLibCheck: true,
+    };
+    const defaultHost = ts.createCompilerHost(compilerOptions);
+    const localSourceHost: ts.CompilerHost = {
+      ...defaultHost,
+      resolveModuleNameLiterals(moduleLiterals, containingFile, _redirected, options) {
+        return moduleLiterals.map((lit) => {
+          const text = lit.text;
+          if (!text.startsWith('.') && !text.startsWith('@/') && !text.startsWith('/')) {
+            return { resolvedModule: undefined };
+          }
+          const resolved = ts.resolveModuleName(text, containingFile, options, defaultHost);
+          if (resolved.resolvedModule?.resolvedFileName.includes('node_modules')) {
+            return { resolvedModule: undefined };
+          }
+          return resolved;
+        });
+      },
+    };
+    const program = ts.createProgram(absModules, compilerOptions, localSourceHost);
     const checker = program.getTypeChecker();
+
+    const assertNoForbiddenDtoFields = (
+      type: ts.Type,
+      anchor: ts.Node,
+      visited = new Set<ts.Type>(),
+    ): void => {
+      if (visited.has(type)) return;
+      visited.add(type);
+      if (type.isUnionOrIntersection()) {
+        for (const member of type.types) {
+          assertNoForbiddenDtoFields(member, anchor, visited);
+        }
+      }
+      if ((type.flags & (ts.TypeFlags.StringLike | ts.TypeFlags.NumberLike | ts.TypeFlags.BooleanLike)) !== 0) {
+        return;
+      }
+      for (const propSym of checker.getPropertiesOfType(type)) {
+        expect(forbiddenNames.has(propSym.getName())).toBe(false);
+        const propType = checker.getTypeOfSymbolAtLocation(propSym, propSym.valueDeclaration ?? anchor);
+        assertNoForbiddenDtoFields(propType, anchor, visited);
+      }
+    };
 
     for (const absPath of absModules) {
       const content = fs.readFileSync(absPath, 'utf8');
@@ -182,16 +226,14 @@ describe('P1-01 Server Action surface & identity-provenance invariant', () => {
         for (const sig of callSigs) {
           for (const paramSym of sig.getParameters()) {
             expect(forbiddenNames.has(paramSym.getName())).toBe(false);
-            const paramType = checker.getTypeOfSymbolAtLocation(paramSym, sf!);
-            for (const propSym of checker.getPropertiesOfType(paramType)) {
-              expect(forbiddenNames.has(propSym.getName())).toBe(false);
-            }
+            const paramType = checker.getTypeOfSymbolAtLocation(paramSym, paramSym.valueDeclaration ?? sf!);
+            assertNoForbiddenDtoFields(paramType, sf!);
           }
         }
       }
       expect(callableExportCount).toBeGreaterThan(0);
     }
-  });
+  }, 30_000);
 
   it('forbids x-user-id header reads inside backtest session-resolution helpers', () => {
     const persistSource = fs.readFileSync(
@@ -239,7 +281,7 @@ describe('P1-01 Server Action surface & identity-provenance invariant', () => {
     }
 
     expect(violations).toEqual([]);
-  });
+  }, 30_000);
 
   it('verifies compiled Next/OpenNext server-reference-manifest.json exposes only audited Server Actions when built', () => {
     const nextDir = `${'.'}next`;

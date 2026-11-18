@@ -292,6 +292,8 @@ describe('runBacktestAction', () => {
     mockCookieMap.set('session_id', 'sess_expired');
     expect(await resolveBacktestSessionUser()).toEqual({ inRequestScope: true, userId: undefined });
     expect(await getBacktestResults('b_victim')).toEqual([]);
+    expect(await getBacktestResults('   ')).toEqual([]);
+    expect(await getBacktestResults(null as unknown as string)).toEqual([]);
 
     mockCookieMap.set('session_id', 'sess_revoked_deleted');
     expect(await resolveBacktestSessionUser()).toEqual({ inRequestScope: true, userId: undefined });

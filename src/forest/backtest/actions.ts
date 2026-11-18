@@ -40,6 +40,7 @@ export async function runBacktestAction(
 }
 
 export async function getBacktestResults(botId: string) {
+  if (typeof botId !== 'string' || !botId.trim()) return [];
   const session = await resolveBacktestSessionUser();
   if (!session.userId) return [];
   return getBacktestResultsFromD1(botId, session.userId);

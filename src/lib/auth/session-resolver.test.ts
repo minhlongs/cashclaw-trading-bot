@@ -56,6 +56,12 @@ describe('resolveServerSessionUser', () => {
     ).toEqual({ status: 'invalid' });
     expect(
       await resolveServerSessionUser(
+        's3_nan',
+        makeDb(async () => ({ results: [{ user_id: 'u1', expires_at: Number.NaN }] })),
+      ),
+    ).toEqual({ status: 'invalid' });
+    expect(
+      await resolveServerSessionUser(
         's4',
         makeDb(async () => {
           throw new Error('D1 down');
