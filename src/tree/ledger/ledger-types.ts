@@ -83,6 +83,7 @@ export interface LedgerSnapshot {
   readonly balances: LedgerAccountBalances;
   readonly positions: readonly LedgerPositionRecord[];
   readonly processedEventHashes: readonly string[];
+  readonly journalEntries?: readonly JournalEntry[];
 }
 
 export interface D1RunMetaLike {
@@ -137,4 +138,20 @@ export interface AtomicLedgerCommitInput {
   readonly nextBalances: LedgerAccountBalances;
   readonly entry: JournalEntry;
   readonly orderUpsert?: AtomicOrderStateUpsert;
+  readonly positions?: readonly LedgerPositionRecord[];
+}
+
+export interface AtomicLedgerCommitStep {
+  readonly entry: JournalEntry;
+  readonly nextBalances: LedgerAccountBalances;
+  readonly requiredCashMicroUsd: bigint;
+}
+
+export interface AtomicLedgerGroupCommitInput {
+  readonly botId: string;
+  readonly expectedVersion: number;
+  readonly fencingToken: number;
+  readonly steps: readonly AtomicLedgerCommitStep[];
+  readonly orderUpserts?: readonly AtomicOrderStateUpsert[];
+  readonly positions?: readonly LedgerPositionRecord[];
 }

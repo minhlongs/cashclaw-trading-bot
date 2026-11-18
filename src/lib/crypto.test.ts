@@ -86,16 +86,13 @@ describe('crypto', () => {
     expect(await decrypt(ciphertext)).toBe(plaintext);
   });
 
-  it('returns ciphertext as-is when decrypt fails with wrong key', async () => {
+  it('throws CRYPTO_DECRYPT_ERROR fail-closed when decrypt fails with wrong key', async () => {
     // Encrypt with one key
     process.env.ENCRYPTION_KEY = makeKey();
     const ciphertext = await encrypt('secret');
 
     // Try to decrypt with different key
     process.env.ENCRYPTION_KEY = makeKey();
-    const result = await decrypt(ciphertext);
-
-    // Should return ciphertext as-is (backward compat path)
-    expect(result).toBe(ciphertext);
+    await expect(decrypt(ciphertext)).rejects.toThrow('CRYPTO_DECRYPT_ERROR');
   });
 });

@@ -3,8 +3,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockAll = vi.fn();
 vi.mock('@/lib/db/client', () => ({ createServerClient: vi.fn() }));
 
-import { middleware } from './middleware';
+import { middleware, config } from './middleware';
 import { createServerClient } from '@/lib/db/client';
+import * as pageStaticInfo from 'next/dist/build/analysis/get-page-static-info';
+
+const { getMiddlewareMatchers } = pageStaticInfo as unknown as {
+  getMiddlewareMatchers: (
+    matchers: typeof config.matcher,
+    options: { i18n: undefined },
+  ) => Array<{ regexp: string }>;
+};
 
 function makeReq(method: string, pathname: string, cookies: Record<string, string> = {}, headers: Record<string, string> = {}) {
   const cookieMap = new Map(Object.entries(cookies).map(([k, v]) => [k, { value: v, name: k }]));
@@ -248,5 +256,81 @@ describe('middleware', () => {
     expect(res.status).toBe(200);
     // Response headers should NOT contain client-supplied x-user-id
     expect(res.headers.get('x-user-id')).toBeNull();
+  });
+
+  /* ── P1-01 compiled Next.js / OpenNext matcher regression ──── */
+  describe('P1-01 compiled config.matcher parity with Next.js + OpenNext middleMatch', () => {
+    function matchesOpenNextMiddleware(normalizedPath: string): boolean {
+      const compiled = getMiddlewareMatchers(config.matcher, { i18n: undefined });
+      const regexes = compiled.map(({ regexp }: { regexp: string }) => new RegExp(regexp));
+      let decodedPath: string | undefined;
+      try {
+        decodedPath = decodeURIComponent(normalizedPath);
+      } catch {
+        decodedPath = undefined;
+      }
+      return regexes.some(
+        (r: RegExp) => r.test(normalizedPath) || (decodedPath !== undefined && r.test(decodedPath)),
+      );
+    }
+
+    it.each([
+      '/',
+      '/en',
+      '/vi',
+      '/en/backtests',
+      '/vi/backtests',
+      '/en/backtests.rsc',
+      '/public',
+      '/public/backtests',
+      '/public/dashboard',
+      '/%70ublic/backtests',
+      '/favicon.ico/',
+      '/favicon.ico/backtests',
+      '/faviconXico',
+      '/faviconXico/backtests',
+      '/favicon.ico.rsc',
+      '/_next/staticX/backtests',
+      '/_next/imageX/backtests',
+      '/%E0%A4%A/backtests',
+      '/api/bots',
+      '/api/ee/quotas',
+      '/api/auth/login',
+    ])('compiled matcher MUST intercept "%s"', (pathname) => {
+      expect(matchesOpenNextMiddleware(pathname)).toBe(true);
+    });
+
+    it.each([
+      '/favicon.ico',
+      '/_next/static/chunks/main.js',
+      '/_next/static',
+      '/_next/image',
+      '/_next/image/subpath',
+    ])('compiled matcher skips only genuine static asset path "%s"', (pathname) => {
+      expect(matchesOpenNextMiddleware(pathname)).toBe(false);
+    });
+
+    it('sanitizes spoofed x-user-id on /public/backtests and /favicon.ico/backtests when unauthenticated and overwrites when authenticated', async () => {
+      for (const path of ['/public/backtests', '/favicon.ico/backtests']) {
+        expect(matchesOpenNextMiddleware(path)).toBe(true);
+        const unauthRes = await middleware(
+          makeReq('POST', path, {}, { 'x-user-id': 'victim-user', 'next-action': 'act_1' }),
+        );
+        expect(unauthRes.status).toBe(200);
+        expect(unauthRes.headers.get('x-middleware-request-x-user-id')).toBeNull();
+        const unauthOverrides = (unauthRes.headers.get('x-middleware-override-headers') ?? '').split(',');
+        expect(unauthOverrides).toContain('next-action');
+        expect(unauthOverrides).not.toContain('x-user-id');
+
+        mockDbSession('real-user', Math.floor(Date.now() / 1000) + 86400);
+        const authRes = await middleware(
+          makeReq('POST', path, { session_id: 'valid-sess' }, { 'x-user-id': 'victim-user', 'next-action': 'act_1' }),
+        );
+        expect(authRes.status).toBe(200);
+        expect(authRes.headers.get('x-middleware-request-x-user-id')).toBe('real-user');
+        const authOverrides = (authRes.headers.get('x-middleware-override-headers') ?? '').split(',');
+        expect(authOverrides).toContain('x-user-id');
+      }
+    });
   });
 });

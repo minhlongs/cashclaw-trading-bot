@@ -36,9 +36,9 @@ export function buildTickContext(
   strategyChain: StrategyChain | null, lastTickPrice: number | null,
   placeOrder: (req: OrderRequest) => Promise<OrderResult>, pause: () => void,
   emitTelemetry: (type: TradeEventType, details: Record<string, unknown>) => void,
-  emitState: () => void,
+  emitState: () => void, lastTickTimestampMs: number | null = null,
 ): TickContext {
-  return { id, config, deps, callbacks, state, strategy, strategyChain, lastTickPrice, placeOrder, pause, emitTelemetry, emitState };
+  return { id, config, deps, callbacks, state, strategy, strategyChain, lastTickPrice, lastTickTimestampMs, placeOrder, pause, emitTelemetry, emitState };
 }
 
 export function buildOrderContext(

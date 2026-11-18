@@ -1,8 +1,6 @@
 // Forest layer — Bot detail view & trade history
 // Deep bot inspection for the detail page.
 
-'use server';
-
 import { getBotCards, type BotCardData } from './bot-kpis';
 import { BotQueryService } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';

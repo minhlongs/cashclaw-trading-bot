@@ -1,8 +1,6 @@
 // Forest layer — Bot lifecycle actions (start, stop, pause, resume, killswitch)
 // Delegates lifecycle control to unified botControlHandler (enforcing credential preflight on start).
 
-'use server';
-
 import { getBotManager } from '@/tree/bot';
 import { botControlHandler } from '@/forest/api/handlers/bot-control';
 import { emergencyHalt, resumeFromHalt } from '@/forest/settings/actions';

@@ -111,6 +111,12 @@ export class PaperForwardRunner {
     if (prevCp && (input.dayIndex <= prevCp.dayIndex || input.timestampMs <= prevCp.timestampMs)) {
       throw new Error(`Non-monotonic PaperForwardDayInput at dayIndex=${input.dayIndex}`);
     }
+    const expectedDayIndex = prevCp ? prevCp.dayIndex + 1 : 1;
+    if (input.dayIndex !== expectedDayIndex) {
+      throw new Error(
+        `Non-contiguous PaperForwardDayInput: expected dayIndex=${expectedDayIndex}, got ${input.dayIndex}`,
+      );
+    }
     const validObs = input.observations.filter((o) => this.universeSet.has(o.symbol));
     for (const obs of validObs) {
       this.latestMarks.set(obs.symbol, { spotMidUsd: obs.spotMidUsd, perpMidUsd: obs.perpMidUsd });

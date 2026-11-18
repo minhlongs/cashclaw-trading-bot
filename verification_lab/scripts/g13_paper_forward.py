@@ -830,6 +830,10 @@ def reconcile_ts_bridge_with_decimal_oracle(
                 d_idx = int(day_entry["dayIndex"])
                 if d_idx <= prev_d_idx:
                     raise ValueError(f"Non-monotonic dayIndex={d_idx} in TS bridge days")
+                if d_idx != prev_d_idx + 1:
+                    raise ValueError(
+                        f"Non-contiguous dayIndex={d_idx} (expected {prev_d_idx + 1}) in TS bridge days"
+                    )
                 prev_d_idx = d_idx
                 day_marks = day_entry.get("marks", {})
                 fund_by_sym = day_entry.get("fundingIntervalsBpsBySymbol", {})
@@ -951,6 +955,7 @@ def evaluate_g13_checkpoints(
     min_required_days: int = 60,
     target_days: int = 90,
     max_allowed_tracking_error_bps_per_month: float = 15.0,
+    auto_kill_tracking_error_bps_per_month: float = 25.0,
     harness_shadow_parity_check: dict[str, Any],
     day0_live_public_snapshot: dict[str, Any],
 ) -> dict[str, Any]:
@@ -965,7 +970,19 @@ def evaluate_g13_checkpoints(
     if latest_dt < gen_dt:
         raise ValueError(f"latest_checkpoint_utc {latest_utc} precedes genesis_utc {genesis_utc}")
 
+    first_dt = _parse_utc(str(sorted_cps[0]["observed_at_utc"]))
+    has_continuity_gap = (first_dt.date() - gen_dt.date()).days != 0
+    for idx in range(1, len(sorted_cps)):
+        prev_cp_dt = _parse_utc(str(sorted_cps[idx - 1]["observed_at_utc"]))
+        curr_cp_dt = _parse_utc(str(sorted_cps[idx]["observed_at_utc"]))
+        day_step = (curr_cp_dt.date() - prev_cp_dt.date()).days
+        if day_step < 0 or day_step > 1:
+            has_continuity_gap = True
+            break
+
     elapsed_days = int((latest_dt - gen_dt).total_seconds() // 86_400)
+    if elapsed_days > 0 and len(sorted_cps) < elapsed_days + 1:
+        has_continuity_gap = True
 
     if elapsed_days > 0 and len(sorted_cps) >= 2:
         p_nav = float(sorted_cps[-1].get("paper_nav", 1.0))
@@ -986,8 +1003,19 @@ def evaluate_g13_checkpoints(
         float(harness_shadow_parity_check["harness_shadow_tracking_error_bps_per_month"])
         < float(max_allowed_tracking_error_bps_per_month)
     )
+    early_auto_kill = bool(
+        realized_te_bps_mo is not None
+        and realized_te_bps_mo >= float(auto_kill_tracking_error_bps_per_month)
+    )
+    auto_kill_triggered = bool(has_continuity_gap or early_auto_kill)
 
-    if elapsed_days < int(min_required_days):
+    if has_continuity_gap:
+        status = "FAIL_NON_CONTIGUOUS_CHECKPOINTS"
+        g13_pass = False
+    elif early_auto_kill:
+        status = "FAIL_AUTO_KILL_TRACKING_ERROR"
+        g13_pass = False
+    elif elapsed_days < int(min_required_days):
         status = "OBSERVATION_ACTIVE_INCONCLUSIVE"
         g13_pass = False
     elif (
@@ -1006,6 +1034,7 @@ def evaluate_g13_checkpoints(
         "gate": "G13",
         "status": status,
         "g13_pass": g13_pass,
+        "auto_kill_triggered": auto_kill_triggered,
         "live_trading_unlocked": False,
         "spec_path": spec_path_rel,
         "spec_sha256": spec_sha256,

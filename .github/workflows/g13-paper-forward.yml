@@ -74,5 +74,6 @@ jobs:
           path: |
             .g13-cache/
             /tmp/g13_offline_check.json
+          include-hidden-files: true
           retention-days: 90
           if-no-files-found: error

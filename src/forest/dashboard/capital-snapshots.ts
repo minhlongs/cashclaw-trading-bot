@@ -1,8 +1,6 @@
 // Forest layer — Capital snapshot queries from D1
 // Fetches historical capital snapshots for a given bot.
 
-'use server';
-
 import { BotQueryService } from '@/forest/bot/d1-adapter';
 import { createServerClient } from '@/lib/db/client';
 import type { CapitalSnapshot } from '@/tree/telemetry';

@@ -34,7 +34,7 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!res.ok || !data.ok) throw new Error(data.error || t('actionFailed', { error: 'Unknown error' }));
-      if (action === 'resume' || action === 'start') setCurrentStatus('live_running');
+      if (action === 'resume' || action === 'start') setCurrentStatus('paper_test');
       else if (action === 'pause') setCurrentStatus('paused');
       else if (action === 'stop') setCurrentStatus('stopped');
     } catch (err) {
@@ -54,7 +54,7 @@ export function BotDetailClient({ bot, trades = [] }: BotDetailClientProps) {
           <div>
             <h1 className="text-h2 text-primary mb-4">{bot.name}</h1>
             <div className="flex items-center gap-2">
-              <span className={`badge ${currentStatus === 'live_running' ? 'badge-running' : currentStatus === 'paused' ? 'badge-paused' : 'badge-neutral'}`}>
+              <span className={`badge ${currentStatus === 'paper_test' || currentStatus === 'live_running' ? 'badge-running' : currentStatus === 'paused' ? 'badge-paused' : 'badge-neutral'}`}>
                 {currentStatus}
               </span>
               <span className="badge badge-neutral">{bot.pair}</span>

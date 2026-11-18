@@ -36,7 +36,14 @@ export type BotStrategyGuardResult =
   | { readonly ok: true; readonly strategy: StrategyType; readonly verificationTier: StrategyVerificationTier; readonly warning?: string; readonly specSha256?: string; readonly verifiedDefaults?: VerifiedH3Defaults }
   | { readonly ok: false; readonly status: 403; readonly code: BotStrategyGuardErrorCode; readonly error: string };
 
-export interface StrategyArtifactPaths { readonly specPath?: string; readonly registryPath?: string; }
+export interface StrategyArtifactPaths {
+  readonly specPath?: string;
+  readonly specSigPath?: string;
+  readonly registryPath?: string;
+}
+
+const BUNDLED_H3_ED25519_SIG_B64 =
+  '4XUT5NvCyTvdraXPHixzTiPNTuF7B+z4rwZZa0PqfnM9vOvnzg+HPbJcs/ocvv3T6XiWMccPdZ8SI/Gt0e/pDg==';
 
 const RETAIL_STRATEGIES = new Set<StrategyType>(['grid', 'mean_reversion', 'volatility_dca']);
 
@@ -44,6 +51,12 @@ function loadArtifactSource(overridePath: string | undefined, bundled: unknown):
   if (!overridePath) return { parsed: bundled };
   const rawJson = fs.readFileSync(overridePath, 'utf8');
   return { parsed: JSON.parse(rawJson) as unknown, rawJson };
+}
+
+function loadEd25519Signature(paths?: StrategyArtifactPaths): string | undefined {
+  const sigPath = paths?.specSigPath ?? (paths?.specPath ? `${paths.specPath}.sig` : undefined);
+  if (!sigPath) return BUNDLED_H3_ED25519_SIG_B64;
+  return fs.existsSync(sigPath) ? fs.readFileSync(sigPath, 'utf8').trim() : undefined;
 }
 
 export function getVerifiedH3SpecInfo(paths?: StrategyArtifactPaths): Extract<BotStrategyGuardResult, { ok: true }> | Extract<BotStrategyGuardResult, { ok: false }> {
@@ -72,10 +85,13 @@ export function getVerifiedH3SpecInfo(paths?: StrategyArtifactPaths): Extract<Bo
     };
   }
 
+  const ed25519Sig = loadEd25519Signature(paths);
   const specRes = validateSignedStrategySpec(specSrc.parsed, {
     ...(specSrc.rawJson ? { rawSpecJson: specSrc.rawJson } : {}),
     registry: regSrc.parsed,
     ...(regSrc.rawJson ? { rawRegistryJson: regSrc.rawJson } : {}),
+    requireEd25519Signature: true,
+    ...(ed25519Sig !== undefined ? { ed25519Signature: ed25519Sig } : {}),
   });
   if (!specRes.ok || specRes.data.strategyId !== 'H3_MAKER') {
     return {

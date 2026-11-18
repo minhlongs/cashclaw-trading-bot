@@ -328,22 +328,37 @@ def test_committed_g13_artifact_is_honestly_day0_inconclusive_and_offline_safe(m
 
 
 def test_g13_state_machine_fails_closed_under_60d_passes_low_te_at_60d_and_fails_high_te():
+    from datetime import datetime, timedelta, timezone
+
     g13_mod = _load_script("g13_paper_forward")
     shadow_ok = {
         "harness_shadow_tracking_error_bps_per_month": 0.05,
         "passes_15bps_per_month_gate": True,
     }
     snap_stub = {"observed_at_utc": "2026-11-14T00:00:00Z", "orders_submitted": 0}
+    gen = datetime(2026, 11, 14, 0, 0, 0, tzinfo=timezone.utc)
 
-    # Case A: 59 elapsed days (< 60 required) with 1.0 bps/mo TE -> MUST remain INCONCLUSIVE (`g13_pass == False`).
+    def _build_contiguous_cps(total_days: int, final_paper: float, final_oracle: float):
+        out = []
+        for d in range(total_days + 1):
+            frac = d / float(total_days) if total_days > 0 else 0.0
+            out.append(
+                {
+                    "checkpoint_index": d,
+                    "day_offset": d,
+                    "observed_at_utc": (gen + timedelta(days=d)).isoformat().replace("+00:00", "Z"),
+                    "paper_nav": round(1.0 + (final_paper - 1.0) * frac, 10),
+                    "oracle_nav": round(1.0 + (final_oracle - 1.0) * frac, 10),
+                }
+            )
+        return out
+
+    # Case A: 59 contiguous elapsed days (< 60 required) with ~1.0 bps/mo TE -> MUST remain INCONCLUSIVE (`g13_pass == False`).
     res_59d = g13_mod.evaluate_g13_checkpoints(
         spec_path_rel="artifacts/signed_strategy_spec_h3_maker.json",
         spec_sha256="a" * 64,
         genesis_utc="2026-11-14T00:00:00Z",
-        checkpoints=[
-            {"checkpoint_index": 0, "observed_at_utc": "2026-11-14T00:00:00Z", "paper_nav": 1.0, "oracle_nav": 1.0},
-            {"checkpoint_index": 1, "observed_at_utc": "2027-01-12T00:00:00Z", "paper_nav": 1.0102, "oracle_nav": 1.0100},
-        ],
+        checkpoints=_build_contiguous_cps(59, 1.0102, 1.0100),
         harness_shadow_parity_check=shadow_ok,
         day0_live_public_snapshot=snap_stub,
     )
@@ -352,15 +367,12 @@ def test_g13_state_machine_fails_closed_under_60d_passes_low_te_at_60d_and_fails
     assert res_59d["g13_pass"] is False
     assert res_59d["live_trading_unlocked"] is False
 
-    # Case B: 60 elapsed days (2.0 months) with 6.0 bps cum diff = 3.0 bps/mo (< 15.0 bps/mo) -> `g13_pass == True`!
+    # Case B: 60 contiguous elapsed days (2.0 months) with 6.0 bps cum diff = 3.0 bps/mo (< 15.0 bps/mo) -> `g13_pass == True`!
     res_60d_pass = g13_mod.evaluate_g13_checkpoints(
         spec_path_rel="artifacts/signed_strategy_spec_h3_maker.json",
         spec_sha256="a" * 64,
         genesis_utc="2026-11-14T00:00:00Z",
-        checkpoints=[
-            {"checkpoint_index": 0, "observed_at_utc": "2026-11-14T00:00:00Z", "paper_nav": 1.0, "oracle_nav": 1.0},
-            {"checkpoint_index": 1, "observed_at_utc": "2027-01-13T00:00:00Z", "paper_nav": 1.0126, "oracle_nav": 1.0120},
-        ],
+        checkpoints=_build_contiguous_cps(60, 1.0126, 1.0120),
         harness_shadow_parity_check=shadow_ok,
         day0_live_public_snapshot=snap_stub,
     )
@@ -371,15 +383,12 @@ def test_g13_state_machine_fails_closed_under_60d_passes_low_te_at_60d_and_fails
     # Live trading MUST STILL remain locked pending separate G15 owner sign-off!
     assert res_60d_pass["live_trading_unlocked"] is False
 
-    # Case C: 60 elapsed days (2.0 months) with 36.0 bps cum diff = 18.0 bps/mo (>= 15.0 bps/mo) -> FAIL!
+    # Case C: 60 contiguous elapsed days (2.0 months) with 36.0 bps cum diff = 18.0 bps/mo (>= 15.0 bps/mo) -> FAIL!
     res_60d_fail = g13_mod.evaluate_g13_checkpoints(
         spec_path_rel="artifacts/signed_strategy_spec_h3_maker.json",
         spec_sha256="a" * 64,
         genesis_utc="2026-11-14T00:00:00Z",
-        checkpoints=[
-            {"checkpoint_index": 0, "observed_at_utc": "2026-11-14T00:00:00Z", "paper_nav": 1.0, "oracle_nav": 1.0},
-            {"checkpoint_index": 1, "observed_at_utc": "2027-01-13T00:00:00Z", "paper_nav": 1.0156, "oracle_nav": 1.0120},
-        ],
+        checkpoints=_build_contiguous_cps(60, 1.0156, 1.0120),
         harness_shadow_parity_check=shadow_ok,
         day0_live_public_snapshot=snap_stub,
     )

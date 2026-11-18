@@ -9,7 +9,7 @@ import type { MeanRevStrategy } from './strategies/mean-reversion';
 import type { VolatilityDcaStrategy } from './strategies/volatility-dca';
 import type { TradeEventType } from '../telemetry/types';
 import { BASE_UNITS_PER_ASSET, MICRO_USD_PER_USD, ZERO_BIGINT } from '../ledger';
-import { ensureDurableBotHydrated } from './bot-order-lifecycle-bridge';
+import { cancelLifecycleOrder, ensureDurableBotHydrated } from './bot-order-lifecycle-bridge';
 import { buildOrderContext } from './bot-instance-events';
 import { initializeStrategy } from './bot-strategy';
 
@@ -29,12 +29,14 @@ export interface StartLifecycleContext {
 export interface StartLifecycleResult {
   strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy | null;
   strategyChain: StrategyChain | null;
+  initialPrice?: number;
+  initialTimestampMs?: number;
 }
 
-/**
- * Fetch and validate starting price from exchange orchestrator or exchange adapter.
- */
-export async function fetchStartPrice(deps: BotDependencies, symbol: string): Promise<number> {
+async function fetchStartTickerSample(
+  deps: BotDependencies,
+  symbol: string,
+): Promise<{ price: number; timestampMs: number }> {
   let ticker;
   if (deps.exchangeOrchestrator) {
     const r = await deps.exchangeOrchestrator.fetchTicker('paper', symbol);
@@ -49,12 +51,35 @@ export async function fetchStartPrice(deps: BotDependencies, symbol: string): Pr
   if (price <= 0) {
     throw new Error(`Invalid price for ${symbol}: ${price}`);
   }
-  return price;
+  const timestampMs = Number.isFinite(ticker.timestamp) && ticker.timestamp > 0 ? ticker.timestamp : Date.now();
+  return { price, timestampMs };
 }
 
-/**
- * Execute start lifecycle: fetch price, initialize strategy, emit telemetry/state, and start ticks.
- */
+export async function fetchStartPrice(deps: BotDependencies, symbol: string): Promise<number> {
+  return (await fetchStartTickerSample(deps, symbol)).price;
+}
+
+export async function executeStrategyCancelOrder(
+  deps: BotDependencies,
+  config: BotConfig,
+  orderCtx: ReturnType<typeof buildOrderContext>,
+  orderId: string,
+  symbol?: string,
+): Promise<boolean> {
+  const targetSym = symbol ?? config.symbol;
+  let cancelled = false;
+  if (deps.exchangeOrchestrator && typeof deps.exchangeOrchestrator.cancelOrder === 'function') {
+    const res = await deps.exchangeOrchestrator.cancelOrder(config.exchange ?? 'paper', orderId, targetSym);
+    cancelled = res.ok ? Boolean(res.data) : false;
+  } else {
+    cancelled = Boolean(await deps.exchange.cancelOrder(orderId, targetSym));
+  }
+  if (deps.lifecycleEngine) {
+    await cancelLifecycleOrder(orderCtx, deps.lifecycleEngine, orderId);
+  }
+  return cancelled;
+}
+
 export async function startBotLifecycle(ctx: StartLifecycleContext): Promise<StartLifecycleResult> {
   const { id, config, deps, callbacks, state, hasStrategy = true, placeOrder, emitTelemetry, emitState, startTicking } = ctx;
 
@@ -63,10 +88,9 @@ export async function startBotLifecycle(ctx: StartLifecycleContext): Promise<Sta
   }
 
   try {
-    await ensureDurableBotHydrated(
-      buildOrderContext(deps, config, state, id, (t) => callbacks.onTrade(t), emitTelemetry, emitState),
-    );
-    const price = await fetchStartPrice(deps, config.symbol);
+    const orderCtx = buildOrderContext(deps, config, state, id, (t) => callbacks.onTrade(t), emitTelemetry, emitState);
+    await ensureDurableBotHydrated(orderCtx);
+    const { price, timestampMs } = await fetchStartTickerSample(deps, config.symbol);
     const getPositionSnapshot = () => {
       const pos = deps.lifecycleEngine?.getLedger().getPosition(config.symbol);
       if (!pos || pos.signedQtyBase <= ZERO_BIGINT) return null;
@@ -79,7 +103,7 @@ export async function startBotLifecycle(ctx: StartLifecycleContext): Promise<Sta
       price,
       botId: id,
       placeOrder,
-      cancelOrder: (orderId, sym) => deps.exchange.cancelOrder(orderId, sym ?? config.symbol),
+      cancelOrder: (orderId, sym) => executeStrategyCancelOrder(deps, config, orderCtx, orderId, sym),
       getPositionSnapshot,
       onTrade: (trade: BotTrade) => callbacks.onTrade(trade),
       onLog: (msg: string) => callbacks.onLog(`[${id}] ${msg}`),
@@ -95,7 +119,12 @@ export async function startBotLifecycle(ctx: StartLifecycleContext): Promise<Sta
     startTicking();
     callbacks.onLog(`Bot ${id} started (${config.strategy}) @ ${price.toFixed(2)}`);
 
-    return { strategy: bundle.strategy, strategyChain: bundle.strategyChain };
+    return {
+      strategy: bundle.strategy,
+      strategyChain: bundle.strategyChain,
+      initialPrice: price,
+      initialTimestampMs: timestampMs,
+    };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     state.status = 'error';

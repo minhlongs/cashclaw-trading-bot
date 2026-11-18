@@ -1,5 +1,9 @@
 // Gate G13 & G15: Fail-Closed Archived-Strategy Kill Fence & SignedStrategySpec Verifier.
 
+import {
+  canonicalizeSpecSignatureMessage,
+  verifyEd25519SignatureSync,
+} from '../protection';
 import { computeCanonicalPayloadSha256, verifyCanonicalPayloadSha256 } from './canonical-hash';
 import {
   ARCHIVED_FALSIFIED_FAMILIES,
@@ -20,6 +24,9 @@ export interface ValidateSpecOptions {
   readonly registry?: unknown;
   readonly rawSpecJson?: string;
   readonly rawRegistryJson?: string;
+  readonly ed25519Signature?: string;
+  readonly requireEd25519Signature?: boolean;
+  readonly trustedPublicKeyB64?: string;
 }
 
 const archivedFamilySet = new Set<string>(ARCHIVED_FALSIFIED_FAMILIES);
@@ -152,6 +159,16 @@ export function validateSignedStrategySpec(
   );
   if (!validSha) {
     return failGuard('SPEC_SIGNATURE_MISMATCH', 'SignedStrategySpec payloadSha256 mismatch');
+  }
+  const sigCandidate = options?.ed25519Signature ?? (typeof rawSpec.ed25519Signature === 'string' ? rawSpec.ed25519Signature : undefined);
+  if (options?.requireEd25519Signature || sigCandidate !== undefined) {
+    if (!sigCandidate) {
+      return failGuard('SPEC_SIGNATURE_MISMATCH', 'SignedStrategySpec missing required Ed25519 signature');
+    }
+    const sigMsg = canonicalizeSpecSignatureMessage(parsed.data.strategyId, parsed.data.payloadSha256);
+    if (!verifyEd25519SignatureSync(sigMsg, sigCandidate, options?.trustedPublicKeyB64)) {
+      return failGuard('SPEC_SIGNATURE_MISMATCH', 'SignedStrategySpec Ed25519 signature verification failed');
+    }
   }
   return { ok: true, data: parsed.data };
 }

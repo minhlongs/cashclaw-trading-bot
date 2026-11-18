@@ -73,7 +73,13 @@ export class CapitalProtectionEngine {
     const hardGate = evaluateNonBypassableSystemGates(context, this.state, this.config);
     if (hardGate) return hardGate;
 
-    const numericCheck = evaluateOrderNumericAndNotional(order, context.equityUsd, context.nowMs, this.config);
+    const numericCheck = evaluateOrderNumericAndNotional(
+      order,
+      context.equityUsd,
+      context.nowMs,
+      this.config,
+      context.positions,
+    );
     if (numericCheck?.nonOverridable) {
       return buildProtectionDecision({
         allowed: false,

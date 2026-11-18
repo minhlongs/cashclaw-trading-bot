@@ -5,8 +5,7 @@
  * Format: base64(iv || ciphertext)
  * Key: base64-encoded 256-bit key from ENCRYPTION_KEY env var.
  *
- * Backward compatibility: values that don't decode as valid
- * base64(iv || ciphertext) are treated as plaintext and returned as-is.
+ * Production invariant: missing or malformed ENCRYPTION_KEY fails closed.
  */
 
 const ALGORITHM = 'AES-GCM';
@@ -14,12 +13,21 @@ const IV_LENGTH = 12; // 96 bits for GCM
 
 async function getEncryptionKey(): Promise<CryptoKey | null> {
   const raw = process.env.ENCRYPTION_KEY;
-  if (!raw) return null;
+  if (!raw || !raw.trim()) return null;
 
-  const keyBytes = Uint8Array.from(atob(raw), c => c.charCodeAt(0));
+  let keyBytes: Uint8Array<ArrayBuffer>;
+  try {
+    const decoded = atob(raw.trim());
+    keyBytes = new Uint8Array(decoded.length);
+    for (let i = 0; i < decoded.length; i += 1) {
+      keyBytes[i] = decoded.charCodeAt(i);
+    }
+  } catch {
+    return null;
+  }
   if (keyBytes.length !== 32) return null;
 
-  return await crypto.subtle.importKey(
+  return crypto.subtle.importKey(
     'raw',
     keyBytes,
     { name: ALGORITHM, length: 256 },
@@ -32,7 +40,12 @@ export async function encrypt(plaintext: string): Promise<string> {
   if (!plaintext) return '';
 
   const key = await getEncryptionKey();
-  if (!key) return plaintext; // No key configured — store as-is (dev mode)
+  if (!key) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRYPTO_CONFIG_ERROR: Valid 32-byte base64 ENCRYPTION_KEY is required in production');
+    }
+    return plaintext; // Local dev/test fallback only
+  }
 
   const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
   const encoded = new TextEncoder().encode(plaintext);
@@ -43,7 +56,6 @@ export async function encrypt(plaintext: string): Promise<string> {
     encoded,
   );
 
-  // Prepend IV to ciphertext, then base64-encode
   const combined = new Uint8Array(iv.length + ciphertext.byteLength);
   combined.set(iv, 0);
   combined.set(new Uint8Array(ciphertext), iv.length);
@@ -55,21 +67,25 @@ export async function decrypt(ciphertext: string): Promise<string> {
   if (!ciphertext) return '';
 
   const key = await getEncryptionKey();
-  if (!key) return ciphertext; // No key configured — return as-is (dev mode)
-
-  // Try to decode as base64(iv || ciphertext)
-  let combined: Uint8Array;
-  try {
-    const raw = atob(ciphertext);
-    combined = Uint8Array.from(raw, c => c.charCodeAt(0));
-  } catch {
-    // Not valid base64 — treat as plaintext (backward compat)
+  if (!key) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRYPTO_CONFIG_ERROR: Valid 32-byte base64 ENCRYPTION_KEY is required in production');
+    }
     return ciphertext;
   }
 
-  // Must have at least IV + 1 byte of ciphertext (GCM tag is 16 bytes)
+  let combined: Uint8Array<ArrayBuffer>;
+  try {
+    const raw = atob(ciphertext);
+    combined = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i += 1) {
+      combined[i] = raw.charCodeAt(i);
+    }
+  } catch {
+    return ciphertext;
+  }
+
   if (combined.length < IV_LENGTH + 17) {
-    // Too short to be encrypted — treat as plaintext
     return ciphertext;
   }
 
@@ -84,7 +100,6 @@ export async function decrypt(ciphertext: string): Promise<string> {
     );
     return new TextDecoder().decode(decrypted);
   } catch {
-    // Decryption failed — treat as plaintext (backward compat)
-    return ciphertext;
+    throw new Error('CRYPTO_DECRYPT_ERROR: AES-GCM decryption failed — possible data corruption or key mismatch');
   }
 }

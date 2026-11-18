@@ -1,17 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/db/client';
+import { resolveServerSessionUser } from '@/lib/auth/session-resolver';
 
-// Session-cookie auth guard for Next.js App Router routes.
-// This middleware applies to /api/* routes handled by Next.js only.
-// Hono routes in src/worker.ts use Bearer token auth (auth-guard.ts).
-// Protected: mutating endpoints (POST/PUT/DELETE/PATCH) + sensitive GET routes.
-// Public: dashboard pages, health/version/metrics, auth endpoints.
 const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
-
-// API route prefixes that require auth for mutating requests.
 const PROTECTED_API_PREFIXES = ['/api/bots', '/api/settings', '/api/alpha', '/api/ops', '/api/ee'];
-
-// GET routes that contain sensitive data — bot capital, PnL, config, settings, metrics, killswitch.
 const SENSITIVE_GET_PREFIXES = [
   '/api/bots',
   '/api/settings',
@@ -22,78 +13,60 @@ const SENSITIVE_GET_PREFIXES = [
   '/api/killswitch-status',
 ];
 
-// Auth routes are always public (login, logout, me).
-// The IPN webhooks must stay public for POST callbacks: NOWPayments calls them
-// without a session cookie, so requiring one would drop notifications from real payers.
 const PUBLIC_API_PREFIXES = ['/api/auth'];
 const PUBLIC_WEBHOOK_PATHS = ['/api/ee/billing/ipn', '/api/ee/billing/nowpayments-ipn'];
+
+function matchesWebhookPath(pathname: string): boolean {
+  return PUBLIC_WEBHOOK_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method = req.method;
 
-  // Auth routes are always public; IPN webhook routes are public for POST callbacks only.
+  // Unconditionally strip client-supplied x-user-id across every route (API, SSR pages, Server Actions).
+  const sanitizedHeaders = new Headers(req.headers ?? {});
+  sanitizedHeaders.delete('x-user-id');
+
   if (
-    PUBLIC_API_PREFIXES.some(p => pathname.startsWith(p)) ||
-    (method === 'POST' && PUBLIC_WEBHOOK_PATHS.some(p => pathname.startsWith(p)))
+    PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p)) ||
+    (method === 'POST' && matchesWebhookPath(pathname))
   ) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: sanitizedHeaders } });
   }
 
-  // Does this request need a session cookie?
   const isMutating = PROTECTED_METHODS.includes(method);
-  const isSensitiveGet = !isMutating && SENSITIVE_GET_PREFIXES.some(p => pathname.startsWith(p));
-  const needsAuth = (isMutating && PROTECTED_API_PREFIXES.some(p => pathname.startsWith(p))) || isSensitiveGet;
+  const isSensitiveGet = !isMutating && SENSITIVE_GET_PREFIXES.some((p) => pathname.startsWith(p));
+  const needsAuth =
+    (isMutating && PROTECTED_API_PREFIXES.some((p) => pathname.startsWith(p))) || isSensitiveGet;
 
+  const sessionId = req.cookies.get('session_id')?.value;
   if (!needsAuth) {
-    return NextResponse.next();
+    if (sessionId) {
+      const resolved = await resolveServerSessionUser(sessionId);
+      if (resolved.status === 'valid') {
+        sanitizedHeaders.set('x-user-id', resolved.userId);
+      }
+    }
+    return NextResponse.next({ request: { headers: sanitizedHeaders } });
   }
 
-  // Validate session cookie exists.
-  const sessionId = req.cookies.get('session_id')?.value;
   if (!sessionId) {
     return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 });
   }
 
-  // Strip any client-supplied x-user-id to prevent spoofing
-  const sanitizedHeaders = new Headers(req.headers);
-  sanitizedHeaders.delete('x-user-id');
-
-  // Validate session against D1
-  const db = createServerClient();
-  if (db) {
-    try {
-      const now = Math.floor(Date.now() / 1000);
-      const { results } = await db
-        .prepare('SELECT user_id, expires_at FROM user_sessions WHERE id = ?')
-        .bind(sessionId)
-        .all<{ user_id: string; expires_at: number }>();
-
-      if (!results.length || results[0].expires_at < now) {
-        return NextResponse.json({ ok: false, error: 'Session expired' }, { status: 401 });
-      }
-
-      // Set server-verified userId on request (overrides any client value)
-      sanitizedHeaders.set('x-user-id', results[0].user_id);
-      return NextResponse.next({ request: { headers: sanitizedHeaders } });
-    } catch {
-      // D1 query failed — deny request rather than silently allowing
-      return NextResponse.json({ ok: false, error: 'Session validation failed' }, { status: 401 });
-    }
-  }
-
-  // No DB available (local dev only) — accept with valid cookie,
-  // but ALWAYS pass sanitizedHeaders and bind a deterministic dev user identity
-  // from the session cookie so client-forged x-user-id headers can never pass through.
-  // In production this should never happen; fail-closed.
-  if (process.env.NODE_ENV === 'production') {
+  const resolved = await resolveServerSessionUser(sessionId);
+  if (resolved.status === 'unavailable') {
     return NextResponse.json({ ok: false, error: 'Session store unavailable' }, { status: 503 });
   }
-  const safeDevSession = sessionId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64) || 'local';
-  sanitizedHeaders.set('x-user-id', `dev_${safeDevSession}`);
+  if (resolved.status === 'invalid') {
+    return NextResponse.json({ ok: false, error: 'Session expired' }, { status: 401 });
+  }
+
+  sanitizedHeaders.set('x-user-id', resolved.userId);
   return NextResponse.next({ request: { headers: sanitizedHeaders } });
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)'],
+  matcher: ['/((?!_next/static(?:/|$)|_next/image(?:/|$)|favicon\\.ico$).*)'],
 };

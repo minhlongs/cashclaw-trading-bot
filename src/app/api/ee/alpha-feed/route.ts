@@ -6,11 +6,20 @@ import { getCloudAlphaFeedForTier } from '@/ee/alpha-cloud/alpha-feed-service';
 import { getEntitlementsForTier } from '@/ee/billing/tier-entitlements';
 import {
   detectCrossWorkspaceIdor,
+  requireAuthenticatedUser,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
 
 export async function GET(req: Request) {
   try {
+    const auth = requireAuthenticatedUser(req);
+    if (!auth.ok) {
+      return NextResponse.json(
+        { ok: false, code: auth.violation.code, error: auth.violation.error },
+        { status: auth.violation.status },
+      );
+    }
+
     const tierContext = await resolveWorkspaceTierContext(req);
     const idor = detectCrossWorkspaceIdor(req, tierContext);
     if (idor) {

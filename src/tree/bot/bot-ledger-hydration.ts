@@ -15,15 +15,25 @@ import type { OrderContext } from './bot-order-executor-types';
 const BASE_SCALE = Number(BASE_UNITS_PER_ASSET);
 
 export function isPositionReducingOrder(ctx: OrderContext, req: OrderRequest): boolean {
-  if (req.reduceOnly) return true;
   const lifecycle = ctx.deps.lifecycleEngine;
-  if (!lifecycle) return false;
+  if (!lifecycle) return Boolean(req.reduceOnly);
   const pos = lifecycle.getLedger().getPosition(req.symbol);
+  if (req.reduceOnly) return true;
   if (pos.signedQtyBase === ZERO_BIGINT) return false;
   const reqQtyBase = BigInt(Math.max(1, Math.round(req.quantity * BASE_SCALE)));
   if (req.side === 'sell' && pos.signedQtyBase > ZERO_BIGINT) return reqQtyBase <= pos.signedQtyBase;
   if (req.side === 'buy' && pos.signedQtyBase < ZERO_BIGINT) return reqQtyBase <= -pos.signedQtyBase;
   return false;
+}
+
+export function resolvePreDispatchReduceOnlyQty(ctx: OrderContext, req: OrderRequest, reduceOnly: boolean): number {
+  if (!reduceOnly || !ctx.deps.lifecycleEngine) return req.quantity;
+  const pos = ctx.deps.lifecycleEngine.getLedger().getPosition(req.symbol);
+  const closesLong = req.side === 'sell' && pos.signedQtyBase > ZERO_BIGINT;
+  const closesShort = req.side === 'buy' && pos.signedQtyBase < ZERO_BIGINT;
+  if (!closesLong && !closesShort) return req.quantity;
+  const absPosQty = Number(closesLong ? pos.signedQtyBase : -pos.signedQtyBase) / BASE_SCALE;
+  return absPosQty > 0 && req.quantity > absPosQty ? absPosQty : req.quantity;
 }
 
 const REVERSE_STATE_MAP: Record<DurableOrderLifecycleState, LifecycleOrderRecord['state']> = {
@@ -102,16 +112,19 @@ export function restoreEngineFromDurableState(
   loaded: LoadedDurableLedgerState,
 ): number {
   const ledger = lifecycleEngine.getLedger();
-  const rawPositions = reconstructPositionsFromOrderIntents(loaded.orderIntents);
-  const sumPosMargin = rawPositions.reduce((acc, p) => acc + p.openMarginMicroUsd, ZERO_BIGINT);
-  const positions =
-    rawPositions.length === 1 && sumPosMargin !== loaded.balances.POSITION_MARGIN && loaded.balances.POSITION_MARGIN >= ZERO_BIGINT
-      ? [{ ...rawPositions[0]!, openMarginMicroUsd: loaded.balances.POSITION_MARGIN, openNotionalMicroUsd: loaded.balances.POSITION_MARGIN }]
-      : rawPositions;
+  const positions = loaded.hasDurablePositionsTable && loaded.positions
+    ? [...loaded.positions]
+    : (() => {
+        const rawPositions = reconstructPositionsFromOrderIntents(loaded.orderIntents);
+        const sumPosMargin = rawPositions.reduce((acc, p) => acc + p.openMarginMicroUsd, ZERO_BIGINT);
+        return rawPositions.length === 1 && sumPosMargin !== loaded.balances.POSITION_MARGIN && loaded.balances.POSITION_MARGIN >= ZERO_BIGINT
+          ? [{ ...rawPositions[0]!, openMarginMicroUsd: loaded.balances.POSITION_MARGIN, openNotionalMicroUsd: loaded.balances.POSITION_MARGIN }]
+          : rawPositions;
+      })();
   const snapRes = ledger.restoreSnapshot({
     botId: loaded.botId,
     version: loaded.version,
-    fencingToken: loaded.fencingToken,
+    fencingToken: Math.max(ledger.getFencingToken(), loaded.fencingToken),
     balances: loaded.balances,
     positions,
     processedEventHashes: loaded.processedEventHashes,

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { defaultCloudSchedulerCoordinator } from '@/ee/scheduler/cloud-scheduler-coordinator';
 import {
   detectCrossWorkspaceIdor,
+  requireAuthenticatedUser,
   resolveEffectiveWorkspaceId,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
@@ -16,6 +17,14 @@ const LeaseRequestSchema = z.object({
 });
 
 export async function GET(req: Request) {
+  const auth = requireAuthenticatedUser(req);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { ok: false, code: auth.violation.code, error: auth.violation.error },
+      { status: auth.violation.status },
+    );
+  }
+
   const url = new URL(req.url);
   const rawNow = url.searchParams.get('nowMs');
   const queryWorkspaceId = url.searchParams.get('workspaceId')?.trim() || undefined;
@@ -51,6 +60,14 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const auth = requireAuthenticatedUser(req);
+    if (!auth.ok) {
+      return NextResponse.json(
+        { ok: false, code: auth.violation.code, error: auth.violation.error },
+        { status: auth.violation.status },
+      );
+    }
+
     const body = await req.json();
     const parsed = LeaseRequestSchema.safeParse(body);
 

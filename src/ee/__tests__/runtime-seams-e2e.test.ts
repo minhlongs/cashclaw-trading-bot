@@ -127,11 +127,19 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     );
     expect(ipnRes.status).toBe(200);
 
-    const getRes = await getIpnEntitlement(new Request('http://localhost/api/ee/billing/nowpayments-ipn?workspaceId=ws_live_tenant'));
+    const getRes = await getIpnEntitlement(
+      new Request('http://localhost/api/ee/billing/nowpayments-ipn?workspaceId=ws_live_tenant', {
+        headers: { 'x-user-id': 'live_tenant' },
+      }),
+    );
     const getBody = (await getRes.json()) as { entitlement: { tier: string } };
     expect(getBody.entitlement.tier).toBe('ENTERPRISE');
 
-    const creditsRes = await getCredits(new Request('http://localhost/api/ee/credits?workspaceId=ws_live_tenant'));
+    const creditsRes = await getCredits(
+      new Request('http://localhost/api/ee/credits?workspaceId=ws_live_tenant', {
+        headers: { 'x-user-id': 'live_tenant' },
+      }),
+    );
     const creditsBody = (await creditsRes.json()) as { account: { tier: string; balanceCredits: number } };
     expect(creditsBody.account.tier).toBe('ENTERPRISE');
     expect(creditsBody.account.balanceCredits).toBe(50_000);
@@ -139,7 +147,8 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
     // POST /api/ee/credits without explicit tier should inherit ENTERPRISE from IPN store
     const debitRes = await postCredits(
       new Request('http://localhost/api/ee/credits', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': 'live_tenant' },
         body: JSON.stringify({ workspaceId: 'ws_live_tenant', modelTier: 'FAST', promptTokens: 500, completionTokens: 500 }),
       }),
     );
@@ -172,6 +181,7 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
       new Request('http://localhost/api/ee/sync', {
         method: 'POST',
         headers: {
+          'x-user-id': 'sync_basic',
           'x-cashclaw-workspace': 'ws_sync_basic',
           // A spoofed tier and bot count must not move the quota decision.
           'x-cashclaw-tier': 'MASTER',
@@ -187,6 +197,7 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
       new Request('http://localhost/api/ee/sync', {
         method: 'POST',
         headers: {
+          'x-user-id': 'sync_premium',
           'x-cashclaw-workspace': 'ws_sync_premium',
           'x-cashclaw-tier': 'BASIC',
           'x-cashclaw-active-bots': '99',
@@ -207,7 +218,7 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
 
     const basicFeedRes = await getAlphaFeed(
       new Request('http://localhost/api/ee/alpha-feed', {
-        headers: { 'x-cashclaw-workspace': 'ws_feed_basic' },
+        headers: { 'x-user-id': 'feed_basic', 'x-cashclaw-workspace': 'ws_feed_basic' },
       }),
     );
     const basicFeed = (await basicFeedRes.json()) as { count: number; safetyMode: string; tier: string };
@@ -217,7 +228,7 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
 
     const entFeedRes = await getAlphaFeed(
       new Request('http://localhost/api/ee/alpha-feed', {
-        headers: { 'x-cashclaw-workspace': 'ws_feed_enterprise' },
+        headers: { 'x-user-id': 'feed_enterprise', 'x-cashclaw-workspace': 'ws_feed_enterprise' },
       }),
     );
     const entFeed = (await entFeedRes.json()) as { count: number };
@@ -232,15 +243,46 @@ describe('25-Step Open-Core & Cloud SaaS Runtime Seams (G1–G5)', () => {
       timestampMs: 1_760_000_000_000,
     };
     const firstAlert = await postCloudAlert(
-      new Request('http://localhost/api/ee/alerts', { method: 'POST', body: JSON.stringify(alertPayload) }),
+      new Request('http://localhost/api/ee/alerts', {
+        method: 'POST',
+        headers: { 'x-user-id': 'alert' },
+        body: JSON.stringify(alertPayload),
+      }),
     );
-    const firstBody = (await firstAlert.json()) as { dispatched: boolean; envelope: { signatureHex: string } };
+    const firstBody = (await firstAlert.json()) as {
+      dispatched: boolean;
+      signatureHex?: string;
+      envelope: { signatureHex?: string };
+    };
     expect(firstBody.dispatched).toBe(true);
-    expect(firstBody.envelope.signatureHex).toMatch(/^[0-9a-f]{64}$/);
+    expect(firstBody.signatureHex).toBeUndefined();
+    expect(firstBody.envelope.signatureHex).toBeUndefined();
+
+    const callerSecretAlert = await postCloudAlert(
+      new Request('http://localhost/api/ee/alerts', {
+        method: 'POST',
+        headers: { 'x-user-id': 'alert' },
+        body: JSON.stringify({
+          ...alertPayload,
+          eventId: 'evt_seam_caller_secret',
+          botId: 'bot_caller_secret',
+          signingSecret: 'caller-owned-webhook-secret',
+        }),
+      }),
+    );
+    const callerSecretBody = (await callerSecretAlert.json()) as {
+      dispatched: boolean;
+      signatureHex?: string;
+      envelope: { signatureHex?: string };
+    };
+    expect(callerSecretBody.dispatched).toBe(true);
+    expect(callerSecretBody.signatureHex).toMatch(/^[0-9a-f]{64}$/);
+    expect(callerSecretBody.envelope.signatureHex).toMatch(/^[0-9a-f]{64}$/);
 
     const duplicateAlert = await postCloudAlert(
       new Request('http://localhost/api/ee/alerts', {
         method: 'POST',
+        headers: { 'x-user-id': 'alert' },
         body: JSON.stringify({ ...alertPayload, timestampMs: 1_760_000_010_000 }),
       }),
     );

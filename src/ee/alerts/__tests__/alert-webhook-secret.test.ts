@@ -115,7 +115,7 @@ describe('POST /api/ee/alerts fail-closed secret behavior', () => {
     const failRes = await postCloudAlert(
       new Request('http://localhost/api/ee/alerts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': 'alert_fc' },
         body: JSON.stringify(payload),
       }),
     );
@@ -127,14 +127,15 @@ describe('POST /api/ee/alerts fail-closed secret behavior', () => {
     expect(failBody.error).toBe(ALERT_MISSING_SECRET_ERROR);
 
     // Once the secret is configured on the edge binding, retrying the same event
-    // within the cooldown window must succeed and must never match 'default_alert_secret'.
+    // within the cooldown window must succeed and must never leak signatureHex when
+    // signed with the server secret.
     throwOnCloudflareContext = false;
     mockCloudflareEnv.CASHCLAW_ALERT_WEBHOOK_SECRET = 'configured-edge-alert-secret';
 
     const retryRes = await postCloudAlert(
       new Request('http://localhost/api/ee/alerts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': 'alert_fc' },
         body: JSON.stringify(payload),
       }),
     );
@@ -144,17 +145,39 @@ describe('POST /api/ee/alerts fail-closed secret behavior', () => {
       ok: boolean;
       dispatched: boolean;
       deduplicated: boolean;
-      signatureHex: string;
-      envelope: { payloadJson: string };
+      signatureHex?: string;
+      envelope: { payloadJson: string; signatureHex?: string };
     };
     expect(retryBody.ok).toBe(true);
     expect(retryBody.dispatched).toBe(true);
     expect(retryBody.deduplicated).toBe(false);
+    expect(retryBody.signatureHex).toBeUndefined();
+    expect(retryBody.envelope.signatureHex).toBeUndefined();
 
+    // When the caller explicitly supplies their own signingSecret, signatureHex is returned.
+    const explicitRes = await postCloudAlert(
+      new Request('http://localhost/api/ee/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': 'alert_fc' },
+        body: JSON.stringify({
+          ...payload,
+          eventId: 'evt_fail_closed_002',
+          botId: 'bot_fc_2',
+          signingSecret: 'caller-explicit-hmac-secret',
+        }),
+      }),
+    );
+    expect(explicitRes.status).toBe(200);
+    const explicitBody = (await explicitRes.json()) as {
+      signatureHex?: string;
+      envelope: { payloadJson: string; signatureHex?: string };
+    };
     const defaultLiteralSig = await signAlertWebhookPayload(
-      retryBody.envelope.payloadJson,
+      explicitBody.envelope.payloadJson,
       'default_alert_secret',
     );
-    expect(retryBody.signatureHex).not.toBe(defaultLiteralSig);
+    expect(explicitBody.signatureHex).toMatch(/^[0-9a-f]{64}$/);
+    expect(explicitBody.envelope.signatureHex).toBe(explicitBody.signatureHex);
+    expect(explicitBody.signatureHex).not.toBe(defaultLiteralSig);
   });
 });

@@ -13,16 +13,41 @@ import type { Candle } from '@/forest/backtest/ohlcv';
 import { computeRegimeContext } from '@/tree/regime/bot-context';
 
 export interface TickContext {
-  id: string; config: BotConfig; deps: BotDependencies; callbacks: BotCallbacks; state: BotState;
+  id: string;
+  config: BotConfig;
+  deps: BotDependencies;
+  callbacks: BotCallbacks;
+  state: BotState;
   strategy: GridStrategy | MeanRevStrategy | VolatilityDcaStrategy | null;
-  strategyChain: StrategyChain | null; lastTickPrice: number | null;
+  strategyChain: StrategyChain | null;
+  lastTickPrice: number | null;
+  lastTickTimestampMs?: number | null;
   placeOrder: (req: OrderRequest) => Promise<import('../exchange/types').OrderResult>;
   pause: () => void;
   emitTelemetry: (eventType: TradeEventType, details: Record<string, unknown>) => void;
-  emitState: () => void; recentCandles?: Candle[];
+  emitState: () => void;
+  recentCandles?: Candle[];
 }
 
-export interface TickResult { lastTickPrice: number | null; }
+export interface TickResult {
+  lastTickPrice: number | null;
+  lastTickTimestampMs?: number | null;
+}
+
+/** Maximum age of a venue ticker before the tick refuses to act on it. */
+const MAX_TICKER_AGE_MS = 15_000;
+
+async function fetchTickTicker(deps: BotDependencies, symbol: string) {
+  if (deps.exchangeOrchestrator) {
+    const r = await deps.exchangeOrchestrator.fetchTicker('paper', symbol);
+    return r.ok ? r.data : undefined;
+  }
+  return deps.exchange.fetchTicker(symbol);
+}
+
+function resolveTickTimestamp(rawTs: number | undefined, nowMs: number): number {
+  return Number.isFinite(rawTs) && (rawTs as number) > 0 ? (rawTs as number) : nowMs;
+}
 
 export async function tick(ctx: TickContext): Promise<TickResult> {
   const {
@@ -32,33 +57,40 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
   } = ctx;
 
   let lastTickPrice = ctx.lastTickPrice;
+  let lastTickTimestampMs = ctx.lastTickTimestampMs ?? null;
 
-  if (state.status !== 'running') return { lastTickPrice };
+  if (state.status !== 'running') return { lastTickPrice, lastTickTimestampMs };
   if (!deps.killswitch.isTradingEnabled()) {
     callbacks.onLog(`Bot ${id} halted by killswitch: ${deps.killswitch.haltReason}`);
     pause();
-    return { lastTickPrice };
+    return { lastTickPrice, lastTickTimestampMs };
   }
 
   try {
-    let ticker;
-    if (deps.exchangeOrchestrator) {
-      const r = await deps.exchangeOrchestrator.fetchTicker('paper', config.symbol);
-      ticker = r.ok ? r.data : undefined;
-    } else {
-      ticker = await deps.exchange.fetchTicker(config.symbol);
-    }
+    const ticker = await fetchTickTicker(deps, config.symbol);
     if (!ticker) {
       throw new Error(`Failed to fetch ticker for ${config.symbol}`);
     }
     const price = ticker.last;
-    if (price <= 0) return { lastTickPrice };
+    if (price <= 0) return { lastTickPrice, lastTickTimestampMs };
 
+    const nowMs = Date.now();
+    const effectiveTickTs = resolveTickTimestamp(ticker.timestamp, nowMs);
     lastTickPrice = price;
-    state.lastTickAt = Date.now();
-    state.updatedAt = Date.now();
+    lastTickTimestampMs = effectiveTickTs;
+    state.lastTickAt = nowMs;
+    state.updatedAt = nowMs;
 
-    // Regime context: read-only, informational — no execution decisions are gated on this
+    if (nowMs - effectiveTickTs > MAX_TICKER_AGE_MS) {
+      emitTelemetry('error', {
+        error: `Stale market ticker ageMs=${nowMs - effectiveTickTs} exceeds ${MAX_TICKER_AGE_MS}ms fence`,
+        action: 'STALE_DATA_FAIL_CLOSED',
+        context: 'bot.tick',
+      });
+      emitState();
+      return { lastTickPrice, lastTickTimestampMs };
+    }
+
     const regimeCtx = computeRegimeContext(config.symbol, recentCandles);
 
     const chainOrder = evaluateChain({
@@ -86,5 +118,5 @@ export async function tick(ctx: TickContext): Promise<TickResult> {
     callbacks.onError(error instanceof Error ? error : new Error(String(error)), 'bot.tick');
   }
 
-  return { lastTickPrice };
+  return { lastTickPrice, lastTickTimestampMs };
 }

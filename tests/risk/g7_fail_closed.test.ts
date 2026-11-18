@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { generateKeyPairSync } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   buildReduceOnlyTwapPlan,
+  bytesToBase64,
   CapitalProtectionEngine,
   DEFAULT_PROTECTION_CONFIG,
   evaluateCollateralPeg,
@@ -15,6 +17,7 @@ import {
   makeStressOrder,
   makeStressPosition,
   resolveProtectionConfig,
+  signOwnerOverrideToken,
   STRESS_BASE_TIMESTAMP_MS,
   validateOwnerOverride,
 } from '@/tree/protection';
@@ -486,17 +489,40 @@ describe('Gate G7: CapitalProtectionEngine — 14 Fail-Closed Controls & HALT_ON
       ).valid,
     ).toBe(false);
 
-    const engine = new CapitalProtectionEngine();
+    const kp = generateKeyPairSync('ed25519');
+    const pubDer = kp.publicKey.export({ format: 'der', type: 'spki' }) as Buffer;
+    const pubB64 = bytesToBase64(pubDer.subarray(pubDer.length - 32));
+    const privPem = kp.privateKey.export({ format: 'pem', type: 'pkcs8' }) as string;
+
+    const engine = new CapitalProtectionEngine({ ownerPublicKeyB64: pubB64 });
     // Trigger strategy cooldown operational gate
     engine.recordStrategyOutcome('strat-neutral-1', -5_000, 0.05, STRESS_BASE_TIMESTAMP_MS);
 
-    const validOverride = {
-      ownerId: 'founder-op',
-      reason: 'Approved manual hedge adjustment',
-      signatureToken: 'hmac-sha256-987654321',
-      issuedAtMs: nowMs - 100,
-      expiresAtMs: nowMs + 60_000,
-    };
+    // Forged non-Ed25519 tokens ('12345678', 'hmac-sha256-987654321') MUST fail closed
+    const forgedCheck = validateOwnerOverride(
+      {
+        ownerId: 'founder-op',
+        reason: 'Forged override',
+        signatureToken: '12345678',
+        issuedAtMs: nowMs - 100,
+        expiresAtMs: nowMs + 60_000,
+      },
+      nowMs,
+      3_600_000,
+      pubB64,
+    );
+    expect(forgedCheck.valid).toBe(false);
+    expect(forgedCheck.reason).toContain('OWNER_OVERRIDE_SIGNATURE_INVALID');
+
+    const validOverride = signOwnerOverrideToken(
+      {
+        ownerId: 'founder-op',
+        reason: 'Approved manual hedge adjustment',
+        issuedAtMs: nowMs - 100,
+        expiresAtMs: nowMs + 60_000,
+      },
+      privPem,
+    );
 
     const overridden = engine.evaluatePreTrade(
       makeStressOrder(),

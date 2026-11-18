@@ -8,16 +8,12 @@ import type { SaasTier } from './tenant-policy';
 
 export interface WorkspaceTierResolutionOptions {
   readonly explicitWorkspaceId?: string | null;
+  readonly trustedServerOperator?: boolean;
 }
 
 export interface WorkspaceTierContext {
   readonly workspaceId: string | undefined;
   readonly tier: SaasTier;
-  /**
-   * Workspaces the signed-in user belongs to, when the workspace was derived
-   * from a session rather than named by the request. A caller can show this so
-   * the user can switch instead of being silently pinned to one workspace.
-   */
   readonly memberWorkspaceIds?: readonly string[];
 }
 
@@ -25,6 +21,34 @@ export interface WorkspaceAccessViolation {
   readonly code: 'WORKSPACE_FORBIDDEN';
   readonly status: 403;
   readonly error: string;
+}
+
+export interface UnauthenticatedAccessViolation {
+  readonly code: 'AUTH_REQUIRED';
+  readonly status: 403;
+  readonly error: string;
+}
+
+export function extractAuthenticatedUserId(req?: Request): string | undefined {
+  const userId = req?.headers?.get?.('x-user-id')?.trim();
+  return userId && userId.length > 0 ? userId : undefined;
+}
+
+export function requireAuthenticatedUser(req?: Request):
+  | { readonly ok: true; readonly userId: string }
+  | { readonly ok: false; readonly violation: UnauthenticatedAccessViolation } {
+  const userId = extractAuthenticatedUserId(req);
+  if (!userId) {
+    return {
+      ok: false,
+      violation: {
+        code: 'AUTH_REQUIRED',
+        status: 403,
+        error: 'AUTH_REQUIRED: session-verified x-user-id is required',
+      },
+    };
+  }
+  return { ok: true, userId };
 }
 
 export function extractRequestedWorkspaceId(
@@ -51,33 +75,29 @@ export function derivePersonalWorkspaceId(userId: string): string {
   return `ws_${safeId}`;
 }
 
-/**
- * Enforces explicit cross-tenant anti-IDOR isolation on HTTP routes.
- * When a session-verified `x-user-id` explicitly names a `workspaceId` (via body,
- * query `?workspaceId=`, or `x-cashclaw-workspace` header) that belongs neither to
- * `memberWorkspaceIds` nor to their deterministic personal workspace `ws_<userId>`,
- * the request is rejected with 403 WORKSPACE_FORBIDDEN / IDOR_VIOLATION.
- */
+/** Enforces cross-tenant anti-IDOR and unauthenticated workspace targeting guards. */
 export function detectCrossWorkspaceIdor(
   req: Request,
   ctx: WorkspaceTierContext,
   explicitWorkspaceId?: string | null,
 ): WorkspaceAccessViolation | null {
-  const userId = req.headers.get('x-user-id')?.trim();
-  if (!userId) return null;
-
   const namedWorkspaceId = extractRequestedWorkspaceId(req, explicitWorkspaceId);
   if (!namedWorkspaceId) return null;
 
-  const personalWorkspaceId = derivePersonalWorkspaceId(userId);
+  const userId = extractAuthenticatedUserId(req);
+  if (!userId) {
+    return {
+      code: 'WORKSPACE_FORBIDDEN',
+      status: 403,
+      error: `WORKSPACE_FORBIDDEN: unauthenticated request cannot target workspace '${namedWorkspaceId}'`,
+    };
+  }
+
   const allowedWorkspaces = new Set<string>([
-    personalWorkspaceId,
+    derivePersonalWorkspaceId(userId),
     ...(ctx.memberWorkspaceIds ?? []),
   ]);
-
-  if (allowedWorkspaces.has(namedWorkspaceId)) {
-    return null;
-  }
+  if (allowedWorkspaces.has(namedWorkspaceId)) return null;
 
   return {
     code: 'WORKSPACE_FORBIDDEN',
@@ -86,19 +106,7 @@ export function detectCrossWorkspaceIdor(
   };
 }
 
-/**
- * Resolves the effective workspaceId and SaaS tier from an HTTP request.
- *
- * The tier is never read from the request — not from a query parameter, not from
- * a header, not from a request body passed in by a route. Any of those would let
- * a caller grant itself a tier it has not paid for. The tier is read only from
- * `defaultSaasEntitlementStore`, which is written by the IPN handler after a
- * verified NOWPayments payment.
- *
- * Precedence for tier: `defaultSaasEntitlementStore` (keyed by workspaceId), else `'BASIC'`.
- * WorkspaceId: `explicitWorkspaceId`, then `?workspaceId=`, then `x-cashclaw-workspace`,
- * then the active membership of the session-verified `x-user-id`.
- */
+/** Resolves workspaceId and verified SaaS tier; never grants paid tiers without identity. */
 export async function resolveWorkspaceTierContext(
   req: Request,
   options?: WorkspaceTierResolutionOptions,
@@ -107,12 +115,15 @@ export async function resolveWorkspaceTierContext(
 
   // `x-user-id` is written by the middleware from the validated D1 session and
   // stripped of any client value first, so a request cannot pick another user.
-  const userId = req.headers.get('x-user-id')?.trim();
+  const userId = extractAuthenticatedUserId(req);
   if (userId) {
     const memberships = await listWorkspaceMemberships(userId, createServerClient() ?? undefined);
     const active = pickActiveMembership(memberships);
     if (!active) {
-      return { workspaceId: undefined, tier: 'BASIC' };
+      const personalTier = await defaultSaasEntitlementStore.getWorkspaceTier(
+        derivePersonalWorkspaceId(userId),
+      );
+      return { workspaceId: undefined, tier: personalTier };
     }
     const memberWorkspaceIds = memberships.map((membership) => membership.workspaceId);
     const selectedWorkspaceId =
@@ -126,7 +137,7 @@ export async function resolveWorkspaceTierContext(
     };
   }
 
-  if (namedWorkspaceId) {
+  if (options?.trustedServerOperator === true && namedWorkspaceId) {
     const tier = await defaultSaasEntitlementStore.getWorkspaceTier(namedWorkspaceId);
     return { workspaceId: namedWorkspaceId, tier };
   }
@@ -140,17 +151,16 @@ export async function resolveWorkspaceTierContext(
 export function resolveEffectiveWorkspaceId(
   req: Request,
   resolvedWorkspaceId: string | undefined,
-  explicitWorkspaceId?: string | null,
+  _explicitWorkspaceId?: string | null,
 ): string | undefined {
   if (resolvedWorkspaceId) {
     return resolvedWorkspaceId;
   }
-  const userId = req.headers.get('x-user-id')?.trim();
+  const userId = extractAuthenticatedUserId(req);
   if (userId) {
     return derivePersonalWorkspaceId(userId);
   }
-  const trimmedExplicit = explicitWorkspaceId?.trim();
-  return trimmedExplicit && trimmedExplicit.length > 0 ? trimmedExplicit : undefined;
+  return undefined;
 }
 
 /**

@@ -3,10 +3,18 @@ import { handleNowPaymentsIpnPost } from '@/ee/billing/nowpayments-ipn-handler';
 import { defaultSaasEntitlementStore } from '@/ee/billing/saas-entitlement-store';
 import {
   detectCrossWorkspaceIdor,
+  requireAuthenticatedUser,
   resolveWorkspaceTierContext,
 } from '@/ee/tenancy/workspace-request-context';
 
 export async function GET(req: Request) {
+  const auth = requireAuthenticatedUser(req);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { ok: false, code: auth.violation.code, error: auth.violation.error },
+      { status: auth.violation.status },
+    );
+  }
   const url = new URL(req.url);
   const workspaceId = url.searchParams.get('workspaceId')?.trim();
   if (!workspaceId) {

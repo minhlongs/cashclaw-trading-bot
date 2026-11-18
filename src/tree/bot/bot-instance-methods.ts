@@ -5,17 +5,32 @@ import type { TradeEventType } from '../telemetry/types';
 import { executeBotStart, executeBotTick, executeBotOrder, type BotStrategy } from './bot-instance-ops';
 
 export interface BotContext {
-  id: string; config: BotConfig; deps: BotDependencies; callbacks: BotCallbacks; state: BotState;
-  strategy: BotStrategy; strategyChain: StrategyChain | null; lastTickPrice: number | null; orderCounter: number;
+  id: string;
+  config: BotConfig;
+  deps: BotDependencies;
+  callbacks: BotCallbacks;
+  state: BotState;
+  strategy: BotStrategy;
+  strategyChain: StrategyChain | null;
+  lastTickPrice: number | null;
+  lastTickTimestampMs?: number | null;
+  orderCounter: number;
 }
 
 export async function runBotStart(ctx: BotContext, placeOrder: (r: OrderRequest) => Promise<OrderResult>, emitTelem: (t: TradeEventType, d?: Record<string, unknown>) => void, emitSt: () => void, startTick: () => void): Promise<void> {
   const res = await executeBotStart(ctx.id, ctx.config, ctx.deps, ctx.callbacks, ctx.state, placeOrder, emitTelem, emitSt, startTick, ctx.strategy !== null);
-  if (res.strategy) { ctx.strategy = res.strategy; ctx.strategyChain = res.strategyChain; }
+  if (res.strategy) {
+    ctx.strategy = res.strategy;
+    ctx.strategyChain = res.strategyChain;
+    if (res.initialPrice !== undefined) ctx.lastTickPrice = res.initialPrice;
+    if (res.initialTimestampMs !== undefined) ctx.lastTickTimestampMs = res.initialTimestampMs;
+  }
 }
 
 export async function runBotTick(ctx: BotContext, placeOrder: (r: OrderRequest) => Promise<OrderResult>, pause: () => void, emitTelem: (t: TradeEventType, d: Record<string, unknown>) => void, emitSt: () => void): Promise<void> {
-  ctx.lastTickPrice = await executeBotTick(ctx.id, ctx.config, ctx.deps, ctx.callbacks, ctx.state, ctx.strategy, ctx.strategyChain, ctx.lastTickPrice, placeOrder, pause, emitTelem, emitSt);
+  const tickRes = await executeBotTick(ctx.id, ctx.config, ctx.deps, ctx.callbacks, ctx.state, ctx.strategy, ctx.strategyChain, ctx.lastTickPrice, placeOrder, pause, emitTelem, emitSt, ctx.lastTickTimestampMs ?? null);
+  ctx.lastTickPrice = tickRes.lastTickPrice;
+  ctx.lastTickTimestampMs = tickRes.lastTickTimestampMs ?? null;
 }
 
 export async function runBotOrder(ctx: BotContext, req: OrderRequest, emitTelem: (t: TradeEventType, d: Record<string, unknown>) => void, emitSt: () => void): Promise<OrderResult> {

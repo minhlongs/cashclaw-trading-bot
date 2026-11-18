@@ -72,6 +72,10 @@ export class MicroDoubleEntryLedger {
     );
   }
 
+  public getAllPositions(): readonly LedgerPositionRecord[] {
+    return Array.from(this.positions.values()).filter((p) => p.signedQtyBase !== ZERO_BIGINT);
+  }
+
   public postJournalEntry(params: {
     readonly eventHash: string;
     readonly eventType: string;
@@ -165,6 +169,7 @@ export class MicroDoubleEntryLedger {
       balances: { ...this.balances },
       positions: Array.from(this.positions.values()),
       processedEventHashes: Array.from(this.processedEventHashes),
+      journalEntries: this.journalEntries.map((e) => ({ ...e, legs: [...e.legs] })),
     };
   }
 
@@ -172,11 +177,16 @@ export class MicroDoubleEntryLedger {
     if (!computeBalanceSheet(snapshot.balances).balanced) return err('CORRUPT_LEDGER_SNAPSHOT: unbalanced');
     this.balances = { ...snapshot.balances };
     this.version = snapshot.version;
-    this.fencingToken = snapshot.fencingToken;
+    this.fencingToken = Math.max(this.fencingToken, snapshot.fencingToken);
     this.positions.clear();
     for (const pos of snapshot.positions) this.positions.set(pos.symbol, { ...pos });
     this.processedEventHashes.clear();
     for (const hash of snapshot.processedEventHashes) this.processedEventHashes.add(hash);
+    const retained = snapshot.journalEntries
+      ? snapshot.journalEntries.filter((e) => e.version <= snapshot.version && this.processedEventHashes.has(e.eventHash))
+      : this.journalEntries.filter((e) => e.version <= snapshot.version && this.processedEventHashes.has(e.eventHash));
+    this.journalEntries.length = 0;
+    for (const entry of retained) this.journalEntries.push({ ...entry, legs: [...entry.legs] });
     return ok(true);
   }
 }

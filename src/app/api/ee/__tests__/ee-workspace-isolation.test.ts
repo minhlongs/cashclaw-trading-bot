@@ -82,7 +82,7 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
     expect(resolveEffectiveWorkspaceId(authedReq, 'ws_enrolled', 'ws_victim')).toBe('ws_enrolled');
 
     const unauthedReq = new Request('http://localhost/api/ee/credits?workspaceId=ws_local');
-    expect(resolveEffectiveWorkspaceId(unauthedReq, undefined, 'ws_local')).toBe('ws_local');
+    expect(resolveEffectiveWorkspaceId(unauthedReq, undefined, 'ws_local')).toBeUndefined();
     expect(resolveEffectiveWorkspaceId(unauthedReq, undefined, '   ')).toBeUndefined();
   });
 
@@ -126,8 +126,15 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
       }),
     );
     expect(ownRes.status).toBe(200);
-    const body = (await ownRes.json()) as { ok: boolean; tier: string; envelope: { payloadJson: string } };
+    const body = (await ownRes.json()) as {
+      ok: boolean;
+      tier: string;
+      signatureHex?: string;
+      envelope: { payloadJson: string; signatureHex?: string };
+    };
     expect(body.tier).toBe('PREMIUM');
+    expect(body.signatureHex).toBeUndefined();
+    expect(body.envelope.signatureHex).toBeUndefined();
     const signedEvent = JSON.parse(body.envelope.payloadJson) as { workspaceId: string };
     expect(signedEvent.workspaceId).toBe('ws_attacker');
   });
@@ -172,15 +179,15 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
     const spoofPostBody = (await spoofPostRes.json()) as { code: string };
     expect(spoofPostBody.code).toBe('WORKSPACE_FORBIDDEN');
 
+    await seedWorkspaceTier('ws_usr_zero_rows', 'PREMIUM');
     const postRes = await postCredits(
       new Request('http://localhost/api/ee/credits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': 'usr_zero_rows' },
         body: JSON.stringify({
-          modelTier: 'REASONING',
+          modelTier: 'FAST',
           promptTokens: 1_500,
           completionTokens: 500,
-          allowNegativeRoiResearch: true,
         }),
       }),
     );
@@ -190,7 +197,7 @@ describe('Cross-tenant workspace isolation across EE routes', () => {
       account: { workspaceId: string; balanceCredits: number };
     };
     expect(postBody.workspaceId).toBe('ws_usr_zero_rows');
-    expect(postBody.account.balanceCredits).toBe(992);
+    expect(postBody.account.balanceCredits).toBe(9_998);
 
     const victimAccount = defaultCreditLedgerStore.getOrCreateAccount('ws_victim_credits', 'ENTERPRISE');
     expect(victimAccount.balanceCredits).toBe(50_000);

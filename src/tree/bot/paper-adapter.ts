@@ -7,6 +7,29 @@ export interface PaperAdapterOptions {
   autoFillLimitOrders?: boolean;
 }
 
+const PAPER_FEE_RATE = 0.001;
+
+async function resolveExecutionPrice(request: OrderRequest, tickerFetcher?: PaperAdapterOptions['tickerFetcher']): Promise<number> {
+  let price = request.price ?? 0;
+  if ((!Number.isFinite(price) || price <= 0) && tickerFetcher) {
+    try {
+      const ticker = await tickerFetcher(request.symbol);
+      if (ticker && Number.isFinite(ticker.last) && ticker.last > 0) price = ticker.last;
+    } catch {
+      // The caller turns an unavailable price into a rejected order.
+    }
+  }
+  return price;
+}
+
+function rejectedMarketOrder(orderId: string, request: OrderRequest): OrderResult {
+  return {
+    id: orderId, exchangeId: 'paper', symbol: request.symbol, side: request.side,
+    type: request.type, price: 0, quantity: request.quantity, filled: 0,
+    status: 'rejected', fee: 0, timestamp: Date.now(), pnl: 0,
+  };
+}
+
 export function createPaperAdapter(capital: number, options?: PaperAdapterOptions): ExchangeAdapter {
   const balances = new Map<string, { free: number; used: number }>();
   const orders = new Map<string, OrderResult>();
@@ -42,20 +65,27 @@ export function createPaperAdapter(capital: number, options?: PaperAdapterOption
 
     async placeOrder(request: OrderRequest): Promise<OrderResult> {
       const orderId = `paper_${++orderCounter}_${Date.now()}`;
-      const isFilled =
+      const effectivePrice = await resolveExecutionPrice(request, options?.tickerFetcher);
+      const hasValidExecutionPrice = Number.isFinite(effectivePrice) && effectivePrice > 0;
+      const isFilled = hasValidExecutionPrice && (
         request.type === 'market' ||
-        Boolean(options?.autoFillLimitOrders && (request.price ?? 0) > 0);
+        Boolean(options?.autoFillLimitOrders)
+      );
+      const filledQty = isFilled ? request.quantity : 0;
+      if (request.type === 'market' && !hasValidExecutionPrice) {
+        return rejectedMarketOrder(orderId, request);
+      }
       const trade: OrderResult = {
         id: orderId,
         exchangeId: 'paper',
         symbol: request.symbol,
         side: request.side,
         type: request.type,
-        price: request.price ?? 0,
+        price: effectivePrice,
         quantity: request.quantity,
-        filled: isFilled ? request.quantity : 0,
+        filled: filledQty,
         status: isFilled ? 'filled' : 'open',
-        fee: request.quantity * 0.001,
+        fee: isFilled ? effectivePrice * filledQty * PAPER_FEE_RATE : 0,
         timestamp: Date.now(),
         pnl: 0,
       };

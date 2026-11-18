@@ -1,7 +1,8 @@
 import type { OrderRequest, OrderResult } from '../exchange/types';
+import { BASE_UNITS_PER_ASSET } from '../ledger';
 import { type OrderContext, orderResultToTrade } from './bot-order-executor-types';
 import { dispatchExchangeOrder } from './bot-order-executor-dispatch';
-import { isPositionReducingOrder } from './bot-ledger-hydration';
+import { isPositionReducingOrder, resolvePreDispatchReduceOnlyQty } from './bot-ledger-hydration';
 import {
   ensureDurableBotHydrated,
   releaseLifecycleOnDispatchThrow,
@@ -11,6 +12,8 @@ import {
 
 export type { OrderContext };
 export { orderResultToTrade };
+
+const BASE_SCALE = Number(BASE_UNITS_PER_ASSET);
 
 function evaluatePreTradeProtection(
   ctx: OrderContext, req: OrderRequest, orderCounter: number, reduceOnly: boolean,
@@ -50,12 +53,38 @@ function evaluatePreTradeProtection(
   return candidatePrice;
 }
 
+function applyOrderResultToState(args: {
+  ctx: OrderContext;
+  result: OrderResult;
+  botId: string;
+  orderCounter: number;
+}): void {
+  const { ctx, result, botId, orderCounter } = args;
+  const { deps, config, state, onTrade, emitTelemetry } = ctx;
+  const hasFill = (result.status === 'filled' || result.status === 'partially_filled') && result.filled > 0;
+  if (!hasFill) return;
+
+  state.totalTrades++;
+  const trade = orderResultToTrade(result, botId, orderCounter);
+  onTrade(trade);
+  deps.killswitch.onOrderFilled(result);
+
+  const pnl = result.pnl ?? 0;
+  state.totalPnl += pnl;
+  if (pnl >= 0) state.winCount++;
+  else state.lossCount++;
+
+  deps.killswitch.updateDailyPnl(pnl);
+  deps.killswitch.updatePeakCapital(config.capital + state.totalPnl);
+  emitTelemetry('fill', { orderId: result.id, side: result.side, price: result.price, quantity: result.quantity, pnl });
+}
+
 export async function executeOrder(
   ctx: OrderContext,
   req: OrderRequest,
   orderCounter: number,
 ): Promise<{ result: OrderResult; orderCounter: number }> {
-  const { deps, config, state, botId, onTrade, emitTelemetry, emitState } = ctx;
+  const { deps, state, emitTelemetry, emitState } = ctx;
   if (deps.killswitch && !deps.killswitch.isTradingEnabled()) {
     emitTelemetry('error', { error: 'Trading halted by killswitch', context: 'bot.executeOrder' });
     throw new Error('Trading halted by killswitch');
@@ -64,14 +93,22 @@ export async function executeOrder(
   await ensureDurableBotHydrated(ctx);
   const nextCounter = orderCounter + 1;
   const reduceOnly = isPositionReducingOrder(ctx, req);
-  const effectivePrice = evaluatePreTradeProtection(ctx, req, nextCounter - 1, reduceOnly);
+  const preClippedQty = resolvePreDispatchReduceOnlyQty(ctx, req, reduceOnly);
+  const candidateReq = preClippedQty !== req.quantity ? { ...req, quantity: preClippedQty } : req;
+  const effectivePrice = evaluatePreTradeProtection(ctx, candidateReq, nextCounter - 1, reduceOnly);
   const submittedOrder = deps.lifecycleEngine
-    ? await submitLifecyclePreDispatch(ctx, deps.lifecycleEngine, req, nextCounter - 1, effectivePrice, reduceOnly)
+    ? await submitLifecyclePreDispatch(ctx, deps.lifecycleEngine, candidateReq, nextCounter - 1, effectivePrice, reduceOnly)
     : undefined;
+  const clippedQty = submittedOrder
+    ? Number(submittedOrder.effectiveQtyBase) / BASE_SCALE
+    : candidateReq.quantity;
+  const dispatchReq = Math.abs(clippedQty - candidateReq.quantity) > 1e-12
+    ? { ...candidateReq, quantity: clippedQty }
+    : candidateReq;
 
   let result: OrderResult;
   try {
-    result = await dispatchExchangeOrder(ctx, req);
+    result = await dispatchExchangeOrder(ctx, dispatchReq);
   } catch (dispatchError) {
     if (deps.lifecycleEngine && submittedOrder) {
       await releaseLifecycleOnDispatchThrow(ctx, deps.lifecycleEngine, submittedOrder.clientOrderId);
@@ -85,21 +122,7 @@ export async function executeOrder(
 
   state.lastOrderAt = Date.now();
   orderCounter = nextCounter;
-  state.totalTrades++;
-
-  const trade = orderResultToTrade(result, botId, orderCounter);
-  onTrade(trade);
-  deps.killswitch.onOrderFilled(result);
-
-  const pnl = result.pnl ?? 0;
-  state.totalPnl += pnl;
-  if (pnl >= 0) state.winCount++;
-  else state.lossCount++;
-
-  deps.killswitch.updateDailyPnl(pnl);
-  deps.killswitch.updatePeakCapital(config.capital + state.totalPnl);
-  emitTelemetry('fill', { orderId: result.id, side: result.side, price: result.price, quantity: result.quantity, pnl });
-
+  applyOrderResultToState({ ctx, result, botId: ctx.botId, orderCounter });
   state.updatedAt = Date.now();
   emitState();
   return { result, orderCounter };

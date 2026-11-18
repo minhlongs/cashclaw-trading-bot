@@ -3,6 +3,8 @@
 
 PRAGMA foreign_keys=OFF;
 
+DROP TABLE IF EXISTS bots_dg_tmp;
+
 CREATE TABLE bots_dg_tmp (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,

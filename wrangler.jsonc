@@ -35,7 +35,8 @@
 	},
 	// CORS — comma-separated allowed origins (set in production via Cloudflare dashboard)
 	"vars": {
-		"ALLOWED_ORIGINS": "https://cashclaw.pages.dev,http://localhost:3000"
+		"ALLOWED_ORIGINS": "https://cashclaw.pages.dev,http://localhost:3000",
+		"CLOUD_LEASE_ENABLED": "true"
 	},
 
 	// CF Cron — drain exchange request queues every 5 minutes

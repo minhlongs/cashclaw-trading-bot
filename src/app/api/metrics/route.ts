@@ -44,8 +44,8 @@ async function countBots(db: D1Database, userId?: string): Promise<BotCounts> {
   const counts: BotCounts = { total: 0, running: 0, paused: 0 };
   for (const row of result.results ?? []) {
     counts.total += row.count;
-    if (row.status === 'live_running') counts.running += row.count;
-    if (row.status === 'paused' || row.status === 'paper_test') counts.paused += row.count;
+    if (row.status === 'live_running' || row.status === 'paper_test') counts.running += row.count;
+    if (row.status === 'paused') counts.paused += row.count;
   }
   return counts;
 }

@@ -77,7 +77,8 @@ describe('createBotSafetyRuntime — context provider & exposure mapping', () =>
     state.totalPnl = 500;
     const hintCtx = runtime.protectionContextProvider({ symbol: 'ETH/USDT', price: 3_000 });
     expect(hintCtx.peakEquityUsd).toBe(10_500);
-    expect(hintCtx.markets['ETH/USDT']?.midPrice).toBe(3_000);
+    // When lastTickPrice is null, midPrice must not be synthesized from orderHint.price (fail-closed).
+    expect(hintCtx.markets['ETH/USDT']).toBeUndefined();
     expect(hintCtx.markets['BTC/USDT']).toBeUndefined();
 
     runtime.ledger.applyFill({

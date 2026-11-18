@@ -1,8 +1,6 @@
 // Forest layer — Bot KPI calculations & dashboard data
 // Reads bot data directly from D1 via BotQueryService.
 
-'use server';
-
 import { BotQueryService, type BotSummary } from '@/forest/bot/d1-adapter';
 import type { TradeEvent } from '@/tree/telemetry';
 import { getRecentEvents } from './trade-events';

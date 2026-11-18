@@ -306,7 +306,22 @@ describe('POST /api/ee/billing/nowpayments-ipn', () => {
     expect(await defaultSaasEntitlementStore.getWorkspaceTier('ws_underpaid')).toBe('BASIC');
   });
 
-  it('GET /api/ee/billing/nowpayments-ipn rejects cross-workspace lookup when session user is not a member', async () => {
+  it('GET /api/ee/billing/nowpayments-ipn fails closed without x-user-id and rejects cross-workspace lookup', async () => {
+    await defaultSaasEntitlementStore.recordIpnAndUpgradeTier({
+      paymentId: 'pay_foreign_ent',
+      workspaceId: 'ws_foreign',
+      targetTier: 'ENTERPRISE',
+      paymentStatus: 'finished',
+      payAmount: 149,
+      payCurrency: 'USDT',
+    });
+
+    const unauthedRes = await getNowPaymentsIpn(
+      new Request('http://localhost/api/ee/billing/nowpayments-ipn?workspaceId=ws_foreign'),
+    );
+    expect(unauthedRes.status).toBe(403);
+    expect(((await unauthedRes.json()) as { code: string }).code).toBe('AUTH_REQUIRED');
+
     const res = await getNowPaymentsIpn(
       new Request('http://localhost/api/ee/billing/nowpayments-ipn?workspaceId=ws_foreign', {
         headers: { 'x-user-id': 'usr_unaffiliated' },
