@@ -52,6 +52,11 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: D1 Migration Preflight Regression Gate (Offline)
+        run: |
+          npm run db:manifest > /dev/null
+          npx vitest run tests/recovery/d1_migration_preflight_hardening.test.ts tests/recovery/d1_migration_lineage_and_populated_d1.test.ts tests/recovery/d1_wrangler_preflight_and_sentinels.test.ts
+
       - name: Dead code check
         run: npx knip
 

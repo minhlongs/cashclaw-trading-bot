@@ -20,7 +20,11 @@ import {
   toSqlInteger,
   toSqlIntegers,
 } from './d1-ledger-sql';
-import { buildPositionBatchStatements, hasPositionsTableInDb } from './d1-positions-sql';
+import {
+  ASSERT_POSITION_FENCING_SQL,
+  buildPositionBatchStatements,
+  hasPositionsTableInDb,
+} from './d1-positions-sql';
 
 export function classifyBatchError(rawError: unknown): string {
   const msg = rawError instanceof Error ? rawError.message : String(rawError);
@@ -158,6 +162,25 @@ export interface BuiltGroupCommitPlan {
   readonly orderUpsertIndices: readonly number[];
 }
 
+function appendPositionOrFencingStatements(
+  db: D1DatabaseLike,
+  input: AtomicLedgerGroupCommitInput,
+  upserts: readonly AtomicOrderStateUpsert[],
+  hasPositionsTable: boolean,
+  statements: D1PreparedStatementLike[],
+): Result<true> {
+  if (!hasPositionsTable) return ok(true);
+  if (input.positions !== undefined) {
+    const updatedAtMs = input.steps.at(-1)?.entry.timestampMs ?? upserts.at(-1)?.updatedAtMs ?? Date.now();
+    const posRes = buildPositionBatchStatements(db, input.botId, input.fencingToken, updatedAtMs, input.positions);
+    if (!posRes.ok) return posRes;
+    statements.push(...posRes.data);
+  } else if (statements.length > 0) {
+    statements.push(db.prepare(ASSERT_POSITION_FENCING_SQL).bind(input.botId, input.fencingToken));
+  }
+  return ok(true);
+}
+
 export async function buildGroupCommitPlan(
   db: D1DatabaseLike,
   input: AtomicLedgerGroupCommitInput,
@@ -165,6 +188,14 @@ export async function buildGroupCommitPlan(
   const upserts = input.orderUpserts ?? [];
   if (input.steps.length === 0 && upserts.length === 0 && input.positions === undefined) {
     return err('EMPTY_ATOMIC_COMMIT_GROUP: no journal steps, order upserts, or positions supplied');
+  }
+
+  let hasPositionsTable: boolean;
+  try {
+    hasPositionsTable = await hasPositionsTableInDb(db);
+  } catch (probeErr) {
+    const msg = probeErr instanceof Error ? probeErr.message : String(probeErr);
+    return err(`POSITIONS_TABLE_PROBE_FAILED: ${msg}`);
   }
 
   const statements: D1PreparedStatementLike[] = [];
@@ -176,21 +207,8 @@ export async function buildGroupCommitPlan(
   );
   if (!coreRes.ok) return coreRes;
 
-  if (input.positions !== undefined) {
-    let hasPositionsTable: boolean;
-    try {
-      hasPositionsTable = await hasPositionsTableInDb(db);
-    } catch (probeErr) {
-      const msg = probeErr instanceof Error ? probeErr.message : String(probeErr);
-      return err(`POSITIONS_TABLE_PROBE_FAILED: ${msg}`);
-    }
-    if (hasPositionsTable) {
-      const updatedAtMs = input.steps.at(-1)?.entry.timestampMs ?? upserts.at(-1)?.updatedAtMs ?? Date.now();
-      const posRes = buildPositionBatchStatements(db, input.botId, input.fencingToken, updatedAtMs, input.positions);
-      if (!posRes.ok) return posRes;
-      statements.push(...posRes.data);
-    }
-  }
+  const posRes = appendPositionOrFencingStatements(db, input, upserts, hasPositionsTable, statements);
+  if (!posRes.ok) return posRes;
 
   if (statements.length === 0) {
     return err('POSITIONS_TABLE_UNAVAILABLE: cannot execute position-only commit without paper_ledger_positions');

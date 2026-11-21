@@ -101,6 +101,9 @@ export const UPDATE_ACCOUNT_BALANCES_OPTIMISTIC_SQL = `
      AND NOT EXISTS (
        SELECT 1 FROM scheduler_bot_leases l WHERE l.bot_id = ?10 AND l.fencing_token > ?8
      )
+     AND NOT EXISTS (
+       SELECT 1 FROM paper_order_intents i WHERE i.bot_id = ?10 AND i.fencing_token > ?8
+     )
 `;
 
 export const INSERT_FIRST_JOURNAL_LEG_GUARDED_SQL = `
@@ -132,6 +135,8 @@ export const UPSERT_ORDER_STATE_SQL = `
      SELECT 1 FROM scheduler_bot_leases l WHERE l.bot_id = ?1 AND l.fencing_token > ?12
    ) AND NOT EXISTS (
      SELECT 1 FROM paper_ledger_accounts a WHERE a.bot_id = ?1 AND a.fencing_token > ?12
+   ) AND NOT EXISTS (
+     SELECT 1 FROM paper_order_intents i WHERE i.bot_id = ?1 AND i.fencing_token > ?12
    )
   ON CONFLICT(bot_id, client_order_id) DO UPDATE SET
     filled_qty_base = excluded.filled_qty_base,

@@ -21,6 +21,8 @@ export const ASSERT_POSITION_FENCING_SQL = `
      SELECT 1 FROM paper_ledger_positions p WHERE p.bot_id = ?1 AND p.fencing_token > ?2
    ) OR EXISTS (
      SELECT 1 FROM paper_ledger_accounts a WHERE a.bot_id = ?1 AND a.fencing_token > ?2
+   ) OR EXISTS (
+     SELECT 1 FROM paper_order_intents i WHERE i.bot_id = ?1 AND i.fencing_token > ?2
    )
 `;
 
