@@ -23,6 +23,8 @@
     "type-check": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "quality:gate": "npm run type-check && npm run lint && npx vitest run --coverage && npx knip",
+    "db:manifest": "node scripts/d1-schema-diff.mjs manifest",
+    "db:preflight": "node scripts/d1-schema-diff.mjs preflight",
     "db:generate": "wrangler d1 migrations create cashclaw-db --local",
     "db:apply": "wrangler d1 migrations apply cashclaw-db --local",
     "db:apply:remote": "wrangler d1 migrations apply cashclaw-db --remote",

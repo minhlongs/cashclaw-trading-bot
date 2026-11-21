@@ -1,0 +1,50 @@
+{
+  "command": "CASHCLAW SUPREME COMMAND #15",
+  "date": "2026-11-21",
+  "baselineCommit": "ac2921a7922007566a2f71cb6d76a087790b8ae1",
+  "branch": "fix/cashclaw-d1-ledger-integrity",
+  "verdict": "READY_FOR_OWNER_PR_REVIEW",
+  "liveTradingUnlocked": false,
+  "g13GenesisUntouched": "2026-11-14T13:07:31.631351Z",
+  "historicalMigrationsModified": false,
+  "remoteD1Touched": false,
+  "productionDeployed": false,
+  "schemaSnapshots": {
+    "lineageAMainSha256": "f3a827333a11e40b0592137b00da0ef7eefc596fcc4a352cd79003d928982d9b",
+    "lineageBPr35Sha256": "490052699c48ba937a43c772f06a2c7eae63ed9e5f7d4926fcbb58677d5e9e9c",
+    "numericCollisions": ["0015", "0016", "0017", "0018", "0019"],
+    "tablesOnlyInMainCount": 8,
+    "tablesOnlyInPr35Count": 10
+  },
+  "d1Pragmas": {
+    "foreign_key_check": "PASS_EMPTY_ON_ACTUAL_D1",
+    "integrity_check": "UNSUPPORTED_IN_D1_SQLITE_AUTH_SUPPLEMENTAL_SQLITE_OK"
+  },
+  "gates": {
+    "typeCheck": "PASS",
+    "eslint": "PASS",
+    "eslintSuppressions": { "current": 6, "baseline": 6, "status": "PASS" },
+    "knip": "PASS",
+    "vitest": { "filesPassed": 761, "filesTotal": 761, "testsPassed": 6412, "testsTotal": 6412, "status": "PASS" },
+    "openNextWorkerBuild": "PASS",
+    "workerdLocalD1Smoke": "PASS",
+    "playwrightSecurityE2e": { "passed": 7, "total": 7, "status": "PASS" },
+    "openCoreGovernance": { "filesPassed": 10, "testsPassed": 49, "status": "PASS" },
+    "gitleaksNewCode": "PASS_ZERO_LEAKS",
+    "gitDiffCheck": "PASS",
+    "pythonVerificationLab": { "passed": 165, "blockedMissingData": 5, "total": 170, "status": "PARTIAL_BLOCKED_MISSING_DATA" },
+    "independentAdversarialReview": { "p0": 0, "p1Fixed": 2, "p2Fixed": 4, "status": "CLEAN_AFTER_FIXES" }
+  },
+  "deliverables": [
+    "plans/reports/cashclaw-p0-d1-ledger-261121/01-baseline-and-scope.md",
+    "plans/reports/cashclaw-p0-d1-ledger-261121/02-migration-lineage-and-schema-diff.md",
+    "plans/reports/cashclaw-p0-d1-ledger-261121/03-populated-d1-upgrade-report.md",
+    "plans/reports/cashclaw-p0-d1-ledger-261121/04-actual-d1-atomic-ledger-report.md",
+    "plans/reports/cashclaw-p0-d1-ledger-261121/05-backup-restore-and-recovery-plan.md",
+    "plans/reports/cashclaw-p0-d1-ledger-261121/06-application-and-worker-compatibility.md",
+    "plans/reports/cashclaw-p0-d1-ledger-261121/07-quality-and-security-gates.md",
+    "plans/reports/cashclaw-p0-d1-ledger-261121/08-independent-adversarial-review.md",
+    "plans/reports/cashclaw-p0-d1-ledger-261121/09-release-readiness.md",
+    "plans/reports/cashclaw-p0-d1-ledger-261121/evidence-manifest.json"
+  ]
+}

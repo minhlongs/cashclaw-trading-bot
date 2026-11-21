@@ -9,9 +9,27 @@ import {
 } from './ledger-types';
 import { toSqlIntegers } from './d1-ledger-sql';
 
+export const ASSERT_POSITION_FENCING_SQL = `
+  INSERT INTO paper_ledger_positions (
+    bot_id, symbol, signed_qty_base, open_notional_micro_usd,
+    open_margin_micro_usd, fencing_token, updated_at_ms
+  )
+  SELECT NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   WHERE EXISTS (
+     SELECT 1 FROM scheduler_bot_leases l WHERE l.bot_id = ?1 AND l.fencing_token > ?2
+   ) OR EXISTS (
+     SELECT 1 FROM paper_ledger_positions p WHERE p.bot_id = ?1 AND p.fencing_token > ?2
+   ) OR EXISTS (
+     SELECT 1 FROM paper_ledger_accounts a WHERE a.bot_id = ?1 AND a.fencing_token > ?2
+   ) OR EXISTS (
+     SELECT 1 FROM paper_order_intents i WHERE i.bot_id = ?1 AND i.fencing_token > ?2
+   )
+`;
+
 export const DELETE_BOT_POSITIONS_GUARDED_SQL = `
   DELETE FROM paper_ledger_positions
    WHERE bot_id = ?1
+     AND fencing_token <= ?2
      AND NOT EXISTS (
        SELECT 1 FROM scheduler_bot_leases l WHERE l.bot_id = ?1 AND l.fencing_token > ?2
      )
@@ -63,6 +81,7 @@ export function buildPositionBatchStatements(
   positions: readonly LedgerPositionRecord[],
 ): Result<D1PreparedStatementLike[]> {
   const stmts: D1PreparedStatementLike[] = [
+    db.prepare(ASSERT_POSITION_FENCING_SQL).bind(botId, fencingToken),
     db.prepare(DELETE_BOT_POSITIONS_GUARDED_SQL).bind(botId, fencingToken),
   ];
   for (const pos of positions) {
@@ -78,20 +97,14 @@ export function buildPositionBatchStatements(
   return ok(stmts);
 }
 
-const positionsTableCache = new WeakMap<D1DatabaseLike, boolean>();
+const positionsTableCache = new WeakMap<D1DatabaseLike, true>();
 
 export async function hasPositionsTableInDb(db: D1DatabaseLike): Promise<boolean> {
-  const cached = positionsTableCache.get(db);
-  if (cached !== undefined) return cached;
-  try {
-    const hit = await db.prepare(CHECK_POSITIONS_TABLE_SQL).first<{ name: string }>();
-    const present = Boolean(hit?.name);
-    positionsTableCache.set(db, present);
-    return present;
-  } catch {
-    positionsTableCache.set(db, false);
-    return false;
-  }
+  if (positionsTableCache.get(db) === true) return true;
+  const hit = await db.prepare(CHECK_POSITIONS_TABLE_SQL).first<{ name: string }>();
+  const present = Boolean(hit?.name);
+  if (present) positionsTableCache.set(db, true);
+  return present;
 }
 
 export async function loadPositionsIfTablePresent(

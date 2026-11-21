@@ -11,6 +11,7 @@ import {
 } from './ledger-types';
 import { computeBalanceSheet, validateBalancedLegs } from './double-entry-math';
 import {
+  ASSERT_ORDER_UPSERT_APPLIED_SQL,
   INSERT_FIRST_JOURNAL_LEG_GUARDED_SQL,
   INSERT_PROCESSED_EVENT_HASH_SQL,
   INSERT_SUBSEQUENT_JOURNAL_LEG_SQL,
@@ -19,15 +20,29 @@ import {
   toSqlInteger,
   toSqlIntegers,
 } from './d1-ledger-sql';
-import { buildPositionBatchStatements, hasPositionsTableInDb } from './d1-positions-sql';
+import {
+  ASSERT_POSITION_FENCING_SQL,
+  buildPositionBatchStatements,
+  hasPositionsTableInDb,
+} from './d1-positions-sql';
 
 export function classifyBatchError(rawError: unknown): string {
   const msg = rawError instanceof Error ? rawError.message : String(rawError);
   if (msg.includes('UNIQUE') && msg.includes('processed_event_hashes')) {
     return `DUPLICATE_EVENT_HASH: ${msg}`;
   }
-  if (msg.includes('paper_journal_entries.account_version') || msg.includes('CHECK constraint')) {
+  const isNotNull = msg.includes('NOT NULL');
+  if (
+    (isNotNull && msg.includes('paper_journal_entries.account_version'))
+    || (msg.includes('CHECK constraint') && (msg.includes('cash_micro_usd') || msg.includes('paper_ledger_accounts')))
+  ) {
     return `OPTIMISTIC_CONCURRENCY_OR_CASH_GUARD_FAILED: ${msg}`;
+  }
+  if (isNotNull && msg.includes('paper_order_intents.bot_id')) {
+    return `STALE_FENCING_TOKEN_ON_INTENT: ${msg}`;
+  }
+  if (isNotNull && msg.includes('paper_ledger_positions.bot_id')) {
+    return `STALE_FENCING_TOKEN_ON_POSITION: ${msg}`;
   }
   return `BATCH_ABORTED: ${msg}`;
 }
@@ -113,10 +128,57 @@ function appendStepStatements(
   return ok(true);
 }
 
+function appendAllStepsAndUpserts(
+  db: D1DatabaseLike,
+  input: AtomicLedgerGroupCommitInput,
+  upserts: readonly AtomicOrderStateUpsert[],
+  statements: D1PreparedStatementLike[],
+  accountUpdateIndices: number[],
+  orderUpsertIndices: number[],
+): Result<true> {
+  for (let i = 0; i < input.steps.length; i++) {
+    const step = input.steps[i]!;
+    const valid = validateCommitStep(step);
+    if (!valid.ok) return valid;
+    const stepRes = appendStepStatements(
+      db, input.botId, input.fencingToken, input.expectedVersion + i, step, statements, accountUpdateIndices,
+    );
+    if (!stepRes.ok) return stepRes;
+  }
+
+  for (const ord of upserts) {
+    const ordStmt = bindOrderUpsertStmt(db, input.botId, input.fencingToken, ord);
+    if (!ordStmt.ok) return ordStmt;
+    orderUpsertIndices.push(statements.length);
+    statements.push(ordStmt.data);
+    statements.push(db.prepare(ASSERT_ORDER_UPSERT_APPLIED_SQL));
+  }
+  return ok(true);
+}
+
 export interface BuiltGroupCommitPlan {
   readonly statements: D1PreparedStatementLike[];
   readonly accountUpdateIndices: readonly number[];
   readonly orderUpsertIndices: readonly number[];
+}
+
+function appendPositionOrFencingStatements(
+  db: D1DatabaseLike,
+  input: AtomicLedgerGroupCommitInput,
+  upserts: readonly AtomicOrderStateUpsert[],
+  hasPositionsTable: boolean,
+  statements: D1PreparedStatementLike[],
+): Result<true> {
+  if (!hasPositionsTable) return ok(true);
+  if (input.positions !== undefined) {
+    const updatedAtMs = input.steps.at(-1)?.entry.timestampMs ?? upserts.at(-1)?.updatedAtMs ?? Date.now();
+    const posRes = buildPositionBatchStatements(db, input.botId, input.fencingToken, updatedAtMs, input.positions);
+    if (!posRes.ok) return posRes;
+    statements.push(...posRes.data);
+  } else if (statements.length > 0) {
+    statements.push(db.prepare(ASSERT_POSITION_FENCING_SQL).bind(input.botId, input.fencingToken));
+  }
+  return ok(true);
 }
 
 export async function buildGroupCommitPlan(
@@ -128,33 +190,28 @@ export async function buildGroupCommitPlan(
     return err('EMPTY_ATOMIC_COMMIT_GROUP: no journal steps, order upserts, or positions supplied');
   }
 
+  let hasPositionsTable: boolean;
+  try {
+    hasPositionsTable = await hasPositionsTableInDb(db);
+  } catch (probeErr) {
+    const msg = probeErr instanceof Error ? probeErr.message : String(probeErr);
+    return err(`POSITIONS_TABLE_PROBE_FAILED: ${msg}`);
+  }
+
   const statements: D1PreparedStatementLike[] = [];
   const accountUpdateIndices: number[] = [];
   const orderUpsertIndices: number[] = [];
 
-  for (let i = 0; i < input.steps.length; i++) {
-    const step = input.steps[i]!;
-    const expectedPrev = input.expectedVersion + i;
-    const valid = validateCommitStep(step);
-    if (!valid.ok) return valid;
-    const stepRes = appendStepStatements(
-      db, input.botId, input.fencingToken, expectedPrev, step, statements, accountUpdateIndices,
-    );
-    if (!stepRes.ok) return stepRes;
-  }
+  const coreRes = appendAllStepsAndUpserts(
+    db, input, upserts, statements, accountUpdateIndices, orderUpsertIndices,
+  );
+  if (!coreRes.ok) return coreRes;
 
-  for (const ord of upserts) {
-    const ordStmt = bindOrderUpsertStmt(db, input.botId, input.fencingToken, ord);
-    if (!ordStmt.ok) return ordStmt;
-    orderUpsertIndices.push(statements.length);
-    statements.push(ordStmt.data);
-  }
+  const posRes = appendPositionOrFencingStatements(db, input, upserts, hasPositionsTable, statements);
+  if (!posRes.ok) return posRes;
 
-  if (input.positions !== undefined && (await hasPositionsTableInDb(db))) {
-    const updatedAtMs = input.steps.at(-1)?.entry.timestampMs ?? upserts.at(-1)?.updatedAtMs ?? Date.now();
-    const posRes = buildPositionBatchStatements(db, input.botId, input.fencingToken, updatedAtMs, input.positions);
-    if (!posRes.ok) return posRes;
-    statements.push(...posRes.data);
+  if (statements.length === 0) {
+    return err('POSITIONS_TABLE_UNAVAILABLE: cannot execute position-only commit without paper_ledger_positions');
   }
 
   return ok({ statements, accountUpdateIndices, orderUpsertIndices });

@@ -15,7 +15,11 @@ import {
   mapOrderIntentRow,
   type LoadedDurableLedgerState,
 } from './d1-ledger-sql';
-import { loadPositionsIfTablePresent } from './d1-positions-sql';
+import {
+  ASSERT_POSITION_FENCING_SQL,
+  hasPositionsTableInDb,
+  loadPositionsIfTablePresent,
+} from './d1-positions-sql';
 import {
   bindOrderUpsertStmt,
   buildGroupCommitPlan,
@@ -41,6 +45,15 @@ export class D1AtomicLedgerBatcher {
     const stmtRes = bindOrderUpsertStmt(this.db, botId, fencingToken, intent);
     if (!stmtRes.ok) return stmtRes;
     try {
+      const hasPositionsTable = await hasPositionsTableInDb(this.db);
+      if (hasPositionsTable) {
+        const batchRes = await this.db.batch([
+          this.db.prepare(ASSERT_POSITION_FENCING_SQL).bind(botId, fencingToken),
+          stmtRes.data,
+        ]);
+        if (batchRes[1]?.meta?.changes === 0) return err('STALE_FENCING_TOKEN_ON_INTENT');
+        return ok(true);
+      }
       const res = await stmtRes.data.run();
       if (res.meta.changes === 0) return err('STALE_FENCING_TOKEN_ON_INTENT');
       return ok(true);
