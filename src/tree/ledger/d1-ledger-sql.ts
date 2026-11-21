@@ -130,6 +130,8 @@ export const UPSERT_ORDER_STATE_SQL = `
   SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
    WHERE NOT EXISTS (
      SELECT 1 FROM scheduler_bot_leases l WHERE l.bot_id = ?1 AND l.fencing_token > ?12
+   ) AND NOT EXISTS (
+     SELECT 1 FROM paper_ledger_accounts a WHERE a.bot_id = ?1 AND a.fencing_token > ?12
    )
   ON CONFLICT(bot_id, client_order_id) DO UPDATE SET
     filled_qty_base = excluded.filled_qty_base,
@@ -139,6 +141,16 @@ export const UPSERT_ORDER_STATE_SQL = `
     fencing_token = excluded.fencing_token,
     updated_at_ms = excluded.updated_at_ms
   WHERE paper_order_intents.fencing_token <= excluded.fencing_token
+`;
+
+export const ASSERT_ORDER_UPSERT_APPLIED_SQL = `
+  INSERT INTO paper_order_intents (
+    bot_id, client_order_id, symbol, side, order_type, quantity_base,
+    filled_qty_base, limit_price_micro_usd, reserved_margin_micro_usd,
+    reduce_only, lifecycle_state, fencing_token, created_at_ms, updated_at_ms
+  )
+  SELECT NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   WHERE changes() = 0
 `;
 
 export const SELECT_ACCOUNT_ROW_SQL = `

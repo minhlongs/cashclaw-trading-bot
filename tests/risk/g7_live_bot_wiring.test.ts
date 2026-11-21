@@ -337,8 +337,9 @@ describe('Live BotManager Runtime Safety Integration (Unmocked BotInstance & Fac
     await bot1.tick();
     await vi.waitFor(() => expect(bot1.getLifecycleEngine()!.getAllOrders()[0]?.state).toBe('filled'));
     expect(batchSpy.mock.calls.length).toBe(2);
-    expect(batchSpy.mock.calls[0]?.[0]).toHaveLength(9);
-    expect(batchSpy.mock.calls[1]?.[0]).toHaveLength(9);
+    // Each atomic batch includes the order-upsert changes()=0 abort guard (+1) and position fencing guard when positions persist
+    expect(batchSpy.mock.calls[0]?.[0]).toHaveLength(10);
+    expect(batchSpy.mock.calls[1]?.[0]).toHaveLength(10);
     expect(runSpy).toHaveBeenCalled();
     mgr1.destroy();
 
