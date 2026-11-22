@@ -361,6 +361,7 @@ def evaluate_store_prospective_clock(
             and contract_res.eligible_for_90d_clock
             and bool(obs_day)
             and obs_day >= start_day_iso
+            and obs_day <= as_of_day_iso
         )
         if record_eligible:
             eligible_obs_days.add(obs_day)

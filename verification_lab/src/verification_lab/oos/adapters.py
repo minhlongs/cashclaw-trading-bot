@@ -13,12 +13,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any, Callable, Mapping, Sequence
-from urllib.parse import urlparse
+from urllib.parse import urlsplit
 
 import requests
 
@@ -227,9 +228,14 @@ class PublicReadOnlyHttpClient:
         json_body: Mapping[str, Any] | None,
         headers: Mapping[str, str],
     ) -> None:
-        parsed = urlparse(url)
+        parsed = urlsplit(url)
         if parsed.scheme != "https":
             raise UnauthorizedEndpointError(f"non_https_endpoint_forbidden ({url})")
+        if parsed.query or parsed.fragment or parsed.username is not None or parsed.password is not None:
+            raise UnauthorizedEndpointError(f"url_components_not_allowed ({url})")
+        lower_path = parsed.path.lower()
+        if ";" in parsed.path or ".." in parsed.path or "%2f" in lower_path or "%5c" in lower_path or "\\" in parsed.path:
+            raise UnauthorizedEndpointError(f"url_path_normalization_forbidden ({url})")
 
         for key in headers:
             if key.lower() in FORBIDDEN_HEADER_KEYS:
@@ -289,10 +295,15 @@ class PublicReadOnlyHttpClient:
                     raise RateLimitExhaustedError(f"http_429_rate_limit_exhausted ({url})")
                 headers_lower = {k.lower(): v for k, v in resp.headers.items()}
                 retry_after = headers_lower.get("retry-after")
-                try:
-                    delay = min(float(retry_after), 30.0) if retry_after is not None else self._base_backoff_s * (2**attempt)
-                except ValueError:
-                    delay = self._base_backoff_s * (2**attempt)
+                fallback_delay = self._base_backoff_s * (2**attempt)
+                delay = fallback_delay
+                if retry_after is not None:
+                    try:
+                        parsed_delay = float(retry_after)
+                        if math.isfinite(parsed_delay):
+                            delay = min(max(parsed_delay, 0.0), 30.0)
+                    except ValueError:
+                        delay = fallback_delay
                 self._sleep_fn(max(delay, 0.0))
                 continue
 
@@ -310,7 +321,7 @@ class PublicReadOnlyHttpClient:
 
             captured_dt = self._clock_fn().astimezone(timezone.utc)
             raw_hash = _compute_sha256(resp.raw_bytes)
-            req_id = f"{venue}:{urlparse(url).path}:{raw_hash[:16]}"
+            req_id = f"{venue}:{urlsplit(url).path}:{raw_hash[:16]}"
             return RawCaptureEnvelope(
                 raw_source_id=req_id,
                 venue=venue,

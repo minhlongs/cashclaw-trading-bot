@@ -16,7 +16,7 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -66,6 +66,23 @@ def _independent_parse_iso_utc(ts: str) -> datetime:
     if dt.tzinfo is None:
         raise ValueError(f"naive_timestamp ({ts})")
     return dt.astimezone(timezone.utc)
+
+
+def _safe_parse_finite_decimal(val: Any, field: str, mismatches: list[str]) -> Decimal | None:
+    if val is None:
+        return None
+    if isinstance(val, bool):
+        mismatches.append(f"invalid_decimal_in_replay ({field})")
+        return None
+    try:
+        dec = Decimal(str(val))
+    except (InvalidOperation, ValueError):
+        mismatches.append(f"invalid_decimal_in_replay ({field})")
+        return None
+    if not dec.is_finite():
+        mismatches.append(f"non_finite_decimal_in_replay ({field})")
+        return None
+    return dec
 
 
 def _independently_reparse_raw_venue_files(
@@ -323,9 +340,9 @@ def run_independent_offline_replay(
             mismatches.append(f"invalid_timestamp_in_replay ({exc})")
 
         # 4. Independently re-parse verbatim raw venue HTTP response bytes when present
-        spot_d = Decimal(str(raw_bundle["spot_price"])) if raw_bundle.get("spot_price") is not None else None
-        perp_d = Decimal(str(raw_bundle["perp_price"])) if raw_bundle.get("perp_price") is not None else None
-        borrow_d = Decimal(str(raw_bundle["borrow_apr_bps"])) if raw_bundle.get("borrow_apr_bps") is not None else None
+        spot_d = _safe_parse_finite_decimal(raw_bundle.get("spot_price"), "spot_price", mismatches)
+        perp_d = _safe_parse_finite_decimal(raw_bundle.get("perp_price"), "perp_price", mismatches)
+        borrow_d = _safe_parse_finite_decimal(raw_bundle.get("borrow_apr_bps"), "borrow_apr_bps", mismatches)
 
         raw_venue_files = rec.get("raw_venue_files") or []
         if raw_venue_files and avail_dt is not None and cap_dt is not None:
@@ -345,7 +362,10 @@ def run_independent_offline_replay(
                     if bundle_val is None:
                         mismatches.append(f"missing_bundle_primitive ({prim_key})")
                         continue
-                    diff = abs(Decimal(str(bundle_val)) - reparsed[prim_key])
+                    bundle_dec = _safe_parse_finite_decimal(bundle_val, f"bundle.{prim_key}", mismatches)
+                    if bundle_dec is None:
+                        continue
+                    diff = abs(bundle_dec - reparsed[prim_key])
                     if diff > Decimal("0.0001"):
                         mismatches.append(f"raw_venue_normalization_mismatch ({prim_key})")
                         num_diffs[f"raw_venue_{prim_key}"] = f"{diff:.8f}"
@@ -365,7 +385,14 @@ def run_independent_offline_replay(
         recorded_signal = norm.get("signal_output", {})
         recorded_exposure = recorded_signal.get("theoretical_two_leg_exposure", {})
         raw_history = raw_bundle.get("annualized_funding_bps_history", [])
-        funding_hist_dec = [Decimal(str(x)) for x in raw_history]
+        funding_hist_dec: list[Decimal] = []
+        if isinstance(raw_history, list):
+            for idx_h, item_h in enumerate(raw_history):
+                parsed_h = _safe_parse_finite_decimal(item_h, f"annualized_funding_bps_history[{idx_h}]", mismatches)
+                if parsed_h is not None:
+                    funding_hist_dec.append(parsed_h)
+        else:
+            mismatches.append("invalid_funding_history_type")
 
         stream_prior_active = prior_active_by_stream.get(stream_key, False)
         recomputed = _independent_recompute_signal(
