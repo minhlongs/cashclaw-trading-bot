@@ -1,5 +1,58 @@
-"""Prospective out-of-sample observation contract and passive evidence validator."""
+"""Prospective out-of-sample observation contract and passive evidence pipeline."""
 
+from verification_lab.oos.adapters import (
+    AdapterError,
+    BinanceReadOnlyAdapter,
+    DataQualityError,
+    HyperliquidReadOnlyAdapter,
+    NormalizedMarketObservation,
+    PublicReadOnlyHttpClient,
+    RateLimitExhaustedError,
+    RawCaptureEnvelope,
+    UnauthorizedEndpointError,
+)
+from verification_lab.oos.causal_timing import (
+    CausalTimestamps,
+    CausalTimingCheck,
+    validate_causal_funding_events,
+    validate_causal_observation_window,
+    validate_daily_candle_finalization,
+    validate_quote_freshness,
+)
+from verification_lab.oos.evidence_store import (
+    AppendOnlyEvidenceStore,
+    ChainVerificationReport,
+    DuplicateRecordError,
+    EvidenceStoreError,
+    LedgerRecord,
+    PartialWriteRecoveryError,
+)
+from verification_lab.oos.frozen_evaluator import (
+    EXPOSURE_LABEL_THEORETICAL_ONLY,
+    FrozenSignalOutput,
+    FrozenSpecVerificationError,
+    FrozenV2Parameters,
+    SIGNAL_NOT_EVALUABLE,
+    evaluate_frozen_v2_signal,
+    load_verified_frozen_v2_spec,
+    validate_theoretical_exposure_shape,
+)
+from verification_lab.oos.microstructure_diagnostics import (
+    G6_PARITY_STATUS,
+    MicrostructureDiagnosticReport,
+    compute_g6_microstructure_diagnostics,
+)
+from verification_lab.oos.offline_replay import (
+    OfflineReplayReport,
+    ReplayRecordComparison,
+    run_independent_offline_replay,
+)
+from verification_lab.oos.pipeline import (
+    ProspectiveClockSummary,
+    build_g6_diagnostics_from_store,
+    evaluate_store_prospective_clock,
+    record_passive_observation,
+)
 from verification_lab.oos.prospective_observation import (
     DailyObservationRecord,
     MissingDataStatus,
@@ -10,10 +63,49 @@ from verification_lab.oos.prospective_observation import (
 )
 
 __all__ = [
+    "AdapterError",
+    "AppendOnlyEvidenceStore",
+    "BinanceReadOnlyAdapter",
+    "CausalTimestamps",
+    "CausalTimingCheck",
+    "ChainVerificationReport",
     "DailyObservationRecord",
+    "DataQualityError",
+    "DuplicateRecordError",
+    "EXPOSURE_LABEL_THEORETICAL_ONLY",
+    "EvidenceStoreError",
+    "FrozenSignalOutput",
+    "FrozenSpecVerificationError",
+    "FrozenV2Parameters",
+    "G6_PARITY_STATUS",
+    "HyperliquidReadOnlyAdapter",
+    "LedgerRecord",
+    "MicrostructureDiagnosticReport",
     "MissingDataStatus",
+    "NormalizedMarketObservation",
     "ObservationValidationResult",
+    "OfflineReplayReport",
+    "PartialWriteRecoveryError",
+    "ProspectiveClockSummary",
+    "PublicReadOnlyHttpClient",
+    "RateLimitExhaustedError",
+    "RawCaptureEnvelope",
+    "ReplayRecordComparison",
+    "SIGNAL_NOT_EVALUABLE",
+    "UnauthorizedEndpointError",
+    "build_g6_diagnostics_from_store",
     "build_prospective_observation_contract",
+    "compute_g6_microstructure_diagnostics",
+    "evaluate_frozen_v2_signal",
     "evaluate_prospective_window_progress",
+    "evaluate_store_prospective_clock",
+    "load_verified_frozen_v2_spec",
+    "record_passive_observation",
+    "run_independent_offline_replay",
+    "validate_causal_funding_events",
+    "validate_causal_observation_window",
+    "validate_daily_candle_finalization",
     "validate_daily_observation",
+    "validate_quote_freshness",
+    "validate_theoretical_exposure_shape",
 ]
