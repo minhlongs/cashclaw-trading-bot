@@ -1,0 +1,1143 @@
+{
+  "committed_tca_verification": {
+    "decimal_recomputation_parity_ok": true,
+    "key_invariants": {
+      "binance_oos_2x_negative": true,
+      "decimal_recomputation_parity_ok": true,
+      "hyperliquid_oos_2x_positive_thin_at_ceiling": true,
+      "hyperliquid_oos_3x_negative": true
+    },
+    "source_artifact": "artifacts/g6_execution_tca.json",
+    "venues": {
+      "binance": {
+        "clears_2x_full_and_oos": false,
+        "full_sample_pass_2x_both_ends": true,
+        "locked_oos_pass_2x_both_ends": false,
+        "scopes": {
+          "full_sample": {
+            "at_ceiling": {
+              "break_even_multiple": 2.0548,
+              "cum_cost": "0.127402",
+              "cum_net": "0.134384",
+              "decimal_parity_ok": true,
+              "expectancy_1_0x": 0.014932,
+              "expectancy_1_5x": 0.007854,
+              "expectancy_2_0x": 0.000776,
+              "expectancy_3_0x": -0.01338,
+              "n_trades": 9,
+              "positive_at_2_0x": true,
+              "positive_at_3_0x": false,
+              "recomputed_break_even_multiple": "2.05480291",
+              "recomputed_expectancy_1_0x": "0.01493156",
+              "recomputed_gross_return": "0.26178600"
+            },
+            "at_floor": {
+              "break_even_multiple": 2.3101,
+              "cum_cost": "0.113324",
+              "cum_net": "0.148462",
+              "decimal_parity_ok": true,
+              "expectancy_1_0x": 0.016496,
+              "expectancy_1_5x": 0.0102,
+              "expectancy_2_0x": 0.003904,
+              "expectancy_3_0x": -0.008687,
+              "n_trades": 9,
+              "positive_at_2_0x": true,
+              "positive_at_3_0x": false,
+              "recomputed_break_even_multiple": "2.31006671",
+              "recomputed_expectancy_1_0x": "0.01649578",
+              "recomputed_gross_return": "0.26178600"
+            }
+          },
+          "locked_oos": {
+            "at_ceiling": {
+              "break_even_multiple": 1.7236,
+              "cum_cost": "0.008272",
+              "cum_net": "0.005985",
+              "decimal_parity_ok": true,
+              "expectancy_1_0x": 0.001995,
+              "expectancy_1_5x": 0.000616,
+              "expectancy_2_0x": -0.000762,
+              "expectancy_3_0x": -0.003519,
+              "n_trades": 3,
+              "positive_at_2_0x": false,
+              "positive_at_3_0x": false,
+              "recomputed_break_even_multiple": "1.72352515",
+              "recomputed_expectancy_1_0x": "0.00199500",
+              "recomputed_gross_return": "0.01425700"
+            },
+            "at_floor": {
+              "break_even_multiple": 1.9992,
+              "cum_cost": "0.007131",
+              "cum_net": "0.007126",
+              "decimal_parity_ok": true,
+              "expectancy_1_0x": 0.002375,
+              "expectancy_1_5x": 0.001187,
+              "expectancy_2_0x": -2e-06,
+              "expectancy_3_0x": -0.002379,
+              "n_trades": 3,
+              "positive_at_2_0x": false,
+              "positive_at_3_0x": false,
+              "recomputed_break_even_multiple": "1.99929884",
+              "recomputed_expectancy_1_0x": "0.00237533",
+              "recomputed_gross_return": "0.01425700"
+            }
+          }
+        }
+      },
+      "hyperliquid": {
+        "clears_2x_full_and_oos": true,
+        "full_sample_pass_2x_both_ends": true,
+        "locked_oos_pass_2x_both_ends": true,
+        "scopes": {
+          "full_sample": {
+            "at_ceiling": {
+              "break_even_multiple": 2.3379,
+              "cum_cost": "0.111974",
+              "cum_net": "0.149812",
+              "decimal_parity_ok": true,
+              "expectancy_1_0x": 0.016646,
+              "expectancy_1_5x": 0.010425,
+              "expectancy_2_0x": 0.004204,
+              "expectancy_3_0x": -0.008237,
+              "n_trades": 9,
+              "positive_at_2_0x": true,
+              "positive_at_3_0x": false,
+              "recomputed_break_even_multiple": "2.33791773",
+              "recomputed_expectancy_1_0x": "0.01664578",
+              "recomputed_gross_return": "0.26178600"
+            },
+            "at_floor": {
+              "break_even_multiple": 2.7061,
+              "cum_cost": "0.096739",
+              "cum_net": "0.165048",
+              "decimal_parity_ok": true,
+              "expectancy_1_0x": 0.018339,
+              "expectancy_1_5x": 0.012964,
+              "expectancy_2_0x": 0.00759,
+              "expectancy_3_0x": -0.003159,
+              "n_trades": 9,
+              "positive_at_2_0x": true,
+              "positive_at_3_0x": false,
+              "recomputed_break_even_multiple": "2.70611646",
+              "recomputed_expectancy_1_0x": "0.01833867",
+              "recomputed_gross_return": "0.26178700"
+            }
+          },
+          "locked_oos": {
+            "at_ceiling": {
+              "break_even_multiple": 2.0304,
+              "cum_cost": "0.007022",
+              "cum_net": "0.007235",
+              "decimal_parity_ok": true,
+              "expectancy_1_0x": 0.002412,
+              "expectancy_1_5x": 0.001241,
+              "expectancy_2_0x": 7.1e-05,
+              "expectancy_3_0x": -0.002269,
+              "n_trades": 3,
+              "positive_at_2_0x": true,
+              "positive_at_3_0x": false,
+              "recomputed_break_even_multiple": "2.03033324",
+              "recomputed_expectancy_1_0x": "0.00241167",
+              "recomputed_gross_return": "0.01425700"
+            },
+            "at_floor": {
+              "break_even_multiple": 2.4634,
+              "cum_cost": "0.005787",
+              "cum_net": "0.008469",
+              "decimal_parity_ok": true,
+              "expectancy_1_0x": 0.002823,
+              "expectancy_1_5x": 0.001859,
+              "expectancy_2_0x": 0.000894,
+              "expectancy_3_0x": -0.001035,
+              "n_trades": 3,
+              "positive_at_2_0x": true,
+              "positive_at_3_0x": false,
+              "recomputed_break_even_multiple": "2.46345257",
+              "recomputed_expectancy_1_0x": "0.00282300",
+              "recomputed_gross_return": "0.01425600"
+            }
+          }
+        }
+      }
+    }
+  },
+  "decimal_two_leg_oracle": {
+    "all_reconciled_zero_residual": true,
+    "binance_borrow_rate_sensitivity": [
+      {
+        "borrow_apr_pct": 0,
+        "borrow_cost_usd": "0E-8",
+        "calibrated_funding_apr_pct": 4.4275,
+        "funding_cash_flow_usd": "137.33741096",
+        "net_pnl_usd": "107.33741096",
+        "net_positive": true,
+        "reconciled_zero_residual": true,
+        "venue": "binance"
+      },
+      {
+        "borrow_apr_pct": 5,
+        "borrow_cost_usd": "155.09589834",
+        "calibrated_funding_apr_pct": 4.4275,
+        "funding_cash_flow_usd": "137.33741096",
+        "net_pnl_usd": "-47.75848738",
+        "net_positive": false,
+        "reconciled_zero_residual": true,
+        "venue": "binance"
+      },
+      {
+        "borrow_apr_pct": 10,
+        "borrow_cost_usd": "310.19179668",
+        "calibrated_funding_apr_pct": 4.4275,
+        "funding_cash_flow_usd": "137.33741096",
+        "net_pnl_usd": "-202.85438572",
+        "net_positive": false,
+        "reconciled_zero_residual": true,
+        "venue": "binance"
+      },
+      {
+        "borrow_apr_pct": 20,
+        "borrow_cost_usd": "620.38359337",
+        "calibrated_funding_apr_pct": 4.4275,
+        "funding_cash_flow_usd": "137.33741096",
+        "net_pnl_usd": "-513.04618241",
+        "net_positive": false,
+        "reconciled_zero_residual": true,
+        "venue": "binance"
+      }
+    ],
+    "borrow_rate_sensitivity": [
+      {
+        "borrow_apr_pct": 0,
+        "borrow_cost_usd": "0E-8",
+        "calibrated_funding_apr_pct": 9.8435,
+        "funding_cash_flow_usd": "305.33727945",
+        "net_pnl_usd": "288.33727945",
+        "net_positive": true,
+        "reconciled_zero_residual": true,
+        "venue": "hyperliquid"
+      },
+      {
+        "borrow_apr_pct": 5,
+        "borrow_cost_usd": "155.09589834",
+        "calibrated_funding_apr_pct": 9.8435,
+        "funding_cash_flow_usd": "305.33727945",
+        "net_pnl_usd": "133.24138111",
+        "net_positive": true,
+        "reconciled_zero_residual": true,
+        "venue": "hyperliquid"
+      },
+      {
+        "borrow_apr_pct": 10,
+        "borrow_cost_usd": "310.19179668",
+        "calibrated_funding_apr_pct": 9.8435,
+        "funding_cash_flow_usd": "305.33727945",
+        "net_pnl_usd": "-21.85451723",
+        "net_positive": false,
+        "reconciled_zero_residual": true,
+        "venue": "hyperliquid"
+      },
+      {
+        "borrow_apr_pct": 20,
+        "borrow_cost_usd": "620.38359337",
+        "calibrated_funding_apr_pct": 9.8435,
+        "funding_cash_flow_usd": "305.33727945",
+        "net_pnl_usd": "-332.04631392",
+        "net_positive": false,
+        "reconciled_zero_residual": true,
+        "venue": "hyperliquid"
+      }
+    ],
+    "calibrated_venue_funding_apr_pct": {
+      "binance": 4.4275,
+      "hyperliquid": 9.8435
+    },
+    "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+    "failure_modes": [
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "0.00017361",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-54.96123782",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0",
+          "spot_position_qty": "0E-8",
+          "terminal_cash_balance_usd": "99945.03876218",
+          "terminal_equity_usd": "99945.03876218"
+        },
+        "name": "spot_fills_perp_misses_emergency_unwind",
+        "notes": "Perp leg missed; spot unwound via emergency taker after -30 bps move (slippage in exec_price, not double-counted)",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "10.00000000",
+            "friction_usd": "2.00000000",
+            "leg": "spot",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM01-SE",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "39880.00000000",
+            "fee_usd": "9.97000000",
+            "friction_usd": "2.99100000",
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "mid_price": "39880.00000000",
+            "order_id": "FM01-SX",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067215000,
+            "venue": "binance"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "0.00023782",
+          "emergency_penalty_usd": "0E-8",
+          "funding_cash_flow_usd": "0E-8",
+          "gross_pnl_usd": "-30.00000000",
+          "net_pnl_usd": "-54.96123782",
+          "perp_price_pnl_usd": "0E-8",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "-30.00000000",
+          "total_costs_usd": "24.96123782",
+          "total_fees_usd": "19.97000000",
+          "total_friction_usd": "4.99100000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-01"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "0.00017361",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-47.02800000",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0E-8",
+          "spot_position_qty": "0",
+          "terminal_cash_balance_usd": "99952.97200000",
+          "terminal_equity_usd": "99952.97200000"
+        },
+        "name": "perp_fills_spot_misses_emergency_cover",
+        "notes": "Spot leg missed; naked short perp covered via emergency taker after +35 bps rally",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "2.00000000",
+            "friction_usd": "2.00000000",
+            "leg": "perp",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM02-PE",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40140.00000000",
+            "fee_usd": "5.01750000",
+            "friction_usd": "3.01050000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "40140.00000000",
+            "order_id": "FM02-PX",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067215000,
+            "venue": "binance"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "0E-8",
+          "emergency_penalty_usd": "0E-8",
+          "funding_cash_flow_usd": "0E-8",
+          "gross_pnl_usd": "-35.00000000",
+          "net_pnl_usd": "-47.02800000",
+          "perp_price_pnl_usd": "-35.00000000",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "0E-8",
+          "total_costs_usd": "12.02800000",
+          "total_fees_usd": "7.01750000",
+          "total_friction_usd": "5.01050000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-02"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "1.00000579",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-30.22787095",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0E-8",
+          "spot_position_qty": "0E-8",
+          "terminal_cash_balance_usd": "99969.77212905",
+          "terminal_equity_usd": "99969.77212905"
+        },
+        "name": "one_leg_partial_fill_delta_rebalance",
+        "notes": "Perp maker filled 60% (0.15/0.25); explicit taker hedge-rebalance order FM03-PR closes 0.10 BTC delta at $39,950",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "4.00000000",
+            "friction_usd": "1.50000000",
+            "leg": "spot",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM03-SE",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "0.90000000",
+            "friction_usd": "0.90000000",
+            "leg": "perp",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM03-PE",
+            "qty": "0.15000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067200500,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "39950.00000000",
+            "fee_usd": "1.79775000",
+            "friction_usd": "0.79900000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "39950.00000000",
+            "order_id": "FM03-PR",
+            "qty": "0.10000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067202500,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "39900.00000000",
+            "fee_usd": "6.98250000",
+            "friction_usd": "1.99500000",
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "mid_price": "39900.00000000",
+            "order_id": "FM03-SX",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704153600000,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "39900.00000000",
+            "fee_usd": "4.48875000",
+            "friction_usd": "1.99500000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "39900.00000000",
+            "order_id": "FM03-PX",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704153600500,
+            "venue": "hyperliquid"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "1.36987095",
+          "emergency_penalty_usd": "0E-8",
+          "funding_cash_flow_usd": "1.50000000",
+          "gross_pnl_usd": "-3.50000000",
+          "net_pnl_usd": "-30.22787095",
+          "perp_price_pnl_usd": "20.00000000",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "-25.00000000",
+          "total_costs_usd": "26.72787095",
+          "total_fees_usd": "18.16900000",
+          "total_friction_usd": "7.18900000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-03"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "3.00004630",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-45.08790247",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0E-8",
+          "spot_position_qty": "0E-8",
+          "terminal_cash_balance_usd": "99954.91209753",
+          "terminal_equity_usd": "99954.91209753"
+        },
+        "name": "venue_disconnect_forced_taker_exit",
+        "notes": "Cross-venue disconnect forces staggered taker exit with basis slippage",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "10.00000000",
+            "friction_usd": "2.00000000",
+            "leg": "spot",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM04-SE",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "1.50000000",
+            "friction_usd": "1.50000000",
+            "leg": "perp",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM04-PE",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067200500,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "39950.00000000",
+            "fee_usd": "9.98750000",
+            "friction_usd": "3.99500000",
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "mid_price": "39950.00000000",
+            "order_id": "FM04-SX",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704326400000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "39980.00000000",
+            "fee_usd": "4.49775000",
+            "friction_usd": "3.99800000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "39980.00000000",
+            "order_id": "FM04-PX",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704326404000,
+            "venue": "hyperliquid"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "4.10965247",
+          "emergency_penalty_usd": "0E-8",
+          "funding_cash_flow_usd": "4.00000000",
+          "gross_pnl_usd": "-3.50000000",
+          "net_pnl_usd": "-45.08790247",
+          "perp_price_pnl_usd": "5.00000000",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "-12.50000000",
+          "total_costs_usd": "41.58790247",
+          "total_fees_usd": "25.98525000",
+          "total_friction_usd": "11.49300000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-04"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "10.00000579",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-75.69863807",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0E-8",
+          "spot_position_qty": "0E-8",
+          "terminal_cash_balance_usd": "99924.30136193",
+          "terminal_equity_usd": "99924.30136193"
+        },
+        "name": "funding_reverses_negative_carry_bleed",
+        "notes": "Funding flips negative before exit threshold triggers",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "4.00000000",
+            "friction_usd": "1.50000000",
+            "leg": "spot",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM05-SE",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "1.50000000",
+            "friction_usd": "1.50000000",
+            "leg": "perp",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM05-PE",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067200500,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "4.00000000",
+            "friction_usd": "1.50000000",
+            "leg": "spot",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM05-SX",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704931200000,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "1.50000000",
+            "friction_usd": "1.50000000",
+            "leg": "perp",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM05-PX",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704931200500,
+            "venue": "hyperliquid"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "13.69863807",
+          "emergency_penalty_usd": "0E-8",
+          "funding_cash_flow_usd": "-45.00000000",
+          "gross_pnl_usd": "-45.00000000",
+          "net_pnl_usd": "-75.69863807",
+          "perp_price_pnl_usd": "0E-8",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "0E-8",
+          "total_costs_usd": "30.69863807",
+          "total_fees_usd": "11.00000000",
+          "total_friction_usd": "6.00000000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-05"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "5.00000579",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-108.92332300",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0E-8",
+          "spot_position_qty": "0E-8",
+          "terminal_cash_balance_usd": "99891.07667700",
+          "terminal_equity_usd": "99891.07667700"
+        },
+        "name": "basis_divergence_mtm_drawdown",
+        "notes": "Perp basis blows out +300 USD/BTC against short perp hedge",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "10.00000000",
+            "friction_usd": "2.00000000",
+            "leg": "spot",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM06-SE",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40020.00000000",
+            "fee_usd": "2.00100000",
+            "friction_usd": "2.00100000",
+            "leg": "perp",
+            "liquidity_role": "maker",
+            "mid_price": "40020.00000000",
+            "order_id": "FM06-PE",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067200500,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "10.00000000",
+            "friction_usd": "4.00000000",
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM06-SX",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704499200000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40320.00000000",
+            "fee_usd": "5.04000000",
+            "friction_usd": "4.03200000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "40320.00000000",
+            "order_id": "FM06-PX",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704499200500,
+            "venue": "binance"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "6.84932300",
+          "emergency_penalty_usd": "0E-8",
+          "funding_cash_flow_usd": "12.00000000",
+          "gross_pnl_usd": "-63.00000000",
+          "net_pnl_usd": "-108.92332300",
+          "perp_price_pnl_usd": "-75.00000000",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "0E-8",
+          "total_costs_usd": "45.92332300",
+          "total_fees_usd": "27.04100000",
+          "total_friction_usd": "12.03300000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-06"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "2.00000579",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-132.73973396",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0E-8",
+          "spot_position_qty": "0E-8",
+          "terminal_cash_balance_usd": "99867.26026604",
+          "terminal_equity_usd": "99867.26026604"
+        },
+        "name": "spread_expansion_shock",
+        "notes": "Half-spread widens to 25 bps on both legs (exec_price=mid_price, spread charged once in friction)",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "10.00000000",
+            "friction_usd": "27.00000000",
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM07-SE",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "5.00000000",
+            "friction_usd": "27.00000000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM07-PE",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067200500,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "10.00000000",
+            "friction_usd": "27.00000000",
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM07-SX",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704240000000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "5.00000000",
+            "friction_usd": "27.00000000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM07-PX",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704240000500,
+            "venue": "binance"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "2.73973396",
+          "emergency_penalty_usd": "0E-8",
+          "funding_cash_flow_usd": "8.00000000",
+          "gross_pnl_usd": "8.00000000",
+          "net_pnl_usd": "-132.73973396",
+          "perp_price_pnl_usd": "0E-8",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "0E-8",
+          "total_costs_usd": "140.73973396",
+          "total_fees_usd": "30.00000000",
+          "total_friction_usd": "108.00000000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-07"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "4.00000579",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-125.47945999",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0E-8",
+          "spot_position_qty": "0E-8",
+          "terminal_cash_balance_usd": "99874.52054001",
+          "terminal_equity_usd": "99874.52054001"
+        },
+        "name": "liquidity_collapse_market_impact",
+        "notes": "Order book depth collapses; exit incurs 45 bps market impact per leg (exec_price=mid_price)",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "4.00000000",
+            "friction_usd": "1.50000000",
+            "leg": "spot",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM08-SE",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "1.50000000",
+            "friction_usd": "1.50000000",
+            "leg": "perp",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM08-PE",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067200500,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "7.00000000",
+            "friction_usd": "55.00000000",
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM08-SX",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704412800000,
+            "venue": "hyperliquid"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "4.50000000",
+            "friction_usd": "55.00000000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM08-PX",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704412800500,
+            "venue": "hyperliquid"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "5.47945999",
+          "emergency_penalty_usd": "0E-8",
+          "funding_cash_flow_usd": "10.00000000",
+          "gross_pnl_usd": "10.00000000",
+          "net_pnl_usd": "-125.47945999",
+          "perp_price_pnl_usd": "0E-8",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "0E-8",
+          "total_costs_usd": "135.47945999",
+          "total_fees_usd": "17.00000000",
+          "total_friction_usd": "113.00000000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-08"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "2.00040509",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-74.52728095",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0E-8",
+          "spot_position_qty": "0E-8",
+          "terminal_cash_balance_usd": "99925.47271905",
+          "terminal_equity_usd": "99925.47271905"
+        },
+        "name": "emergency_exit_failure_retry_ladder",
+        "notes": "First emergency exit attempts rejected; retry ladder fills 30s later with explicit rejected order audit trail",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "10.00000000",
+            "friction_usd": "2.00000000",
+            "leg": "spot",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM09-SE",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "2.00000000",
+            "friction_usd": "2.00000000",
+            "leg": "perp",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM09-PE",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067200500,
+            "venue": "binance"
+          },
+          {
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "order_id": "FM09-SX-ATTEMPT1",
+            "qty": "0.25000000",
+            "reject_reason": "IOC_INSUFFICIENT_DEPTH",
+            "side": "SELL",
+            "status": "REJECTED",
+            "ts_ms": 1704240000000,
+            "venue": "binance"
+          },
+          {
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "order_id": "FM09-PX-ATTEMPT1",
+            "qty": "0.25000000",
+            "reject_reason": "EXCHANGE_RATE_LIMIT_429",
+            "side": "BUY",
+            "status": "REJECTED",
+            "ts_ms": 1704240000500,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "39700.00000000",
+            "fee_usd": "9.92500000",
+            "friction_usd": "7.94000000",
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "mid_price": "39700.00000000",
+            "order_id": "FM09-SX-RETRY2",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704240030000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "39760.00000000",
+            "fee_usd": "4.97000000",
+            "friction_usd": "7.95200000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "39760.00000000",
+            "order_id": "FM09-PX-RETRY2",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704240035000,
+            "venue": "binance"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "2.74028095",
+          "emergency_penalty_usd": "15.00000000",
+          "funding_cash_flow_usd": "5.00000000",
+          "gross_pnl_usd": "-10.00000000",
+          "net_pnl_usd": "-74.52728095",
+          "perp_price_pnl_usd": "60.00000000",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "-75.00000000",
+          "total_costs_usd": "64.52728095",
+          "total_fees_usd": "26.89500000",
+          "total_friction_usd": "19.89200000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-09"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "hold_days": "7.00001157",
+        "ledger_state": {
+          "initial_cash_usd": "100000.00000000",
+          "ledger_net_pnl_usd": "-141.15311389",
+          "net_delta_qty": "0E-8",
+          "perp_position_qty": "0E-8",
+          "spot_position_qty": "0E-8",
+          "terminal_cash_balance_usd": "99858.84688611",
+          "terminal_equity_usd": "99858.84688611"
+        },
+        "margin_liquidation": {
+          "adverse_mtm_loss_usd": "1500.00000000",
+          "derived_liquidation_fee_usd": "57.68750000",
+          "liquidation_fee_bps": "50.0",
+          "maintenance_margin_usd": "500.00000000",
+          "margin_breached": true,
+          "posted_margin_usd": "1000.00000000"
+        },
+        "name": "liquidation_pressure_margin_breach",
+        "notes": "Sharp +15% rally breaches short-perp maintenance margin; liquidation fee derived from 50 bps * exit perp notional",
+        "orders": [
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "10.00000000",
+            "friction_usd": "2.00000000",
+            "leg": "spot",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM10-SE",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704067200000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "40000.00000000",
+            "fee_usd": "2.00000000",
+            "friction_usd": "2.00000000",
+            "leg": "perp",
+            "liquidity_role": "maker",
+            "mid_price": "40000.00000000",
+            "order_id": "FM10-PE",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704067200500,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "46000.00000000",
+            "fee_usd": "11.50000000",
+            "friction_usd": "5.75000000",
+            "leg": "spot",
+            "liquidity_role": "taker",
+            "mid_price": "46000.00000000",
+            "order_id": "FM10-SX",
+            "qty": "0.25000000",
+            "side": "SELL",
+            "status": "FILLED",
+            "ts_ms": 1704672000000,
+            "venue": "binance"
+          },
+          {
+            "exec_price": "46150.00000000",
+            "fee_usd": "5.76875000",
+            "friction_usd": "5.76875000",
+            "leg": "perp",
+            "liquidity_role": "taker",
+            "mid_price": "46150.00000000",
+            "order_id": "FM10-PX",
+            "qty": "0.25000000",
+            "side": "BUY",
+            "status": "FILLED",
+            "ts_ms": 1704672001000,
+            "venue": "binance"
+          }
+        ],
+        "pnl_components": {
+          "borrow_cost_usd": "19.17811389",
+          "emergency_penalty_usd": "57.68750000",
+          "funding_cash_flow_usd": "18.00000000",
+          "gross_pnl_usd": "-19.50000000",
+          "net_pnl_usd": "-141.15311389",
+          "perp_price_pnl_usd": "-1537.50000000",
+          "reconciliation_residual_usd": "0E-8",
+          "spot_price_pnl_usd": "1500.00000000",
+          "total_costs_usd": "121.65311389",
+          "total_fees_usd": "29.26875000",
+          "total_friction_usd": "15.51875000"
+        },
+        "reconciled_zero_residual": true,
+        "scenario_id": "G6-FM-10"
+      }
+    ],
+    "failure_modes_reconciled_zero_residual": 10,
+    "failure_modes_total": 10,
+    "precision_digits": 28,
+    "rounding_mode": "ROUND_HALF_EVEN"
+  },
+  "external_engine_parity": {
+    "HftBacktest": "NOT_VERIFIED",
+    "NautilusTrader": "NOT_VERIFIED",
+    "note": "Neither NautilusTrader nor HftBacktest is installed or executed in this offline audit environment."
+  },
+  "gate": "G6_REALISTIC_NET_EXECUTION_ECONOMICS",
+  "generated_at_utc": "2026-11-22T00:26:06.635411+00:00",
+  "schema_version": "1.1.0",
+  "verdict": {
+    "committed_tca_invariants_verified": true,
+    "decimal_oracle_zero_residual": true,
+    "external_parity_status": "NOT_VERIFIED"
+  }
+}

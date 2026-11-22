@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0.0",
+  "command": "CashClaw Supreme Command #19 — Quant Scientific Integrity & H3 Strategy Parity",
+  "generated_at_utc": "2026-11-22T07:35:00Z",
+  "repository": "https://github.com/minhlongs/cashclaw-trading-bot",
+  "origin_main_sha": "05e4f1aa2389b88a1e427335651cc07a87841bfb",
+  "worktree_path": "/Users/macbook/orca/workspaces/trade-bot/h3-parity",
+  "feature_branch": "research/g2-g6-h3-strategy-identity",
+  "protected_local_checkout": "/Users/macbook/trade-bot",
+  "pr35_untouched_head_oid": "8453915b6929b11d9766e9c138511ef50c885d92",
+  "dependency_hashes": {
+    "package-lock.json": "798429524fc629d3fd85ac6e964fd55e2913e401c781eb6cc69a50127e58a00e",
+    "verification_lab/pyproject.toml": "c9a36b542cc5a085d0445e5bee1551bf49be14a746ce036434d0c234feb83eab"
+  },
+  "final_verdicts": {
+    "release_verdict": "READY_FOR_OWNER_QUANT_REVIEW",
+    "falsification_decision": "REVISE_HYPOTHESIS",
+    "proposed_v2_strategy_id": "H3_BASIS_CARRY_V2",
+    "prospective_oos_status": "PENDING_FRESH_OOS",
+    "h3_maker_bot_runtime_applicability": "NOT_VERIFIED",
+    "economic_identity_verdict": "ECONOMICALLY_DIFFERENT",
+    "production_mutation_status": "HOLD_PRODUCTION",
+    "execution_mode": "PAPER_ONLY",
+    "live_trading_unlocked": false
+  },
+  "gate_statuses": {
+    "strategy_identity_gate": "PASS_FAIL_CLOSED_ECONOMICALLY_DIFFERENT",
+    "g2_data_provenance": {
+      "provenance_manifest_verified": true,
+      "synthetic_validators_passed": true,
+      "raw_local_data_status": "BLOCKED_MISSING_DATA"
+    },
+    "g3_signal_determinism": "PASS_100_PCT_IDENTICAL",
+    "g4_causal_leakage": "PASS",
+    "g5_statistical_reproduction": {
+      "registry_integrity_pass": true,
+      "dsr_reproduction_pass": true,
+      "exposed_holdout_quarantined": true,
+      "empirical_randomized_entry_status": "BLOCKED_MISSING_DATA",
+      "prospective_status": "PENDING_FRESH_OOS"
+    },
+    "g6_execution_economics": {
+      "committed_tca_invariants_verified": true,
+      "decimal_oracle_zero_residual": true,
+      "external_parity_status": "NOT_VERIFIED"
+    },
+    "g13_paper_forward": "OBSERVATION_ACTIVE_INCONCLUSIVE_UNMODIFIED",
+    "g15_live_trading": "LOCKED_PAPER_ONLY"
+  },
+  "quality_gates": {
+    "type_check": "PASS",
+    "lint": "PASS",
+    "knip": "PASS",
+    "build_worker": "PASS",
+    "git_diff_check": "PASS",
+    "ts_test_files_passed": 765,
+    "ts_test_files_total": 765,
+    "ts_tests_passed": 6463,
+    "ts_tests_total": 6463,
+    "coverage_pct": {
+      "statements": 94.95,
+      "branches": 91.46,
+      "functions": 95.47,
+      "lines": 94.95
+    },
+    "python_pytest_passed": 170,
+    "python_pytest_blocked_missing_data": 5,
+    "python_independent_audit_tests_passed": 5,
+    "python_independent_audit_tests_total": 5
+  },
+  "independent_reviewers": {
+    "round_1_summary": { "p0": 0, "p1": 9, "p2": 8 },
+    "round_2_summary": { "p0": 0, "p1": 0, "p2": 1, "waivers": 0 },
+    "reviewers": [
+      { "id": "Reviewer_A", "domain": "Scientific Validity (G2-G5)", "verdict": "APPROVE", "p0": 0, "p1": 0, "p2": 1 },
+      { "id": "Reviewer_B", "domain": "Market Microstructure (G6)", "verdict": "APPROVE", "p0": 0, "p1": 0, "p2": 0 },
+      { "id": "Reviewer_C", "domain": "Runtime & Security (§8/G13/G15)", "verdict": "APPROVE", "p0": 0, "p1": 0, "p2": 0 }
+    ]
+  },
+  "reports": [
+    "plans/reports/cashclaw-g2-g6-h3-parity/01-source-and-environment-manifest.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/02-strategy-identity-forensics.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/03-g2-data-provenance-audit.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/04-g3-signal-determinism-audit.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/05-g4-causal-leakage-audit.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/06-g5-statistical-reproduction-audit.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/07-g6-execution-economics-audit.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/08-strategy-identity-safety-gate.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/09-h3-v2-hypothesis-and-falsification-decision.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/10-independent-quant-audit-and-qa.md",
+    "plans/reports/cashclaw-g2-g6-h3-parity/11-release-and-founder-decision.md"
+  ],
+  "new_audit_artifacts": [
+    { "path": "artifacts/g2_data_provenance.json", "sha256": "9ccf0b84cf585f24451b279abd0cf89a0350f1b5b18594ef82e4862ce6643599" },
+    { "path": "artifacts/g3_signal_determinism.json", "sha256": "4c1c2ebdb7697b61d3976ba71c34c09d7a56bee1f9b7e8819d24e392ef337bc8" },
+    { "path": "artifacts/g4_independent_leakage_audit.json", "sha256": "ef501e68877b07b0379b6ddbbb8761e756babb22943f9150316727eded21520f" },
+    { "path": "artifacts/g5_independent_statistical_audit.json", "sha256": "c9dd053d277c235ff247048bff6bcf0f7d97777b523c7cf450644654bdfa6848" },
+    { "path": "artifacts/g6_independent_execution_audit.json", "sha256": "f16765240af0d947e51bdf87e1b9c6053e75f1dd3e539c6139bef0e401e00e2a" },
+    { "path": "artifacts/strategy_identity_assessment.json", "sha256": "13eb0708cc0629757de69b94c45b44d79d784400c03347bbd8c5f136c9a5c351" }
+  ],
+  "preserved_immutable_historical_artifacts": [
+    { "path": "artifacts/signed_strategy_spec_h3_maker.json", "sha256": "3e020570aaeba0a84e67dde272a45102d4ee7ed50d5c84a38f80f60f18c3d39b" },
+    { "path": "artifacts/strategy_lifecycle_registry.json", "sha256": "e2f53b8e3f9555bae48b30f4b872da0e36b8c80a99b7ad01ab5f5da51cc08127" },
+    { "path": "artifacts/trial_registry.jsonl", "sha256": "37ee9db5c0bf0aba14558b5d370dc2fb42c3455a56dfa7d134727206c0c1373d" },
+    { "path": "artifacts/g13_paper_tracking_error.json", "sha256": "eca612906239b29ef3df79846eae627e58616a8be85b070626a59b4f95e94ad9" },
+    { "path": "artifacts/g2_data_provenance.parquet", "sha256": "95b91ca8040c19026f7dac061d7e5d8c2829fd3dfa6925e9424958933859149f" },
+    { "path": "artifacts/g4_leakage_audit.json", "sha256": "02aedc39447d0473619608223bbf829d31e37207c1fe5bb5dc218aa956565ed8" },
+    { "path": "artifacts/g5_statistical_validity.json", "sha256": "e03cf128be2431e852cebdd0433b5eb2beee47072b42deebd85e9b4c7d2c055e" },
+    { "path": "artifacts/g6_execution_tca.json", "sha256": "e5110ca512f0ed932833cb4d92673b57a1f3c41860c187dbe9a49be1c48fe679" }
+  ]
+}
