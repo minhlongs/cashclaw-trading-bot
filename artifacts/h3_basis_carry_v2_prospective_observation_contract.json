@@ -1,0 +1,43 @@
+{
+  "contract_version": "1.0.0",
+  "strategy_id": "H3_BASIS_CARRY_V2",
+  "generated_utc": "2026-11-22T00:00:00Z",
+  "git_anchor_commit": "a7de6a291f65f31fbdde1cf8308eaccad06c10ac",
+  "references": {
+    "original_registration_artifact": "artifacts/h3_basis_carry_v2_prospective_oos_registration.json",
+    "original_registration_sha256": "c089527416420ac11dfea01a2ad7ca0b18a167ad13bb775575af5b1ef70d0012",
+    "original_frozen_spec_sha256": "187e1974069bc1d70950b475804b670a8510a413411652c2c71b1e370b22ee53",
+    "evidence_erratum_artifact": "artifacts/h3_basis_carry_v2_evidence_erratum_v1.json",
+    "evidence_erratum_sha256": "9dd9def3271d756dca30bdfae044befb96059d7d94f10d97f0d527fb7a577a01"
+  },
+  "execution_authority_guards": {
+    "paper_forward_allowed": false,
+    "live_order_authority": false,
+    "g13_isolation": "UNTOUCHED",
+    "g15_hard_lock": "HARD_LOCKED",
+    "h3_maker_quarantine": "PRESERVED",
+    "mode": "PASSIVE_MARKET_DATA_OBSERVATION_ONLY"
+  },
+  "prospective_window": {
+    "start_utc": "2026-11-23T00:00:00Z",
+    "clock_rule": "COUNT_ELIGIBLE_REAL_OBSERVATIONS_ONLY",
+    "required_eligible_observation_days": 90,
+    "min_completed_round_trips": 15,
+    "retroactive_missing_day_reconstruction_allowed": false,
+    "simulated_fills_represented_as_real_allowed": false,
+    "statistical_sufficiency_warning": "The 15 completed round-trip minimum is insufficient for a general claim of long-term profitable alpha without further statistical validation."
+  },
+  "daily_evidence_requirements": [
+    "utc_observation_timestamp",
+    "raw_source_uri_or_id",
+    "source_hash",
+    "data_completeness",
+    "signal_emitted_from_frozen_spec",
+    "theoretical_exposure_under_explicit_assumptions",
+    "funding_and_basis_observations",
+    "missing_data_status",
+    "independent_offline_replay_check",
+    "no_use_before_available_time_validation"
+  ],
+  "validator_module": "verification_lab.oos.prospective_observation"
+}

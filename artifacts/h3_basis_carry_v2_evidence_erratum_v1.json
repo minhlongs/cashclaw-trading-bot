@@ -1,0 +1,597 @@
+{
+  "erratum_version": "1.0.0",
+  "erratum_id": "h3_basis_carry_v2_evidence_erratum_v1",
+  "generated_utc": "2026-11-22T00:00:00Z",
+  "git_anchor_commit": "a7de6a291f65f31fbdde1cf8308eaccad06c10ac",
+  "original_registration_reference": {
+    "path": "artifacts/h3_basis_carry_v2_prospective_oos_registration.json",
+    "exact_sha256": "c089527416420ac11dfea01a2ad7ca0b18a167ad13bb775575af5b1ef70d0012",
+    "original_frozen_spec_sha256": "187e1974069bc1d70950b475804b670a8510a413411652c2c71b1e370b22ee53",
+    "original_commit": "a7de6a291f65f31fbdde1cf8308eaccad06c10ac",
+    "byte_identical_preserved": true
+  },
+  "historical_multiple_testing_lineage": {
+    "parent_hypothesis": "H3_MAKER",
+    "prior_family_trial_count": 185,
+    "v2_trial_seq": 1,
+    "cumulative_family_trials": 186,
+    "disclosure": "trial_seq=1 applies only to H3_BASIS_CARRY_V2 prospective OOS tracking and does not erase the 185 prior research trials from multiple-testing history."
+  },
+  "data_provenance_attestation": {
+    "overall_provenance_state": "HASH_RECORDED_UNVERIFIED",
+    "independent_authenticity_proven": false,
+    "state_counts": {
+      "HASH_MATCH_TRUSTED_MANIFEST": 0,
+      "HASH_RECORDED_UNVERIFIED": 7,
+      "HASH_MISMATCH": 0,
+      "MISSING_SOURCE": 0,
+      "INVALID_SCHEMA": 0
+    },
+    "datasets": {
+      "spot_1d.parquet": {
+        "filename": "spot_1d.parquet",
+        "state": "HASH_RECORDED_UNVERIFIED",
+        "exists": true,
+        "rows": 45963,
+        "columns": [
+          "ts_ms",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "available_at_ms",
+          "available_at_utc",
+          "symbol",
+          "last_active_ts_ms",
+          "is_delisted"
+        ],
+        "observed_sha256": "a9869e80714dd188968d4f2baff7ac70230490df090611f16c0fe4e9ff355fab",
+        "expected_sha256": null,
+        "matched_version": null,
+        "manifest_origin": null,
+        "missing_columns": [],
+        "reason": "No independently verified trusted manifest digest is available for this file. Local SHA-256 recorded for auditability, but provenance is NOT independently verified."
+      },
+      "perp_1d.parquet": {
+        "filename": "perp_1d.parquet",
+        "state": "HASH_RECORDED_UNVERIFIED",
+        "exists": true,
+        "rows": 45898,
+        "columns": [
+          "ts_ms",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "available_at_ms",
+          "available_at_utc",
+          "symbol",
+          "last_active_ts_ms",
+          "is_delisted"
+        ],
+        "observed_sha256": "081a9c8aac893977e94f939e75721f3ff5cd649e8fcdf7647fa89a87bbf60a44",
+        "expected_sha256": null,
+        "matched_version": null,
+        "manifest_origin": null,
+        "missing_columns": [],
+        "reason": "No independently verified trusted manifest digest is available for this file. Local SHA-256 recorded for auditability, but provenance is NOT independently verified."
+      },
+      "perp_4h.parquet": {
+        "filename": "perp_4h.parquet",
+        "state": "HASH_RECORDED_UNVERIFIED",
+        "exists": true,
+        "rows": 275376,
+        "columns": [
+          "ts_ms",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "available_at_ms",
+          "available_at_utc",
+          "symbol",
+          "last_active_ts_ms",
+          "is_delisted"
+        ],
+        "observed_sha256": "007cf7443a373765705935d6ceb08ec3bf07561aa9cea698c780960ed5bfe266",
+        "expected_sha256": null,
+        "matched_version": null,
+        "manifest_origin": null,
+        "missing_columns": [],
+        "reason": "No independently verified trusted manifest digest is available for this file. Local SHA-256 recorded for auditability, but provenance is NOT independently verified."
+      },
+      "funding.parquet": {
+        "filename": "funding.parquet",
+        "state": "HASH_RECORDED_UNVERIFIED",
+        "exists": true,
+        "rows": 137889,
+        "columns": [
+          "ts_ms",
+          "funding_rate",
+          "available_at_ms",
+          "available_at_utc",
+          "symbol",
+          "last_active_ts_ms",
+          "is_delisted"
+        ],
+        "observed_sha256": "98af00c24b25278eaa3e9cc6191bd180994c8f6f31b40dc5bb345cac30f5ad84",
+        "expected_sha256": null,
+        "matched_version": null,
+        "manifest_origin": null,
+        "missing_columns": [],
+        "reason": "No independently verified trusted manifest digest is available for this file. Local SHA-256 recorded for auditability, but provenance is NOT independently verified."
+      },
+      "oi_monthly.parquet": {
+        "filename": "oi_monthly.parquet",
+        "state": "HASH_RECORDED_UNVERIFIED",
+        "exists": true,
+        "rows": 1270,
+        "columns": [
+          "ts_ms",
+          "sum_open_interest",
+          "sum_open_interest_value",
+          "toptrader_long_short_ratio",
+          "taker_long_short_vol_ratio",
+          "n_intraday_obs",
+          "available_at_ms",
+          "available_at_utc",
+          "symbol",
+          "month",
+          "last_active_ts_ms",
+          "is_delisted"
+        ],
+        "observed_sha256": "e00e25c14b9e28d8dfaf76f6bb4a66740e16459a0d7a73d565bb113a622678ec",
+        "expected_sha256": null,
+        "matched_version": null,
+        "manifest_origin": null,
+        "missing_columns": [],
+        "reason": "No independently verified trusted manifest digest is available for this file. Local SHA-256 recorded for auditability, but provenance is NOT independently verified."
+      },
+      "hyperliquid_funding_1h.parquet": {
+        "filename": "hyperliquid_funding_1h.parquet",
+        "state": "HASH_RECORDED_UNVERIFIED",
+        "exists": true,
+        "rows": 182640,
+        "columns": [
+          "coin",
+          "symbol",
+          "ts_ms",
+          "hour_ts_ms",
+          "funding_rate",
+          "premium",
+          "available_at_ms",
+          "available_at_utc"
+        ],
+        "observed_sha256": "508446d3ae93e1bc1d0118193b11bd4b2375c3dc7e2494b6c60e40bf0077e906",
+        "expected_sha256": null,
+        "matched_version": null,
+        "manifest_origin": null,
+        "missing_columns": [],
+        "reason": "No independently verified trusted manifest digest is available for this file. Local SHA-256 recorded for auditability, but provenance is NOT independently verified."
+      },
+      "hyperliquid_l1_quotes.parquet": {
+        "filename": "hyperliquid_l1_quotes.parquet",
+        "state": "HASH_RECORDED_UNVERIFIED",
+        "exists": true,
+        "rows": 19,
+        "columns": [
+          "coin",
+          "symbol",
+          "ts_ms",
+          "available_at_utc",
+          "best_bid",
+          "best_ask",
+          "mid_px",
+          "mark_px",
+          "bid_sz",
+          "ask_sz",
+          "l1_full_spread_bps",
+          "l1_half_spread_bps",
+          "impact_bid_px",
+          "impact_ask_px",
+          "impact_full_spread_bps",
+          "impact_half_spread_bps",
+          "current_1h_funding_rate",
+          "open_interest_coins",
+          "day_ntl_vlm_usd",
+          "snapshot_nature"
+        ],
+        "observed_sha256": "d957ec4b857b5b7a7a1c64a1277b3c5d7d9a70e72eeb5a3cca7a846f8d65b89c",
+        "expected_sha256": null,
+        "matched_version": null,
+        "manifest_origin": null,
+        "missing_columns": [],
+        "reason": "No independently verified trusted manifest digest is available for this file. Local SHA-256 recorded for auditability, but provenance is NOT independently verified."
+      }
+    },
+    "upstream_manifest_note": "Local normalized Parquet datasets are gitignored and have no pre-existing independent checksum manifest in main; artifacts/g2_data_provenance.parquet only records 12/7808 raw monthly rows as checksum_verified=true. Accordingly, local files without an external trusted manifest are reported as HASH_RECORDED_UNVERIFIED rather than authentic."
+  },
+  "independent_double_entry_accounting": {
+    "status": "INDEPENDENT_DOUBLE_ENTRY_VERIFIED",
+    "journal_module": "verification_lab.execution.double_entry_journal",
+    "all_scenarios_reconciled": true,
+    "all_residuals_zero_q8": true,
+    "stress_scenarios": [
+      {
+        "scenario": "BINANCE_2X_5PCT_BORROW_NO_DELAY",
+        "venue": "binance",
+        "cost_multiplier": "2.0",
+        "cost_scaling_scope": "MAKER_FEE_MULTIPLIER_ONLY",
+        "borrow_apr": "0.0500",
+        "funding_pnl": "181.95205479",
+        "basis_pnl": "40.00000000",
+        "execution_fee_cost": "240.00000000",
+        "borrow_financing_cost": "205.47945205",
+        "hedge_delay_loss": "0.00000000",
+        "liquidation_triggered": false,
+        "liquidation_penalty_cost": "0.00000000",
+        "net_pnl": "-223.52739726",
+        "double_entry_residual": "0.00000000",
+        "arithmetic_cash_conservation_residual": "0.00000000",
+        "independent_journal_reconciled": true,
+        "independent_journal_status": "INDEPENDENT_DOUBLE_ENTRY_VERIFIED",
+        "independent_journal_event_count": 12
+      },
+      {
+        "scenario": "HYPERLIQUID_2X_5PCT_BORROW_NO_DELAY",
+        "venue": "hyperliquid",
+        "cost_multiplier": "2.0",
+        "cost_scaling_scope": "MAKER_FEE_MULTIPLIER_ONLY",
+        "borrow_apr": "0.0500",
+        "funding_pnl": "404.52739726",
+        "basis_pnl": "40.00000000",
+        "execution_fee_cost": "110.00000000",
+        "borrow_financing_cost": "205.47945205",
+        "hedge_delay_loss": "0.00000000",
+        "liquidation_triggered": false,
+        "liquidation_penalty_cost": "0.00000000",
+        "net_pnl": "129.04794521",
+        "double_entry_residual": "0.00000000",
+        "arithmetic_cash_conservation_residual": "0.00000000",
+        "independent_journal_reconciled": true,
+        "independent_journal_status": "INDEPENDENT_DOUBLE_ENTRY_VERIFIED",
+        "independent_journal_event_count": 12
+      },
+      {
+        "scenario": "HYPERLIQUID_2X_10PCT_BORROW_NO_DELAY",
+        "venue": "hyperliquid",
+        "cost_multiplier": "2.0",
+        "cost_scaling_scope": "MAKER_FEE_MULTIPLIER_ONLY",
+        "borrow_apr": "0.1000",
+        "funding_pnl": "404.52739726",
+        "basis_pnl": "40.00000000",
+        "execution_fee_cost": "110.00000000",
+        "borrow_financing_cost": "410.95890411",
+        "hedge_delay_loss": "0.00000000",
+        "liquidation_triggered": false,
+        "liquidation_penalty_cost": "0.00000000",
+        "net_pnl": "-76.43150685",
+        "double_entry_residual": "0.00000000",
+        "arithmetic_cash_conservation_residual": "0.00000000",
+        "independent_journal_reconciled": true,
+        "independent_journal_status": "INDEPENDENT_DOUBLE_ENTRY_VERIFIED",
+        "independent_journal_event_count": 12
+      },
+      {
+        "scenario": "HYPERLIQUID_DELAYED_HEDGE_LIQUIDATION_BREACH",
+        "venue": "hyperliquid",
+        "cost_multiplier": "2.0",
+        "cost_scaling_scope": "MAKER_FEE_MULTIPLIER_ONLY",
+        "borrow_apr": "0.0500",
+        "funding_pnl": "0.00000000",
+        "basis_pnl": "0.00000000",
+        "execution_fee_cost": "110.00000000",
+        "borrow_financing_cost": "6.84931507",
+        "hedge_delay_loss": "9750.00000000",
+        "liquidation_triggered": true,
+        "liquidation_penalty_cost": "272.50000000",
+        "net_pnl": "-10139.34931507",
+        "double_entry_residual": "0.00000000",
+        "arithmetic_cash_conservation_residual": "0.00000000",
+        "independent_journal_reconciled": true,
+        "independent_journal_status": "INDEPENDENT_DOUBLE_ENTRY_VERIFIED",
+        "independent_journal_event_count": 10
+      }
+    ]
+  },
+  "execution_cost_realism": {
+    "g6_full_execution_parity_status": "G6_FULL_EXECUTION_PARITY_NOT_VERIFIED",
+    "hyperliquid_l1_observation_count": 19,
+    "hyperliquid_l1_calibration_confidence": "INSUFFICIENT_SAMPLE_N19",
+    "cost_concepts": {
+      "MAKER_FEE_MULTIPLIER_2X": {
+        "description": "Multiplies only modeled maker entry/exit fees by 2x. Does NOT double spread, slippage, market impact, queue uncertainty, partial fills, borrow financing, or liquidation costs.",
+        "terms_scaled": [
+          "maker_fees"
+        ]
+      },
+      "FULL_EXECUTION_FRICTION_STRESS_2X": {
+        "description": "Would require doubling all measured/calibrated execution friction terms (maker/taker fees, spread, slippage, market impact, queue-miss cost, partial-fill cost, borrow, and liquidation cost).",
+        "calibrated": false,
+        "unavailable_terms": [
+          "bid_ask_spread",
+          "slippage",
+          "market_impact",
+          "partial_fills"
+        ],
+        "status": "G6_FULL_EXECUTION_PARITY_NOT_VERIFIED"
+      }
+    },
+    "friction_terms": [
+      {
+        "term": "maker_fees",
+        "provenance": "VENUE_PUBLISHED",
+        "scaled_by_cost_multiplier": true,
+        "calibration_basis": "Binance VIP0 (10.0 bps spot / 2.0 bps perp); Hyperliquid Tier-0 (4.0 bps spot / 1.5 bps perp).",
+        "limitation": "Tiered fee rebates or VIP changes are not dynamically modeled."
+      },
+      {
+        "term": "taker_fallback_fees",
+        "provenance": "VENUE_PUBLISHED",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "Binance 5.0 bps perp taker; Hyperliquid 4.5 bps perp taker.",
+        "limitation": "Not multiplied by cost_multiplier in borrow_liquidation_model; emergency_taker_fee_bps is applied only inside liquidation_penalty_cost when liquidation_triggered is True."
+      },
+      {
+        "term": "bid_ask_spread",
+        "provenance": "UNAVAILABLE",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "Historical continuous L1/L2 spread series unavailable; Hyperliquid L1 snapshot has only n=19 observations.",
+        "limitation": "Cannot calibrate historical bid/ask spread across 2021-2026 regime changes."
+      },
+      {
+        "term": "slippage",
+        "provenance": "UNAVAILABLE",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "No historical execution fill log or L2 order-book depth replay.",
+        "limitation": "Not included in MAKER_FEE_MULTIPLIER_2X."
+      },
+      {
+        "term": "market_impact",
+        "provenance": "UNAVAILABLE",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "No empirical order-flow impact calibration on target venues.",
+        "limitation": "Square-root impact is uncalibrated for Hyperliquid spot/perp books."
+      },
+      {
+        "term": "queue_position_uncertainty",
+        "provenance": "ASSUMED",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "Assumed fifo_fill_probability=0.55; Hyperliquid L1 sample size n=19 (<1000 minimum observations).",
+        "limitation": "Queue-fill calibration from n=19 L1 observations is statistically insufficient without an independent statistical justification."
+      },
+      {
+        "term": "partial_fills",
+        "provenance": "UNAVAILABLE",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "No empirical partial-fill distribution recorded.",
+        "limitation": "Modeled structurally in double-entry journal, not empirically calibrated."
+      },
+      {
+        "term": "single_leg_miss",
+        "provenance": "ASSUMED",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "Deterministic adverse-move liquidation breach scenario (19.5% adverse jump on delayed hedge at 20.0% initial margin vs 1.00% HL MMR).",
+        "limitation": "Probability of single-leg miss during volatility spikes is assumed, not measured."
+      },
+      {
+        "term": "borrow_financing",
+        "provenance": "ASSUMED",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "Parametric 5% APR and 10% APR stress scenarios.",
+        "limitation": "Actual venue borrow rates spike non-linearly during high positive funding regimes."
+      },
+      {
+        "term": "funding",
+        "provenance": "MEASURED",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "Historical 8h Binance and 1h Hyperliquid funding rate time series.",
+        "limitation": "Local Parquet provenance is HASH_RECORDED_UNVERIFIED without external trusted manifest."
+      },
+      {
+        "term": "liquidation_costs",
+        "provenance": "VENUE_PUBLISHED",
+        "scaled_by_cost_multiplier": false,
+        "calibration_basis": "Modeled maintenance margin ratios (0.50% Binance / 1.00% HL) and 50.0 bps liquidation penalty plus emergency taker fee.",
+        "limitation": "Insurance-fund / ADL / cascade slippage beyond nominal penalty is uncalibrated."
+      }
+    ],
+    "retained_observed_scenarios": {
+      "BINANCE_2X_5PCT_BORROW_NO_DELAY": {
+        "scenario": "BINANCE_2X_5PCT_BORROW_NO_DELAY",
+        "venue": "binance",
+        "cost_multiplier": "2.0",
+        "cost_scaling_scope": "MAKER_FEE_MULTIPLIER_ONLY",
+        "borrow_apr": "0.0500",
+        "funding_pnl": "181.95205479",
+        "basis_pnl": "40.00000000",
+        "execution_fee_cost": "240.00000000",
+        "borrow_financing_cost": "205.47945205",
+        "hedge_delay_loss": "0.00000000",
+        "liquidation_triggered": false,
+        "liquidation_penalty_cost": "0.00000000",
+        "net_pnl": "-223.52739726",
+        "double_entry_residual": "0.00000000",
+        "arithmetic_cash_conservation_residual": "0.00000000",
+        "independent_journal_reconciled": true,
+        "independent_journal_status": "INDEPENDENT_DOUBLE_ENTRY_VERIFIED",
+        "independent_journal_event_count": 12
+      },
+      "HYPERLIQUID_2X_5PCT_BORROW_NO_DELAY": {
+        "scenario": "HYPERLIQUID_2X_5PCT_BORROW_NO_DELAY",
+        "venue": "hyperliquid",
+        "cost_multiplier": "2.0",
+        "cost_scaling_scope": "MAKER_FEE_MULTIPLIER_ONLY",
+        "borrow_apr": "0.0500",
+        "funding_pnl": "404.52739726",
+        "basis_pnl": "40.00000000",
+        "execution_fee_cost": "110.00000000",
+        "borrow_financing_cost": "205.47945205",
+        "hedge_delay_loss": "0.00000000",
+        "liquidation_triggered": false,
+        "liquidation_penalty_cost": "0.00000000",
+        "net_pnl": "129.04794521",
+        "double_entry_residual": "0.00000000",
+        "arithmetic_cash_conservation_residual": "0.00000000",
+        "independent_journal_reconciled": true,
+        "independent_journal_status": "INDEPENDENT_DOUBLE_ENTRY_VERIFIED",
+        "independent_journal_event_count": 12
+      },
+      "HYPERLIQUID_2X_10PCT_BORROW_NO_DELAY": {
+        "scenario": "HYPERLIQUID_2X_10PCT_BORROW_NO_DELAY",
+        "venue": "hyperliquid",
+        "cost_multiplier": "2.0",
+        "cost_scaling_scope": "MAKER_FEE_MULTIPLIER_ONLY",
+        "borrow_apr": "0.1000",
+        "funding_pnl": "404.52739726",
+        "basis_pnl": "40.00000000",
+        "execution_fee_cost": "110.00000000",
+        "borrow_financing_cost": "410.95890411",
+        "hedge_delay_loss": "0.00000000",
+        "liquidation_triggered": false,
+        "liquidation_penalty_cost": "0.00000000",
+        "net_pnl": "-76.43150685",
+        "double_entry_residual": "0.00000000",
+        "arithmetic_cash_conservation_residual": "0.00000000",
+        "independent_journal_reconciled": true,
+        "independent_journal_status": "INDEPENDENT_DOUBLE_ENTRY_VERIFIED",
+        "independent_journal_event_count": 12
+      },
+      "HYPERLIQUID_DELAYED_HEDGE_LIQUIDATION_BREACH": {
+        "scenario": "HYPERLIQUID_DELAYED_HEDGE_LIQUIDATION_BREACH",
+        "venue": "hyperliquid",
+        "cost_multiplier": "2.0",
+        "cost_scaling_scope": "MAKER_FEE_MULTIPLIER_ONLY",
+        "borrow_apr": "0.0500",
+        "funding_pnl": "0.00000000",
+        "basis_pnl": "0.00000000",
+        "execution_fee_cost": "110.00000000",
+        "borrow_financing_cost": "6.84931507",
+        "hedge_delay_loss": "9750.00000000",
+        "liquidation_triggered": true,
+        "liquidation_penalty_cost": "272.50000000",
+        "net_pnl": "-10139.34931507",
+        "double_entry_residual": "0.00000000",
+        "arithmetic_cash_conservation_residual": "0.00000000",
+        "independent_journal_reconciled": true,
+        "independent_journal_status": "INDEPENDENT_DOUBLE_ENTRY_VERIFIED",
+        "independent_journal_event_count": 10
+      }
+    }
+  },
+  "empirical_permutation_audit": {
+    "evidence_scope": "HISTORICAL_H3_MAKER_DIAGNOSTIC",
+    "prospective_v2_oos_scope": "H3_BASIS_CARRY_V2_PROSPECTIVE_OOS",
+    "valid_as_v2_alpha_proof": false,
+    "apples_to_apples_null_verified": false,
+    "inferential_status": "DIAGNOSTIC_ONLY_NON_EQUIVALENT_NULL_DOWNGRADED",
+    "preserved_numerical_result": {
+      "observed_sharpe": 4.320427,
+      "empirical_p_value": 0.00999,
+      "exceed_count": 9,
+      "n_controls": 1000,
+      "n_active_days": 1019,
+      "total_days": 2130,
+      "seed": 20261122,
+      "dataset_origin": "HISTORICAL_H3_MAKER_BACKTEST_NOT_FRESH_V2_OOS"
+    },
+    "multiple_testing_lineage": {
+      "prior_family_research_trials": 185,
+      "v2_trial_seq": 1,
+      "cumulative_family_trials": 186,
+      "family_selection_bias_note": "H3_BASIS_CARRY_V2 is registered with trial_seq=1 for its fresh prospective window, but inherits family-level selection bias from 185 prior research trials. Unadjusted single-test p-values do not control FWER/FDR."
+    },
+    "dimension_audit": [
+      {
+        "dimension": "instruments_and_exposure",
+        "equivalent": false,
+        "observed_strategy_treatment": "Signal-filtered subset of perp/spot carry pairs with regime gating.",
+        "null_control_treatment": "Unconditioned equal-weight average across all available carry pairs on each sampled day.",
+        "impact_on_p_value": "Null mixes instruments not held by the strategy, altering cross-sectional variance."
+      },
+      {
+        "dimension": "holding_period_distribution",
+        "equivalent": false,
+        "observed_strategy_treatment": "Multi-day persistent carry positions held across consecutive positive-funding regimes.",
+        "null_control_treatment": "Independent single-day draws without replacement (no contiguous holding-period blocks).",
+        "impact_on_p_value": "Destroys multi-day holding structure and serial carry clustering."
+      },
+      {
+        "dimension": "turnover",
+        "equivalent": false,
+        "observed_strategy_treatment": "Explicit entry/exit turnover driven by signal transitions.",
+        "null_control_treatment": "Zero turnover modeling on sampled daily returns.",
+        "impact_on_p_value": "Null is not penalized for random entry/exit churn."
+      },
+      {
+        "dimension": "fees",
+        "equivalent": false,
+        "observed_strategy_treatment": "Observed H3_MAKER Sharpe is net of modeled maker fees.",
+        "null_control_treatment": "Null samples gross equal-weight carry returns with zero entry/exit fees.",
+        "impact_on_p_value": "Asymmetric fee treatment prevents apples-to-apples Sharpe comparison."
+      },
+      {
+        "dimension": "borrow_costs",
+        "equivalent": false,
+        "observed_strategy_treatment": "Historical H3_MAKER omitted spot borrow financing (V2 adds 5%/10% APR borrow).",
+        "null_control_treatment": "Zero borrow financing applied in null control.",
+        "impact_on_p_value": "Cannot validate V2 alpha under positive borrow costs."
+      },
+      {
+        "dimension": "funding_convention",
+        "equivalent": true,
+        "observed_strategy_treatment": "Daily summed 8h Binance funding accrual on short perp leg.",
+        "null_control_treatment": "Same daily summed funding series used to construct carry_ret.",
+        "impact_on_p_value": "Consistent funding series source."
+      },
+      {
+        "dimension": "asset_selection_policy",
+        "equivalent": false,
+        "observed_strategy_treatment": "Top-carry / funding-threshold asset selection rule.",
+        "null_control_treatment": "Uniform equal-weight across all pairs regardless of funding rank.",
+        "impact_on_p_value": "Tests combined selection + timing vs unconditioned universe rather than pure timing null."
+      },
+      {
+        "dimension": "active_day_fraction",
+        "equivalent": true,
+        "observed_strategy_treatment": "1019 active days out of 2130 total days.",
+        "null_control_treatment": "Draws exactly n_active=1019 days per permutation.",
+        "impact_on_p_value": "Matches active-day count only."
+      },
+      {
+        "dimension": "risk_normalization",
+        "equivalent": false,
+        "observed_strategy_treatment": "Annualized Sharpe over full calendar equity curve where build_positions_maker (p_fill=0.55) scales gross exposure below 1.0 during partial-fill entry/exit ramps.",
+        "null_control_treatment": "Annualized Sharpe over full zero-padded calendar vector applying full 1.0 unit equal-weight gross exposure on every sampled active day.",
+        "impact_on_p_value": "Time-varying partial-fill exposure vs full-unit exposure changes return variance and drawdown scaling across active days, preventing strict risk-normalized parity."
+      },
+      {
+        "dimension": "time_series_dependency_preservation",
+        "equivalent": false,
+        "observed_strategy_treatment": "Autocorrelated funding and volatility clusters.",
+        "null_control_treatment": "i.i.d. day sampling without block bootstrap or stationary bootstrap.",
+        "impact_on_p_value": "Understates variance of null Sharpe under positive funding autocorrelation."
+      }
+    ],
+    "non_equivalent_dimensions": [
+      "instruments_and_exposure",
+      "holding_period_distribution",
+      "turnover",
+      "fees",
+      "borrow_costs",
+      "asset_selection_policy",
+      "risk_normalization",
+      "time_series_dependency_preservation"
+    ]
+  },
+  "safety_invariants": {
+    "paper_forward_allowed": false,
+    "live_order_authority": false,
+    "h3_maker_quarantine": "PRESERVED",
+    "g13_genesis": "UNTOUCHED",
+    "g15_hard_lock": "HARD_LOCKED"
+  }
+}
