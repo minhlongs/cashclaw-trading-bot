@@ -1,0 +1,281 @@
+{
+  "committed_provenance_parquet": {
+    "available_at_utc_completeness": {
+      "completeness_ratio": 0.945184,
+      "non_empty_rows": 7380,
+      "non_null_rows": 7380
+    },
+    "bytes": 341957,
+    "checksum_verified_stats": {
+      "verified_false": 7796,
+      "verified_ratio": 0.001537,
+      "verified_true": 12
+    },
+    "column_count": 17,
+    "columns": [
+      "dataset",
+      "symbol",
+      "month",
+      "url",
+      "retrieved_at",
+      "zombie_bars_filtered",
+      "checksum_verified",
+      "is_delisted",
+      "last_active_ts_ms",
+      "available_at_utc",
+      "cache_hit",
+      "bytes",
+      "sha256",
+      "rows",
+      "first_ts_ms",
+      "last_ts_ms",
+      "status"
+    ],
+    "dataset_breakdown": {
+      "funding": 1610,
+      "hyperliquid_funding_1h": 10,
+      "hyperliquid_l1_quotes": 1,
+      "oi_metrics": 1357,
+      "perp_1d": 1610,
+      "perp_4h": 1610,
+      "spot_1d": 1610
+    },
+    "path": "artifacts/g2_data_provenance.parquet",
+    "row_count": 7808,
+    "sha256": "95b91ca8040c19026f7dac061d7e5d8c2829fd3dfa6925e9424958933859149f",
+    "status_breakdown": {
+      "empty": 76,
+      "http_404": 352,
+      "ok": 7380
+    },
+    "symbol_coverage": {
+      "binance_symbol_count": 23,
+      "binance_symbols": [
+        "ADAUSDT",
+        "APTUSDT",
+        "ATOMUSDT",
+        "AVAXUSDT",
+        "BCHUSDT",
+        "BNBUSDT",
+        "BTCUSDT",
+        "DOGEUSDT",
+        "DOTUSDT",
+        "EOSUSDT",
+        "ETCUSDT",
+        "ETHUSDT",
+        "FILUSDT",
+        "FTMUSDT",
+        "LINKUSDT",
+        "LTCUSDT",
+        "MATICUSDT",
+        "MKRUSDT",
+        "NEARUSDT",
+        "SOLUSDT",
+        "TRXUSDT",
+        "UNIUSDT",
+        "XRPUSDT"
+      ],
+      "delisted_symbol_count": 4,
+      "delisted_symbols": [
+        "EOSUSDT",
+        "FTMUSDT",
+        "MATICUSDT",
+        "MKRUSDT"
+      ],
+      "hyperliquid_symbol_entries": [
+        "ALL_19",
+        "AVAXUSDT",
+        "BNBUSDT",
+        "BTCUSDT",
+        "DOGEUSDT",
+        "ETHUSDT",
+        "LINKUSDT",
+        "NEARUSDT",
+        "SOLUSDT",
+        "UNIUSDT",
+        "XRPUSDT"
+      ],
+      "total_distinct_symbol_entries": 24
+    },
+    "zombie_bars_filtered_stats": {
+      "rows_with_zombie_bars_filtered": 82,
+      "total_zombie_bars_filtered": 7631
+    }
+  },
+  "gate": "G2_POINT_IN_TIME_DATA_PROVENANCE",
+  "generated_at_utc": "2026-11-22T00:26:01.868297+00:00",
+  "local_gitignored_datasets": {
+    "affected_pytest_count": 5,
+    "affected_pytest_tests": [
+      "verification_lab/tests/test_g13_bridge_cli.py::test_multiday_ts_reconciliation_bridge_progression_and_fail_closed_tamper_guards",
+      "verification_lab/tests/test_g13_bridge_cli.py::test_geoblock_http_451_fallback_and_missing_parquet_ci_resilience",
+      "verification_lab/tests/test_issue59_extensions.py::test_committed_provenance_has_zero_hard_errors_verified_uniusdt_checksum_and_oi",
+      "verification_lab/tests/test_issue59_extensions.py::test_h3_maker_flattens_delisted_positions_on_settlement_across_entire_maker_grid",
+      "verification_lab/tests/test_issue63_calibration_and_g13.py::test_committed_g13_artifact_is_honestly_day0_inconclusive_and_offline_safe"
+    ],
+    "local_data_status": "BLOCKED_MISSING_DATA",
+    "missing_files": [
+      "verification_lab/data/normalized/spot_1d.parquet",
+      "verification_lab/data/normalized/perp_1d.parquet",
+      "verification_lab/data/normalized/perp_4h.parquet",
+      "verification_lab/data/normalized/funding.parquet",
+      "verification_lab/data/normalized/oi_metrics.parquet",
+      "verification_lab/data/raw/g13_day0_snapshot.json"
+    ],
+    "present_files": []
+  },
+  "schema_version": "1.0.0",
+  "synthetic_edge_case_validation": {
+    "all_passed": true,
+    "cases": [
+      {
+        "case_id": "G2-EC-01",
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "details": {
+          "clean_control_zero_false_positives": true,
+          "gaps_detected": [
+            {
+              "curr_ts_ms": 1704412800000,
+              "irregular_step_ms": 259200000,
+              "missing_bars": 2,
+              "prev_ts_ms": 1704153600000
+            }
+          ],
+          "sub_step_gaps_detected": [
+            {
+              "curr_ts_ms": 1704283200000,
+              "irregular_step_ms": 129600000,
+              "missing_bars": 0,
+              "prev_ts_ms": 1704153600000
+            }
+          ]
+        },
+        "name": "missing_candles",
+        "passed": true
+      },
+      {
+        "case_id": "G2-EC-02",
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "details": {
+          "clean_control_zero_false_positives": true,
+          "duplicate_timestamps_ms": [
+            1704070800000
+          ]
+        },
+        "name": "timestamp_collisions",
+        "passed": true
+      },
+      {
+        "case_id": "G2-EC-03",
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "details": {
+          "clean_control_zero_false_positives": true,
+          "max_age_ms": 14400000,
+          "stale_observations": [
+            {
+              "age_ms": 28800000,
+              "index": 1,
+              "ts_ms": 1704074400000
+            }
+          ]
+        },
+        "name": "stale_observations",
+        "passed": true
+      },
+      {
+        "case_id": "G2-EC-04",
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "details": {
+          "clean_control_zero_false_positives": true,
+          "order_violations": [
+            {
+              "curr_ts_ms": 1704081600000,
+              "index": 2,
+              "prev_ts_ms": 1704096000000
+            }
+          ]
+        },
+        "name": "reordered_funding_events",
+        "passed": true
+      },
+      {
+        "case_id": "G2-EC-05",
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "details": {
+          "binance_8h_valid": true,
+          "clean_control_zero_false_positives": true,
+          "cross_interval_mismatch_caught": true,
+          "hyperliquid_1h_valid": true
+        },
+        "name": "funding_interval_1h_and_8h",
+        "passed": true
+      },
+      {
+        "case_id": "G2-EC-06",
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "details": {
+          "clean_control_zero_false_positives": true,
+          "pit_early": [
+            "BTCUSDT",
+            "EOSUSDT"
+          ],
+          "pit_late": [
+            "BTCUSDT",
+            "NEWCOINUSDT"
+          ]
+        },
+        "name": "historical_pair_selection",
+        "passed": true
+      },
+      {
+        "case_id": "G2-EC-07",
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "details": {
+          "clean_control_zero_false_positives": true,
+          "delisted_at_ms": 1706659200000,
+          "zombie_bars_detected": [
+            1706745600000,
+            1706832000000
+          ]
+        },
+        "name": "delisted_markets_zombie_bars",
+        "passed": true
+      },
+      {
+        "case_id": "G2-EC-08",
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "details": {
+          "clean_control_zero_false_positives": true,
+          "current_sha256": "e85d51a229467319ec1ce0216cbae5c601649d1f5b16ce5f3858b9d9b0b18dc9",
+          "recorded_sha256": "6c5f21c9e4a44c9ba510d84e0d3c38bbc4196298d02df87c30eb5357f87f44ab",
+          "revision_detected": true
+        },
+        "name": "data_revisions_sha256_mismatch",
+        "passed": true
+      },
+      {
+        "case_id": "G2-EC-09",
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "details": {
+          "clean_control_zero_false_positives": true,
+          "expected_count": 3,
+          "missing_data_flag": true,
+          "missing_months": [
+            "2021-02"
+          ],
+          "present_count": 2
+        },
+        "name": "missing_open_interest_periods",
+        "passed": true
+      }
+    ],
+    "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+    "passed_cases": 9,
+    "total_cases": 9
+  },
+  "verdict": {
+    "provenance_manifest_verified": true,
+    "raw_local_data_status": "BLOCKED_MISSING_DATA",
+    "synthetic_validators_passed": true
+  }
+}

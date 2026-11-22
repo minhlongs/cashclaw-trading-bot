@@ -9,3 +9,5 @@ export * from './paper-forward-leg-order';
 export * from './paper-forward-pair-executor';
 export * from './paper-forward-runner';
 export * from './tracking-error-reconciler';
+export * from './strategy-identity-types';
+export * from './strategy-identity-gate';

@@ -1,0 +1,649 @@
+{
+  "adversarial_leakage_detection": {
+    "all_detected": true,
+    "detected_vectors": 10,
+    "total_vectors": 10,
+    "vectors": [
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "first_divergent_cutoff": 20,
+        "leakage_detected": true,
+        "name": "future_candle_leakage_shift_minus_1",
+        "vector_id": "G4-LV-01"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "first_divergent_cutoff": 20,
+        "leakage_detected": true,
+        "name": "rolling_window_centered_leakage",
+        "vector_id": "G4-LV-02"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "first_divergent_cutoff": 20,
+        "leakage_detected": true,
+        "name": "future_fitted_normalization_zscore",
+        "vector_id": "G4-LV-03"
+      },
+      {
+        "clean_signal_at_bar_20": 0.000190624,
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "first_divergent_cutoff": 20,
+        "leakage_detected": true,
+        "leaky_signal_at_bar_20": 0.0026163945,
+        "name": "funding_availability_mismatch",
+        "vector_id": "G4-LV-04"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "first_divergent_cutoff": 40,
+        "leakage_detected": true,
+        "name": "cross_sectional_survivor_selection",
+        "vector_id": "G4-LV-05"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "leakage_detected": true,
+        "name": "label_overlap_across_split",
+        "split_audit": {
+          "actual_gap": 2,
+          "embargo_bars": 1,
+          "holding_horizon": 5,
+          "label_overlap_detected": true,
+          "n_bars": 80,
+          "purge_bars": 2,
+          "test_start": 52,
+          "train_end": 50,
+          "valid": false
+        },
+        "vector_id": "G4-LV-06"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "leakage_detected": true,
+        "name": "train_test_embargo_failure",
+        "split_audit": {
+          "actual_gap": 5,
+          "embargo_bars": 0,
+          "holding_horizon": 5,
+          "label_overlap_detected": false,
+          "n_bars": 80,
+          "purge_bars": 5,
+          "test_start": 55,
+          "train_end": 50,
+          "valid": false
+        },
+        "vector_id": "G4-LV-07"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "first_divergent_cutoff": 0,
+        "leakage_detected": true,
+        "name": "incorrect_pit_universe_membership",
+        "newusdt_pre_listing_zero_weight": true,
+        "vector_id": "G4-LV-08"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "first_divergent_cutoff": 20,
+        "leakage_detected": true,
+        "name": "recursive_indicator_backward_ema_drift",
+        "vector_id": "G4-LV-09"
+      },
+      {
+        "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+        "first_divergent_cutoff": 0,
+        "leakage_detected": true,
+        "monotonic_guard_rejected_unsorted": true,
+        "name": "data_import_ordering_corruption",
+        "unguarded_processing_diverged": true,
+        "vector_id": "G4-LV-10"
+      }
+    ]
+  },
+  "clean_causal_prefix_invariance": {
+    "all_passed": true,
+    "passed_seeds": 50,
+    "seed_results": [
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 0
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 1
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 2
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 3
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 4
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 5
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 6
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 7
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 8
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 9
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 10
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 11
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 12
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 13
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 14
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 15
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 16
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 17
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 18
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 19
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 20
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 21
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 22
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 23
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 24
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 25
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 26
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 27
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 28
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 29
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 30
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 31
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 32
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 33
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 34
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 35
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 36
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 37
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 38
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 39
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 40
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 41
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 42
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 43
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 44
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 45
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 46
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 47
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 48
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 49
+      }
+    ],
+    "total_seeds": 50,
+    "truncation_points": [
+      15,
+      30,
+      45,
+      60,
+      75
+    ]
+  },
+  "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+  "gate": "G4_CAUSAL_LEAKAGE_AND_SURVIVORSHIP_AUDIT",
+  "generated_at_utc": "2026-11-22T00:26:06.344586+00:00",
+  "production_h3_maker_prefix_invariance": {
+    "all_passed": true,
+    "passed_seeds": 50,
+    "seed_results": [
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 0
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 1
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 2
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 3
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 4
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 5
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 6
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 7
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 8
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 9
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 10
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 11
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 12
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 13
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 14
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 15
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 16
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 17
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 18
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 19
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 20
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 21
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 22
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 23
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 24
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 25
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 26
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 27
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 28
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 29
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 30
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 31
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 32
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 33
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 34
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 35
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 36
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 37
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 38
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 39
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 40
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 41
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 42
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 43
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 44
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 45
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 46
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 47
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 48
+      },
+      {
+        "first_divergent_cutoff": null,
+        "passed": true,
+        "seed": 49
+      }
+    ],
+    "strategy_module": "verification_lab.strategies.h3_basis_carry.build_positions_maker",
+    "total_seeds": 50,
+    "truncation_points": [
+      15,
+      30,
+      45,
+      60,
+      75
+    ]
+  },
+  "purged_embargoed_split_verification": {
+    "actual_gap": 60,
+    "embargo_bars": 30,
+    "holding_horizon": 30,
+    "label_overlap_detected": false,
+    "n_bars": 2130,
+    "purge_bars": 30,
+    "test_start": 1551,
+    "train_end": 1491,
+    "valid": true
+  },
+  "schema_version": "1.1.0",
+  "verdict": "PASS"
+}

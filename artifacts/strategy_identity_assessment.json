@@ -1,0 +1,17 @@
+{
+  "assessment_version": "1.0.0",
+  "immutable_historical_records_preserved": {
+    "signed_strategy_spec_h3_maker_sha256": "3e020570aaeba0a84e67dde272a45102d4ee7ed50d5c84a38f80f60f18c3d39b",
+    "strategy_lifecycle_registry_sha256": "e2f53b8e3f9555bae48b30f4b872da0e36b8c80a99b7ad01ab5f5da51cc08127"
+  },
+  "h3_maker_bot_runtime_applicability": "NOT_VERIFIED",
+  "economic_identity_verdict": "ECONOMICALLY_DIFFERENT",
+  "g13_paper_forward_harness_status": "TWO_LEG_BASIS_CARRY_WITHOUT_BORROW_OR_LIQUIDATION_MODEL",
+  "proposed_v2_candidate": {
+    "strategy_id": "H3_BASIS_CARRY_V2",
+    "research_status": "PENDING_FRESH_OOS",
+    "paper_forward_allowed": false,
+    "live_order_authority": false,
+    "exposed_holdout_quarantined": true
+  }
+}

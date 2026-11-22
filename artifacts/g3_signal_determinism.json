@@ -1,0 +1,590 @@
+{
+  "canonical_output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+  "canonical_strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359",
+  "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+  "environments": [
+    {
+      "label": "env1",
+      "python_executable": "/tmp/cc-g3-env1/bin/python"
+    },
+    {
+      "label": "env2",
+      "python_executable": "/tmp/cc-g3-env2/bin/python"
+    }
+  ],
+  "gate": "G3_DETERMINISTIC_SIGNAL_VALIDATION",
+  "generated_at_utc": "2026-11-22T00:26:05.277734+00:00",
+  "identical_across_all_runs": true,
+  "llm_in_path": false,
+  "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+  "runs": [
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77346,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 1,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77347,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 2,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77349,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 3,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77350,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 4,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77351,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 5,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77358,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 6,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77365,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 7,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77370,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 8,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77372,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 9,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env1",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77373,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env1/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 10,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77375,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 1,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77377,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 2,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77378,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 3,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77379,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 4,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77380,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 5,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77381,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 6,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77382,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 7,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77383,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 8,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77385,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 9,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    },
+    {
+      "entries": 3,
+      "env_label": "env2",
+      "event_count": 270,
+      "exits": 3,
+      "output_sha256": "89286eb1ff760629665e425d89f3b04d03d868264e2c122aaadd798b76e0837a",
+      "packages": {
+        "numpy": "2.5.5",
+        "polars": "1.44.2"
+      },
+      "pid": 77386,
+      "production_h3_nonzero_position_days": 58,
+      "production_h3_params_used": {
+        "entryAnnualBps": 800.0,
+        "exitAnnualBps": 150.0,
+        "fifoFillProbability": 0.55,
+        "lookbackDays": 30,
+        "maxGrossLeverage": 1.0
+      },
+      "production_h3_positions_sha256": "ad81ef2ae309aba41bce2cbe73ec1c655cfa9cdf3022fd76139a5b5f7823c9f0",
+      "python_executable": "/private/tmp/cc-g3-env2/bin/python",
+      "python_version": "3.12.13",
+      "run_index": 10,
+      "signal_count": 135,
+      "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+      "signed_strategy_spec_verified": true,
+      "strategy_spec_sha256": "05ba3f4e78891212ef633819e9e97e7fcdd521650c87c07c0d2cd619ca21d359"
+    }
+  ],
+  "runs_per_env": 10,
+  "schema_version": "1.1.0",
+  "signed_strategy_spec_payload_sha256": "43ac1c5bec68810391da6d366156b933369dada96631fe0c54d66c376ef94169",
+  "signed_strategy_spec_verified": true,
+  "total_runs": 20,
+  "unique_output_hash_count": 1,
+  "unique_pids": 20,
+  "verdict": "PASS_100_PCT_IDENTICAL"
+}

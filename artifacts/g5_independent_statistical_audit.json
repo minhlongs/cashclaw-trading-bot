@@ -1,0 +1,137 @@
+{
+  "gate": "G5_INDEPENDENT_STATISTICAL_REPRODUCTION",
+  "generated_at_utc": "2026-11-22T00:26:06.581320+00:00",
+  "h3_maker_statistical_verification": {
+    "committed_dsr": 0.998772,
+    "cpcv": {
+      "embargo_bars": 30,
+      "n_paths": 28,
+      "periods_per_year": 365,
+      "purge_bars": 1,
+      "winner_mean_path_sharpe": 6.4615,
+      "winner_p05_path_sharpe": 0.6561,
+      "winner_p95_path_sharpe": 9.8976,
+      "winner_std_path_sharpe": 3.0305
+    },
+    "dsr_abs_diff": 2e-06,
+    "dsr_verified": true,
+    "embargo_bars": 30,
+    "expected_max_sharpe_committed": 4.7672,
+    "expected_max_sharpe_recomputed": 4.7672,
+    "exposed_holdout": {
+      "break_even_multiple": 3.2037,
+      "cum_net": 0.0098,
+      "embargo_days": 60,
+      "n_trades": 3,
+      "sharpe": 2.3476,
+      "window_days": 579
+    },
+    "independent_registry_variance_recomputation": {
+      "committed_trial_sr_variance_per_period": 0.0082938,
+      "dsr_delta_registry_ddof0_minus_committed": 0.000251,
+      "dsr_delta_registry_ddof1_minus_committed": 9.6e-05,
+      "dsr_using_registry_ddof0": 0.999023,
+      "dsr_using_registry_ddof1": 0.998868,
+      "registry_trial_sr_variance_per_period_ddof0": 0.0082245596,
+      "registry_trial_sr_variance_per_period_ddof1": 0.0082692583,
+      "variance_delta_ddof0_minus_committed": -6.92404e-05,
+      "variance_delta_ddof1_minus_committed": -2.45417e-05
+    },
+    "n_trials_deflated": 185,
+    "pbo": {
+      "n_combinations": 300,
+      "n_observations": 1491,
+      "n_splits": 16,
+      "n_strategies": 36,
+      "pbo": 0.03333333333333333
+    },
+    "purge_bars": 1,
+    "recomputed_dsr": 0.998774
+  },
+  "holdout_quarantine_and_prospective_registration": {
+    "exposed_holdout_quarantined": true,
+    "prospective_oos_status": "PENDING_FRESH_OOS",
+    "prospective_strategy_id": "H3_BASIS_CARRY_V2",
+    "quarantine_reason": "n_trades=3 over 579d is underpowered and already inspected; cannot be reused as fresh OOS"
+  },
+  "hypothesis_verdicts": {
+    "by_family": {
+      "H1": "REJECT",
+      "H1_G1": "REJECT",
+      "H2": "REJECT",
+      "H2_G1": "REJECT",
+      "H3": "REJECT",
+      "H3_MAKER": "PASS"
+    },
+    "passed_count": 1,
+    "passed_families": [
+      "H3_MAKER"
+    ],
+    "rejected_count": 5,
+    "rejected_families": [
+      "H1",
+      "H2",
+      "H3",
+      "H1_G1",
+      "H2_G1"
+    ]
+  },
+  "randomized_entry_controls": {
+    "h3_maker_regime_randomized_entry": {
+      "control_type": "SYNTHETIC_GAUSSIAN_REGIME_NULL_NOT_EMPIRICAL",
+      "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+      "exceed_count": 1,
+      "null_mean_sharpe": -0.026,
+      "null_p95_sharpe": 1.3882,
+      "observed_oos_days": 579,
+      "observed_oos_sharpe": 2.3476,
+      "observed_oos_trades": 3,
+      "p_value": 0.001998
+    },
+    "n_controls": 1000,
+    "raw_daily_returns_availability": "BLOCKED_MISSING_DATA_LOCAL_PARQUET",
+    "risk_matched_baselines": {
+      "cash_funding_baseline_4pct_apr_cum": 0.063452,
+      "h3_maker_oos_cum_net": 0.0098,
+      "risk_matched_buy_and_hold_cum": 0.003331,
+      "window_days": 579
+    },
+    "seed": 20261122,
+    "synthetic_calibration_verification": {
+      "data_origin": "SYNTHETIC_SOFTWARE_TEST_FIXTURE",
+      "detects_positive_drift": true,
+      "n_controls": 1000,
+      "observed_sharpe": 2.4559,
+      "p_value": 0.012987
+    }
+  },
+  "schema_version": "1.1.0",
+  "trial_registry_audit": {
+    "family_counts": {
+      "H1": 30,
+      "H1_G1": 32,
+      "H2": 15,
+      "H2_G1": 24,
+      "H3": 48,
+      "H3_MAKER": 36
+    },
+    "first_bad_seq": null,
+    "hash_chain_verified": true,
+    "head_hash": "dc6c8ec2c63203175fc5ca26bd85a0170abda71228fbb74bd0932cf1cc027236",
+    "path": "artifacts/trial_registry.jsonl",
+    "seq_contiguous_1_to_N": true,
+    "status_counts": {
+      "completed": 185
+    },
+    "total_trials": 185,
+    "zero_invisible_deletions_confirmed": true
+  },
+  "verdict": {
+    "dsr_reproduction_pass": true,
+    "empirical_randomized_entry_status": "BLOCKED_MISSING_DATA",
+    "exposed_holdout_quarantined": true,
+    "prospective_status": "PENDING_FRESH_OOS",
+    "randomized_controls_executed": true,
+    "registry_integrity_pass": true
+  }
+}
