@@ -33,6 +33,9 @@ export const StrategyProvenanceSchema = z
   .object({
     specSha256: sha256HexSchema,
     trialCount: z.number().int().min(1),
+    priorFamilyTrialCount: z.number().int().min(0).optional(),
+    cumulativeFamilyTrialCount: z.number().int().min(1).optional(),
+    parentHypothesis: z.string().trim().min(1).optional(),
     oosStatus: OosProvenanceStatusSchema,
     paperForwardEligible: z.boolean(),
   })

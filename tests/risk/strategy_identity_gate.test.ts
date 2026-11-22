@@ -157,4 +157,48 @@ describe('Strategy Identity Safety Gate (§8)', () => {
       sha256File('artifacts/strategy_lifecycle_registry.json'),
     );
   });
+
+  it('exposes 185-trial historical lineage on H3_BASIS_CARRY_V2 and pins immutable registration + erratum + observation contract', () => {
+    expect(H3_BASIS_CARRY_V2_DECLARED_ECONOMICS.provenance.trialCount).toBe(1);
+    expect(H3_BASIS_CARRY_V2_DECLARED_ECONOMICS.provenance.priorFamilyTrialCount).toBe(185);
+    expect(H3_BASIS_CARRY_V2_DECLARED_ECONOMICS.provenance.cumulativeFamilyTrialCount).toBe(186);
+    expect(H3_BASIS_CARRY_V2_DECLARED_ECONOMICS.provenance.parentHypothesis).toBe('H3_MAKER');
+    expect(H3_BASIS_CARRY_V2_DECLARED_ECONOMICS.provenance.paperForwardEligible).toBe(false);
+
+    const regSha = 'c089527416420ac11dfea01a2ad7ca0b18a167ad13bb775575af5b1ef70d0012';
+    const specSha = '187e1974069bc1d70950b475804b670a8510a413411652c2c71b1e370b22ee53';
+    expect(sha256File('artifacts/h3_basis_carry_v2_prospective_oos_registration.json')).toBe(regSha);
+
+    const erratum = JSON.parse(
+      readFileSync(resolve(process.cwd(), 'artifacts/h3_basis_carry_v2_evidence_erratum_v1.json'), 'utf8'),
+    ) as {
+      original_registration_reference: { exact_sha256: string; original_frozen_spec_sha256: string };
+      safety_invariants: { paper_forward_allowed: boolean; live_order_authority: boolean };
+    };
+    expect(erratum.original_registration_reference.exact_sha256).toBe(regSha);
+    expect(erratum.original_registration_reference.original_frozen_spec_sha256).toBe(specSha);
+    expect(erratum.safety_invariants.paper_forward_allowed).toBe(false);
+    expect(erratum.safety_invariants.live_order_authority).toBe(false);
+
+    const contract = JSON.parse(
+      readFileSync(
+        resolve(process.cwd(), 'artifacts/h3_basis_carry_v2_prospective_observation_contract.json'),
+        'utf8',
+      ),
+    ) as {
+      references: {
+        original_registration_sha256: string;
+        original_frozen_spec_sha256: string;
+        evidence_erratum_sha256: string;
+      };
+      execution_authority_guards: { paper_forward_allowed: boolean; live_order_authority: boolean };
+    };
+    expect(contract.references.original_registration_sha256).toBe(regSha);
+    expect(contract.references.original_frozen_spec_sha256).toBe(specSha);
+    expect(contract.references.evidence_erratum_sha256).toBe(
+      sha256File('artifacts/h3_basis_carry_v2_evidence_erratum_v1.json'),
+    );
+    expect(contract.execution_authority_guards.paper_forward_allowed).toBe(false);
+    expect(contract.execution_authority_guards.live_order_authority).toBe(false);
+  });
 });

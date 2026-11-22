@@ -156,6 +156,11 @@ export const H3_BASIS_CARRY_V2_DECLARED_ECONOMICS: Readonly<DeclaredStrategyEcon
   feeSettlementModel: 'two_leg_spot_perp_maker_taker', barGranularity: '1d', paperExecutionRequired: true,
   provenance: Object.freeze({
     specSha256: '187e1974069bc1d70950b475804b670a8510a413411652c2c71b1e370b22ee53',
-    trialCount: 1, oosStatus: 'PENDING_FRESH_OOS', paperForwardEligible: false,
+    trialCount: 1,
+    priorFamilyTrialCount: 185,
+    cumulativeFamilyTrialCount: 186,
+    parentHypothesis: 'H3_MAKER',
+    oosStatus: 'PENDING_FRESH_OOS',
+    paperForwardEligible: false,
   }),
 });

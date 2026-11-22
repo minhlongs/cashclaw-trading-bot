@@ -5,13 +5,19 @@ Models two real-world cash-and-carry risks omitted from the original H3_MAKER la
 2. Delayed-hedge directional exposure and perpetual maintenance-margin liquidation
    when one leg fills while the hedge leg is delayed under adverse price movement.
 
-All cash flows reconcile via double-entry Decimal accounting to exact 0.00000000.
+Cash conservation is verified both via arithmetic identity and via the independent
+event-level Debit/Credit journal in ``double_entry_journal.py``.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_EVEN
+
+from verification_lab.execution.double_entry_journal import (
+    build_carry_cycle_journal,
+    reconcile_journal,
+)
 
 Q8 = Decimal("0.00000001")
 DAYS_PER_YEAR = Decimal("365")
@@ -87,6 +93,11 @@ class CarryCycleResult:
     starting_cash: Decimal
     ending_cash: Decimal
     double_entry_residual: Decimal
+    arithmetic_cash_conservation_residual: Decimal = Decimal("0.00000000")
+    independent_journal_reconciled: bool = False
+    independent_journal_status: str = "ARITHMETIC_CASH_CONSERVATION_ONLY"
+    independent_journal_event_count: int = 0
+    cost_scaling_scope: str = "MAKER_FEE_MULTIPLIER_ONLY"
 
 
 def simulate_v2_carry_cycle(
@@ -149,7 +160,7 @@ def simulate_v2_carry_cycle(
         - liquidation_penalty_cost
     )
 
-    # Independent double-entry cash conservation check
+    # Arithmetic cash-conservation check (necessary but not sufficient alone)
     starting_cash = _q8(inp.notional_usd)
     ending_cash = _q8(
         starting_cash
@@ -160,9 +171,36 @@ def simulate_v2_carry_cycle(
         - hedge_delay_loss
         - liquidation_penalty_cost
     )
-    residual = _q8((ending_cash - starting_cash) - net_pnl)
-    if residual != Decimal("0.00000000"):
-        raise AssertionError(f"DOUBLE_ENTRY_RESIDUAL_NONZERO: {residual}")
+    arithmetic_residual = _q8((ending_cash - starting_cash) - net_pnl)
+    if arithmetic_residual != Decimal("0.00000000"):
+        raise AssertionError(f"ARITHMETIC_CASH_CONSERVATION_RESIDUAL_NONZERO: {arithmetic_residual}")
+
+    # Independent event-level Debit/Credit journal reconciliation oracle
+    entry_maker_fee = _q8(execution_fee_cost / Decimal("2"))
+    exit_maker_fee = _q8(execution_fee_cost - entry_maker_fee)
+    journal_events = build_carry_cycle_journal(
+        starting_cash=starting_cash,
+        spot_notional=half_notional,
+        perp_notional=Decimal("0.00000000") if inp.unhedged_leg_only else half_notional,
+        perp_margin_posted=initial_equity,
+        entry_maker_fee=entry_maker_fee,
+        exit_maker_fee=exit_maker_fee,
+        borrow_cost=borrow_financing_cost,
+        funding_pnl=funding_pnl,
+        basis_pnl=basis_pnl,
+        liquidation_loss=liquidation_penalty_cost,
+        emergency_close_loss=hedge_delay_loss,
+    )
+    oracle_report = reconcile_journal(
+        journal_events,
+        starting_cash=starting_cash,
+        expected_ending_cash=ending_cash,
+        expected_net_pnl=net_pnl,
+    )
+    if not oracle_report.reconciled:
+        raise AssertionError(
+            f"INDEPENDENT_DOUBLE_ENTRY_ORACLE_FAILED: {oracle_report.failures}"
+        )
 
     return CarryCycleResult(
         cycle_id=inp.cycle_id,
@@ -179,5 +217,10 @@ def simulate_v2_carry_cycle(
         net_pnl=net_pnl,
         starting_cash=starting_cash,
         ending_cash=ending_cash,
-        double_entry_residual=residual,
+        double_entry_residual=oracle_report.balance_sheet_residual_usd,
+        arithmetic_cash_conservation_residual=arithmetic_residual,
+        independent_journal_reconciled=oracle_report.reconciled,
+        independent_journal_status=oracle_report.status,
+        independent_journal_event_count=oracle_report.event_count,
+        cost_scaling_scope="MAKER_FEE_MULTIPLIER_ONLY",
     )
