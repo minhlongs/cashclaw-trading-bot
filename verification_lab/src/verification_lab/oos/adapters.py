@@ -229,13 +229,14 @@ class PublicReadOnlyHttpClient:
         headers: Mapping[str, str],
     ) -> None:
         parsed = urlsplit(url)
+        safe_url = f"{parsed.scheme}://{parsed.hostname or ''}{parsed.path}"
         if parsed.scheme != "https":
-            raise UnauthorizedEndpointError(f"non_https_endpoint_forbidden ({url})")
+            raise UnauthorizedEndpointError(f"non_https_endpoint_forbidden ({safe_url})")
         if parsed.query or parsed.fragment or parsed.username is not None or parsed.password is not None:
-            raise UnauthorizedEndpointError(f"url_components_not_allowed ({url})")
+            raise UnauthorizedEndpointError(f"url_components_not_allowed ({safe_url})")
         lower_path = parsed.path.lower()
         if ";" in parsed.path or ".." in parsed.path or "%2f" in lower_path or "%5c" in lower_path or "\\" in parsed.path:
-            raise UnauthorizedEndpointError(f"url_path_normalization_forbidden ({url})")
+            raise UnauthorizedEndpointError(f"url_path_normalization_forbidden ({safe_url})")
 
         for key in headers:
             if key.lower() in FORBIDDEN_HEADER_KEYS:

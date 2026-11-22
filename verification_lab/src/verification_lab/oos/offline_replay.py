@@ -68,8 +68,16 @@ def _independent_parse_iso_utc(ts: str) -> datetime:
     return dt.astimezone(timezone.utc)
 
 
-def _safe_parse_finite_decimal(val: Any, field: str, mismatches: list[str]) -> Decimal | None:
+def _safe_parse_finite_decimal(
+    val: Any,
+    field: str,
+    mismatches: list[str],
+    *,
+    allow_none: bool = True,
+) -> Decimal | None:
     if val is None:
+        if not allow_none:
+            mismatches.append(f"invalid_decimal_in_replay ({field})")
         return None
     if isinstance(val, bool):
         mismatches.append(f"invalid_decimal_in_replay ({field})")
@@ -388,7 +396,12 @@ def run_independent_offline_replay(
         funding_hist_dec: list[Decimal] = []
         if isinstance(raw_history, list):
             for idx_h, item_h in enumerate(raw_history):
-                parsed_h = _safe_parse_finite_decimal(item_h, f"annualized_funding_bps_history[{idx_h}]", mismatches)
+                parsed_h = _safe_parse_finite_decimal(
+                    item_h,
+                    f"annualized_funding_bps_history[{idx_h}]",
+                    mismatches,
+                    allow_none=False,
+                )
                 if parsed_h is not None:
                     funding_hist_dec.append(parsed_h)
         else:

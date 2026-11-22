@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any, Mapping, Sequence
 
 from verification_lab.oos.adapters import NormalizedMarketObservation, RawCaptureEnvelope
@@ -353,15 +353,41 @@ def evaluate_store_prospective_clock(
             expected_frozen_spec_sha256=params.frozen_spec_sha256,
             prospective_start_utc=prospective_start_utc,
         )
+        obs_day_valid = False
+        if obs_day:
+            try:
+                parsed_obs_date = date.fromisoformat(obs_day)
+                obs_day_valid = (
+                    obs_day == parsed_obs_date.isoformat()
+                    and start_dt.date() <= parsed_obs_date <= as_of.date()
+                )
+            except ValueError:
+                obs_day_valid = False
+
+        timestamps_not_future = False
+        try:
+            avail_dt_parsed = datetime.fromisoformat(
+                str(rec.get("available_at_utc", "")).replace("Z", "+00:00")
+            )
+            cap_dt_parsed = datetime.fromisoformat(
+                str(rec.get("captured_at_utc", "")).replace("Z", "+00:00")
+            )
+            if avail_dt_parsed.tzinfo is not None and cap_dt_parsed.tzinfo is not None:
+                timestamps_not_future = (
+                    avail_dt_parsed.astimezone(timezone.utc) <= as_of
+                    and cap_dt_parsed.astimezone(timezone.utc) <= as_of
+                )
+        except ValueError:
+            timestamps_not_future = False
+
         record_eligible = (
             chain_report.intact
             and replay_ok
             and rec.get("eligibility_status") == "ELIGIBLE"
             and causal_check.get("valid") is True
             and contract_res.eligible_for_90d_clock
-            and bool(obs_day)
-            and obs_day >= start_day_iso
-            and obs_day <= as_of_day_iso
+            and obs_day_valid
+            and timestamps_not_future
         )
         if record_eligible:
             eligible_obs_days.add(obs_day)
