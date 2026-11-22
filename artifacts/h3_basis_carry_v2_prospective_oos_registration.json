@@ -1,0 +1,200 @@
+{
+  "artifact_version": "1.0.0",
+  "generated_at_utc": "2026-11-22T00:56:26.446698+00:00",
+  "spec_sha256": "187e1974069bc1d70950b475804b670a8510a413411652c2c71b1e370b22ee53",
+  "frozen_v2_spec": {
+    "strategy_id": "H3_BASIS_CARRY_V2",
+    "parent_hypothesis": "H3_MAKER",
+    "trial_identity": {
+      "trial_seq": 1,
+      "lineage_reset_reason": "ECONOMICALLY_DIFFERENT_V2_WITH_BORROW_AND_LIQUIDATION"
+    },
+    "economic_structure": {
+      "legs": 2,
+      "structure": "market_neutral",
+      "requires_funding_accrual": true,
+      "requires_hedge_execution": true,
+      "requires_borrow_financing": true,
+      "requires_delayed_hedge_liquidation_model": true,
+      "fee_settlement_model": "two_leg_spot_perp_maker_taker",
+      "bar_granularity": "1d",
+      "max_gross_leverage": 1.0
+    },
+    "signal_parameters_frozen": {
+      "lookback_days": 30,
+      "entry_annual_bps": 800.0,
+      "exit_annual_bps": 150.0,
+      "fifo_fill_probability": 0.55,
+      "require_net_funding_above_borrow_apr": true,
+      "min_funding_minus_borrow_spread_bps": 200.0
+    },
+    "prospective_oos_window": {
+      "registration_date_utc": "2026-11-22T00:00:00Z",
+      "window_start_utc": "2026-11-23T00:00:00Z",
+      "min_observation_days": 90,
+      "min_completed_round_trip_trades": 15,
+      "exposed_holdout_excluded": {
+        "start_utc": "2024-09-29T00:00:00Z",
+        "end_utc": "2026-04-30T00:00:00Z",
+        "reason": "EXPOSED_HOLDOUT_QUARANTINED_3_TRADES"
+      }
+    },
+    "promotion_and_kill_gates": {
+      "min_dsr": 0.95,
+      "max_pbo": 0.15,
+      "max_empirical_randomized_entry_p_value": 0.05,
+      "require_positive_expectancy_at_2x_cost_with_borrow": true,
+      "require_zero_causal_leakage": true,
+      "require_strategy_identity_gate_pass": true,
+      "kill_if_net_expectancy_negative_at_2x_with_borrow": true,
+      "kill_if_liquidation_breach_in_stress_envelope": true
+    },
+    "safety_invariants": {
+      "research_status": "PENDING_FRESH_OOS",
+      "paper_forward_allowed": false,
+      "live_order_authority": false,
+      "production_state": "HOLD_PRODUCTION",
+      "h3_maker_bot_runtime_quarantined": true,
+      "h3_maker_bot_runtime_applicability": "NOT_VERIFIED"
+    }
+  },
+  "restored_g2_parquet_verification": {
+    "status": "RESTORED_AND_VERIFIED",
+    "normalized_dir_present": true,
+    "verified_file_count": 7,
+    "missing_files": [],
+    "files": [
+      {
+        "file": "funding.parquet",
+        "rows": 137889,
+        "columns": 7,
+        "sha256": "98af00c24b25278eaa3e9cc6191bd180994c8f6f31b40dc5bb345cac30f5ad84"
+      },
+      {
+        "file": "perp_1d.parquet",
+        "rows": 45898,
+        "columns": 11,
+        "sha256": "081a9c8aac893977e94f939e75721f3ff5cd649e8fcdf7647fa89a87bbf60a44"
+      },
+      {
+        "file": "spot_1d.parquet",
+        "rows": 45963,
+        "columns": 11,
+        "sha256": "a9869e80714dd188968d4f2baff7ac70230490df090611f16c0fe4e9ff355fab"
+      },
+      {
+        "file": "perp_4h.parquet",
+        "rows": 275376,
+        "columns": 11,
+        "sha256": "007cf7443a373765705935d6ceb08ec3bf07561aa9cea698c780960ed5bfe266"
+      },
+      {
+        "file": "oi_monthly.parquet",
+        "rows": 1270,
+        "columns": 12,
+        "sha256": "e00e25c14b9e28d8dfaf76f6bb4a66740e16459a0d7a73d565bb113a622678ec"
+      },
+      {
+        "file": "hyperliquid_funding_1h.parquet",
+        "rows": 182640,
+        "columns": 8,
+        "sha256": "508446d3ae93e1bc1d0118193b11bd4b2375c3dc7e2494b6c60e40bf0077e906"
+      },
+      {
+        "file": "hyperliquid_l1_quotes.parquet",
+        "rows": 19,
+        "columns": 20,
+        "sha256": "d957ec4b857b5b7a7a1c64a1277b3c5d7d9a70e72eeb5a3cca7a846f8d65b89c"
+      }
+    ]
+  },
+  "g5_empirical_randomized_entry_audit": {
+    "status": "EMPIRICAL_VERIFIED",
+    "data_origin": "AUTHENTIC_RESTORED_LOCAL_PARQUET",
+    "note": "HISTORICAL_ERROR_ANALYSIS_NOT_FRESH_OOS",
+    "n_controls": 1000,
+    "seed": 20261122,
+    "common_symbols_count": 23,
+    "n_days": 2130,
+    "active_day_fraction": 0.478404,
+    "observed_full_sample_sharpe": 4.320427,
+    "null_mean_sharpe": 3.390713,
+    "null_p95_sharpe": 4.154715,
+    "exceed_count": 9,
+    "empirical_p_value": 0.00999,
+    "passes_p_lt_0_05": true,
+    "risk_matched_baselines": {
+      "strategy_cum_return": 0.206302,
+      "btc_risk_matched_cum_return": 0.025224,
+      "btc_risk_matched_sharpe": 0.577025,
+      "cash_4pct_apr_cum_return": 0.262902
+    }
+  },
+  "v2_borrow_and_liquidation_stress": {
+    "note": "HISTORICAL_VENUE_CALIBRATED_STRESS_NOT_FRESH_OOS",
+    "all_residuals_zero": true,
+    "liquidation_breach_detected": true,
+    "scenarios": [
+      {
+        "scenario": "BINANCE_2X_5PCT_BORROW_NO_DELAY",
+        "venue": "binance",
+        "cost_multiplier": "2.0",
+        "borrow_apr": "0.0500",
+        "funding_pnl": "181.95205479",
+        "basis_pnl": "40.00000000",
+        "execution_fee_cost": "240.00000000",
+        "borrow_financing_cost": "205.47945205",
+        "hedge_delay_loss": "0.00000000",
+        "liquidation_triggered": false,
+        "liquidation_penalty_cost": "0.00000000",
+        "net_pnl": "-223.52739726",
+        "double_entry_residual": "0.00000000"
+      },
+      {
+        "scenario": "HYPERLIQUID_2X_5PCT_BORROW_NO_DELAY",
+        "venue": "hyperliquid",
+        "cost_multiplier": "2.0",
+        "borrow_apr": "0.0500",
+        "funding_pnl": "404.52739726",
+        "basis_pnl": "40.00000000",
+        "execution_fee_cost": "110.00000000",
+        "borrow_financing_cost": "205.47945205",
+        "hedge_delay_loss": "0.00000000",
+        "liquidation_triggered": false,
+        "liquidation_penalty_cost": "0.00000000",
+        "net_pnl": "129.04794521",
+        "double_entry_residual": "0.00000000"
+      },
+      {
+        "scenario": "HYPERLIQUID_2X_10PCT_BORROW_NO_DELAY",
+        "venue": "hyperliquid",
+        "cost_multiplier": "2.0",
+        "borrow_apr": "0.1000",
+        "funding_pnl": "404.52739726",
+        "basis_pnl": "40.00000000",
+        "execution_fee_cost": "110.00000000",
+        "borrow_financing_cost": "410.95890411",
+        "hedge_delay_loss": "0.00000000",
+        "liquidation_triggered": false,
+        "liquidation_penalty_cost": "0.00000000",
+        "net_pnl": "-76.43150685",
+        "double_entry_residual": "0.00000000"
+      },
+      {
+        "scenario": "HYPERLIQUID_DELAYED_HEDGE_LIQUIDATION_BREACH",
+        "venue": "hyperliquid",
+        "cost_multiplier": "2.0",
+        "borrow_apr": "0.0500",
+        "funding_pnl": "0.00000000",
+        "basis_pnl": "0.00000000",
+        "execution_fee_cost": "110.00000000",
+        "borrow_financing_cost": "6.84931507",
+        "hedge_delay_loss": "9750.00000000",
+        "liquidation_triggered": true,
+        "liquidation_penalty_cost": "272.50000000",
+        "net_pnl": "-10139.34931507",
+        "double_entry_residual": "0.00000000"
+      }
+    ]
+  }
+}
