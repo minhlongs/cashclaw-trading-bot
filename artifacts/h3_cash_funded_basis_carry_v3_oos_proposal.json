@@ -1,0 +1,24 @@
+{
+  "artifact_version": "1.0.0",
+  "proposal_status": "PROPOSAL_ONLY_NOT_ACTIVE",
+  "future_oos_registration_state": "NOT_ACTIVE",
+  "generated_at_utc": "2026-11-23T06:45:00Z",
+  "hypothesis_id": "H3_CASH_FUNDED_BASIS_CARRY_V3",
+  "v2_window_reused": false,
+  "forbidden_reused_start_date": "2026-11-23T00:00:00Z",
+  "proposed_earliest_eligible_window_start_policy": "MUST_BE_STRICTLY_AFTER_SEPARATE_FOUNDER_FINALIZED_PUBLIC_REGISTRATION_PLUS_24H",
+  "recommendation": "DO_NOT_ACTIVATE_UNTIL_CAPITAL_EFFICIENCY_AND_DSR_BLOCKERS_ARE_RESOLVED",
+  "preconditions_before_any_future_activation": [
+    "1. Resolve CASHCLAW #27 P1-A (1d finalized daily bar vs intraday snapshot) and P1-B (conservative composite available_at_utc) in a separate collector remediation PR.",
+    "2. Replace oracle spot reference with actual executable UBTC/USDC (@142) L2 spot order-book capture and track UBTC/BTC wrapper basis explicitly.",
+    "3. Establish trusted-source provenance (HASH_MATCH_TRUSTED_MANIFEST) rather than HASH_RECORDED_UNVERIFIED.",
+    "4. Address the fundamental 60%-allocation capital-efficiency drag vs 4.00% cash opportunity cost (where 2x friction currently yields negative excess carry on both Binance and Hyperliquid historical series).",
+    "5. Obtain explicit separate Founder approval and publish a fresh immutable OOS registration with a strictly future start date (never 2026-11-23)."
+  ],
+  "safety_invariants": {
+    "oos_clock_started": false,
+    "scheduler_installed": false,
+    "paper_forward_allowed": false,
+    "live_order_authority": false
+  }
+}
