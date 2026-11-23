@@ -25,7 +25,13 @@ from verification_lab.oos.adapters import NormalizedMarketObservation, RawCaptur
 from verification_lab.oos.causal_timing import (
     CausalTimestamps,
     format_utc_iso,
+    parse_utc_iso,
     validate_causal_observation_window,
+)
+from verification_lab.oos.hyperliquid_borrow_rate import (
+    BORROW_RATE_SOURCE_PUBLIC_READ_ONLY,
+    BORROW_RATE_STATUS_INVALID,
+    HyperliquidBorrowRateObservation,
 )
 from verification_lab.oos.evidence_store import (
     AppendOnlyEvidenceStore,
@@ -64,7 +70,15 @@ TRANSITION_STATES: frozenset[str] = frozenset(
     }
 )
 BORROW_SOURCE_VENUE_OBSERVED = "VENUE_OBSERVED"
+BORROW_SOURCE_VENUE_OBSERVED_PUBLIC = BORROW_RATE_SOURCE_PUBLIC_READ_ONLY
+BORROW_SOURCE_INVALID = BORROW_RATE_STATUS_INVALID
 BORROW_SOURCE_MANUAL_ASSUMPTION = "MANUAL_ASSUMPTION_NOT_VENUE_OBSERVED"
+VALID_VENUE_BORROW_SOURCES: frozenset[str] = frozenset(
+    {
+        BORROW_SOURCE_VENUE_OBSERVED,
+        BORROW_SOURCE_VENUE_OBSERVED_PUBLIC,
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -117,6 +131,7 @@ def record_passive_observation(
     raw_envelopes: Sequence[RawCaptureEnvelope] | None = None,
     annualized_funding_bps_by_day: Sequence[tuple[str, Any]] | None = None,
     borrow_apr_source: str = BORROW_SOURCE_VENUE_OBSERVED,
+    borrow_rate_observation: HyperliquidBorrowRateObservation | None = None,
 ) -> LedgerRecord:
     """Evaluate a captured observation read-only, validate fail-closed, and append to ledger."""
     eval_iso = format_utc_iso(evaluation_time_utc)
@@ -181,6 +196,17 @@ def record_passive_observation(
         "source_envelopes": envelope_meta,
         "causal_timestamps": timestamps.to_dict(),
     }
+    borrow_evidence_dict: dict[str, Any] | None = (
+        borrow_rate_observation.to_dict()
+        if borrow_rate_observation is not None
+        else (
+            observation.public_liquidity_metadata.get("borrow_rate_evidence")
+            if isinstance(observation.public_liquidity_metadata.get("borrow_rate_evidence"), dict)
+            else None
+        )
+    )
+    if borrow_evidence_dict is not None:
+        raw_bundle["borrow_rate_evidence"] = borrow_evidence_dict
     if annualized_funding_bps_by_day is not None:
         raw_bundle["annualized_funding_bps_by_day"] = [
             [str(day), str(val)] for day, val in annualized_funding_bps_by_day
@@ -193,6 +219,7 @@ def record_passive_observation(
         "causal_timing_check": causal_check.to_dict(),
         "signal_output": signal.to_dict(),
         "borrow_apr_source": borrow_apr_source,
+        "borrow_rate_evidence": borrow_evidence_dict,
         "missing_data_status": effective_missing_status,
         "retroactively_reconstructed": effective_retroactive,
         "simulated_fills_represented_as_real": bool(simulated_fills_represented_as_real),
@@ -205,6 +232,9 @@ def record_passive_observation(
     exposure_errors = validate_theoretical_exposure_shape(signal.theoretical_two_leg_exposure)
     rejection_reasons.extend(exposure_errors)
 
+    if observation.borrow_apr_bps is None:
+        rejection_reasons.append("INELIGIBLE_MISSING_VENUE_BORROW_APR")
+
     if not signal.evaluable:
         rejection_reasons.append("signal_not_evaluable_missing_data")
 
@@ -213,7 +243,71 @@ def record_passive_observation(
         if len(seen_days) != len(set(seen_days)):
             rejection_reasons.append("duplicate_utc_days_in_lookback_history")
 
-    if borrow_apr_source != BORROW_SOURCE_VENUE_OBSERVED and not synthetic_fixture:
+    # Enforce strict venue isolation: never allow Hyperliquid borrow rates on Binance or cross-venue reuse.
+    obs_venue_lower = observation.venue.lower()
+    if borrow_evidence_dict is not None:
+        ev_venue_lower = str(borrow_evidence_dict.get("venue", "")).lower()
+        if ev_venue_lower != obs_venue_lower:
+            rejection_reasons.append(
+                f"cross_venue_borrow_rate_contamination_forbidden "
+                f"(observation_venue={observation.venue}, borrow_venue={borrow_evidence_dict.get('venue')})"
+            )
+        if borrow_evidence_dict.get("eligible_for_borrow_input") is not True:
+            rejection_reasons.append(BORROW_SOURCE_INVALID)
+            for reason in borrow_evidence_dict.get("failure_reasons") or []:
+                rejection_reasons.append(f"borrow_rate_evidence_failed ({reason})")
+        ev_causal = borrow_evidence_dict.get("causal_timestamps") or {}
+        ev_cap_str = ev_causal.get("local_capture_time_utc")
+        ev_req_str = ev_causal.get("local_request_time_utc") or ev_cap_str
+        ev_http_date = ev_causal.get("http_response_date_utc")
+        if not isinstance(ev_cap_str, str) or not ev_cap_str:
+            rejection_reasons.append("missing_borrow_rate_capture_timestamp")
+        else:
+            try:
+                from verification_lab.oos.hyperliquid_borrow_rate import (
+                    CAUSAL_STATUS_VIOLATION,
+                    validate_borrow_rate_causal_timestamps,
+                )
+
+                ev_cap_dt = parse_utc_iso(ev_cap_str, "borrow_rate_evidence.local_capture_time_utc")
+                ev_req_dt = parse_utc_iso(str(ev_req_str), "borrow_rate_evidence.local_request_time_utc")
+                eval_dt = evaluation_time_utc.astimezone(timezone.utc)
+                recheck_causal = validate_borrow_rate_causal_timestamps(
+                    local_request_time_utc=ev_req_dt,
+                    local_capture_time_utc=ev_cap_dt,
+                    strategy_evaluation_time_utc=eval_dt,
+                    http_response_date_utc=ev_http_date if isinstance(ev_http_date, str) else None,
+                    exchange_publication_time_utc=ev_causal.get("exchange_publication_time_utc"),
+                    market_rate_event_time_utc=ev_causal.get("market_rate_event_time_utc"),
+                )
+                if recheck_causal.causal_validity_status == CAUSAL_STATUS_VIOLATION:
+                    for creason in recheck_causal.causal_reasons:
+                        rejection_reasons.append(f"borrow_rate_causal_recheck_failed ({creason})")
+            except ValueError:
+                rejection_reasons.append("invalid_borrow_rate_capture_timestamp")
+        ev_bps = borrow_evidence_dict.get("borrow_apr_bps")
+        if (
+            borrow_evidence_dict.get("eligible_for_borrow_input") is True
+            and observation.borrow_apr_bps is not None
+            and ev_bps is not None
+            and str(ev_bps) != str(observation.borrow_apr_bps)
+        ):
+            rejection_reasons.append("borrow_rate_observation_value_mismatch")
+
+    if obs_venue_lower == "binance" and borrow_apr_source == BORROW_SOURCE_VENUE_OBSERVED_PUBLIC:
+        rejection_reasons.append("cross_venue_borrow_rate_contamination_forbidden (binance_has_no_public_borrow_apr)")
+
+    if borrow_apr_source == BORROW_SOURCE_VENUE_OBSERVED_PUBLIC and not synthetic_fixture:
+        if borrow_evidence_dict is None or borrow_evidence_dict.get("eligible_for_borrow_input") is not True:
+            rejection_reasons.append("unverified_rate_falsely_labeled_venue_observed_public_read_only")
+        else:
+            env_hashes = {env.raw_sha256 for env in (raw_envelopes or ())}
+            req_meta_sha = borrow_evidence_dict.get("raw_spot_meta_sha256")
+            req_res_sha = borrow_evidence_dict.get("raw_reserve_sha256")
+            if not req_meta_sha or not req_res_sha or req_meta_sha not in env_hashes or req_res_sha not in env_hashes:
+                rejection_reasons.append("missing_raw_borrow_envelopes_for_venue_observed_public_read_only")
+
+    if borrow_apr_source not in VALID_VENUE_BORROW_SOURCES and not synthetic_fixture:
         rejection_reasons.append(f"non_venue_borrow_apr_source ({borrow_apr_source})")
 
     if synthetic_fixture:

@@ -181,12 +181,150 @@ def _independently_reparse_raw_venue_files(
         latest_fr = Decimal(str(causal_funding[-1]["fundingRate"]))
         ann_funding_bps = latest_fr * HYPERLIQUID_ANNUAL_FUNDING_MULT
         basis_bps = ((mark_px - oracle_px) * Decimal("10000")) / oracle_px
-        return {
+        result: dict[str, Decimal] = {
             "spot_price": oracle_px,
             "perp_price": mark_px,
             "basis_bps": basis_bps,
             "annualized_funding_bps": ann_funding_bps,
-        }, []
+        }
+
+        # Independently re-parse Hyperliquid spotMeta + allBorrowLendReserveStates when present.
+        spot_meta = next(
+            (p for u, p in parsed_by_url if "/info" in u and isinstance(p, dict) and isinstance(p.get("tokens"), list)),
+            None,
+        )
+        reserves = next(
+            (
+                p
+                for u, p in parsed_by_url
+                if "/info" in u
+                and isinstance(p, list)
+                and p
+                and isinstance(p[0], list)
+                and len(p[0]) == 2
+                and isinstance(p[0][1], dict)
+                and "borrowYearlyRate" in p[0][1]
+            ),
+            None,
+        )
+        if spot_meta is not None or reserves is not None:
+            if spot_meta is None or reserves is None:
+                return None, ["incomplete_raw_hyperliquid_borrow_envelopes"]
+
+            borrow_errors: list[str] = []
+            seen_meta_indices: set[int] = set()
+            usdc_matches: list[dict[str, Any]] = []
+            for tok in spot_meta["tokens"]:
+                if not isinstance(tok, dict):
+                    continue
+                idx_val = tok.get("index")
+                if isinstance(idx_val, bool) or not isinstance(idx_val, int):
+                    borrow_errors.append("invalid_token_index_in_raw_spot_meta")
+                    continue
+                if idx_val in seen_meta_indices:
+                    borrow_errors.append("duplicate_token_index_in_raw_spot_meta")
+                seen_meta_indices.add(idx_val)
+                if tok.get("name") == "USDC":
+                    usdc_matches.append(tok)
+
+            usdc_idx: int | None = None
+            if len(usdc_matches) != 1:
+                borrow_errors.append("invalid_or_ambiguous_usdc_in_raw_spot_meta")
+            else:
+                if usdc_matches[0].get("isCanonical") is False:
+                    borrow_errors.append("non_canonical_usdc_in_raw_spot_meta")
+                idx_cand = usdc_matches[0].get("index")
+                if isinstance(idx_cand, bool) or not isinstance(idx_cand, int):
+                    borrow_errors.append("invalid_usdc_index_in_raw_spot_meta")
+                else:
+                    usdc_idx = idx_cand
+
+            seen_res_ids: set[int] = set()
+            usdc_reserves: list[dict[str, Any]] = []
+            for entry in reserves:
+                if not isinstance(entry, list) or len(entry) != 2 or not isinstance(entry[1], dict):
+                    borrow_errors.append("malformed_entry_in_raw_reserves")
+                    continue
+                tid = entry[0]
+                if isinstance(tid, bool) or not isinstance(tid, int):
+                    borrow_errors.append("invalid_token_id_in_raw_reserves")
+                    continue
+                if tid in seen_res_ids:
+                    borrow_errors.append("duplicate_token_id_in_raw_reserves")
+                seen_res_ids.add(tid)
+                if usdc_idx is not None and tid == usdc_idx:
+                    usdc_reserves.append(entry[1])
+
+            if usdc_idx is not None and len(usdc_reserves) != 1:
+                borrow_errors.append("missing_or_duplicate_usdc_in_raw_reserves")
+
+            reparsed_borrow_bps: Decimal | None = None
+            if not borrow_errors and len(usdc_reserves) == 1:
+                st = usdc_reserves[0]
+                req_fields = (
+                    "borrowYearlyRate",
+                    "utilization",
+                    "totalSupplied",
+                    "totalBorrowed",
+                    "balance",
+                    "oraclePx",
+                    "ltv",
+                )
+                parsed_st: dict[str, Decimal] = {}
+                for fname in req_fields:
+                    raw_v = st.get(fname)
+                    if isinstance(raw_v, (bool, float)) or raw_v is None:
+                        borrow_errors.append(f"invalid_or_float_raw_reserve_field ({fname})")
+                        break
+                    try:
+                        dv = Decimal(str(raw_v).strip())
+                    except (InvalidOperation, ValueError):
+                        borrow_errors.append(f"non_decimal_raw_reserve_field ({fname})")
+                        break
+                    if not dv.is_finite():
+                        borrow_errors.append(f"non_finite_raw_reserve_field ({fname})")
+                        break
+                    parsed_st[fname] = dv
+
+                if not borrow_errors:
+                    rate = parsed_st["borrowYearlyRate"]
+                    util = parsed_st["utilization"]
+                    tot_sup = parsed_st["totalSupplied"]
+                    tot_bor = parsed_st["totalBorrowed"]
+                    bal = parsed_st["balance"]
+                    opx = parsed_st["oraclePx"]
+                    ltv = parsed_st["ltv"]
+
+                    if rate < Decimal("0") or rate > Decimal("100"):
+                        borrow_errors.append("out_of_range_borrow_yearly_rate")
+                    if util < Decimal("0") or util > Decimal("1"):
+                        borrow_errors.append("out_of_range_utilization")
+                    if tot_sup <= Decimal("0") or tot_bor < Decimal("0") or tot_bor > tot_sup:
+                        borrow_errors.append("invalid_reserve_supply_borrow_bounds")
+                    if bal < Decimal("0") or opx <= Decimal("0") or ltv < Decimal("0") or ltv > Decimal("1"):
+                        borrow_errors.append("invalid_reserve_balance_oracle_or_ltv")
+
+                    if not borrow_errors:
+                        excess_u = max(Decimal("0"), util - Decimal("0.8"))
+                        formula_rate = Decimal("0.05") + Decimal("4.75") * excess_u
+                        if abs(rate - formula_rate) > Decimal("0.0005"):
+                            borrow_errors.append("raw_reserve_formula_rate_mismatch")
+                        computed_u = tot_bor / tot_sup
+                        if abs(util - computed_u) > Decimal("0.001"):
+                            borrow_errors.append("raw_reserve_utilization_mismatch")
+                        bal_rel_diff = abs(bal - (tot_sup - tot_bor)) / tot_sup
+                        if bal_rel_diff > Decimal("0.01"):
+                            borrow_errors.append("raw_reserve_balance_mismatch")
+
+                    if not borrow_errors:
+                        reparsed_borrow_bps = (Decimal("1") + rate).ln() * Decimal("10000")
+
+            result["borrow_present"] = True
+            result["borrow_valid"] = len(borrow_errors) == 0 and reparsed_borrow_bps is not None
+            result["borrow_apr_bps"] = reparsed_borrow_bps
+            result["borrow_errors"] = borrow_errors
+
+        return result, []
 
     return None, [f"unsupported_venue_for_raw_reparse ({venue})"]
 
@@ -380,6 +518,38 @@ def run_independent_offline_replay(
                 # Drive signal recomputation from raw-venue-reparsed prices rather than pre-normalized bundle
                 spot_d = reparsed["spot_price"]
                 perp_d = reparsed["perp_price"]
+                if reparsed.get("borrow_present"):
+                    bundle_borrow = raw_bundle.get("borrow_apr_bps")
+                    rec_market_obs = rec.get("normalized_observation", {}).get("market_observation", {})
+                    rec_borrow_ev = (rec_market_obs.get("public_liquidity_metadata") or {}).get("borrow_rate_evidence")
+                    convention_ok = True
+                    if isinstance(rec_borrow_ev, dict):
+                        rec_conv = rec_borrow_ev.get("rate_conversion") or {}
+                        if rec_conv.get("annualization_convention") != "HYPERLIQUID_PORTFOLIO_MARGIN_CONTINUOUS_APY":
+                            convention_ok = False
+
+                    if reparsed.get("borrow_valid") and convention_ok:
+                        if bundle_borrow is None:
+                            if rec.get("eligibility_status") == "ELIGIBLE":
+                                mismatches.append("raw_borrow_valid_but_bundle_borrow_missing")
+                            borrow_d = None
+                        else:
+                            bundle_borrow_dec = _safe_parse_finite_decimal(
+                                bundle_borrow, "bundle.borrow_apr_bps", mismatches
+                            )
+                            if bundle_borrow_dec is not None:
+                                borrow_diff = abs(bundle_borrow_dec - reparsed["borrow_apr_bps"])
+                                if borrow_diff > Decimal("0.001"):
+                                    mismatches.append("raw_venue_normalization_mismatch (borrow_apr_bps)")
+                                    num_diffs["raw_venue_borrow_apr_bps"] = f"{borrow_diff:.8f}"
+                            borrow_d = reparsed["borrow_apr_bps"]
+                    else:
+                        borrow_d = None
+                        if bundle_borrow is not None or rec.get("eligibility_status") == "ELIGIBLE":
+                            mismatches.append(
+                                f"raw_borrow_invalid_but_recorded_populated_or_eligible "
+                                f"({'; '.join(reparsed.get('borrow_errors') or ['unverified_convention'])})"
+                            )
 
         # 5. Independently verify distinct lookback days when day-keyed history is present
         day_keyed_hist = raw_bundle.get("annualized_funding_bps_by_day")
