@@ -1,0 +1,92 @@
+{
+  "artifact_version": "1.0.0",
+  "generated_at_utc": "2026-11-23T06:45:00Z",
+  "hypothesis_id": "H3_CASH_FUNDED_BASIS_CARRY_V3",
+  "strategy_family": "H3_BASIS_CARRY",
+  "version": "3.0.0-candidate",
+  "status": "PROPOSED_UNVALIDATED",
+  "promotion_state": "RESEARCH_CANDIDATE_NOT_PROMOTED",
+  "parent_hypothesis": "H3_BASIS_CARRY_V2",
+  "parent_anchors_unchanged": {
+    "v2_registration_sha256": "c089527416420ac11dfea01a2ad7ca0b18a167ad13bb775575af5b1ef70d0012",
+    "v2_frozen_spec_sha256": "187e1974069bc1d70950b475804b670a8510a413411652c2c71b1e370b22ee53",
+    "v2_erratum_sha256": "9dd9def3271d756dca30bdfae044befb96059d7d94f10d97f0d527fb7a577a01",
+    "v2_observation_contract_sha256": "6c2e67d3ed0049a175a97c493a362272516b6b644fa0e1d0f04f4993bc2cfc21"
+  },
+  "inherits_v2_g5_or_h3_maker_p_value": false,
+  "economic_differences_from_v2": [
+    "Strictly cash-funded (Initial Equity = 60% Spot Cash + 15% Perp Initial Margin + 25% Free Liquidity Reserve); zero literal borrowed principal.",
+    "Replaces V2 venue borrow-APR financing hurdle (which required Portfolio Margin >$10k/$5M volume) with explicit 4.00% annualized stablecoin cash opportunity cost.",
+    "Requires an actual executable spot order book (Hyperliquid UBTC/USDC @142 or Binance BTC/USDT), explicitly rejecting oracle-only spot proxies.",
+    "Enforces conservative composite causal availability (latest component capture/event time) and strict 1d vs intraday alignment, closing CASHCLAW #27 P1-A and P1-B."
+  ],
+  "venue_configuration": {
+    "primary_mechanical_candidate": "ROUTE_A_HYPERLIQUID_UBTC_SPOT_BTC_PERP",
+    "secondary_unverified_access": "ROUTE_B_BINANCE_BTC_SPOT_BTC_PERP",
+    "rejected_cross_venue": "ROUTE_C_CROSS_VENUE_BINANCE_SPOT_HL_PERP"
+  },
+  "instrument_pair": {
+    "route_a_spot": "UBTC/USDC (@142, token_index=197, tokenId=0x8f254b963e8468305d409b33aa137c67, isCanonical=false)",
+    "route_a_perp": "BTC-PERP (Hyperliquid, szDecimals=5, maxLeverage=40)"
+  },
+  "position_direction_rules": {
+    "spot_leg": "LONG_ONLY_100PCT_CASH_FUNDED",
+    "perp_leg": "SHORT_EQUAL_BTC_QUANTITY",
+    "no_borrowed_principal": true
+  },
+  "capital_allocation_policy": {
+    "spot_cash_ratio": "0.60",
+    "perp_initial_margin_ratio": "0.15",
+    "free_liquidity_reserve_ratio": "0.25",
+    "min_free_reserve_ratio": "0.25",
+    "target_capital_tiers_usd": [100, 500, 1000, 5000, 10000]
+  },
+  "execution_and_cost_specification": {
+    "spot_taker_fee_bps_hl": "7.0",
+    "perp_taker_fee_bps_hl": "4.5",
+    "spot_taker_fee_bps_bn": "10.0",
+    "perp_taker_fee_bps_bn": "5.0",
+    "synthetic_slippage_floor_bps_rt": "5.0",
+    "cash_opportunity_cost_annual_bps": "400.0",
+    "ubtc_wrapper_risk_haircut_annual_bps": "50.0",
+    "g6_execution_parity_status": "G6_FULL_EXECUTION_PARITY_NOT_VERIFIED"
+  },
+  "underlying_and_wrapper_risk": {
+    "route_a_ubtc_is_wrapped": true,
+    "wrapper_protocol": "Unit Protocol (Unit Bitcoin, evmContract 0x9fdbda0a5e284c32744d2f17ee5c74b284993463)",
+    "observed_ubtc_vs_oracle_basis_bps": "-15.67"
+  },
+  "dataset_provenance": {
+    "historical_parquets_status": "HASH_RECORDED_UNVERIFIED",
+    "live_probes_status": "SOURCE_CAPTURED_LOCAL_UNAUTHENTICATED",
+    "independent_authenticity_proven": false
+  },
+  "trial_lineage": {
+    "prior_family_trials": 186,
+    "v3_feasibility_grid_trials": 15,
+    "cumulative_family_trials_n": 201,
+    "never_reset_n_to_1": true
+  },
+  "initial_feasibility_outcome": {
+    "verdict": "FALSIFIED_OR_INSUFFICIENT_EXCESS_CARRY",
+    "binance_historical_excess_over_4pct_cash_1x_pct": -0.1249,
+    "binance_historical_excess_over_4pct_cash_2x_pct": -0.3837,
+    "binance_dsr_at_n201": 0.000459,
+    "hyperliquid_historical_excess_over_4pct_cash_1x_pct": 0.4058,
+    "hyperliquid_historical_excess_over_4pct_cash_2x_pct": -0.0709,
+    "hyperliquid_dsr_at_n201": 0.127139,
+    "summary": "At 60% spot capital efficiency (required to avoid Portfolio Margin and preserve a 25% free liquidity reserve), cash-funded V3 fails to beat a 4.00% cash benchmark under 2x execution friction and fails DSR >= 0.95 at cumulative N=201."
+  },
+  "stop_conditions": [
+    "Do NOT activate prospective OOS registration or recurring collector.",
+    "Do NOT authorize paper-forward or live trading.",
+    "Keep G13 untouched and G15 hard-locked."
+  ],
+  "safety_invariants": {
+    "paper_forward_allowed": false,
+    "live_order_authority": false,
+    "h3_maker_quarantined": true,
+    "g13_untouched": true,
+    "g15_hard_locked": true
+  }
+}
