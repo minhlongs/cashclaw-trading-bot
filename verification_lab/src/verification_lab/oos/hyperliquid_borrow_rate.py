@@ -678,13 +678,15 @@ def verify_saved_raw_borrow_evidence(
     if actual_res_sha != expected_reserve_sha256:
         errors.append("saved_reserve_sha256_mismatch")
     rec_meta_sha = recorded_observation.get("raw_spot_meta_sha256")
-    if rec_meta_sha is not None and rec_meta_sha != actual_meta_sha:
+    if not isinstance(rec_meta_sha, str) or rec_meta_sha != actual_meta_sha:
         errors.append("recorded_spot_meta_sha256_mismatch")
     rec_res_sha = recorded_observation.get("raw_reserve_sha256")
-    if rec_res_sha is not None and rec_res_sha != actual_res_sha:
+    if not isinstance(rec_res_sha, str) or rec_res_sha != actual_res_sha:
         errors.append("recorded_reserve_sha256_mismatch")
     rec_norm_sha = recorded_observation.get("normalized_sha256")
-    if isinstance(rec_norm_sha, str) and rec_norm_sha:
+    if not isinstance(rec_norm_sha, str) or not rec_norm_sha:
+        errors.append("missing_or_invalid_recorded_normalized_sha256")
+    else:
         body_without_sha = {
             k: v
             for k, v in recorded_observation.items()

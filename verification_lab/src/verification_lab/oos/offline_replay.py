@@ -522,11 +522,15 @@ def run_independent_offline_replay(
                     bundle_borrow = raw_bundle.get("borrow_apr_bps")
                     rec_market_obs = rec.get("normalized_observation", {}).get("market_observation", {})
                     rec_borrow_ev = (rec_market_obs.get("public_liquidity_metadata") or {}).get("borrow_rate_evidence")
-                    convention_ok = True
+                    convention_ok = False
                     if isinstance(rec_borrow_ev, dict):
-                        rec_conv = rec_borrow_ev.get("rate_conversion") or {}
-                        if rec_conv.get("annualization_convention") != "HYPERLIQUID_PORTFOLIO_MARGIN_CONTINUOUS_APY":
-                            convention_ok = False
+                        rec_conv = rec_borrow_ev.get("rate_conversion")
+                        if (
+                            isinstance(rec_conv, dict)
+                            and rec_conv.get("annualization_convention")
+                            == "HYPERLIQUID_PORTFOLIO_MARGIN_CONTINUOUS_APY"
+                        ):
+                            convention_ok = True
 
                     if reparsed.get("borrow_valid") and convention_ok:
                         if bundle_borrow is None:
@@ -550,6 +554,12 @@ def run_independent_offline_replay(
                                 f"raw_borrow_invalid_but_recorded_populated_or_eligible "
                                 f"({'; '.join(reparsed.get('borrow_errors') or ['unverified_convention'])})"
                             )
+                elif (
+                    raw_bundle.get("borrow_apr_source") == "VENUE_OBSERVED_PUBLIC_READ_ONLY"
+                    and not rec.get("synthetic_fixture", False)
+                    and rec.get("eligibility_status") == "ELIGIBLE"
+                ):
+                    mismatches.append("missing_raw_borrow_venue_files_for_public_read_only_source")
 
         # 5. Independently verify distinct lookback days when day-keyed history is present
         day_keyed_hist = raw_bundle.get("annualized_funding_bps_by_day")

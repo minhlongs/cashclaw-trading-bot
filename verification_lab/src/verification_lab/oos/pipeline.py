@@ -286,13 +286,13 @@ def record_passive_observation(
             except ValueError:
                 rejection_reasons.append("invalid_borrow_rate_capture_timestamp")
         ev_bps = borrow_evidence_dict.get("borrow_apr_bps")
-        if (
-            borrow_evidence_dict.get("eligible_for_borrow_input") is True
-            and observation.borrow_apr_bps is not None
-            and ev_bps is not None
-            and str(ev_bps) != str(observation.borrow_apr_bps)
-        ):
-            rejection_reasons.append("borrow_rate_observation_value_mismatch")
+        if borrow_evidence_dict.get("eligible_for_borrow_input") is True:
+            if (
+                ev_bps is None
+                or observation.borrow_apr_bps is None
+                or str(ev_bps) != str(observation.borrow_apr_bps)
+            ):
+                rejection_reasons.append("borrow_rate_observation_value_mismatch")
 
     if obs_venue_lower == "binance" and borrow_apr_source == BORROW_SOURCE_VENUE_OBSERVED_PUBLIC:
         rejection_reasons.append("cross_venue_borrow_rate_contamination_forbidden (binance_has_no_public_borrow_apr)")

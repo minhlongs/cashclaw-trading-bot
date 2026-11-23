@@ -922,11 +922,32 @@ def test_37_verify_only_idempotency_and_tampered_historical_rate_detection(tmp_p
     assert ok_m is False
     assert "recorded_spot_meta_sha256_mismatch" in errs_m
 
-    rehashed_rec = {
+    rehashed_missing_norm = {
         **hl_borrow.to_dict(),
         "raw_spot_meta_sha256": hashlib.sha256(tampered_meta).hexdigest(),
         "raw_reserve_sha256": hashlib.sha256(tampered_res_9).hexdigest(),
         "normalized_sha256": "",
+    }
+    ok_m1, errs_m1 = verify_saved_raw_borrow_evidence(
+        raw_spot_meta_bytes=tampered_meta,
+        raw_reserve_bytes=tampered_res_9,
+        expected_spot_meta_sha256=hashlib.sha256(tampered_meta).hexdigest(),
+        expected_reserve_sha256=hashlib.sha256(tampered_res_9).hexdigest(),
+        recorded_observation=rehashed_missing_norm,
+    )
+    assert ok_m1 is False
+    assert "missing_or_invalid_recorded_normalized_sha256" in errs_m1
+
+    body_for_rehash = {
+        k: v
+        for k, v in rehashed_missing_norm.items()
+        if k not in {"normalized_sha256", "observation_id"}
+    }
+    rehashed_rec = {
+        **rehashed_missing_norm,
+        "normalized_sha256": hashlib.sha256(
+            json.dumps(body_for_rehash, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+        ).hexdigest(),
     }
     ok_m2, errs_m2 = verify_saved_raw_borrow_evidence(
         raw_spot_meta_bytes=tampered_meta,
