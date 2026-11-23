@@ -11,7 +11,7 @@ import argparse
 import json
 import sys
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from verification_lab.oos.adapters import (
@@ -23,8 +23,10 @@ from verification_lab.oos.evidence_store import AppendOnlyEvidenceStore
 from verification_lab.oos.frozen_evaluator import load_verified_frozen_v2_spec
 from verification_lab.oos.offline_replay import run_independent_offline_replay
 from verification_lab.oos.pipeline import (
+    BORROW_SOURCE_INVALID,
     BORROW_SOURCE_MANUAL_ASSUMPTION,
     BORROW_SOURCE_VENUE_OBSERVED,
+    BORROW_SOURCE_VENUE_OBSERVED_PUBLIC,
     build_g6_diagnostics_from_store,
     evaluate_store_prospective_clock,
     record_passive_observation,
@@ -41,6 +43,16 @@ ACTIVE_SIGNAL_STATES = frozenset(
 )
 
 
+def _parse_non_negative_decimal_arg(raw: str) -> Decimal:
+    try:
+        val = Decimal(raw.strip())
+    except InvalidOperation as exc:
+        raise argparse.ArgumentTypeError(f"invalid decimal value: {raw!r}") from exc
+    if not val.is_finite() or val < Decimal("0"):
+        raise argparse.ArgumentTypeError(f"borrow-apr-bps must be finite and non-negative: {raw!r}")
+    return val
+
+
 def _cmd_capture_once(args: argparse.Namespace) -> int:
     params = load_verified_frozen_v2_spec(Path(args.registration))
     store = AppendOnlyEvidenceStore(Path(args.store_dir))
@@ -48,7 +60,7 @@ def _cmd_capture_once(args: argparse.Namespace) -> int:
 
     live_clock = lambda: datetime.now(timezone.utc)
     client = PublicReadOnlyHttpClient(clock_fn=live_clock)
-    borrow_dec = Decimal(str(args.borrow_apr_bps)) if args.borrow_apr_bps is not None else None
+    borrow_dec: Decimal | None = args.borrow_apr_bps
     borrow_source = (
         BORROW_SOURCE_MANUAL_ASSUMPTION if borrow_dec is not None else BORROW_SOURCE_VENUE_OBSERVED
     )
@@ -71,7 +83,14 @@ def _cmd_capture_once(args: argparse.Namespace) -> int:
             funding_start_time_ms=start_ms,
             funding_end_time_ms=end_ms,
             borrow_apr_bps=borrow_dec,
+            fetch_public_borrow_rate=(borrow_dec is None),
         )
+        if borrow_dec is None:
+            borrow_ev = obs.public_liquidity_metadata.get("borrow_rate_evidence") or {}
+            if borrow_ev.get("eligible_for_borrow_input") is True:
+                borrow_source = BORROW_SOURCE_VENUE_OBSERVED_PUBLIC
+            else:
+                borrow_source = BORROW_SOURCE_INVALID
     else:
         raise ValueError(f"Unsupported venue: {args.venue}")
 
@@ -164,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
     cap = sub.add_parser("capture-once", help="Run one read-only public capture and append to evidence ledger")
     cap.add_argument("--venue", choices=["binance", "hyperliquid"], required=True)
     cap.add_argument("--instrument", default="BTC")
-    cap.add_argument("--borrow-apr-bps", type=float, default=None)
+    cap.add_argument("--borrow-apr-bps", type=_parse_non_negative_decimal_arg, default=None)
     cap.add_argument("--synthetic-fixture", action="store_true")
     cap.set_defaults(func=_cmd_capture_once)
 

@@ -18,6 +18,7 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
+from email.utils import parsedate_to_datetime
 from typing import Any, Callable, Mapping, Sequence
 from urllib.parse import urlsplit
 
@@ -56,6 +57,8 @@ ALLOWED_HYPERLIQUID_INFO_TYPES: frozenset[str] = frozenset(
         "metaAndAssetCtxs",
         "l2Book",
         "fundingHistory",
+        "allBorrowLendReserveStates",
+        "spotMeta",
     }
 )
 
@@ -66,8 +69,12 @@ FORBIDDEN_HEADER_KEYS: frozenset[str] = frozenset(
         "x-api-key",
         "api-key",
         "x-signature",
+        "x-hl-signature",
+        "cookie",
     }
 )
+
+DEFAULT_MAX_RESPONSE_BYTES = 5 * 1024 * 1024  # 5 MiB response cap
 
 SOURCE_AUTHENTICITY_UNVERIFIED_HTTP = "SOURCE_CAPTURED_LOCAL_UNAUTHENTICATED"
 
@@ -110,9 +117,11 @@ class RawCaptureEnvelope:
     raw_sha256: str
     captured_at_utc: str
     source_authenticity_status: str = SOURCE_AUTHENTICITY_UNVERIFIED_HTTP
+    requested_at_utc: str | None = None
+    http_date_utc: str | None = None
 
     def metadata_dict(self) -> dict[str, Any]:
-        return {
+        meta: dict[str, Any] = {
             "raw_source_id": self.raw_source_id,
             "venue": self.venue,
             "endpoint_url": self.endpoint_url,
@@ -124,6 +133,11 @@ class RawCaptureEnvelope:
             "captured_at_utc": self.captured_at_utc,
             "source_authenticity_status": self.source_authenticity_status,
         }
+        if self.requested_at_utc is not None:
+            meta["requested_at_utc"] = self.requested_at_utc
+        if self.http_date_utc is not None:
+            meta["http_date_utc"] = self.http_date_utc
+        return meta
 
 
 @dataclass(frozen=True)
@@ -174,6 +188,20 @@ def _compute_sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _parse_http_date_header(headers: Mapping[str, str]) -> str | None:
+    """Safely parse HTTP Date header to UTC ISO-8601 Z without inventing timestamps."""
+    for key, val in headers.items():
+        if key.lower() == "date" and isinstance(val, str) and val.strip():
+            try:
+                dt = parsedate_to_datetime(val.strip())
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return format_utc_iso(dt.astimezone(timezone.utc))
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
 def _default_transport(
     method: str,
     url: str,
@@ -181,21 +209,47 @@ def _default_transport(
     json_body: Mapping[str, Any] | None,
     headers: Mapping[str, str],
     timeout_s: float,
+    *,
+    max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
 ) -> HttpResponseData:
-    resp = requests.request(
-        method=method,
-        url=url,
-        params=params,
-        json=json_body,
-        headers=dict(headers),
-        timeout=timeout_s,
-        allow_redirects=False,
-    )
-    return HttpResponseData(
-        status_code=resp.status_code,
-        raw_bytes=resp.content,
-        headers=dict(resp.headers),
-    )
+    with requests.Session() as session:
+        session.trust_env = False
+        with session.request(
+            method=method,
+            url=url,
+            params=params,
+            json=json_body,
+            headers=dict(headers),
+            timeout=timeout_s,
+            allow_redirects=False,
+            stream=True,
+        ) as resp:
+            content_length = resp.headers.get("Content-Length") or resp.headers.get("content-length")
+            if content_length is not None:
+                try:
+                    declared_len = int(content_length)
+                except ValueError:
+                    declared_len = -1
+                if declared_len > max_response_bytes:
+                    raise DataQualityError(
+                        f"oversized_response_body (content_length={declared_len} > max={max_response_bytes})"
+                    )
+            chunks: list[bytes] = []
+            total = 0
+            for chunk in resp.iter_content(chunk_size=65536):
+                if not chunk:
+                    continue
+                total += len(chunk)
+                if total > max_response_bytes:
+                    raise DataQualityError(
+                        f"oversized_response_body (len>{max_response_bytes})"
+                    )
+                chunks.append(chunk)
+            return HttpResponseData(
+                status_code=resp.status_code,
+                raw_bytes=b"".join(chunks),
+                headers=dict(resp.headers),
+            )
 
 
 class PublicReadOnlyHttpClient:
@@ -210,15 +264,28 @@ class PublicReadOnlyHttpClient:
         timeout_s: float = 10.0,
         max_retries: int = 3,
         base_backoff_s: float = 0.5,
+        max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
     ) -> None:
+        if not math.isfinite(timeout_s) or timeout_s <= 0:
+            raise ValueError("timeout_s must be finite and positive")
+        if not math.isfinite(base_backoff_s) or base_backoff_s < 0:
+            raise ValueError("base_backoff_s must be finite and non-negative")
         if max_retries < 0 or max_retries > 5:
             raise ValueError("max_retries must be bounded between 0 and 5")
-        self._transport = transport
+        if max_response_bytes <= 0:
+            raise ValueError("max_response_bytes must be positive")
+        if transport is _default_transport:
+            self._transport = lambda m, u, p, jb, h, t: _default_transport(
+                m, u, p, jb, h, t, max_response_bytes=max_response_bytes
+            )
+        else:
+            self._transport = transport
         self._clock_fn = clock_fn
         self._sleep_fn = sleep_fn
         self._timeout_s = timeout_s
         self._max_retries = max_retries
         self._base_backoff_s = base_backoff_s
+        self._max_response_bytes = max_response_bytes
 
     @staticmethod
     def _assert_allowed_request(
@@ -246,12 +313,12 @@ class PublicReadOnlyHttpClient:
         key_pair = (parsed.netloc.lower(), parsed.path)
         if method_upper == "GET":
             if key_pair not in ALLOWED_PUBLIC_GET_ENDPOINTS:
-                raise UnauthorizedEndpointError(f"endpoint_not_in_public_read_only_allowlist ({method_upper} {url})")
+                raise UnauthorizedEndpointError(f"endpoint_not_in_public_read_only_allowlist ({method_upper} {safe_url})")
         elif method_upper == "POST":
             if key_pair not in ALLOWED_PUBLIC_POST_ENDPOINTS:
-                raise UnauthorizedEndpointError(f"endpoint_not_in_public_read_only_allowlist ({method_upper} {url})")
+                raise UnauthorizedEndpointError(f"endpoint_not_in_public_read_only_allowlist ({method_upper} {safe_url})")
             info_type = (json_body or {}).get("type")
-            if info_type not in ALLOWED_HYPERLIQUID_INFO_TYPES:
+            if not isinstance(info_type, str) or info_type not in ALLOWED_HYPERLIQUID_INFO_TYPES:
                 raise UnauthorizedEndpointError(
                     f"hyperliquid_post_type_not_read_only_allowlisted ({info_type!r})"
                 )
@@ -272,9 +339,12 @@ class PublicReadOnlyHttpClient:
         if headers:
             req_headers.update(headers)
         self._assert_allowed_request(method=method, url=url, json_body=json_body, headers=req_headers)
+        parsed = urlsplit(url)
+        safe_url = f"{parsed.scheme}://{parsed.hostname or ''}{parsed.path}"
 
         last_exc: Exception | None = None
         for attempt in range(self._max_retries + 1):
+            requested_dt = self._clock_fn().astimezone(timezone.utc)
             try:
                 resp = self._transport(
                     method.upper(),
@@ -287,13 +357,20 @@ class PublicReadOnlyHttpClient:
             except (TimeoutError, requests.Timeout, requests.ConnectionError) as exc:
                 last_exc = exc
                 if attempt >= self._max_retries:
-                    raise AdapterError(f"http_timeout_or_network_error ({url}): {exc}") from exc
+                    raise AdapterError(f"http_timeout_or_network_error ({safe_url}): {exc}") from exc
                 self._sleep_fn(self._base_backoff_s * (2**attempt))
                 continue
+            except requests.RequestException as exc:
+                raise AdapterError(f"http_transport_error ({safe_url}): {exc}") from exc
+
+            if 300 <= resp.status_code < 400:
+                raise UnauthorizedEndpointError(
+                    f"http_redirect_rejected (status={resp.status_code} url={safe_url})"
+                )
 
             if resp.status_code == 429:
                 if attempt >= self._max_retries:
-                    raise RateLimitExhaustedError(f"http_429_rate_limit_exhausted ({url})")
+                    raise RateLimitExhaustedError(f"http_429_rate_limit_exhausted ({safe_url})")
                 headers_lower = {k.lower(): v for k, v in resp.headers.items()}
                 retry_after = headers_lower.get("retry-after")
                 fallback_delay = self._base_backoff_s * (2**attempt)
@@ -310,19 +387,24 @@ class PublicReadOnlyHttpClient:
 
             if resp.status_code >= 500:
                 if attempt >= self._max_retries:
-                    raise AdapterError(f"exchange_http_5xx ({resp.status_code} {url})")
+                    raise AdapterError(f"exchange_http_5xx ({resp.status_code} {safe_url})")
                 self._sleep_fn(self._base_backoff_s * (2**attempt))
                 continue
 
             if resp.status_code != 200:
-                raise AdapterError(f"exchange_http_error (status={resp.status_code} url={url})")
+                raise AdapterError(f"exchange_http_error (status={resp.status_code} url={safe_url})")
 
             if not resp.raw_bytes:
-                raise DataQualityError(f"empty_response_body ({url})")
+                raise DataQualityError(f"empty_response_body ({safe_url})")
+
+            if len(resp.raw_bytes) > self._max_response_bytes:
+                raise DataQualityError(
+                    f"oversized_response_body (len={len(resp.raw_bytes)} > max={self._max_response_bytes})"
+                )
 
             captured_dt = self._clock_fn().astimezone(timezone.utc)
             raw_hash = _compute_sha256(resp.raw_bytes)
-            req_id = f"{venue}:{urlsplit(url).path}:{raw_hash[:16]}"
+            req_id = f"{venue}:{parsed.path}:{raw_hash[:16]}"
             return RawCaptureEnvelope(
                 raw_source_id=req_id,
                 venue=venue,
@@ -334,9 +416,11 @@ class PublicReadOnlyHttpClient:
                 raw_sha256=raw_hash,
                 captured_at_utc=format_utc_iso(captured_dt),
                 source_authenticity_status=SOURCE_AUTHENTICITY_UNVERIFIED_HTTP,
+                requested_at_utc=format_utc_iso(requested_dt),
+                http_date_utc=_parse_http_date_header(resp.headers),
             )
 
-        raise AdapterError(f"request_failed ({url}): {last_exc}")
+        raise AdapterError(f"request_failed ({safe_url}): {last_exc}")
 
 
 def _parse_json_bytes(envelope: RawCaptureEnvelope) -> Any:
@@ -529,6 +613,9 @@ class BinanceReadOnlyAdapter:
             strategy_evaluation_time_utc=format_utc_iso(capture_dt),
         )
 
+        if borrow_apr_bps is not None:
+            if not isinstance(borrow_apr_bps, Decimal) or not borrow_apr_bps.is_finite() or borrow_apr_bps < Decimal("0"):
+                raise DataQualityError(f"invalid_borrow_apr_bps ({borrow_apr_bps!r})")
         obs = NormalizedMarketObservation(
             venue="binance",
             instrument=instrument.upper(),
@@ -601,6 +688,7 @@ class HyperliquidReadOnlyAdapter:
         funding_start_time_ms: int,
         funding_end_time_ms: int | None = None,
         borrow_apr_bps: Decimal | None = None,
+        fetch_public_borrow_rate: bool = False,
     ) -> tuple[NormalizedMarketObservation, list[RawCaptureEnvelope]]:
         """Capture public Hyperliquid oracle/mark context, 1h funding history, and L1 top-of-book."""
         coin_upper = coin.upper()
@@ -631,6 +719,22 @@ class HyperliquidReadOnlyAdapter:
         )
         envelopes = [meta_env, book_env, funding_env]
 
+        if borrow_apr_bps is not None:
+            if not isinstance(borrow_apr_bps, Decimal) or not borrow_apr_bps.is_finite() or borrow_apr_bps < Decimal("0"):
+                raise DataQualityError(f"invalid_borrow_apr_bps ({borrow_apr_bps!r})")
+
+        spot_meta_env: RawCaptureEnvelope | None = None
+        reserve_env: RawCaptureEnvelope | None = None
+        if fetch_public_borrow_rate and borrow_apr_bps is None:
+            from verification_lab.oos.hyperliquid_borrow_rate import HyperliquidBorrowRateAdapter
+
+            borrow_adapter = HyperliquidBorrowRateAdapter(self._client, clock_fn=self._clock_fn)
+            spot_meta_env = borrow_adapter.fetch_spot_meta()
+            reserve_env = borrow_adapter.fetch_reserve_states()
+            envelopes.extend([spot_meta_env, reserve_env])
+
+        # Sample evaluation/capture timestamp AFTER all HTTP envelopes are received so live
+        # advancing wall clocks satisfy cap_dt <= eval_dt across every envelope.
         capture_dt = self._clock_fn().astimezone(timezone.utc)
         meta_payload = _parse_json_bytes(meta_env)
         book_payload = _parse_json_bytes(book_env)
@@ -719,6 +823,34 @@ class HyperliquidReadOnlyAdapter:
             strategy_evaluation_time_utc=format_utc_iso(capture_dt),
         )
 
+        liquidity_meta: dict[str, Any] = {
+            "open_interest": str(asset_ctx.get("openInterest")),
+            "day_ntl_vlm": str(asset_ctx.get("dayNtlVlm")),
+            "quote_age_seconds": round(quote_age_s, 4) if quote_age_s is not None else None,
+            "reference_price_type": "ORACLE_REFERENCE_NOT_SPOT_BOOK",
+        }
+        resolved_borrow_bps: str | None = f"{borrow_apr_bps:.6f}" if borrow_apr_bps is not None else None
+        warnings: list[str] = []
+
+        if spot_meta_env is not None and reserve_env is not None:
+            from verification_lab.oos.hyperliquid_borrow_rate import (
+                build_borrow_rate_observation_from_envelopes,
+            )
+
+            borrow_obs = build_borrow_rate_observation_from_envelopes(
+                spot_meta_envelope=spot_meta_env,
+                reserve_envelope=reserve_env,
+                evaluation_time_utc=capture_dt,
+            )
+            liquidity_meta["borrow_rate_evidence"] = borrow_obs.to_dict()
+            if borrow_obs.eligible_for_borrow_input and borrow_obs.borrow_apr_bps is not None:
+                resolved_borrow_bps = borrow_obs.borrow_apr_bps
+            else:
+                resolved_borrow_bps = None
+                warnings.append("borrow_rate_invalid_or_unverifiable")
+        elif resolved_borrow_bps is None:
+            warnings.append("borrow_apr_bps_unavailable_public_endpoint")
+
         obs = NormalizedMarketObservation(
             venue="hyperliquid",
             instrument=coin_upper,
@@ -731,24 +863,19 @@ class HyperliquidReadOnlyAdapter:
             funding_rate_interval=f"{latest_funding:.10f}",
             funding_interval_hours=1,
             annualized_funding_bps=f"{annualized_funding_bps:.6f}",
-            borrow_apr_bps=f"{borrow_apr_bps:.6f}" if borrow_apr_bps is not None else None,
+            borrow_apr_bps=resolved_borrow_bps,
             bid_price=f"{bid_px:.8f}",
             ask_price=f"{ask_px:.8f}",
             spread_bps=f"{spread_bps:.6f}",
             l1_bid_qty=f"{bid_sz:.8f}",
             l1_ask_qty=f"{ask_sz:.8f}",
-            public_liquidity_metadata={
-                "open_interest": str(asset_ctx.get("openInterest")),
-                "day_ntl_vlm": str(asset_ctx.get("dayNtlVlm")),
-                "quote_age_seconds": round(quote_age_s, 4) if quote_age_s is not None else None,
-                "reference_price_type": "ORACLE_REFERENCE_NOT_SPOT_BOOK",
-            },
+            public_liquidity_metadata=liquidity_meta,
             instrument_availability_status="AVAILABLE",
             causal_timestamps=timestamps.to_dict(),
             data_completeness=1.0,
             source_request_ids=[e.raw_source_id for e in envelopes],
             source_response_hashes={e.raw_source_id: e.raw_sha256 for e in envelopes},
             source_authenticity_status=SOURCE_AUTHENTICITY_UNVERIFIED_HTTP,
-            warnings=[] if borrow_apr_bps is not None else ["borrow_apr_bps_unavailable_public_endpoint"],
+            warnings=warnings,
         )
         return obs, envelopes
