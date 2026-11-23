@@ -491,6 +491,7 @@ def run_independent_offline_replay(
         borrow_d = _safe_parse_finite_decimal(raw_bundle.get("borrow_apr_bps"), "borrow_apr_bps", mismatches)
 
         raw_venue_files = rec.get("raw_venue_files") or []
+        borrow_reparsed = False
         if raw_venue_files and avail_dt is not None and cap_dt is not None:
             reparsed, venue_errors = _independently_reparse_raw_venue_files(
                 store=store,
@@ -519,6 +520,7 @@ def run_independent_offline_replay(
                 spot_d = reparsed["spot_price"]
                 perp_d = reparsed["perp_price"]
                 if reparsed.get("borrow_present"):
+                    borrow_reparsed = True
                     bundle_borrow = raw_bundle.get("borrow_apr_bps")
                     rec_market_obs = rec.get("normalized_observation", {}).get("market_observation", {})
                     rec_borrow_ev = (rec_market_obs.get("public_liquidity_metadata") or {}).get("borrow_rate_evidence")
@@ -554,12 +556,14 @@ def run_independent_offline_replay(
                                 f"raw_borrow_invalid_but_recorded_populated_or_eligible "
                                 f"({'; '.join(reparsed.get('borrow_errors') or ['unverified_convention'])})"
                             )
-                elif (
-                    raw_bundle.get("borrow_apr_source") == "VENUE_OBSERVED_PUBLIC_READ_ONLY"
-                    and not rec.get("synthetic_fixture", False)
-                    and rec.get("eligibility_status") == "ELIGIBLE"
-                ):
-                    mismatches.append("missing_raw_borrow_venue_files_for_public_read_only_source")
+
+        if (
+            not borrow_reparsed
+            and raw_bundle.get("borrow_apr_source") == "VENUE_OBSERVED_PUBLIC_READ_ONLY"
+            and not rec.get("synthetic_fixture", False)
+            and rec.get("eligibility_status") == "ELIGIBLE"
+        ):
+            mismatches.append("missing_raw_borrow_venue_files_for_public_read_only_source")
 
         # 5. Independently verify distinct lookback days when day-keyed history is present
         day_keyed_hist = raw_bundle.get("annualized_funding_bps_by_day")
